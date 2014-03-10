@@ -59,7 +59,7 @@ object TraverserImpl extends HasLogger {
       else new Position(0, 0)
     if (position.getLength != 0) Some(annotation -> position)
     else {
-      logger.warn("Skipping annotation, position length = 0.")
+      logger.warn(s"Skipping annotation, position length = 0, position offset = ${position.getOffset}")
       None
     }
   }
@@ -73,10 +73,10 @@ object TraverserImpl extends HasLogger {
 final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, compiler: SPC) extends TraverserImpl {
 
   /** Checks if AST node matches type definition */
-  private def checkType(obj: compiler.Tree, definition: TraverserDef.TypeDefinition): Boolean = {
+  private def checkType(obj: compiler.Tree): Boolean = {
     val result = compiler.askOption { () =>
-      val requiredClass = compiler.rootMirror.getRequiredClass(definition.fullName)
-      val hasType = obj.tpe
+      val requiredClass = compiler.rootMirror.getRequiredClass(traverserDef.typeDefinition.fullName)
+      val hasType = obj.tpe.erasure
       val needsType = requiredClass.toType.erasure
       hasType <:< needsType
     }
@@ -86,7 +86,7 @@ final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, c
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkType(obj, traverserDef.typeDefinition) => Some((obj.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkType(obj) && !select.symbol.isConstructor => Some((obj.pos, traverserDef.message))
       case _ => None
     }
   }
@@ -100,15 +100,15 @@ final case class MethodTraverserImpl(traverserDef: MethodTraverserDef, compiler:
   /**
    * Checks if AST node matches method definition.
    */
-  private def checkMethod(obj: compiler.Tree, name: compiler.Name, definition: TraverserDef.MethodDefinition): Boolean = {
+  private def checkMethod(obj: compiler.Tree, name: compiler.Name): Boolean = {
 
     def checkMethod(methodName: String): Boolean = name.toString() == methodName
 
     val result = compiler.askOption { () =>
-      val requiredClass = compiler.rootMirror.getRequiredClass(definition.fullName)
+      val requiredClass = compiler.rootMirror.getRequiredClass(traverserDef.methodDefinition.fullName)
       val hasType = obj.tpe
       val needsType = requiredClass.toType
-      checkMethod(definition.method) && hasType.erasure <:< needsType.erasure
+      checkMethod(traverserDef.methodDefinition.method) && hasType.erasure <:< needsType.erasure
     }
 
     result.getOrElse(false)
@@ -117,7 +117,7 @@ final case class MethodTraverserImpl(traverserDef: MethodTraverserDef, compiler:
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkMethod(obj, method, traverserDef.methodDefinition) => Some((select.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkMethod(obj, method) && !select.symbol.isConstructor => Some((select.pos, traverserDef.message))
       case _ => None
     }
   }
@@ -131,7 +131,7 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
   /**
    * Checks if AST node matches annotation definition.
    */
-  private def checkAnnotations(select: SPC#Select, annotation: TraverserDef.AnnotationDefinition): Boolean = {
+  private def checkAnnotations(select: SPC#Select): Boolean = {
     // for defs
     val symbolAnnots = select.symbol.annotations
     // for vals and vars
@@ -141,7 +141,7 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
       }.getOrElse(Nil)
       else Nil
     compiler.askOption { () =>
-      val requiredAnnotation = compiler.rootMirror.getRequiredClass(annotation.fullName)
+      val requiredAnnotation = compiler.rootMirror.getRequiredClass(traverserDef.annotation.fullName)
       (accessedAnnots ++ symbolAnnots).exists(_.symbol == requiredAnnotation)
     } getOrElse (false)
   }
@@ -149,7 +149,7 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkAnnotations(select, traverserDef.annotation) => Some((select.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor => Some((select.pos, traverserDef.message))
       case _ => None
     }
   }

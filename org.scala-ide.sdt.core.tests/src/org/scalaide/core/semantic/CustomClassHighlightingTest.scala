@@ -44,9 +44,7 @@ class CustomClassHighlightingTest
       val expected = List(
         "'types.Base' type found [252, 1]",
         "'types.Base' type found [261, 17]",
-        "'types.Base' type found [298, 8]",
         "'types.Base' type found [313, 1]",
-        "'types.Base' type found [330, 3]",
         "'types.Base' type found [365, 1]")
       val actual = annotations("baseType")(traversers)(spc, scu)
 
