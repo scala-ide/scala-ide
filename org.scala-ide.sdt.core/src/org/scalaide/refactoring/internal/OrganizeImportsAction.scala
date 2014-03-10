@@ -124,7 +124,7 @@ class OrganizeImportsAction extends RefactoringAction with RefactoringActionWith
           pm.subTask("Applying the changes.")
           val changes = createChanges(scalaSourceFile, imports, pm)
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
+          EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes, false)
           None
         }
       }
