@@ -26,6 +26,8 @@ import org.eclipse.jface.text.TextUtilities
 import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 @RunWith(classOf[JUnit4ClassRunner])
 class TestScalaIndenter {
@@ -75,8 +77,13 @@ class TestScalaIndenter {
   }
 
   def runTest(textSoFar : String, insert : String, expectedResultWithCaret : String) {
+    def nrOfCarets(str: String): Int = s"\\Q$CARET\\E".r.findAllIn(str).size
 
     val document = new Document(textSoFar.replace(CARET, ""))
+    val partitioner = new ScalaDocumentPartitioner
+    partitioner.connect(document)
+    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
+
 
     // Create the command with all needed information
     val command = new InstantiableDocumentCommands()
@@ -105,21 +112,19 @@ class TestScalaIndenter {
 
     val project = new JavaProject()
 
-    val indentStrategy = new TestScalaAutoIndentStrategy(null, project, null, preferenceProvider)
+    val indentStrategy = new TestScalaAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING, project, null, preferenceProvider)
     indentStrategy.customizeDocumentCommand(document, command)
 
     // Allow for not moving the offset
     val newOffset =
       if (command.caretOffset == -1) {
-        (textSoFar.substring(0, textSoFar.indexOf(CARET)).replace(CARET, "") + command.text).length
+        command.offset + command.text.length
       } else {
         command.caretOffset
       }
 
-    val result =
-      textSoFar.substring(0, textSoFar.indexOf(CARET)).replace(CARET, "") +
-      command.text +
-      textSoFar.substring(textSoFar.indexOf(CARET)).replace(CARET, "")
+    val editedText = textSoFar.substring(0, command.offset) + command.text + textSoFar.substring(command.offset + command.length)
+    val result = editedText.replaceAllLiterally(CARET, "")
 
     // Replace system specific new lines in the result with a generic '\n'
     val lineDelimiter = TextUtilities.getDefaultLineDelimiter(document)
@@ -128,7 +133,8 @@ class TestScalaIndenter {
     val expectedResult = expectedResultWithCaret.replace(CARET, "")
     assertEquals(expectedResult.replace(CARET, ""), resultWithCleanNewLines)
 
-    val expectedOffset = expectedResultWithCaret.lastIndexOf(CARET) - CARET.length
+    val delta = if (nrOfCarets(expectedResultWithCaret) > 1) CARET.length else 0
+    val expectedOffset = expectedResultWithCaret.lastIndexOf(CARET) - delta
     assertEquals(expectedOffset, newOffset)
   }
 
@@ -326,5 +332,187 @@ class TestScalaIndenter {
       "}"
 
     runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefNoRhs() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = $CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = $CARET
+                             |    $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDef() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = "abc"$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = "abc"$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefEmptySpace() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = "abc"
+                        |  $CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = "abc"
+                             |  $CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefCharLit() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = 'a'$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = 'a'$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefCharLitEscaped() {
+    val textSoFar = raw"""|
+                        |class x {
+                        |  val x = '\n'$CARET
+                        |}""".stripMargin
+
+    val expectedResult = raw"""|
+                             |class x {
+                             |  val x = '\n'$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefCharLitEscapedBackSlash() {
+    val textSoFar = raw"""|
+                        |class x {
+                        |  val x = '\\'$CARET
+                        |}""".stripMargin
+
+    val expectedResult = raw"""|
+                             |class x {
+                             |  val x = '\\'$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefRawString() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = \"\"\"abcdef\"\"\"$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = \"\"\"abcdef\"\"\"$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefMiddleCaret() {
+    val textSoFar = s"""|
+                        |class x {
+                        |  val x = $CARET"abc"
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {
+                             |  val x = $CARET
+                             |    $CARET"abc"
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterValDefWithEscape() {
+    val textSoFar = s"""|
+                        |class x {"
+                        |  val x = "a\"bc"$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {"
+                             |  val x = "a\"bc"$CARET
+                             |  $CARET
+                             |}""".stripMargin
+
+    runTest(textSoFar, "\n", expectedResult)
+  }
+
+  @Test
+  def afterIfElse() {
+    val textSoFar = s"""|
+                        |class x {"
+                        |  if (true)
+                        |    1
+                        |    els$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {"
+                             |  if (true)
+                             |    1
+                             |  else$CARET
+                             |}""".stripMargin
+    runTest(textSoFar, "e", expectedResult)
+  }
+
+  @Test
+  def afterIfElseNoChange() {
+    val textSoFar = s"""|
+                        |class x {"
+                        |  if (true)
+                        |    1
+                        |  els$CARET
+                        |}""".stripMargin
+
+    val expectedResult = s"""|
+                             |class x {"
+                             |  if (true)
+                             |    1
+                             |  else$CARET
+                             |}""".stripMargin
+    runTest(textSoFar, "e", expectedResult)
   }
 }

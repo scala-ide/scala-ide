@@ -807,8 +807,10 @@ class ScalaIndenter(
         // trap when hitting start of document
         return NOT_FOUND
 
-      case Symbols.TokenEQUAL =>
-        // indent assignments
+      // indent assignments, but special case `val x = "foo"`
+      // The JavaHeuristicScanner is finding `=` as the previous token, missing the string literal
+      // so we fix it in `isStringAssignment`
+      case Symbols.TokenEQUAL if !isStringOrCharLiteralAssignment(fPosition, offset) =>
         fIndent = prefAssignmentIndent
         return fPosition
 
@@ -857,6 +859,10 @@ class ScalaIndenter(
         return skipToPreviousListItemOrListStart
 
       case _ =>
+        // this ensures correct treatment after "else", the
+        // `if` branch is a single expression (with no semicolon)
+        if (danglingElse)
+          return skipToStatementStart(danglingElse, false)
         // inside whatever we don't know about: similar to the list case:
         // if we are inside a continued expression, then either align with a previous line that has indentation
         // or indent from the expression start line (either a scope introducer or the start of the expr).
@@ -1497,5 +1503,18 @@ class ScalaIndenter(
     }
 
     return false // Never reaches here
+  }
+
+  /** Is this part of a string literal assignment?
+   *
+   *  This test handles strings with escapes, but not raw strings (triple quotes)
+   */
+  private def isStringOrCharLiteralAssignment(referenceTokenPos: Int, offset: Int) = {
+    val restOfTheLine = document.get(referenceTokenPos, Math.max(offset - referenceTokenPos, 0))
+    val charLit = """'(.|\\\w|\\\\)'"""
+    val stringLit = """"(\\"|[^"])*")"""
+
+    val regex = s"(${charLit}|${stringLit}$$".r
+    regex.findFirstIn(restOfTheLine.trim).isDefined
   }
 }
