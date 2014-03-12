@@ -6,6 +6,7 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil._
 import org.scalaide.util.internal.Utils
+import org.eclipse.ui.preferences.ScopedPreferenceStore
 
 /**
  * This is responsible for initializing Scala Compiler
@@ -17,7 +18,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences() : Unit = {
     Utils.tryExecute {
       val node = DefaultScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId)
-      val store = ScalaPlugin.plugin.getPluginPreferences
+      val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, ScalaPlugin.plugin.pluginId)
 
       def defaultPreference(s: Settings#Setting) {
         val preferenceName = convertNameToProperty(s.name)
