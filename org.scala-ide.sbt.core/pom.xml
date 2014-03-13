@@ -93,6 +93,14 @@
                   <groupId>com.fasterxml.jackson.core</groupId>
                   <artifactId>jackson-databind</artifactId>
                 </artifactItem>
+                <artifactItem>
+                  <groupId>com.netflix.rxjava</groupId>
+                  <artifactId>rxjava-core</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.netflix.rxjava</groupId>
+                  <artifactId>rxjava-scala</artifactId>
+                </artifactItem>
               </artifactItems>
               <stripVersion>true</stripVersion>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>

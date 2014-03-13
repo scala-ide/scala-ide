@@ -29,6 +29,7 @@
     <scala-stm.version>0.7</scala-stm.version>
     <joda-time.version>2.2</joda-time.version>
     <jackson.version>2.2.2</jackson.version>
+    <rxjava.version>0.17.0-RC7</rxjava.version>
   </properties>
 
   <dependencies>
@@ -116,6 +117,16 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>${rxjava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-scala</artifactId>
+      <version>${rxjava.version}</version>
     </dependency>
   </dependencies>
 
