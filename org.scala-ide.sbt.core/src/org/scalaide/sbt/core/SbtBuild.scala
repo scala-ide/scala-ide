@@ -19,8 +19,11 @@ import com.typesafe.sbtrc.client.SimpleConnector
 
 import rx.lang.scala.Observable
 import sbt.client.SbtClient
-import sbt.client.Subscription
-import sbt.protocol.MinimalBuildStructure
+import sbt.protocol.LogEvent
+import sbt.protocol.LogMessage
+import sbt.protocol.LogStdErr
+import sbt.protocol.LogStdOut
+import sbt.protocol.LogSuccess
 import sbt.protocol.ProjectReference
 
 object SbtBuild {
@@ -63,23 +66,26 @@ object SbtBuild {
 
 }
 
-/** Internal data structure containing info around SbtClient.
- */
-case class SbtBuildDataContainer(
-  sbtClient: Future[SbtClient],
-  sbtClientSubscription: Subscription,
-  build: Future[MinimalBuildStructure],
-  watchedKeys: Map[String, Future[_]],
-  subscriptions: List[Subscription])
-
 /** Wrapper for the connection to the sbt-server for a sbt build.
  */
 class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient], console: MessageConsole) extends HasLogger {
 
-  val sbtClientObservable = ObservableExt.replay(sbtClient_, 1).map(s => new SbtClientWithObservableAndCache(s))
+  val sbtClientObservable = ObservableExt.replay(sbtClient_.map{s => println("mapping sbtClient"); new SbtClientWithObservableAndCache(s)}, 1)
 
   def sbtClientFuture = ObservableExt.firstFuture(sbtClientObservable)
   
+  sbtClientObservable.subscribe{ sbtClient => 
+    val out = console.newMessageStream()
+    sbtClient.eventWatcher.subscribe {
+      _ match {
+        case LogEvent(LogSuccess(msg)) => out.println(s"[success] $msg")
+        case LogEvent(LogMessage(level, msg)) => out.println(s"[$level] $msg")
+        case LogEvent(LogStdOut(msg)) => out.println(s"[stdout] $msg")
+        case LogEvent(LogStdErr(msg)) => out.println(s"[stderr] $msg")
+        case m => logger.debug("No event handler for " + m)
+      }
+    }
+  }
 
   /** Triggers the compilation of the given project.
    */
@@ -90,7 +96,7 @@ class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient],
       sbtClient.requestExecution(s"${project.getName}/compile", None)
     }
   }
-  
+
   /** Returns the list of projects defined in this build.
    */
   def projects(): Future[immutable.Seq[ProjectReference]] = {
@@ -101,7 +107,7 @@ class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient],
       build.projects.to[immutable.Seq]
     }
   }
-  
+
   /** Returns a Future for the value of the given setting key.
    *
    *  Assumes that the values can be serialize, so BuildValue.value.get is always valid.
