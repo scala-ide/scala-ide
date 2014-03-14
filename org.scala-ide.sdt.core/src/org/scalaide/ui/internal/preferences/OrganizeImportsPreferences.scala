@@ -7,6 +7,7 @@ import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.dialogs.IInputValidator
@@ -193,7 +194,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
   override def performOk() = {
     super.performOk()
     fieldEditors.foreach(_.store)
-    ScalaPlugin.plugin.savePluginPreferences()
+    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
     true
   }
 }

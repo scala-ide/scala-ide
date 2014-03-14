@@ -9,6 +9,7 @@ import java.util.Properties
 import net.miginfocom.layout._
 import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -311,7 +312,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
-    ScalaPlugin.plugin.savePluginPreferences()
+    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
     true
   }
 
