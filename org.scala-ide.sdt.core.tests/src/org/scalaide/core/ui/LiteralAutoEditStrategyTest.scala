@@ -5,10 +5,9 @@ import org.junit.Test
 import org.scalaide.ui.internal.editor.autoedits.LiteralAutoEditStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-import AutoEditStrategyTests._
+class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
 
-class LiteralAutoEditStrategyTest extends AutoEditStrategyTests(
-    new LiteralAutoEditStrategy(prefStore)) {
+  val strategy = new LiteralAutoEditStrategy(prefStore)
 
   @Before
   def startUp() {

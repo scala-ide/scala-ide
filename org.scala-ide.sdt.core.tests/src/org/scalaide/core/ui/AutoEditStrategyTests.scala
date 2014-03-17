@@ -11,16 +11,9 @@ import org.junit.ComparisonFailure
 import org.mockito.Mockito._
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
-object AutoEditStrategyTests {
+abstract class AutoEditStrategyTests {
 
-  class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int) extends DocumentCommand {
-    caretOffset = cCaretOffset
-    doit = true
-    length = cLength
-    offset = cOffset
-    text = cText
-    shiftsCaret = true
-  }
+  val strategy: IAutoEditStrategy
 
   val prefStore = mock(classOf[IPreferenceStore])
 
@@ -41,9 +34,15 @@ object AutoEditStrategyTests {
     enable(property, false)
     f
   }
-}
 
-abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
+  class TestCommand(cOffset: Int, cLength: Int, cText: String, cCaretOffset: Int) extends DocumentCommand {
+    caretOffset = cCaretOffset
+    doit = true
+    length = cLength
+    offset = cOffset
+    text = cText
+    shiftsCaret = true
+  }
 
   /**
    * Creates the following DSL for a test:
@@ -60,8 +59,6 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
   implicit class TestExecutor(testData: (String, String)) {
     def after(operation: Operation) = test(testData._1, testData._2, operation)
   }
-
-  import AutoEditStrategyTests._
 
   sealed abstract class Operation
   /** Adds the given string at the position of the caret */
@@ -145,20 +142,13 @@ abstract class AutoEditStrategyTests(strategy: IAutoEditStrategy) {
 
     operation match {
       case Add(s) =>
-        import collection.JavaConverters._
-        val cmds = cmd.getCommandIterator().asScala.toList.reverse
-
-        /**
-         * Because `cmd.getCommandIterator()` returns a raw type and because the type
-         * of the underlying instances belong to a inner private static Java class it
-         * seems to be impossible to access it from Scala. Thus, the code is accessed
-         * via Reflection.
+        /*
+         * The method ``DocumentCommand.execute(IDocument)`` is package private,
+         * thus we have to access it with Reflection.
          */
-        for (c <- cmds) {
-          val m = c.getClass().getMethod("execute", classOf[IDocument])
-          m.setAccessible(true)
-          m.invoke(c, doc)
-        }
+        val m = classOf[DocumentCommand].getDeclaredMethod("execute", classOf[IDocument])
+        m.setAccessible(true)
+        m.invoke(cmd, doc)
       case Remove(s) =>
         doc.replace(cmd.offset, cmd.length, "")
     }

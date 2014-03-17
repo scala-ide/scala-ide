@@ -6,13 +6,9 @@ import org.junit.Test
 import org.scalaide.ui.internal.editor.autoedits.StringAutoEditStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-import AutoEditStrategyTests._
+class StringAutoEditStrategyTest extends AutoEditStrategyTests {
 
-class StringAutoEditStrategyTest extends AutoEditStrategyTests(
-    new StringAutoEditStrategy(
-        IDocumentExtension3.DEFAULT_PARTITIONING,
-        prefStore)) {
-
+  val strategy = new StringAutoEditStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
 
   @Before
   def startUp() {

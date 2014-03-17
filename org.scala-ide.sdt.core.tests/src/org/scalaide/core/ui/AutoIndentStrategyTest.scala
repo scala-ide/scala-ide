@@ -6,10 +6,11 @@ import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.ui.internal.editor.autoedits.AutoIndentStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-import AutoEditStrategyTests._
 import scalariform.formatter.preferences._
 
-class AutoIndentStrategyTest extends AutoEditStrategyTests(new AutoIndentStrategy(prefStore)) {
+class AutoIndentStrategyTest extends AutoEditStrategyTests {
+
+  val strategy = new AutoIndentStrategy(prefStore)
 
   implicit class ToCorrectTestInput(s: String) {
     def c = s.replaceAll("""\\t""", "\t")

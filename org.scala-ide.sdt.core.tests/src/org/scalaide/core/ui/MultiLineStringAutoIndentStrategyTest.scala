@@ -7,12 +7,11 @@ import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.ui.internal.editor.autoedits.MultiLineStringAutoIndentStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-import AutoEditStrategyTests._
 import scalariform.formatter.preferences._
 
-class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests(
-    new MultiLineStringAutoIndentStrategy(
-        IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)) {
+class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
+
+  val strategy = new MultiLineStringAutoIndentStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
 
   implicit class ToMultiLineString(s: String) {
     def mls = s.replaceAll("```", "\"\"\"").replaceAll("""\\t""", "\t").stripMargin

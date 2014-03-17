@@ -5,10 +5,9 @@ import org.junit.Test
 import org.scalaide.ui.internal.editor.autoedits.BracketAutoEditStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-import AutoEditStrategyTests._
+class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
-class BracketAutoEditStrategyTest extends AutoEditStrategyTests(
-    new BracketAutoEditStrategy(prefStore)) {
+  val strategy = new BracketAutoEditStrategy(prefStore)
 
   @Before
   def startUp() {

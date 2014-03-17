@@ -4,10 +4,9 @@ import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Test
 import org.scalaide.ui.internal.editor.autoedits.MultiLineStringAutoEditStrategy
 
-class MultiLineStringAutoEditStrategyTest extends AutoEditStrategyTests(
-    new MultiLineStringAutoEditStrategy(
-        IDocumentExtension3.DEFAULT_PARTITIONING,
-        AutoEditStrategyTests.prefStore)) {
+class MultiLineStringAutoEditStrategyTest extends AutoEditStrategyTests {
+
+  val strategy = new MultiLineStringAutoEditStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
 
   @Test
   def remove_multi_line_string() {
