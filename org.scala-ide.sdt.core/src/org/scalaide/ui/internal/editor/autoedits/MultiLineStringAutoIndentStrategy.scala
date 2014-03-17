@@ -29,14 +29,14 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
 
       def copyIndentOfPreviousLine(additionalIndent: String) = {
         val indent = indentOfLine(doc, line)
-        cmd.text = s"\n$indent$additionalIndent"
+        cmd.text = s"${cmd.text}$indent$additionalIndent"
       }
 
-      def handleFirstLine = {
+      def handleFirstLine() = {
         def containsFirstLineStripMargin =
           doc.getChar(partition.getOffset() + 3) == '|'
 
-        def handleFirstStripMarginLine = {
+        def handleFirstStripMarginLine() = {
           val r = doc.getLineInformationOfOffset(cmd.offset)
           val lineIndent = indentOfLine(doc, line)
           val indentCountToBar = partition.getOffset() - r.getOffset() - lineIndent.length + 3
@@ -47,7 +47,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
             doc.get(barOffset, wsEnd - barOffset)
           }
 
-          val indent = s"\n$lineIndent${" " * indentCountToBar}|$innerIndent"
+          val indent = s"${cmd.text}$lineIndent${" " * indentCountToBar}|$innerIndent"
           val isMultiLineStringClosed = partition.getOffset() + partition.getLength() != doc.getLength()
 
           if (isMultiLineStringClosed) {
@@ -66,7 +66,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
           copyIndentOfPreviousLine("  ")
       }
 
-      def handleStripMarginLine = {
+      def handleStripMarginLine() = {
         val r = doc.getLineInformationOfOffset(cmd.offset)
         val (lineIndent, rest, _) = breakLine(doc, cmd.offset)
         val indentCountToBar = partition.getOffset() - r.getOffset() - lineIndent.length + 3
@@ -78,7 +78,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
             val wsEnd = findEndOfWhiteSpace(doc, barOffset, r.getOffset() + r.getLength())
             doc.get(barOffset, wsEnd - barOffset)
           }
-        val indent = s"\n$lineIndent${" " * indentCountToBar}|$innerIndent"
+        val indent = s"${cmd.text}$lineIndent${" " * indentCountToBar}|$innerIndent"
 
         cmd.text = indent
       }
@@ -91,10 +91,12 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
         copyIndentOfPreviousLine("")
     }
 
+    def isNewlineSign = doc.getLegalLineDelimiters().exists(_ == cmd.text)
+
     cmd.text match {
-      case "\n" if isAutoIndentEnabled => autoIndentAfterNewLine()
-      case "\t" if isAutoIndentEnabled => indentOnTab(doc, cmd, indentWithTabs, tabSize)
-      case _ =>
+      case _ if isAutoIndentEnabled && isNewlineSign => autoIndentAfterNewLine()
+      case "\t" if isAutoIndentEnabled               => indentOnTab(doc, cmd, indentWithTabs, tabSize)
+      case _                                         =>
     }
   }
 }
