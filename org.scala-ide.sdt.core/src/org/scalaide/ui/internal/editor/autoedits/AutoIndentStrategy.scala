@@ -78,8 +78,7 @@ class AutoIndentStrategy(prefStore: IPreferenceStore) extends DefaultIndentLineA
         val str = doc.get(r.getOffset(), r.getLength())
         str.trim().isEmpty()
       }
-
-      indentOfLine(doc, findPrevLine.next())
+      if (findPrevLine.hasNext) indentOfLine(doc, findPrevLine.next()) else ""
     }
 
     def copyPreviousLineIndent =

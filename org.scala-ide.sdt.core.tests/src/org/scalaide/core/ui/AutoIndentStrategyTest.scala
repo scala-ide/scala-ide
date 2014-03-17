@@ -202,4 +202,13 @@ class AutoIndentStrategyTest extends AutoEditStrategyTests {
       }
     }
     """ after tab
+
+  @Test
+  def hit_tab_on_first_line() = """
+    ^
+    class X
+    """ becomes """
+      ^
+    class X
+    """ after tab
 }
