@@ -12,6 +12,10 @@ import org.junit.AfterClass
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.eclipse.ui.preferences.ScopedPreferenceStore
+import org.eclipse.core.resources.ProjectScope
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.junit.After
 import scala.tools.nsc.Settings
 
 object CompilerSettingsTest {
@@ -31,27 +35,109 @@ object CompilerSettingsTest {
   }
 }
 
+/** Note that project.scalacArguments feeds itself from ScalaProject.storage,
+ *  which returns a project-scoped store or the instance-scoped workspace store,
+ *  depending on the value of the useProjectSettings. @see `enableProjectSettings`.
+ */
 class CompilerSettingsTest {
   import CompilerSettingsTest.project
 
+  @After
+  def clean_deprecation_and_additional() {
+    ScalaPlugin.prefStore.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+    ScalaPlugin.prefStore.setToDefault("deprecation")
+    ScalaPlugin.prefStore.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+  }
+
+  // independent from PropertyStore, checks project-scoped reads find the instance scope
   @Test
-  def workspace_settings_are_correctly_propagated() {
-    enableProjectSettings()
+  def import_from_instance_scope_to_project_scope() {
+    setWorkspaceSettings("deprecation", "true") // in essence writing to an instance-scoped store
+    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    assertTrue("Settings should contain deprecation setting fetched from instance scope: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
+  }
 
-    try {
-      setWorkspaceSettings("deprecation", "true")
-      assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+  // unobviously independent from PropertyStore, checks project-scoped reads find project-scoped writes
+  @Test
+  def import_from_propertystore_to_project_scope() {
+    setProjectSettings("deprecation", "true")
+    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    assertTrue("Settings should contain deprecation setting: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
+  }
 
-      setProjectSettings("deprecation", "false")
-      assertFalse("Settings should not contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
-    }
-    finally {
-      setWorkspaceSettings("deprecation", "false")
-    }
+  // unobviously independent from PropertyStore, checks instance-scoped reads don't find project-scoped writes
+  @Test
+  def no_import_from_propertystore_to_instance_scope() {
+    setProjectSettings("deprecation", "true")
+    val instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, ScalaPlugin.plugin.pluginId)
+    assertFalse("Settings should not contain deprecation setting: " + project.scalacArguments, instanceStore.getString("deprecation") == "true")
+  }
+
+  // independent from PropertyStore, checks instance-scoped reads don't find project-scoped writes
+  @Test
+  def no_import_from_projectscope_to_instance_scope() {
+    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    projectStore.setValue("deprecation", "true")
+    val instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, ScalaPlugin.plugin.pluginId)
+    assertFalse("Settings should not contain deprecation setting: " + project.scalacArguments, instanceStore.getString("deprecation") == "true")
+  }
+
+
+  @Test
+  def instance_settings_need_no_flag() {
+    enableProjectSettings(false)
+    setWorkspaceSettings("deprecation", "true")
+    assertTrue("Settings should contain -deprecation after disabled write: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
   }
 
   @Test
-  def project_settings_are_correctly_updated() {
+  def project_settings_do_need_the_flag() {
+    enableProjectSettings(false)
+    setProjectSettings("deprecation", "true")
+    assertFalse("Settings should not contain -deprecation after disabled write: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+  }
+
+  @Test
+  def project_settings_really_do_need_the_flag() {
+    setProjectSettings("deprecation", "true")
+    assertFalse("Settings should not contain -deprecation after not enabled write: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+  }
+
+  @Test
+  def project_settings_need_the_flag() {
+    // note this (with other tests) show there is no write from the property store to the instance scope
+    // the ScalaProject just returns the project-scoped store sometimes
+    enableProjectSettings()
+    setProjectSettings("deprecation", "true")
+    assertTrue("Settings should contain -deprecation after enabled write: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+  }
+
+  @Test
+  def property_store_is_a_snapshot() {
+    enableProjectSettings()
+
+    // just setProjectSettings("deprecation", "true"), keeping a handle on the store
+    val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
+    projectStore.setValue("deprecation", "true")
+    projectStore.save()
+    setWorkspaceSettings("deprecation", "false")
+    assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+    assertTrue("ProjectStore should not reflect exterior updates", projectStore.getString("deprecation") == "true")
+  }
+
+  @Test
+  def project_settings_import_workspace_settings() {
+    enableProjectSettings()
+
+    setWorkspaceSettings("deprecation", "true")
+    assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+
+    setProjectSettings("deprecation", "false")
+    assertFalse("Settings should not contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+  }
+
+  @Test
+  def project_settings_are_updated() {
     enableProjectSettings()
     setProjectSettings("deprecation", "true")
     assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
@@ -61,7 +147,7 @@ class CompilerSettingsTest {
   }
 
   @Test
-  def project_additional_settings_are_correctly_updated() {
+  def project_additional_settings_are_updated() {
     enableProjectSettings()
     setProjectSettings(CompilerSettings.ADDITIONAL_PARAMS, "-language:implicits")
     assertTrue("Settings should contain additional parameters: " + project.scalacArguments, project.scalacArguments.contains("-language:implicits"))
@@ -92,15 +178,16 @@ class CompilerSettingsTest {
   }
 
   /** Set a workspace-wide setting value. For compiler settings, you need to strip the '-', for instance
-    * call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
-    */
+   *  call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
+   */
   private def setWorkspaceSettings(settingName: String, value: String) {
+    // this writes to the plugin's Instance-level preference Store
     ScalaPlugin.prefStore.setValue(settingName, value)
   }
 
   /** Set a project-scoped setting value. For compiler settings, you need to strip the '-', for instance
-    * call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
-    */
+   *  call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
+   */
   private def setProjectSettings(settingName: String, value: String) {
     val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
     projectStore.setValue(settingName, value)
