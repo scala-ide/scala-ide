@@ -35,6 +35,8 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
 import scalariform.ScalaVersions
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.formatter.FormatterPreferences._
+import scalariform.formatter.preferences._
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -79,11 +81,34 @@ class ScalaSourceViewerConfiguration(
     )
   }
 
-  override def getTabWidth(sourceViewer: ISourceViewer): Int = {
-    import org.scalaide.core.internal.formatter.FormatterPreferences._
-    import scalariform.formatter.preferences._
-
+  override def getTabWidth(sourceViewer: ISourceViewer): Int =
     scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+
+  /**
+   * Indent prefixes are all possible variations of strings of a given
+   * 'indent' length that can be inserted as indent.
+   *
+   * As an example, when the indent depth is 4, these are the prefixes:
+   *
+   * '\t', ' \t', '  \t', '   \t', '    ', '' (when only tabs should be inserted)
+   * '    ', '\t', ' \t', '  \t', '   \t', '' (when only spaces should be inserted)
+   *
+   * The array always contains 2 + indent depth elements, where the last element
+   * is always the empty string. The first element describes a full indent depth,
+   * whereas the remaining elements describe a combination of spaces + a tab to
+   * fill a full indent depth.
+   */
+  override def getIndentPrefixes(sourceViewer: ISourceViewer, contentType: String): Array[String] = {
+    val spaceWidth = scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+    val useTabs = scalaPreferenceStore.getBoolean(IndentWithTabs.eclipseKey)
+
+    val spacePrefix = " " * spaceWidth
+    val prefixes = 0 until spaceWidth map (i => " " * i + "\t")
+
+    if (useTabs)
+      (prefixes :+ spacePrefix :+ "").toArray
+    else
+      (spacePrefix +: prefixes :+ "").toArray
   }
 
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
@@ -153,7 +178,7 @@ class ScalaSourceViewerConfiguration(
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
           new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
       case IJavaPartitions.JAVA_STRING =>
@@ -165,11 +190,14 @@ class ScalaSourceViewerConfiguration(
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new AutoIndentStrategy(ScalaPlugin.prefStore),
           new BracketAutoEditStrategy(ScalaPlugin.prefStore),
           new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
 
       case _ =>
-        Array(new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider))
+        Array(
+            new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+            new AutoIndentStrategy(ScalaPlugin.prefStore))
     }
   }
 

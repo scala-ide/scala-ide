@@ -1,28 +1,14 @@
 package org.scalaide.core.ui
 
-import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito._
 import org.scalaide.ui.internal.editor.autoedits.StringAutoEditStrategy
+import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
-object StringAutoEditStrategyTest {
+class StringAutoEditStrategyTest extends AutoEditStrategyTests {
 
-  val prefStore = mock(classOf[IPreferenceStore])
-
-  def enable(property: String, enable: Boolean) {
-    when(prefStore.getBoolean(property)).thenReturn(enable)
-  }
-}
-
-class StringAutoEditStrategyTest extends AutoEditStrategyTests(
-    new StringAutoEditStrategy(
-        IDocumentExtension3.DEFAULT_PARTITIONING,
-        StringAutoEditStrategyTest.prefStore)) {
-
-  import StringAutoEditStrategyTest._
-  import org.scalaide.ui.internal.preferences.EditorPreferencePage._
+  val strategy = new StringAutoEditStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
 
   @Before
   def startUp() {

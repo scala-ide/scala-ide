@@ -55,6 +55,7 @@ import org.eclipse.ui.texteditor.TextOperationAction
 import org.scalaide.ui.internal.actions
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.refactoring
+import org.eclipse.swt.SWT
 
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
@@ -107,6 +108,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     historyAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_LAST)
     setAction(StructureSelectionAction.HISTORY, historyAction)
     selectionHistory.setHistoryAction(historyAction)
+
+    // disable Java indent logic, which is otherwise invoked when the tab key is entered
+    setAction("IndentOnTab", null)
 
     val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
@@ -286,6 +290,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   override def handlePreferenceStoreChanged(event: PropertyChangeEvent) = {
+    import org.scalaide.core.internal.formatter.FormatterPreferences._
+    import scalariform.formatter.preferences._
+    val IndentSpacesKey = IndentSpaces.eclipseKey
+    val IndentWithTabsKey = IndentWithTabs.eclipseKey
+
     event.getProperty match {
       case PreferenceConstants.EDITOR_MARK_OCCURRENCES =>
       // swallow the event. We don't want 'mark occurrences' to be linked to the Java editor preference
@@ -296,6 +305,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
           case _ =>
             uninstallOccurrencesFinder()
         }
+
+      case IndentSpacesKey | IndentWithTabsKey =>
+        val tabWidth = getSourceViewerConfiguration().getTabWidth(sourceViewer)
+        sourceViewer.getTextWidget().setTabs(tabWidth)
+        updateIndentPrefixes()
 
       case _ =>
         if (affectsTextPresentation(event)) {
