@@ -78,4 +78,6 @@ Export-Package:
  org.scalaide.debug.internal.model,
  org.scalaide.debug.internal.preferences
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: target/lib/commons-collections4-4.0.jar,
+ .
 

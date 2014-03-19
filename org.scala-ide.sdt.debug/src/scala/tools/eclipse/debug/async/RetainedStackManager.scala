@@ -1,8 +1,9 @@
 package scala.tools.eclipse.debug.async
 
 import com.sun.jdi.ObjectReference
+
 import com.sun.jdi.StackFrame
-import scala.collection.immutable
+import scala.collection.mutable
 import scala.tools.eclipse.debug.model.ScalaDebugTarget
 import scala.tools.eclipse.debug.BaseDebuggerActor
 import com.sun.jdi.event._
@@ -20,8 +21,8 @@ import com.sun.jdi.Method
  *
  */
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
-
-  private var stackFrames: Map[ObjectReference, AsyncStackTrace] = immutable.HashMap()
+  final val MAX_ENTRIES = 20000
+  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTrace] = new LRUMap(MAX_ENTRIES)
 
   private var futureApplyRequest: BreakpointRequest = null
 
