@@ -917,8 +917,8 @@ class ScalaAutoIndentStrategy(
    *
    * @return the number of spaces displayed for a tabulator in the editor
    */
-  private def getVisualTabLengthPreference : Int = CodeFormatterUtil.getTabWidth(fProject)
-
+  private def getVisualTabLengthPreference: Int =
+    preferencesProvider.getInt(ScalaIndenter.TAB_SIZE)
 
   /**
    * The preference setting that tells whether to insert spaces when pressing the Tab key.
@@ -926,9 +926,8 @@ class ScalaAutoIndentStrategy(
    * @return <code>true</code> if spaces are inserted when pressing the Tab key
    * @since 3.5
    */
-  private def isInsertingSpacesForTab : Boolean =
-    JavaCore.SPACE.equals(getCoreOption(fProject, DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR))
-
+  private def isInsertingSpacesForTab: Boolean =
+    preferencesProvider.getBoolean(ScalaIndenter.INDENT_WITH_TABS)
 
   /**
    * Returns the possibly <code>project</code>-specific core preference defined under
