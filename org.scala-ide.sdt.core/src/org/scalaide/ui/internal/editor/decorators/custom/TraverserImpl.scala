@@ -36,7 +36,7 @@ object TraverserImpl extends HasLogger {
    * Extracts all annotations from given source using given traversers.
    */
   final def extract(compiler: SPC)(sourceFile: SourceFile, annotationId: String, traversers: Seq[TraverserImpl]): Seq[(Annotation, Position)] = {
-    var regions = Seq.empty[(Annotation, Position)]
+    var regions = IndexedSeq.empty[(Annotation, Position)]
 
     new compiler.Traverser {
       override def traverse(tree: compiler.Tree): Unit = {

@@ -24,15 +24,15 @@ trait TraverserDef {
 object TraverserDef {
 
   case class MethodDefinition(packages: Seq[String], cls: String, method: String) {
-    def fullName: String = (packages :+ cls).mkString(".")
+    def fullName: String = packages.mkString("", ".", ".") + cls
   }
 
   case class AnnotationDefinition(packages: Seq[String], name: String) {
-    def fullName: String = (packages :+ name).mkString(".")
+    def fullName: String = packages.mkString("", ".", ".") + name
   }
 
   case class TypeDefinition(packages: Seq[String], name: String) {
-    def fullName: String = (packages :+ name).mkString(".")
+    def fullName: String = packages.mkString("", ".", ".") + name
   }
 }
 
