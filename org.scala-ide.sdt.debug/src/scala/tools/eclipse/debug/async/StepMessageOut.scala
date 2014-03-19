@@ -54,7 +54,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         logger.debug(s"receive intercepted: topFrame arguments: $args")
         val msg = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
         if (watchedMessage == msg) {
-          logger.debug("Intercepted a good receive!")
+          logger.debug(s"Intercepted a good receive! $msg")
 
           val targetThread = debugTarget.getScalaThread(breakpointEvent.thread())
           targetThread foreach { thread =>
@@ -76,7 +76,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         reply(true) // suspend here!
 
       case stepEvent: StepEvent =>
-        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
+//        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
         steps += 1
         reply(false) // resume VM
     }
