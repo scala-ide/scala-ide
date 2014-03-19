@@ -41,7 +41,7 @@ class CustomMethodHighlightingTest
   }
 
   @Test
-  def customMethodHighlightingWithInheritance {
+  def customMethodHighlightingWithInheritance() {
     withCompilationUnitAndCompiler("custom/MethodsInheritance.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(

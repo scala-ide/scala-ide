@@ -24,7 +24,7 @@ class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
       dummy.get
 
       val tree = new compiler.Response[compiler.Tree]
-      compiler.askType(src, false, tree)
+      compiler.askLoadedTyped(src, tree)
       tree.get
       test(compiler, unit)
     }
