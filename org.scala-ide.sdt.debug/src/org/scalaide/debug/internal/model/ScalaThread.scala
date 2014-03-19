@@ -52,13 +52,19 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def isStepping: Boolean = ???
 
   override def stepInto(): Unit = {
-    wrapJDIException("Exception while performing `step into`") { ScalaStepInto(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
+    }
   }
   override def stepOver(): Unit = {
-    wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
+    }
   }
   override def stepReturn(): Unit = {
-    wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
+    }
   }
 
   def stepMessageOut(): Unit = {
