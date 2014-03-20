@@ -171,7 +171,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @Test
   def findReferencesOfClassFieldLazyVal() {
-    val expected = fieldVal("Foo.x") isReferencedBy method("Bar.meth")
+    val expected = fieldVal("Foo.lazyX") isReferencedBy method("Bar.meth")
     runTest("lazy-val", "FindReferencesOfClassFieldLazyVal.scala", expected)
   }
 
