@@ -1,135 +1,36 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/node/146
+ */
 package org.scalaide.ui.internal.editor.decorators.implicits
 
-import java.util.Collections
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage._
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.logging.HasLogger
+import scala.reflect.internal.util.SourceFile
+import org.scalaide.ui.internal.editor.decorators.BaseSemanticAction
+
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
-import scala.reflect.internal.util.SourceFile
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.preference.PreferenceConverter
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.source.AnnotationPainter
-import org.eclipse.jface.text.source.IAnnotationAccess
-import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.text.IPainter
-import org.eclipse.jface.text.Position
-import org.eclipse.jface.text.TextViewer
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.swt.SWT
-import org.eclipse.ui.editors.text.EditorsUI
-import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.util.internal.eclipse.AnnotationUtils
-import org.scalaide.ui.internal.editor.decorators.SemanticAction
-import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
-import org.eclipse.jface.text.Region
-import org.scalaide.core.hyperlink.detector._
-import org.scalaide.core.hyperlink.HyperlinkFactory
 import org.scalaide.core.hyperlink.Hyperlink
-
+import org.scalaide.core.hyperlink.HyperlinkFactory
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
 
 /**
- *
+ * Semantic action for highlighting implicit conversions and parameters.
  */
-class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer) extends SemanticAction with HasLogger {
-  import ImplicitHighlightingPresenter._
+class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer)
+  extends BaseSemanticAction(
+    sourceViewer,
+    ImplicitAnnotation.ID,
+    Some("implicit")) {
 
-  val annotationAccess = new IAnnotationAccess {
-    def getType(annotation: Annotation) = annotation.getType
-    def isMultiLine(annotation: Annotation) = true
-    def isTemporary(annotation: Annotation) = true
-  }
-
-  private def isFontStyleBold = if(pluginStore.getBoolean(P_BOLD)) SWT.BOLD else SWT.NORMAL
-
-  private def isFontStyleItalic = if(pluginStore.getBoolean(P_ITALIC)) SWT.ITALIC else SWT.NORMAL
-
-  private lazy val P_COLOR = {
-    val lookup = new org.eclipse.ui.texteditor.AnnotationPreferenceLookup()
-    val pref = lookup.getAnnotationPreference(ImplicitAnnotation.ID)
-    pref.getColorPreferenceKey()
-  }
-
-  private def colorValue = {
-    val rgb = PreferenceConverter.getColor(EditorsUI.getPreferenceStore, P_COLOR)
-    ColorManager.colorManager.getColor(rgb)
-  }
-
-  private val impTextStyleStrategy = new ImpliticAnnotationTextStyleStrategy(isFontStyleBold | isFontStyleItalic)
-
-  private val painter: AnnotationPainter = {
-    val p = new AnnotationPainter(sourceViewer, annotationAccess)
-    p.addAnnotationType(ImplicitAnnotation.ID, ImplicitAnnotation.ID)
-    p.addTextStyleStrategy(ImplicitAnnotation.ID, impTextStyleStrategy)
-    //FIXME settings color of the underline is required to active TextStyle (bug ??, better way ??)
-    p.setAnnotationTypeColor(ImplicitAnnotation.ID, colorValue)
-    val textViewer = sourceViewer.asInstanceOf[TextViewer]
-    textViewer.addPainter(p)
-    textViewer.addTextPresentationListener(p)
-    p
-  }
-
-  private val _listener = new IPropertyChangeListener {
-    def propertyChange(event: PropertyChangeEvent) {
-      val changed = event.getProperty() match {
-        case P_BOLD | P_ITALIC | P_COLOR => true
-        case P_ACTIVE => {
-          refresh()
-          false
-        }
-        case _ => false
-      }
-      if (changed) {
-        impTextStyleStrategy.fontStyle = isFontStyleBold | isFontStyleItalic
-        painter.setAnnotationTypeColor(ImplicitAnnotation.ID, colorValue)
-        painter.paint(IPainter.CONFIGURATION)
-      }
-    }
-  }
-
-  private def refresh() = {
-    import org.scalaide.util.internal.Utils._
-    for {
-      page <- EclipseUtils.getWorkbenchPages
-      editorReference <- page.getEditorReferences
-      editorInput <- Option(editorReference.getEditorInput)
-      compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
-      scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
-    } apply(scu)
-  }
-
-  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
-
-  PropertyChangeListenerProxy(_listener, pluginStore, EditorsUI.getPreferenceStore).autoRegister()
-
-  //TODO monitor P_ACTIVATE to register/unregister update
-  //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
-  override def apply(scu: ScalaCompilationUnit): Unit = {
-    scu.doWithSourceFile { (sourceFile, compiler) =>
-      var annotationsToAdd = Map[Annotation, Position]()
-
-      if (pluginStore.getBoolean(P_ACTIVE)) {
-        val response = new compiler.Response[compiler.Tree]
-        compiler.askLoadedTyped(sourceFile, response)
-        response.get(200) match {
-          case Some(Left(_)) =>
-            annotationsToAdd = findAllImplicitConversions(compiler, scu, sourceFile)
-          case Some(Right(exc)) =>
-            logger.error(exc)
-          case None =>
-            logger.warn("Timeout while waiting for `askLoadedTyped` during implicit highlighting.")
-        }
-      }
-
-      AnnotationUtils.update(sourceViewer, ImplicitAnnotation.ID, annotationsToAdd)
-    }
-  }
+  protected override def findAll(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile): Map[Annotation, Position] =
+    ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, sourceFile)
 }
 
 object ImplicitHighlightingPresenter {
@@ -140,6 +41,9 @@ object ImplicitHighlightingPresenter {
   def findAllImplicitConversions(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.Tree
     import compiler.Traverser
+    import compiler.Apply
+    import compiler.MethodSymbol
+    import compiler.Select
     import compiler.ApplyImplicitView
     import compiler.ApplyToImplicitArgs
 
@@ -162,7 +66,7 @@ object ImplicitHighlightingPresenter {
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
       val annotation = new ImplicitConversionAnnotation(() => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
-          "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
+        "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
 
       (annotation, pos)
     }

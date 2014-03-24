@@ -114,8 +114,7 @@
             id="org.scalaide.ui.preferences.editor"
             name="Editor">
       </page>      
-   </extension>
-
+  </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
@@ -1495,7 +1494,7 @@
  <extension
        point="org.scala-ide.sdt.core.reconciliationParticipants">
     <participant
-          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.SemanticHighlightingReconciliationParticipant"
+          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.ImplicitHighlighter"
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>

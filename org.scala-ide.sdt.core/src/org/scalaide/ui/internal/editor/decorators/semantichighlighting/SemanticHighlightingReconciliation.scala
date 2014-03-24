@@ -1,22 +1,27 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/node/146
+ */
 package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
-import org.scalaide.util.internal.Utils._
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.ui.IPartListener
-import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import java.util.concurrent.ConcurrentHashMap
-import org.scalaide.ui.internal.editor.decorators.SemanticAction
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.actions.PartAdapter
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.ui.IEditorInput
+
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.ui.JavaPlugin
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.IWorkbenchPart
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
+import org.scalaide.ui.internal.editor.decorators.SemanticAction
+import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.internal.eclipse.EclipseUtils
+
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.
@@ -30,8 +35,8 @@ import org.scalaide.logging.HasLogger
  * should be enabled via the editor, just like we do for semantic highlighting.
  *
  */
-@deprecated("This is not needed and should be removed the moment implicit highlighting is hooked in the editor","2.1.0")
-class SemanticHighlightingReconciliation extends HasLogger {
+@deprecated("This is not needed and should be removed the moment implicit highlighting is hooked in the editor", "2.1.0")
+class SemanticHighlightingReconciliation(actions: List[JavaSourceViewer => SemanticAction]) extends HasLogger {
 
   private case class SemanticDecorationManagers(actions: List[SemanticAction])
 
@@ -45,8 +50,7 @@ class SemanticHighlightingReconciliation extends HasLogger {
         editorInput <- Option(scalaEditor.getEditorInput)
         compilationUnit <- getCompilationUnitOf(editorInput)
         if scu == compilationUnit
-      }
-        semanticDecorationManagers.remove(scu)
+      } semanticDecorationManagers.remove(scu)
     }
   }
 
@@ -75,8 +79,7 @@ class SemanticHighlightingReconciliation extends HasLogger {
         if scu == compilationUnit
       } yield {
         page.addPartListener(new UnregisteringPartListener(scu))
-        val semanticActions = List(new ImplicitHighlightingPresenter(scalaEditor.sourceViewer))
-        SemanticDecorationManagers(semanticActions)
+        SemanticDecorationManagers(actions.map(_(scalaEditor.sourceViewer)))
       }
     presenters.headOption
   }
