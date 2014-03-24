@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.logging.HasLogger
+import scala.util.Try
 
 object EclipseResource extends HasLogger {
   def apply(r: IResource): EclipseResource[_ <: IResource] = r match {
@@ -47,7 +48,7 @@ object EclipseResource extends HasLogger {
    */
   def fromString(path: String, prefix: IPath = Path.EMPTY): Option[EclipseResource[IResource]] = {
     def resourceForPath(p: IPath) = {
-      val resources = ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(p))
+      val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(p))).getOrElse(Array())
 
       resources match {
         case Array(_, _*) => resources.find(prefix isPrefixOf _.getFullPath)
