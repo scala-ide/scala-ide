@@ -398,7 +398,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         setting
       }
 
-      val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.bootclasspath)
+      val classpathSettings = List(defaultSettings.javabootclasspath, defaultSettings.javaextdirs, defaultSettings.bootclasspath)
 
       (classpathSettings ++ userSettings) map (_.unparse)
     }
@@ -444,10 +444,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val scalaCp = scalaClasspath // don't need to recompute it each time we use it
 
     settings.javabootclasspath.value = scalaCp.jdkPaths.map(_.toOSString).mkString(pathSeparator)
+    // extdirs are already included in Platform JDK paths
+    // here we disable Scala's default that would pick up the running JVM extdir, resulting in
+    // a mix of classes from the running JVM and configured JDK
+    // (we use a space because an empty string is considered as 'value not set by user')
+    settings.javaextdirs.value = " "
     settings.classpath.value = (scalaCp.userCp ++ scalaCp.scalaLib.toSeq).map(_.toOSString).mkString(pathSeparator)
     scalaCp.scalaLib.foreach(scalaLib => settings.bootclasspath.value = scalaLib.toOSString)
 
     logger.debug("javabootclasspath: " + settings.javabootclasspath.value)
+    logger.debug("javaextdirs: " + settings.javaextdirs.value)
     logger.debug("scalabootclasspath: " + settings.bootclasspath.value)
     logger.debug("user classpath: " + settings.classpath.value)
   }

@@ -12,6 +12,7 @@ import org.junit.AfterClass
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import scala.tools.nsc.Settings
 
 object CompilerSettingsTest {
   private val simulator = new EclipseUserSimulator
@@ -68,6 +69,20 @@ class CompilerSettingsTest {
     setProjectSettings(CompilerSettings.ADDITIONAL_PARAMS, "-Ylog:typer")
     assertFalse("Settings should not contain additional parameters: " + project.scalacArguments, project.scalacArguments.contains("-language:implicits"))
     assertTrue("Settings should contain additional parameters: " + project.scalacArguments, project.scalacArguments.contains("-Ylog:typer"))
+  }
+
+  @Test
+  def no_javaextdirs() {
+    val scalacArgs = project.scalacArguments
+
+    // We make sure -javaextdirs never picks up the default (runtime) JRE
+    // See ticket #1002072
+    project.presentationCompiler { comp =>
+      val settings = new Settings
+      settings.processArguments(scalacArgs.toList, true)
+      val resolver = new scala.tools.util.PathResolver(settings)
+      assertEquals("Calculated javaextdirs should be empty", "", resolver.Calculated.javaExtDirs.trim)
+    }
   }
 
   private def enableProjectSettings(value: Boolean = true) {
