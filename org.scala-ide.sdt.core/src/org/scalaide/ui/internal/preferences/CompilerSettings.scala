@@ -41,6 +41,7 @@ import org.eclipse.jface.bindings.keys.KeyStroke
 import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.builder.ProjectsCleanJob
+import org.eclipse.core.resources.ProjectScope
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -54,6 +55,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
   }
 
   def save(userBoxes: List[IDESettings.Box], store: IPreferenceStore): Unit = {
+    import SettingConverterUtil._
     for (b <- userBoxes) {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
@@ -66,7 +68,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
           case ms: Settings#MultiStringSetting => ms.value == Nil
           case cs: Settings#ChoiceSetting      => cs.value == cs.default
         }
-        if (isDefault)
+        if (!store.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE) && isDefault)
           store.setToDefault(name)
         else {
           val value = setting match {
@@ -111,7 +113,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     if (project.isEmpty)
       super.getPreferenceStore()
     else
-      new PropertyStore(project.get, super.getPreferenceStore(), getPageId)
+      new PropertyStore(new ProjectScope(project.get), getPageId)
   }
 
   /** Returns the id of what preference page we use */

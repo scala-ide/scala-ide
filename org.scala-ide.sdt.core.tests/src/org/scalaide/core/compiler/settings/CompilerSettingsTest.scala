@@ -16,6 +16,10 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.preferences.InstanceScope
 import org.junit.After
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.eclipse.core.runtime.preferences.ConfigurationScope
+import org.eclipse.core.runtime.Platform
+import org.osgi.service.prefs.Preferences
 import scala.tools.nsc.Settings
 
 object CompilerSettingsTest {
@@ -41,19 +45,27 @@ object CompilerSettingsTest {
  */
 class CompilerSettingsTest {
   import CompilerSettingsTest.project
+  val projectScope = new ProjectScope(project.underlying)
 
   @After
   def clean_deprecation_and_additional() {
     ScalaPlugin.prefStore.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
     ScalaPlugin.prefStore.setToDefault("deprecation")
     ScalaPlugin.prefStore.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
+    projectStore.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+    projectStore.setToDefault("deprecation")
+    projectStore.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
   }
 
   // independent from PropertyStore, checks project-scoped reads find the instance scope
   @Test
   def import_from_instance_scope_to_project_scope() {
     setWorkspaceSettings("deprecation", "true") // in essence writing to an instance-scoped store
-    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
+    // TODO: This line is done by default in Kepler, remove it when we drop Juno
+    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     assertTrue("Settings should contain deprecation setting fetched from instance scope: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
   }
 
@@ -61,7 +73,9 @@ class CompilerSettingsTest {
   @Test
   def import_from_propertystore_to_project_scope() {
     setProjectSettings("deprecation", "true")
-    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
+    // TODO: This line is done by default in Kepler, remove it when we drop Juno
+    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     assertTrue("Settings should contain deprecation setting: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
   }
 
@@ -76,7 +90,7 @@ class CompilerSettingsTest {
   // independent from PropertyStore, checks instance-scoped reads don't find project-scoped writes
   @Test
   def no_import_from_projectscope_to_instance_scope() {
-    val projectStore = new ScopedPreferenceStore(new ProjectScope(project.underlying), ScalaPlugin.plugin.pluginId)
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
     projectStore.setValue("deprecation", "true")
     val instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, ScalaPlugin.plugin.pluginId)
     assertFalse("Settings should not contain deprecation setting: " + project.scalacArguments, instanceStore.getString("deprecation") == "true")
@@ -108,21 +122,26 @@ class CompilerSettingsTest {
     // note this (with other tests) show there is no write from the property store to the instance scope
     // the ScalaProject just returns the project-scoped store sometimes
     enableProjectSettings()
+    checkProjectSettingsEnabled()
     setProjectSettings("deprecation", "true")
     assertTrue("Settings should contain -deprecation after enabled write: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
   }
 
+  // Beware of default settings in this case, see `PropertyStore#setValue`
   @Test
-  def property_store_is_a_snapshot() {
+  def property_store_is_not_a_snapshot_anymore() {
     enableProjectSettings()
 
     // just setProjectSettings("deprecation", "true"), keeping a handle on the store
-    val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
+    // TODO: This line is done by default in Kepler, remove it when we drop Juno
+    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     projectStore.setValue("deprecation", "true")
     projectStore.save()
-    setWorkspaceSettings("deprecation", "false")
-    assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
-    assertTrue("ProjectStore should not reflect exterior updates", projectStore.getString("deprecation") == "true")
+    checkProjectSettingsEnabled()
+    setProjectSettings("deprecation", "false")
+    assertFalse("Settings should not contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
+    assertTrue("ProjectStore should reflect exterior updates", projectStore.getString("deprecation") == "false")
   }
 
   @Test
@@ -132,6 +151,7 @@ class CompilerSettingsTest {
     setWorkspaceSettings("deprecation", "true")
     assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
 
+    checkProjectSettingsEnabled()
     setProjectSettings("deprecation", "false")
     assertFalse("Settings should not contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
   }
@@ -139,6 +159,7 @@ class CompilerSettingsTest {
   @Test
   def project_settings_are_updated() {
     enableProjectSettings()
+    checkProjectSettingsEnabled()
     setProjectSettings("deprecation", "true")
     assertTrue("Settings should contain -deprecation: " + project.scalacArguments, project.scalacArguments.contains("-deprecation"))
 
@@ -149,6 +170,7 @@ class CompilerSettingsTest {
   @Test
   def project_additional_settings_are_updated() {
     enableProjectSettings()
+    checkProjectSettingsEnabled()
     setProjectSettings(CompilerSettings.ADDITIONAL_PARAMS, "-language:implicits")
     assertTrue("Settings should contain additional parameters: " + project.scalacArguments, project.scalacArguments.contains("-language:implicits"))
 
@@ -172,9 +194,16 @@ class CompilerSettingsTest {
   }
 
   private def enableProjectSettings(value: Boolean = true) {
-    val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
+    val projectStore = new PropertyStore(projectScope, ScalaPlugin.plugin.pluginId)
     projectStore.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, value)
     projectStore.save()
+  }
+
+  private def checkProjectSettingsEnabled(){
+    val projectStore = new ScopedPreferenceStore(projectScope, ScalaPlugin.plugin.pluginId)
+    // TODO: This line is done by default in Kepler, remove it when we drop Juno
+    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
+    assertTrue("project-specific settings should be enabled at this stage", projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE))
   }
 
   /** Set a workspace-wide setting value. For compiler settings, you need to strip the '-', for instance
@@ -189,8 +218,8 @@ class CompilerSettingsTest {
    *  call `setWorkspaceSettings("deprecation", ..") instead of "-deprecation"
    */
   private def setProjectSettings(settingName: String, value: String) {
-    val projectStore = new PropertyStore(project.underlying, ScalaPlugin.prefStore, ScalaPlugin.plugin.pluginId)
+    val projectStore = new PropertyStore(projectScope, ScalaPlugin.plugin.pluginId)
     projectStore.setValue(settingName, value)
-    projectStore.save() // the project store is an in-memory snapshot, needs to be persisted this way
+    projectStore.save()// the project store is an in-memory snapshot, needs to be persisted this way
   }
 }

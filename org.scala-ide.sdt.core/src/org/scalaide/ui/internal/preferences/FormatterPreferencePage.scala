@@ -36,6 +36,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
+import org.eclipse.core.resources.ProjectScope
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -219,8 +220,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     val pluginId = ScalaPlugin.plugin.pluginId
     val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
-      case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
-      case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
+      case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
+      case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
       case _ => scalaPrefStore
     })
   }
