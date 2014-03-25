@@ -58,7 +58,7 @@ import org.scalaide.ui.internal.diagnostic
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
 
-  private final val HeadlessTest  = "sdtcore.headless"
+  private final val HeadlessTest = "sdtcore.headless"
   private final val NoTimeouts = "sdtcore.notimeouts"
 
   @volatile var plugin: ScalaPlugin = _
@@ -115,32 +115,40 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  private def cutVersion(version: String): String = {
+  private def explodeVersion(version: String): Option[(String, String)] = {
     val pattern = "(\\d)\\.(\\d+)\\..*".r
     version match {
       case pattern(major, minor) =>
-        major + "." + minor
+        Some(major, minor)
       case _ =>
-        "(unknown)"
+        None
     }
   }
 
-  /**
-   * Check if the given version is compatible with the current plug-in version.
-   * Check on the major/minor number, discard the maintenance number.
+  /** Check if the given version is compatible with the current plug-in version.
+   *  Check on the major/minor number, discard the maintenance number.
    *
-   * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
-   * 2.8.1 and 2.9.0 aren't.
+   *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+   *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: Option[String]): Boolean = version match {
-    case Some(v) =>
-      cutVersion(v) == shortScalaVer
-    case None =>
-      false
-  }
+  def isCompatibleVersion(version: Option[String]): Boolean = version exists
+    (explodeVersion(_) == splitShortScalaVer && splitShortScalaVer.isDefined) // don't treat 2 unknown versions as equal
+
+  def isPreviousVersion(version: Option[String]): Boolean =
+    version exists { (v) =>
+      splitShortScalaVer exists {
+        case (majorS, minorS) => {
+          explodeVersion(v) exists {
+            case (major, minor) => major == majorS && minor.toInt + 1 == minorS.toInt
+          }
+        }
+      }
+    }
 
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
-  lazy val shortScalaVer = cutVersion(scalaVer)
+  lazy val splitShortScalaVer = explodeVersion(scalaVer)
+  @deprecated("use `splitShortScalaVer` instead", "4.0.0")
+  lazy val shortScalaVer = splitShortScalaVer.getOrElse(("","(unknown)")).productIterator.mkString(".")
 
   lazy val sdtCoreBundle = getBundle()
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
@@ -152,8 +160,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
-  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
-  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
+  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + splitShortScalaVer.get.mkstring(".") + "/lib/scala-library.jar")
+  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + splitShortScalaVer.get.mkstring(".") + "/lib/scala-compiler.jar")
 
   lazy val scalaLibBundle = {
     // all library bundles
@@ -228,10 +236,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     } scalaProject.presentationCompiler.askRestart()
   }
 
-  /**
-   * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
+  /** Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
    */
-  def asScalaProject(project: IProject): Option[ScalaProject]= {
+  def asScalaProject(project: IProject): Option[ScalaProject] = {
     if (isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
@@ -273,7 +280,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     import IJavaElementDelta._
 
     // check if the changes are linked with the build path
-    val modelDelta= event.getDelta()
+    val modelDelta = event.getDelta()
 
     // check that the notification is about a change (CHANGE) of some elements (F_CHILDREN) of the java model (JAVA_MODEL)
     if (modelDelta.getElement().getElementType() == JAVA_MODEL && modelDelta.getKind() == CHANGED && (modelDelta.getFlags() & F_CHILDREN) != 0) {
@@ -299,7 +306,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     def findRemovedSources(delta: IJavaElementDelta) {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
-      val isAdded   = delta.getKind == ADDED
+      val isAdded = delta.getKind == ADDED
 
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
 
@@ -337,7 +344,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
         case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
-          if(hasContentChanged)
+          if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed
             changed += elem.asInstanceOf[ICompilationUnit]
           false
@@ -362,7 +369,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
     // ask for the changed scala files to be refreshed in each project presentation compiler if needed
     if (changed.nonEmpty) {
-      changed.toList groupBy(_.getJavaProject.getProject) foreach {
+      changed.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, units) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p)) {
@@ -373,7 +380,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
 
     projectsToReset.foreach(_.presentationCompiler.askRestart())
-    if(buff.nonEmpty) {
+    if (buff.nonEmpty) {
       buff.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
