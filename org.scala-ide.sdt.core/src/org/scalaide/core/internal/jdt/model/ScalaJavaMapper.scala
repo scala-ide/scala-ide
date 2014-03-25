@@ -10,7 +10,7 @@ import org.eclipse.core.runtime.Path
 
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
 
-  @deprecated("Remove this when dropping Scala 2.10 support. See SI-8030")
+  @deprecated("Remove this when dropping Scala 2.10 support. See SI-8030", "4.0.0")
   private[core] def initializeRequiredSymbols() {
     import definitions._
     val symbols = Vector(UnitClass,

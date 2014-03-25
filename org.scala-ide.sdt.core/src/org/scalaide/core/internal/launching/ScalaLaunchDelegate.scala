@@ -184,8 +184,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
                 1)
             dialog.open()
             val returnValue = dialog.getReturnCode()
-            if (returnValue == IDialogConstants.OK_ID) continueLaunch = true
-            else continueLaunch = false
+            continueLaunch = (returnValue == IDialogConstants.OK_ID)
           }
           finally {
             latch.countDown()

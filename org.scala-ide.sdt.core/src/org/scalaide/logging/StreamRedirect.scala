@@ -53,7 +53,7 @@ private[logging] object StreamRedirect {
 
   private class Redirect(to: Any => Unit) extends OutputStream {
     override def write(b: Int) {
-      to(String.valueOf(b.asInstanceOf[Char]))
+      to(String.valueOf(b.toChar))
     }
 
     override def write(b: Array[Byte], off: Int, len: Int) {
