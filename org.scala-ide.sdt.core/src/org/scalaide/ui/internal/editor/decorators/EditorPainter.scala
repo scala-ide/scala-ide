@@ -45,6 +45,7 @@ abstract class EditorPainter(viewer: ISourceViewer, enablePreference: String) ex
     if (isActive) {
       isActive = false
       widget.removePaintListener(this)
+      store.removePropertyChangeListener(this)
       if (redraw)
         widget.redraw()
     }
