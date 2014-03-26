@@ -116,7 +116,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val jarFileExtn = ".jar"
 
   private def explodeVersion(version: String): Option[(String, String)] = {
-    val pattern = "(\\d)\\.(\\d+)\\..*".r
+    val pattern = "(\\d)\\.(\\d+)\\.?.*".r
     version match {
       case pattern(major, minor) =>
         Some(major, minor)
@@ -131,8 +131,20 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
    *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: Option[String]): Boolean = version exists
-    (explodeVersion(_) == splitShortScalaVer && splitShortScalaVer.isDefined) // don't treat 2 unknown versions as equal
+  def isCompatibleVersion(version: Option[String], project: Option[ScalaProject]): Boolean = {
+    val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
+    val versionInArguments = project.map(p => p.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None})
+
+    def isSameVersion(v: Option[String]) = splitShortScalaVer.isDefined && (v exists (explodeVersion(_) == splitShortScalaVer))
+
+    if (versionInArguments.map(_.length) != Some(1) || isSameVersion(versionInArguments.map(_.head)))
+      isSameVersion(version)// don't treat 2 unknown versions as equal
+    else
+      if (!isPreviousVersion(versionInArguments.map(_.head)))
+        throw new IllegalArgumentException("found wrong or unparseable option for Xsource : %s".format(versionInArguments.map(_.head).getOrElse("")))
+      else
+        isPreviousVersion(version)
+  }
 
   def isPreviousVersion(version: Option[String]): Boolean =
     version exists { (v) =>

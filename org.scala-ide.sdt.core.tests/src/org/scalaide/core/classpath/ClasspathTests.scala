@@ -24,6 +24,8 @@ import org.eclipse.core.runtime.jobs.IJobChangeEvent
 import org.eclipse.core.runtime.jobs.JobChangeAdapter
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import scala.tools.nsc.Settings
+import org.scalaide.util.internal.SettingConverterUtil
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -93,7 +95,65 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
   }
 
+  /** Binary would be detected as previous, but check has been turned off.
+   *  One warning from compatible version on classpath, which isnt exactly the one bundled.
+   */
+  @Test
+  def previousBinaryWithPreferenceFalse() {
+    project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
+    val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
+    val majorMinor = getPreviousScalaVersion
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 0)
+  }
+
+  /** Std Library is the previous major version of Scala, warning suggesting Xsource addition.
+   *
+   *  One warning from scala library version validation, one error from validation of binaries on classpath.
+   */
+  @Test
+  def previousLibrary() {
+    val majorMinor = getPreviousScalaVersion
+    val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
+
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+  }
+
+  /** Std Library is the previous major version of Scala, with Xsource flag activated
+   *
+   * One warning witnessing a compatible version on classpath, which isnt exactly the one bundled.
+   */
+  @Test
+  def previousLibraryWithXsource() {
+    try {
+      val majorMinor = getPreviousScalaVersion
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+      val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
+
+      setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 0)
+    } finally{
+          project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+    }
+  }
+
+  /** Std Library is the previous major version of Scala, with Xsource flag activated, but binaries on classpath dont match
+   *
+   * One warning witnessing a compatible version on classpath, one error on classpath validation
+   */
+  @Test
+  def previousLibraryWithXsourceAndBadBinary() {
+    try {
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+ getPreviousScalaVersion)
+      val majorMinor = getIncompatibleScalaVersion
+      val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
+
+      setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+    } finally{
+          project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+    }
+  }
+
   /** Check that no incompatibility is reported for low value version (< 2.8.0)
+   *  FIXME: this does not test anything more than `binaryIncompatibleLibraryWithPreferenceFalse`
    */
   @Test
   def lowVersionLibrary() {
@@ -442,8 +502,18 @@ class ClasspathTests {
     JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
         getIncompatibleScalaVersion + ".x/scala-library.jar"), null, null)
 
+  private def createPreviousScalaLibraryEntry(): IClasspathEntry =
+    JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
+        getPreviousScalaVersion + ".x/scala-library.jar"), null, null)
+
+  /** Impossible to give a < 2.8 version i
+   */
   private def getIncompatibleScalaVersion: String = {
-    if (ScalaPlugin.plugin.splitShortScalaVer exists (_ == ("2","10"))) "2.9" else "2.10"
+    if (ScalaPlugin.plugin.splitShortScalaVer exists (_ == (("2","10")))) "2.11" else "2.9"
+  }
+
+  private def getPreviousScalaVersion: String = {
+    if (ScalaPlugin.plugin.splitShortScalaVer exists (_ == (("2","10")))) "2.9" else "2.10"
   }
 
   // for these tests' purposes of comparing minors, it's enough to get ".(unkown)" if the plugin version is unparseable
@@ -462,7 +532,7 @@ class ClasspathTests {
    */
   private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject = project) {
     // check the classpathValid state
-    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+    assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
     var actualMarkers = (0, 0)
     SDTTestUtils.waitUntil(10000) {

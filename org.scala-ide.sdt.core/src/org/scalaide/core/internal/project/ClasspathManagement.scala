@@ -87,12 +87,12 @@ object IncompatibleVersion {
    * Regex accepting filename of the format: name_2.xx.xx-version.jar.
    * It is used to extract the `2.xx.xx` section.
    */
-  private val CrossCompiledRegex = """.*_(2\.\d+(\.\d*)?)(-.*)?.jar""".r
+  private val CrossCompiledRegex = """.*_(2\.\d+(?:\.\d*)?)(?:-.*)?.jar""".r
 
-  def unapply(fileName: String): Option[String] = {
+  def unapply(fileName: String): Option[ScalaProject => Option[String]] = {
     fileName match {
-      case CrossCompiledRegex(version, _, _) if !plugin.isCompatibleVersion(Some(new Version(version).toString)) =>
-        Some(version)
+      case CrossCompiledRegex(version) =>
+        Some ({(project: ScalaProject) => if (plugin.isCompatibleVersion(Some(new Version(version).toString), Some(project))) None else Some(version: String)})
       case _ =>
         None
     }
@@ -309,7 +309,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
-      case ScalaLibrary(_, version, false) => !plugin.isCompatibleVersion(version)
+      case ScalaLibrary(_, version, false) => !plugin.isCompatibleVersion(version, Some(this))
       case _                               => false
     }
 
@@ -324,9 +324,12 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           case Some(v) if v == plugin.scalaVer =>
             // exactly the same version, should be from the container. Perfect
             Nil
-          case v if plugin.isCompatibleVersion(v) =>
+          case v if plugin.isCompatibleVersion(v, Some(this)) =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
+          case v if (plugin.isPreviousVersion(v)) =>
+            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
+            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
           case Some(v) =>
             // incompatible version
             (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
@@ -406,8 +409,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
-        case IncompatibleVersion(version) =>
-          errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
+        case IncompatibleVersion(versionValidator) =>
+          if (versionValidator(this).isDefined)
+          errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, versionValidator(this).get)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
