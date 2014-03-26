@@ -157,7 +157,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
         val scalaLibs = resolveClasspath(e, configuration)
         scalaLibs.diff(included)
       case None =>
-        List()
+        Nil
     }
   }
 

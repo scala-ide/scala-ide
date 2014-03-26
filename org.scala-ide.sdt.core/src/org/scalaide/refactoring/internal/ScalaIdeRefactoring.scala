@@ -162,7 +162,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     result match {
       case Some(refactoringResult) =>
         refactoringResult.left.map(e => refactoringError = Some(e.cause)).fold(_ => Nil, identity)
-      case _ =>
+      case None =>
         refactoringError = Some("An error occurred, please check the log file")
         Nil
     }

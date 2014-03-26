@@ -28,12 +28,10 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
 
   def open() {
     val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
-    tpe0 match {
-      case Some(tpe) =>
+    tpe0 foreach { (tpe) =>
         val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
         if (method.exists)
           JavaUI.openInEditor(method, true, true);
-      case _ =>
     }
   }
 }

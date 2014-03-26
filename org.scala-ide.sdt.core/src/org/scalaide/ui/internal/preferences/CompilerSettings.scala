@@ -211,10 +211,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     additionalParamsWidget = (new AdditionalParametersWidget).addTo(composite)
 
     //Make sure we check enablement of compiler settings here...
-    useProjectSettingsWidget match {
-      case Some(widget) => widget.handleToggle
-      case None         =>
-    }
+    useProjectSettingsWidget.foreach(_.handleToggle())
 
     tabFolder.pack()
     composite
@@ -266,8 +263,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   //Make sure apply button isn't available until it should be
   override def isChanged: Boolean = {
-    useProjectSettingsWidget match {
-      case Some(widget) =>
+    useProjectSettingsWidget foreach { (widget) =>
         if (widget.isChanged) {
           return true
         } else {
@@ -276,7 +272,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
           if (!widget.isUseEnabled)
             return false
         }
-      case None => //don't need to check
     }
 
     logger.info(eclipseBoxes.exists { box =>

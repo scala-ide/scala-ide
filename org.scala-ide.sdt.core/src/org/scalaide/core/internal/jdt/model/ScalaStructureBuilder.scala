@@ -231,11 +231,10 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         for ((m, mInfo) <- modules) {
           val c = companionClassOf(m)
           if (c != NoSymbol) {
-            classes.get(c) match {
-              case Some((classElem, classElemInfo)) =>
+            classes.get(c) foreach {
+              case (classElem, classElemInfo) =>
                 addModuleInnerClasses(classElem, classElemInfo, mInfo)
                 addForwarders(classElem, classElemInfo, m.moduleClass)
-              case _ =>
             }
           } else {
             val className = m.nameString
@@ -356,9 +355,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         def addImport(name : String, isWildcard : Boolean) {
           val path = prefix + (if(isWildcard) "" else "." + name)
 
-          val (importContainer, importContainerInfo) = currentImportContainer match {
-            case Some(ci) => ci
-            case None =>
+          val (importContainer, importContainerInfo) = currentImportContainer getOrElse {
               val importContainerElem = JavaElementFactory.createImportContainer(element)
               val importContainerElemInfo = new ImportContainerInfo
 

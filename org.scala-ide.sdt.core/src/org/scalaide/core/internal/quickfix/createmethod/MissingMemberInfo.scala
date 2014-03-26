@@ -133,18 +133,12 @@ object MissingMemberInfo {
           }
         })
       }.flatten
-      optopt.flatten match {
-        case None => Some((Nil, None))
-        case some => some
-      }
+      optopt.flatten.orElse(Some(Nil, None))
     }
 
     val result = for (MethodCallInfo(offset, length, argPosition) <- ScalariformUtils.callingOffsetAndLength(source, offset)) yield {
       getParamsAndReturnType(offset, length, argPosition)
     }
-    result.flatten match {
-      case None => (Nil, None)
-      case Some(tuple) => tuple
-    }
+    result.flatten.getOrElse(Nil,None)
   }
 }
