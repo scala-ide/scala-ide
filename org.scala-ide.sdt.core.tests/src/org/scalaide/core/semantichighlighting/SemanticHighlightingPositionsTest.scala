@@ -156,8 +156,8 @@ class SemanticHighlightingPositionsTest {
     }
 
     def editTestCode(offset: Int, length: Int, newText: String): Unit = {
-      document.replace(offset, length, edit.newText) // triggers the IUpdatePosition listener
-      unit.getBuffer().replace(offset, length, edit.newText) // needed by the semantic highlighting reconciler
+      document.replace(offset, length, newText) // triggers the IUpdatePosition listener
+      unit.getBuffer().replace(offset, length, newText) // needed by the semantic highlighting reconciler
       // compiler needs to reload the content of the unit (this is usually done by the reconciler, but the test does not rely on it)
       project.presentationCompiler { _.askReload(unit, unit.getContents) }
     }

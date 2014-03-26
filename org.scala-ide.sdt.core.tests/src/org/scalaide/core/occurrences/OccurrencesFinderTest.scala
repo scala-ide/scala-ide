@@ -30,7 +30,7 @@ class OccurrencesFinderTest {
       dummy.get
 
       val tree =  new Response[compiler.Tree]
-      compiler.askType(src, false,tree)
+      compiler.askLoadedTyped(src, false,tree)
       tree.get
     }
 

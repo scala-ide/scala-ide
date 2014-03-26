@@ -38,7 +38,7 @@ class CompletionTests {
       dummy.get
 
       val tree = new Response[compiler.Tree]
-      compiler.askType(src, true, tree)
+      compiler.askLoadedTyped(src, false, tree)
       tree.get
 
       val contents = unit.getContents
