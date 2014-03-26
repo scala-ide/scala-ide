@@ -1428,7 +1428,7 @@
    id="scala.tools.eclipse.TemplateCompletionProposalComputer"
    name="Template Completion Proposal Computer">
    <javaCompletionProposalComputer
-      class="org.eclipse.jdt.internal.ui.text.java.TemplateCompletionProposalComputer"
+      class="org.scalaide.ui.internal.templates.TemplateCompletionProposalComputer"
       categoryId="org.eclipse.jdt.ui.templateProposalCategory">
       <partition type="__dftl_partition_content_type"/>
    </javaCompletionProposalComputer>
