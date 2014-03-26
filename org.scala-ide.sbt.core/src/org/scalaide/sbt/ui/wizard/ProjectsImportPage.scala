@@ -56,7 +56,6 @@ import org.scalaide.sbt.core.SbtBuild
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.IWorkspace
-import scala.tools.eclipse.ScalaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.core.JavaCore
 import scala.collection._

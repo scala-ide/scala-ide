@@ -1,6 +1,6 @@
 package org.scalaide.sbt.core
 
-import scala.tools.eclipse.util.Utils
+import org.scalaide.util.internal.Utils
 
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent

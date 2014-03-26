@@ -7,7 +7,7 @@ import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Promise
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
