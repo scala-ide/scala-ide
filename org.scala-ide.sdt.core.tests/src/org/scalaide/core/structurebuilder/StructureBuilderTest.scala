@@ -115,7 +115,7 @@ class StructureBuilderTest {
             m.getParameterNames().length == m.getParameterTypes().length)
         }
 
-      case _ =>
+      case None =>
         Assert.fail("Could not find type")
     }
   }

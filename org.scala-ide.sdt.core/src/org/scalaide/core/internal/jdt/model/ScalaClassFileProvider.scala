@@ -31,7 +31,7 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
 
     val scalaCF = ScalaClassFileDescriber.isScala(new ByteArrayInputStream(contents)) match {
       case Some(sourcePath) => new ScalaClassFile(parent, name, sourcePath)
-      case _                => null
+      case None                => null
     }
     updateCache(scalaCF ne null)
     scalaCF

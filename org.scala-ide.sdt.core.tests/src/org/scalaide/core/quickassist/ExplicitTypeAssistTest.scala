@@ -19,7 +19,7 @@ object ExplicitTypeAssistTest {
   var simulator = new EclipseUserSimulator
 
   @BeforeClass
-  def createProject {
+  def createProject() {
     project = simulator.createProjectInWorkspace("assist")
   }
 
@@ -29,7 +29,7 @@ object ExplicitTypeAssistTest {
   }
 
   @AfterClass
-  def deleteProject {
+  def deleteProject() {
     Exception.ignoring(classOf[Exception]) { project.underlying.delete(true, null) }
   }
 

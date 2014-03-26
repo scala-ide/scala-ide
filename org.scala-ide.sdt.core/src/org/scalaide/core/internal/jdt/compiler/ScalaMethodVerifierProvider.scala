@@ -67,12 +67,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
           logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
 
-          ScalaPlugin.plugin.asScalaProject(project) match {
-            case Some(scalaProject) =>
-              isConcreteTraitMethod(abstractMethod, scalaProject)
-
-            case None => false
-          }
+          ScalaPlugin.plugin.asScalaProject(project) exists { isConcreteTraitMethod(abstractMethod, _) }
         }
       }.getOrElse(false)
     }.getOrElse(false)

@@ -211,9 +211,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def getJavaProject(project: IProject) = JavaCore.create(project)
 
   def getScalaProject(project: IProject): ScalaProject = projects.synchronized {
-    projects.get(project) match {
-      case Some(scalaProject) => scalaProject
-      case None =>
+    projects.get(project) getOrElse {
         val scalaProject = ScalaProject(project)
         projects(project) = scalaProject
         scalaProject
@@ -263,11 +261,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
   private def disposeProject(project: IProject): Unit = {
     projects.synchronized {
-      projects.get(project) match {
-        case Some(scalaProject) =>
+      projects.get(project) foreach { (scalaProject) =>
           projects.remove(project)
           scalaProject.dispose()
-        case None =>
       }
     }
   }

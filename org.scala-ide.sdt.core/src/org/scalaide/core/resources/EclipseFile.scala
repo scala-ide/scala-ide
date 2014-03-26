@@ -65,7 +65,7 @@ object EclipseResource extends HasLogger {
           case Some(res) =>
             res.refreshLocal(IResource.DEPTH_ONE, null)
             resourceForPath(path0).map(EclipseResource(_))
-          case _ => None
+          case None => None
         }
     }
   }

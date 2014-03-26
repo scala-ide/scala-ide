@@ -95,13 +95,9 @@ class AutoIndentStrategy(prefStore: IPreferenceStore) extends DefaultIndentLineA
       }
 
     val indent =
-      if (prevLineIndent == curLineIndent)
+      if (prevLineIndent == curLineIndent || textSize(prevLineIndent) < textSize(curLineIndent))
         oneIndent(indentWithTabs, tabSize)
-      else if (textSize(prevLineIndent) < textSize(curLineIndent))
-        oneIndent(indentWithTabs, tabSize)
-      else if (rest != restAfterCaret)
-        oneIndent(indentWithTabs, tabSize)
-      else if (restAfterCaret.trim().nonEmpty)
+      else if (rest != restAfterCaret || restAfterCaret.trim().nonEmpty)
         oneIndent(indentWithTabs, tabSize)
       else
         copyPreviousLineIndent

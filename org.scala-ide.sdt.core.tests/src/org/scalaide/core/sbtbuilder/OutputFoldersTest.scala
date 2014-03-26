@@ -95,10 +95,7 @@ class OutputFoldersTest {
     val srcEntries =
       for ((dirPath, inclPats, exclPats, binPath) <- sourceFolders) yield {
         for (path <- Seq(Some(dirPath), Option(binPath)))
-          path match {
-            case Some(path) => ensureFolderExists(project.underlying, path)
-            case None =>
-          }
+          path foreach { (path) => ensureFolderExists(project.underlying, path) }
 
         JavaCore.newSourceEntry(dirPath, inclPats, exclPats, binPath)
       }

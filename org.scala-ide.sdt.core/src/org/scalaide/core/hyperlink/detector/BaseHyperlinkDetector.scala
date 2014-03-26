@@ -50,7 +50,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasL
               null
           }
 
-        case _ => null
+        case None => null
       }
     }
   }

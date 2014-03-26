@@ -8,9 +8,9 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IDocument
 
 abstract class ProposalRefactoringActionAdapter(
-    action: ActionAdapter,
-    displayString: String,
-    relevance: Int = RelevanceValues.ProposalRefactoringActionAdapter)
+  action: ActionAdapter,
+  displayString: String,
+  relevance: Int = RelevanceValues.ProposalRefactoringActionAdapter)
   extends BasicCompletionProposal(relevance, displayString) {
 
   override def apply(document: IDocument): Unit = {
@@ -19,15 +19,14 @@ abstract class ProposalRefactoringActionAdapter(
     action.run(null)
   }
 
-  def isValidProposal : Boolean = {
+  def isValidProposal: Boolean = {
     val ra = action match {
       case refactoringAction: RefactoringAction => refactoringAction
-      case renameAction : RenameAction => renameAction.getRenameAction
+      case renameAction: RenameAction => renameAction.getRenameAction
     }
-    ra.createScalaIdeRefactoringForCurrentEditorAndSelection match {
+    ra.createScalaIdeRefactoringForCurrentEditorAndSelection exists {
       // TODO not sure if this null here is very safe
-      case Some(refactoring) => !refactoring.checkInitialConditions(new NullProgressMonitor).hasWarning
-      case None  => false
+      (refactoring) => !refactoring.checkInitialConditions(new NullProgressMonitor).hasWarning
     }
   }
 

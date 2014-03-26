@@ -34,7 +34,7 @@ trait RefactoringActionWithoutWizard extends RefactoringAction {
           } else {
             refactoring.createChange(pm).perform(pm)
           }
-        case _ =>
+        case None =>
           runRefactoring(new ErrorRefactoringWizard("An error occurred while creating the refactoring."), shell)
       }
 
