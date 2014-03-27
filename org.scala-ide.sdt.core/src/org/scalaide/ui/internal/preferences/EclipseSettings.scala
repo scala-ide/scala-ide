@@ -20,7 +20,6 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.util.internal.Trim
 import org.scalaide.core.ScalaPlugin
 
 trait EclipseSettings {
@@ -95,6 +94,8 @@ trait EclipseSettings {
 
     /** Apply the value of the control */
     def apply()
+
+    override def toString() = s"${setting.name}($isChanged) = ${setting.value}"
   }
 
   /** Boolean setting controlled by a checkbox.
@@ -182,7 +183,8 @@ trait EclipseSettings {
       control.addModifyListener(ModifyListenerSing)
     }
 
-    def values: List[String] = control.getText().split(',').flatMap(Trim(_)).toList
+    def values: List[String] =
+      control.getText().split(',').map(_.trim).toList
 
     def isChanged = setting.value != values
     def reset() { control.setText("") }
@@ -243,7 +245,7 @@ trait EclipseSettings {
     }
 
     def fileNames(): List[String] = {
-      control.getText().split(',').flatMap(f => Trim(f).map(fileName)).toList
+      control.getText().split(',').map(f => fileName(f.trim)).toList
     }
 
     override def isChanged = setting.value != fileNames()

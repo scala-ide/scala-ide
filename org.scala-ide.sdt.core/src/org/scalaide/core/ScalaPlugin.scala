@@ -51,7 +51,6 @@ import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.PluginLogConfigurator
-import org.scalaide.util.internal.Trim
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic

@@ -252,10 +252,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   // Eclipse PropertyPage API
-  override def performOk = try {
+  override def performOk() = try {
+    val wasChanged = isChanged
     eclipseBoxes.foreach(_.eSettings.foreach(_.apply()))
     save()
-    buildIfNecessary()
+    if (wasChanged) buildIfNecessary()
     true
   } catch {
     case ex: Throwable => eclipseLog.error(ex); false

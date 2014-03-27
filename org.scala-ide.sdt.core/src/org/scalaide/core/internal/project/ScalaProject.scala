@@ -11,7 +11,6 @@ import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.actions.PartAdapter
 import org.scalaide.core.resources.EclipseResource
-import org.scalaide.util.internal.Trim
 import scala.tools.nsc.Settings
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
@@ -382,7 +381,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     for {
       box <- IDESettings.shownSettings(settings)
       setting <- box.userSettings if filter(setting)
-      value <- Trim(currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name)))
+      val value = currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name))
+      if !value.isEmpty
     } yield (setting, value)
   }
 
