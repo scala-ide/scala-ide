@@ -43,6 +43,7 @@
             <configuration>
               <source>1.5</source>
               <target>1.5</target>
+              <complianceLevel>1.5</complianceLevel>
               <aspectDirectory>src</aspectDirectory>
               <Xlint>ignore</Xlint>
               <deprecation>true</deprecation>
