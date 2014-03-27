@@ -20,7 +20,6 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.util.internal.Trim
 import org.scalaide.core.ScalaPlugin
 
 trait EclipseSettings {

@@ -1,7 +1,5 @@
 package org.scalaide.logging
 
-import org.scalaide.util.internal.Trim
-
 private[logging] object StreamRedirect {
   import java.io.OutputStream
   import java.io.PrintStream
