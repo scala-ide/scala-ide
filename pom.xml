@@ -143,6 +143,9 @@
       <id>sbtrc</id>
       <name>repository with the sbtrc binaries</name>
       <url>${sbtrc.repo}</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
     </repository>
     <repository>
       <id>play</id>
