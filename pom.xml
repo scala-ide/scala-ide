@@ -19,7 +19,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-60fbc51c669ab30a2864f056706e5535a516cccb</sbtrc.version>
+    <sbtrc.version>1.0-2ed540099de878afad149a1b86d395ab13f92f53</sbtrc.version>
     <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
@@ -29,6 +29,7 @@
     <scala-stm.version>0.7</scala-stm.version>
     <joda-time.version>2.2</joda-time.version>
     <jackson.version>2.2.2</jackson.version>
+    <rxjava.version>0.17.0-RC7</rxjava.version>
   </properties>
 
   <dependencies>
@@ -116,6 +117,16 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-core</artifactId>
+      <version>${rxjava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.rxjava</groupId>
+      <artifactId>rxjava-scala</artifactId>
+      <version>${rxjava.version}</version>
     </dependency>
   </dependencies>
 

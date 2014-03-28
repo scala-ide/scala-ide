@@ -2,9 +2,15 @@ package org.scalaide.sbt.ui.wizard
 
 import java.io.File
 import java.lang.reflect.InvocationTargetException
+
+import scala.collection._
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.Promise
+import scala.concurrent.duration._
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.CoreException
@@ -14,7 +20,6 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.dialogs.IMessageProvider
@@ -38,32 +43,24 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.DirectoryDialog
 import org.eclipse.swt.widgets.Event
 import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.widgets.Label
-import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.dialogs.WizardDataTransferPage
 import org.eclipse.ui.dialogs.WorkingSetGroup
-import org.eclipse.ui.internal.ide.IDEWorkbenchMessages
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
-import org.scalaide.sbt.ui.actions.withWorkspaceModifyOperation
-import sbt.protocol.MinimalBuildStructure
-import sbt.protocol.ProjectReference
-import org.eclipse.jface.window.IShellProvider
 import org.scalaide.sbt.core.SbtBuild
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.IProjectDescription
-import org.eclipse.core.resources.IWorkspace
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.core.JavaCore
-import scala.collection._
+import org.scalaide.sbt.core.SbtProjectSupport
+
+import sbt.protocol.ProjectReference
 
 object ProjectsImportPage {
 
   /** */
-  class ProjectRecord(ref: ProjectReference) {
+  class ProjectRecord(val build: SbtBuild, val ref: ProjectReference) {
     /** Location of the sbt build file. */
     lazy val buildRoot = ref.build.getRawPath()
 
@@ -90,8 +87,8 @@ object ProjectsImportPage {
   }
 
   /** Holds information about the current state of the UI.
-    * @param selectedProjects
-    */
+   *  @param selectedProjects
+   */
   private class Model {
 
     private lazy val workspaceProjects: Seq[IProject] = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getProjects().toList
@@ -101,8 +98,8 @@ object ProjectsImportPage {
     var workingSetGroup: Option[WorkingSetGroup] = None
 
     /** Projects selected by the user that will be imported in the workspace. Note that
-      * the intersection of `selectedProjects` and `workspaceProjects` should be empty.
-      */
+     *  the intersection of `selectedProjects` and `workspaceProjects` should be empty.
+     */
     @volatile
     var selectedProjects: Seq[ProjectRecord] = Seq.empty
 
@@ -117,10 +114,10 @@ object ProjectsImportPage {
     }
 
     /** Determine if the project with the given name is in the current workspace.
-      *
-      * @param projectName The project name to check
-      * @return true if the project with the given name is in this workspace
-      */
+     *
+     *  @param projectName The project name to check
+     *  @return true if the project with the given name is in this workspace
+     */
     private def isProjectInWorkspace(projectName: String): Boolean = workspaceProjects.exists(_.getName == projectName)
   }
 }
@@ -157,6 +154,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
     createProjectsRoot(workArea)
     createProjectsList(workArea)
+    createBuilderGroup(workArea)
     createWorkingSetGroup(workArea)
     Dialog.applyDialogFont(workArea)
   }
@@ -172,7 +170,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     projectGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL))
 
     // new project from directory radio button
-    val projectsLabel = new Label(projectGroup, SWT.BORDER)
+    val projectsLabel = new Label(projectGroup, SWT.NONE)
     projectsLabel.setText(DataTransferMessages.WizardProjectsImportPage_RootSelectTitle)
 
     // project location entry combo
@@ -195,8 +193,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       if (e.detail == SWT.TRAVERSE_RETURN) {
         e.doit = false
         updateProjectsList(directoryPathField.getText().trim())
-      }
-      else ()
+      } else ()
     })
 
     directoryPathField.addSelectionListener(onWidgetSelected { _ =>
@@ -310,10 +307,45 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     setButtonLayoutData(refresh)
   }
 
+  private def createBuilderGroup(workArea: Composite): Unit = {
+    // UI group not wired to anything. Used to show that the internal sbt builder will be used
+    val group = new Group(workArea, SWT.NONE)
+    group.setFont(workArea.getFont());
+    group.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+    group.setLayout(new GridLayout(1, false));
+    val internalBuilderButton = new Button(group, SWT.CHECK)
+    internalBuilderButton.setText("Use internal sbt builder")
+    internalBuilderButton.setSelection(true)
+    internalBuilderButton.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false))
+    group.setText("Builder")
+
+    setAllDisabled(group)
+  }
+
   private def createWorkingSetGroup(workArea: Composite): Unit = {
     val workingSetIds = Array("org.eclipse.ui.resourceWorkingSetPage",
       "org.eclipse.jdt.ui.JavaWorkingSetPage")
-    model.workingSetGroup = Some(new WorkingSetGroup(workArea, currentSelection, workingSetIds))
+    // TODO: remove the wrapping composite used to disable the working set selection area. sbt-11
+    val composite = new Composite(workArea, SWT.NONE | SWT.FILL)
+    composite.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true,
+      false));
+    val layout = new GridLayout(1, false)
+    layout.marginWidth = 0
+    layout.marginHeight = 0
+    composite.setLayout(layout)
+
+    model.workingSetGroup = Some(new WorkingSetGroup(composite, currentSelection, workingSetIds))
+
+    setAllDisabled(composite)
+  }
+
+  private def setAllDisabled(control: Control) {
+    control match {
+      case composite: Composite =>
+        composite.getChildren().foreach(setAllDisabled(_))
+      case _ =>
+    }
+    control.setEnabled(false)
   }
 
   private def updateProjectsList(path: String): Unit = {
@@ -338,14 +370,12 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
             monitor.worked(50)
             monitor.subTask(DataTransferMessages.WizardProjectsImportPage_ProcessingMessage)
             val projects = collectProjectsReferencesFromDirectory(directory, monitor)
-            model.selectedProjects = projects.map(ref => new ProjectRecord(ref))
-          }
-          else monitor.worked(60)
+            model.selectedProjects = projects
+          } else monitor.worked(60)
           monitor.done()
         }
       })
-    }
-    catch {
+    } catch {
       case e: InvocationTargetException => IDEWorkbenchPlugin.log(e.getMessage(), e)
       case e: InterruptedException      => () //FIXME: Should at least set current thread status interrupted?
     }
@@ -358,8 +388,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       if (project.hasConflicts) {
         displayWarning = true
         projectsList.setGrayed(project, true)
-      }
-      else projectsList.setChecked(project, true)
+      } else projectsList.setChecked(project, true)
     }
 
     if (displayWarning)
@@ -373,15 +402,19 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
   }
 
-  private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectReference] = {
+  private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectRecord] = {
     if (!monitor.isCanceled()) {
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
       val promise = Promise[Seq[ProjectReference]]
 
       import scala.concurrent.ExecutionContext.Implicits.global
 
+      val build = SbtBuild.buildFor(directory)
       val projects = SbtBuild.buildFor(directory).projects()
-      Await.result(projects, scala.concurrent.duration.Duration.Inf)
+      val projectRecords = projects.map {
+        _.map(new ProjectRecord(build, _))
+      }
+      Await.result(projectRecords, scala.concurrent.duration.Duration.Inf)
     } else {
       Seq.empty
     }
@@ -398,13 +431,16 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   def createProjects(): Boolean = {
     val selected = model.selectedProjects
 
-    val op = withWorkspaceModifyOperation { monitor =>
-      try {
-        monitor.beginTask("", selected.length)
-        if (monitor.isCanceled()) throw new OperationCanceledException()
-        val createdProjects = selected.map(createExistingProject(_, new SubProgressMonitor(monitor, 1)))
-        addToWorkingSets(createdProjects)
-      } finally monitor.done()
+    val op = new IRunnableWithProgress() {
+      override def run(monitor: IProgressMonitor): Unit = {
+        try {
+          monitor.beginTask("", selected.length)
+          if (monitor.isCanceled()) throw new OperationCanceledException()
+          val createdProjects = selected.map(r => SbtProjectSupport.createWorkspaceProject(r.build, r.ref.name, "org.scala-ide.sbt.core.remoteBuilder", monitor))
+          Await.result(Future.sequence(createdProjects), 20.seconds)
+          ResourcesPlugin.getWorkspace().save(true, monitor)
+        } finally monitor.done()
+      }
     }
 
     try getContainer().run( /*fork*/ true, /*cancellable*/ true, op)
@@ -426,46 +462,14 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
   private def addToWorkingSets(projects: immutable.Seq[IProject]): Unit = {
     // TODO: make working set support working. sbt-11
-//    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
-//
-//    for {
-//      workingGroup <- model.workingSetGroup
-//      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
-//      if selectedWorkingSets.nonEmpty
-//      project <- projects
-//    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
-  }
-  
-  private def createExistingProject(record: ProjectRecord, monitor: IProgressMonitor): IProject = {
-
-    val projectName = record.name
-    val workspace = ResourcesPlugin.getWorkspace()
-    val project = workspace.getRoot().getProject(projectName)
-    project.create(configureProjectDescription(record, workspace), IResource.NONE, monitor)
-    project.open(monitor)
-    configureProject(project, monitor)
-    project
-  }
-
-  def configureProjectDescription(project: ProjectRecord, workspace: IWorkspace): IProjectDescription = {
-    val description = workspace.newProjectDescription(project.name)
-
-    // TODO: this is wrong, it should be the project root, but we need to get the info through settings
-    description.setLocation(new Path(project.buildRoot))
-
-    description.setNatureIds(Array("org.scala-ide.sdt.core.scalanature", "org.eclipse.jdt.core.javanature"))
-
-    val newBuilderCommand = description.newCommand;
-    newBuilderCommand.setBuilderName("org.scala-ide.sbt.core.remoteBuilder");
-    description.setBuildSpec(Array(newBuilderCommand))
-
-    description
-  }
-
-  def configureProject(project: IProject, monitor: IProgressMonitor) {
-    val javaProject = JavaCore.create(project)
-    // For some reason, using ScalaPlugin$ crashes at runtime. Missing dependency?
-    javaProject.setRawClasspath(PreferenceConstants.getDefaultJRELibrary() :+ JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_CONTAINER")), monitor)
+    //    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
+    //
+    //    for {
+    //      workingGroup <- model.workingSetGroup
+    //      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
+    //      if selectedWorkingSets.nonEmpty
+    //      project <- projects
+    //    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
   }
 
 }
