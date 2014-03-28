@@ -52,15 +52,23 @@ object ScalaSyntaxClasses {
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
   val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
 
+  val DYNAMIC_SELECT = ScalaSyntaxClass("Call of selectDynamic", "syntaxColouring.semantic.selectDynamic", canBeDisabled = true)
+  val DYNAMIC_UPDATE = ScalaSyntaxClass("Call of updateDynamic", "syntaxColouring.semantic.updateDynamic", canBeDisabled = true)
+  val DYNAMIC_APPLY = ScalaSyntaxClass("Call of applyDynamic", "syntaxColouring.semantic.applyDynamic", canBeDisabled = true)
+  val DYNAMIC_APPLY_NAMED = ScalaSyntaxClass("Call of applyDynamicNamed", "syntaxColouring.semantic.applyDynamicNamed", canBeDisabled = true)
+
   case class Category(name: String, children: List[ScalaSyntaxClass])
 
-  val scalaSyntacticCategory = Category("Scala (syntactic)", List(
+  val scalaSyntacticCategory = Category("Syntactic", List(
     BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, CHARACTER, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
 
-  val scalaSemanticCategory = Category("Scala (semantic)", List(
+  val scalaSemanticCategory = Category("Semantic", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
     TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING))
+
+  val dynamicCategory = Category("Dynamic", List(
+    DYNAMIC_SELECT, DYNAMIC_UPDATE, DYNAMIC_APPLY, DYNAMIC_APPLY_NAMED))
 
   val commentsCategory = Category("Comments", List(
     SINGLE_LINE_COMMENT, MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK, SCALADOC_ANNOTATION, SCALADOC_MACRO, TASK_TAG))
@@ -69,7 +77,7 @@ object ScalaSyntaxClasses {
     XML_ATTRIBUTE_NAME, XML_ATTRIBUTE_VALUE, XML_ATTRIBUTE_EQUALS, XML_CDATA_BORDER, XML_COMMENT, XML_TAG_DELIMITER,
     XML_TAG_NAME, XML_PI))
 
-  val categories = List(scalaSyntacticCategory, scalaSemanticCategory, commentsCategory, xmlCategory)
+  val categories = List(scalaSyntacticCategory, scalaSemanticCategory, dynamicCategory, commentsCategory, xmlCategory)
 
   val ALL_SYNTAX_CLASSES = categories.flatMap(_.children)
 

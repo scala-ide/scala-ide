@@ -38,23 +38,27 @@ object HighlightingStyle {
 
   def symbolTypeToSyntaxClass(symbolType: SymbolTypes.SymbolType): ScalaSyntaxClass = {
     symbolType match {
-      case Annotation      => ANNOTATION
-      case CaseClass       => CASE_CLASS
-      case CaseObject      => CASE_OBJECT
-      case Class           => CLASS
-      case LazyLocalVal    => LAZY_LOCAL_VAL
-      case LazyTemplateVal => LAZY_TEMPLATE_VAL
-      case LocalVal        => LOCAL_VAL
-      case LocalVar        => LOCAL_VAR
-      case Method          => METHOD
-      case Param           => PARAM
-      case Object          => OBJECT
-      case Package         => PACKAGE
-      case TemplateVar     => TEMPLATE_VAR
-      case TemplateVal     => TEMPLATE_VAL
-      case Trait           => TRAIT
-      case Type            => TYPE
-      case TypeParameter   => TYPE_PARAMETER
+      case Annotation        => ANNOTATION
+      case CaseClass         => CASE_CLASS
+      case CaseObject        => CASE_OBJECT
+      case Class             => CLASS
+      case LazyLocalVal      => LAZY_LOCAL_VAL
+      case LazyTemplateVal   => LAZY_TEMPLATE_VAL
+      case LocalVal          => LOCAL_VAL
+      case LocalVar          => LOCAL_VAR
+      case Method            => METHOD
+      case Param             => PARAM
+      case Object            => OBJECT
+      case Package           => PACKAGE
+      case TemplateVar       => TEMPLATE_VAR
+      case TemplateVal       => TEMPLATE_VAL
+      case Trait             => TRAIT
+      case Type              => TYPE
+      case TypeParameter     => TYPE_PARAMETER
+      case DynamicSelect     => DYNAMIC_SELECT
+      case DynamicUpdate     => DYNAMIC_UPDATE
+      case DynamicApply      => DYNAMIC_APPLY
+      case DynamicApplyNamed => DYNAMIC_APPLY_NAMED
     }
   }
 }

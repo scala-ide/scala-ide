@@ -24,7 +24,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         def selectDynamic(name: String) = ???
       }
       """,
-      Map("VAR" -> TemplateVar))
+      Map("VAR" -> DynamicSelect))
   }
 
   @Test
@@ -44,7 +44,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
       object X {
         val d = new D
         d.$VAR$ = 10
-        d.$VAR$
+        d.$SEL$
       }
       import language.dynamics
       class D extends Dynamic {
@@ -52,7 +52,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         def updateDynamic(name: String)(value: Any) = ???
       }
       """,
-      Map("VAR" -> TemplateVar))
+      Map("VAR" -> DynamicUpdate, "SEL" -> DynamicSelect))
   }
 
   @Test
@@ -78,7 +78,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         def applyDynamic(name: String)(value: Any) = ???
       }
       """,
-      Map("METH" -> Method))
+      Map("METH" -> DynamicApply))
   }
 
   @Test
@@ -102,7 +102,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         def applyDynamicNamed(name: String)(value: (String, Any)) = ???
       }
       """,
-      Map("METH" -> Method, "ARG" -> Param))
+      Map("METH" -> DynamicApplyNamed, "ARG" -> Param))
   }
 
 }
