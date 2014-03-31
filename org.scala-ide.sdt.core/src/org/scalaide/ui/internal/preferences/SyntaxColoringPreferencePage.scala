@@ -5,6 +5,7 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Highlight
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Preferences
 import org.scalaide.util.internal.eclipse.EclipseUtils._
 import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.jdt.internal.ui.preferences._
 import org.eclipse.jface.layout.PixelConverter
 import org.eclipse.jface.preference._
@@ -97,7 +98,7 @@ class SyntaxColoringPreferencePage extends PreferencePage with IWorkbenchPrefere
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
-    ScalaPlugin.plugin.savePluginPreferences()
+    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
     true
   }
 

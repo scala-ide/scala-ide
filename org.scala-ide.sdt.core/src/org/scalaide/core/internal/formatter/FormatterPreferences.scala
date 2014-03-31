@@ -11,6 +11,7 @@ import scalariform.formatter.preferences.IFormattingPreferences
 import org.eclipse.jface.preference.IPreferenceStore
 import scalariform.formatter.preferences.PreferenceDescriptor
 import org.scalaide.ui.internal.preferences.PropertyStore
+import org.eclipse.core.resources.ProjectScope
 
 object FormatterPreferences {
 
@@ -59,7 +60,7 @@ object FormatterPreferences {
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
     val workspaceStore = ScalaPlugin.prefStore
-    val projectStore = new PropertyStore(project, workspaceStore, ScalaPlugin.plugin.pluginId)
+    val projectStore = new PropertyStore(new ProjectScope(project), ScalaPlugin.plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(FormatterPreferences.USE_PROJECT_SPECIFIC_SETTINGS_KEY)
     val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore
     prefStore

@@ -42,6 +42,7 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.builder
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.eclipse.core.resources.ProjectScope
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -409,7 +410,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def initializeSetting(setting: Settings#Setting, propValue: String) {
     try {
       setting.tryToSetFromPropertyValue(propValue)
-      logger.debug("[%s] initializing %s to %s".format(underlying.getName(), setting.name, setting.value.toString))
+      logger.debug("[%s] initializing %s to %s (%s)".format(underlying.getName(), setting.name, setting.value.toString, storage.getString(SettingConverterUtil.convertNameToProperty(setting.name))))
     } catch {
       case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + propValue + "'", t)
     }
@@ -468,29 +469,19 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   /** Return a the project-specific preference store. This does not take into account the
    *  user-preference whether to use project-specific compiler settings or not.
    *
-   *  @note This can't be a `val` or a `def`, because of the way `PropertyStore` is implemented.
    *  @see  #1001241.
    *  @see `storage` for a method that decides based on user preference
    */
-  def projectSpecificStorage: IPersistentPreferenceStore = {
-    new PropertyStore(underlying, ScalaPlugin.prefStore, plugin.pluginId)
+  lazy val projectSpecificStorage: IPersistentPreferenceStore = {
+    new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
   }
 
   /** Return the current project preference store.
    *
-   *  The returned store won't track changes happening in the background, so it represents a
-   *  snapshot of this project's settings.
-   *
-   *  @note This can't be a `val` or a `def`, because of the way `PropertyStore` is implemented.
-   *  @see the half-broken implementation of `PropertyStore`
    *  @see  #1001241.
    */
   def storage: IPreferenceStore = {
-    val workspaceStore = ScalaPlugin.prefStore
-    val projectStore = projectSpecificStorage
-    val useProjectSettings = projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-
-    if (useProjectSettings) projectStore else workspaceStore
+    if (usesProjectSettings) projectSpecificStorage else ScalaPlugin.prefStore
   }
 
   def isStandardSource(file: IFile, qualifiedName: String): Boolean = {

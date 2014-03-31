@@ -3,6 +3,7 @@ package org.scalaide.ui.internal.diagnostic
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ui.DisplayThread
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.ScalaPlugin
@@ -61,7 +62,7 @@ object StartupDiagnostics extends HasLogger {
           }
         val currentVersion = plugin.getBundle.getVersion.toString
         prefStore.setValue(INSTALLED_VERSION_KEY, currentVersion)
-        ScalaPlugin.plugin.savePluginPreferences // TODO: this method is deprecated, but the solution given in the docs is unclear and is not used by Eclipse itself. -DM
+        InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
       }
       ensureWeavingIsEnabled()
     }

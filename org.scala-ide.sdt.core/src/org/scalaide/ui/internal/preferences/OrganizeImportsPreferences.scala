@@ -7,6 +7,7 @@ import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.dialogs.IInputValidator
@@ -32,6 +33,7 @@ import org.scalaide.core.ScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
 import org.eclipse.jface.preference.BooleanFieldEditor
+import org.eclipse.core.resources.ProjectScope
 
 
 
@@ -54,8 +56,8 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     val pluginId = ScalaPlugin.plugin.pluginId
     val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
-      case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
-      case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
+      case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
+      case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
       case _ => scalaPrefStore
     })
   }
@@ -193,7 +195,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
   override def performOk() = {
     super.performOk()
     fieldEditors.foreach(_.store)
-    ScalaPlugin.plugin.savePluginPreferences()
+    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
     true
   }
 }
@@ -215,7 +217,7 @@ object OrganizeImportsPreferences extends Enumeration {
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
     val workspaceStore = ScalaPlugin.prefStore
-    val projectStore = new PropertyStore(project, workspaceStore, ScalaPlugin.plugin.pluginId)
+    val projectStore = new PropertyStore(new ProjectScope(project), ScalaPlugin.plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
     val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore
     prefStore

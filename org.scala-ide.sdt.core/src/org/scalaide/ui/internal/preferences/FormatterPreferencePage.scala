@@ -9,6 +9,7 @@ import java.util.Properties
 import net.miginfocom.layout._
 import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -35,6 +36,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
+import org.eclipse.core.resources.ProjectScope
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -218,8 +220,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     val pluginId = ScalaPlugin.plugin.pluginId
     val scalaPrefStore = ScalaPlugin.prefStore
     setPreferenceStore(getElement match {
-      case project: IProject => new PropertyStore(project, scalaPrefStore, pluginId)
-      case project: IJavaProject => new PropertyStore(project.getProject, scalaPrefStore, pluginId)
+      case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
+      case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
       case _ => scalaPrefStore
     })
   }
@@ -311,7 +313,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
-    ScalaPlugin.plugin.savePluginPreferences()
+    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
     true
   }
 
