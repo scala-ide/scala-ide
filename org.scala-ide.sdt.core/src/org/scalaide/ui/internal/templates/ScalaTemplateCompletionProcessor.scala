@@ -3,19 +3,16 @@ package org.scalaide.ui.internal.templates
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.ui.editors.text.templates.ContributionContextTypeRegistry
 import org.eclipse.ui.editors.text.templates.ContributionTemplateStore
-
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateCompletionProcessor
 import org.eclipse.jface.text.templates.TemplateContextType
 import org.eclipse.swt.graphics.Image
-
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.TemplateContextType
 import org.scalaide.core.ScalaPlugin
-
-//TODO multi-line Template aren't indented
+import org.eclipse.jface.text.templates.DocumentTemplateContext
 
 /**
  * Group template related information instead of being merged/flatten into ScalaPlugin.
@@ -57,15 +54,22 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
   /**
    * @return All the templates
    * @TODO take care of contextTypeId
-   * @TODO provide a ScalaTemplate class with a match() method in template and get more sensible template matching.
    */
   protected override def getTemplates(contextTypeId : String) : Array[Template] = {
-    tm.templateStore.getTemplates()
+    tm.templateStore.getTemplates(contextTypeId)
   }
 
   protected override def getRelevance(template : Template, prefix : String) : Int = {
     if (prefix == null || prefix.trim().length == 0) 0
     else super.getRelevance(template, prefix)
+  }
+
+  override def createContext(viewer: ITextViewer, region: IRegion) = {
+    val contextType = getContextType(viewer, region);
+    if (contextType != null) {
+      val document= viewer.getDocument();
+      new ScalaTemplateContext(contextType, document, region.getOffset, region.getLength)
+    } else null
   }
 }
 
