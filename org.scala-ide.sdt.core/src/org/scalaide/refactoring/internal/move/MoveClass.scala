@@ -1,21 +1,24 @@
 package org.scalaide.refactoring.internal
 package move
 
-import org.eclipse.core.resources.IFolder
+import scala.tools.refactoring.analysis.GlobalIndexes
+import scala.tools.refactoring.common.ConsoleTracing
+import scala.tools.refactoring.common.NewFileChange
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations
+
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.internal.corext.refactoring.nls.changes.CreateFileChange
-import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
-import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.CompositeChange
-
+import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.common.NewFileChange
-import scala.tools.refactoring.common.ConsoleTracing
-import scala.tools.refactoring.implementations.MoveClass
+import org.scalaide.refactoring.internal.FullProjectIndex
+import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
 /**
  * The Move Class refactoring moves (non-nested) classes, objects and traits between different
@@ -24,9 +27,8 @@ import scala.tools.refactoring.implementations.MoveClass
  *
  * Using the ScalaMoveParticipant, the refactoring also hooks into other Eclipse move actions,
  * like for example when a file is moved by drag&drop in the package explorer.
- *
  */
-class MoveClassAction extends RefactoringActionWithWizard {
+class MoveClass extends RefactoringExecutorWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MoveClassScalaIdeRefactoring(start, end, file)
 
@@ -51,7 +53,7 @@ class MoveClassAction extends RefactoringActionWithWizard {
     }
 
     val refactoring = withCompiler { compiler =>
-      new MoveClass with GlobalIndexes with ConsoleTracing {
+      new implementations.MoveClass with GlobalIndexes with ConsoleTracing {
         val global = compiler
 
         /* The initial index is empty, it will be filled during the initialization

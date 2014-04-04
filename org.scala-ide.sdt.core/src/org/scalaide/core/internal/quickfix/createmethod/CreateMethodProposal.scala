@@ -1,13 +1,9 @@
 package org.scalaide.core.internal.quickfix.createmethod
 
 import scala.reflect.internal.util.RangePosition
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.EditorHelpers
-import org.scalaide.util.internal.scalariform.ScalariformParser
-import org.scalaide.util.internal.scalariform.ScalariformUtils
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
+
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -17,6 +13,11 @@ import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.text.edits.ReplaceEdit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.scalariform.ScalariformParser
+import org.scalaide.util.internal.scalariform.ScalariformUtils
 
 case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], method: String, target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends IJavaCompletionProposal {
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
@@ -82,7 +83,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
     for {
       scalaSourceFile <- targetSourceFile
       //we must open the editor before doing the refactoring on the compilation unit:
-      theDocument <- EditorHelpers.findOrOpen(scalaSourceFile.workspaceFile)
+      theDocument <- EditorUtils.findOrOpen(scalaSourceFile.workspaceFile)
     } {
       val scu = scalaSourceFile.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
       val changes = scu.withSourceFile { (srcFile, compiler) =>
@@ -98,7 +99,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
       //TODO: we should allow them to change parameter names and types by tabbing
       for (change <- changes.headOption) {
         val offset = change.from + change.text.lastIndexOf("???")
-        EditorHelpers.enterLinkedModeUi(List((offset, "???".length)), selectFirst = true)
+        EditorUtils.enterLinkedModeUi(List((offset, "???".length)), selectFirst = true)
       }
     }
   }

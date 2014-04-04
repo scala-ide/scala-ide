@@ -8,8 +8,8 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 /**
  * Abstract refactoring for common functionality of refactorings that
  * generate code driven by class parameters.
- * @see GenerateHashcodeAndEqualsAction
- * @see IntroduceProductNTraitAction
+ * @see GenerateHashcodeAndEquals
+ * @see IntroduceProductNTrait
  */
 abstract class ClassParameterDrivenIdeRefactoring(name: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
   extends ScalaIdeRefactoring(name, sourcefile, start, end) {
