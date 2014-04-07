@@ -164,7 +164,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     buildReporter.reset()
     pendingSources ++= addedOrUpdated
     val removedFiles = removed.map(EclipseResource(_): AbstractFile)
-    val toBuild = pendingSources.map(EclipseResource(_): AbstractFile) -- removedFiles
+    val toBuild = pendingSources.filter(_.exists).map(EclipseResource(_): AbstractFile) -- removedFiles
     monitor = pm
     hasErrors = false
     try {
