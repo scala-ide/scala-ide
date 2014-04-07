@@ -160,14 +160,11 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
   override def invalidateAfterLoad: Boolean = true
 
-
-  private def unbuilt: Set[AbstractFile] = Set.empty // TODO: this should be taken care of
-
   override def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm: SubMonitor) {
     buildReporter.reset()
     pendingSources ++= addedOrUpdated
-    val removedFiles = removed.map(EclipseResource(_) : AbstractFile)
-    val toBuild = pendingSources.map(EclipseResource(_)) ++ unbuilt -- removedFiles
+    val removedFiles = removed.map(EclipseResource(_): AbstractFile)
+    val toBuild = pendingSources.map(EclipseResource(_): AbstractFile) -- removedFiles
     monitor = pm
     hasErrors = false
     try {
