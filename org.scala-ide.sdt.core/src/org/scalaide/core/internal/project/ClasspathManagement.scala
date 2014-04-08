@@ -35,6 +35,7 @@ import org.osgi.framework.Version
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import scala.tools.nsc.settings.ScalaVersion
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -78,10 +79,9 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  */
 case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
 
-/** Extractor which return the Scala version of a jar, if it is '''not''' compatible with the version
- *  of Scala the platform is running on.
+/** Extractor which returns the Scala version of a jar,
  */
-object IncompatibleVersion {
+object VersionInFile {
 
   /**
    * Regex accepting filename of the format: name_2.xx.xx-version.jar.
@@ -89,10 +89,10 @@ object IncompatibleVersion {
    */
   private val CrossCompiledRegex = """.*_(2\.\d+(?:\.\d*)?)(?:-.*)?.jar""".r
 
-  def unapply(fileName: String): Option[ScalaProject => Option[String]] = {
+  def unapply(fileName: String): Option[ScalaVersion] = {
     fileName match {
       case CrossCompiledRegex(version) =>
-        Some ({(project: ScalaProject) => if (plugin.isCompatibleVersion(Some(new Version(version).toString), Some(project))) None else Some(version: String)})
+        Some(ScalaVersion(version))
       case _ =>
         None
     }
@@ -309,7 +309,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
-      case ScalaLibrary(_, version, false) => !plugin.isCompatibleVersion(version, Some(this))
+      case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), Some(this))
       case _                               => false
     }
 
@@ -321,15 +321,15 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
           Nil
         } else fragmentRoots(0).version match {
-          case Some(v) if v == plugin.scalaVer =>
+          case Some(v) if ScalaVersion(v) == plugin.scalaVer =>
             // exactly the same version, should be from the container. Perfect
             Nil
-          case v if plugin.isCompatibleVersion(v, Some(this)) =>
+          case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), Some(this)) =>
             // compatible version (major, minor are the same). Still, add warning message
-            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
-          case v if (plugin.isPreviousVersion(v)) =>
+            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
+          case Some(v) if (plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v.get + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
+            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
           case Some(v) =>
             // incompatible version
             (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
@@ -409,9 +409,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
-        case IncompatibleVersion(versionValidator) =>
-          if (versionValidator(this).isDefined)
-          errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, versionValidator(this).get)))
+        case VersionInFile(version) =>
+          if (!plugin.isCompatibleVersion(version, Some(this)))
+            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }

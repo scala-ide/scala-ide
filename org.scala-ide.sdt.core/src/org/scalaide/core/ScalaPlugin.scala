@@ -49,6 +49,8 @@ import org.osgi.framework.Bundle
 import org.scalaide.util.internal.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.PluginLogConfigurator
 import scala.tools.nsc.Settings
@@ -115,52 +117,53 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  private def explodeVersion(version: String): Option[(String, String)] = {
-    val pattern = "(\\d)\\.(\\d+)\\.?.*".r
-    version match {
-      case pattern(major, minor) =>
-        Some(major, minor)
-      case _ =>
-        None
+  /** These utility methods should be in tools.nsc.settings's ScalaVersion
+   */
+
+  object ShortScalaVersion {
+    def unapply(v: ScalaVersion): Option[(Int, Int)] = v match {
+      case SpecificScalaVersion(major, minor, _, _) => Some((major, minor))
+      case _ => None
     }
   }
 
-  /** Check if the given version is compatible with the current plug-in version.
+  def isBinarySame: (ScalaVersion, ScalaVersion) => Boolean = {
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor
+    case _ => false
+  }
+
+  def isBinaryPrevious: (ScalaVersion, ScalaVersion) => Boolean = {
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor + 1
+    case _ => false
+  }
+
+  /****
+   * End utility methods
+   */
+
+
+   /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
    *
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
    *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: Option[String], project: Option[ScalaProject]): Boolean = {
+  def isCompatibleVersion(version: ScalaVersion, project: Option[ScalaProject]): Boolean = {
     val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
     val versionInArguments = project.map(p => p.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None})
 
-    def isSameVersion(v: Option[String]) = splitShortScalaVer.isDefined && (v exists (explodeVersion(_) == splitShortScalaVer))
-
-    if (versionInArguments.map(_.length) != Some(1) || isSameVersion(versionInArguments.map(_.head)))
-      isSameVersion(version)// don't treat 2 unknown versions as equal
-    else
-      if (!isPreviousVersion(versionInArguments.map(_.head)))
-        throw new IllegalArgumentException("found wrong or unparseable option for Xsource : %s".format(versionInArguments.map(_.head).getOrElse("")))
-      else
-        isPreviousVersion(version)
+    if (versionInArguments.map(_.length) != Some(1) || isBinarySame(ScalaVersion.current, ScalaVersion(versionInArguments.map(_.head).get)))
+      isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
+    else if (versionInArguments.map(_.head) exists { v => isBinaryPrevious(ScalaVersion.current, ScalaVersion(v,eclipseLog.error(_)))})
+        isBinaryPrevious(ScalaVersion.current, version)
+    else false
   }
 
-  def isPreviousVersion(version: Option[String]): Boolean =
-    version exists { (v) =>
-      splitShortScalaVer exists {
-        case (majorS, minorS) => {
-          explodeVersion(v) exists {
-            case (major, minor) => major == majorS && minor.toInt + 1 == minorS.toInt
-          }
-        }
-      }
-    }
-
-  lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
-  lazy val splitShortScalaVer = explodeVersion(scalaVer)
-  @deprecated("use `splitShortScalaVer` instead", "4.0.0")
-  lazy val shortScalaVer = splitShortScalaVer.getOrElse(("","(unknown)")).productIterator.mkString(".")
+  lazy val scalaVer = ScalaVersion.current
+  lazy val shortScalaVer = scalaVer match {
+    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
+    case _ => "none"
+  }
 
   lazy val sdtCoreBundle = getBundle()
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
@@ -172,8 +175,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
-  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + splitShortScalaVer.get.mkstring(".") + "/lib/scala-library.jar")
-  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + splitShortScalaVer.get.mkstring(".") + "/lib/scala-compiler.jar")
+  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
+  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
 
   lazy val scalaLibBundle = {
     // all library bundles

@@ -509,15 +509,15 @@ class ClasspathTests {
   /** Impossible to give a < 2.8 version i
    */
   private def getIncompatibleScalaVersion: String = {
-    if (ScalaPlugin.plugin.splitShortScalaVer exists (_ == (("2","10")))) "2.11" else "2.9"
+    if (ScalaPlugin.plugin.shortScalaVer == "2.10") "2.11" else "2.9"
   }
 
   private def getPreviousScalaVersion: String = {
-    if (ScalaPlugin.plugin.splitShortScalaVer exists (_ == (("2","10")))) "2.9" else "2.10"
+    if (ScalaPlugin.plugin.shortScalaVer == "2.10") "2.9" else "2.10"
   }
 
-  // for these tests' purposes of comparing minors, it's enough to get ".(unkown)" if the plugin version is unparseable
-  private def getTestShortScalaVersion: String = ScalaPlugin.plugin.splitShortScalaVer.getOrElse(("","(unknown)")).productIterator.mkString(".")
+  // for these tests' purposes of comparing minors, it's enough to get "none" if the plugin version is unparseable
+  private def getTestShortScalaVersion: String = ScalaPlugin.plugin.shortScalaVer
 
   /**
    * Set the new classpath and check the number of errors and warnings attached to the project.
