@@ -34,6 +34,13 @@ import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import xsbti.compile.Inputs
+import sbt.compiler.AnalyzingCompiler
+import sbt.compiler.AggressiveCompile
+import sbt.inc.IncOptions
+import xsbti.Maybe
+import org.scalaide.util.internal.SbtUtils.m2o
+import org.scalaide.core.ScalaPlugin
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -61,7 +68,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
       def unitIPath: IPath = Path.fromOSString(unitPath)
 
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
-      if(phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(clearMarkers)
+      if (phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(FileUtils.clearTasks(_, null))
 
       // What follows is a direct copy of the mechanism in the refined build managers
       throttledMessages += 1
@@ -73,7 +80,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
 
     override def advance(current: Int, total: Int): Boolean =
-       if (monitor.isCanceled) {
+      if (monitor.isCanceled) {
         false
       } else {
         if (savedTotal != total) {
@@ -88,8 +95,6 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         true
       }
   }
-
-  private val pendingSources = new mutable.HashSet[IFile]
 
   private val sbtLogger = new xsbti.Logger {
     override def error(msg: F0[String]) = logger.error(msg())
@@ -108,7 +113,6 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     def asJFiles: Seq[File] = files.map(_.file).toSeq
   }
 
-
   private val sources: mutable.Set[AbstractFile] = mutable.Set.empty
 
   /** Remove the given files from the managed build process. */
@@ -124,6 +128,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
 
+    project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     buildingFiles(added)
     removeFiles(removed)
     sources ++= added
@@ -131,10 +136,10 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
-    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, cacheFile, sbtReporter, sbtLogger)
+    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtReporter, sbtLogger)
     val analysis =
       try
-        Some(IC.compile(inputs, sbtLogger))
+        Some(aggressiveCompile(inputs, sbtLogger))
       catch {
         case _: CompileFailed => None
       }
@@ -143,13 +148,18 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 
   private val cached = new AtomicReference[SoftReference[Analysis]]
   private def setCached(a: Analysis): Analysis = {
-   cached set new SoftReference[Analysis](a); a
+    cached set new SoftReference[Analysis](a); a
   }
   private[zinc] def latestAnalysis: Analysis = Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile))
 
   private val cachePath = project.underlying.getFile(".cache")
   private def cacheFile = cachePath.getLocation.toFile
 
+  // this directory is used by Sbt to store classfiles between compilation runs
+  // to implement all-or-nothing compilation sementics. Unless all steps of the
+  // compilation succeed, the actually output directory is not updated
+  private val tempDir = project.underlying.getFolder(".tmpBin")
+  private def tempDirFile = tempDir.getLocation().toFile()
 
   override var depFile: IFile = null
 
@@ -160,11 +170,10 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
   override def invalidateAfterLoad: Boolean = true
 
-  override def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm: SubMonitor) {
+  override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], pm: SubMonitor) {
     buildReporter.reset()
-    pendingSources ++= addedOrUpdated
     val removedFiles = removed.map(EclipseResource(_): AbstractFile)
-    val toBuild = pendingSources.filter(_.exists).map(EclipseResource(_): AbstractFile) -- removedFiles
+    val toBuild = addedOrUpdated.filter(_.exists).map(EclipseResource(_): AbstractFile) -- removedFiles
     monitor = pm
     hasErrors = false
     try {
@@ -178,19 +187,27 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
 
     hasErrors = sbtReporter.hasErrors || hasErrors
-    if (!hasErrors)
-      pendingSources.clear
   }
 
   private def buildingFiles(included: scala.collection.Set[AbstractFile]) {
     included foreach {
-      case EclipseResource(f : IFile) => clearMarkers(f)
-      case _ =>
+      case EclipseResource(f: IFile) => FileUtils.clearTasks(f, null)
+      case _                         =>
     }
   }
 
-  private def clearMarkers(f: IFile): Unit = {
-    FileUtils.clearBuildErrors(f, null)
-    FileUtils.clearTasks(f, null)
+  /** Inspired by IC.compile
+   *
+   *  We needed this duplication because the Java interface serializes incOptions to a String map,
+   *  which is not expressive enough to use the transactional classfile manager (required for correctness).
+   */
+  private def aggressiveCompile(in: SbtInputs, log: Logger): Analysis = {
+    val options = in.options; import options.{ options => scalacOptions, _ }
+    val compilers = in.compilers; import compilers._
+    val agg = new AggressiveCompile(cacheFile)
+    val aMap = (f: File) => m2o(in.analysisMap(f))
+    val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
+    agg(scalac, javac, options.sources, classpath, output, in.cache, m2o(in.progress), scalacOptions, javacOptions, aMap,
+      defClass, in.reporter, order, skip = false, in.incOptions)(log)
   }
 }

@@ -57,6 +57,35 @@ class SbtBuilderTest {
     Assert.assertTrue("Build errors found", noErrors)
   }
 
+  @Test def testBuildChangeAndRevert() {
+    import SDTTestUtils._
+    SDTTestUtils.enableAutoBuild(false)
+
+    val Seq(prj) = createProjects("A")
+    try {
+
+      val pack = createSourcePackage("test")(prj)
+      val originalA = "package test; object A { def callMe() = ??? }"
+
+      // C depends directly on A, through an exported dependency of B
+      val unitA = pack.createCompilationUnit("A.scala", originalA, true, null)
+      val unitB = pack.createCompilationUnit("B.scala", "package test; class B { A.callMe() } ", true, null)
+
+      // no errors
+      prj.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      val errors = getErrorMessages(unitA, unitB)
+      Assert.assertEquals("Build errors found", List(), errors)
+
+      val changedErrors = SDTTestUtils.buildWith(unitA.getResource, "package test; object A { def callMe1() = ??? }", Seq(unitA, unitB))
+
+      Assert.assertEquals("Build problems " + changedErrors, 1, changedErrors.size)
+
+      val errorMessages = SDTTestUtils.buildWith(unitA.getResource, originalA, Seq(unitA, unitB))
+      Assert.assertEquals("No build problems: " + errorMessages, 0, errorMessages.size)
+    } finally
+      deleteProjects(prj)
+  }
+
   @Test def testSimpleBuildWithResources() {
     println("building " + depProject)
     depProject.project.clean(new NullProgressMonitor())
