@@ -8,6 +8,7 @@ import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.Reporter
 import org.scalaide.core.resources.EclipseResource
+import org.scalaide.util.internal.SbtUtils.m2o
 
 /**  An Sbt Reporter that forwards to an underlying [[BuildReporter]]
  */
@@ -26,7 +27,6 @@ private[zinc] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Re
     underlying.comment(toScalaPosition(pos), msg)
   }
 
-  private def m2o[T](m: xsbti.Maybe[T]): Option[T] = if (m.isEmpty) None else Some(m.get)
   private def toScalaPosition(pos0: xsbti.Position): Position =
     (m2o(pos0.sourcePath), m2o(pos0.offset)) match {
       case (Some(srcpath), Some(offset)) =>
