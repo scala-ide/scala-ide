@@ -65,18 +65,18 @@ class SbtBuilderTest {
     try {
 
       val pack = createSourcePackage("test")(prj)
-      val originalA = "package test; object A { def callMe() = ??? }"
+      val originalA = "package test;\n object A { def callMe() = ??? }\n"
 
       // C depends directly on A, through an exported dependency of B
       val unitA = pack.createCompilationUnit("A.scala", originalA, true, null)
-      val unitB = pack.createCompilationUnit("B.scala", "package test; class B { A.callMe() } ", true, null)
+      val unitB = pack.createCompilationUnit("B.scala", "package test;\n class B { A.callMe() } \n", true, null)
 
       // no errors
       prj.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
       val errors = getErrorMessages(unitA, unitB)
       Assert.assertEquals("Build errors found", List(), errors)
 
-      val changedErrors = SDTTestUtils.buildWith(unitA.getResource, "package test; object A { def callMe1() = ??? }", Seq(unitA, unitB))
+      val changedErrors = SDTTestUtils.buildWith(unitA.getResource, "package test;\n object A { def callMe1() = ??? }\n", Seq(unitA, unitB))
 
       Assert.assertEquals("Build problems " + changedErrors, 1, changedErrors.size)
 
