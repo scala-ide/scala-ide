@@ -20,7 +20,7 @@
 
   <properties>
     <sbtrc.version>1.0-2ed540099de878afad149a1b86d395ab13f92f53</sbtrc.version>
-    <sbtrc.repo>http://download.scala-ide.org/tmp-luc/sbt-rc/m2repo/</sbtrc.repo>
+    <sbtrc.repo>http://download.scala-ide.org/sbt-integration/m2repo/</sbtrc.repo>
     <akka.version>2.2.0</akka.version>
     <config.version>1.0.0</config.version>
     <sbt.version>0.13.2-M2</sbt.version>
@@ -143,6 +143,9 @@
       <id>sbtrc</id>
       <name>repository with the sbtrc binaries</name>
       <url>${sbtrc.repo}</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
     </repository>
     <repository>
       <id>play</id>
