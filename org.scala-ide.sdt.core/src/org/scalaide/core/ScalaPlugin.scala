@@ -148,8 +148,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
    *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: ScalaVersion, project: Option[ScalaProject]): Boolean = {
-    if (project exists (_.isUsingCompatibilityMode()))
+  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
+    if (project.isUsingCompatibilityMode())
       isBinaryPrevious(ScalaVersion.current, version)
     else
       isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal

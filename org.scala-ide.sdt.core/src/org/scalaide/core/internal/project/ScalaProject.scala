@@ -477,7 +477,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
     val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
-    p.addPropertyChangeListener(new IPropertyChangeListener{ def propertyChange(event: PropertyChangeEvent) = {compatibilityModeCache = Some(getCompatibilityMode()); ()} })
+    p.addPropertyChangeListener(new IPropertyChangeListener{ def propertyChange(event: PropertyChangeEvent) = {compatibilityModeCache = Some(getCompatibilityMode()); classpathHasChanged()} })
     p
   }
 
@@ -499,13 +499,17 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  private var compatibilityModeCache : Option[Boolean] = None
+  @volatile private var compatibilityModeCache : Option[Boolean] = None
   private def getCompatibilityMode(): Boolean = {
     val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
     val versionInArguments = this.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None}
-    val (l,specdVersion) = (versionInArguments.length,versionInArguments.headOption)
+    val l = versionInArguments.length
+    val specdVersion = versionInArguments.headOption
+
     if (l >= 2)
-      eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($versionInArguments.head)")
+      eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
+    if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
+      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
     if (l < 1 || (specdVersion exists (x => plugin.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
       false
     else

@@ -309,7 +309,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
-      case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), Some(this))
+      case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), this)
       case _                               => false
     }
 
@@ -324,7 +324,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           case Some(v) if ScalaVersion(v) == plugin.scalaVer =>
             // exactly the same version, should be from the container. Perfect
             Nil
-          case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), Some(this)) =>
+          case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
           case Some(v) if (plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
@@ -410,7 +410,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
         case VersionInFile(version) =>
-          if (!plugin.isCompatibleVersion(version, Some(this)))
+          if (!plugin.isCompatibleVersion(version, this))
             errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
