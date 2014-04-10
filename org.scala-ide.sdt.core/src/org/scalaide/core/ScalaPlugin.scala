@@ -149,14 +149,10 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    *  2.8.1 and 2.9.0 aren't.
    */
   def isCompatibleVersion(version: ScalaVersion, project: Option[ScalaProject]): Boolean = {
-    val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
-    val versionInArguments = project.map(p => p.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None})
-
-    if (versionInArguments.map(_.length) != Some(1) || isBinarySame(ScalaVersion.current, ScalaVersion(versionInArguments.map(_.head).get)))
+    if (project exists (_.isUsingCompatibilityMode()))
+      isBinaryPrevious(ScalaVersion.current, version)
+    else
       isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
-    else if (versionInArguments.map(_.head) exists { v => isBinaryPrevious(ScalaVersion.current, ScalaVersion(v,eclipseLog.error(_)))})
-        isBinaryPrevious(ScalaVersion.current, version)
-    else false
   }
 
   lazy val scalaVer = ScalaVersion.current

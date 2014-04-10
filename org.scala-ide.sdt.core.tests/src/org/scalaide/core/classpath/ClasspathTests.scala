@@ -118,6 +118,19 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
   }
 
+  @Test
+  def previousLibraryWithXsourceButNoProjectSpecificSettings() {
+    try {
+
+      val majorMinor = getPreviousScalaVersion
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+      val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
+
+      setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+    } finally{
+          project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+    }
+  }
   /** Std Library is the previous major version of Scala, with Xsource flag activated
    *
    * One warning witnessing a compatible version on classpath, which isnt exactly the one bundled.
@@ -126,6 +139,7 @@ class ClasspathTests {
   def previousLibraryWithXsource() {
     try {
       val majorMinor = getPreviousScalaVersion
+      project.storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
       project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
