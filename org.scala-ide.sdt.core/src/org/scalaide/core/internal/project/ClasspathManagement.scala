@@ -329,7 +329,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
           case Some(v) if (plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
+            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
           case Some(v) =>
             // incompatible version
             (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil

@@ -96,26 +96,26 @@ class ClasspathTests {
   }
 
   /** Binary would be detected as previous, but check has been turned off.
-   *  One warning from compatible version on classpath, which isnt exactly the one bundled.
+   *  One error from previous library version on classpath w/o XSource
    */
   @Test
   def previousBinaryWithPreferenceFalse() {
     project.storage.setValue(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name), false)
     val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
     val majorMinor = getPreviousScalaVersion
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 0)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
   }
 
-  /** Std Library is the previous major version of Scala, warning suggesting Xsource addition.
+  /** Std Library is the previous major version of Scala, error suggesting Xsource addition.
    *
-   *  One warning from scala library version validation, one error from validation of binaries on classpath.
+   *  One error from scala library version w/o XSource, one error from validation of binaries on classpath.
    */
   @Test
   def previousLibrary() {
     val majorMinor = getPreviousScalaVersion
     val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
   }
 
   @Test
@@ -126,7 +126,7 @@ class ClasspathTests {
       project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-      setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+      setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
     } finally{
           project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
     }
