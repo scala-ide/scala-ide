@@ -321,18 +321,23 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
           Nil
         } else fragmentRoots(0).version match {
-          case Some(v) if ScalaVersion(v) == plugin.scalaVer =>
+          case Some(v) if (!this.isUsingCompatibilityMode() && ScalaVersion(v) == plugin.scalaVer) =>
             // exactly the same version, should be from the container. Perfect
             Nil
           case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
             // compatible version (major, minor are the same). Still, add warning message
-            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Make sure you know what you are doing.") :: Nil
+            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Make sure you know what you are doing.") :: Nil
           case Some(v) if (plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please use the -Xsource flag.") :: Nil
-          case Some(v) =>
+            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Please use the -Xsource flag.") :: Nil
+          case Some(v) => {
+            val expectedVer = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
+              case plugin.ShortScalaVersion(major, minor) => {val newminor = (minor -1); f"$major%d.$newminor%2d"}
+              case _ => "none"
+            } else plugin.scalaVer.unparse
             // incompatible version
-            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
+            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + expectedVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
+          }
           case None =>
             // no version found
             (IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar") :: Nil
