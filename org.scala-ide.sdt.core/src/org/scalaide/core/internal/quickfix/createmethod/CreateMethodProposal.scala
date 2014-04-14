@@ -3,7 +3,6 @@ package org.scalaide.core.internal.quickfix.createmethod
 import scala.reflect.internal.util.RangePosition
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -18,8 +17,9 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils
+import org.scalaide.core.internal.quickfix.AddMethodProposal
 
-case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], method: String, target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends IJavaCompletionProposal {
+case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], method: String, target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends AddMethodProposal {
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 
   private val sourceFile = compilationUnit.asInstanceOf[ScalaSourceFile]
@@ -42,7 +42,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
     }) getOrElse ("Any")
   }
 
-  private val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
+  protected val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
     case Some(otherClass) =>
       val info = new MissingMemberInfo(compilationUnit, otherClass, method, pos, sourceAst.get)
       val targetSourceFile = info.targetElement.collect { case scalaSource: ScalaSourceFile => scalaSource }
@@ -67,8 +67,8 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
   private val parametersWithSimpleName = for (parameterList <- rawParameters)
     yield for ((name, tpe) <- parameterList) yield
       (name, tpe.substring(tpe.lastIndexOf('.') + 1))
-  private val parameters = ParameterListUniquifier.uniquifyParameterNames(parametersWithSimpleName)
-  private val returnType: ReturnType = if (UnaryMethodNames.contains(method)) className else rawReturnType
+  protected val parameters = ParameterListUniquifier.uniquifyParameterNames(parametersWithSimpleName)
+  protected val returnType: ReturnType = if (UnaryMethodNames.contains(method)) className else rawReturnType
 
   /*
    * if they write "unknown = 3" or "other.unknown = 3", we will be in here since
@@ -79,47 +79,11 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], met
 
   def isApplicable = !suppressQuickfix && targetSourceFile.isDefined && className.isDefined
 
-  override def apply(document: IDocument): Unit = {
-    for {
-      scalaSourceFile <- targetSourceFile
-      //we must open the editor before doing the refactoring on the compilation unit:
-      theDocument <- EditorUtils.findOrOpen(scalaSourceFile.workspaceFile)
-    } {
-      val scu = scalaSourceFile.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
-      val changes = scu.withSourceFile { (srcFile, compiler) =>
-        val refactoring = new AddMethod { val global = compiler }
-        refactoring.addMethod(scalaSourceFile.file, className.get, method, parameters, returnType, target) //if we're here, className should be defined because of the check in isApplicable
-      } getOrElse Nil
-
-      for (change <- changes) {
-        val edit = new ReplaceEdit(change.from, change.to - change.from, change.text)
-        edit.apply(theDocument)
-      }
-
-      //TODO: we should allow them to change parameter names and types by tabbing
-      for (change <- changes.headOption) {
-        val offset = change.from + change.text.lastIndexOf("???")
-        EditorUtils.enterLinkedModeUi(List((offset, "???".length)), selectFirst = true)
-      }
-    }
-  }
-
   override def getDisplayString(): String = {
-    val prettyParameterList = (for (parameterList <- parameters) yield {
-      parameterList.map(_._2).mkString(", ")
-    }).mkString("(", ")(", ")")
-
-    val returnTypeStr = returnType.map(": " + _).getOrElse("")
+    val (prettyParameterList, returnTypeStr) = getMethodInfo(parameters, returnType)
 
     val base = s"Create method '$method$prettyParameterList$returnTypeStr'"
     val inType = if (targetIsOtherClass) s" in type '${className.get}'" else ""
     base + inType
   }
-
-  override def getRelevance = 90
-  override def getSelection(document: IDocument): Point = null
-  override def getAdditionalProposalInfo(): String = null
-  override def getImage(): Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
-  override def getContextInformation: IContextInformation = null
-
 }
