@@ -39,7 +39,8 @@
     <!-- plugin versions -->
     <tycho.plugin.version>0.19.0</tycho.plugin.version>
     <scala.plugin.version>3.1.5</scala.plugin.version>
-    <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <aspectj.plugin.version>1.6</aspectj.plugin.version>
+    <aspectj.version>1.7.4</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
@@ -386,6 +387,11 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjrt</artifactId>
+        <version>${aspectj.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -451,6 +457,13 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>aspectj-maven-plugin</artifactId>
           <version>${aspectj.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.aspectj</groupId>
+              <artifactId>aspectjtools</artifactId>
+	      <version>${aspectj.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <!-- scala compiler -->
         <plugin>
