@@ -387,11 +387,6 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>org.aspectj</groupId>
-        <artifactId>aspectjrt</artifactId>
-        <version>${aspectj.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -461,7 +456,7 @@
             <dependency>
               <groupId>org.aspectj</groupId>
               <artifactId>aspectjtools</artifactId>
-	      <version>${aspectj.version}</version>
+              <version>${aspectj.version}</version>
             </dependency>
           </dependencies>
         </plugin>
