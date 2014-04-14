@@ -10,6 +10,7 @@ import org.eclipse.jdt.ui.text.java.IProblemLocation
 import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor
 import org.eclipse.jface.text.Position
 import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
+import org.scalaide.core.internal.quickfix.abstractimpl.ImplAbstractMembers
 
 /**
  * Enables all quick fixes that don't resolve errors in the document. Instead they
@@ -35,7 +36,8 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
           }
           corrections.toArray.distinct
         }
-        val allAssists = ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++ assists
+        val allAssists = ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++
+        ImplAbstractMembers.suggestsFor(ssf, context.getSelectionOffset) ++ assists
 
         if(allAssists.isEmpty) null
         else allAssists
