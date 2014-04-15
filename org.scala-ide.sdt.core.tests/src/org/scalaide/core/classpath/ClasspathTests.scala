@@ -56,9 +56,22 @@ class ClasspathTests {
   /**
    * The classpath, with the eclipse scala container removed.
    */
-  def cleanRawClasspath= for (classpathEntry <- baseRawClasspath
+  private def cleanRawClasspath= for (classpathEntry <- baseRawClasspath
         if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER")
       yield classpathEntry
+
+  val projectStore = project.projectSpecificStorage
+
+  private def enableProjectSpecificSettings() = {
+    projectStore.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+    projectStore.save()
+  }
+
+  @After
+  def resetProjectSpecificSettings() = {
+    projectStore.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+    projectStore.save()
+  }
 
   @After
   def resetClasspath() {
@@ -68,6 +81,10 @@ class ClasspathTests {
   @After
   def resetPreferences() {
     project.storage.setToDefault(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name))
+    project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+
+    projectStore.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
+    projectStore.save()
   }
 
   /**
@@ -120,16 +137,11 @@ class ClasspathTests {
 
   @Test
   def previousLibraryWithXsourceButNoProjectSpecificSettings() {
-    try {
-
       val majorMinor = getPreviousScalaVersion
-      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:" + majorMinor)
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
       setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
-    } finally {
-      project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
-    }
   }
   /** Std Library is the previous major version of Scala, with Xsource flag activated
    *
@@ -137,31 +149,22 @@ class ClasspathTests {
    */
   @Test
   def previousLibraryWithXsource() {
-    try {
       val majorMinor = getPreviousScalaVersion
-      project.storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+      enableProjectSpecificSettings()
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:" + majorMinor)
+
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
       setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 0)
-    } finally {
-          project.storage.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-          project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
-    }
   }
 
   @Test
   def newerLibraryButWithXSource() {
-    try {
       val majorMinor = getPreviousScalaVersion
-      project.storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+      enableProjectSpecificSettings()
+      project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:" + majorMinor)
 
       setRawClasspathAndCheckMarkers(baseRawClasspath, expectedWarnings = 0, expectedErrors = 1)
-    } finally {
-      project.storage.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-      project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
-    }
   }
 
   /** Std Library is the previous major version of Scala, with Xsource flag activated, but binaries on classpath dont match
@@ -170,17 +173,12 @@ class ClasspathTests {
    */
   @Test
   def previousLibraryWithXsourceAndBadBinary() {
-    try {
-      project.storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+      enableProjectSpecificSettings()
       project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+ getPreviousScalaVersion)
       val majorMinor = getIncompatibleScalaVersion
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
       setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
-    } finally{
-          project.storage.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
-          project.storage.setToDefault(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-    }
   }
 
   /** Check that no incompatibility is reported for low value version (< 2.8.0)
