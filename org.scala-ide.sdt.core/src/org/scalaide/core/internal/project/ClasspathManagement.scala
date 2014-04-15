@@ -332,7 +332,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Please use the -Xsource flag.") :: Nil
           case Some(v) => {
             val expectedVer = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
-              case plugin.ShortScalaVersion(major, minor) => {val newminor = (minor -1); f"$major%d.$newminor%2d"}
+              case plugin.ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
               case _ => "none"
             } else plugin.scalaVer.unparse
             // incompatible version
@@ -353,7 +353,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def moreThanOneLibraryError(libs: Seq[IPath], compatible: Boolean): String = {
     val first =  "More than one scala library found in the build path (%s).".format(libs.mkString(", "))
     if (compatible) first + "This is not an optimal configuration, try to limit to one Scala library in the build path."
-    else first + "At least one has an incompatible version. Please update the project build path so it contains only compatible scala libraries."
+    else first + "At least one has an incompatible version. Please update the project build path so it contains only one compatible scala library."
   }
 
   /** Return the version number contained in library.properties if it exists.
@@ -416,7 +416,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       entry.lastSegment() match {
         case VersionInFile(version) =>
           if (!plugin.isCompatibleVersion(version, this))
-            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case of errorneous report, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
+            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case this report is mistaken, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
