@@ -81,10 +81,10 @@ class ScalaCompilerClasspathContainerPage extends
     ScalaPlugin.plugin.scalaCompilerId,
     "ScalaCompilerContainerPage",
     "Scala Compiler Container",
-    "Scala compiler container")
+    "Scala compiler container (bundled) version " + ScalaPlugin.plugin.scalaVer.unparse)
 
 class ScalaLibraryClasspathContainerPage extends
   ScalaClasspathContainerPage(ScalaPlugin.plugin.scalaLibId,
     "ScalaLibraryContainerPage",
     "Scala Library Container",
-    "Scala library container")
+    "Scala library container (bundled) version " + ScalaPlugin.plugin.scalaVer.unparse)
