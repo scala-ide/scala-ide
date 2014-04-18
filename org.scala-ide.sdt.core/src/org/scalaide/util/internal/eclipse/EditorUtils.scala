@@ -18,6 +18,7 @@ import org.eclipse.jface.text.link.LinkedPosition
 import org.eclipse.jface.text.link.LinkedPositionGroup
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModelExtension2
+import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ltk.core.refactoring.TextFileChange
 import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.text.edits.RangeMarker
@@ -156,6 +157,19 @@ object EditorUtils {
     }
   }
 
+  /**
+   * Given an `ISourceViewer` it applies `f` on the underlying document's model.
+   * If one of the involved components is `null`, even if `f` returns `null`, this
+   * method returns `None`, otherwise the result of `f`.
+   */
+  def withDocument[A](sourceViewer: ISourceViewer)(f: IDocument => A): Option[A] =
+    for {
+      s <- Option(sourceViewer)
+      d <- Option(s.getDocument)
+      r <- Option(f(d))
+    } yield r
+
+  /** Creates a `TextFileChange` which always contains a `MultiTextEdit`. */
   def createTextFileChange(file: IFile, fileChanges: List[TextChange], saveAfter: Boolean = true): TextFileChange = {
     new TextFileChange(file.getName(), file) {
 
