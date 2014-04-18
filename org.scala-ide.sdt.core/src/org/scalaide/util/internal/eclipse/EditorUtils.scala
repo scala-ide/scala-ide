@@ -2,7 +2,6 @@ package org.scalaide.util.internal.eclipse
 
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.refactoring.common.TextChange
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
@@ -36,7 +35,14 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.editor.ISourceViewerEditor
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.eclipse.jface.text.source.ISourceViewer
 
+/**
+ * Provides helper methods for the text editor of Eclipse, which is a GUI aware
+ * class. This means that most methods of this object can only be called when an
+ * UI environment is loaded - if this is not the case these methods will fail at
+ * runtime.
+ */
 object EditorUtils {
 
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
@@ -95,22 +101,19 @@ object EditorUtils {
   def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
     if(p.isEditorAreaVisible) Some(p.getActiveEditor) else None
 
-  def textEditor(e: IEditorPart): Option[ISourceViewerEditor] = e match {
-    case t: ISourceViewerEditor => Some(t)
-    case _ => None
-  }
+  def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
+    PartialFunction.condOpt(e) {
+      case t: ISourceViewerEditor => t
+    }
 
-  def file(e: ITextEditor): Option[IFile] = e.getEditorInput match {
-    case f: IFileEditorInput =>
-      Some(f.getFile)
-    case _ =>
-      None
-  }
+  def file(e: ITextEditor): Option[IFile] =
+    PartialFunction.condOpt(e.getEditorInput()) {
+      case f: IFileEditorInput => f.getFile
+    }
 
   def selection(e: ITextEditor): Option[ITextSelection] =
-    e.getSelectionProvider.getSelection match {
-      case s: ITextSelection => Some(s)
-      case _ => None
+    PartialFunction.condOpt(e.getSelectionProvider.getSelection) {
+      case s: ITextSelection => s
     }
 
   def doWithCurrentEditor(block: ISourceViewerEditor => Unit): Unit = {
@@ -120,19 +123,17 @@ object EditorUtils {
     }
   }
 
-  def withCurrentEditor[T](block: ISourceViewerEditor => Option[T]): Option[T] = {
-    activeWorkbenchWindow flatMap {
-      activePage(_)         flatMap {
-        activeEditor(_)       flatMap {
-          textEditor(_)         flatMap block
-        }
-      }
-    }
-  }
+  def withCurrentEditor[T](block: ISourceViewerEditor => Option[T]): Option[T] = for {
+    w <- activeWorkbenchWindow
+    p <- activePage(w)
+    e <- activeEditor(p)
+    t <- textEditor(e)
+    b <- block(t)
+  } yield b
 
   def withCurrentScalaSourceFile[T](block: ScalaSourceFile => T): Option[T] = {
     withCurrentEditor { textEditor =>
-      file(textEditor)      flatMap { file =>
+      file(textEditor) flatMap { file =>
         ScalaSourceFile.createFromPath(file.getFullPath.toString) map block
       }
     }
@@ -152,7 +153,7 @@ object EditorUtils {
     withScalaFileAndSelection { (icu, selection) =>
       icu match {
         case ssf: ScalaSourceFile => block(ssf, selection)
-        case _ => None
+        case _                    => None
       }
     }
   }
@@ -161,6 +162,8 @@ object EditorUtils {
    * Given an `ISourceViewer` it applies `f` on the underlying document's model.
    * If one of the involved components is `null`, even if `f` returns `null`, this
    * method returns `None`, otherwise the result of `f`.
+   *
+   * This method is UI independent.
    */
   def withDocument[A](sourceViewer: ISourceViewer)(f: IDocument => A): Option[A] =
     for {
@@ -185,8 +188,50 @@ object EditorUtils {
   }
 
   /**
-   * Applies a list of refactoring changes to a document. The current selection (or just the caret position)
-   * is tracked and restored after applying the changes.
+   * Non UI logic that touches a `MultiTextEdit`, which is mutable internally.
+   * Returns `(selectionStart, selectionLength)` after the edit is applied.
+   */
+  def applyMultiTextEdit(document: IDocument, textSelection: ITextSelection, edit: MultiTextEdit): (Int, Int) = {
+    def selectionIsInManipulatedRegion(region: IRegion): Boolean = {
+      val regionStart = region.getOffset
+      val regionEnd = regionStart + region.getLength()
+      val selectionStart = textSelection.getOffset()
+      val selectionEnd = selectionStart + textSelection.getLength()
+
+      selectionStart >= regionStart && selectionEnd <= regionEnd
+    }
+
+    val selectionCannotBeRetained = edit.getChildren map (_.getRegion) exists selectionIsInManipulatedRegion
+
+    if(selectionCannotBeRetained) {
+      // the selection overlaps the selected region, so we are on
+      // our own in trying to the preserve the user's selection.
+      if(edit.getOffset > textSelection.getOffset) {
+        edit.apply(document)
+        // if the edit starts after the start of the selection,
+        // we just keep the current selection
+        (textSelection.getOffset, textSelection.getLength)
+      } else {
+        // if the edit starts before the selection, we keep the
+        // selection relative to the end of the document.
+        val originalLength = document.getLength
+        edit.apply(document)
+        val modifiedLength = document.getLength
+        (textSelection.getOffset + (modifiedLength - originalLength), textSelection.getLength)
+      }
+
+    } else {
+      // Otherwise, we can track the selection and restore it after the refactoring.
+      val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
+      edit.addChild(currentPosition)
+      edit.apply(document)
+      (currentPosition.getOffset, currentPosition.getLength)
+    }
+  }
+
+  /**
+   * Applies a list of refactoring changes to a document. The current selection
+   * (or just the caret position) is tracked and restored after applying the changes.
    *
    * @param document The document the changes are applied to.
    * @param textSelection The currently selected area of the document.
@@ -195,50 +240,17 @@ object EditorUtils {
    * @param saveAfter Whether files should be saved after changes
    */
   def applyChangesToFileWhileKeepingSelection(
-      document: IDocument, textSelection: ITextSelection,
-      file: AbstractFile, changes: List[TextChange], saveAfter: Boolean = true): Unit = {
-
-    def selectionIsInManipulatedRegion(region: IRegion): Boolean = {
-      val (regionStart, regionEnd) = {
-        (region.getOffset, region.getOffset + region.getLength)
-      }
-      val (selectionStart, selectionEnd) = {
-        (textSelection.getOffset, textSelection.getOffset + textSelection.getLength)
-      }
-      selectionStart >= regionStart && selectionEnd <= regionEnd
-    }
+      document: IDocument,
+      textSelection: ITextSelection,
+      file: AbstractFile,
+      changes: List[TextChange],
+      saveAfter: Boolean = true): Unit = {
 
     FileUtils.toIFile(file) foreach { f =>
       createTextFileChange(f, changes, saveAfter).getEdit match {
         // we know that it is a MultiTextEdit because we created it above
         case edit: MultiTextEdit =>
-
-          val selectionCannotBeRetained = edit.getChildren map (_.getRegion) exists selectionIsInManipulatedRegion
-
-          val (selectionStart, selectionLength) = if(selectionCannotBeRetained) {
-            // the selection overlaps the selected region, so we are on
-            // our own in trying to the preserve the user's selection.
-            if(edit.getOffset > textSelection.getOffset) {
-              edit.apply(document)
-              // if the edit starts after the start of the selection,
-              // we just keep the current selection
-              (textSelection.getOffset, textSelection.getLength)
-            } else {
-              // if the edit starts before the selection, we keep the
-              // selection relative to the end of the document.
-              val originalLength = document.getLength
-              edit.apply(document)
-              val modifiedLength = document.getLength
-              (textSelection.getOffset + (modifiedLength - originalLength), textSelection.getLength)
-            }
-
-          } else {
-            // Otherwise, we can track the selection and restore it after the refactoring.
-            val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
-            edit.addChild(currentPosition)
-            edit.apply(document)
-            (currentPosition.getOffset, currentPosition.getLength)
-          }
+          val (selectionStart, selectionLength) = applyMultiTextEdit(document, textSelection, edit)
 
           withCurrentEditor { editor =>
             editor.selectAndReveal(selectionStart, selectionLength)
