@@ -38,32 +38,28 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer {
       }
 
       val newBindings = bindingsOf(newCommandId)
-      if (newBindings.isEmpty)
-        return
-
-      val doUserBindingsAlreadyExist = newBindings.filter(_.getType() == Binding.USER).nonEmpty
-      if (doUserBindingsAlreadyExist)
-        return
-
+      val userBindings = newBindings.filter(_.getType() == Binding.USER)
       val oldBindings = bindingsOf(oldCommandId).filter(_.getType() == Binding.USER)
-      if (oldBindings.isEmpty)
-        return
-
       val allBindings = service.getBindings().filterNot(oldBindings contains _)
 
-      val migratedBindings =
-        for (b <- oldBindings) yield new KeyBinding(
-          b.asInstanceOf[KeyBinding].getKeySequence(),
-          newBindings.head.getParameterizedCommand(),
-          b.getSchemeId(),
-          b.getContextId(),
-          b.getLocale(),
-          b.getPlatform(),
-          null,
-          b.getType())
+      val executeCopyOperation =
+        newBindings.nonEmpty && userBindings.isEmpty && oldBindings.nonEmpty
 
-      oldBindings foreach (_.getParameterizedCommand().getCommand().undefine())
-      service.savePreferences(service.getActiveScheme(), allBindings ++ migratedBindings)
+      if (executeCopyOperation) {
+        val migratedBindings =
+          for (b <- oldBindings) yield new KeyBinding(
+            b.asInstanceOf[KeyBinding].getKeySequence(),
+            newBindings.head.getParameterizedCommand(),
+            b.getSchemeId(),
+            b.getContextId(),
+            b.getLocale(),
+            b.getPlatform(),
+            null,
+            b.getType())
+
+        oldBindings foreach (_.getParameterizedCommand().getCommand().undefine())
+        service.savePreferences(service.getActiveScheme(), allBindings ++ migratedBindings)
+      }
     }
 
     // These values are added for the 4.0 release
