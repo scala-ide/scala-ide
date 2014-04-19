@@ -174,36 +174,32 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
 
     val completionFullString = completionString(overwrite, doParamsProbablyExist)
+
     val importSize = EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
-      var changes: List[TextChange] = Nil
-
-      scalaSourceFile.withSourceFile { (sourceFile, _) =>
+      scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
         val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-        changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
+        val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
+
+        val importStmt =
+          if (!needImport)
+            Nil
+          else {
+            val refactoring = new AddImportStatement { val global = compiler }
+            refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+          }
+
+        // Apply the two changes in one step, if done separately we would need an
+        // another `waitLoadedType` to update the positions for the refactoring
+        // to work properly.
+        EditorUtils.applyChangesToFileWhileKeepingSelection(
+          d, textSelection, scalaSourceFile.file, completedIdent +: importStmt)
+
+        importStmt.headOption.map(_.text.length)
       }
-
-      val importStmt = if (needImport) { // add an import statement if required
-        scalaSourceFile.withSourceFile { (_, compiler) =>
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        } getOrElse (Nil)
-      } else {
-        Nil
-      }
-
-      changes ++= importStmt
-
-      // Apply the two changes in one step, if done separately we would need an
-      // another `waitLoadedType` to update the positions for the refactoring
-      // to work properly.
-      EditorUtils.applyChangesToFileWhileKeepingSelection(
-        d, textSelection, scalaSourceFile.file, changes)
-
-      importStmt.headOption.map(_.text.length)
     }
 
     def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
-      editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
+      editor.selectAndReveal(startPos + completionFullString.length() + importSize.flatten.getOrElse(0), 0)
     }
 
     if (context.contextType != CompletionContext.ImportContext) {
