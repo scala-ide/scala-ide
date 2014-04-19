@@ -132,10 +132,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
+    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
+    if (showOnlyTooltips)
+      return
+
     val d: IDocument = viewer.getDocument()
     val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
-
-    val tooltipsOnly = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
 
     /**
      * This is a heuristic that is only called when 'completion overwrite' is enabled.
@@ -175,11 +177,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val importSize = EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
       var changes: List[TextChange] = Nil
 
-      if (!tooltipsOnly) {
-        scalaSourceFile.withSourceFile { (sourceFile, _) =>
-          val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-          changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
-        }
+      scalaSourceFile.withSourceFile { (sourceFile, _) =>
+        val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
+        changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
       }
 
       val importStmt = if (needImport) { // add an import statement if required
@@ -206,7 +206,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
       editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
     }
 
-    if (!tooltipsOnly && context.contextType != CompletionContext.ImportContext) {
+    if (context.contextType != CompletionContext.ImportContext) {
       if (!overwrite || !doParamsProbablyExist) selectionProvider match {
         case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
           addArgumentTemplates(d, viewer, completionFullString)
