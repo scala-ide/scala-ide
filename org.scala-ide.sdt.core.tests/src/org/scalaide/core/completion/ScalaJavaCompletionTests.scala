@@ -40,7 +40,7 @@ class ScalaJavaCompletionTests {
     for (i <- 0 until positions.size) {
 
       // get the proposal
-      val proposals = completionProposalComputer.mixedInCompletions(unit, positions(i) + 1, null, new NullProgressMonitor)
+      val proposals = completionProposalComputer.mixedInCompletions(unit, positions(i) + 1, new NullProgressMonitor)
 
       import scala.collection.JavaConversions._
 

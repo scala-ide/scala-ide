@@ -35,13 +35,14 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.eclipse.jface.text.TextSelection
 
 /** A UI class for displaying completion proposals.
  *
  *  It adds parenthesis at the end of a proposal if it has parameters, and places the caret
  *  between them.
  */
-class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
+class ScalaCompletionProposal(proposal: CompletionProposal)
   extends IJavaCompletionProposal
   with ICompletionProposalExtension
   with ICompletionProposalExtension2
@@ -110,7 +111,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
    * Applies the actual completion to the document, while considering if completion
    * overwrite is enabled.
    */
-  def applyCompletionToDocument(d: IDocument, offset: Int, overwrite: Boolean): Unit = {
+  def applyCompletionToDocument(viewer: ITextViewer, offset: Int, overwrite: Boolean): Unit = {
+    val d: IDocument = viewer.getDocument()
     // lazy val necessary because the operation may be unnecessary and the
     // underlying document changes during completion insertion
     lazy val paramsProbablyExists = doParamsProbablyExist(d, offset)
@@ -129,28 +131,16 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
             refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
           }
 
-        val newCursorPosition = startPos + completionFullString.length() + importStmt.headOption.fold(0)(_.text.length)
-
         // Apply the two changes in one step, if done separately we would need an
         // another `waitLoadedType` to update the positions for the refactoring
         // to work properly.
         EditorUtils.applyChangesToFileWhileKeepingSelection(
-          d, textSelection, scalaSourceFile.file, completedIdent +: importStmt)
+          d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
 
-        def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
-          editor.selectAndReveal(newCursorPosition, 0)
-        }
-
-        if (context.contextType != CompletionContext.ImportContext) {
-          if (!overwrite || !paramsProbablyExists) selectionProvider match {
-            case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
-              addArgumentTemplates(d, viewer, completionFullString)
-            case _ =>
-              adjustCursorPosition()
-          }
-          else
-            adjustCursorPosition()
-        }
+        if (context.contextType != CompletionContext.ImportContext
+            && (!overwrite || !paramsProbablyExists)
+            && explicitParamNames.flatten.nonEmpty)
+          addArgumentTemplates(d, viewer, completionFullString)
       }
     }
   }
@@ -159,10 +149,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
 
     if (!showOnlyTooltips) {
-      val d: IDocument = viewer.getDocument()
       val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
 
-      applyCompletionToDocument(d, offset, overwrite)
+      applyCompletionToDocument(viewer, offset, overwrite)
     }
   }
 
@@ -331,7 +320,8 @@ object ScalaCompletionProposal {
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
 
-  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal, selectionProvider)
+  @deprecated("Use the constructor of ScalaCompletionProposal instead", "4.0")
+  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal)
 
   def insertCompletion(): Boolean = {
     val preference = JavaPlugin.getDefault().getPreferenceStore()
