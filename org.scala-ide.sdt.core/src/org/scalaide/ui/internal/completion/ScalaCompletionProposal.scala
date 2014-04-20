@@ -1,8 +1,5 @@
 package org.scalaide.ui.internal.completion
 
-import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.implementations.AddImportStatement
-
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -10,7 +7,6 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
@@ -18,7 +14,6 @@ import org.eclipse.jface.text.ITextViewerExtension4
 import org.eclipse.jface.text.ITextViewerExtension5
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.TextPresentation
-import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
@@ -37,7 +32,6 @@ import org.scalaide.core.completion._
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 /** A UI class for displaying completion proposals.
  *
@@ -53,10 +47,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   import proposal._
   import ScalaCompletionProposal._
 
-  private var cachedStyleRange: StyleRange = null
+  private var viewer: ITextViewer = _
+  private var cachedStyleRange: StyleRange = _
   private val ScalaProposalCategory = "ScalaProposal"
-
-  override def getRelevance = relevance
 
   private lazy val image = {
     import MemberKind._
@@ -75,10 +68,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     }
   }
 
-  override def getImage = image
-
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
+
+  override def getRelevance = relevance
+  override def getImage = image
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   override def getContextInformation(): IContextInformation =
@@ -109,56 +103,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     throw new IllegalStateException("Shouldn't be called")
   }
 
-  /**
-   * Applies the actual completion to the document, while considering if completion
-   * overwrite is enabled.
-   *
-   * This method is UI independent and returns the position of the cursor after
-   * the completion is inserted and a boolean value that describes if a linked
-   * mode model should be created.
-   */
-  def applyCompletionToDocument(
-      d: IDocument,
-      scalaSourceFile: InteractiveCompilationUnit,
-      offset: Int,
-      overwrite: Boolean): Option[(Int, Boolean)] = {
-    // lazy val necessary because the operation may be unnecessary and the
-    // underlying document changes during completion insertion
-    lazy val paramsProbablyExists = doParamsProbablyExist(d, offset)
-    val completionFullString = completionString(overwrite, paramsProbablyExists)
-
-    scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-      val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-      val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
-
-      val importStmt =
-        if (!needImport)
-          Nil
-        else {
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        }
-
-      val applyLinkedMode =
-        (context.contextType != CompletionContext.ImportContext
-        && (!overwrite || !paramsProbablyExists)
-        && explicitParamNames.flatten.nonEmpty)
-
-      val exitPosition = if (applyLinkedMode) startPos + completionFullString.length() else endPos
-
-      // Apply the two changes in one step, if done separately we would need an
-      // another `waitLoadedType` to update the positions for the refactoring
-      // to work properly.
-      val selection = EditorUtils.applyChangesToFile(
-        d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
-
-      if (applyLinkedMode)
-        Some((startPos + completionFullString.length(), applyLinkedMode))
-      else
-        selection map (_.getOffset() -> applyLinkedMode)
-    }.flatten
-  }
-
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
     val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
 
@@ -185,6 +129,34 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
 
   override def isValidFor(d: IDocument, pos: Int) =
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
+
+  /** Highlight the part of the text that would be overwritten by the current selection
+   */
+  override def selected(viewer: ITextViewer, smartToggle: Boolean) {
+    repairPresentation(viewer)
+    if (!insertCompletion() ^ smartToggle) {
+      cachedStyleRange = createStyleRange(viewer)
+      if (cachedStyleRange == null)
+        return
+
+      viewer match {
+        case viewerExtension4: ITextViewerExtension4 =>
+          this.viewer = viewer
+          viewerExtension4.addTextPresentationListener(presListener)
+        case _ => ()
+      }
+      repairPresentation(viewer)
+    }
+  }
+
+  override def unselected(viewer: ITextViewer) {
+    viewer.asInstanceOf[ITextViewerExtension4].removeTextPresentationListener(presListener)
+    repairPresentation(viewer)
+    cachedStyleRange = null
+  }
+
+  override def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean =
+    isValidFor(doc, offset)
 
   /** Insert a completion proposal, with placeholders for each explicit argument.
    *  For each argument, it inserts its name, and puts the editor in linked mode.
@@ -243,31 +215,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     ui
   }
 
-  /** Highlight the part of the text that would be overwritten by the current selection
-   */
-  override def selected(viewer: ITextViewer, smartToggle: Boolean) {
-    repairPresentation(viewer)
-    if (!insertCompletion() ^ smartToggle) {
-      cachedStyleRange = createStyleRange(viewer)
-      if (cachedStyleRange == null)
-        return
-
-      viewer match {
-        case viewerExtension4: ITextViewerExtension4 =>
-          this.viewer = viewer
-          viewerExtension4.addTextPresentationListener(presListener)
-        case _ => ()
-      }
-      repairPresentation(viewer)
-    }
-  }
-
-  override def unselected(viewer: ITextViewer) {
-    viewer.asInstanceOf[ITextViewerExtension4].removeTextPresentationListener(presListener)
-    repairPresentation(viewer)
-    cachedStyleRange = null
-  }
-
   private def repairPresentation(viewer: ITextViewer) {
     if (cachedStyleRange != null) viewer match {
       case viewer2: ITextViewerExtension2 =>
@@ -302,19 +249,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     if (modelCaret > startPos + completion.length)
       return null
 
-    val region = existingIdentifier(viewer.getDocument(), modelCaret)
-    val length = startPos + region.getLength() - modelCaret
+    val wordLen = ScalaWordFinder.identLenAtOffset(viewer.getDocument(), modelCaret)
+    val length = startPos + wordLen - modelCaret
 
     new StyleRange(modelCaret, length, getForegroundColor, getBackgroundColor)
   }
 
-  private def existingIdentifier(doc: IDocument, offset: Int): IRegion = {
-    ScalaWordFinder.findWord(doc, offset)
-  }
-
-  private var viewer: ITextViewer = null
-
-  object presListener extends ITextPresentationListener {
+  private object presListener extends ITextPresentationListener {
     override def applyTextPresentation(textPresentation: TextPresentation) {
       if (viewer ne null) {
         cachedStyleRange = createStyleRange(viewer)
@@ -322,10 +263,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
           textPresentation.mergeStyleRange(cachedStyleRange)
       }
     }
-  }
-
-  override def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean = {
-    isValidFor(doc, offset)
   }
 }
 

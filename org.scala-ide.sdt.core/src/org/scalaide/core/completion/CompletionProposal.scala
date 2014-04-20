@@ -1,6 +1,12 @@
 package org.scalaide.core.completion
 
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.TextSelection
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 object HasArgs extends Enumeration {
   val NoArgs, EmptyArgs, NonEmptyArgs = Value
@@ -137,6 +143,56 @@ case class CompletionProposal(
       .next()
 
     !terminatesExprProbably(terminationChar)
+  }
+
+    /**
+   * Applies the actual completion to the document, while considering if completion
+   * overwrite is enabled.
+   *
+   * This method is UI independent and returns the position of the cursor after
+   * the completion is inserted and a boolean value that describes if a linked
+   * mode model should be created.
+   */
+  def applyCompletionToDocument(
+      d: IDocument,
+      scalaSourceFile: InteractiveCompilationUnit,
+      offset: Int,
+      overwrite: Boolean): Option[(Int, Boolean)] = {
+    // lazy val necessary because the operation may be unnecessary and the
+    // underlying document changes during completion insertion
+    lazy val paramsProbablyExists = doParamsProbablyExist(d, offset)
+    val completionFullString = completionString(overwrite, paramsProbablyExists)
+
+    scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+      val endPos = if (overwrite) startPos + ScalaWordFinder.identLenAtOffset(d, offset) else offset
+      val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
+
+      val importStmt =
+        if (!needImport)
+          Nil
+        else {
+          val refactoring = new AddImportStatement { val global = compiler }
+          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+        }
+
+      val applyLinkedMode =
+        (context.contextType != CompletionContext.ImportContext
+        && (!overwrite || !paramsProbablyExists)
+        && explicitParamNames.flatten.nonEmpty)
+
+      val exitPosition = if (applyLinkedMode) startPos + completionFullString.length() else endPos
+
+      // Apply the two changes in one step, if done separately we would need an
+      // another `waitLoadedType` to update the positions for the refactoring
+      // to work properly.
+      val selection = EditorUtils.applyChangesToFile(
+        d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
+
+      if (applyLinkedMode)
+        Some((startPos + completionFullString.length(), applyLinkedMode))
+      else
+        selection map (_.getOffset() -> applyLinkedMode)
+    }.flatten
   }
 }
 
