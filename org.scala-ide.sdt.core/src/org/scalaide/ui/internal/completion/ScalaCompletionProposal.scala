@@ -1,10 +1,8 @@
 package org.scalaide.ui.internal.completion
 
-import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.core.completion._
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
+
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -20,6 +18,7 @@ import org.eclipse.jface.text.ITextViewerExtension4
 import org.eclipse.jface.text.ITextViewerExtension5
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.TextPresentation
+import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
@@ -34,8 +33,11 @@ import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import org.scalaide.core.completion._
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.eclipse.jface.text.TextSelection
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 /** A UI class for displaying completion proposals.
  *
@@ -110,39 +112,51 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   /**
    * Applies the actual completion to the document, while considering if completion
    * overwrite is enabled.
+   *
+   * This method is UI independent and returns the position of the cursor after
+   * the completion is inserted and a boolean value that describes if a linked
+   * mode model should be created.
    */
-  def applyCompletionToDocument(viewer: ITextViewer, offset: Int, overwrite: Boolean): Unit = {
-    val d: IDocument = viewer.getDocument()
+  def applyCompletionToDocument(
+      d: IDocument,
+      scalaSourceFile: InteractiveCompilationUnit,
+      offset: Int,
+      overwrite: Boolean): Option[(Int, Boolean)] = {
     // lazy val necessary because the operation may be unnecessary and the
     // underlying document changes during completion insertion
     lazy val paramsProbablyExists = doParamsProbablyExist(d, offset)
     val completionFullString = completionString(overwrite, paramsProbablyExists)
 
-    EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
-      scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-        val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-        val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
+    scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
+      val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
+      val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
 
-        val importStmt =
-          if (!needImport)
-            Nil
-          else {
-            val refactoring = new AddImportStatement { val global = compiler }
-            refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-          }
+      val importStmt =
+        if (!needImport)
+          Nil
+        else {
+          val refactoring = new AddImportStatement { val global = compiler }
+          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+        }
 
-        // Apply the two changes in one step, if done separately we would need an
-        // another `waitLoadedType` to update the positions for the refactoring
-        // to work properly.
-        EditorUtils.applyChangesToFileWhileKeepingSelection(
-          d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
+      val applyLinkedMode =
+        (context.contextType != CompletionContext.ImportContext
+        && (!overwrite || !paramsProbablyExists)
+        && explicitParamNames.flatten.nonEmpty)
 
-        if (context.contextType != CompletionContext.ImportContext
-            && (!overwrite || !paramsProbablyExists)
-            && explicitParamNames.flatten.nonEmpty)
-          addArgumentTemplates(d, viewer, completionFullString)
-      }
-    }
+      val exitPosition = if (applyLinkedMode) startPos + completionFullString.length() else endPos
+
+      // Apply the two changes in one step, if done separately we would need an
+      // another `waitLoadedType` to update the positions for the refactoring
+      // to work properly.
+      val selection = EditorUtils.applyChangesToFile(
+        d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
+
+      if (applyLinkedMode)
+        Some((startPos + completionFullString.length(), applyLinkedMode))
+      else
+        selection map (_.getOffset() -> applyLinkedMode)
+    }.flatten
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
@@ -150,8 +164,19 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
 
     if (!showOnlyTooltips) {
       val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
+      val d = viewer.getDocument()
 
-      applyCompletionToDocument(viewer, offset, overwrite)
+      EditorUtils.withScalaFileAndSelection { (scalaSourceFile, _) =>
+        applyCompletionToDocument(d, scalaSourceFile, offset, overwrite) foreach {
+          case (cursorPos, applyLinkedMode) =>
+            if (applyLinkedMode) {
+              val ui = mkEditorLinkedMode(d, viewer, mkLinkedModeModel(d), cursorPos)
+              ui.enter()
+            }
+        }
+        None
+      }
+
     }
   }
 
@@ -166,7 +191,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
    *  This means that TAB can be used to navigate to the next argument, and Enter or Esc
    *  can be used to exit this mode.
    */
-  def addArgumentTemplates(document: IDocument, textViewer: ITextViewer, completionFullString: String) {
+  private def mkLinkedModeModel(document: IDocument): LinkedModeModel = {
     val model = new LinkedModeModel()
 
     document.addPositionCategory(ScalaProposalCategory)
@@ -189,15 +214,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     })
 
     model.forceInstall()
-
-    val ui = mkEditorLinkedMode(document, textViewer, model, completionFullString.length)
-    ui.enter()
+    model
   }
 
   /** Prepare a linked mode for the given editor. */
-  private def mkEditorLinkedMode(document: IDocument, textViewer: ITextViewer, model: LinkedModeModel, len: Int): EditorLinkedModeUI = {
+  private def mkEditorLinkedMode(document: IDocument, textViewer: ITextViewer, model: LinkedModeModel, cursorPosition: Int): EditorLinkedModeUI = {
     val ui = new EditorLinkedModeUI(model, textViewer)
-    ui.setExitPosition(textViewer, startPos + len, 0, Integer.MAX_VALUE)
+    ui.setExitPosition(textViewer, cursorPosition, 0, Integer.MAX_VALUE)
     ui.setExitPolicy(new IExitPolicy {
       override def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
         event.character match {
