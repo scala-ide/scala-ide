@@ -74,31 +74,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
   override def getImage = image
 
-  /** `getParamNames` is expensive, save this result once computed.
-   *
-   *  @note This field should be lazy to avoid unnecessary computation.
-   */
-  private lazy val explicitParamNames = getParamNames()
-
-  /** The string that will be inserted in the document if this proposal is chosen.
-   *  By default, it consists of the method name, followed by all explicit parameter sections,
-   *  and inside each section the parameter names, delimited by commas. If `overwrite`
-   *  is on, it won't add parameter names
-   *
-   *  @note It triggers the potentially expensive `getParameterNames` operation.
-   */
-  def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean) = {
-    if (context.contextType == CompletionContext.ImportContext || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist))
-      completion
-    else {
-      val buffer = new StringBuffer(completion)
-
-      for (section <- explicitParamNames)
-        buffer.append(section.mkString("(", ", ", ")"))
-      buffer.toString
-    }
-  }
-
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
 
@@ -131,51 +106,17 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     throw new IllegalStateException("Shouldn't be called")
   }
 
-  override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
-    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
-    if (showOnlyTooltips)
-      return
+  /**
+   * Applies the actual completion to the document, while considering if completion
+   * overwrite is enabled.
+   */
+  def applyCompletionToDocument(d: IDocument, offset: Int, overwrite: Boolean): Unit = {
+    // lazy val necessary because the operation may be unnecessary and the
+    // underlying document changes during completion insertion
+    lazy val paramsProbablyExists = doParamsProbablyExist(d, offset)
+    val completionFullString = completionString(overwrite, paramsProbablyExists)
 
-    val d: IDocument = viewer.getDocument()
-    val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
-
-    /**
-     * This is a heuristic that is only called when 'completion overwrite' is enabled.
-     * It checks if an expression _probably_ has already its parameter list. Without
-     * this heuristic the IDE would in cases like
-     * {{{
-     *   List(1).map^
-     * }}}
-     * not know if the parameter list should be added or not.
-     *
-     * Because this is a heuristic it will only work in some cases, but hopefully in
-     * the most important ones.
-     */
-    lazy val doParamsProbablyExist = {
-      // - inner method exists to make a return possible
-      // - lazy val necessary because the operation may be unnecessary and the
-      //   underlying document changes during completion insertion
-      def check: Boolean = {
-        def terminatesExprProbably(c: Char) =
-          c.toString matches "[a-zA-Z_;)},.\n]"
-
-        val terminationChar = Iterator
-          .from(offset)
-          // prevent BadLocationException at end of file
-          .filter(c => if (c < d.getLength()) true else return false)
-          .map(d.getChar)
-          .dropWhile(Character.isJavaIdentifierPart)
-          .dropWhile(" \t" contains _)
-          .next()
-
-        !terminatesExprProbably(terminationChar)
-      }
-      check
-    }
-
-    val completionFullString = completionString(overwrite, doParamsProbablyExist)
-
-    val importSize = EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
       scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
         val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
         val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
@@ -188,29 +129,40 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
             refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
           }
 
+        val newCursorPosition = startPos + completionFullString.length() + importStmt.headOption.fold(0)(_.text.length)
+
         // Apply the two changes in one step, if done separately we would need an
         // another `waitLoadedType` to update the positions for the refactoring
         // to work properly.
         EditorUtils.applyChangesToFileWhileKeepingSelection(
           d, textSelection, scalaSourceFile.file, completedIdent +: importStmt)
 
-        importStmt.headOption.map(_.text.length)
+        def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
+          editor.selectAndReveal(newCursorPosition, 0)
+        }
+
+        if (context.contextType != CompletionContext.ImportContext) {
+          if (!overwrite || !paramsProbablyExists) selectionProvider match {
+            case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
+              addArgumentTemplates(d, viewer, completionFullString)
+            case _ =>
+              adjustCursorPosition()
+          }
+          else
+            adjustCursorPosition()
+        }
       }
     }
+  }
 
-    def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
-      editor.selectAndReveal(startPos + completionFullString.length() + importSize.flatten.getOrElse(0), 0)
-    }
+  override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
+    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
 
-    if (context.contextType != CompletionContext.ImportContext) {
-      if (!overwrite || !doParamsProbablyExist) selectionProvider match {
-        case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
-          addArgumentTemplates(d, viewer, completionFullString)
-        case _ =>
-          adjustCursorPosition()
-      }
-      else
-        adjustCursorPosition()
+    if (!showOnlyTooltips) {
+      val d: IDocument = viewer.getDocument()
+      val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
+
+      applyCompletionToDocument(d, offset, overwrite)
     }
   }
 
@@ -229,23 +181,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     val model = new LinkedModeModel()
 
     document.addPositionCategory(ScalaProposalCategory)
-    var offset = startPos + completion.length
 
-    for (section <- explicitParamNames) {
-      offset += 1 // open parenthesis
-      var idx = 0 // the index of the current argument
-      for (proposal <- section) {
+    linkedModeGroups foreach {
+      case (offset, len) =>
+        document.addPosition(ScalaProposalCategory, new Position(offset, len))
         val group = new LinkedPositionGroup()
-        val positionOffset = offset + 2 * idx // each argument is followed by ", "
-        val positionLength = proposal.length
-        offset += positionLength
-
-        document.addPosition(ScalaProposalCategory, new Position(positionOffset, positionLength))
-        group.addPosition(new LinkedPosition(document, positionOffset, positionLength, LinkedPositionGroup.NO_STOP))
+        group.addPosition(new LinkedPosition(document, offset, len, LinkedPositionGroup.NO_STOP))
         model.addGroup(group)
-        idx += 1
-      }
-      offset += 1 + 2 * (idx - 1) // close parenthesis around section (and the last argument isn't followed by comma and space)
     }
 
     model.addLinkingListener(new ILinkedModeListener() {

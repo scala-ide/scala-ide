@@ -1,5 +1,7 @@
 package org.scalaide.core.completion
 
+import org.eclipse.jface.text.IDocument
+
 object HasArgs extends Enumeration {
   val NoArgs, EmptyArgs, NonEmptyArgs = Value
 
@@ -55,6 +57,12 @@ case class CompletionProposal(
   needImport: Boolean        // for Class, Trait, Type, Objects: import statement has to be added
 ) {
 
+  /** `getParamNames` is expensive, save this result once computed.
+   *
+   *  @note This field is lazy to avoid unnecessary computation.
+   */
+  lazy val explicitParamNames = getParamNames()
+
   /** Return the tooltip displayed once a completion has been activated. */
   def tooltip: String = {
     val contextInfo = for {
@@ -62,6 +70,73 @@ case class CompletionProposal(
     } yield for { (name, tpe) <- names.zip(tpes) } yield "%s: %s".format(name, tpe)
 
     contextInfo.map(_.mkString("(", ", ", ")")).mkString("")
+  }
+
+  /** The string that will be inserted in the document if this proposal is chosen.
+   *  By default, it consists of the method name, followed by all explicit parameter sections,
+   *  and inside each section the parameter names, delimited by commas. If `overwrite`
+   *  is on, it won't add parameter names
+   *
+   *  @note It triggers the potentially expensive `getParameterNames` operation.
+   */
+  def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
+    if (context.contextType == CompletionContext.ImportContext || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist))
+      completion
+    else {
+      val buffer = new StringBuffer(completion)
+
+      for (section <- explicitParamNames)
+        buffer.append(section.mkString("(", ", ", ")"))
+      buffer.toString
+    }
+  }
+
+  /** Non GUI logic that calculates the `(offset, length)` groups for the `LinkedModeModel` */
+  def linkedModeGroups: IndexedSeq[(Int, Int)] = {
+    var groups = IndexedSeq[(Int, Int)]()
+    var offset = startPos + completion.length
+    for (section <- explicitParamNames) {
+      offset += 1 // open parenthesis
+      var idx = 0 // the index of the current argument
+      for (proposal <- section) {
+        val positionOffset = offset + 2 * idx // each argument is followed by ", "
+        val positionLength = proposal.length
+        offset += positionLength
+
+        groups :+= positionOffset -> positionLength
+        idx += 1
+      }
+      offset += 1 + 2 * (idx - 1) // close parenthesis around section (and the last argument isn't followed by comma and space)
+    }
+    groups
+  }
+
+  /**
+   * This is a heuristic that only needs to be called when 'completion overwrite' is enabled.
+   * It checks if an expression _probably_ has already its parameter list. Without
+   * this heuristic the IDE would in cases like
+   * {{{
+   *   List(1).map^
+   * }}}
+   * not know if the parameter list should be added or not.
+   *
+   * Because this is a heuristic it will only work in some cases, but hopefully in
+   * the most important ones.
+   */
+  def doParamsProbablyExist(d: IDocument, offset: Int): Boolean = {
+    def terminatesExprProbably(c: Char) =
+      c.toString matches "[a-zA-Z_;)},.\n]"
+
+    val terminationChar = Iterator
+      .from(offset)
+      // prevent BadLocationException at end of file
+      .filter(c => if (c < d.getLength()) true else return false)
+      .map(d.getChar)
+      .dropWhile(Character.isJavaIdentifierPart)
+      .dropWhile(" \t" contains _)
+      .next()
+
+    !terminatesExprProbably(terminationChar)
   }
 }
 
