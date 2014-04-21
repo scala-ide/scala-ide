@@ -1166,6 +1166,19 @@
             </enablement>
          </action>
          <action
+               class="org.scalaide.refactoring.internal.extract.ExtractExtractorAction"
+               definitionId="org.scalaide.refactoring.command.ExtractExtractor"
+               id="org.scalaide.refactoring.extractExtractorAction"
+               label="Extract Extractor"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.codeExtractionGroup"
+               tooltip="Extract Extractor">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+         <action
                class="org.scalaide.ui.internal.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
@@ -1254,6 +1267,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.codeextraction"
          id="org.scalaide.refactoring.command.ExtractParameter"
          name="Extract Parameter"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.codeextraction"
+         id="org.scalaide.refactoring.command.ExtractExtractor"
+         name="Extract Extractor"/>
       <command
          categoryId="scala.tools.eclipse.category"
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
