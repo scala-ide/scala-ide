@@ -21,28 +21,8 @@ trait ExtractAction extends RefactoringAction {
 
     var selectedExtraction: Option[refactoring.Extraction] = None
 
-    val preferredName = "extracted"
-
-    lazy val proposedPlaceholderName = {
-      // we simply search the CU for name collisions
-      // because the name must be unique to the CU
-      // in order to not break inline renaming.
-      def nameCollides(n: String): Boolean =
-        file.getContents().indexOfSlice(n) != -1 ||
-          // if no collision in CU found, we can check the scope
-          !selectedExtraction.get.extractionTarget.scope.nameCollisions(n).isEmpty
-
-      if (!nameCollides(preferredName))
-        preferredName
-      else {
-        (1 to Int.MaxValue).collectFirst {
-          case i if !nameCollides(preferredName + i) =>
-            preferredName + i
-        }.get
-      }
-    }
-
-    def refactoringParameters: refactoring.RefactoringParameters
+    def refactoringParameters: refactoring.RefactoringParameters =
+      selectedExtraction.get
 
     val initialSelection = EditorHelpers.withCurrentEditor { editor =>
       Some(editor.getViewer().getSelectedRange())
@@ -78,7 +58,7 @@ trait ExtractAction extends RefactoringAction {
           case Some(e) =>
             r.selectedExtraction = Some(e)
             if (runRefactoring(r, shell))
-              doInlineRenaming(r.proposedPlaceholderName)
+              doInlineRenaming(e.abstractionName)
           // use the refactoring wizard for displaying preparation errors
           case None =>
             r.resetSelection()

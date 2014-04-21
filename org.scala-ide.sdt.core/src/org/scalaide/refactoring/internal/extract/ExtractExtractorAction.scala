@@ -13,11 +13,5 @@ class ExtractExtractorAction extends ExtractAction {
           val global = compiler
         }
       }.get
-
-      override val preferredName = "Extracted"
-
-      def refactoringParameters =
-        selectedExtraction.get
-          .withAbstractionName(proposedPlaceholderName)
     }
 }

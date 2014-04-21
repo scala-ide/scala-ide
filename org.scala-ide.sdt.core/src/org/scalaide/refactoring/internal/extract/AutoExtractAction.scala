@@ -13,9 +13,5 @@ class AutoExtractAction extends ExtractAction {
           val global = compiler
         }
       }.get
-
-      def refactoringParameters =
-        selectedExtraction.get
-          .withAbstractionName(proposedPlaceholderName)
     }
 }
