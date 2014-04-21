@@ -1053,32 +1053,6 @@
                </objectClass>
             </enablement>-->
          </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExtractMethodAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExtractMethod"
-               id="scala.tools.eclipse.refactoring.extractMethodAction"
-               label="Extract Method"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Extract Method">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
-         <action
-               class="org.scalaide.refactoring.internal.ExtractLocalAction"
-               definitionId="scala.tools.eclipse.refactoring.command.ExtractLocal"
-               id="scala.tools.eclipse.refactoring.extractLocalAction"
-               label="Extract Local"
-               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.sourceGeneratorGroup"
-               tooltip="Extract Local">
-            <enablement>
-               <objectClass
-                     name="org.eclipse.jface.text.TextSelection">
-               </objectClass>
-            </enablement>
-         </action>
            <action
                class="org.scalaide.refactoring.internal.InlineLocalAction"
                definitionId="scala.tools.eclipse.refactoring.command.InlineLocal"
@@ -1246,14 +1220,6 @@
          name="Move Class/Object/Trait"/>
       <command
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExtractMethod"
-         name="Extract Method"/>
-      <command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
-         id="scala.tools.eclipse.refactoring.command.ExtractLocal"
-         name="Extract Local"/>
-      <command
-         categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.InlineLocal"
          name="Inline Local"/>
       <command
@@ -1344,16 +1310,6 @@
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
          contextId="scala.tools.eclipse.scalaEditorScope"
          sequence="M2+M3+T"/> 
-   <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractMethod"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+M"/>
-   <key
-   		 commandId="scala.tools.eclipse.refactoring.command.ExtractLocal"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+L"/>
    <key
    		 commandId="scala.tools.eclipse.refactoring.command.InlineLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"

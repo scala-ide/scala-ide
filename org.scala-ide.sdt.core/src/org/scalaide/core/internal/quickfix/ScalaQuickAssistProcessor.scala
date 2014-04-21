@@ -64,10 +64,8 @@ object ScalaQuickAssistProcessor {
   private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
 
   val availableAssists = Seq(
-    ExtractLocalProposal,
     ExpandCaseClassBindingProposal,
-    InlineLocalProposal,
-    ExtractMethodProposal
+    InlineLocalProposal
   )
 }
 
