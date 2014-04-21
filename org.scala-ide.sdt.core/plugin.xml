@@ -419,6 +419,9 @@
       </type>
       <type
             name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
+      <type
+         markerType="org.scalaide.refactoring.codeSelection"
+         name="org.scalaide.refactoring.codeSelection"/>
    </extension>
    
    <extension
@@ -442,6 +445,32 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
+     <specification 
+          annotationType="org.scalaide.refactoring.codeSelection"
+          colorPreferenceKey="codeSelection.color"
+          colorPreferenceValue="192,255,192"
+          contributesToHeader="false"
+          highlightPreferenceKey="codeSelection.highlight"
+          highlightPreferenceValue="true"
+          includeOnPreferencePage="true"
+          label="Code Selection Marker"
+          overviewRulerPreferenceKey="codeSelectionoverview"
+          overviewRulerPreferenceValue="true"
+          presentationLayer="0"
+          textPreferenceKey="codeSelection.text"
+          textPreferenceValue="true"
+          textStylePreferenceValue="BOX"
+          verticalRulerPreferenceKey="codeSelection.ruler"
+          verticalRulerPreferenceValue="true">
+     </specification>
+   </extension>
+
+   <extension
+     id="org.scalaide.refactoring.codeSelection"
+     name="Code Selection"
+     point="org.eclipse.core.resources.markers">
+     <super
+       type="org.eclipse.core.resources.textmarker"/>
    </extension>
 
     <extension
@@ -969,6 +998,7 @@
             <separator name="scala.tools.eclipse.refactoring.refactoringGroup"/>
             <separator name="scala.tools.eclipse.refactoring.quickfixGroup"/>
             <separator name="scala.tools.eclipse.refactoring.methodSignatureGroup"/>
+            <separator name="scala.tools.eclipse.refactoring.codeExtractionGroup"/>
          </menu>
          <action
                class="org.scalaide.refactoring.internal.method.SplitParameterListsAction"
