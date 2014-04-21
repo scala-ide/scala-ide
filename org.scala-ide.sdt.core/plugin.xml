@@ -1127,6 +1127,19 @@
             </enablement>
          </action>
          <action
+               class="org.scalaide.refactoring.internal.extract.ExtractValueAction"
+               definitionId="org.scalaide.refactoring.command.ExtractValue"
+               id="org.scalaide.refactoring.extractValueAction"
+               label="Extract Value"
+               menubarPath="scala.tools.eclipse.refactoring.refactoringMenu/scala.tools.eclipse.refactoring.codeExtractionGroup"
+               tooltip="Extract Value">
+            <enablement>
+               <objectClass
+                     name="org.eclipse.jface.text.TextSelection">
+               </objectClass>
+            </enablement>
+         </action>
+         <action
                class="org.scalaide.ui.internal.actions.RunSelectionAction"
                definitionId="scala.tools.eclipse.interpreter.RunSelection"
                disabledIcon="icons/full/dtool16/run_interpreter.gif"
@@ -1203,6 +1216,10 @@
          categoryId="scala.tools.eclipse.refactoring.commands.refactoring"
          id="scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding"
          name="Expand Case Class Binding"/>
+      <command
+         categoryId="scala.tools.eclipse.refactoring.commands.codeextraction"
+         id="org.scalaide.refactoring.command.ExtractValue"
+         name="Extract Value"/>
       <command
          categoryId="scala.tools.eclipse.category"
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
