@@ -18,7 +18,8 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
 
   case class Completion(
       completionToApply: String,
-      enableOverwrite: Boolean = false)
+      enableOverwrite: Boolean = false,
+      expectedCompletions: Seq[String] = Nil)
         extends Operation {
 
     def execute() = {
@@ -28,6 +29,10 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       val unit = compilationUnitOfSourceFile(src)
       val completions = new ScalaCompletions().findCompletions(r)(caretOffset, unit)(src, compiler)
       val completion = completions.find(_.display == completionToApply)
+
+      val missingCompletions = expectedCompletions.filter(c => !completions.exists(_.display == c))
+      if (missingCompletions.nonEmpty)
+        throw new IllegalArgumentException(s"the following completions do not exist:\n\t${missingCompletions.mkString("\t\n")}")
 
       completion.fold(throw new IllegalArgumentException(s"the completion '$completionToApply' does not exist")) {
         completion => completion.applyCompletionToDocument(doc, unit, caretOffset, enableOverwrite) foreach {

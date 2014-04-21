@@ -21,6 +21,7 @@ import scala.reflect.internal.util.OffsetPosition
 
 object CompletionTests extends TestProjectSetup("completion")
 
+@deprecated("Don't use this test class anymore. Use the test suite in org.scalaide.ui.completion instead", "4.0")
 class CompletionTests {
   import CompletionTests._
 
@@ -123,34 +124,6 @@ class CompletionTests {
    */
   private def normalizeCompletion(str: String): String = {
     str.replace("(", "").replace(")", "").replace("java.lang.String", "String")
-  }
-
-  /**
-   * Test that completion shows only accessible members.
-   */
-  @Test
-  def accessibilityTests() {
-    val oraclePos14 = List("secretPrivate: Unit",
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-
-    val oraclePos16 = List("secretPrivate: Unit",
-      "secretPrivateThis: Unit",
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos22 = List(
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos28 = List(
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos37 = List(
-      "secretPublic: Unit")
-
-    runTest("accessibility/AccessibilityTest.scala", true)(oraclePos14, oraclePos16, oraclePos22, oraclePos28, oraclePos37)
   }
 
   @Test

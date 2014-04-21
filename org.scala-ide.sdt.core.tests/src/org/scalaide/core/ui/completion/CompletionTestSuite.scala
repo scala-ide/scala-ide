@@ -5,6 +5,7 @@ import org.junit.runners.Suite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
-    classOf[CompletionOverwriteTests]
+    classOf[CompletionOverwriteTests],
+    classOf[AccessibilityTests]
 ))
 class CompletionTestSuite
