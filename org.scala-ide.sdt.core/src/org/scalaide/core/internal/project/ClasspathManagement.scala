@@ -36,6 +36,8 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import scala.tools.nsc.settings.ScalaVersion
+import org.eclipse.jface.util.StatusHandler
+import org.eclipse.debug.core.DebugPlugin
 import org.scalaide.util.internal.CompilerUtils
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
@@ -335,6 +337,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.") :: Nil
           case Some(v) if (CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
+            if (!plugin.headlessMode) {
+              val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, "", null)
+              val handler = DebugPlugin.getDefault().getStatusHandler(status)
+              handler.handleStatus(status, this)
+            }
            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is prior to the one provided by scala IDE ($scalaVersion). Please use the -Xsource flag.") :: Nil
           }
