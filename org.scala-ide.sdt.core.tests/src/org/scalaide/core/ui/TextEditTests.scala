@@ -1,11 +1,5 @@
 package org.scalaide.core.ui
 
-import scala.reflect.internal.util.BatchSourceFile
-import scala.reflect.internal.util.SourceFile
-import scala.reflect.io.PlainFile
-
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.IJavaPartitions
@@ -19,6 +13,7 @@ import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
 /**
@@ -139,9 +134,6 @@ trait CompilerSupport extends EclipseDocumentSupport {
     simulator.createProjectInWorkspace(projectName)
   }
 
-  private lazy val rootPackage =
-    project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src"))
-
   final val compiler: ScalaPresentationCompiler = {
     var c: ScalaPresentationCompiler = null
     project.presentationCompiler { c = _ }
@@ -149,37 +141,20 @@ trait CompilerSupport extends EclipseDocumentSupport {
   }
 
   /**
-   * Returns the compilation unit corresponding to the given path, relative to the src folder.
-   * Example: "scala/collection/Map.scala"
-   */
-  def compilationUnit(path: String): ICompilationUnit = {
-    val segments = path.split("/")
-    rootPackage.getPackageFragment(segments.init.mkString(".")).getCompilationUnit(segments.last)
-  }
-
-  /** Returns a ScalaCompilationUnit to a given SourceFile. */
-  def compilationUnitOfSourceFile(src: SourceFile): ScalaCompilationUnit =
-    compilationUnit(src.path.replaceAll(".*/src(.*)", "$1")).asInstanceOf[ScalaCompilationUnit]
-
-
-  /**
-   * Creates a source file which physically exists in the test project of the test
-   * workspace. The name of the file is automatically generated and unique.
+   * Creates a compilation unit whose underlying source file physically exists
+   * in the test project of the test workspace. The file is placed in a unique
+   * package name to prevent name clashes between generated files.
    *
    * The newly generated file is made available to the Eclipse platform and the
    * Scala compiler to allow the usage of the full non GUI feature set of the IDE.
    */
-  final def createLoadedSourceFile(source: String): SourceFile = {
-    val workspacePath = ScalaPlugin.plugin.workspaceRoot.getLocation().toOSString()
-    val projectPath = project.javaProject.getPath().toOSString()
-    val fullPath = s"$workspacePath$projectPath/src/testfile${System.nanoTime()}.scala"
-    val f = new PlainFile(fullPath)
-    f.create()
-    val sourceFile = new BatchSourceFile(f, source)
-    compiler.loadedType(sourceFile)
-    ResourcesPlugin.getWorkspace().getRoot().refreshLocal(IResource.DEPTH_INFINITE, new NullProgressMonitor)
-    sourceFile
+  final def mkCompilationUnit(source: String): ICompilationUnit = {
+    val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
+    new EclipseUserSimulator().createCompilationUnit(p, "testfile.scala", source)
   }
+
+  final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =
+    mkCompilationUnit(source).asInstanceOf[ScalaCompilationUnit]
 
   @After
   final def deleteProject(): Unit = {
