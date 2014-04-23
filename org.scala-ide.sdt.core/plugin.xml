@@ -686,7 +686,7 @@
                id="org.scala-ide.sdt.core.natures.ToggleNatureAction"
                label="Remove Scala Nature"
                menubarPath="org.scala-ide.sdt.core.popupMenu/content"
-               tooltip="Removes an Scala Builder/Classpath from a Java project">
+               tooltip="Removes a Scala Builder/Classpath from a Java project">
          </action>
          <visibility>
            <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>

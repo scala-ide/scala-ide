@@ -49,6 +49,8 @@ import org.osgi.framework.Bundle
 import org.scalaide.util.internal.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.PluginLogConfigurator
 import scala.tools.nsc.Settings
@@ -58,7 +60,7 @@ import org.scalaide.ui.internal.diagnostic
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
 
-  private final val HeadlessTest  = "sdtcore.headless"
+  private final val HeadlessTest = "sdtcore.headless"
   private final val NoTimeouts = "sdtcore.notimeouts"
 
   @volatile var plugin: ScalaPlugin = _
@@ -115,32 +117,49 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  private def cutVersion(version: String): String = {
-    val pattern = "(\\d)\\.(\\d+)\\..*".r
-    version match {
-      case pattern(major, minor) =>
-        major + "." + minor
-      case _ =>
-        "(unknown)"
+  /** These utility methods should be in tools.nsc.settings's ScalaVersion
+   */
+
+  object ShortScalaVersion {
+    def unapply(v: ScalaVersion): Option[(Int, Int)] = v match {
+      case SpecificScalaVersion(major, minor, _, _) => Some((major, minor))
+      case _ => None
     }
   }
 
-  /**
-   * Check if the given version is compatible with the current plug-in version.
-   * Check on the major/minor number, discard the maintenance number.
-   *
-   * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
-   * 2.8.1 and 2.9.0 aren't.
-   */
-  def isCompatibleVersion(version: Option[String]): Boolean = version match {
-    case Some(v) =>
-      cutVersion(v) == shortScalaVer
-    case None =>
-      false
+  def isBinarySame: (ScalaVersion, ScalaVersion) => Boolean = {
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor
+    case _ => false
   }
 
-  lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
-  lazy val shortScalaVer = cutVersion(scalaVer)
+  def isBinaryPrevious: (ScalaVersion, ScalaVersion) => Boolean = {
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor + 1
+    case _ => false
+  }
+
+  /****
+   * End utility methods
+   */
+
+
+   /** Check if the given version is compatible with the current plug-in version.
+   *  Check on the major/minor number, discard the maintenance number.
+   *
+   *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+   *  2.8.1 and 2.9.0 aren't.
+   */
+  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
+    if (project.isUsingCompatibilityMode())
+      isBinaryPrevious(ScalaVersion.current, version)
+    else
+      isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
+  }
+
+  lazy val scalaVer = ScalaVersion.current
+  lazy val shortScalaVer = scalaVer match {
+    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
+    case _ => "none"
+  }
 
   lazy val sdtCoreBundle = getBundle()
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
@@ -228,10 +247,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     } scalaProject.presentationCompiler.askRestart()
   }
 
-  /**
-   * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
+  /** Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
    */
-  def asScalaProject(project: IProject): Option[ScalaProject]= {
+  def asScalaProject(project: IProject): Option[ScalaProject] = {
     if (isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
@@ -273,7 +291,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     import IJavaElementDelta._
 
     // check if the changes are linked with the build path
-    val modelDelta= event.getDelta()
+    val modelDelta = event.getDelta()
 
     // check that the notification is about a change (CHANGE) of some elements (F_CHILDREN) of the java model (JAVA_MODEL)
     if (modelDelta.getElement().getElementType() == JAVA_MODEL && modelDelta.getKind() == CHANGED && (modelDelta.getFlags() & F_CHILDREN) != 0) {
@@ -299,7 +317,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     def findRemovedSources(delta: IJavaElementDelta) {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
-      val isAdded   = delta.getKind == ADDED
+      val isAdded = delta.getKind == ADDED
 
       def hasFlag(flag: Int) = (delta.getFlags & flag) != 0
 
@@ -337,7 +355,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
         case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
-          if(hasContentChanged)
+          if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed
             changed += elem.asInstanceOf[ICompilationUnit]
           false
@@ -362,7 +380,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
     // ask for the changed scala files to be refreshed in each project presentation compiler if needed
     if (changed.nonEmpty) {
-      changed.toList groupBy(_.getJavaProject.getProject) foreach {
+      changed.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, units) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p)) {
@@ -373,7 +391,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
 
     projectsToReset.foreach(_.presentationCompiler.askRestart())
-    if(buff.nonEmpty) {
+    if (buff.nonEmpty) {
       buff.toList groupBy (_.getJavaProject.getProject) foreach {
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
