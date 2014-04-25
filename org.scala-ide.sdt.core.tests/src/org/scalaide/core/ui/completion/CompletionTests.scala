@@ -4,9 +4,6 @@ import org.scalaide.core.completion.ScalaCompletions
 import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.junit.After
-import scala.reflect.internal.util.SourceFile
 
 /**
  * This provides a test suite for the code completion functionality.
@@ -23,7 +20,11 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
    * These are all the possible options that are considered by the test suite:
    *
    * @param completionToApply
-   *        The completion that should be applied to the document
+   *        The completion as it is displayed in type notation. This could be
+   *        `foo(Int)(Int): Int` for a function that returns an `Int` and has
+   *        two parameter lists that both take an `Int` or `foo(): Int - a.b.Type`
+   *        for a function that has a zero arg parameter list, returns `Int` and
+   *        is located in `a.b.Type`.
    * @param enableOverwrite
    *        If `true` the completion overwrite feature is enabled
    * @param expectedCompletions
@@ -41,14 +42,21 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
         extends Operation {
 
     def execute() = {
-      val r = ScalaWordFinder.findWord(doc, caretOffset)
-
       val unit = mkScalaCompilationUnit(doc.get())
       val src = unit.sourceFile()
-      val completions = new ScalaCompletions().findCompletions(r)(caretOffset, unit)(src, compiler)
-      val completion = completions.find(_.display == completionToApply)
+      val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
 
-      val missingCompletions = expectedCompletions.filter(c => !completions.exists(_.display == c))
+      def findCompletion(rawCompletion: String) =
+        if (!rawCompletion.contains("-"))
+          completions.find(_.display == rawCompletion)
+        else {
+          val Array(completion, qualifier) = rawCompletion.split(" *- *")
+          completions.find(c => c.display == completion && c.displayDetail == qualifier)
+        }
+
+      val completion = findCompletion(completionToApply)
+
+      val missingCompletions = expectedCompletions.filter(c => findCompletion(c).isEmpty)
       if (missingCompletions.nonEmpty)
         throw new IllegalArgumentException(s"the following completions do not exist:\n\t${missingCompletions.mkString("\n\t")}")
 
