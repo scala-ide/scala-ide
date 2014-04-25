@@ -21,6 +21,7 @@ import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings.BooleanSettingWithDefault
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>
@@ -28,7 +29,7 @@ trait EclipseSettings {
   object EclipseSetting {
     /** Function to map a Scala compiler setting to an Eclipse plugin setting */
     private def apply(setting: Settings#Setting): EclipseSetting = setting match {
-      case setting: ScalaPluginSettings.BooleanSettingWithDefault => new CheckBoxSettingWithDefault(setting)
+      case setting: ScalaPluginSettings.BooleanSettingWithDefault => new CheckBoxSetting(setting)
       case setting: Settings#BooleanSetting => new CheckBoxSetting(setting)
       case setting: Settings#IntSetting     => new IntegerSetting(setting)
       case setting: Settings#StringSetting =>
@@ -98,29 +99,13 @@ trait EclipseSettings {
 
   /** Boolean setting controlled by a checkbox.
    */
-  private class CheckBoxSetting(setting: Settings#BooleanSetting)
+  private class CheckBoxSetting(setting: Settings#BooleanSetting, default: => Boolean = false)
     extends EclipseSetting(setting) {
     var control: Button = _
 
-    def createControl(page: Composite) {
-      control = new Button(page, SWT.CHECK)
-      control.setSelection(setting.value)
-      control.addSelectionListener(
-        SelectionListenerSing)
+    def this(setting: BooleanSettingWithDefault) = {
+      this(setting, setting.default)
     }
-
-    def isChanged = !setting.value.equals(control.getSelection)
-
-    def reset() { control.setSelection(false) }
-
-    def apply() { setting.value = control.getSelection }
-  }
-
-  /** Boolean setting controlled by a checkbox, with a custom default value.
-   *  (copy of CheckBoxSetting, with a different reset)
-   */
-  private class CheckBoxSettingWithDefault(setting: ScalaPluginSettings.BooleanSettingWithDefault) extends EclipseSetting(setting) {
-    var control: Button = _
 
     def createControl(page: Composite) {
       control = new Button(page, SWT.CHECK)
@@ -131,7 +116,7 @@ trait EclipseSettings {
 
     def isChanged = !setting.value.equals(control.getSelection)
 
-    def reset() { control.setSelection(setting.default) }
+    def reset() { control.setSelection(default) }
 
     def apply() { setting.value = control.getSelection }
   }
