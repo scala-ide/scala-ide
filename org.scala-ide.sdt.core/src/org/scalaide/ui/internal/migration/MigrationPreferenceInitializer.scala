@@ -5,6 +5,7 @@ import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.keys.IBindingService
+import org.scalaide.core.ScalaPlugin
 
 /**
  * The purpose of this class is to keep user defined preferences when they are
@@ -13,6 +14,13 @@ import org.eclipse.ui.keys.IBindingService
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
+    // do not run in an UI less environment
+    if (!ScalaPlugin.plugin.headlessMode) {
+      copyKeyBindings()
+    }
+  }
+
+  private def copyKeyBindings() = {
     val service = PlatformUI.getWorkbench().getAdapter(classOf[IBindingService]).asInstanceOf[IBindingService]
 
     /**
