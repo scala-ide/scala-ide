@@ -109,7 +109,6 @@ Export-Package:
  org.scalaide.refactoring.internal.source.ui,
  org.scalaide.refactoring.internal.ui,
  org.scalaide.ui.editor,
- org.scalaide.ui.editor.util,
  org.scalaide.ui.internal,
  org.scalaide.ui.internal.actions,
  org.scalaide.ui.internal.actions.hyperlinks,

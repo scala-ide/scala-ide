@@ -58,7 +58,7 @@ import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.RichAnnotationModel.RichModel
+import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
 
 
