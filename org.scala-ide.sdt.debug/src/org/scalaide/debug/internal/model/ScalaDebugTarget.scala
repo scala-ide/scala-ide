@@ -29,13 +29,18 @@ import com.sun.jdi.request.ThreadStartRequest
 
 object ScalaDebugTarget extends HasLogger {
 
-  def apply(virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean): ScalaDebugTarget = {
+  def apply(virtualMachine: VirtualMachine,
+            launch: ILaunch,
+            process: IProcess,
+            allowDisconnect: Boolean,
+            allowTerminate: Boolean,
+            classPath: Option[Seq[String]] = None): ScalaDebugTarget = {
 
     val threadStartRequest = JdiRequestFactory.createThreadStartRequest(virtualMachine)
 
     val threadDeathRequest = JdiRequestFactory.createThreadDeathRequest(virtualMachine)
 
-    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect, allowTerminate) {
+    val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect, allowTerminate, classPath) {
       override val companionActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
@@ -62,18 +67,24 @@ object ScalaDebugTarget extends HasLogger {
 
   /** A message sent to the companion actor to indicate we're attached to the VM. */
   private[model] object AttachedToVM
+
 }
 
 /**
  * A debug target in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, launch: ILaunch, process: IProcess, allowDisconnect: Boolean, allowTerminate: Boolean) extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
+abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
+                                        launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
+                                        allowTerminate: Boolean, val classPath: Option[Seq[String]])
+  extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
   override def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+
   override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
+
   override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
@@ -82,37 +93,54 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 
   // Members declared in org.eclipse.debug.core.model.IDebugTarget
 
-  override def getName: String = "Scala Debug Target" // TODO: need better name
+  override def getName: String = "Scala Debug Target"
+
+  // TODO: need better name
   override def getProcess: org.eclipse.debug.core.model.IProcess = process
+
   override def getThreads: Array[org.eclipse.debug.core.model.IThread] = threads.toArray
+
   override def hasThreads: Boolean = !threads.isEmpty
+
   override def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.IDisconnect
 
   override def canDisconnect(): Boolean = allowDisconnect && running
+
   override def disconnect(): Unit = {
     virtualMachine.dispose()
   }
+
   override def isDisconnected(): Boolean = !running
 
   // Members declared in org.eclipse.debug.core.model.IMemoryBlockRetrieval
 
   override def getMemoryBlock(startAddress: Long, length: Long): org.eclipse.debug.core.model.IMemoryBlock = ???
+
   override def supportsStorageRetrieval: Boolean = ???
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume: Boolean = false // TODO: need real logic
-  override def canSuspend: Boolean = false // TODO: need real logic
-  override def isSuspended: Boolean = false // TODO: need real logic
+  override def canResume: Boolean = false
+
+  // TODO: need real logic
+  override def canSuspend: Boolean = false
+
+  // TODO: need real logic
+  override def isSuspended: Boolean = false
+
+  // TODO: need real logic
   override def resume(): Unit = ???
+
   override def suspend(): Unit = ???
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
   override def canTerminate: Boolean = allowTerminate && running
+
   override def isTerminated: Boolean = !running
+
   override def terminate(): Unit = {
     virtualMachine.exit(1)
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired
@@ -271,25 +299,25 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     val classLoader = getClassLoader(predef, thread)
     classLoader.invokeMethod("loadClass", thread, ScalaValue(typeName, this))
     val entities = virtualMachine.classesByName(typeName)
-      if (entities.isEmpty()) {
-        throw new ClassNotLoadedException(typeName, "Unable to force load")
-      } else {
-        ScalaType(entities.get(0), this)
-      }
+    if (entities.isEmpty()) {
+      throw new ClassNotLoadedException(typeName, "Unable to force load")
+    } else {
+      ScalaType(entities.get(0), this)
+    }
   }
 
   /** Return the classloader of the given object.
    */
   private def getClassLoader(instance: ScalaObjectReference, thread: ScalaThread): ScalaObjectReference = {
-    val typeClassLoader= instance.underlying.referenceType().classLoader()
+    val typeClassLoader = instance.underlying.referenceType().classLoader()
     if (typeClassLoader == null) {
       // JDI returns null for classLoader() if the classloader is the boot classloader.
       // Fetch the boot classloader by using ClassLoader.getSystemClassLoader()
-      val classLoaderClass= classByName("java.lang.ClassLoader", false, null).asInstanceOf[ScalaClassType]
+      val classLoaderClass = classByName("java.lang.ClassLoader", false, null).asInstanceOf[ScalaClassType]
       classLoaderClass.invokeMethod("getSystemClassLoader", thread).asInstanceOf[ScalaObjectReference]
-      } else {
-        new ScalaObjectReference(typeClassLoader, this)
-      }
+    } else {
+      new ScalaObjectReference(typeClassLoader, this)
+    }
   }
 
   /** Called when attaching to a remote VM. Makes the companion actor run the initialization
@@ -334,8 +362,10 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   }
 
   private def disposeThreads() {
-     threads.foreach { _.dispose() }
-     threads = Nil
+    threads.foreach {
+      _.dispose()
+    }
+    threads = Nil
   }
 
   /**
@@ -373,6 +403,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
 }
 
 private[model] object ScalaDebugTargetActor {
+
   case class ThreadSuspended(thread: ThreadReference, eventDetail: Int)
 
   def apply(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget): ScalaDebugTargetActor = {
@@ -391,7 +422,8 @@ private[model] object ScalaDebugTargetActor {
  * of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
  * linked actors).
  */
-private class ScalaDebugTargetActor private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
+private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
+
   import ScalaDebugTargetActor._
 
   /** Is this actor initialized and listening to thread events? */

@@ -23,6 +23,7 @@ import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassType
 import org.eclipse.debug.core.model.IIndexedValue
+import org.scalaide.debug.internal.expression.JavaBoxed
 
 object ScalaValueTest {
   def createFields(size: Int): JList[Field] = {
@@ -182,7 +183,7 @@ class ScalaValueTest {
 
     val scalaValue = ScalaValue(jdiValue, null)
 
-    assertEquals("Bad type", "java.lang.String", scalaValue.getReferenceTypeName)
+    assertEquals("Bad type", JavaBoxed.String, scalaValue.getReferenceTypeName)
     assertEquals("Bad value", "\"some string\" (id=15)", scalaValue.getValueString)
     assertTrue("Should not have variables", scalaValue.hasVariables)
     assertEquals("Should not have variables", 4, scalaValue.getVariables.length)

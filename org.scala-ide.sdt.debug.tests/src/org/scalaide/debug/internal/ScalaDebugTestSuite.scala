@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/node/146
+ */
 package org.scalaide.debug.internal
 
 import org.junit.runners.Suite
@@ -10,6 +15,7 @@ import org.scalaide.debug.internal.model.DebugTargetTerminationTest
 import org.scalaide.debug.internal.model.MethodClassifierUnitTest
 import org.scalaide.debug.internal.model.ScalaDebugCacheTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
+import org.scalaide.debug.internal.expression.ExpressionsTestSuite
 
 /**
  * Junit test suite for the Scala debugger.
@@ -31,6 +37,7 @@ import org.scalaide.debug.internal.launching.RemoteConnectorTest
     classOf[DebugTargetTerminationTest],
     classOf[RemoteConnectorTest],
     classOf[ScalaDebugBreakpointTest],
-    classOf[ScalaDebugCacheTest]))
+    classOf[ScalaDebugCacheTest],
+    classOf[ExpressionsTestSuite]))
 class ScalaDebugTestSuite {
 }

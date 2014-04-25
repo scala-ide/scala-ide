@@ -1,5 +1,6 @@
 *.aj eol=lf
 *.java eol=lf
+*.MD eol=lf
 *.MF eol=lf
 *.properties eol=lf
 *.pom eol=lf

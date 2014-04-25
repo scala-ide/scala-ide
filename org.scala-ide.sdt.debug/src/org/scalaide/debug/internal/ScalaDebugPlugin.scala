@@ -1,11 +1,12 @@
 package org.scalaide.debug.internal
 
-import org.eclipse.ui.plugin.AbstractUIPlugin
-import org.eclipse.ui.IStartup
-import org.osgi.framework.BundleContext
 import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import org.eclipse.ui.IStartup
+import org.eclipse.ui.plugin.AbstractUIPlugin
+import org.osgi.framework.BundleContext
+import org.scalaide.logging.HasLogger
 
 object ScalaDebugPlugin {
   @volatile var plugin: ScalaDebugPlugin = _
@@ -18,12 +19,13 @@ object ScalaDebugPlugin {
 
 }
 
-class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
+class ScalaDebugPlugin extends AbstractUIPlugin with IStartup with HasLogger {
 
   override def start(context: BundleContext) {
     super.start(context)
     ScalaDebugPlugin.plugin = this
     ScalaDebugger.init()
+    logger.info("Working...")
   }
 
   override def stop(context: BundleContext) {

@@ -1,16 +1,16 @@
 package org.scalaide.debug.internal
 
 import org.scalaide.core.ScalaPlugin
-
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.debug.internal.ui.contexts.DebugContextManager
 import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-
 import model.ScalaStackFrame
 import model.ScalaThread
+import org.scalaide.debug.internal.expression.ExpressionManager
+import org.eclipse.debug.core.DebugPlugin
 
 object ScalaDebugger {
 
@@ -54,6 +54,7 @@ object ScalaDebugger {
     if (!ScalaPlugin.plugin.headlessMode) {
       ScalaDebuggerContextListener.register()
     }
+    DebugPlugin.getDefault.addDebugEventListener(ExpressionManager)
   }
 
   /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different

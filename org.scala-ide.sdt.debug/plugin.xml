@@ -80,4 +80,29 @@
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>
+
+
+    <!--firefly - copy it to sputnik-plugin plugin.xml file-->
+
+    <extension point="org.eclipse.ui.perspectiveExtensions">
+
+        <perspectiveExtension
+                targetID="org.eclipse.debug.ui.DebugPerspective">
+            <view
+                    relative="org.eclipse.ui.console.ConsoleView"
+                    visible="true"
+                    relationship="stack"
+                    id="org.scalaide.debug.internal.ui.ExpressionEvaluation"/>
+        </perspectiveExtension>
+    </extension>
+
+    <extension point="org.eclipse.ui.views">
+        <view
+                id="org.scalaide.debug.internal.ui.ExpressionEvaluation"
+                name="Scala Expression Evaluator"
+                category="org.eclipse.debug.ui"
+                class="org.scalaide.debug.internal.ui.ExpressionEvaluator"
+                allowMultiple="false"
+                />
+    </extension>
 </plugin>
