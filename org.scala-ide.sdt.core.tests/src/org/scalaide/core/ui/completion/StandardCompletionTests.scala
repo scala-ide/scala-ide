@@ -73,6 +73,27 @@ class StandardCompletionTests extends CompletionTests {
   """ after Completion("foobar(Int, Int)(Int)(Int): Int", expectedNumberOfCompletions = 1)
 
   @Test
+  def completeImportedMembers() = """
+    class A {
+      def foo(i: Int) = 0
+    }
+    object X {
+      val a = new A
+      import a._
+      fo^
+    }
+  """ becomes """
+    class A {
+      def foo(i: Int) = 0
+    }
+    object X {
+      val a = new A
+      import a._
+      foo([[i]])^
+    }
+  """ after Completion("foo(Int): Int")
+
+  @Test
   def completeMethodWithEmptyParamList() = """
     class Ticket1000475 {
       val v = new Object
