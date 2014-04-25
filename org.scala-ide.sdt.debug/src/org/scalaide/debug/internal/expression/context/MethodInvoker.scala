@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
+package org.scalaide.debug.internal.expression.context
+
+import scala.reflect.ClassTag
+
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
+
+import com.sun.jdi.Value
+
+trait MethodInvoker extends Any {
+
+  /**
+   * Invokes a method on a proxy.
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
+   *
+   * @param proxy
+   * @param onRealType scala type (not jvm implementation) of object laying under proxy (eg. for 1.toDouble it will be RichInt)
+   *   if you are not aware which type Scala see for object or you are not interested in eg. AnyVal method calls just pass None here
+   * @param methodName
+   * @param args list of list of arguments to pass to method
+   * @param implicits list of implicit arguments
+   * @return JdiProxy with a result of a method call
+   */
+  def invokeMethod[Result <: JdiProxy](proxy: JdiProxy,
+    onRealType: Option[String],
+    methodName: String,
+    args: Seq[Seq[JdiProxy]] = Seq.empty,
+    implicits: Seq[JdiProxy] = Seq.empty): Result
+
+  /**
+   * Invokes a method on a proxy. Returns unboxed value.
+   *
+   * @param proxy
+   * @param onScalaType scala type (not jvm implementation) of object laying under proxy (eg. for 1.toDouble it will be RichInt)
+   *  if you are not aware which type Scala see for object or you are not interested in eg. AnyVal method calls just pass None here
+   * @param methodName
+   * @param args list of list of arguments to pass to method
+   * @param implicits list of implicit arguments
+   * @return jdi unboxed Value with a result of a method call
+   */
+  def invokeUnboxed[Result <: Value](proxy: JdiProxy,
+    onRealType: Option[String],
+    methodName: String,
+    args: Seq[Seq[JdiProxy]],
+    implicits: Seq[JdiProxy] = Seq.empty): Result
+
+  /**
+   * Creates new instance of given class.
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
+   *
+   * @param className class for object to create
+   * @param args list of list of arguments to pass to method
+   * @param implicits list of implicit arguments
+   */
+  def newInstance[Result <: JdiProxy : ClassTag](className: String, args: Seq[Seq[JdiProxy]], implicits: Seq[JdiProxy] = Seq.empty): Result
+
+}
