@@ -5,6 +5,7 @@ import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.keys.IBindingService
+import org.scalaide.core.ScalaPlugin
 
 /**
  * The purpose of this class is to keep user defined preferences when they are
@@ -13,6 +14,13 @@ import org.eclipse.ui.keys.IBindingService
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
+    // do not run in an UI less environment
+    if (!ScalaPlugin.plugin.headlessMode) {
+      copyKeyBindings()
+    }
+  }
+
+  private def copyKeyBindings() = {
     val service = PlatformUI.getWorkbench().getAdapter(classOf[IBindingService]).asInstanceOf[IBindingService]
 
     /**
@@ -38,32 +46,28 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer {
       }
 
       val newBindings = bindingsOf(newCommandId)
-      if (newBindings.isEmpty)
-        return
-
-      val doUserBindingsAlreadyExist = newBindings.filter(_.getType() == Binding.USER).nonEmpty
-      if (doUserBindingsAlreadyExist)
-        return
-
+      val userBindings = newBindings.filter(_.getType() == Binding.USER)
       val oldBindings = bindingsOf(oldCommandId).filter(_.getType() == Binding.USER)
-      if (oldBindings.isEmpty)
-        return
-
       val allBindings = service.getBindings().filterNot(oldBindings contains _)
 
-      val migratedBindings =
-        for (b <- oldBindings) yield new KeyBinding(
-          b.asInstanceOf[KeyBinding].getKeySequence(),
-          newBindings.head.getParameterizedCommand(),
-          b.getSchemeId(),
-          b.getContextId(),
-          b.getLocale(),
-          b.getPlatform(),
-          null,
-          b.getType())
+      val executeCopyOperation =
+        newBindings.nonEmpty && userBindings.isEmpty && oldBindings.nonEmpty
 
-      oldBindings foreach (_.getParameterizedCommand().getCommand().undefine())
-      service.savePreferences(service.getActiveScheme(), allBindings ++ migratedBindings)
+      if (executeCopyOperation) {
+        val migratedBindings =
+          for (b <- oldBindings) yield new KeyBinding(
+            b.asInstanceOf[KeyBinding].getKeySequence(),
+            newBindings.head.getParameterizedCommand(),
+            b.getSchemeId(),
+            b.getContextId(),
+            b.getLocale(),
+            b.getPlatform(),
+            null,
+            b.getType())
+
+        oldBindings foreach (_.getParameterizedCommand().getCommand().undefine())
+        service.savePreferences(service.getActiveScheme(), allBindings ++ migratedBindings)
+      }
     }
 
     // These values are added for the 4.0 release
