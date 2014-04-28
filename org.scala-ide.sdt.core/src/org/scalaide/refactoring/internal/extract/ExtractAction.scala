@@ -3,8 +3,16 @@ package org.scalaide.refactoring.internal.extract
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.extraction.ExtractionRefactoring
+
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.dialogs.IDialogConstants
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.contentassist.ContentAssistant
+import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.eclipse.jface.text.contentassist.IContentAssistProcessor
+import org.eclipse.jface.text.contentassist.IContextInformation
+import org.eclipse.jface.text.contentassist.IContextInformationValidator
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.PlatformUI
@@ -12,7 +20,6 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.EditorHelpers
 import org.scalaide.refactoring.internal.RefactoringAction
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.refactoring.internal.ui.CodeSelectionAssistant
 
 trait ExtractAction extends RefactoringAction {
   abstract class ScalaIdeExtractionRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile)
@@ -33,7 +40,8 @@ trait ExtractAction extends RefactoringAction {
         pr.extractions.headOption.foreach { e =>
           EditorHelpers.doWithCurrentEditor { editor =>
             val viewer = editor.getViewer()
-            viewer.setSelectedRange(e.extractionSource.pos.start, e.extractionSource.pos.end - e.extractionSource.pos.start)
+            val pos = e.extractionSource.pos
+            viewer.setSelectedRange(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
           }
         }
       }
@@ -58,7 +66,7 @@ trait ExtractAction extends RefactoringAction {
           case Some(e) =>
             r.selectedExtraction = Some(e)
             if (runRefactoring(r, shell))
-              doInlineRenaming(e.abstractionName)
+              LocalNameOccurrences(e.abstractionName).performInlineRenaming()
           // use the refactoring wizard for displaying preparation errors
           case None =>
             r.resetSelection()
@@ -96,7 +104,7 @@ trait ExtractAction extends RefactoringAction {
   }
 
   /**
-   * Opens a CodeSelectionAssistent that allows the selection
+   * Opens a content assist that allows the selection
    * of a proposed extraction.
    * If the user selects an extraction and hits enter, `block` is
    * called with the selected extraction, otherwise with `None`.
@@ -106,29 +114,36 @@ trait ExtractAction extends RefactoringAction {
       ideRefactoring.preparationResult().fold(
         { _ => block(None) },
         { es =>
-          val snippets = es.extractions.map { e =>
-            CodeSelectionAssistant.Snippet(
-              e.displayName,
-              e.extractionTarget.enclosing.pos.start, e.extractionTarget.enclosing.pos.end,
-              () => block(Some(e)))
+          val proposals = es.extractions.map { e =>
+            val pos = e.extractionTarget.enclosing.pos
+            new ExtractProposal(e.displayName, pos.startOrPoint, pos.endOrPoint) {
+              def apply(doc: IDocument) = {
+                block(Some(e))
+              }
+            }
           }
 
-          new CodeSelectionAssistant(snippets, editor, Some("Please choose an extraction"), () => block(None))
-            .show()
+          val processor = new IContentAssistProcessor {
+            def computeCompletionProposals(tv: ITextViewer, offset: Int): Array[ICompletionProposal] = {
+              proposals.toArray
+            }
+            def computeContextInformation(tv: ITextViewer, offset: Int): Array[IContextInformation] = null
+            def getCompletionProposalAutoActivationCharacters(): Array[Char] = null
+            def getContextInformationAutoActivationCharacters(): Array[Char] = null
+            def getContextInformationValidator(): IContextInformationValidator = null
+            def getErrorMessage(): String = null
+          }
+
+          val assistant = new ContentAssistant {
+            override def possibleCompletionsClosed() = {
+              block(None)
+            }
+          }
+          assistant.setContentAssistProcessor(processor, "__dftl_partition_content_type")
+          assistant.setStatusMessage("Please choose an extraction")
+          assistant.install(editor.getViewer())
+          assistant.showPossibleCompletions()
         })
     }
   }
-
-  /**
-   * Enters linked mode for renaming the new abstraction and its parameters (if any).
-   */
-  def doInlineRenaming(name: String) =
-    EditorHelpers.withCurrentScalaSourceFile { file =>
-      val of = new OccurrenceFinder(file)
-
-      val nameOccurrences = of.termNameOccurrences(name)
-      val paramOccurrences = of.parameterOccurrences(name)
-
-      EditorHelpers.enterMultiLinkedModeUi(nameOccurrences :: paramOccurrences, selectFirst = true)
-    }
 }
