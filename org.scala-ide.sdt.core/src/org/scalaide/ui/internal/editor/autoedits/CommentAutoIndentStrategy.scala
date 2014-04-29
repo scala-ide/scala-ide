@@ -20,10 +20,8 @@ import org.eclipse.jface.text.TextUtilities
 class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends AutoIndentStrategy(prefStore) with HasLogger {
 
   override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
-    if (cmd.offset == -1 || doc.getLength() == 0) return // don't spend time on invalid docs
-
     try {
-      if (cmd.length == 0 && cmd.text != null && TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
+      if (TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
         val shouldClose = {
           val isAutoClosingEnabled = prefStore.getBoolean(
               EditorPreferencePage.P_ENABLE_AUTO_CLOSING_COMMENTS)
