@@ -8,6 +8,8 @@ import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
+import org.scalaide.util.internal.ScalaWordFinder
+import org.eclipse.jface.text.IRegion
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -66,19 +68,71 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
 
             // we want the caret before the closing comment
             cmd.caretOffset = cmd.offset + buf.length - restAfterCaret.length()
-            buf append ("\n"+indent)
+            buf append (cmd.text+indent)
             buf append (if (isDocStart) " */" else "*/")
             cmd.shiftsCaret = false
           }
         }
         cmd.text = buf.toString
       }
+      else handleAutoLineBreak(doc, cmd)
     } catch {
       case e: Exception =>
         // don't break typing under any circumstances
         eclipseLog.warn("Error in scaladoc autoedit", e)
     }
   }
+
+  private def handleAutoLineBreak(doc: IDocument, cmd: DocumentCommand): Unit = {
+    import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants._
+
+    def trimRightLen(str: String) =
+      str.reverse.takeWhile(Character.isWhitespace).length()
+
+    def doAutoBreak(line: IRegion) = {
+      val systemLineSeparator = TextUtilities.getDefaultLineDelimiter(doc)
+      val endOfIndent = findEndOfWhiteSpace(doc, line.getOffset(), cmd.offset)
+      val innerIndentNeeded = doc.getChar(endOfIndent) == '*'
+
+      val textStart =
+        if (innerIndentNeeded)
+          findEndOfWhiteSpace(doc, endOfIndent+1, cmd.offset)
+        else
+          endOfIndent
+
+      val lastWord = ScalaWordFinder.findWord(doc, cmd.offset)
+      val canSplitText = lastWord.getOffset() != textStart
+
+      if (canSplitText) {
+        val newLine = Seq(
+            systemLineSeparator,
+            doc.get(line.getOffset(), endOfIndent-line.getOffset()),
+            doc.get(endOfIndent, textStart-endOfIndent),
+            doc.get(lastWord.getOffset(), lastWord.getLength()),
+            cmd.text)
+
+        val wsLen = trimRightLen(doc.get(textStart, lastWord.getOffset()-textStart))
+
+        cmd.text = newLine.mkString
+        cmd.offset = lastWord.getOffset()-wsLen
+        cmd.length = lastWord.getLength()+wsLen
+      }
+    }
+
+    val enableAutoBreaking = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_BREAKING_COMMENTS)
+
+    if (enableAutoBreaking) {
+      val marginColumn = prefStore.getInt(EDITOR_PRINT_MARGIN_COLUMN)
+      val line = doc.getLineInformationOfOffset(cmd.offset)
+      val exceedMarginColumn = line.getLength() + cmd.text.length > marginColumn
+      val singleSpace = cmd.text == " " && doc.getChar(cmd.offset-1) != ' '
+
+      if (exceedMarginColumn && !singleSpace)
+        doAutoBreak(line)
+    }
+  }
+
 
   /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
    *  inside a Scaladoc that runs to the end of the document or if the line
