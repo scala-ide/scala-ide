@@ -155,9 +155,10 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private val cachePath = project.underlying.getFile(".cache")
   private def cacheFile = cachePath.getLocation.toFile
 
-  // this directory is used by Sbt to store classfiles between compilation runs
-  // to implement all-or-nothing compilation sementics. Unless all steps of the
-  // compilation succeed, the actually output directory is not updated
+  // this directory is used by Sbt to store classfiles between
+  // compilation runs to implement all-or-nothing compilation
+  // sementics. Original files are copied over to tempDir and
+  // moved back in case of compilation errors.
   private val tempDir = project.underlying.getFolder(".tmpBin")
   private def tempDirFile = tempDir.getLocation().toFile()
 
@@ -198,8 +199,12 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
 
   /** Inspired by IC.compile
    *
-   *  We needed this duplication because the Java interface serializes incOptions to a String map,
-   *  which is not expressive enough to use the transactional classfile manager (required for correctness).
+   *  We need to duplicate IC.compile (by inlining insde this
+   *  private method) because the Java interface it has as a
+   *  parameter serializes IncOptions to a String map, which is
+   *  not expressive enough to use the transactional classfile
+   *  manager (required for correctness).  In other terms, we
+   *  need a richer (IncOptions) parameter type, here.
    */
   private def aggressiveCompile(in: SbtInputs, log: Logger): Analysis = {
     val options = in.options; import options.{ options => scalacOptions, _ }
