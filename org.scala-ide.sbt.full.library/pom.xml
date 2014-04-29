@@ -19,7 +19,7 @@
     <profile>
       <!--- the profile using the default values. Scala 2.11.x -->
       <id>scala-2.11.x</id>
-      <dependencies>
+<!--      <dependencies>
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-xml_${scala.binary.version}</artifactId>
@@ -28,7 +28,7 @@
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
         </dependency>
-      </dependencies>
+      </dependencies> -->
     </profile>
   </profiles>
 
