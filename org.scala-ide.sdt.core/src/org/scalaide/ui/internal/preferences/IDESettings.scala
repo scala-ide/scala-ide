@@ -37,8 +37,38 @@ object ScalaPluginSettings extends Settings {
   val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "sbt")
   val compileOrder = ChoiceSetting("-compileorder", "which", "Compilation order",
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")
-  val stopBuildOnErrors = BooleanSetting("-stopBuildOnError", "Stop build if dependent projects have errors.")
+  val stopBuildOnErrors = new BooleanSettingWithDefault("-stopBuildOnError", "Stop build if dependent projects have errors.", true)
   val relationsDebug = BooleanSetting("-relationsDebug", "Log very detailed information about relations, such as dependencies between source files.")
-  val withVersionClasspathValidator = BooleanSetting("-withVersionClasspathValidator", "Check Scala compatibility of jars in classpath")
+  val withVersionClasspathValidator = new BooleanSettingWithDefault("-withVersionClasspathValidator", "Check Scala compatibility of jars in classpath", true)
   val apiDiff = BooleanSetting("-apiDiff", "Log type diffs that trigger additional compilation (slows down builder)")
+
+  /** A setting represented by a boolean flag, with a custom default */
+  // original code from MutableSettings#BooleanSetting
+  class BooleanSettingWithDefault(
+    name: String,
+    descr: String,
+    val default: Boolean)
+    extends Setting(name, descr) {
+    type T = Boolean
+    protected var v: Boolean = false
+    override def value: Boolean = v
+
+    def tryToSet(args: List[String]) = { value = true; Some(args) }
+    def unparse: List[String] = if (value) List(name) else Nil
+    override def tryToSetFromPropertyValue(s: String) { // used from ide
+      value = s.equalsIgnoreCase("true")
+    }
+    override def tryToSetColon(args: List[String]) = args match {
+      case Nil => tryToSet(Nil)
+      case List(x) =>
+        if (x.equalsIgnoreCase("true")) {
+          value = true
+          Some(Nil)
+        } else if (x.equalsIgnoreCase("false")) {
+          value = false
+          Some(Nil)
+        } else errorAndValue("'" + x + "' is not a valid choice for '" + name + "'", None)
+    }
+
+  }
 }
