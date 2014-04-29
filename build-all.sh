@@ -10,7 +10,7 @@ ROOT_DIR=${PWD}
 
 if [ -z "$*" ]
 then
-  ARGS="-Pscala-2.10.x -Peclipse-juno clean install"
+  ARGS="-Pscala-2.11.x -Peclipse-juno clean install"
 else
   ARGS="$*"
 fi
@@ -27,23 +27,24 @@ echo "Building the toolchain"
 cd ${ROOT_DIR}/org.scala-ide.build-toolchain
 mvn ${ARGS}
 
-
-# set the versions if required
-cd ${ROOT_DIR}
-if [ -n "${SET_VERSIONS}" ]
-then
-  echo "setting versions"
-  mvn ${ARGS} -Pset-versions exec:java
-else
-  echo "Not running UpdateScalaIDEManifests."
-fi
-
-# set features.xml
-echo "Setting features.xml"
-(mvn ${ARGS} -Pset-features antrun:run) || exit -1
-
-# the plugins
-echo "Building plugins"
-cd ${ROOT_DIR}/org.scala-ide.sdt.build
-mvn ${ARGS}
+#
+#
+## set the versions if required
+#cd ${ROOT_DIR}
+#if [ -n "${SET_VERSIONS}" ]
+#then
+#  echo "setting versions"
+#  mvn ${ARGS} -Pset-versions exec:java
+#else
+#  echo "Not running UpdateScalaIDEManifests."
+#fi
+#
+## set features.xml
+#echo "Setting features.xml"
+#(mvn ${ARGS} -Pset-features antrun:run) || exit -1
+#
+## the plugins
+#echo "Building plugins"
+#cd ${ROOT_DIR}/org.scala-ide.sdt.build
+#mvn ${ARGS}
 
