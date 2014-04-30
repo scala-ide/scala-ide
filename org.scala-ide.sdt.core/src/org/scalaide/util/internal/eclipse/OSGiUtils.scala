@@ -16,8 +16,9 @@ object OSGiUtils {
     Option(url) map urlToPath
   }
 
+  /** accepts `null`*/
   def getBundlePath(bundle: Bundle): Option[IPath] = util.control.Exception.failing(classOf[IOException]) {
-    Option(FileLocator.getBundleFile(bundle)).map(f => Path.fromOSString(f.getAbsolutePath()))
+    Option(bundle).map(b => Path.fromOSString(FileLocator.getBundleFile(b).getAbsolutePath()))
   }
 
   def allPathsInBundle(bundle: Bundle, path: String, filePattern: String): Iterator[IPath] = {

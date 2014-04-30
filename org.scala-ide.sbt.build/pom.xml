@@ -30,7 +30,7 @@
 
   <modules>
     <module>org.scala-ide.sbt.feature</module>
-<!--    <module>org.scala-ide.scala210.source.feature</module> -->
+    <module>org.scala-ide.sbt.source.feature</module>
     <module>org.scala-ide.sbt.update-site</module>
   </modules>
 

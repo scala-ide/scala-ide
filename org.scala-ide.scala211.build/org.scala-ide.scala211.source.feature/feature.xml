@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.scala211.feature"
+      id="org.scala-ide.scala211.source.feature"
       label="Scala 2.11.x"
       version="4.0.0.qualifier"
-      provider-name="scala-ide.org"
-      plugin="org.scala-lang.scala-library">
+      provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
      Scala 2.11.x library, compiler and associated jars.
@@ -58,56 +57,56 @@ SUCH DAMAGE.
    </url>
 
    <plugin
-         id="org.scala-lang.scala-library"
+         id="org.scala-lang.scala-library.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.scala-compiler"
+         id="org.scala-lang.scala-compiler.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.scala-reflect"
+         id="org.scala-lang.scala-reflect.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.scala-actors"
+         id="org.scala-lang.scala-actors.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.modules.scala-xml"
+         id="org.scala-lang.modules.scala-xml.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.modules.scala-parser-combinators"
+         id="org.scala-lang.modules.scala-swing.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.modules.scala-swing"
+         id="org.scala-lang.modules.scala-parser-combinators.source"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-ide.sbt.compiler.interface"
+         id="org.scala-ide.sbt.compiler.interface.source"
          download-size="0"
          install-size="0"
          version="0.0.0"

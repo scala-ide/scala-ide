@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.scala211.feature"
-      label="Scala 2.11.x"
+      id="org.scala-ide.sbt.source.feature"
+      label="sbt"
       version="4.0.0.qualifier"
-      provider-name="scala-ide.org"
-      plugin="org.scala-lang.scala-library">
+      provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Scala 2.11.x library, compiler and associated jars.
+     Scala 2.10.x library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -58,56 +57,7 @@ SUCH DAMAGE.
    </url>
 
    <plugin
-         id="org.scala-lang.scala-library"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.scala-compiler"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.scala-reflect"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.scala-actors"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.modules.scala-xml"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.modules.scala-parser-combinators"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.modules.scala-swing"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-ide.sbt.compiler.interface"
+         id="org.scala-ide.sbt.full.library.source"
          download-size="0"
          install-size="0"
          version="0.0.0"

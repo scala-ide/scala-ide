@@ -90,9 +90,9 @@
 <!--        <scala.binary.version>2.11</scala.binary.version>
         <scala-xml.version>1.0.1</scala-xml.version>
         <scala-parser-combinators.version>1.0.0</scala-parser-combinators.version>
-        <scala-swing.version>1.0.0</scala-swing.version>
+        <scala-swing.version>1.0.0</scala-swing.version> -->
 
-        <version.suffix>2_11</version.suffix> -->
+        <version.suffix>2_11</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
         <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
