@@ -9,6 +9,9 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.ScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import org.scalaide.core.internal.project.Nature
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.core.runtime.Status
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -17,7 +20,7 @@ import org.scalaide.core.internal.project.Nature
   *
   * @note This class is thread-safe.
   */
-final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLogger {
+final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends HasLogger {
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -140,18 +143,22 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
       logger.debug("Presentation compiler classpath: " + pc.classPath)
       pc.askOption(() => pc.initializeRequiredSymbols())
       pc
-    }
-    catch {
+    } catch {
       case ex @ MissingRequirementError(required) =>
-        failedCompilerInitialization("could not find a required class: " + required)
+        val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, "could not find a required class: " + required, ex)
+        val handler = DebugPlugin.getDefault().getStatusHandler(status)
+        handler.handleStatus(status, this)
         eclipseLog.error(ex)
         null
       case ex: Throwable =>
         logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
         ex.printStackTrace()
-        if (project.underlying.isOpen)
-          failedCompilerInitialization("error initializing Scala compiler")
-       shutdown()
+        if (project.underlying.isOpen) {
+          val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, "error initializing the presentation compiler: " + ex.getMessage(), ex)
+          val handler = DebugPlugin.getDefault().getStatusHandler(status)
+          handler.handleStatus(status, this)
+        }
+        shutdown()
         eclipseLog.error(ex)
         null
     }
@@ -176,24 +183,4 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
       YpresentationDelay)
   }
 
-  private val messageShown: AtomicBoolean = new AtomicBoolean(false)
-
-  // FIXME: This is mostly UI logic that should be moved somewhere else.
-  private def failedCompilerInitialization(msg: String) {
-    logger.debug("failedCompilerInitialization: " + msg)
-    val wasMessageShown = messageShown.getAndSet(true)
-    if(!wasMessageShown && !ScalaPlugin.plugin.headlessMode) {
-      DisplayThread.asyncExec {
-        import org.eclipse.jface.dialogs.MessageDialog
-        val doAdd = MessageDialog.openQuestion(ScalaPlugin.getShell, "Add Scala library to project classpath?",
-          ("There was an error initializing the Scala compiler: %s. \n\n"+
-           "The editor compiler will be restarted when the project is cleaned or the classpath is changed.\n\n" +
-           "Add the Scala library to the classpath of project %s?")
-          .format(msg, project.underlying.getName))
-        if (doAdd) Utils.tryExecute {
-          Nature.addScalaLibAndSave(project.underlying)
-        }
-      }
-    }
-  }
 }
