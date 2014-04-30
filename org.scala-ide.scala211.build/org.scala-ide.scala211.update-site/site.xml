@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.scala-ide.scala211.feature_0.0.0.jar" id="org.scala-ide.scala211.feature" version="0.0.0">
+   </feature>
+   <feature url="features/org.scala-ide.scala211.source.feature_0.0.0.jar" id="org.scala-ide.scala211.source.feature" version="0.0.0">
+   </feature>
+</site>

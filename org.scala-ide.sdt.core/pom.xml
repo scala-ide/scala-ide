@@ -16,13 +16,13 @@
       <id>scala-2.10.x</id>
       <build>
         <plugins>
-          <plugin>
+    <!--      <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
             <executions>
-              <execution>
+              <execution> -->
                 <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
-                <id>copy.modules</id>
+   <!--                <id>copy.modules</id>
                 <phase>initialize</phase>
                 <goals>
                   <goal>copy</goal>
@@ -55,7 +55,7 @@
                 </configuration>
               </execution>
             </executions>
-          </plugin>
+          </plugin> -->
         </plugins>
       </build>
     </profile>
@@ -63,13 +63,13 @@
       <id>scala-2.11.x</id>
       <build>
         <plugins>
-          <plugin>
+         <!-- <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-dependency-plugin</artifactId>
             <executions>
-              <execution>
+              <execution> -->
                 <!-- add the source jar, to be able to attach the source to the Scala container. And the continuation plug-in -->
-                <id>copy.modules</id>
+<!--                <id>copy.modules</id>
                 <phase>initialize</phase>
                 <goals>
                   <goal>copy</goal>
@@ -117,7 +117,7 @@
                 </configuration>
               </execution>
             </executions>
-          </plugin>
+          </plugin> -->
         </plugins>
       </build>
     </profile>
@@ -191,7 +191,7 @@
                 </artifactItem>
 
                 <!-- sources for Scala library and compiler -->
-                <artifactItem>
+<!--                <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-library</artifactId>
                   <classifier>sources</classifier>
@@ -214,7 +214,7 @@
                   <type>jar</type>
                   <destFileName>scala-compiler-src.jar</destFileName>
                   <outputDirectory>${project.build.directory}/src</outputDirectory>
-                </artifactItem>
+                </artifactItem> -->
               </artifactItems>
             </configuration>
           </execution>

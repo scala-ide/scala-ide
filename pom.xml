@@ -37,8 +37,8 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.19.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.5</scala.plugin.version>
+    <tycho.plugin.version>0.20.0</tycho.plugin.version>
+    <scala.plugin.version>3.1.6</scala.plugin.version>
     <aspectj.plugin.version>1.6</aspectj.plugin.version>
     <aspectj.version>1.7.4</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
@@ -62,11 +62,10 @@
     <repo.ajdt>Select a profile</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
-     <scala.version>2.10.0</scala.version>
-     <scala.library.version>${scala.version}</scala.library.version>
-     <version.suffix>2_10</version.suffix>
+     <scala.version>Select a profile</scala.version>
+     <version.suffix>Select a profile</version.suffix>
      <version.tag>local</version.tag>
-     <sbt.version>0.13.0</sbt.version>
+     <sbt.version>0.13.2</sbt.version>
      <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
 
     <!-- the repos containing the Scala dependencies -->
@@ -85,41 +84,13 @@
     </profile>
 
     <profile>
-      <id>scala-2.10.x</id>
-      <properties>
-        <scala.version>2.10.4-SNAPSHOT</scala.version>
-        <version.suffix>2_10</version.suffix>
-
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
-        <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
-      </properties>
-
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-actors</artifactId>
-            <version>${scala.library.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-swing</artifactId>
-            <version>${scala.library.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-
-    </profile>
-
-    <profile>
       <id>scala-2.11.x</id>
       <properties>
-        <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.binary.version>2.11.0-RC1</scala.binary.version>
-        <scala-xml.version>1.0.0</scala-xml.version>
+        <scala.version>2.11.1-SNAPSHOT</scala.version>
+<!--        <scala.binary.version>2.11</scala.binary.version>
+        <scala-xml.version>1.0.1</scala-xml.version>
         <scala-parser-combinators.version>1.0.0</scala-parser-combinators.version>
-        <scala-swing.version>1.0.0</scala-swing.version>
+        <scala-swing.version>1.0.0</scala-swing.version> -->
 
         <version.suffix>2_11</version.suffix>
 
@@ -128,7 +99,7 @@
         <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
 
-      <dependencyManagement>
+<!--      <dependencyManagement>
         <dependencies>
           <dependency>
             <groupId>org.scala-lang</groupId>
@@ -151,7 +122,7 @@
             <version>${scala-parser-combinators.version}</version>
           </dependency>
         </dependencies>
-      </dependencyManagement>
+      </dependencyManagement> -->
     </profile>
 
     <profile>
@@ -263,7 +234,7 @@
       </repositories>
     </profile>
 
-    <profile>
+<!--    <profile>
       <id>set-features</id>
       <properties>
         <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
@@ -296,7 +267,7 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
+    </profile> -->
   </profiles>
 
   <repositories>
@@ -320,7 +291,7 @@
   <dependencyManagement>
     <dependencies>
       <!-- toolchain, Scala library -->
-      <dependency>
+<!--      <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-library</artifactId>
         <version>${scala.library.version}</version>
@@ -329,9 +300,9 @@
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-reflect</artifactId>
         <version>${scala.library.version}</version>
-      </dependency>
+      </dependency> -->
       <!-- toolchain, Scala compiler -->
-      <dependency>
+<!--  <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-compiler</artifactId>
         <version>${scala.version}</version>
@@ -340,7 +311,7 @@
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-reflect</artifactId>
         <version>${scala.version}</version>
-      </dependency>
+      </dependency> -->
       <!-- toolchain, sbt -->
       <dependency>
         <groupId>com.typesafe.sbt</groupId>
@@ -406,11 +377,11 @@
           </configuration>
         </plugin>
         <!-- set property value from file -->
-        <plugin>
+<!--        <plugin>
           <groupId>org.kuali.maven.plugins</groupId>
           <artifactId>properties-maven-plugin</artifactId>
           <version>${properties-maven.plugin.version}</version>
-        </plugin>
+        </plugin> -->
         <!-- tycho plugins -->
         <plugin>
           <groupId>org.eclipse.tycho</groupId>

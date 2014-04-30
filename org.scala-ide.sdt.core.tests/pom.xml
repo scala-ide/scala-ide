@@ -119,6 +119,13 @@
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <testSuite>${project.artifactId}</testSuite>
           <testClass>org.scalaide.core.TestsSuite</testClass>
+          <dependencies>
+            <dependency>
+              <type>eclipse-feature</type>
+              <artifactId>org.scala-ide.scala211.source.feature</artifactId>
+              <version>0.0.0</version>
+            </dependency>
+          </dependencies>
         </configuration>
       </plugin>
       <plugin>

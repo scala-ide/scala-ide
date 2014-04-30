@@ -69,11 +69,23 @@
       <layout>p2</layout>
       <url>${repo.equinox.launcher}</url>
     </repository>
+    <repository>
+      <id>sbt</id>
+      <name>sbt</name>
+      <layout>p2</layout>
+      <url>file:../org.scala-ide.sbt.build/org.scala-ide.sbt.update-site/target/site</url>
+    </repository>
+    <repository>
+      <id>scala211</id>
+      <name>Scala 211 library and jars</name>
+      <layout>p2</layout>
+      <url>file:../org.scala-ide.scala211.build/org.scala-ide.scala211.update-site/target/site</url>
+    </repository>
   </repositories>
 
   <dependencies>
     <!-- POM-first dependencies (Scala OSGi bundles or bnd-ified dependencies  -->
-    <dependency>
+<!--    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
     </dependency>
@@ -105,10 +117,10 @@
       <groupId>org.scala-ide</groupId>
       <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
       <version>${project.version}</version>
-    </dependency>
+    </dependency> -->
 
     <!-- Source dependencies -->
-    <dependency>
+<!--    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <classifier>sources</classifier>
@@ -125,20 +137,20 @@
       <artifactId>scala-reflect</artifactId>
       <classifier>sources</classifier>
       <version>${scala.version}</version>
-    </dependency>
+    </dependency> -->
   </dependencies>
 
   <profiles>
     <profile>
       <id>scala-2.10.x</id>
       <dependencies>
-        <dependency>
+<!--        <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
-        </dependency>
+        </dependency> -->
 
         <!-- Source dependencies -->
-        <dependency>
+<!--        <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-swing</artifactId>
           <classifier>sources</classifier>
@@ -149,14 +161,14 @@
           <artifactId>scala-actors</artifactId>
           <classifier>sources</classifier>
           <version>${scala.library.version}</version>
-        </dependency>
+        </dependency> -->
       </dependencies>
     </profile>
 
     <profile>
       <id>scala-2.11.x</id>
       <dependencies>
-        <dependency>
+<!--        <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
         </dependency>
@@ -169,10 +181,10 @@
         <dependency>
           <groupId>org.scala-lang.modules</groupId>
           <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-        </dependency>
+        </dependency> -->
 
         <!-- Source dependencies -->
-        <dependency>
+<!--        <dependency>
           <groupId>org.scala-lang</groupId>
           <artifactId>scala-actors</artifactId>
           <classifier>sources</classifier>
@@ -195,7 +207,7 @@
           <artifactId>scala-swing_${scala.binary.version}</artifactId>
           <classifier>sources</classifier>
           <version>${scala-swing.version}</version>
-        </dependency>
+        </dependency> -->
       </dependencies>
     </profile>
   </profiles>
@@ -214,7 +226,7 @@
         <artifactId>target-platform-configuration</artifactId>
         <configuration>
           <resolver>p2</resolver>
-          <pomDependencies>consider</pomDependencies>
+   <!--       <pomDependencies>consider</pomDependencies> -->
         </configuration>
       </plugin>
       <plugin>
