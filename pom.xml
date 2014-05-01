@@ -37,8 +37,8 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.19.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.5</scala.plugin.version>
+    <tycho.plugin.version>0.20.0</tycho.plugin.version>
+    <scala.plugin.version>3.1.6</scala.plugin.version>
     <aspectj.plugin.version>1.6</aspectj.plugin.version>
     <aspectj.version>1.7.4</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
@@ -62,11 +62,11 @@
     <repo.ajdt>Select a profile</repo.ajdt>
 
      <!-- default values, can be overwritten by profiles -->
-     <scala.version>2.10.0</scala.version>
+     <scala.version>select a profile</scala.version>
      <scala.library.version>${scala.version}</scala.library.version>
-     <version.suffix>2_10</version.suffix>
+     <version.suffix>select a profile</version.suffix>
      <version.tag>local</version.tag>
-     <sbt.version>0.13.0</sbt.version>
+     <sbt.version>0.13.2</sbt.version>
      <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
 
     <!-- the repos containing the Scala dependencies -->
@@ -87,7 +87,7 @@
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.4-SNAPSHOT</scala.version>
+        <scala.version>2.10.5-SNAPSHOT</scala.version>
         <version.suffix>2_10</version.suffix>
 
         <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
@@ -115,11 +115,11 @@
     <profile>
       <id>scala-2.11.x</id>
       <properties>
-        <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.binary.version>2.11.0-RC1</scala.binary.version>
-        <scala-xml.version>1.0.0</scala-xml.version>
-        <scala-parser-combinators.version>1.0.0</scala-parser-combinators.version>
-        <scala-swing.version>1.0.0</scala-swing.version>
+        <scala.version>2.11.1-SNAPSHOT</scala.version>
+        <scala.binary.version>2.11</scala.binary.version>
+        <scala-xml.version>1.0.1</scala-xml.version>
+        <scala-parser-combinators.version>1.0.1</scala-parser-combinators.version>
+        <scala-swing.version>1.0.1</scala-swing.version>
 
         <version.suffix>2_11</version.suffix>
 
