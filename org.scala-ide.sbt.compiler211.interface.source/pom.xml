@@ -8,13 +8,15 @@
     <version>4.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.compiler.interface</artifactId>
+  <artifactId>org.scala-ide.sbt.compiler211.interface.source</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbt</groupId>
       <artifactId>compiler-interface-precompiled</artifactId>
+      <version>${sbt.scala211.version}</version>
+      <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>
   </dependencies>
@@ -26,14 +28,15 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-          <outputDirectory>${project.build.directory}/lib</outputDirectory>
+          <outputDirectory>${project.build.directory}/src</outputDirectory>
           <instructions>
+            <Bundle-Name>Sbt Compiler Interface Sources for Eclipse</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Compiler Interface for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
-            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>xsbt.*;version=${sbt.osgi.version}</_exportcontents>
-            <Embed-StripVersion>true</Embed-StripVersion>
+            <Bundle-Version>${sbt.osgi.light.version}</Bundle-Version>
+            <!-- This defines the bundle we provide the source for -->
+            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler211.interface;version="${sbt.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
+            <!-- Extract all sources into this bundle -->
+            <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>
         </configuration>
       </plugin>
