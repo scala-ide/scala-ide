@@ -1,4 +1,4 @@
 **/.cache
 target/
-org.scala-ide.sdt.feature/feature.xml
-org.scala-ide.sdt.source.feature/feature.xml
+org.scala-ide.sdt.core/META-INF/MANIFEST.MF
+org.scala-ide.sdt.update-site/site.xml

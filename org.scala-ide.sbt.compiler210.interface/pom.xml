@@ -8,26 +8,15 @@
     <version>4.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.full.library</artifactId>
+  <artifactId>org.scala-ide.sbt.compiler210.interface</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>sbt-interface</artifactId>
-        <version>${sbt.ide.version}</version>
-        <optional>true</optional>
-    </dependency>
-    <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>incremental-compiler</artifactId>
-        <version>${sbt.ide.version}</version>
-        <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.java-diff-utils</groupId>
-      <artifactId>diffutils</artifactId>
-      <version>${diffutils.version}</version>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>compiler-interface-precompiled</artifactId>
+      <version>${sbt.scala210.version}</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 
@@ -40,11 +29,11 @@
         <configuration>
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
-            <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Name>Sbt Compiler Interface for Eclipse</Bundle-Name>
+            <Bundle-Version>${sbt.osgi.light.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version},sbinary.*;version=${sbt.osgi.version},difflib.*;version=${diffutils.version}</_exportcontents>
+            <_exportcontents>xsbt.*;version=${sbt.osgi.light.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>

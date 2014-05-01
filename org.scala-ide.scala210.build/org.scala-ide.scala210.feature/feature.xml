@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.sdt.feature"
-      label="Scala IDE for Eclipse"
+      id="org.scala-ide.scala210.feature"
+      label="Scala 2.10.x"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org"
-      plugin="org.scala-ide.sdt.core">
+      plugin="org.scala-lang.scala-library">
 
    <description url="http://scala-ide.org">
-     The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
+     Scala 2.10.x library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
-      Copyright (c) 2002-2010 EPFL, Lausanne.
+      Copyright (c) 2002-2014 EPFL, Lausanne.
 All rights reserved.
    </copyright>
 
@@ -57,37 +57,6 @@ SUCH DAMAGE.
       <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current"/>
    </url>
 
-   <includes
-         id="org.scala-ide.sdt.weaving.feature"
-         version="0.0.0"/>
-
-   <requires>
-      <import plugin="org.eclipse.equinox.weaving.aspectj"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.eclipse.core.filesystem"/>
-      <import plugin="org.eclipse.jface.text"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.ui.ide"/>
-      <import plugin="org.eclipse.ui.editors"/>
-      <import plugin="org.eclipse.ui.workbench.texteditor"/>
-      <import plugin="org.eclipse.ui.views"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.search"/>
-      <import plugin="org.eclipse.text"/>
-      <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.eclipse.jdt.ui"/>
-      <import plugin="org.eclipse.jdt.launching"/>
-      <import plugin="org.eclipse.debug.core"/>
-      <import plugin="org.eclipse.debug.ui"/>
-      <import plugin="org.eclipse.jdt.debug"/>
-      <import plugin="org.eclipse.jdt.debug.ui"/>
-      <import plugin="org.eclipse.ui.forms"/>
-      <import plugin="org.eclipse.ui.navigator"/>
-      <import plugin="org.eclipse.ui.navigator.resources"/>
-      <import plugin="org.apache.ant"/>
-   </requires>
-
    <plugin
          id="org.scala-lang.scala-library"
          download-size="0"
@@ -117,56 +86,7 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.modules.scala-xml"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.modules.scala-parser-combinators"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-ide.sdt.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-ide.sdt.debug"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-refactoring.library"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="scalariform"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-ide.sbt.full.library"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-ide.sbt.compiler.interface"
+         id="org.scala-ide.sbt.compiler210.interface"
          download-size="0"
          install-size="0"
          version="0.0.0"
