@@ -5,7 +5,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocumentExtension3
-import org.junit.After
+import org.junit.AfterClass
 import org.junit.ComparisonFailure
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.ScalaPlugin
@@ -60,7 +60,7 @@ abstract class TextEditTests {
   }
 
   /** This method allows subclasses to provide their own test setup. */
-  def prepare(source: String): Unit
+  def runTest(source: String, operation: Operation): Unit
 
   /** This method allows the test suite to access the sources on which a test is executed. */
   def source: String
@@ -95,8 +95,7 @@ abstract class TextEditTests {
     val inputWithoutCursor = inputWithoutDollarSigns.filterNot(_ == '^')
 
     operation.caretOffset = caretOffset
-    prepare(inputWithoutCursor)
-    operation.execute()
+    runTest(inputWithoutCursor, operation)
 
     val expected = expectedOutput.replaceAll("\\$", "")
     val actual = new StringBuilder(source).insert(operation.caretOffset, "^").toString()
@@ -112,13 +111,14 @@ trait EclipseDocumentSupport {
 
   var doc: Document = _
 
-  override def prepare(source: String): Unit = {
+  override def runTest(source: String, operation: Operation): Unit = {
     doc = new Document(source)
     val partitioner = new ScalaDocumentPartitioner
 
     doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
     doc.setDocumentPartitioner(IDocumentExtension3.DEFAULT_PARTITIONING, partitioner)
     partitioner.connect(doc)
+    operation.execute()
   }
 
   override def source: String =
@@ -134,6 +134,12 @@ trait CompilerSupport extends EclipseDocumentSupport {
   private val project: ScalaProject = {
     val simulator = new EclipseUserSimulator
     simulator.createProjectInWorkspace(projectName)
+  }
+
+  override def runTest(source: String, operation: Operation): Unit = {
+    EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
+      super.runTest(source, operation)
+    }
   }
 
   def withCompiler(f: ScalaPresentationCompiler => Unit): Unit =
