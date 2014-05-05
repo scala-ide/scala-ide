@@ -17,19 +17,19 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
     Utils.tryExecute {
-      val node = DefaultScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId)
       val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, ScalaPlugin.plugin.pluginId)
 
       def defaultPreference(s: Settings#Setting) {
         val preferenceName = convertNameToProperty(s.name)
         val default = s match {
+            case bswd : ScalaPluginSettings.BooleanSettingWithDefault => bswd.default.toString()
             case bs : Settings#BooleanSetting => "false"
             case is : Settings#IntSetting => is.default.toString
             case ss : Settings#StringSetting => ss.default
             case ms : Settings#MultiStringSetting => ""
             case cs : Settings#ChoiceSetting => cs.default
           }
-        node.put(preferenceName, default)
+        store.setDefault(preferenceName, default)
       }
 
       IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings()).foreach {_.userSettings.foreach (defaultPreference)}

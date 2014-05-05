@@ -42,6 +42,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.builder.ProjectsCleanJob
 import org.eclipse.core.resources.ProjectScope
+import org.scalaide.core.internal.project.ScalaProject
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -60,6 +61,8 @@ trait ScalaPluginPreferencePage extends HasLogger {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
         val isDefault = setting match {
+          case bswd : ScalaPluginSettings.BooleanSettingWithDefault =>
+            bswd.value == bswd.default
           case bs: Settings#BooleanSetting     =>
             // use the store default if it is defined: e.i. it is not a sbt/scalac preference
             bs.value == store.getDefaultBoolean(name)
@@ -110,10 +113,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       case javaProject: IJavaProject => Some(javaProject.getProject())
       case other                     => None // We're a Preference page!
     }
-    if (project.isEmpty)
-      super.getPreferenceStore()
-    else
-      new PropertyStore(new ProjectScope(project.get), getPageId)
+    project.map { p =>
+      ScalaPlugin.plugin.getScalaProject(p).projectSpecificStorage
+    } getOrElse (
+      super.getPreferenceStore())
   }
 
   /** Returns the id of what preference page we use */
