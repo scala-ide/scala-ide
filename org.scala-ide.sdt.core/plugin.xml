@@ -1060,10 +1060,6 @@
          name="Move Class/Object/Trait"/>
       <command
          categoryId="org.scalaide.ui.menu.refactoring"
-         id="org.scalaide.refactoring.ExtractMethod"
-         name="Extract Method"/>
-      <command
-         categoryId="org.scalaide.ui.menu.refactoring"
          id="org.scalaide.refactoring.ExtractLocal"
          name="Extract Local"/>
       <command
