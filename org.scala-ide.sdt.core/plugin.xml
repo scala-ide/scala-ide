@@ -419,6 +419,9 @@
       </type>
       <type
             name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
+      <type
+            markerType="org.scalaide.refactoring.extractionScope"
+            name="org.scalaide.refactoring.extractionScope"/>
    </extension>
 
    <extension
@@ -442,6 +445,32 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
+     <specification 
+          annotationType="org.scalaide.refactoring.extractionScope"
+          colorPreferenceKey="extractionScope.color"
+          colorPreferenceValue="192,255,192"
+          contributesToHeader="false"
+          highlightPreferenceKey="extractionScope.highlight"
+          highlightPreferenceValue="true"
+          includeOnPreferencePage="true"
+          label="Code Selection Marker"
+          overviewRulerPreferenceKey="extractionScopeOverview"
+          overviewRulerPreferenceValue="true"
+          presentationLayer="0"
+          textPreferenceKey="extractionScope.text"
+          textPreferenceValue="true"
+          textStylePreferenceValue="BOX"
+          verticalRulerPreferenceKey="extractionScope.ruler"
+          verticalRulerPreferenceValue="true">
+     </specification>
+   </extension>
+
+   <extension
+     id="org.scalaide.refactoring.extractionScope"
+     name="Extraction Scope"
+     point="org.eclipse.core.resources.markers">
+     <super
+       type="org.eclipse.core.resources.textmarker"/>
    </extension>
 
     <extension
@@ -1393,6 +1422,10 @@
                 style="push"
                 tooltip="Split parameter lists">
           </command>
+          <separator
+                name="org.scalaide.refactoring.separator.codeExtractionGroup"
+                visible="true">
+          </separator>
           <separator
                 name="org.scalaide.refactoring.separator.sourceGeneratorGroup"
                 visible="true">
