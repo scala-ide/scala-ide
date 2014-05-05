@@ -62,8 +62,8 @@ class RenameParticipant extends LtkRenameParticipant {
 
           // we can reuse the already existing rename action
           val renameRefactoring = {
-            val renameAction = new GlobalRenameAction
-            new renameAction.RenameScalaIdeRefactoring(pos.start, pos.start + file.getName.length, scalaSourceFile)
+            val refactoring = new GlobalRename
+            new refactoring.RenameScalaIdeRefactoring(pos.start, pos.start + file.getName.length, scalaSourceFile)
           }
 
           import renameRefactoring._

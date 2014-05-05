@@ -5,7 +5,7 @@ import scala.tools.refactoring.implementations.extraction.ExtractCode
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
-class AutoExtractAction extends ExtractAction {
+class AutoExtract extends ExtractAction {
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new ScalaIdeExtractionRefactoring(selectionStart, selectionEnd, file) {
       val refactoring = file.withSourceFile { (sourceFile, compiler) =>

@@ -7,7 +7,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.Pr
 import scala.collection.breakOut
 import org.eclipse.jdt.core.compiler.IProblem
 import org.scalaide.util.internal.eclipse.SWTUtils
-import org.scalaide.util.internal.eclipse.RichAnnotationModel._
+import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jdt.core.ICompilationUnit

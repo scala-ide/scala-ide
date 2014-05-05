@@ -18,10 +18,10 @@ import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.EditorHelpers
-import org.scalaide.refactoring.internal.RefactoringAction
+import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
-trait ExtractAction extends RefactoringAction {
+trait ExtractAction extends RefactoringExecutor {
   abstract class ScalaIdeExtractionRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile)
     extends ScalaIdeRefactoring("Extract...", file, selectionStart, selectionEnd) {
     val refactoring: ExtractionRefactoring with InteractiveScalaCompiler
@@ -56,7 +56,7 @@ trait ExtractAction extends RefactoringAction {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile): ScalaIdeExtractionRefactoring
 
-  override def run(action: IAction) = {
+  override def perform() = {
     val shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
 
     createScalaIdeRefactoringForCurrentEditorAndSelection() match {

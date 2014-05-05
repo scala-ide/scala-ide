@@ -1,15 +1,12 @@
 package org.scalaide.refactoring.internal
 
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.internal.eclipse.FileUtils
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.ParameterlessRefactoring
 import scala.tools.refactoring.common.Change
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
+
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
@@ -18,6 +15,11 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.FileUtils
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -129,7 +131,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     changes groupBy (_.sourceFile.file) map {
       case (file, fileChanges) =>
         FileUtils.toIFile(file) map { file =>
-          EditorHelpers.createTextFileChange(file, fileChanges)
+          EditorUtils.createTextFileChange(file, fileChanges)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path
           throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))

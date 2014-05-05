@@ -25,7 +25,7 @@ abstract class ScalaClasspathContainerInitializer(desc : String) extends Classpa
     JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
       def getPath = containerPath
       def getClasspathEntries = entries
-      def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")+"]"
+      def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "none")+"]"
       def getKind = IClasspathContainer.K_SYSTEM
     }), null)
   }

@@ -14,7 +14,7 @@
 <template name="app"
   description="application object"
   id="scala.templates.app"
-  context="org.scala-ide.sdt.core.templates" enabled="false"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
 >object ${name} extends Application {
   ${line_selection}${cursor}
 }</template>
@@ -28,6 +28,11 @@
   id="scala.templates.asof"
   context="org.scala-ide.sdt.core.templates" enabled="true"
 >asInstanceOf[${type}]${cursor}</template>
+<template name="isof"
+  description="isInstanceOf[T]"
+  id="scala.templates.isof"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
+>isInstanceOf[${type}]${cursor}</template>
 <template name="while"
   description="while loop"
   id="scala.templates.while"
@@ -39,8 +44,8 @@
   description="match/case statement"
   id="scala.templates.match"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->match {
-  case ${value} => ${cursor}
+>${value} match {
+  case ${caseValue} => ${cursor}
 }</template>
 <template name="case"
   description="case statement"
@@ -71,11 +76,11 @@
 <template name="trycatch"
   description="try catch block"
   id="scala.templates.trycatch"
-  context="org.scala-ide.sdt.core.templates" enabled="false"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
 >try {
   ${line_selection}${cursor}
 } catch {
-  case t =>  t.printStackTrace()// ${todo}: handle error
+  case ${t}: ${Throwable} => ${t}.printStackTrace() // TODO: handle error
 }</template>
 <template name="try"
   description="try"
@@ -89,7 +94,7 @@
   id="scala.templates.catch"
   context="org.scala-ide.sdt.core.templates" enabled="true"
 >catch {
-  case t => ${cursor}// ${todo}: handle error
+  case ${t}: ${Throwable} => ${t}.printStackTrace()${cursor} // TODO: handle error
 }</template>
 <template name="finally"
   description="finally block"
@@ -102,7 +107,7 @@
   description="method"
   id="scala.templates.function"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->def ${name}(${}) : ${Unit} = {
+>def ${name}(${}): ${Unit} = {
   ${cursor}
 }</template>
 <template name="lazy"
@@ -113,7 +118,7 @@
 <template name="class"
   description="new class"
   id="scala.templates.newClass"
-  context="org.scala-ide.sdt.core.templates" enabled="false"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
 >/**
  * @author ${user}
  */
@@ -123,7 +128,7 @@ class ${type_name}() {
 <template name="trait"
   description="new trait"
   id="scala.templates.newTrait"
-  context="org.scala-ide.sdt.core.templates" enabled="false"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
 >/**
  * @author ${user}
  */
@@ -133,7 +138,7 @@ trait ${type_name} {
 <template name="obj"
   description="new object"
   id="scala.templates.newObject"
-  context="org.scala-ide.sdt.core.templates" enabled="false"
+  context="org.scala-ide.sdt.core.templates" enabled="true"
 >/**
  * @author ${user}
  */
@@ -144,33 +149,28 @@ object ${new_name} {
   description="new variable"
   id="scala.templates.var"
   context="org.scala-ide.sdt.core.templates" enabled="false"
->var ${new_name} : ${type} = ${cursor}</template>
+>var ${new_name}: ${type} = ${cursor}</template>
 <template name="val"
   description="new constant"
   id="scala.templates.val"
-  context="net.alchim31.yascaladt.template" enabled="false"
->val ${new_name} : ${type} = ${cursor}</template>
+  context="org.scala-ide.sdt.core.templates" enabled="false"
+>val ${new_name}: ${type} = ${cursor}</template>
 <template name="main"
   description="main"
   id="scala.templates.main"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->def main(args: Array[String]) {
+>def main(args: Array[String]): Unit = {
   ${cursor}
 }</template>
 <template name="syserr"
   description="print to standard error"
   id="scala.templates.syserr"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->System.err.println(${word_selection}${});${cursor}</template>
+>System.err.println(${word_selection}${})${cursor}</template>
 <template name="sysout"
   description="print to standard out"
   id="scala.templates.sysout"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->println(${word_selection}${});${cursor}</template>
-<template name="systrace"
-  description="print current method to standard out"
-  id="scala.templates.systrace"
-  context="org.scala-ide.sdt.core.templates" enabled="true"
->System.out.println("${enclosing_type}.${enclosing_method}()");</template>
+>println(${word_selection}${})${cursor}</template>
 
 </templates>

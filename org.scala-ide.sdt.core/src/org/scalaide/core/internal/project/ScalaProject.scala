@@ -43,6 +43,9 @@ import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.builder
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.eclipse.core.resources.ProjectScope
+import scala.tools.nsc.settings.ScalaVersion
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -473,7 +476,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  @see `storage` for a method that decides based on user preference
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
-    new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
+    val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
+    p.addPropertyChangeListener(new IPropertyChangeListener{ def propertyChange(event: PropertyChangeEvent) = {compatibilityModeCache = Some(getCompatibilityMode()); classpathHasChanged()} })
+    p
   }
 
   /** Return the current project preference store.
@@ -493,6 +498,34 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       sourceFolders.exists(_ == sourceFolderPath)
     }
   }
+
+  @volatile private var compatibilityModeCache : Option[Boolean] = None
+  private def getCompatibilityMode(): Boolean = {
+    val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
+    val versionInArguments = this.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None}
+    val l = versionInArguments.length
+    val specdVersion = versionInArguments.headOption
+
+    if (l >= 2)
+      eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
+    if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
+      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
+    if (l < 1 || (specdVersion exists (x => plugin.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
+      false
+    else
+      specdVersion exists (x => plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
+  }
+
+  /**
+   * TODO: letting this be a workspace-wide setting.
+   */
+  def isUsingCompatibilityMode(): Boolean = {
+    if (!compatibilityModeCache.isDefined) {
+      compatibilityModeCache = Some(getCompatibilityMode())
+    }
+    compatibilityModeCache.get
+  }
+
 
   /**
    * Performs `op` on the presentation compiler, if the compiler could be initialized.

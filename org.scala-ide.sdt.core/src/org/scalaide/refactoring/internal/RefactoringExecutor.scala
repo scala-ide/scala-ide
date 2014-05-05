@@ -1,12 +1,10 @@
 package org.scalaide.refactoring.internal
 
-import org.eclipse.jface.action.IAction
 import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
-import org.eclipse.ui.PlatformUI
-import scala.tools.refactoring.common.TextChange
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * This is the abstract driver of a refactoring execution: it is the
@@ -15,10 +13,10 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
  * Each concrete refactoring action needs to implement the abstract
  * `createRefactoring` method which instantiates a ScalaIdeRefactoring.
  *
- * There are two important subclasses called [[RefactoringActionWithWizard]] and
- * [[RefactoringActionWithoutWizard]] that can be used instead of this class.
+ * There are two important subclasses called [[RefactoringExecutorWithWizard]] and
+ * [[RefactoringExecutorWithoutWizard]] that can be used instead of this class.
  */
-trait RefactoringAction extends ActionAdapter {
+trait RefactoringExecutor extends RefactoringHandler {
 
   /**
    * This factory method needs to be implemented by subclasses to
@@ -42,9 +40,7 @@ trait RefactoringAction extends ActionAdapter {
    * None is returned.
    */
   def createScalaIdeRefactoringForCurrentEditorAndSelection(): Option[ScalaIdeRefactoring] = {
-    import EditorHelpers._
-
-    withScalaSourceFileAndSelection { (scalaFile, selection) =>
+    EditorUtils.withScalaSourceFileAndSelection { (scalaFile, selection) =>
       Some(createRefactoring(selection.getOffset, selection.getOffset + selection.getLength, scalaFile))
     }
   }

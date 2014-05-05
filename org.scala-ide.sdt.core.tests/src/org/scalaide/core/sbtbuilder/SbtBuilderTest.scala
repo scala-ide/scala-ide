@@ -22,6 +22,8 @@ import org.eclipse.jdt.core.JavaCore
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
@@ -56,6 +58,44 @@ class SbtBuilderTest {
 
     Assert.assertTrue("Build errors found", noErrors)
   }
+
+  /**
+   * See #1002070
+   */
+  @Test def testBuildErrorRemove() {
+     import SDTTestUtils._
+     SDTTestUtils.enableAutoBuild(false)
+
+     val Seq(prj) = createProjects("A")
+     try {
+
+       val pack = createSourcePackage("test")(prj)
+       val originalA = "package test;\n object A { def callMe() = ??? }\n"
+       val originalB = "package test;\n class B { A.callMe() } \n"
+
+       // C depends directly on A, through an exported dependency of B
+       val unitA = pack.createCompilationUnit("A.scala", originalA, true, null)
+       val unitB = pack.createCompilationUnit("B.scala", originalB, true, null)
+
+       // no errors
+       prj.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+       val errors = getErrorMessages(unitA, unitB)
+       Assert.assertEquals("Build errors found", List(), errors)
+
+       val changedErrors = SDTTestUtils.buildWith(unitA.getResource, "package test;\n object A { def callMe1() = ??? }\n", Seq(unitA, unitB))
+       Assert.assertEquals("Build problems " + changedErrors, 1, changedErrors.size)
+
+       prj.presentationCompiler(pc => pc.discardCompilationUnit(unitA.asInstanceOf[ScalaCompilationUnit]))
+       val deletedErrors = SDTTestUtils.buildWith(unitB.getResource, originalB, Seq(unitB))
+       Assert.assertEquals("Build problems " + deletedErrors, 1, deletedErrors.size)
+
+       // the error goes away
+       val newUnitA = pack.createCompilationUnit("A.scala", originalA, true, null)
+       val errorMessages = SDTTestUtils.buildWith(newUnitA.getResource, originalA, Seq(newUnitA, unitB))
+       Assert.assertEquals("No build problems: " + errorMessages, 0, errorMessages.size)
+     } finally
+       deleteProjects(prj)
+   }
 
   @Test def testSimpleBuildWithResources() {
     println("building " + depProject)

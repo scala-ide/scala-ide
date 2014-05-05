@@ -1,16 +1,12 @@
 package org.scalaide.refactoring.internal
 package rename
 
-import org.eclipse.jface.action.IAction
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.nsc.symtab.Flags
-import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.analysis.Indexes
-import scala.tools.refactoring.common.ConsoleTracing
-import scala.tools.refactoring.common.InteractiveScalaCompiler
-import scala.tools.refactoring.common.Selections
-import scala.tools.refactoring.implementations.Rename
+import scala.tools.refactoring.implementations
+
+import org.scalaide.refactoring.internal.RefactoringExecutor
+import org.scalaide.refactoring.internal.RefactoringHandler
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * This implementation supports renaming of all identifiers that occur in the program.
@@ -23,16 +19,16 @@ import scala.tools.refactoring.implementations.Rename
  * For example, a local variable. All names that can potentially be accessed from other compilation
  * units in the program are renamed with the wizard and show a preview of the changes.
  *
- * The actual renaming is done in LocalRenameAction and GlobalRenameAction.
+ * The actual renaming is done in [[LocalRename]] and [[GlobalRename]].
  */
-class RenameAction extends ActionAdapter {
+class Rename extends RefactoringHandler {
 
-  override def run(action: IAction) {
-    val renameAction = getRenameAction
-    renameAction.run(action)
+  override def perform(): Unit = {
+    getRenameRefactoring.perform()
   }
 
-  def getRenameAction = if (isLocalRename) new LocalRenameAction else new GlobalRenameAction
+  def getRenameRefactoring: RefactoringExecutor =
+    if (isLocalRename) new LocalRename else new GlobalRename
 
   /**
    * Using the currently opened file and selection, determines whether the
@@ -40,9 +36,9 @@ class RenameAction extends ActionAdapter {
    */
   private def isLocalRename: Boolean = {
 
-    val isLocalRename = EditorHelpers.withScalaFileAndSelection { (scalaFile, selected) =>
+    val isLocalRename = EditorUtils.withScalaFileAndSelection { (scalaFile, selected) =>
       scalaFile.withSourceFile{(source, compiler) =>
-        val refactoring = new Rename with GlobalIndexes {
+        val refactoring = new implementations.Rename with GlobalIndexes {
           val global = compiler
           val index = EmptyIndex
         }

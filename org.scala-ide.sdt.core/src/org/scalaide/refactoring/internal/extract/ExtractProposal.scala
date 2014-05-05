@@ -53,7 +53,7 @@ object ExtractProposal {
 
     cu.withSourceFile { (file, compiler) =>
       val refactoring = createRefactoring(compiler, file, selectionStart, selectionEnd)
-      var relevance = RelevanceValues.ProposalRefactoringActionAdapter - 1
+      var relevance = RelevanceValues.ProposalRefactoringHandlerAdapter - 1
 
       refactoring.extractions.foreach { extraction =>
         val pos = extraction.extractionTarget.enclosing.pos

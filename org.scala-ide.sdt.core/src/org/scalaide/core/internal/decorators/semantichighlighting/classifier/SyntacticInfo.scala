@@ -1,6 +1,5 @@
 package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
-import org.scalaide.util.internal.CollectionUtil
 import scalariform.lexer.ScalaLexer
 import scalariform.lexer.Token
 import scalariform.parser._
@@ -72,8 +71,9 @@ object SyntacticInfo {
             token <- astNode.tokens.filter { token => token.text == text || token.text == "`" + text + "`" }
           } maybeSelfRefs += token.range.toRegion
         case ann @ Annotation(_, annotationType, _, _) =>
-          val tokens = annotationType.tokens.filter(_.tokenType.isId)
-          val (pkges, annotation) = CollectionUtil.splitAtLast(tokens)
+          val tokens = annotationType.tokens.toIndexedSeq.filter(_.tokenType.isId)
+          val pkges = tokens.take(tokens.size-1)
+          val annotation = tokens.lastOption
           pkges.foreach(packages += _.range.toRegion)
           annotation foreach ( annotations += _.range.toRegion)
         case StringInterpolation(_, stringPartsAndScala, _) =>

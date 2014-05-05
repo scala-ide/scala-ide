@@ -1,10 +1,10 @@
 class Foo {
-  lazy val x/*ref*/ = 0
+  lazy val lazyX/*ref*/ = 0
 }
 
 class Bar {
   def meth {
     val obj = new Foo
-    obj.x
+    obj.lazyX
   }
 }

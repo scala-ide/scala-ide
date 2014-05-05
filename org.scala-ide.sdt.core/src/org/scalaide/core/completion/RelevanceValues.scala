@@ -2,7 +2,7 @@ package org.scalaide.core.completion
 
 object RelevanceValues {
 
-  final val ProposalRefactoringActionAdapter = 100
+  final val ProposalRefactoringHandlerAdapter = 100
 
   final val ExpandingProposalBase = 100
 

@@ -2,14 +2,14 @@ package org.scalaide.refactoring.internal
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.implementations.MoveConstructorToCompanionObject
+import scala.tools.refactoring.implementations
 
 /**
  * This refactoring redirects calls to the primary constructor to the
  * apply method of the companion object.
  * The apply method and if necessary the companion object will be generated.
  */
-class MoveConstructorToCompanionObjectAction extends RefactoringActionWithWizard {
+class MoveConstructorToCompanionObject extends RefactoringExecutorWithWizard {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MoveConstructorToCompanionObjectIdeRefactoring(start, end, file)
 
@@ -17,7 +17,7 @@ class MoveConstructorToCompanionObjectAction extends RefactoringActionWithWizard
     extends IndexedIdeRefactoring("Move constructor to companion object", start, end, file) {
 
     val refactoring = withCompiler { compiler =>
-      new MoveConstructorToCompanionObject with GlobalIndexes with Indexed {
+      new implementations.MoveConstructorToCompanionObject with GlobalIndexes with Indexed {
         val global = compiler
       }
     }

@@ -4,7 +4,7 @@ import org.scalaide.refactoring.internal.ui.ExtractTraitConfigurationPageGenerat
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.implementations.ExtractTrait
+import scala.tools.refactoring.implementations
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
@@ -20,7 +20,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
  * The original class/trait will automatically extend the extracted trait and the
  * extracted trait will have a self-type annotation for the original class/trait.
  */
-class ExtractTraitAction extends RefactoringActionWithWizard {
+class ExtractTrait extends RefactoringExecutorWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractTraitScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
@@ -28,7 +28,7 @@ class ExtractTraitAction extends RefactoringActionWithWizard {
     extends ScalaIdeRefactoring("Extract trait", file, start, end) with ExtractTraitConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
-      new ExtractTrait with GlobalIndexes {
+      new implementations.ExtractTrait with GlobalIndexes {
         val global = c
         val index = EmptyIndex
       }

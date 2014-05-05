@@ -1,17 +1,20 @@
 package org.scalaide.refactoring.internal
 package source
 
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.refactoring.implementations.GenerateHashcodeAndEquals
+import scala.tools.refactoring.implementations
+
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
+
 import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
 
 /**
- * This refactoring that generates hashCode and equals implementations
+ * This refactoring generates hashCode and equals implementations by
  * following the recommendations given in chapter 28 of
  * Programming in Scala.
  */
-class GenerateHashcodeAndEqualsAction extends RefactoringActionWithWizard {
+class GenerateHashcodeAndEquals extends RefactoringExecutorWithWizard {
 
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
@@ -19,7 +22,7 @@ class GenerateHashcodeAndEqualsAction extends RefactoringActionWithWizard {
     extends ClassParameterDrivenIdeRefactoring("Generate hashCode and equals", start, end, file) with GenerateHashcodeAndEqualsConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
-      new GenerateHashcodeAndEquals {
+      new implementations.GenerateHashcodeAndEquals {
         val global = c
       }
     }

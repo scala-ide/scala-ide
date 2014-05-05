@@ -4,7 +4,6 @@ import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.scalaide.core.jcompiler.AbstractMethodVerifierTest
 import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
-import org.scalaide.core.util.CollectionUtilTest
 import org.scalaide.core.wizards.ImportSupportTest
 import org.scalaide.core.hyperlink.HyperlinkDetectorTests
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
@@ -74,7 +73,6 @@ import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
     classOf[StructureBuilderTest],
     classOf[ScalaJavaMapperTest],
     classOf[UITestSuite],
-    classOf[CollectionUtilTest],
     classOf[ImportSupportTest],
     classOf[QualifiedNameSupportTest],
     classOf[ScalaWordFinderTest]))

@@ -1,10 +1,13 @@
 package org.scalaide.refactoring.internal
 package rename
 
-import org.eclipse.jface.action.IAction
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.implementations.Rename
+import scala.tools.refactoring.implementations
+
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.refactoring.internal.RefactoringExecutor
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 /**
  * Supports renaming of identifiers inside a single file using Eclipse's
@@ -13,7 +16,7 @@ import scala.tools.refactoring.implementations.Rename
  * Should the renaming fail to properly initialize, the GlobalRenameAction
  * is called which then shows the error message.
  */
-class LocalRenameAction extends RefactoringAction {
+class LocalRename extends RefactoringExecutor {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 
@@ -21,7 +24,7 @@ class LocalRenameAction extends RefactoringAction {
 
     def refactoringParameters = ""
 
-    val refactoring = file.withSourceFile((source, compiler) => new Rename with GlobalIndexes {
+    val refactoring = file.withSourceFile((source, compiler) => new implementations.Rename with GlobalIndexes {
       val global = compiler
       var index = {
         val tree = askLoadedAndTypedTreeForFile(source).left.get
@@ -30,7 +33,7 @@ class LocalRenameAction extends RefactoringAction {
     }) getOrElse fail()
   }
 
-  override def run(action: IAction) {
+  override def perform(): Unit = {
 
     def runInlineRename(r: RenameScalaIdeRefactoring) {
       import r.refactoring._
@@ -57,12 +60,12 @@ class LocalRenameAction extends RefactoringAction {
         }
       }
 
-      EditorHelpers.enterLinkedModeUi(positions, selectFirst = false)
+      EditorUtils.enterLinkedModeUi(positions, selectFirst = false)
     }
 
     createScalaIdeRefactoringForCurrentEditorAndSelection() map {
       case refactoring: RenameScalaIdeRefactoring =>
-        refactoring.preparationResult.fold(_ => (new GlobalRenameAction).run(action), _ => runInlineRename(refactoring))
+        refactoring.preparationResult.fold(_ => (new GlobalRename).perform(), _ => runInlineRename(refactoring))
     }
   }
 }

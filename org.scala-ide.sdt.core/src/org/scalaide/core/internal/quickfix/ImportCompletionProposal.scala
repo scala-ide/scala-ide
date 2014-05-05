@@ -1,9 +1,7 @@
 package org.scalaide.core.internal.quickfix
 
-import org.scalaide.core.completion.RelevanceValues
-import org.scalaide.logging.HasLogger
-import org.scalaide.refactoring.internal.EditorHelpers
 import scala.tools.refactoring.implementations.AddImportStatement
+
 import org.eclipse.jdt.ui.ISharedImages
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -12,6 +10,9 @@ import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.eclipse.EditorUtils
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
 
@@ -41,7 +42,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    */
   private def applyByASTTransformation(document: IDocument) {
 
-    EditorHelpers.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
 
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
 
@@ -60,7 +61,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
 
       } getOrElse (Nil)
 
-      EditorHelpers.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
+      EditorUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
 
       None
     }
