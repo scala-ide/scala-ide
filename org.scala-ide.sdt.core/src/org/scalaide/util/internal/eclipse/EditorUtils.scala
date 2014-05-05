@@ -64,9 +64,9 @@ object EditorUtils {
     val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
 
     val annotations = model match {
-      case null                            => Iterator.empty
+      case null => Iterator.empty
       case am2: IAnnotationModelExtension2 => am2.getAnnotationIterator(offset, 1, true, true).asScala
-      case _                               => model.getAnnotationIterator.asScala
+      case _ => model.getAnnotationIterator.asScala
     }
 
     val annotationsWithPositions = annotations collect {
@@ -100,7 +100,7 @@ object EditorUtils {
     Option(w.getActivePage)
 
   def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
-    if(p.isEditorAreaVisible) Some(p.getActiveEditor) else None
+    if (p.isEditorAreaVisible) Some(p.getActiveEditor) else None
 
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
     PartialFunction.condOpt(e) {
@@ -154,7 +154,7 @@ object EditorUtils {
     withScalaFileAndSelection { (icu, selection) =>
       icu match {
         case ssf: ScalaSourceFile => block(ssf, selection)
-        case _                    => None
+        case _ => None
       }
     }
   }
@@ -204,10 +204,10 @@ object EditorUtils {
 
     val selectionCannotBeRetained = edit.getChildren map (_.getRegion) exists selectionIsInManipulatedRegion
 
-    if(selectionCannotBeRetained) {
+    if (selectionCannotBeRetained) {
       // the selection overlaps the selected region, so we are on
       // our own in trying to the preserve the user's selection.
-      if(edit.getOffset > textSelection.getOffset) {
+      if (edit.getOffset > textSelection.getOffset) {
         edit.apply(document)
         // if the edit starts after the start of the selection,
         // we just keep the current selection
@@ -291,17 +291,19 @@ object EditorUtils {
   }
 
   /**
-   * Enters the editor in the LinkedModeUI with the given list of positions.
+   * Enters the editor in the LinkedModeUI with the given list of position groups.
+   * Each position group is a list of positions with identical strings.
    * A position is given as an offset and the length.
    */
-  def enterLinkedModeUi(ps: List[(Int, Int)], selectFirst: Boolean): Unit = {
-
-    doWithCurrentEditor { editor =>
+  def enterMultiLinkedModeUi(positionGroups: List[List[(Int, Int)]], selectFirst: Boolean): Unit =
+    EditorUtils.doWithCurrentEditor { editor =>
 
       val model = new LinkedModeModel {
-        this addGroup new LinkedPositionGroup {
-          val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          ps foreach (p => addPosition(new LinkedPosition(document, p._1, p._2, 0)))
+        positionGroups foreach { ps =>
+          this addGroup new LinkedPositionGroup {
+            val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
+            ps foreach (p => addPosition(new LinkedPosition(document, p._1, p._2, 0)))
+          }
         }
         forceInstall
       }
@@ -320,7 +322,13 @@ object EditorUtils {
       if (!selectFirst)
         viewer.setSelectedRange(priorSelection.x, priorSelection.y)
     }
-  }
+
+  /**
+   * Enters the editor in the LinkedModeUI with the given list of positions.
+   * A position is given as an offset and the length.
+   */
+  def enterLinkedModeUi(ps: List[(Int, Int)], selectFirst: Boolean): Unit =
+    enterMultiLinkedModeUi(ps :: Nil, selectFirst)
 
   def findOrOpen(file: IFile): Option[IDocument] = {
     for (window <- activeWorkbenchWindow) yield {
