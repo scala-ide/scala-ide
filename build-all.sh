@@ -10,10 +10,10 @@ ROOT_DIR=${PWD}
 if [ -z "$*" ]
 then
   MVN_ARGS="-Pscala-2.11.x -Peclipse-juno clean install"
-  MVN_P2_ARGS="-Pscala-2.11.x -Peclipse-juno clean verify"
+  MVN_P2_ARGS="-Dtycho.localArtifacts=ignore -Pscala-2.11.x -Peclipse-juno clean verify"
 else
   MVN_ARGS="$*"
-  MVN_P2_ARGS="$*"
+  MVN_P2_ARGS="-Dtycho.localArtifacts=ignore $*"
 fi
 
 echo "Running with: mvn ${MVN_P2_ARGS}"
@@ -45,7 +45,7 @@ fi
 
 # set features.xml
 echo "Setting features.xml"
-mvn ${ARGS} -Pset- antrun:run
+mvn ${MVN_P2_ARGS} -Pset-version-specific-files antrun:run
 
 # the plugins
 echo "Building plugins"
