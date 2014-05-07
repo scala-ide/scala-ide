@@ -24,7 +24,7 @@
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
-    <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
+    <repo.eclipse.luna>http://download.eclipse.org/eclipse/updates/4.4milestones</repo.eclipse.luna>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
