@@ -31,7 +31,7 @@ trait AnonymousFunctionSupport {
   // for new function name
   private val newClassName = "CustomFunction"
 
-  import toolbox.u.{Try => _, _}
+  import toolbox.u.{ Try => _, _ }
 
   // we should exlude start function -> it must stay function cos it is not a part of original expression
   protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
@@ -58,8 +58,7 @@ trait AnonymousFunctionSupport {
     val DefDef(functionMods, functionName, _, _, retType, _) = oldApplyFunction
     val newApplyFunction = DefDef(functionMods, functionName, Nil, List(params), retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, List(constructor, newApplyFunction)))
-    // TODO - resetAllAttrs is removed in 2.11
-    val functionReseted = toolbox.resetAllAttrs(newFunctionClass)
+    val functionReseted = ResetTypeInformation(toolbox).transform(newFunctionClass)
 
     ClassListener.listenForClasses(newClassName)(() => toolbox.compile(functionReseted))
   }

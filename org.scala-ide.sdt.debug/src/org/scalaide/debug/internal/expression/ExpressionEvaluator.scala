@@ -72,22 +72,34 @@ abstract class ExpressionEvaluator(val classLoader: ClassLoader)
   import toolbox.u
 
   /** Parses given code to a Tree */
-  final def parse(code: String): u.Tree = toolbox.parse(code)
+  def parse(code: String): u.Tree = toolbox.parse(code)
+
+  /**
+   * Main entry point for this class, compiles given expression in given context to scala `Expression`.
+   */
+  final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
+    val parsed = parse(code)
+    val typesContext = new TypesContext()
+
+    val phases = genPhases(context, typesContext)
+
+    val transformed = transform(parsed, phases)
+
+    val message = s"""
+                      |Compiling tree:
+                      |$transformed
+                      |""".stripMargin
+    logger.debug(message)
+
+    compile(transformed, typesContext.classesToLoad)
+  }
 
   /** Compiles a Tree to Expression */
-  final def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
-    val allReset = toolbox.resetAllAttrs(tree)
-    // FIXME - localReset should be used instead of allReset, because latter is removed in Scala 2.11
-    // unfortunately, with localReset compile fails on imports
-    // val localReset = toolbox.resetLocalAttrs(tree)
-
-    val compiled = toolbox.compile(allReset)
-
-    compiled() match {
+  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression =
+    toolbox.compile(tree).apply() match {
       case function: ExpressionFunc => JdiExpression(function, newClasses)
       case other => throw new IllegalArgumentException("Bad compilation result!")
     }
-  }
 
   private def genPhases(context: VariableContext, typesContext: TypesContext): Seq[TransformationPhase] = Seq(
     MockVariables(toolbox, context),
@@ -106,43 +118,26 @@ abstract class ExpressionEvaluator(val classLoader: ClassLoader)
     MockNewOperator(toolbox, typesContext),
     MockConditionalExpressions(toolbox, typesContext),
     GenerateStubs(toolbox, typesContext),
-    ImplementValues(toolbox, typesContext))
+    ImplementValues(toolbox, typesContext),
+    ResetTypeInformation(toolbox))
 
-  /**
-   * Main entry point for this class, compiles given expression in given context to scala `Expression`.
-   */
-  final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
-    val parsed = parse(code)
-    val typesContext = new TypesContext()
-
-    val phases = genPhases(context, typesContext)
-
-    val transformed = phases.foldLeft(parsed) {
-      case (tree, phase) =>
-        val phaseName = phase.getClass.getSimpleName
-        val message = s"""
+  private def transform(code: universe.Tree, phases: Seq[TransformationPhase]) = phases.foldLeft(code) {
+    case (tree, phase) =>
+      val phaseName = phase.getClass.getSimpleName
+      val message = s"""
                         |Applying phase: $phaseName
                         |Tree before transformation:
                         |$tree
                         |""".stripMargin
 
-        logger.debug(message)
+      logger.debug(message)
 
-        try {
-          phase.transform(tree)
-        } catch {
-          case e: Throwable =>
-            logger.error(s"Phase $phaseName failed")
-            throw e
-        }
-    }
-
-    val message = s"""
-                      |Compiling tree:
-                      |$transformed
-                      |""".stripMargin
-    logger.debug(message)
-
-    compile(transformed, typesContext.classesToLoad)
+      try {
+        phase.transform(tree)
+      } catch {
+        case e: Throwable =>
+          logger.error(s"Phase $phaseName failed")
+          throw e
+      }
   }
 }
