@@ -31,6 +31,9 @@ object TestValues {
   val thisFileName = "This"
   val thisLineNumber = 23
 
+  val visibilityFileName = "Visibility"
+  val visibilityLineNumber = 23
+
   val variablesFileName = "Variables"
   val variablesLineNumber = 15
 

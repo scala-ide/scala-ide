@@ -16,6 +16,7 @@ import org.junit.runners.Suite
   Array(
     classOf[MethodArgumentsAccessTest],
     classOf[ThisTest],
+    classOf[VisibilityTest],
     classOf[ExceptionsTest],
     classOf[PrimitivesIntegrationTest],
     classOf[StringAdditionTest],
