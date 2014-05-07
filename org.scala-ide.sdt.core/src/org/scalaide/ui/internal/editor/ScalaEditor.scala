@@ -8,7 +8,7 @@ import org.scalaide.core.internal.lexical._
 
 trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 
-  def createDocumentPartitioner = new ScalaDocumentPartitioner
+  override def createDocumentPartitioner = new ScalaDocumentPartitioner
 
 }
 

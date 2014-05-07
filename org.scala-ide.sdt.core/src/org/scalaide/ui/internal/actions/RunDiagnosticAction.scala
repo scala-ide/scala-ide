@@ -22,11 +22,11 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
     parentWindow = window
   }
 
-  def dispose = { }
+  override def dispose = { }
 
-  def selectionChanged(action: IAction, selection: ISelection) {  }
+  override def selectionChanged(action: IAction, selection: ISelection) {  }
 
-  def run(action: IAction) {
+  override def run(action: IAction) {
     Utils tryExecute {
       action.getId match {
         case RUN_DIAGNOSTICS =>
@@ -42,5 +42,5 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
     }
   }
 
-  def setActivePart(action: IAction, targetPart: IWorkbenchPart) { }
+  override def setActivePart(action: IAction, targetPart: IWorkbenchPart) { }
 }

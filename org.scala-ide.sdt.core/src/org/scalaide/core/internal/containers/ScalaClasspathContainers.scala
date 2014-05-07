@@ -18,15 +18,15 @@ import org.scalaide.core.ScalaPlugin
 abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer with HasLogger {
   def entries : Array[IClasspathEntry]
 
-  def initialize(containerPath : IPath, project : IJavaProject) = {
+  override def initialize(containerPath : IPath, project : IJavaProject) = {
     logger.info(s"Initializing classpath container $desc: ${ScalaPlugin.plugin.libClasses}")
     logger.info(s"Initializing classpath container $desc with sources: ${ScalaPlugin.plugin.libSources}")
 
     JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
-      def getPath = containerPath
-      def getClasspathEntries = entries
-      def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "none")+"]"
-      def getKind = IClasspathContainer.K_SYSTEM
+      override def getPath = containerPath
+      override def getClasspathEntries = entries
+      override def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "none")+"]"
+      override def getKind = IClasspathContainer.K_SYSTEM
     }), null)
   }
 
@@ -64,13 +64,13 @@ abstract class ScalaClasspathContainerPage(id : String, name : String, title : S
   setDescription(desc)
   setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY)
 
-  def finish() = true
+  override def finish() = true
 
-  def getSelection() : IClasspathEntry = fContainerEntryResult
+  override def getSelection() : IClasspathEntry = fContainerEntryResult
 
-  def setSelection(containerEntry : IClasspathEntry) {}
+  override def setSelection(containerEntry : IClasspathEntry) {}
 
-  def createControl(parent : Composite) {
+  override def createControl(parent : Composite) {
     val composite = new Composite(parent, SWT.NONE)
     setControl(composite)
   }
