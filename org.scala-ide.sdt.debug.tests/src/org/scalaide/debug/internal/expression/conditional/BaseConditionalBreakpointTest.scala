@@ -78,7 +78,7 @@ class BaseConditionalBreakpointTestCompanion(workspace: String = "conditional-br
     session = initDebugSession(fileName)
 
     val objectName = "debug." + fileName + "$"
-    session.runToLine(objectName, lineNumber, conditionContext)
+    session.runToLine(objectName, lineNumber, conditionContext = conditionContext)
 
     if (shouldHitBreakpoint(conditionContext)) {
       Some(initializeEvaluator(session))

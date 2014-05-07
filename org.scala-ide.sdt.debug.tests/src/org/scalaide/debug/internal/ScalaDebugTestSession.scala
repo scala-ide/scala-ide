@@ -139,21 +139,12 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   /**
    * Add a breakpoint at the specified location,
    * start or launch the session,
-   * and wait until the application is suspended
-   */
-  def runToLine(typeName: String, breakpointLine: Int, conditionContext: Option[ConditionContext] = None) {
-    runToLine(typeName, breakpointLine, ScalaDebugTestSession.Noop, conditionContext)
-  }
-
-  /**
-   * Add a breakpoint at the specified location,
-   * start or launch the session,
    * perform the additional action,
    * and wait until the application is suspended
    *
    * @param conditionContext condition context represents condition and expected condition evaluation result (works with single visit breakpoints as there's only one flag for expected result)
    */
-  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T, conditionContext: Option[ConditionContext] = None): T = {
+  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T = ScalaDebugTestSession.Noop, conditionContext: Option[ConditionContext] = None): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine)
