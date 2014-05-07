@@ -256,10 +256,13 @@ public privileged aspect ClassFileProviderAspect {
       // simple super class name
       char[] superclassName = null;
       TypeReference superclass;
+      boolean anonymous;
       if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
         superclass = typeDeclaration.allocation.type;
+        anonymous = true;
       } else {
         superclass = typeDeclaration.superclass;
+        anonymous = false;
       }
       if (superclass != null) {
         char[][] typeName = superclass.getTypeName();
@@ -284,7 +287,8 @@ public privileged aspect ClassFileProviderAspect {
         typeDeclaration.name,
         typeDeclaration.binding.modifiers,
         superclassName,
-        superInterfaceNames);
+        superInterfaceNames,
+        anonymous);
       hr.remember(hierarchyType, typeDeclaration.binding);
     }
   }
