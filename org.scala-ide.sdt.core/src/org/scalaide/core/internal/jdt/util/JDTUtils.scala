@@ -50,7 +50,7 @@ object JDTUtils {
   def resolveType(nameLookup : NameLookup, packageName : String, typeName : String, acceptFlags : Int) : Option[IType] = {
     val pkgs = nameLookup.findPackageFragments(packageName, false)
     for(p <- pkgs) {
-      val tpe = nameLookup.findType(typeName, p, false, acceptFlags, true)
+      val tpe = nameLookup.findType(typeName, p, false, acceptFlags, true, true)
       if (tpe != null)
         return Some(tpe)
     }
