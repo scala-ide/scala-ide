@@ -23,24 +23,24 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
-  private var currentTrees: Seq[u.Tree] = Nil
+  private var currentTrees: Seq[Tree] = Nil
 
   /**
    * Traverse throught function call and returns arguments
    */
-  private def extractParameters(tree: u.Tree): List[List[u.Tree]] = tree match {
-    case select @ u.Select(_, _) => Nil
-    case typeApply @ u.TypeApply(fun, _) => extractParameters(fun)
-    case apply @ u.Apply(fun, args) => args :: extractParameters(fun)
+  private def extractParameters(tree: Tree): List[List[Tree]] = tree match {
+    case select: Select => Nil
+    case typeApply @ TypeApply(fun, _) => extractParameters(fun)
+    case apply @ Apply(fun, args) => args :: extractParameters(fun)
     case _ => throw new RuntimeException(s"Bad part of call function tree: $tree")
   }
 
   /**
    * Rewrites new Class(a)(b) to __context.newInstance("package.Class", Seq(Seq(a), Seq(b)))
    */
-  private def proxiedNewCode(fun: u.Tree, args: List[u.Tree], classType: String): u.Tree = {
+  private def proxiedNewCode(fun: Tree, args: List[Tree], classType: String): Tree = {
     // parameters lists for constructor
     val params = (args +: extractParameters(fun)).reverse
 
@@ -48,28 +48,28 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
     val classTypeCode = toolbox.parse('"' + classType + '"')
 
     // responsible for "Seq" parts of expression
-    val u.Apply(seqApplyFunction, _) = toolbox.parse("Seq()")
+    val Apply(seqApplyFunction, _) = toolbox.parse("Seq()")
 
     // responsible for "__context.newInstance" part of expression
     val newInstanceFunc = toolbox.parse(s"${DebuggerSpecific.contextParamName}.newInstance")
 
     // responsible for "Seq(a), Seq(a)" part of expression
-    val argumentSeqArgumentSeqs: List[u.Tree] = params.map {
-      list => u.Apply(seqApplyFunction, list)
+    val argumentSeqArgumentSeqs: List[Tree] = params.map {
+      list => Apply(seqApplyFunction, list)
     }
 
     // responsible for "Seq(Seq(a), Seq(a))" part of expression
-    val argsCode = u.Apply(seqApplyFunction, argumentSeqArgumentSeqs)
+    val argsCode = Apply(seqApplyFunction, argumentSeqArgumentSeqs)
 
     // whole expression
-    u.Apply(newInstanceFunc, List(classTypeCode, argsCode))
+    Apply(newInstanceFunc, List(classTypeCode, argsCode))
   }
 
   /** Transformer */
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = {
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = {
     currentTrees = tree +: currentTrees
     val retTree = tree match {
-      case newTree @ u.Apply(fun, args) if fun.symbol.name.toString == ScalaOther.constructorFunctionName =>
+      case newTree @ Apply(fun, args) if fun.symbol.name.toString == ScalaOther.constructorFunctionName =>
         proxiedNewCode(fun, args, newTree.tpe.toString)
       case any => transformFurther(tree)
     }

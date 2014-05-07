@@ -23,7 +23,7 @@ import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
 case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
   private val constantTransformMap = Map(
     "-Infinity" -> "NegativeInfinity",
@@ -34,7 +34,7 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Create code to replace literal.
    * Created code is parsed and literal is replaced by it
    */
-  private def literalCode(literal: u.Literal): String = {
+  private def literalCode(literal: Literal): String = {
     if (constantTransformMap.contains(literal.toString)) {
       literalConstantCode(literal)
     } else if (literal.toString == ScalaOther.unitLiteral) {
@@ -53,13 +53,13 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Generate code __context.proxy(Type.Constant)
    * where types are Float and Double and Constant are NegativeInfinity, PositiveInfinity and NaN
    */
-  private def literalConstantCode(literal: u.Literal): String = {
+  private def literalConstantCode(literal: Literal): String = {
     val literalStub = typesContext.treeTypeFromContext(literal).get
 
     val literalCode = if (literalStub.contains("Float"))
-      s"Float.${constantTransformMap(literal.toString())}"
+      s"Float.${constantTransformMap(literal.toString)}"
     else
-      s"Double.${constantTransformMap(literal.toString())}"
+      s"Double.${constantTransformMap(literal.toString)}"
 
     import DebuggerSpecific._
     s"$literalStub($contextParamName.$proxyMethodName($literalCode))"
@@ -69,11 +69,11 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Checks if given literal should be proxied.
    * Unit literal - '()' and 'null' do not require to be proxied
    */
-  private def shouldBeProxied(literal: u.Literal) = literal.toString != "null"
+  private def shouldBeProxied(literal: Literal) = literal.toString != "null"
 
   /** See `AstTransformer.transformSingleTree`. */
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = tree match {
-    case literal @ u.Literal(_) if shouldBeProxied(literal) => toolbox.parse(literalCode(literal))
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case literal: Literal if shouldBeProxied(literal) => toolbox.parse(literalCode(literal))
     case any => transformFurther(tree)
   }
 }

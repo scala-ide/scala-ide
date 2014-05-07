@@ -31,19 +31,19 @@ trait AnonymousFunctionSupport {
   // for new function name
   private val newClassName = "CustomFunction"
 
-  import toolbox.u
+  import toolbox.u.{Try => _, _}
 
   // we should exlude start function -> it must stay function cos it is not a part of original expression
-  protected def isStartFunctionForExpression(params: List[u.ValDef]) = params match {
-    case List(u.ValDef(_, name, typeTree, _)) if name.toString == DebuggerSpecific.contextParamName => true
+  protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
+    case List(ValDef(_, name, typeTree, _)) if name.toString == DebuggerSpecific.contextParamName => true
     case _ => false
   }
 
-  protected def compilePartialFunction(partialFunction: u.Tree): NewClassContext = {
+  protected def compilePartialFunction(partialFunction: Tree): NewClassContext = {
     ClassListener.listenForClasses(newClassName)(() => toolbox.compile(partialFunction))
   }
 
-  protected def compileFunction(params: List[u.ValDef], body: u.Tree): NewClassContext = {
+  protected def compileFunction(params: List[ValDef], body: Tree): NewClassContext = {
     val argumentsTypes = params.map(_.tpt).flatMap(typesContext.treeTypeName)
 
     argumentsTypes.collectFirst {
@@ -53,18 +53,19 @@ trait AnonymousFunctionSupport {
     val functionGenericTypes = (argumentsTypes ++ Seq("Any")).mkString(", ")
     val newClass = toolbox.parse(s"class $newClassName extends Function${params.size}[$functionGenericTypes]{ override def apply(v1: Any) = ???}")
 
-    val u.ClassDef(mods, name, tparams, u.Template(parents, self, List(constructor, oldApplyFunction))) = newClass
+    val ClassDef(mods, name, tparams, Template(parents, self, List(constructor, oldApplyFunction))) = newClass
 
-    val u.DefDef(functionMods, functionName, _, _, retType, _) = oldApplyFunction
-    val newApplyFunction = u.DefDef(functionMods, functionName, Nil, List(params), retType, body)
-    val newFunctionClass = u.ClassDef(mods, name, tparams, u.Template(parents, self, List(constructor, newApplyFunction)))
+    val DefDef(functionMods, functionName, _, _, retType, _) = oldApplyFunction
+    val newApplyFunction = DefDef(functionMods, functionName, Nil, List(params), retType, body)
+    val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, List(constructor, newApplyFunction)))
+    // TODO - resetAllAttrs is removed in 2.11
     val functionReseted = toolbox.resetAllAttrs(newFunctionClass)
 
     ClassListener.listenForClasses(newClassName)(() => toolbox.compile(functionReseted))
   }
 
   // creates and compiles new function class
-  protected def createAndCompileNewFunction(params: List[u.ValDef], body: u.Tree, parentType: String): u.Tree = {
+  protected def createAndCompileNewFunction(params: List[ValDef], body: Tree, parentType: String): Tree = {
     val NewClassContext(jvmClassName, classCode) = compileFunction(params, body)
 
     val proxyClassName = s"${parentType}v$functionsCount"
@@ -74,20 +75,21 @@ trait AnonymousFunctionSupport {
     lambdaProxy(newFunctionType)
   }
 
-  protected def lambdaProxy(proxyClass: String): u.Tree =
+  protected def lambdaProxy(proxyClass: String): Tree =
     toolbox.parse(s"$proxyClass(${DebuggerSpecific.contextParamName})")
 
-  protected def extractByNameParams(select: u.Tree): Option[Seq[Boolean]] = Try {
-    def innerArgs(tpe: u.Type): Seq[Boolean] =
+  protected def extractByNameParams(select: Tree): Option[Seq[Boolean]] = Try {
+
+    def innerArgs(tpe: Type): Seq[Boolean] =
       tpe match {
-        case poly @ u.PolyType(_, realType) =>
+        case poly @ PolyType(_, realType) =>
           innerArgs(realType)
-        case method @ u.MethodType(params, resultType) =>
+        case method @ MethodType(params, resultType) =>
           params.map(byName)
         case _ => Nil
       }
 
-    def byName(symbol: u.Symbol): Boolean =
+    def byName(symbol: Symbol): Boolean =
       symbol.typeSignature.toString.startsWith("=>")
 
     innerArgs(select.tpe)

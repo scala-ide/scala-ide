@@ -14,7 +14,7 @@ import org.scalaide.debug.internal.expression.DebuggerSpecific
 case class PackInFunction(toolbox: ToolBox[universe.type], thisPackage: Option[String])
   extends TransformationPhase {
 
-  import toolbox.u
+  import toolbox.u._
 
   /**
    * Wraps the tree in expression:
@@ -27,17 +27,17 @@ case class PackInFunction(toolbox: ToolBox[universe.type], thisPackage: Option[S
    *  (context: JdiContext) => <ast>
    * }}}
    */
-  private def wrapInExpression(ast: u.Tree): u.Tree = {
+  private def wrapInExpression(ast: Tree): Tree = {
     val proxiesPackageName = org.scalaide.debug.internal.expression.proxies.name
     val contextPackageName = org.scalaide.debug.internal.expression.context.name
     val primitiveProxiesPackageName = org.scalaide.debug.internal.expression.proxies.primitives.name
 
     // gets AST of function arguments required in expression
-    val functionArgs: List[u.ValDef] = {
+    val functionArgs: List[ValDef] = {
       import DebuggerSpecific._
       val dummyFunction = s"""($contextParamName: $contextFullName) => ???"""
       val parsed = toolbox.parse(dummyFunction)
-      val u.Function(args, _) = toolbox.typeCheck(parsed)
+      val Function(args, _) = toolbox.typeCheck(parsed)
       args
     }
 
@@ -52,10 +52,10 @@ case class PackInFunction(toolbox: ToolBox[universe.type], thisPackage: Option[S
       | ???
       |""".stripMargin
 
-    val u.Block(imports, _) = toolbox.parse(importCode)
+    val Block(imports, _) = toolbox.parse(importCode)
 
-    u.Block(imports, u.Function(functionArgs, ast))
+    Block(imports, Function(functionArgs, ast))
   }
 
-  override def transform(tree: u.Tree): u.Tree = wrapInExpression(tree)
+  override def transform(tree: Tree): Tree = wrapInExpression(tree)
 }

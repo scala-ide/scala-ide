@@ -14,33 +14,33 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) with AnonymousFunctionSupport {
 
-  import toolbox.u
+  import toolbox.u._
 
   // for function naming
   private var functionsCount = 0
 
   //should we mock this lambda?
-  private def allParamsTyped(params: Seq[u.ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
+  private def allParamsTyped(params: Seq[ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
 
 
   /** all val def and binds have type adnotation? */
-  private def treeFullyTyped(tree: u.Tree): Boolean = tree match {
-    case bind@u.Bind(_, tpt) => !tpt.isEmpty
-    case appl@u.Apply(_, args) => args.forall(treeFullyTyped)
+  private def treeFullyTyped(tree: Tree): Boolean = tree match {
+    case bind @ Bind(_, tpt) => !tpt.isEmpty
+    case appl @ Apply(_, args) => args.forall(treeFullyTyped)
     case _ => false
   }
 
-  private def caseFullyTyped(caseDef: u.CaseDef): Boolean = treeFullyTyped(caseDef.pat)
+  private def caseFullyTyped(caseDef: CaseDef): Boolean = treeFullyTyped(caseDef.pat)
 
-  private def allCasesTyped(cases: Seq[u.CaseDef]) = cases.forall(caseFullyTyped)
+  private def allCasesTyped(cases: Seq[CaseDef]) = cases.forall(caseFullyTyped)
 
   /** Compile lambda, create new class form lambda and create mock that represent this lambda*/
-  private def createStubedPartialFunction(function: u.Match): u.Tree = {
-    val u.Function(args, u.Match(on, _)) = toolbox.parse("(_ : Any) match { case _ => false }")
+  private def createStubedPartialFunction(function: Match): Tree = {
+    val Function(args, Match(on, _)) = toolbox.parse("(_ : Any) match { case _ => false }")
 
-    val newFunction = u.Function(args, u.Match(on, function.cases))
+    val newFunction = Function(args, Match(on, function.cases))
 
-    val typeCheckFunction@u.Function(_, newBody) = toolbox.typeCheck(newFunction)
+    val typeCheckFunction @ Function(_, newBody) = toolbox.typeCheck(newFunction)
     val ret = typesContext.treeTypeName(newBody).getOrElse(ScalaOther.nothingType)
     val compiled = compileFunction(typeCheckFunction.vparams, typeCheckFunction.body)
 
@@ -58,7 +58,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
 
   /** Compile lambda, create new class form lambda and create mock that represent this lambda*/
-  private def createStubedFunction(function: u.Function): u.Tree = {
+  private def createStubedFunction(function: Function): Tree = {
     val ret = typesContext.treeTypeName(function.body).getOrElse(ScalaOther.nothingType)
     val compiled = compileFunction(function.vparams, function.body)
 
@@ -79,11 +79,11 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
    * @param baseTree tree to transform
    * @param transformFurther call it on tree node to recursively transform it further
    */
-  protected def transformSingleTree(baseTree: u.Tree, transformFurther: (u.Tree) => u.Tree): u.Tree = baseTree match {
-    case fun@u.Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
+  protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
+    case fun @ Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
       val typedFunction = toolbox.typeCheck(fun)
-      createStubedFunction(typedFunction.asInstanceOf[u.Function])
-    case fun@u.Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
+      createStubedFunction(typedFunction.asInstanceOf[Function])
+    case fun @ Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
       createStubedPartialFunction(fun)
     case _ => transformFurther(baseTree)
   }

@@ -20,17 +20,17 @@ case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesConte
   extends AstTransformer(typesContext)
   with AnonymousFunctionSupport {
 
-  import toolbox.u
+  import toolbox.u._
 
   private def hasByNameParams(byNames: Option[Seq[Boolean]]): Boolean =  byNames.forall(bools => bools.isEmpty || bools.forall(!_))
 
-  protected override def transformSingleTree(baseTree: u.Tree, transformFurther: (u.Tree) => u.Tree): u.Tree = baseTree match {
-    case fun @ u.Function(params, body) if !isStartFunctionForExpression(params) =>
+  protected override def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
+    case fun @ Function(params, body) if !isStartFunctionForExpression(params) =>
       //search for witch FunctionXJdiProxy should be used
       val parentType = typesContext.treeTypeName(fun).getOrElse(throw new RuntimeException("Function must have type!"))
       createAndCompileNewFunction(params, body, parentType)
 
-    case apply @ u.Apply(func, args) =>
+    case apply @ Apply(func, args) =>
       val byNames = extractByNameParams(func)
       if (hasByNameParams(byNames)) transformFurther(apply)
       else {
@@ -40,7 +40,7 @@ case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesConte
           case (tree, true) =>
             createAndCompileNewFunction(Nil, tree, ScalaFunctions.Function0)
         }
-        u.Apply(transformSingleTree(func, transformFurther), newArgs)
+        Apply(transformSingleTree(func, transformFurther), newArgs)
       }
     case tree =>
       transformFurther(tree)

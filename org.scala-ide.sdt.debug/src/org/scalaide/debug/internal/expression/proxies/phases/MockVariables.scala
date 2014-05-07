@@ -19,12 +19,12 @@ import org.scalaide.debug.internal.expression.context.VariableContext
 case class MockVariables(toolbox: ToolBox[universe.type], context: VariableContext)
   extends TransformationPhase {
 
-  import toolbox.u
+  import toolbox.u.{Try => _, _}
 
   /**
    * Collects unbound names in the tree.
    */
-  class VariableProxyTraverser(tree: u.Tree) extends u.Traverser {
+  class VariableProxyTraverser(tree: Tree) extends Traverser {
 
     private val scopeManager = new ScopeManager(tree)
 
@@ -42,34 +42,34 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * Collects unbound names in tree.
      * Keeps track of all name bindings in order to collect unbound names.
      */
-    final override def traverse(tree: u.Tree): Unit = {
+    final override def traverse(tree: Tree): Unit = {
       scopeManager.pushTree(tree)
       tree match {
         // all identifiers
-        case u.Assign(u.Ident(termName), value) =>
+        case Assign(Ident(termName), value) =>
           // supressing value extraction from lhs
           super.traverse(value)
 
-        case u.Ident(name) =>
+        case Ident(name) =>
           nameManager.registerUnboundName(name, tree)
 
         // like: case ala: Ala =>
-        case u.CaseDef(u.Bind(name, _), _, _) =>
+        case CaseDef(Bind(name, _), _, _) =>
           nameManager.registerNameBinding(name, tree)
           super.traverse(tree)
 
         // named args like: foo(ala = "ola")
-        case u.AssignOrNamedArg(u.Ident(name), _) =>
+        case AssignOrNamedArg(Ident(name), _) =>
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(tree)
 
         // for assignments like: var ala; ala = "ola"
-        case u.Bind(name, _) =>
+        case Bind(name, _) =>
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(tree)
 
         // value definition like: val ala = "Ala"
-        case restTree @ u.ValDef(_, name, _, _) =>
+        case restTree @ ValDef(_, name, _, _) =>
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(restTree)
 
@@ -83,21 +83,21 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
    * Keeps track of all enclosing trees
    * @param topLevelTree top level tree
    */
-  class ScopeManager(topLevelTree: u.Tree) {
+  class ScopeManager(topLevelTree: Tree) {
 
-    private var treeStack: List[u.Tree] = Nil
+    private var treeStack: List[Tree] = Nil
 
     final def popTree(): Unit = treeStack = treeStack.tail
 
-    final def pushTree(tree: u.Tree): Unit = treeStack = tree :: treeStack
+    final def pushTree(tree: Tree): Unit = treeStack = tree :: treeStack
 
     /**
      * @return tree defining enclosing scope e.g.: function, block, case def
      *         when no such tree is found the top level tree is returned
      */
-    final def findCurrentScopeTree(): u.Tree =
+    final def findCurrentScopeTree(): Tree =
       treeStack.find {
-        case _@ u.Function(_, _) | _@ u.Block(_, _) | _@ u.CaseDef(_, _, _) => true
+        case _ @ Function(_, _) | _ @ Block(_, _) | _ @ CaseDef(_, _, _) => true
         case _ => false
       }.getOrElse(topLevelTree)
   }
@@ -116,7 +116,7 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
     /**
      * A map of names and corresponding trees which bind the name
      */
-    private var boundNames = Map.empty[u.Name, Seq[u.Tree]].withDefaultValue(Seq.empty)
+    private var boundNames = Map.empty[Name, Seq[Tree]].withDefaultValue(Seq.empty)
 
     /**
      * @return collected unbound names
@@ -127,7 +127,7 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * @param name identifier
      * @param boundingTree tree bounding the name
      */
-    final def registerNameBinding(name: u.Name, boundingTree: u.Tree): Unit = {
+    final def registerNameBinding(name: Name, boundingTree: Tree): Unit = {
       boundNames += name -> (boundNames(name) :+ boundingTree)
     }
 
@@ -136,9 +136,9 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * @param name an identifier
      * @param tree tree representing the name usage
      */
-    final def registerUnboundName(name: u.Name, tree: u.Tree): Unit = {
+    final def registerUnboundName(name: Name, tree: Tree): Unit = {
       val isBound = boundingTreesOf(name).exists(parentOf(tree))
-      val isScalaSymbol = name == u.nme.WILDCARD || name.toString == "scala"
+      val isScalaSymbol = name == nme.WILDCARD || name.toString == "scala"
       val isPredefSymbol = isPredef(name.toString)
 
       if (!isScalaSymbol && !isPredefSymbol && !isBound && name.isTermName) {
@@ -163,13 +163,13 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * @param node node checked for parenthood
      * @return true if the node contains the child, i.e. the node is a parent of the child, false otherwise
      */
-    private def parentOf(child: u.Tree)(node: u.Tree): Boolean = node.exists(_ == child)
+    private def parentOf(child: Tree)(node: Tree): Boolean = node.exists(_ == child)
 
     /**
      * @param name identifier
      * @return all trees which define the name
      */
-    private def boundingTreesOf(name: u.Name): Seq[u.Tree] = boundNames(name)
+    private def boundingTreesOf(name: Name): Seq[Tree] = boundNames(name)
 
   }
 
@@ -184,25 +184,25 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * @param context variables context for retrieving type information
      * @return code with mock definitions prepended
      */
-    final def prependMockProxyCode(code: u.Tree): u.Tree = {
+    final def prependMockProxyCode(code: Tree): Tree = {
       val mockProxiesCode = generateProxies(findUnboundVariableNames(code), context)
       if (mockProxiesCode.isEmpty) {
         code
       } else {
-        u.Block(mockProxiesCode, code)
+        Block(mockProxiesCode, code)
       }
     }
 
     /**
      * Collects unbound variable names in the tree.
      */
-    private def findUnboundVariableNames(code: u.Tree): Set[String] = {
+    private def findUnboundVariableNames(code: Tree): Set[String] = {
       new VariableProxyTraverser(code).findUnboundNames()
     }
 
     /** break genetated expression into sequence of value definition */
-    private def breakValDefBlock(code: u.Tree): Seq[u.Tree] = breakBlock(code) {
-      case valDef @ u.ValDef(_, _, _, _) => Seq(valDef)
+    private def breakValDefBlock(code: Tree): Seq[Tree] = breakBlock(code) {
+      case valDef: ValDef => Seq(valDef)
     }
 
     /**
@@ -210,7 +210,7 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      * @param context variable context
      * @return tree representing proxy definitions for each name in names and according to types from context
      */
-    private def generateProxies(names: Set[String], context: VariableContext): List[u.Tree] = {
+    private def generateProxies(names: Set[String], context: VariableContext): List[Tree] = {
       val namesWithThis = names + DebuggerSpecific.thisValName
       val proxyDefinitions = namesWithThis.flatMap(buildProxyDefinition(context)).mkString("\n")
       breakValDefBlock(toolbox.parse(proxyDefinitions)).toList

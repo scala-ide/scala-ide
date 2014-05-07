@@ -6,6 +6,7 @@
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
+import scala.reflect.runtime.universe._
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 
@@ -13,6 +14,7 @@ import org.scalaide.debug.internal.expression.context.JdiContext
 * Abstract representation of transformation phase, just transform expression tree to another tree
 */
 trait TransformationPhase {
+
   /**
   * Tranforms current tree to new form.
   * It is called only once per object livetime.
@@ -21,12 +23,11 @@ trait TransformationPhase {
   */
   def transform(baseTree: universe.Tree): universe.Tree
 
-
   /** Breaks block of code into Seq of matching trees */
   protected final def breakBlock(code: universe.Tree)(single: PartialFunction[universe.Tree, Seq[universe.Tree]]): Seq[universe.Tree] = {
     single.orElse[universe.Tree, Seq[universe.Tree]] {
-      case block@universe.Block(_, _) => block.children
-      case empty@universe.EmptyTree => Nil
+      case block: universe.Block => block.children
+      case empty @ universe.EmptyTree => Nil
       case any => throw new UnsupportedTree("breaking block of given type", any)
     }.apply(code)
   }
@@ -62,7 +63,7 @@ abstract class AstTransformer(typesContext: TypesContext)
   /** Transformer that skip all part of tree that is dynamic and it is not a part of original expression */
   private val transformer = new universe.Transformer {
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
-      case tree@universe.Apply(select@universe.Select(on, name), args) if isJdiDynamicProxyMethod(name.toString) =>
+      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isJdiDynamicProxyMethod(name.toString) =>
         universe.Apply(universe.Select(transformSingleTree(on, tree => super.transform(tree)), name), args)
       case tree =>
         transformSingleTree(baseTree, super.transform)

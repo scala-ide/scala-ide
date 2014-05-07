@@ -18,10 +18,10 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockThis(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = tree match {
-    case u.This(thisName) => toolbox.parse(DebuggerSpecific.thisValName)
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case This(thisName) => toolbox.parse(DebuggerSpecific.thisValName)
     case other => transformFurther(other)
   }
 }

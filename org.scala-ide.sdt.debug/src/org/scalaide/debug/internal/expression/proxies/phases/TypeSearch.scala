@@ -20,19 +20,19 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
   extends AstTransformer(typesContext)
   with AnonymousFunctionSupport {
 
-  import toolbox.u
+  import toolbox.u._
 
-  private object TypesTraverser extends u.Traverser {
+  private object TypesTraverser extends Traverser {
 
     /** Extract name from function - as decoded name */
-    private def extractFunctionName(tree: u.Tree): String = tree.symbol.name.decoded
+    private def extractFunctionName(tree: Tree): String = tree.symbol.name.decoded
 
     /** obtains type name form type -> normal by value */
-    private def typeForArgument(arg: u.Tree): String =
+    private def typeForArgument(arg: Tree): String =
       typesContext.treeTypeName(arg).getOrElse(DebuggerSpecific.proxyName)
 
     /** extract function from select tree */
-    private def extractFromSelect(select: u.Select, qualifier: u.Tree, name: u.Name): Option[(String, FunctionStub)] = {
+    private def extractFromSelect(select: Select, qualifier: Tree, name: Name): Option[(String, FunctionStub)] = {
       val functionName = extractFunctionName(select)
       val onType = typesContext.treeTypeName(qualifier)
       val retType = typesContext.treeTypeName(select)
@@ -47,7 +47,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
      *
      * Changes implicits args and modifies return type.
      */
-    private def extractFromImplicitArgs(implApply: u.Tree, args: List[u.Tree])(extractedFunction: (String, FunctionStub)) = {
+    private def extractFromImplicitArgs(implApply: Tree, args: List[Tree])(extractedFunction: (String, FunctionStub)) = {
       val implArgTypes = args
         .map(typesContext.treeTypeName)
         .map(_.getOrElse(DebuggerSpecific.proxyName))
@@ -64,7 +64,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
      * Maps function due to parse of another argument list.
      * Changes args lists and modifies return type.
      */
-    private def extractFromArgs(apply: u.Tree, func: u.Tree, args: List[u.Tree])(extractedFunction: (String, FunctionStub)) = {
+    private def extractFromArgs(apply: Tree, func: Tree, args: List[Tree])(extractedFunction: (String, FunctionStub)) = {
 
       val argumentTypes = extractByNameParams(func).map {
         byNames =>
@@ -88,7 +88,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
      * Maps function due to implicit argument application
      * change implicit args and modifies return type
      */
-    private def extractFromTypeAppy(typeApply: u.Tree)(extractedFunction: (String, FunctionStub)) = {
+    private def extractFromTypeAppy(typeApply: Tree)(extractedFunction: (String, FunctionStub)) = {
 
       val (typeName, oldFunction) = extractedFunction
 
@@ -108,25 +108,25 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
      * @param tree tree to look for function
      * @return option with function and type on witch function is called
      */
-    private def extractFunction(traverseFunction: (u.Tree => Unit), tree: u.Tree): Option[(String, FunctionStub)] = {
+    private def extractFunction(traverseFunction: (Tree => Unit), tree: Tree): Option[(String, FunctionStub)] = {
       tree match {
         //select part of function
-        case select @ u.Select(qualifier, name) if select.symbol.isMethod =>
+        case select @ Select(qualifier, name) if select.symbol.isMethod =>
           traverseFunction(select)
           extractFromSelect(select, qualifier, name)
 
         //implicit parameter lists
-        case implApply @ u.Apply(func, args) if implApply.getClass.getName.contains("ApplyToImplicitArgs") =>
+        case implApply @ Apply(func, args) if implApply.getClass.getName.contains("ApplyToImplicitArgs") =>
           args.foreach(traverse)
           extractFunction(traverseFunction, func).map(extractFromImplicitArgs(implApply, args))
 
         //type parameters list
-        case apply @ u.TypeApply(func, args) =>
+        case apply @ TypeApply(func, args) =>
           args.foreach(traverse)
           extractFunction(traverseFunction, func).map(extractFromTypeAppy(apply))
 
         //argument list
-        case apply @ u.Apply(func, args) =>
+        case apply @ Apply(func, args) =>
           args.foreach(traverse)
           extractFunction(traverseFunction, func).map(extractFromArgs(apply, func, args))
 
@@ -138,13 +138,13 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
     }
 
     /** Extracts type for value definition (eg. function argument) */
-    private def extractValueType(tree: u.Tree): Unit = tree match {
-      case u.ValDef(_, _, tpt, _) => typesContext.treeTypeName(tpt).foreach(typesContext.typeNameFor)
+    private def extractValueType(tree: Tree): Unit = tree match {
+      case ValDef(_, _, tpt, _) => typesContext.treeTypeName(tpt).foreach(typesContext.typeNameFor)
       case any =>
     }
 
     /** Traverse, find types and function calls. Each type and function is added to context */
-    override final def traverse(tree: u.Tree) {
+    override final def traverse(tree: Tree) {
       extractFunction(super.traverse _, tree).foreach {
         case (typeString, function) => typesContext.newFunction(typeString, function)
       }

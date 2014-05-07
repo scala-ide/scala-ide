@@ -18,7 +18,7 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class ImplementValues(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
   /**
    * Transforms a proxy mock definition into actual proxy creating code
@@ -27,24 +27,24 @@ case class ImplementValues(toolbox: ToolBox[universe.type], typesContext: TypesC
    * @param transformFurther function to transform tree furhter
    * @return transformed tree
    */
-  final override def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = transformFurther(tree) match {
-    case u.ValDef(mods, name, tpt, value) if isThisMethodStub(name) =>
+  final override def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = transformFurther(tree) match {
+    case ValDef(mods, name, tpt, value) if isThisMethodStub(name) =>
       val thisValImpl = thisProxyImplementation(tpt.toString)
-      u.ValDef(mods, name, tpt, thisValImpl)
-    case u.ValDef(mods, name, tpt, value) if isProxy(value) =>
+      ValDef(mods, name, tpt, thisValImpl)
+    case ValDef(mods, name, tpt, value) if isProxy(value) =>
       val valImpl = proxyImplementation(name.toString, tpt.toString)
-      u.ValDef(mods, name, tpt, valImpl)
+      ValDef(mods, name, tpt, valImpl)
     case other =>
       other
   }
 
   /** Checks if name corresponds to `this` stub */
-  private def isThisMethodStub(name: u.Name): Boolean =
+  private def isThisMethodStub(name: Name): Boolean =
     name.toString == DebuggerSpecific.thisValName
 
 
   /** Checks if a tree is a placeholder put there in previous phase. */
-  private def isProxy(value: u.Tree): Boolean = {
+  private def isProxy(value: Tree): Boolean = {
     import DebuggerSpecific._
     value.toString == contextFullName + "." + placeholderName
   }
@@ -54,13 +54,13 @@ case class ImplementValues(toolbox: ToolBox[universe.type], typesContext: TypesC
    *
    * @return tree representing proxy factory method call
    */
-  private def proxyImplementation(name: String, typeName: String): u.Tree = {
+  private def proxyImplementation(name: String, typeName: String): Tree = {
     import DebuggerSpecific._
     wrapInType(typeName)( s"""$contextParamName.$valueProxyMethodName("$name")""")
   }
 
   /** Implements proxy for `this` */
-  private def thisProxyImplementation(typeName: String): u.Tree = {
+  private def thisProxyImplementation(typeName: String): Tree = {
     import DebuggerSpecific._
     wrapInType(typeName)(s"$contextParamName.$thisObjectProxyMethodName()")
   }
@@ -68,7 +68,7 @@ case class ImplementValues(toolbox: ToolBox[universe.type], typesContext: TypesC
   /**
     * check if impementation should be wrapped in given type and if yes wraps it
     */
-  private def wrapInType(typeName: String)(code: String): u.Tree = {
+  private def wrapInType(typeName: String)(code: String): Tree = {
     val realCode = if (typeName == DebuggerSpecific.proxyFullName) code
     else s"""$typeName($code)"""
     toolbox.parse(realCode)

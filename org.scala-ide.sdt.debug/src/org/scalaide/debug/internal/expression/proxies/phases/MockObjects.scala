@@ -23,20 +23,20 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockObjects(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
   /**
    * Check if given select is object.
    * We consioder select as object if isModule (scala's AST name for object) an it is not JdiContext and package
    */
-  private def isObject(select: u.Select): Boolean =
+  private def isObject(select: Select): Boolean =
     select.tpe != null &&
       select.symbol.isModule &&
       !select.symbol.isPackage &&
       select.toString != DebuggerSpecific.contextFullName
 
   /** generate and parse object code */
-  private def createProxy(select: u.Tree, context: TypesContext): u.Tree = {
+  private def createProxy(select: Tree, context: TypesContext): Tree = {
     val objectType = context.treeTypeName(select).getOrElse(throw new RuntimeException("object must have type!"))
 
     val stubClass = context.typeNameFor(objectType)
@@ -45,8 +45,8 @@ case class MockObjects(toolbox: ToolBox[universe.type], typesContext: TypesConte
     toolbox.parse(s"""$stubClass(${DebuggerSpecific.contextParamName}.${DebuggerSpecific.objectProxyMethodName}("$objectType"))""")
   }
 
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = tree match {
-    case select @ u.Select(_, _) if isObject(select) => createProxy(select, typesContext)
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case select: Select if isObject(select) => createProxy(select, typesContext)
     case other => transformFurther(other)
   }
 }

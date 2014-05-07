@@ -20,19 +20,19 @@ import org.scalaide.debug.internal.expression.FunctionStub
 case class MockTypes(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
   /**  create type name for given type */
-  private def createTypeTree(name: String): u.Tree =
+  private def createTypeTree(name: String): Tree =
     toolbox.parse(s"var a: $name = null") match {
-      case u.ValDef(_, _, tpt, _) => tpt
+      case ValDef(_, _, tpt, _) => tpt
     }
 
   /** See `AstTransformer.transformSingleTree`. */
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = {
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = {
     tree match {
-      case u.TypeApply(func, _) => transformFurther(func)
-      case typeTree @ u.TypeTree() =>
+      case TypeApply(func, _) => transformFurther(func)
+      case typeTree: TypeTree =>
         typesContext.treeTypeFromContext(transformFurther(typeTree)).map(createTypeTree).getOrElse(typeTree)
       case any => transformFurther(any)
     }

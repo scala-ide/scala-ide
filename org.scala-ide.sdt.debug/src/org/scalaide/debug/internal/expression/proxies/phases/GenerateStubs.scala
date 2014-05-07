@@ -15,21 +15,21 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class GenerateStubs(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends TransformationPhase {
 
-  import toolbox.u
+  import toolbox.u._
 
   /** Breaks generated block of code into seq of ClassDef */
-  private def breakClassDefBlock(code: universe.Tree): Seq[universe.Tree] = breakBlock(code) {
-    case classDef @ universe.ClassDef(_, _, _, _) => Seq(classDef)
+  private def breakClassDefBlock(code: Tree): Seq[Tree] = breakBlock(code) {
+    case classDef: ClassDef => Seq(classDef)
   }
 
   /** Adds additional expressions to one created by `wrapInExpression` */
-  private def insertAtFunctionStart(blockWithFunction: u.Tree, newCode: Seq[u.Tree]): u.Tree = {
-    val u.Block(importStms, universe.Function(args, body)) = blockWithFunction
-    val newFunction = u.Function(args, u.Block(newCode.toList, body))
-    u.Block(importStms, newFunction)
+  private def insertAtFunctionStart(blockWithFunction: Tree, newCode: Seq[Tree]): Tree = {
+    val Block(importStms, Function(args, body)) = blockWithFunction
+    val newFunction = Function(args, Block(newCode.toList, body))
+    Block(importStms, newFunction)
   }
 
-  override def transform(tree: universe.Tree): universe.Tree = {
+  override def transform(tree: Tree): Tree = {
     val newTypes = typesContext.typesStubCode
 
     if (newTypes != "") {

@@ -18,17 +18,17 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockToString(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
   /** Matches `toString` method call. */
-  private def isToString(name: u.Name): Boolean = name.toString == "toString"
+  private def isToString(name: Name): Boolean = name.toString == "toString"
 
   /** Creates a proxy to replace `toString` call. */
-  private def createProxy(proxy: u.Tree): u.Tree =
+  private def createProxy(proxy: Tree): Tree =
     toolbox.parse(s"""${DebuggerSpecific.contextParamName}.${DebuggerSpecific.stringifyMethodName}($proxy)""")
 
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = tree match {
-    case u.Apply(u.Select(on, name), _) if isToString(name) => createProxy(on)
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case Apply(Select(on, name), _) if isToString(name) => createProxy(on)
     case other => transformFurther(other)
   }
 }

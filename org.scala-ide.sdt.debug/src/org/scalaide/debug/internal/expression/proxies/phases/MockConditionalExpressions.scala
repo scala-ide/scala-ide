@@ -17,14 +17,14 @@ import org.scalaide.debug.internal.expression.TypesContext
 case class MockConditionalExpressions(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer(typesContext) {
 
-  import toolbox.u
+  import toolbox.u._
 
-  private def getBooleanValueFromProxy(booleanTree: u.Tree) = u.Select(booleanTree, u.newTermName("booleanValue"))
+  private def getBooleanValueFromProxy(booleanTree: Tree) = Select(booleanTree, newTermName("booleanValue"))
 
-  override final def transformSingleTree(tree: u.Tree, transformFurther: u.Tree => u.Tree): u.Tree = tree match {
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     // while and do-while expressions also use if
-    case u.If(cond, thenp, elsep) =>
-      u.If(
+    case If(cond, thenp, elsep) =>
+      If(
         getBooleanValueFromProxy(transformSingleTree(cond, transformFurther)),
         transformSingleTree(thenp, transformFurther),
         transformSingleTree(elsep, transformFurther))
