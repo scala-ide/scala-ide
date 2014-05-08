@@ -6,15 +6,15 @@
 package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
-
 import org.scalaide.debug.internal.expression.TransformationPhase
 import scala.tools.reflect.ToolBox
+import scala.reflect.api.{JavaUniverse => universe}
 
+/**
+ * Used for 2.11-2.10 source compatibility.
+ */
 case class ResetTypeInformation(toolbox: ToolBox[universe.type]) extends TransformationPhase {
   override def transform(tree: universe.Tree): universe.Tree = {
-    // FIXME - localReset (untypecheck) should be used instead of allReset, because latter is removed in Scala 2.11
-    // unfortunately, with localReset compilation fails with strange assertion errors
-    // toolbox.untypecheck(tree)
     toolbox.resetAllAttrs(tree)
   }
 }

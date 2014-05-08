@@ -14,6 +14,8 @@ import org.scalaide.debug.internal.expression.ScalaOther
 
 class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
 
+  // TODO - this test fails with assertion from toolbox compiler when `TypedLambdasTest` is run separately
+  // Grzegorz Kossakowski said it's a bug in Scala and we could investigate it further and file a ticket
   @Test
   def `lambda with explicit type: list.map((_: Int) + 1) `(): Unit =
     eval("list.map((_: Int) - 1)", "List(0, 1, 2)", ScalaOther.scalaList)

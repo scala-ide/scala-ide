@@ -97,7 +97,7 @@ abstract class ExpressionEvaluator(val classLoader: ClassLoader)
   /** Compiles a Tree to Expression */
   private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression =
     toolbox.compile(tree).apply() match {
-      case function: ExpressionFunc => JdiExpression(function, newClasses)
+      case function: ExpressionFunc @unchecked => JdiExpression(function, newClasses)
       case other => throw new IllegalArgumentException("Bad compilation result!")
     }
 
