@@ -1,8 +1,13 @@
 package org.scalaide.core.ui.completion
 
 import org.junit.Test
+import org.scalaide.core.ui.CompilerSupport
+import org.junit.AfterClass
 
-class StandardCompletionTests extends CompletionTests {
+object StandardCompletionTests extends CompletionTests
+class StandardCompletionTests {
+
+  import StandardCompletionTests._
 
   @Test
   def completeMethodWithoutParameterList() = """

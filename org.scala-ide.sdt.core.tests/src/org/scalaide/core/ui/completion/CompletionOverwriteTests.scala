@@ -3,7 +3,10 @@ package org.scalaide.core.ui.completion
 import org.junit.Test
 import org.junit.Ignore
 
-class CompletionOverwriteTests extends CompletionTests {
+object CompletionOverwriteTests extends CompletionTests
+class CompletionOverwriteTests {
+
+  import CompletionOverwriteTests._
 
   @Test
   def doNotOverwriteWhenFeatureDisabled() = """

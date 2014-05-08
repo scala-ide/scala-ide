@@ -4,11 +4,12 @@ import org.scalaide.core.completion.ScalaCompletions
 import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.util.internal.ScalaWordFinder
+import org.junit.ComparisonFailure
 
 /**
  * This provides a test suite for the code completion functionality.
- * It can not only find out which completion exists, it also checks if the source
- * file after the insertion of a completion is inserted is correct.
+ * It can not only find out which completions exist, it also checks if the source
+ * file after the insertion of a completion is correct.
  *
  * It can also handle Eclipse linked mode model. To depict such a model in the test
  * simply surround the identifiers that should be considered by the linked model
@@ -41,7 +42,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       expectedNumberOfCompletions: Int = -1)
         extends Operation {
 
-    def execute() = {
+    def execute() = withCompiler { compiler =>
       val unit = mkScalaCompilationUnit(doc.get())
       val src = unit.sourceFile()
       val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
@@ -58,19 +59,21 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
 
       val missingCompletions = expectedCompletions.filter(c => findCompletion(c).isEmpty)
       if (missingCompletions.nonEmpty)
-        throw new IllegalArgumentException(s"the following completions do not exist:\n\t${missingCompletions.mkString("\n\t")}")
+        throw new ComparisonFailure(s"There are expected completions that do not exist.", missingCompletions.mkString("\n"), "")
 
-      lazy val completionList = completions.sortBy(-_.relevance).map(_.display).mkString("\n\t", "\n\t", "")
+      def completionList = completions.sortBy(-_.relevance).map(_.display).mkString("\n")
 
       if (expectedNumberOfCompletions >= 0
           && completions.size != expectedNumberOfCompletions) {
-        throw new IllegalArgumentException(
-            s"There were '$expectedNumberOfCompletions' completions expected, but '${completions.size}' found, namely:$completionList")
+        throw new ComparisonFailure(
+            s"There were '$expectedNumberOfCompletions' completions expected, but '${completions.size}' found.",
+            s"$expectedNumberOfCompletions completions expected\n\n<only number of expected completions provided>",
+            s"${completions.size} completions found:\n\n$completionList")
       }
 
       completion.fold(
-          throw new IllegalArgumentException(
-              s"the completion '$completionToApply' does not exist, but:$completionList")) {
+          throw new ComparisonFailure(
+              s"The completion '$completionToApply' does not exist.", completionToApply, completionList)) {
         completion => completion.applyCompletionToDocument(doc, unit, caretOffset, enableOverwrite) foreach {
           case (cursorPos, applyLinkedMode) =>
             if (!applyLinkedMode)

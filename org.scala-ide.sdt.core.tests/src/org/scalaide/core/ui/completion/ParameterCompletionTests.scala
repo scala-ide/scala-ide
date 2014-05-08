@@ -3,7 +3,10 @@ package org.scalaide.core.ui.completion
 import org.junit.Test
 import org.junit.Ignore
 
-class ParameterCompletionTests extends CompletionTests {
+object ParameterCompletionTests extends CompletionTests
+class ParameterCompletionTests {
+
+  import ParameterCompletionTests._
 
   // TODO remove core.completion.CompletionTests.{t1001218,t1001272} once ticket #1002095 is fixed
   @Test @Ignore("not implemented. See #1002095")

@@ -2,7 +2,10 @@ package org.scalaide.core.ui.completion
 
 import org.junit.Test
 
-class AccessibilityTests extends CompletionTests {
+object AccessibilityTests extends CompletionTests
+class AccessibilityTests {
+
+  import AccessibilityTests._
 
   def mkTestObj(
       additionInClass: String = "",
