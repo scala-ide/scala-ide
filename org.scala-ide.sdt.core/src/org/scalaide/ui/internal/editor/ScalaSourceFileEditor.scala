@@ -296,6 +296,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   override def handlePreferenceStoreChanged(event: PropertyChangeEvent) = {
     import org.scalaide.core.internal.formatter.FormatterPreferences._
     import scalariform.formatter.preferences._
+
     val IndentSpacesKey = IndentSpaces.eclipseKey
     val IndentWithTabsKey = IndentWithTabs.eclipseKey
 

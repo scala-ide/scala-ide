@@ -14,7 +14,11 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Before
   def startUp() {
+    import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants._
+
     enable(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
+    enable(P_ENABLE_AUTO_BREAKING_COMMENTS, true)
+    setIntPref(EDITOR_PRINT_MARGIN_COLUMN, 20)
   }
 
   @Test
@@ -495,4 +499,84 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
     """ after newline
   }
 
+  @Test
+  def auto_break_on_print_margin() = """
+    /*
+     *      test tes^
+     */
+  """ becomes """
+    /*
+     *      test
+     *      test^
+     */
+  """ after Add("t")
+
+  @Test
+  def no_auto_break_on_print_margin_when_feature_disabled() = disabled(P_ENABLE_AUTO_BREAKING_COMMENTS) { """
+      /*
+       *      test tes^
+       */
+    """ becomes """
+      /*
+       *      test test^
+       */
+    """ after Add("t")
+  }
+
+  @Test
+  def auto_break_on_print_margin_when_no_star_exists() = """
+    /*
+      test test test^
+     */
+  """ becomes """
+    /*
+      test test
+      tests^
+     */
+  """ after Add("s")
+
+  @Test
+  def no_auto_break_on_print_margin_with_only_one_ident() = """
+    /*
+     * testxtestxtes^
+     */
+  """ becomes """
+    /*
+     * testxtestxtest^
+     */
+  """ after Add("t")
+
+  @Test
+  def no_auto_break_on_print_margin_with_only_one_ident_when_no_star_exists() = """
+    /*
+xxxxxxtestxtestxtest^
+     */
+  """ becomes """
+    /*
+xxxxxxtestxtestxtests^
+     */
+  """ after Add("s")
+
+  @Test
+  def no_auto_break_on_print_margin_when_single_whitespace_is_inserted() = """
+    /*
+     * test test tes^
+     */
+  """ becomes """
+    /*
+     * test test tes ^
+     */
+  """ after Add(" ")
+
+  @Test
+  def auto_break_on_print_margin_when_text_after_single_whitespace_is_inserted() = """
+    /*
+     * test test tes ^
+     */
+  """ becomes """
+    /*
+     * test test tes
+     *  ^
+     */
+  """ after Add(" ")
 }

@@ -37,6 +37,7 @@ import scalariform.ScalaVersions
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter.preferences._
+import org.eclipse.ui.texteditor.ChainedPreferenceStore
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -48,8 +49,10 @@ class ScalaSourceViewerConfiguration(
       editor,
       IJavaPartitions.JAVA_PARTITIONING) {
 
-  private val codeHighlightingScanners = {
+  private val combinedPrefStore = new ChainedPreferenceStore(
+      Array(scalaPreferenceStore, javaPreferenceStore))
 
+  private val codeHighlightingScanners = {
     val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
     val singleLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
     val multiLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
@@ -173,7 +176,7 @@ class ScalaSourceViewerConfiguration(
 
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(ScalaPlugin.prefStore, partitioning))
+        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(

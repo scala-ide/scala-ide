@@ -57,6 +57,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_AUTO_ESCAPE_LITERALS, "Automatically escape \" signs in string literals", typing)
     checkBox(P_ENABLE_AUTO_ESCAPE_SIGN, "Automatically escape \\ signs in string and character literals", typing)
     checkBox(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, "Automatically remove complete escaped sign in string and character literals", typing)
+    checkBox(P_ENABLE_AUTO_BREAKING_COMMENTS, "Automatically break multi-line comments and Scaladoc after the Print Margin", typing)
 
     val indent = group("Indentation", base)
     checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Enable auto indent when tab is pressed", indent)
@@ -116,6 +117,7 @@ object EditorPreferencePage {
   final val P_ENABLE_AUTO_INDENT_ON_TAB = BASE + "autoIndent"
   final val P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING = BASE + "autoIndentMultiLineString"
   final val P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING = BASE + "autoStringMarginInMultiLineString"
+  final val P_ENABLE_AUTO_BREAKING_COMMENTS = BASE + "autoBreakingComments"
 
   final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
   final val P_SHOW_INFERRED_SEMICOLONS = BASE + "showInferredSemicolons"
@@ -141,6 +143,7 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_INDENT_ON_TAB, true)
     store.setDefault(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, false)
     store.setDefault(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, false)
+    store.setDefault(P_ENABLE_AUTO_BREAKING_COMMENTS, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
     // TODO This preference is added in 4.0. Delete the former preference once support for the former release is dropped.
