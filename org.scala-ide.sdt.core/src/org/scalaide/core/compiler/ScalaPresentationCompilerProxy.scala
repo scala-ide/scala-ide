@@ -166,6 +166,7 @@ final class ScalaPresentationCompilerProxy(project: ScalaProject) extends HasLog
       verbose,
       Xexperimental,
       future,
+      source,
       Ylogcp,
       pluginSetting,
       pluginsDir,

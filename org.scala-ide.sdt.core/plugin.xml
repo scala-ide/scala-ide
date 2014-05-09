@@ -467,6 +467,14 @@
          class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerPage">
       </classpathContainerPage>
    </extension>
+   <extension point="org.eclipse.debug.core.statusHandlers">
+   <statusHandler
+      id="Xsource"
+      class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+      plugin="org.scala-ide.sdt.core"
+      code="1001">
+   </statusHandler>
+   </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
      <launchConfigurationType
            id="scala.application"
