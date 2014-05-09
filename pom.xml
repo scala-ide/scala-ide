@@ -188,7 +188,7 @@
         <eclipse.codename>luna</eclipse.codename>
         <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
-        <weaving.hook.plugin.version>1.1.0.I20131224-0800</weaving.hook.plugin.version>
+        <weaving.hook.plugin.version>1.1.0.I20140501-0200</weaving.hook.plugin.version>
       </properties>
     </profile>    
 
