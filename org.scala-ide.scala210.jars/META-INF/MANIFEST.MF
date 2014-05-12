@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scala 2.10 jars
+Bundle-SymbolicName: org.scala-ide.scala210.jars;singleton:=true
+Bundle-Version: 4.0.0.qualifier
+Bundle-Vendor: scala-ide.org
+Bundle-ActivationPolicy: lazy
+Bundle-Localization: plugin
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Eclipse-ExtensibleAPI: 
+ true
+
+

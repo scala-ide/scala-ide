@@ -53,6 +53,13 @@
       <artifactId>scala-swing_${scala211.binary.version}</artifactId>
       <version>${scala211.scala-swing.version}</version>
     </dependency>
+    <!-- TODO remove when multiple bundles of Scala are supported -->
+    <!-- scala 210 -->
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala210.jars</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- sbt interface -->
     <dependency>
       <groupId>org.scala-ide</groupId>
