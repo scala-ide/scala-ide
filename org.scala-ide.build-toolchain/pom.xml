@@ -42,8 +42,10 @@
     <profile>
       <id>scala-2.11.x</id>
       <modules>
-        <module>../org.scala-ide.sbt.compiler210.interface</module>
-        <module>../org.scala-ide.sbt.compiler210.interface.source</module>
+        <module>../org.scala-ide.scala210.jars</module>
+        <!-- TODO enable back when multiple bundles of Scala are supported -->
+<!--        <module>../org.scala-ide.sbt.compiler210.interface</module>
+        <module>../org.scala-ide.sbt.compiler210.interface.source</module> -->
         <module>../org.scala-ide.sbt.compiler211.interface</module>
         <module>../org.scala-ide.sbt.compiler211.interface.source</module>
       </modules>

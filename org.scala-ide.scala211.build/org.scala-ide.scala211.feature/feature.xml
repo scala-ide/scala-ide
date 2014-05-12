@@ -113,4 +113,13 @@ SUCH DAMAGE.
          version="0.0.0"
          unpack="false"/>
 
+   <!-- TODO remove when multiple bundles of Scala are supported -->
+   <plugin
+         id="org.scala-ide.scala210.jars"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="true"/>
+
+
 </feature>

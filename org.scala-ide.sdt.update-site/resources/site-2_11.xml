@@ -6,16 +6,18 @@
    <feature url="features/org.scala-ide.sbt.feature_0.0.0.jar" id="org.scala-ide.sbt.feature" version="0.0.0">
       <category name="sdt"/>
    </feature>
-   <feature url="features/org.scala-ide.scala210.feature_0.0.0.jar" id="org.scala-ide.scala210.feature" version="0.0.0">
+<!-- TODO enable back when multiple bundles of Scala are supported -->
+<!--   <feature url="features/org.scala-ide.scala210.feature_0.0.0.jar" id="org.scala-ide.scala210.feature" version="0.0.0">
       <category name="sdt"/>
-   </feature>
+   </feature> -->
    <feature url="features/org.scala-ide.scala211.feature_0.0.0.jar" id="org.scala-ide.scala211.feature" version="0.0.0">
       <category name="sdt"/>
    </feature>
    <feature url="features/org.scala-ide.sdt.source.feature_0.0.0.jar" id="org.scala-ide.sdt.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature>
-   <feature url="features/org.scala-ide.scala210.source.feature_0.0.0.jar" id="org.scala-ide.scala210.source.feature" version="0.0.0">
+<!-- TODO enable back when multiple bundles of Scala are supported -->
+<!--   <feature url="features/org.scala-ide.scala210.source.feature_0.0.0.jar" id="org.scala-ide.scala210.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature> -->
    <feature url="features/org.scala-ide.scala211.source.feature_0.0.0.jar" id="org.scala-ide.scala211.source.feature" version="0.0.0">

@@ -23,7 +23,8 @@
     <profile>
       <id>scala-2.11.x</id>
       <modules>
-        <module>../org.scala-ide.scala210.build</module>
+<!-- TODO enable back when multiple bundles of Scala are supported -->
+<!--        <module>../org.scala-ide.scala210.build</module> -->
         <module>../org.scala-ide.scala211.build</module>
       </modules>
     </profile>
