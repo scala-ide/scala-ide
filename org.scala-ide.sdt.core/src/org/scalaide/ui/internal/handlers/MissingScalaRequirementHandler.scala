@@ -27,11 +27,9 @@ object MissingScalaRequirementHandler {
 
 }
 
-class MissingScalaRequirementHandler extends IStatusHandler {
+class MissingScalaRequirementHandler extends RichStatusHandler {
 
-   private val messageShown: AtomicBoolean = new AtomicBoolean(false)
-
-  def handleStatus(status: IStatus, source: Object): Object = {
+  def doHandleStatus(status: IStatus, source: Object) = {
     val scalaPc = source.asInstanceOfOpt[ScalaPresentationCompilerProxy]
     val shell = ScalaPlugin.getShell
     val title = "Add Scala library to project classpath?"
@@ -43,8 +41,7 @@ class MissingScalaRequirementHandler extends IStatusHandler {
       val projectName = project.underlying.getName
       val message = s"There was an error initializing the Scala compiler: $msg \n\n The editor compiler will be restarted when the project is cleaned or the classpath is changed. Add the Scala library to the classpath of project $projectName?"
 
-      val wasMessageShown = messageShown.getAndSet(true)
-      if (!wasMessageShown && !ScalaPlugin.plugin.headlessMode) {
+      if (!ScalaPlugin.plugin.headlessMode) {
           val dialog = new MD(
             shell,
             title,
@@ -58,7 +55,6 @@ class MissingScalaRequirementHandler extends IStatusHandler {
           if (buttonId == IDialogConstants.OK_ID) Utils.tryExecute(Nature.addScalaLibAndSave(project.underlying))
       }
     }
-    null
   }
 
 }
