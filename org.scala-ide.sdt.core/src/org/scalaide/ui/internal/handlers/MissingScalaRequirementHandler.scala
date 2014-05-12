@@ -15,7 +15,6 @@ import org.scalaide.core.internal.project.Nature
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.ui.DisplayThread
-import java.util.concurrent.atomic.AtomicBoolean
 
 object MissingScalaRequirementHandler {
 

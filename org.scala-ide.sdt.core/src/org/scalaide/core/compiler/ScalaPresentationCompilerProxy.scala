@@ -8,8 +8,11 @@ import org.scalaide.util.internal.Utils
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.ScalaPlugin
 import scala.reflect.internal.MissingRequirementError
+import scala.reflect.internal.FatalError
+import java.util.Collections.synchronizedList
 import org.scalaide.core.internal.project.Nature
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.MultiStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
 
@@ -108,7 +111,6 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
 
   /** Shutdown the presentation compiler, and force a re-initialization. */
   private def restart(): Unit = pcLock.synchronized {
-    val oldPc = pc
     shutdown()
     assert(pc eq null, "There must be a race-condition if the presentation compiler instance isn't `null` right after calling `shutdown`.")
     initialize()
@@ -131,36 +133,55 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
     if (oldPc ne null) oldPc.destroy()
   }
 
+  private val pcInitMessageShown: AtomicBoolean = new AtomicBoolean(false)
   /** Creates a presentation compiler instance.
-    *
-    * @note Should not throw.
-    */
-  private def create(): ScalaPresentationCompiler = pcLock.synchronized {
-    try {
-      val settings = ScalaPlugin.defaultScalaSettings()
-      project.initializeCompilerSettings(settings, isPCSetting(settings))
-      val pc = new ScalaPresentationCompiler(project, settings)
-      logger.debug("Presentation compiler classpath: " + pc.classPath)
-      pc.askOption(() => pc.initializeRequiredSymbols())
-      pc
-    } catch {
-      case ex @ MissingRequirementError(required) =>
-        val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, "could not find a required class: " + required, ex)
-        val handler = DebugPlugin.getDefault().getStatusHandler(status)
-        handler.handleStatus(status, this)
-        eclipseLog.error(ex)
-        null
-      case ex: Throwable =>
-        logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
-        ex.printStackTrace()
-        if (project.underlying.isOpen) {
-          val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, "error initializing the presentation compiler: " + ex.getMessage(), ex)
+   *
+   *  @note Should not throw.
+   */
+  private def create(): ScalaPresentationCompiler = {
+    val pcScalaMissingStatuses = new scala.collection.mutable.ListBuffer[IStatus]()
+    pcLock.synchronized {
+      def updatePcStatus(msg: String, ex: Throwable) = {
+        pcScalaMissingStatuses += new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, msg, ex)
+      }
+
+      try {
+        val settings = ScalaPlugin.defaultScalaSettings()
+        project.initializeCompilerSettings(settings, isPCSetting(settings))
+        val pc = new ScalaPresentationCompiler(project, settings)
+        logger.debug("Presentation compiler classpath: " + pc.classPath)
+        pc.askOption(() => pc.initializeRequiredSymbols())
+        pc
+      } catch {
+        case ex @ MissingRequirementError(required) =>
+          updatePcStatus("could not find a required class: " + required, ex)
+          eclipseLog.error(ex)
+          null
+        case ex @ FatalError(required) if required.startsWith("package scala does not have a member") =>
+          updatePcStatus("could not find a required class: " + required, ex)
+          eclipseLog.error(ex)
+          null
+        case ex: Throwable =>
+          logger.info("Throwable when intializing presentation compiler!!! " + ex.getMessage)
+          ex.printStackTrace()
+          if (project.underlying.isOpen) {
+            updatePcStatus("error initializing the presentation compiler: " + ex.getMessage(), ex)
+          }
+          shutdown()
+          eclipseLog.error(ex)
+          null
+      } finally {
+        val messageShown = pcInitMessageShown.getAndSet(true)
+        if (!messageShown && !pcScalaMissingStatuses.isEmpty) {
+          val firstStatus = pcScalaMissingStatuses.head
+          val statuses: Array[IStatus] = pcScalaMissingStatuses.tail.toArray
+          val status = new MultiStatus(ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, statuses, firstStatus.getMessage(), firstStatus.getException())
           val handler = DebugPlugin.getDefault().getStatusHandler(status)
-          handler.handleStatus(status, this)
+          // Don't allow asyncExec bec. of the concurrent nature of this call,
+          // we're create()-ing instances repeatedly otherwise
+          if (handler != null) DisplayThread.syncExec(handler.handleStatus(status, this))
         }
-        shutdown()
-        eclipseLog.error(ex)
-        null
+      }
     }
   }
 
