@@ -30,6 +30,8 @@ import org.eclipse.jdt.core.JavaModelException
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
+import scala.util.control.Exception
+import org.eclipse.core.runtime.CoreException
 
 
 class ScalaSourceFileProvider extends SourceFileProvider {
@@ -154,7 +156,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     if (getBufferManager().getBuffer(this) == null && getResource().getLocation() == null && getResource().getLocationURI() == null) {
       return CharOperation.NO_CHAR
     }
-    return super.getContents()
+    Exception.failAsValue(classOf[CoreException])(CharOperation.NO_CHAR) { super.getContents() }
   }
 
   /** Makes sure {{{this}}} source is not in the ignore buffer of the compiler and ask the compiler to reload it. */
