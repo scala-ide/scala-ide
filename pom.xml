@@ -24,11 +24,11 @@
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
-    <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
+    <repo.eclipse.luna>http://download.eclipse.org/eclipse/updates/4.4milestones</repo.eclipse.luna>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
-    <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/update</repo.ajdt.luna>
+    <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
 
@@ -187,8 +187,8 @@
       <properties>
         <eclipse.codename>luna</eclipse.codename>
         <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
-        <repo.ajdt>${repo.ajdt.juno}</repo.ajdt> <!-- FIXME: Change this when there is an AJDT Eclipse Luna compatible release -->
-        <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version> <!-- FIXME: Change this when there is an AJDT Eclipse Luna compatible release -->
+        <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
+        <weaving.hook.plugin.version>1.1.0.I20140501-0200</weaving.hook.plugin.version>
       </properties>
     </profile>    
 
