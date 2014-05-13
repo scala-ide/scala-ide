@@ -41,6 +41,9 @@ trait ScalaInstallation {
 
   /** Create an Sbt-compatible ScalaInstance */
   def scalaInstance: ScalaInstance
+
+  override def toString() =
+    s"Scala $version: ${allJars.mkString(", ")})"
 }
 
 /** The Scala installation installed on the Eclipse platform.
