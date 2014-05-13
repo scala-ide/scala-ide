@@ -369,4 +369,32 @@ class CompletionTests {
     }
   }
 
+  @Test
+  def backticks_completion_t1001371() {
+    withCompletions("backticks_completion/BackticksCompletionDemo.scala") {
+      (testNumber, _, proposals) => {
+        def `assert completes with    backticks`(what: String, completion: String) {
+          assertTrue(s"$what should auto-complete WITH backticks.", proposals.exists(_.completion == s"`$completion`"))
+        }
+
+        def `assert completes without backticks`(what: String, completion: String) {
+          assertTrue(s"$what should auto-complete WITHOUT backticks.", proposals.exists(_.completion == completion))
+        }
+
+        testNumber match {
+          case 0 => `assert completes without backticks`("A normal class name", "NormalClassName")
+          case 1 => `assert completes with    backticks`("A non-standard class name", "weird class name")
+          case 2 => `assert completes without backticks`("A weird but valid class name", "abcαβγ_!^©®")
+          case 3 => `assert completes with    backticks`("A non-standard trait name", "misnamed/trait")
+          case 4 => `assert completes with    backticks`("A non-standard object name", "YOLO Obj")
+          case 5 => `assert completes without backticks`("A def with a standard name", "normalDef")
+          case 6 => `assert completes with    backticks`("A def with a non-standard name", "weird/def")
+          case 7 => `assert completes with    backticks`("A field with a non-standard name", "text/plain")
+          case 8 => `assert completes without backticks`("A field with a weird but valid name", "lolcαβγ_!^©®")
+          case 9 => `assert completes with    backticks`("A field with an illegal char in its name", "badchar£2")
+          case 10=> `assert completes with    backticks`("An identifier that is a reserved word", "while")
+        }
+      }
+    }
+  }
 }
