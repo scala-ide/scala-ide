@@ -136,12 +136,12 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
-    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtReporter, sbtLogger)
+    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
       catch {
-        case _: CompileFailed => None
+        case _: CompileFailed | CompilerInterfaceFailed => None
       }
     analysis foreach setCached
   }
@@ -171,7 +171,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
   override def invalidateAfterLoad: Boolean = true
 
-  override def build(addedOrUpdated : Set[IFile], removed : Set[IFile], pm: SubMonitor) {
+  override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], pm: SubMonitor) {
     buildReporter.reset()
     val removedFiles = removed.map(EclipseResource(_): AbstractFile)
     val toBuild = addedOrUpdated.map(EclipseResource(_): AbstractFile) -- removedFiles
@@ -208,11 +208,21 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
    */
   private def aggressiveCompile(in: SbtInputs, log: Logger): Analysis = {
     val options = in.options; import options.{ options => scalacOptions, _ }
-    val compilers = in.compilers; import compilers._
+    val compilers = in.compilers
     val agg = new AggressiveCompile(cacheFile)
     val aMap = (f: File) => m2o(in.analysisMap(f))
     val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
-    agg(scalac, javac, options.sources, classpath, output, in.cache, m2o(in.progress), scalacOptions, javacOptions, aMap,
-      defClass, in.reporter, order, skip = false, in.incOptions)(log)
+
+    compilers match {
+      case Right(comps) =>
+        import comps._
+        agg(scalac, javac, options.sources, classpath, output, in.cache, m2o(in.progress), scalacOptions, javacOptions, aMap,
+          defClass, sbtReporter, order, skip = false, in.incOptions)(log)
+      case Left(errors) =>
+        buildReporter.error(NoPosition, errors)
+        throw CompilerInterfaceFailed
+    }
   }
+
+  private object CompilerInterfaceFailed extends RuntimeException
 }

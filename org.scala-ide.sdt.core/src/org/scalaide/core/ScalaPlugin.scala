@@ -59,6 +59,7 @@ import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
+import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -81,7 +82,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-
   import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
   def pluginId = "org.scala-ide.sdt.core"
@@ -245,6 +245,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     super.stop(context)
     ScalaPlugin.plugin = null
   }
+
+  /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
+  lazy val compilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 

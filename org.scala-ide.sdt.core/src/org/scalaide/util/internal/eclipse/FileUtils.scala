@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.internal.resources.ResourceException
+import java.io.File
 
 object FileUtils {
 
@@ -95,4 +96,13 @@ object FileUtils {
     IMarker.USER_EDITABLE,
     IMarker.SOURCE_ID
   )
+
+  /** Delete directory recursively. Does nothing if dir is not a directory. */
+  def deleteDir(dir: File): Unit = {
+    if (dir.isDirectory()) {
+      for (f <- dir.listFiles())
+        if (f.isDirectory) deleteDir(f) else f.delete()
+      dir.delete()
+    }
+  }
 }

@@ -65,11 +65,10 @@ object EclipseUtils {
   def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
     new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
-  /**
-   * Run the given function as a workspace runnable inside `wspace`.
+  /** Run the given function as a workspace runnable inside `wspace`.
    *
-   * @param wspace the workspace
-   * @param monitor the progress monitor (defaults to null for no progress monitor).
+   *  @param wspace the workspace
+   *  @param monitor the progress monitor (defaults to null for no progress monitor).
    */
   def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
     wspace.run(new IWorkspaceRunnable {
@@ -79,13 +78,12 @@ object EclipseUtils {
     }, monitor)
   }
 
-  /**
-   * Create a job with the given name. Default values for scheduling rules and priority are taken
-   * from the `Job` implementation.
+  /** Create a job with the given name. Default values for scheduling rules and priority are taken
+   *  from the `Job` implementation.
    *
-   * @param rule The scheduling rule
-   * @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
-   * @return The job
+   *  @param rule The scheduling rule
+   *  @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
+   *  @return The job
    */
   def prepareJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
     val job = new Job(name) {
@@ -125,4 +123,40 @@ object EclipseUtils {
       page <- window.getPages
     } yield page
 
+  def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
+    val jarFile = bundlePath.lastSegment()
+    val parentFolder = bundlePath.removeLastSegments(1)
+
+    val sourceBundleId = bundleId + ".source"
+    val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
+
+    val installedLocation = parentFolder / sourceJarFile
+
+    val versionString = parentFolder.lastSegment()
+    val groupFolder = parentFolder.removeLastSegments(2)
+
+    val buildLocation = groupFolder / sourceBundleId / versionString / sourceJarFile
+
+    if (installedLocation.toFile().exists()) {
+      Some(installedLocation)
+    } else {
+      val versionString = parentFolder.lastSegment()
+      val groupFolder = parentFolder.removeLastSegments(2)
+
+      val buildLocation = groupFolder / sourceBundleId / versionString / sourceJarFile
+      if (buildLocation.toFile().exists()) {
+        Some(buildLocation)
+      } else {
+        None
+      }
+    }
+  }
+
+  implicit class RichPath(val p: IPath) extends AnyVal {
+    def /(segment: String): IPath =
+      p append segment
+
+    def /(other: IPath): IPath =
+      p append other
+  }
 }
