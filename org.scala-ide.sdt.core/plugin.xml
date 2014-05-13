@@ -468,6 +468,12 @@
       </classpathContainerPage>
    </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
+        <statusHandler
+       id="Xsource"
+       class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+       plugin="org.scala-ide.sdt.core"
+       code="1001">
+     </statusHandler>
      <statusHandler
        id="MissingScalaRequirement"
        class="org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler"
@@ -475,10 +481,10 @@
        code="1002">
      </statusHandler>
      <statusHandler
-       id="Xsource"
-       class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+       id="CompilerLaunchError"
+       class="org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler"
        plugin="org.scala-ide.sdt.core"
-       code="1001">
+       code="1003">
      </statusHandler>
    </extension>
    <extension point = "org.eclipse.debug.core.launchConfigurationTypes">
