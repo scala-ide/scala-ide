@@ -30,6 +30,8 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
   import CommandField.Evaluator
 
+  def isEmpty = getCharCount() == 0
+
   protected case class MaskedKeyCode(code: Int, mask: Int) {
     def apply(e: org.eclipse.swt.events.KeyEvent): Boolean =
       e.keyCode == code && (e.stateMask & mask) == mask
@@ -56,6 +58,11 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       pos = history.length
     }
 
+    def clearHistory() {
+      history.clear()
+      resetHistoryPos()
+    }
+
     override def keyReleased(e: org.eclipse.swt.events.KeyEvent) {
       if (evaluateKey(e)) evaluate(getText)
       else if (historyUpKey(e)) showPreviousExprFromHistory()
@@ -67,7 +74,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
         e.doit = false
     }
 
-    private def evaluate(command: String) {
+    private[repl] def evaluate(command: String) {
       if (command.nonEmpty) {
         appendHistory(command)
         evaluator.eval(command)
@@ -101,7 +108,8 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     }
   }
 
-  /** Handles the display of a help text message that should describe the kind
+  /**
+   * Handles the display of a help text message that should describe the kind
    * of input that `CommandField` expects.
    * When the input field gains the focus, the help text is automatically hidden.
    * The help text message is re-displayed when the field is empty and it lose the
@@ -126,9 +134,9 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     textWidget.addFocusListener(new FocusListener {
       override def focusGained(e: FocusEvent) {
         if (helpTextDisplayed) {
+          helpTextDisplayed = false
           textWidget.setForeground(defaultBgColor)
           textWidget.setText("")
-          helpTextDisplayed = false
         }
       }
       override def focusLost(e: FocusEvent) {
@@ -136,11 +144,13 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       }
     })
 
+    def isHelpTextDisplayed = helpTextDisplayed
+
     private def maybeShowHelpText() {
       if (textWidget.getText().isEmpty) {
+        helpTextDisplayed = true
         textWidget.setForeground(codeBgColor)
         textWidget.setText(helpText)
-        helpTextDisplayed = true
       }
     }
 
@@ -165,6 +175,15 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   def clear() {
     inputFieldListener.reset()
   }
+
+  def clearHistory() {
+    inputFieldListener.clearHistory()
+  }
+
+  // to be able to execute evaluation in other way than key event and still be able to add something to history
+  def forceEvaluation() = inputFieldListener.evaluate(getText())
+
+  def isHelpTextDisplayed = fieldHelp.isHelpTextDisplayed
 
   override def dispose() {
     fieldHelp.dispose()

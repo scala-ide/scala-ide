@@ -10,11 +10,20 @@ package org.scalaide.debug.internal.expression
  */
 object TestValues {
 
+  val argumentsFileName = "Arguments"
+  val argumentsLine = 11
+
+  val codeCompletionFileName = "CodeCompletion"
+  val codeCompletionLineNumber = 26
+
+  val exceptionsFileName = "Exceptions"
+  val exceptionsLineNumber = 12
+
   val fileName = "Values"
   val breakpointLine = 39
 
-  val argumentsFileName = "Arguments"
-  val argumentsLine = 11
+  val implicitsFileName = "Implicits"
+  val implicitsLineNumber = 15
 
   val nestedFileName = "Nested"
   val nestedScopeLine = 15
@@ -22,23 +31,22 @@ object TestValues {
   val newInstancesFileName = "NewInstances"
   val newInstancesLineNumber = 8
 
-  val implicitsFileName = "Implicits"
-  val implicitsLineNumber = 15
-
-  val exceptionsFileName = "Exceptions"
-  val exceptionsLineNumber = 12
-
   val thisFileName = "This"
   val thisLineNumber = 23
 
-  val visibilityFileName = "Visibility"
-  val visibilityLineNumber = 23
+  val varargsFileName = "Varargs"
+  val varargsLineNumber = 43
 
   val variablesFileName = "Variables"
   val variablesLineNumber = 15
 
-  val varargsFileName = "Varargs"
-  val varargsLineNumber = 43
+  val visibilityFileName = "Visibility"
+  val visibilityLineNumber = 23
+
+  object Nested {
+    val outerUsed = 1
+    val outerUnused = 2
+  }
 
   object This {
     val traitParam = 1
@@ -47,11 +55,6 @@ object TestValues {
     val classMethod = 2
     val objectParam = 3
     val objectMethod = 3
-  }
-
-  object Nested {
-    val outerUsed = 1
-    val outerUnused = 2
   }
 
   object Values {

@@ -5,7 +5,7 @@
  */
 package org.scalaide.debug.internal.expression
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -14,6 +14,7 @@ import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.IDebugEventSetListener
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
+import org.eclipse.jdt.internal.debug.core.model.JDIThread
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.logging.HasLogger
@@ -21,7 +22,6 @@ import org.scalaide.logging.HasLogger
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.BreakpointEvent
-import org.eclipse.jdt.internal.debug.core.model.JDIThread
 
 /**
  * Main entry point to expression evaluation.
@@ -47,12 +47,14 @@ trait ExpressionManager {
   protected def currentEvaluator: Option[JdiExpressionEvaluator]
 
   /**
-   * Expression evaluator that should be used.
-   * It's set to `Some` only when debug is running and thread is suspended.
-   *
-   * @param thread thread to run debug session with when evaluating breakpoint condition
+   * Debugging session to which current evaluator is related
    */
   protected def currentSession: Option[DebuggingSession]
+
+  /**
+   * Thread suspended on breakpoint. If debug is not running or breakpoint is not hit, it's None.
+   */
+  protected def currentThread: Option[ThreadReference]
 
   /**
    * Create expression evaluator
@@ -60,6 +62,14 @@ trait ExpressionManager {
    * @param thread thread to run debug session with when evaluating breakpoint condition
    */
   protected def createEvaluator(currentSession: DebuggingSession, thread: ThreadReference): JdiExpressionEvaluator
+
+  /**
+   * Returns the highest frame from the debugging stack frames.
+   */
+  def currentStackFrame() = currentThread match {
+    case Some(thread) if thread.frameCount() > 0 => Some(thread.frame(0))
+    case _ => None
+  }
 
   /**
    * Computes an expression and runs appropriate callback.
@@ -154,7 +164,7 @@ trait ExpressionManagerDebugEventListener
   private var _currentSession: Option[DebuggingSession] = None
 
   /** Holds current Thread reference, it's set up when VM suspends on breakpoint and cleared on resume */
-  private var currentThread: Option[ThreadReference] = None
+  private var _currentThread: Option[ThreadReference] = None
 
   override def handleDebugEvents(events: Array[DebugEvent]): Unit = events.foreach {
     event =>
@@ -175,10 +185,12 @@ trait ExpressionManagerDebugEventListener
    */
   protected override def currentSession: Option[DebuggingSession] = _currentSession
 
+  protected override def currentThread: Option[ThreadReference] = _currentThread
+
   /** Builds expression evaluator based on current thread and debug target */
   protected override def currentEvaluator: Option[JdiExpressionEvaluator] = for {
     session <- currentSession
-    thread <- currentThread
+    thread <- _currentThread
   } yield createEvaluator(session, thread)
 
   /** Creates expression evaluator */
@@ -186,12 +198,12 @@ trait ExpressionManagerDebugEventListener
     new JdiExpressionEvaluator(currentSession.debugTarget, thread)
 
   /** Clear thread from current evaluator */
-  private def clearThread(): Unit = currentThread = None
+  private def clearThread(): Unit = _currentThread = None
 
   /** Clear target from current evaluator */
   private def clearThreadAndTarget(): Unit = {
     _currentSession = None
-    currentThread = None
+    _currentThread = None
   }
 
   private def onCreate(event: DebugEvent): Unit = event.getSource match {
@@ -230,7 +242,7 @@ trait ExpressionManagerDebugEventListener
     logger.info("Suspend Debugging " + event)
     threadFrom(event).map {
       thread =>
-        currentThread = Some(thread)
+        _currentThread = Some(thread)
     }.getOrElse {
       clearThread()
     }

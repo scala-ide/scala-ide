@@ -16,6 +16,8 @@ import org.scalaide.debug.internal.model.MethodClassifierUnitTest
 import org.scalaide.debug.internal.model.ScalaDebugCacheTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
 import org.scalaide.debug.internal.expression.ExpressionsTestSuite
+import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderTest
+import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderIntegrationTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -38,6 +40,8 @@ import org.scalaide.debug.internal.expression.ExpressionsTestSuite
     classOf[RemoteConnectorTest],
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
-    classOf[ExpressionsTestSuite]))
+    classOf[ExpressionsTestSuite],
+    classOf[SimpleContentProposalProviderTest],
+    classOf[SimpleContentProposalProviderIntegrationTest]))
 class ScalaDebugTestSuite {
 }

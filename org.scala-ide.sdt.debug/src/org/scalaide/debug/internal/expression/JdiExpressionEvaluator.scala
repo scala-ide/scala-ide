@@ -60,7 +60,7 @@ class JdiExpressionEvaluator(debugTarget: ScalaDebugTarget, thread: ThreadRefere
       sw.toString
     }
     val message = s"""Exception was thrown during expression evaluation.
-                     |If you see this message, evaluated code problably uses some not-yet-supported Scala feature.
+                     |If you see this message, evaluated code probably uses some not-yet-supported Scala feature.
                      |If you want this fixed you are welcome to fill a bug report on Scala IDE tracker.
                      |Exception details:
                      |${e.getMessage}

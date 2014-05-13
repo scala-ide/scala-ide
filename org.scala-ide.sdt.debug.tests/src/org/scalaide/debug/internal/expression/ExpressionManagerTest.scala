@@ -26,6 +26,8 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
 
       protected override def currentSession: Option[DebuggingSession] = None
 
+      protected override def currentThread: Option[ThreadReference] = None
+
       protected def createEvaluator(currentSession: DebuggingSession, thread: ThreadReference): JdiExpressionEvaluator =
         companion.expressionEvaluator
     }

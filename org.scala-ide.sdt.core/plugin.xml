@@ -258,6 +258,17 @@
          class="org.scalaide.ui.internal.actions.RunDiagnosticAction"
          enablesFor="*">
        </action>
+       <action
+	       class="org.scalaide.ui.internal.actions.RunSelectionInInterpreterAction"
+	       definitionId="scala.tools.eclipse.interpreter.RunSelectionInInterpreter"
+	       disabledIcon="icons/full/dtool16/run_interpreter.gif"
+	       hoverIcon="icons/full/etool16/run_interpreter.gif"
+	       icon="icons/full/etool16/run_interpreter.gif"
+	       id="scala.tools.eclipse.interpreter.runSelectionInInterpreterAction"
+	       label="Run Selection in Scala Interpreter"
+	       toolbarPath="org.eclipse.debug.ui.launchActionSet/debug"
+	       tooltip="Run Selection in Scala Interpreter">
+     	</action> 
      </actionSet>
    </extension>
 
@@ -1059,7 +1070,7 @@
          name="Toggle Implicits Display"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
-         id="scala.tools.eclipse.interpreter.RunSelection"
+         id="scala.tools.eclipse.interpreter.RunSelectionInInterpreter"
          name="Send Selection to Scala Interpreter"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1152,7 +1163,7 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
-       commandId="scala.tools.eclipse.interpreter.RunSelection"
+       commandId="scala.tools.eclipse.interpreter.RunSelectionInInterpreter"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>

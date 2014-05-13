@@ -58,7 +58,7 @@
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.scalaide.ui.preferences"
-            class="org.scalaide.debug.internal.preferences.DebuggerPreferences"
+            class="org.scalaide.debug.internal.preferences.DebuggerPreferencePage"
             id="org.scalaide.ui.preferences.debug"
             name="Debug">
       </page>
@@ -82,10 +82,9 @@
    </extension>
 
 
-    <!--firefly - copy it to sputnik-plugin plugin.xml file-->
+    <!--firefly -->
 
     <extension point="org.eclipse.ui.perspectiveExtensions">
-
         <perspectiveExtension
                 targetID="org.eclipse.debug.ui.DebugPerspective">
             <view
@@ -93,7 +92,12 @@
                     visible="true"
                     relationship="stack"
                     id="org.scalaide.debug.internal.ui.ExpressionEvaluation"/>
+			<actionSet id="org.scala-ide.sdt.ui.scalaMenu.debuggerActionSet"/>
         </perspectiveExtension>
+        
+		<perspectiveExtension targetID="org.scala-ide.sdt.core.perspective">
+			<actionSet id="org.scala-ide.sdt.ui.scalaMenu.debuggerActionSet"/>
+		</perspectiveExtension>
     </extension>
 
     <extension point="org.eclipse.ui.views">
@@ -101,8 +105,42 @@
                 id="org.scalaide.debug.internal.ui.ExpressionEvaluation"
                 name="Scala Expression Evaluator"
                 category="org.eclipse.debug.ui"
-                class="org.scalaide.debug.internal.ui.ExpressionEvaluator"
+                class="org.scalaide.debug.internal.ui.ExpressionEvaluatorConsoleView"
                 allowMultiple="false"
                 />
     </extension>
+        
+	<extension point = "org.eclipse.ui.actionSets">
+		<actionSet id="org.scala-ide.sdt.ui.scalaMenu.debuggerActionSet"
+			label="Scala Diagnostics"
+			visible="false">
+			<action
+				class="org.scalaide.debug.internal.ui.actions.RunSelectionInExpressionEvaluatorAction"
+				definitionId="scala.tools.eclipse.expressionevaluator.RunSelectionInExpressionEvaluator"
+				disabledIcon="icons/full/etool16/run_evaluator.gif"
+				hoverIcon="icons/full/etool16/run_evaluator.gif"
+				icon="icons/full/etool16/run_evaluator.gif"
+				id="scala.tools.eclipse.expressionevaluator.runSelectionInExpressionEvaluatorAction"
+				label="Run Selection in Scala Expression Evaluator"
+				toolbarPath="org.eclipse.debug.ui.launchActionSet/debug"
+				tooltip="Run Selection in Scala Expression Evaluator">
+			</action> 
+		</actionSet>
+	</extension>
+    
+	<extension
+		point="org.eclipse.ui.commands">
+		<command
+			categoryId="org.eclipse.debug.ui.category.run"
+			id="scala.tools.eclipse.expressionevaluator.RunSelectionInExpressionEvaluator"
+			name="Send Selection to Scala Expression Evaluator"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.bindings">
+		<key
+			commandId="scala.tools.eclipse.expressionevaluator.RunSelectionInExpressionEvaluator"
+			schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+			contextId="scala.tools.eclipse.scalaEditorScope"
+			sequence="M1+M2+Z"/>
+	</extension>
 </plugin>

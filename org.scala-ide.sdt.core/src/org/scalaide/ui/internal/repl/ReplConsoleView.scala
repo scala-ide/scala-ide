@@ -110,7 +110,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setHoverImageDescriptor(ConsolePluginImages.getImageDescriptor(IConsoleConstants.IMG_LCL_CLEAR));
 
     override def run() {
-      textWidget.setText("")
+      resultsTextWidget.setText("")
       setEnabled(false)
     }
   }
