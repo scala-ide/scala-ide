@@ -169,6 +169,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
+  // TODO: add doc
   def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
 
 
