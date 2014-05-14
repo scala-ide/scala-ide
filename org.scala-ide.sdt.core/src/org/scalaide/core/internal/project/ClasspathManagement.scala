@@ -36,6 +36,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.util.internal.CompilerUtils
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -327,12 +328,12 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Make sure you know what you are doing.") :: Nil
-          case Some(v) if (plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
+          case Some(v) if (CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
             (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Please use the -Xsource flag.") :: Nil
           case Some(v) => {
             val expectedVer = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
-              case plugin.ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
+              case CompilerUtils.ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
               case _ => "none"
             } else plugin.scalaVer.unparse
             // incompatible version

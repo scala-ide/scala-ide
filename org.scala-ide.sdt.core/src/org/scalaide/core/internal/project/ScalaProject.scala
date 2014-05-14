@@ -46,6 +46,7 @@ import org.eclipse.core.resources.ProjectScope
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.scalaide.util.internal.CompilerUtils
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -510,10 +511,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
     if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
       eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
-    if (l < 1 || (specdVersion exists (x => plugin.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
+    if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
       false
     else
-      specdVersion exists (x => plugin.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
+      specdVersion exists (x => CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
   }
 
   /**

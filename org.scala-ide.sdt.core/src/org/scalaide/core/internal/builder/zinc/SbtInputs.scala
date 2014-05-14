@@ -2,9 +2,7 @@ package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
 import java.util.zip.ZipFile
-
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
-
 import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.internal.project.ScalaProject
@@ -12,7 +10,6 @@ import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
-
 import sbt.ClasspathOptions
 import sbt.ScalaInstance
 import sbt.classpath.ClasspathUtilities
@@ -26,6 +23,7 @@ import xsbti.Logger
 import xsbti.Maybe
 import xsbti.Reporter
 import xsbti.compile._
+import org.scalaide.core.internal.project.ScalaInstallation
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -97,11 +95,7 @@ class SbtInputs(sourceFiles: Seq[File],
   def compilers = new Compilers[AnalyzingCompiler] {
     def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
     def scalac = {
-      val libClasses = plugin.libClasses map (_.toFile) getOrElse (throw new RuntimeException("scala-library not found"))
-      val compilerClasses = plugin.compilerClasses map (_.toFile) getOrElse (throw new RuntimeException("scala-compiler not found"))
-      val reflectClasses = plugin.reflectClasses map (_.toFile)
-      val scalaLoader = getClass.getClassLoader
-      val scalaInstance = new ScalaInstance(plugin.scalaVer.unparse, scalaLoader, libClasses, compilerClasses, reflectClasses.toList, None)
+      val scalaInstance = ScalaInstallation.platformInstallation.scalaInstance
       val compilerInterface = plugin.sbtCompilerInterface map (_.toFile) getOrElse (throw new RuntimeException("compiler-interface not found"))
 
       // prevent Sbt from adding things to the (boot)classpath

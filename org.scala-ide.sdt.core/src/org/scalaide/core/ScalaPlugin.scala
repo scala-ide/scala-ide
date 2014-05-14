@@ -56,6 +56,7 @@ import org.scalaide.logging.PluginLogConfigurator
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic
+import org.scalaide.util.internal.CompilerUtils
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -117,30 +118,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  /** These utility methods should be in tools.nsc.settings's ScalaVersion
-   */
-
-  object ShortScalaVersion {
-    def unapply(v: ScalaVersion): Option[(Int, Int)] = v match {
-      case SpecificScalaVersion(major, minor, _, _) => Some((major, minor))
-      case _ => None
-    }
-  }
-
-  def isBinarySame: (ScalaVersion, ScalaVersion) => Boolean = {
-    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor
-    case _ => false
-  }
-
-  def isBinaryPrevious: (ScalaVersion, ScalaVersion) => Boolean = {
-    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor + 1
-    case _ => false
-  }
-
-  /****
-   * End utility methods
-   */
-
+  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
    /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
