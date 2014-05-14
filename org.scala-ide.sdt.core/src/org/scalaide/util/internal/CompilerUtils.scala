@@ -20,4 +20,9 @@ object CompilerUtils {
     case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor + 1
     case _ => false
   }
+
+  def shortString(s: ScalaVersion) = s match {
+    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
+    case _ => "none"
+  }
 }

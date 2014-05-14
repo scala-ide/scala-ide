@@ -81,7 +81,7 @@ object ScalaProject {
           editor.getEditorInput match {
             case fei: FileEditorInput =>
               val f = fei.getFile
-              if (f.getProject == project.underlying &&  f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
+              if (f.getProject == project.underlying && f.getName.endsWith(ScalaPlugin.plugin.scalaFileExtn)) {
                 for (ssf <- ScalaSourceFile.createFromPath(f.getFullPath.toString)) {
                   if (project.underlying.isOpen)
                     project.presentationCompiler(op(_, ssf))
@@ -107,16 +107,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   case class InvalidCompilerSettings() extends RuntimeException(
-        "Scala compiler cannot initialize for project: " + underlying.getName +
-              ". Please check that your classpath contains the standard Scala library.")
+    "Scala compiler cannot initialize for project: " + underlying.getName +
+      ". Please check that your classpath contains the standard Scala library.")
 
   val presentationCompiler = new ScalaPresentationCompilerProxy(this)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
-   * [[ScalaPlugin]] instance has been fully initialized.
+   *  [[ScalaPlugin]] instance has been fully initialized.
    */
   private def init(): Unit = {
-    if(!ScalaPlugin.plugin.headlessMode)
+    if (!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().addPartListener(worbenchPartListener))
   }
 
@@ -135,7 +135,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
-
   /** Deletes all build problem markers for all resources in {{{this}}} Scala project. */
   private def clearAllBuildProblemMarkers(): Unit = {
     if (isUnderlyingValid) {
@@ -147,7 +146,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (isUnderlyingValid) {
       underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
     }
-
 
   /** The direct dependencies of this project. It only returns opened projects. */
   def directDependencies: Seq[IProject] =
@@ -169,7 +167,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  dependencies.
    */
   def exportedDependencies: Seq[IProject] = {
-    for { entry <- resolvedClasspath
+    for {
+      entry <- resolvedClasspath
       if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
     } yield plugin.workspaceRoot.getProject(entry.getPath().toString)
   }
@@ -211,7 +210,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
 
       val wsroot = plugin.workspaceRoot
-      val binPath = wsroot.getFolder(outputLocation)  // may not exist
+      val binPath = wsroot.getFolder(outputLocation) // may not exist
 
       (source.asInstanceOf[IContainer], binPath)
     }
@@ -219,21 +218,20 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
 
-  /**
-   * This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil,
-   * so avoids throwing an exceptions.
+  /** This function checks that the underlying project is closed, if not, return the classpath, otherwise return Nil,
+   *  so avoids throwing an exceptions.
    *  @return the classpath or Nil, if the underlying project is closed.
    */
   private def resolvedClasspath =
-     try {
-       if (isUnderlyingValid) {
-         javaProject.getResolvedClasspath(true).toList
-       } else {
-         Nil
-       }
-     } catch {
-       case e: JavaModelException => logger.error(e); Nil
-     }
+    try {
+      if (isUnderlyingValid) {
+        javaProject.getResolvedClasspath(true).toList
+      } else {
+        Nil
+      }
+    } catch {
+      case e: JavaModelException => logger.error(e); Nil
+    }
 
   /** Return all source files in the source path. It only returns buildable files (meaning
    *  Java or Scala sources).
@@ -288,7 +286,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
       val exclusionPatterns = fullPatternChars(srcEntry, srcEntry.getExclusionPatterns())
-      val isAlsoProject = srcFolder == underlying  // source folder is the project itself
+      val isAlsoProject = srcFolder == underlying // source folder is the project itself
 
       srcFolder.accept(
         new IResourceProxyVisitor {
@@ -302,19 +300,19 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
               case IResource.FOLDER =>
                 if (isAlsoProject) {
-                  !sourceOrBinaryFolder(proxy.requestFullPath)  // recurse if not on a source or binary folder path
+                  !sourceOrBinaryFolder(proxy.requestFullPath) // recurse if not on a source or binary folder path
                 } else if (exclusionPatterns != null) {
                   if (Util.isExcluded(proxy.requestFullPath, inclusionPatterns, exclusionPatterns, true)) {
                     // must walk children if inclusionPatterns != null, can skip them if == null
                     // but folder is excluded so do not create it in the output folder
                     inclusionPatterns != null
                   } else true
-                } else true  // recurse into subfolders
+                } else true // recurse into subfolders
 
               case _ =>
                 true
             }
-         }
+          }
         }, IResource.NONE)
     }
 
@@ -429,7 +427,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
       }
 
-    for(enc <- encoding)
+    for (enc <- encoding)
       settings.encoding.value = enc
 
     setupCompilerClasspath(settings)
@@ -466,9 +464,97 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.buildManager.name))
 
+  /** Which Scala source level is this project configured to work with ? */
+  def getDesiredSourceLevel() = {
+    if (!usesProjectSettings) ScalaPlugin.plugin.shortScalaVer
+    else {
+      if (!projectSpecificStorage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) projectSpecificStorage.setDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, ScalaPlugin.plugin.shortScalaVer)
+      projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)
+    }
+  }
+
+  def turnOnProjectSpecificSettings(reason: String){
+    if (!usesProjectSettings) {
+      val pName = this.toString
+      eclipseLog.warn(s"Turning on project-specific settings for $pName because of $reason")
+      projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+      projectSpecificStorage.save()
+    }
+  }
+
+  def turnOffProjectSpecificSettings(reason: String){
+    if (usesProjectSettings){
+      val pName = this.toString
+      eclipseLog.warn(s"Turning off project-specific settings for $pName because of $reason")
+      projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, false)
+      projectSpecificStorage.save()
+    }
+  }
+
+  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)), slReason: String = "requested Source Level change"): Unit = {
+    projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
+    turnOnProjectSpecificSettings(slReason)
+    // is the required sourceLevel the bundled scala version ?
+    if (isUsingCompatibilityMode) {
+      if (CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)) {
+        unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
+      }
+    } else {
+      if (CompilerUtils.isBinaryPrevious(ScalaPlugin.plugin.scalaVer, scalaVersion)) {
+        toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
+      }
+    }
+    projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
+    projectSpecificStorage.save()
+    classpathHasChanged()
+    projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
+  }
+
+  def toggleProjectSpecificSettingsAndSetXsource(scalaVersion: ScalaVersion, reason: String) = {
+    turnOnProjectSpecificSettings("requested Xsource change")
+    val scalaVersionString = CompilerUtils.shortString(scalaVersion)
+    // initial space here is important
+    val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
+    eclipseLog.debug(s"Adding $optionString to compiler arguments because of: $reason")
+    val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+    val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
+    storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
+  }
+
+  def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
+    if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
+      val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+
+      val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
+      val superfluousString = superfluousArgs.mkString(" ")
+      eclipseLog.debug(s"Removing $superfluousString from compiler arguments because of: $reason")
+      storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
+
+      // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
+      val projectSettingsSameAsWorkSpace = shownSettings(ScalaPlugin.defaultScalaSettings(), _ => true) forall {
+        case (setting, value) => ScalaPlugin.prefStore.getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
+      }
+      if (projectSettingsSameAsWorkSpace) {
+        turnOffProjectSpecificSettings("Settings are all identical to workspace after Xsource removal.")
+      }
+    }
+  }
+
   /** Does this project use project-specific compiler settings? */
   def usesProjectSettings: Boolean =
     projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+
+
+  val compilerSettingsListener = new IPropertyChangeListener {
+      def propertyChange(event: PropertyChangeEvent) = {
+        if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) {
+          setDesiredSourceLevel()
+        }
+        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE){
+          if (isUnderlyingValid) classpathHasChanged()
+        }
+      }
+    }
 
   /** Return a the project-specific preference store. This does not take into account the
    *  user-preference whether to use project-specific compiler settings or not.
@@ -478,14 +564,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
     val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
-    p.addPropertyChangeListener(new IPropertyChangeListener {
-      def propertyChange(event: PropertyChangeEvent) = {
-        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
-          compatibilityModeCache = Some(getCompatibilityMode())
-          classpathHasChanged()
-        }
-      }
-    })
+    p.addPropertyChangeListener(compilerSettingsListener)
     p
   }
 
@@ -508,10 +587,20 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  @volatile private var compatibilityModeCache : Option[Boolean] = None
+  @deprecated("removed this cache to avoid sync issues with desired Source level", "4.0.1")
+  private var compatibilityModeCache = null
+
+/** This compares the bundled version and the Xsource version found
+  * in arguments, and returns false if they are binary-compatible,
+  * and true otherwise.  Since this is the final, observable
+  * setting on the running presentation Compiler (independently of
+  * Eclipse's settings), it's considered to be the reference on
+  * whether the PC is in compatibility mode or not.  It's a bad
+  * idea to cache this one (desired sourcelevel & al. need to sync
+  * on it).
+  */
   private def getCompatibilityMode(): Boolean = {
-    val xSourceSetting = """-Xsource:(\d.\d+(?:\.\d*)?)""".r
-    val versionInArguments = this.scalacArguments flatMap {case xSourceSetting(c) => Some(c); case _ => None}
+    val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
     val l = versionInArguments.length
     val specdVersion = versionInArguments.headOption
 
@@ -525,20 +614,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       specdVersion exists (x => CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
   }
 
-  /**
-   * TODO: letting this be a workspace-wide setting.
+  /** TODO: letting this be a workspace-wide setting.
    */
-  def isUsingCompatibilityMode(): Boolean = {
-    if (!compatibilityModeCache.isDefined) {
-      compatibilityModeCache = Some(getCompatibilityMode())
-    }
-    compatibilityModeCache.get
-  }
+  def isUsingCompatibilityMode(): Boolean = getCompatibilityMode()
 
-
-  /**
-   * Performs `op` on the presentation compiler, if the compiler could be initialized.
-   * Otherwise, do nothing (no exception thrown).
+  /** Performs `op` on the presentation compiler, if the compiler could be initialized.
+   *  Otherwise, do nothing (no exception thrown).
    */
   @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
   def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = presentationCompiler(op)
@@ -548,10 +629,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     throw InvalidCompilerSettings()
   }
 
-  /**
-   * If the presentation compiler has failed to initialize and no `orElse` is specified,
-   * the default handler throws an `InvalidCompilerSettings` exception
-   * If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
+  /** If the presentation compiler has failed to initialize and no `orElse` is specified,
+   *  the default handler throws an `InvalidCompilerSettings` exception
+   *  If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
    */
   @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
   def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
@@ -585,11 +665,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // We assume that build manager setting has only single box
       val choice = buildManagerInitialize
       choice match {
-        case "sbt"  =>
+        case "sbt" =>
           logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
           buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
         case _ =>
-          logger.info("Invalid build manager choice '" + choice  + "'. Setting to (default) sbt build manager")
+          logger.info("Invalid build manager choice '" + choice + "'. Setting to (default) sbt build manager")
           buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
       }
 
@@ -673,7 +753,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       presentationCompiler.shutdown()
     }
 
-    if(!ScalaPlugin.plugin.headlessMode)
+    if (!ScalaPlugin.plugin.headlessMode)
       ScalaPlugin.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
     shutDownCompilers()
   }

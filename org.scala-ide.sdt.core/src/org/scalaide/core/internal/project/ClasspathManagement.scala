@@ -196,6 +196,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   @volatile
   private var classpathValid = false;
 
+  def isCheckingClassPath(): Boolean = java.lang.Thread.holdsLock(classpathCheckLock)
+
   /** Return <code>true</code> if the classpath is deemed valid.
    *  Check the classpath if it has not been checked yet.
    */
@@ -211,7 +213,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  It is said valid if it contains one and only scala library jar, with a version compatible
    *  with the one from the scala-ide plug-in
    */
-  def classpathHasChanged() {
+  def classpathHasChanged() = {
     classpathCheckLock.synchronized {
       // mark as in progress
       classpathHasBeenChecked = false
@@ -311,6 +313,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private var classpathContinuation = Promise[() => Unit]
+  private var messageWasShown = new java.util.concurrent.atomic.AtomicBoolean(false)
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     import org.scalaide.util.internal.CompilerUtils._
@@ -343,13 +346,15 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.") :: Nil
           case Some(v) if (isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
             val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, "", null)
-            val handler = DebugPlugin.getDefault().getStatusHandler(status)
-            if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
-            try {classpathContinuation.future onSuccess {
+            if (!messageWasShown.getAndSet(true)) try {
+              val handler = DebugPlugin.getDefault().getStatusHandler(status)
+              if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
+              classpathContinuation.future onSuccess {
                 case f => f()
-            }} finally {classpathContinuation = Promise[() => Unit]}
+              }
+            } finally { classpathContinuation = Promise[() => Unit]; messageWasShown.set(false) }
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is prior to the one provided by scala IDE ($scalaVersion). Please use the -Xsource flag.") :: Nil
+            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is prior to the one provided by scala IDE ($scalaVersion). Please use the source level flags in this project's compiler options.") :: Nil
           }
           case Some(v) => {
             // incompatible version
