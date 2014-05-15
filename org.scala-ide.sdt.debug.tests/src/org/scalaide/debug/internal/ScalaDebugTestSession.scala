@@ -57,6 +57,10 @@ object ScalaDebugTestSession {
 }
 
 class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) extends HasLogger {
+  // 60s should be enough even for Jenkins builds running under high-load
+  // (increased from 10s)
+  val TIMEOUT = 60000
+
   object State extends Enumeration {
     type State = Value
     val ACTION_REQUESTED, NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
@@ -271,7 +275,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
 
     if (state ne NOT_LAUNCHED) {
       debugTarget.breakpointManager.waitForAllCurrentEvents()
-      waitUntil(15000) {
+      waitUntil(TIMEOUT) {
         debugTarget.breakpointManager.getBreakpointRequestState(breakpoint) match {
           case Some(state) =>
             state == enabled
