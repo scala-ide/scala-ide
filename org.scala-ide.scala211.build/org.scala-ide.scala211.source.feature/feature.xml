@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.scala211.source.feature"
-      label="Scala 2.11.x"
+      label="Scala 2.11.x sources"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org">
 
