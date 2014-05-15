@@ -169,32 +169,36 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
+  /**
+   * Returns the location of the source bundle for the bundle.
+   *
+   * @param bundleId the bundle id
+   * @param bundelPath the bundle location
+   */
   def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
-
-
     val jarFile = bundlePath.lastSegment()
     val parentFolder = bundlePath.removeLastSegments(1)
 
     val sourceBundleId = bundleId + ".source"
+    // the expected filename for the source jar
     val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
 
+    // the source jar location when the files are from the plugins folder
     val installedLocation = parentFolder.append(sourceJarFile)
 
-    val versionString = parentFolder.lastSegment()
-    val groupFolder = parentFolder.removeLastSegments(2)
-
-    val buildLocation = groupFolder.append(sourceBundleId).append(versionString).append(sourceJarFile)
-
     if (installedLocation.toFile().exists()) {
+      // found in the plugins folder
       Some(installedLocation)
     } else {
       val versionString = parentFolder.lastSegment()
       val groupFolder = parentFolder.removeLastSegments(2)
-
+      // the source jar location when the files are from a local m2 repo
       val buildLocation = groupFolder.append(sourceBundleId).append(versionString).append(sourceJarFile)
       if (buildLocation.toFile().exists()) {
+        // found in the m2 repo
         Some(buildLocation)
       } else {
+        // not found
         None
       }
     }
