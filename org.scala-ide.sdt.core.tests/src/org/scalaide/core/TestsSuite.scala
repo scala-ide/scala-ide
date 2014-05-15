@@ -35,6 +35,7 @@ import org.scalaide.core.sbtbuilder.NestedProjectsTest
 import org.scalaide.core.sbtbuilder.TodoBuilderTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.project.ScalaInstallationTest
+import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 
 /**
  * To run this class DO NOT FORGET to set the config.ini in the  "configuration" tab.
@@ -77,5 +78,6 @@ import org.scalaide.core.project.ScalaInstallationTest
     classOf[ImportSupportTest],
     classOf[QualifiedNameSupportTest],
     classOf[ScalaWordFinderTest],
-    classOf[ScalaInstallationTest]))
+    classOf[ScalaInstallationTest],
+    classOf[MultiScalaVersionTest]))
 class TestsSuite

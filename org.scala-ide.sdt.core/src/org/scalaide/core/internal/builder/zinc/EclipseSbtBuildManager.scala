@@ -41,6 +41,11 @@ import sbt.inc.IncOptions
 import xsbti.Maybe
 import org.scalaide.util.internal.SbtUtils.m2o
 import org.scalaide.core.ScalaPlugin
+import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.core.internal.project.ScalaInstallation
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.util.hashing.Hashing
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -136,7 +141,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
-    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
+    val inputs = new SbtInputs(findInstallation(project), sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
@@ -197,6 +202,26 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
   }
 
+  def findInstallation(project: ScalaProject): ScalaInstallation = {
+    val version = project.scalaClasspath.scalaVersion.map(ScalaVersion.apply)
+    version match {
+      case Some(desiredVersion @ SpecificScalaVersion(major, minor, micro, _)) =>
+        ScalaInstallation.availableInstallations.find(_.version == desiredVersion) match {
+          case Some(installation) =>
+            logger.info(s"Found precise match for Scala installation $installation")
+            installation
+          case None =>
+            val installation = findBestMatch(desiredVersion)
+            logger.info(s"Found best match: $installation")
+            installation
+        }
+
+      case _ =>
+        // if we can't determine the Scala version, we default to the platform installation
+        ScalaInstallation.platformInstallation
+    }
+  }
+
   /** Inspired by IC.compile
    *
    *  We need to duplicate IC.compile (by inlining insde this
@@ -225,4 +250,19 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private object CompilerInterfaceFailed extends RuntimeException
+
+  def findBestMatch(desiredVersion: SpecificScalaVersion): ScalaInstallation = {
+    def versionDistance(v: ScalaVersion) = v match {
+      case SpecificScalaVersion(major, minor, micro, build) =>
+        import Math._
+        abs(major - desiredVersion.major) * 10000 +
+          abs(minor - desiredVersion.minor) * 1000 +
+          abs(micro - desiredVersion.rev) & 100 +
+          build.compare(desiredVersion.build)
+
+      case _ =>
+        0
+    }
+    ScalaInstallation.availableInstallations.minBy(i => versionDistance(i.version))
+  }
 }

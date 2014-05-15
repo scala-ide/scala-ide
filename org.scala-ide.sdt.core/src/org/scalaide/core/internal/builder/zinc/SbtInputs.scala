@@ -25,13 +25,17 @@ import xsbti.Reporter
 import xsbti.compile._
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.ScalaPlugin
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
  */
-class SbtInputs(sourceFiles: Seq[File],
+class SbtInputs(installation: ScalaInstallation,
+  sourceFiles: Seq[File],
   project: ScalaProject,
   javaMonitor: SubMonitor,
   scalaProgress: CompileProgress,
@@ -75,7 +79,8 @@ class SbtInputs(sourceFiles: Seq[File],
       }.toArray
     }
 
-    def options = project.scalacArguments.toArray
+    // remove -Xsource arguments (it is relevant only for the presentation compiler)
+    def options = project.scalacArguments.filter(!_.startsWith("-Xsource")).toArray
 
     def javacOptions = Array() // Not used.
 
@@ -93,11 +98,10 @@ class SbtInputs(sourceFiles: Seq[File],
   /** @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
-    val installation = ScalaInstallation.platformInstallation
     val scalaInstance = installation.scalaInstance
     val store = ScalaPlugin.plugin.compilerInterfaceStore
 
-    store.compilerInterfaceFor(installation)(javaMonitor).right.map {
+    store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerInterface =>
         // prevent Sbt from adding things to the (boot)classpath
         val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
