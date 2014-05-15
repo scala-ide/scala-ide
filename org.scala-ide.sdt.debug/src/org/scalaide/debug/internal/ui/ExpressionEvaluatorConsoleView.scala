@@ -65,6 +65,10 @@ class ExpressionEvaluatorConsoleView extends ViewPart with InterpreterConsoleVie
     val provider = new SimpleContentProposalProvider {
       override protected def isCodeCompletionEnabled() = prefStore.getBoolean(DebuggerPreferencePage.EXP_EVAL_ENABLE_CODE_COMPLETION)
     }
+    // there's known issue related to internal implementation of ContentProposalAdapter
+    // (handling SWT.BS (backspace) in handleEvents method in private, final class TargetControlListener)
+    // when we have only one letter in input field, shown proposals filtered by this letter and we'll delete it using backspace,
+    // proposals are not refreshed (nothing happens because there's a check in code whether input field's content is not empty)
     val proposal = new ContentProposalAdapter(inputCommandField, new StyledTextContentAdapter, provider, KeyStroke.getInstance("Ctrl+Space"), null)
     proposal.setFilterStyle(ContentProposalAdapter.FILTER_NONE)
     proposal.setPopupSize(new Point(codeCompletionPopupWidth, codeCompletionPopupHeight))

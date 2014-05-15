@@ -8,12 +8,10 @@ package org.scalaide.debug.internal.ui.completion
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.reflect.NameTransformer
 import scala.reflect.runtime.{ universe => ru }
-
 import org.eclipse.jface.fieldassist.ContentProposal
 import org.eclipse.jface.fieldassist.IContentProposal
 import org.eclipse.jface.fieldassist.IContentProposalProvider
 import org.scalaide.debug.internal.expression.ExpressionManager
-
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 
@@ -91,18 +89,16 @@ object SimpleContentProposalProvider {
     proposalsForEvaluationContext() ++ constantProposals
 
   private def proposalsForEvaluationContext() = {
-    ExpressionManager.currentStackFrame() match {
-      case Some(stackFrame) => // match instead getOrElse because sometimes it seemed to be null (defensive programming)
-        Option(stackFrame.thisObject()).map { objectRef =>
-          val thisReference = objectRef.referenceType()
+    ExpressionManager.currentStackFrame().map { stackFrame =>
+      Option(stackFrame.thisObject()).map { objectRef =>
+        val thisReference = objectRef.referenceType()
 
-          val members = getMembersOfThis(thisReference)
-          val currentVariables = getAccessibleVariablesProposals(stackFrame)
+        val members = getMembersOfThis(thisReference)
+        val currentVariables = getAccessibleVariablesProposals(stackFrame)
 
-          (members ++ currentVariables).sortBy(_.getLabel())
-        }.getOrElse(Nil)
-      case _ => Nil
-    }
+        (members ++ currentVariables).sortBy(_.getLabel())
+      }.getOrElse(Nil)
+    }.getOrElse(Nil)
   }
 
   private def getMembersOfThis(thisReference: ReferenceType) = {

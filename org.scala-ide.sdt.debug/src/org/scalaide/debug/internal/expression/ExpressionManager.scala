@@ -67,7 +67,7 @@ trait ExpressionManager {
    * Returns the highest frame from the debugging stack frames.
    */
   def currentStackFrame() = currentThread match {
-    case Some(thread) if thread.frameCount() > 0 => Some(thread.frame(0))
+    case Some(thread) if thread.frameCount() > 0 => Option(thread.frame(0)) // frame sometimes can be null (defensive programming)
     case _ => None
   }
 
