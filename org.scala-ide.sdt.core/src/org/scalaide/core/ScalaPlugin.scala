@@ -59,6 +59,8 @@ import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.FixedSizeCache
+import org.scalaide.core.internal.project.ScalaInstallation
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -213,7 +215,10 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   }
 
   /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
-  lazy val compilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
+  lazy val compilerInterfaceStore: CompilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
+
+  /** A LRU cache of class loaders for Scala builders */
+  lazy val classLoaderStore: FixedSizeCache[ScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 

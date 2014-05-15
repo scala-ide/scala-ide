@@ -41,6 +41,11 @@ import sbt.inc.IncOptions
 import xsbti.Maybe
 import org.scalaide.util.internal.SbtUtils.m2o
 import org.scalaide.core.ScalaPlugin
+import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.core.internal.project.ScalaInstallation
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.util.hashing.Hashing
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -136,7 +141,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   }
 
   private def runCompiler(sources: Seq[File]) {
-    val inputs = new SbtInputs(sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
+    val inputs = new SbtInputs(findInstallation(project), sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
@@ -194,6 +199,26 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     included foreach {
       case EclipseResource(f: IFile) => FileUtils.clearTasks(f, null)
       case _                         =>
+    }
+  }
+
+  def findInstallation(project: ScalaProject): ScalaInstallation = {
+    val version = project.scalaClasspath.scalaVersion.map(ScalaVersion.apply)
+    version match {
+      case Some(desiredVersion @ SpecificScalaVersion(major, minor, micro, _)) =>
+        ScalaInstallation.availableInstallations.find(_.version == desiredVersion) match {
+          case Some(installation) =>
+            logger.info(s"Found precise match for Scala installation $installation")
+            installation
+          case None =>
+            val installation = ScalaInstallation.findBestMatch(desiredVersion)
+            logger.info(s"Found best match: $installation")
+            installation
+        }
+
+      case _ =>
+        // if we can't determine the Scala version, we default to the platform installation
+        ScalaInstallation.platformInstallation
     }
   }
 
