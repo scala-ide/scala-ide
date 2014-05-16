@@ -36,40 +36,36 @@ class BooleanComparisonTest extends BaseIntegrationTest(BooleanComparisonTest) {
     eval("boolean2 != boolean", boolean != boolean2, JavaBoxed.Boolean)
   }
 
-  @Ignore("TODO - O-5375 - support for boolean comparison")
   @Test
   def lesserThan(): Unit = {
     eval("boolean < boolean", boolean < boolean, JavaBoxed.Boolean)
-    eval("boolean2 < boolean2", boolean < boolean, JavaBoxed.Boolean)
     eval("boolean < boolean2", boolean < boolean2, JavaBoxed.Boolean)
-    eval("boolean2 < boolean", boolean < boolean2, JavaBoxed.Boolean)
+    eval("boolean2 < boolean", boolean2 < boolean, JavaBoxed.Boolean)
+    eval("boolean2 < boolean2", boolean2 < boolean2, JavaBoxed.Boolean)
   }
 
-  @Ignore("TODO - O-5375 - support for boolean comparison")
   @Test
   def greaterThan(): Unit = {
     eval("boolean > boolean", boolean > boolean, JavaBoxed.Boolean)
     eval("boolean > boolean2", boolean > boolean2, JavaBoxed.Boolean)
-    eval("boolean2 > boolean2", boolean > boolean, JavaBoxed.Boolean)
-    eval("boolean2 > boolean", boolean > boolean2, JavaBoxed.Boolean)
+    eval("boolean2 > boolean", boolean2 > boolean, JavaBoxed.Boolean)
+    eval("boolean2 > boolean2", boolean2 > boolean2, JavaBoxed.Boolean)
   }
 
-  @Ignore("TODO - O-5375 - support for boolean comparison")
   @Test
   def lesserThanOrEqual(): Unit = {
     eval("boolean <= boolean", boolean <= boolean, JavaBoxed.Boolean)
     eval("boolean <= boolean2", boolean <= boolean2, JavaBoxed.Boolean)
-    eval("boolean2 <= boolean2", boolean <= boolean, JavaBoxed.Boolean)
-    eval("boolean2 <= boolean", boolean <= boolean2, JavaBoxed.Boolean)
+    eval("boolean2 <= boolean", boolean2 <= boolean, JavaBoxed.Boolean)
+    eval("boolean2 <= boolean2", boolean2 <= boolean2, JavaBoxed.Boolean)
   }
 
-  @Ignore("TODO - O-5375 - support for boolean comparison")
   @Test
   def greaterThanOrEqual(): Unit = {
     eval("boolean >= boolean", boolean >= boolean, JavaBoxed.Boolean)
     eval("boolean >= boolean2", boolean >= boolean2, JavaBoxed.Boolean)
-    eval("boolean2 >= boolean2", boolean >= boolean, JavaBoxed.Boolean)
-    eval("boolean2 >= boolean", boolean >= boolean2, JavaBoxed.Boolean)
+    eval("boolean2 >= boolean", boolean2 >= boolean, JavaBoxed.Boolean)
+    eval("boolean2 >= boolean2", boolean2 >= boolean2, JavaBoxed.Boolean)
   }
 
 }

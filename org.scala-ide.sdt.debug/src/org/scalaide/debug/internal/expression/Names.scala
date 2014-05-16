@@ -78,6 +78,13 @@ object ScalaPrimitivesUnified {
   val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short)
 }
 
+/**
+ * Scala rich types wrappers.
+ */
+object ScalaRichTypes {
+  val Boolean = classOf[scala.runtime.RichBoolean].getName
+}
+
 object ScalaFunctions {
 
   val PartialFunction = "scala.PartialFunction"

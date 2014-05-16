@@ -17,19 +17,17 @@ class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) {
   import TestValues.Values._
   import TestValues.any2String
 
-  private def baseBooleanTest(valName: String, value: String)(operator: String, expected: Boolean): Unit =
-    eval(s" $valName $operator $value", expected.toString, JavaBoxed.Boolean) // compare to 1
-
-  private def baseIntBooleanTest = baseBooleanTest(int, int2) _
+  private def baseBooleanTest(operator: String, expected: Boolean): Unit =
+    eval(s"int $operator int2", expected.toString, JavaBoxed.Boolean) // compare to 1
 
   @Test
   def integerComparisonTest(): Unit = {
-    baseIntBooleanTest("<", true)
-    baseIntBooleanTest(">", false)
-    baseIntBooleanTest(">=", false)
-    baseIntBooleanTest("<=", true)
-    baseIntBooleanTest("==", false)
-    baseIntBooleanTest("!=", true)
+    baseBooleanTest("<", true)
+    baseBooleanTest(">", false)
+    baseBooleanTest(">=", false)
+    baseBooleanTest("<=", true)
+    baseBooleanTest("==", false)
+    baseBooleanTest("!=", true)
   }
 
   @Test

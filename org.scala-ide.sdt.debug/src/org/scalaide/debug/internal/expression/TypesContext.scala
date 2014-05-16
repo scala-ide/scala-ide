@@ -252,6 +252,9 @@ final class TypesContext() {
     ScalaOther.nothingType,
     ScalaOther.unitType,
 
+    // rich types
+    ScalaRichTypes.Boolean,
+
     //JdiProxy in all forms
     DebuggerSpecific.proxyName,
     DebuggerSpecific.proxyFullName,
@@ -265,8 +268,7 @@ final class TypesContext() {
   /** Could class with given name be stubbed. */
   private def couldBeStubbed(stub: String): Boolean = {
     def isPrimitive(name: String) = ScalaPrimitivesUnified.all.contains(name)
-    !(notStubbable.contains(stub) ||
-      isPrimitive(stub))
+    !(notStubbable.contains(stub) || isPrimitive(stub))
   }
 }
 
@@ -310,6 +312,8 @@ protected object TypesContext {
     ScalaPrimitivesUnified.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
 
     ScalaOther.unitType -> classOf[UnitJdiProxy].getSimpleName,
+
+    ScalaRichTypes.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
 
     JavaBoxed.Byte -> classOf[ByteJdiProxy].getSimpleName,
     JavaBoxed.Short -> classOf[ShortJdiProxy].getSimpleName,
