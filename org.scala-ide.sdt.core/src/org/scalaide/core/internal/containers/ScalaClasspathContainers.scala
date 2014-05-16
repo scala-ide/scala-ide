@@ -4,36 +4,39 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.ClasspathContainerInitializer
 import org.eclipse.jdt.core.IClasspathContainer
+import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.internal.ui.JavaPluginImages
-import org.eclipse.jdt.ui.wizards.NewElementWizardPage
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage
+import org.eclipse.jdt.ui.wizards.NewElementWizardPage
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Composite
-import org.scalaide.logging.HasLogger
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation._
+import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.project.ScalaModule
 
-abstract class ScalaClasspathContainerInitializer(desc : String) extends ClasspathContainerInitializer with HasLogger {
-  def entries : Array[IClasspathEntry]
+abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
+  def entries: Array[IClasspathEntry]
 
-  override def initialize(containerPath : IPath, project : IJavaProject) = {
-    logger.info(s"Initializing classpath container $desc: ${ScalaPlugin.plugin.libClasses}")
-    logger.info(s"Initializing classpath container $desc with sources: ${ScalaPlugin.plugin.libSources}")
+  override def initialize(containerPath: IPath, project: IJavaProject) = {
+    logger.info(s"Initializing classpath container $desc: ${library.classJar}")
+    logger.info(s"Initializing classpath container $desc with sources: ${library.sourceJar}")
 
     JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
       override def getPath = containerPath
       override def getClasspathEntries = entries
-      override def getDescription = desc+" [" + scala.util.Properties.scalaPropOrElse("version.number", "none")+"]"
+      override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
       override def getKind = IClasspathContainer.K_SYSTEM
     }), null)
   }
 
-  protected def libraryEntries(classes: IPath, sources: Option[IPath]): IClasspathEntry = {
-    if(sources.isEmpty) logger.debug(s"No source attachements for ${classes.lastSegment()}")
+  protected def libraryEntries(lib: ScalaModule): IClasspathEntry = {
+    if (lib.sourceJar.isEmpty) logger.debug(s"No source attachements for ${lib.classJar.lastSegment()}")
 
-    JavaCore.newLibraryEntry(classes, sources.orNull, null)
+    JavaCore.newLibraryEntry(lib.classJar, lib.sourceJar.orNull, null)
   }
 }
 
@@ -41,23 +44,18 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  override def entries = Array(
-    (libClasses, libSources),
-    (reflectClasses, reflectSources),
-    // modules:
-    (actorsClasses, actorsSources),
-    (swingClasses, swingSources)
-  ).flatMap { case (c, s) => c map { classes => libraryEntries(classes, s) }}
+  override def entries = (library +: ScalaInstallation.platformInstallation.extraJars).map {libraryEntries}.to[Array]
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala Compiler") {
   val plugin = ScalaPlugin.plugin
   import plugin._
+  import ScalaInstallation.platformInstallation._
 
-  override def entries = Array(libraryEntries(compilerClasses.get, compilerSources))
+  override def entries = Array(libraryEntries(compiler))
 }
 
-abstract class ScalaClasspathContainerPage(id : String, name : String, title : String, desc : String) extends NewElementWizardPage(name) with IClasspathContainerPage {
+abstract class ScalaClasspathContainerPage(id: String, name: String, title: String, desc: String) extends NewElementWizardPage(name) with IClasspathContainerPage {
   val fContainerEntryResult = JavaCore.newContainerEntry(new Path(id))
 
   setTitle(title)
@@ -66,11 +64,11 @@ abstract class ScalaClasspathContainerPage(id : String, name : String, title : S
 
   override def finish() = true
 
-  override def getSelection() : IClasspathEntry = fContainerEntryResult
+  override def getSelection(): IClasspathEntry = fContainerEntryResult
 
-  override def setSelection(containerEntry : IClasspathEntry) {}
+  override def setSelection(containerEntry: IClasspathEntry) {}
 
-  override def createControl(parent : Composite) {
+  override def createControl(parent: Composite) {
     val composite = new Composite(parent, SWT.NONE)
     setControl(composite)
   }

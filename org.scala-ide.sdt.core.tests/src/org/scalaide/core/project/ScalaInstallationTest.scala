@@ -40,8 +40,8 @@ class ScalaInstallationTest {
 
         val bundlePath = OSGiUtils.pathInBundle(Platform.getBundle("org.scala-ide.scala210.jars"), "target").get.removeLastSegments(1)
 
-        assertEquals("Wrong library jar", bundlePath.append(BundledScalaInstallation.ScalaLibraryPath), scalaInstallation.libraryJar)
-        assertEquals("Wrong compiler jar", bundlePath.append(BundledScalaInstallation.ScalaCompilerPath), scalaInstallation.compilerJar)
+        assertEquals("Wrong library jar", bundlePath.append(BundledScalaInstallation.ScalaLibraryPath), scalaInstallation.library.classJar)
+        assertEquals("Wrong compiler jar", bundlePath.append(BundledScalaInstallation.ScalaCompilerPath), scalaInstallation.compiler.classJar)
 
         val expectedAllJars = Seq(
           bundlePath.append(BundledScalaInstallation.ScalaLibraryPath),
@@ -50,7 +50,16 @@ class ScalaInstallationTest {
           bundlePath.append(BundledScalaInstallation.ScalaReflectPath),
           bundlePath.append(BundledScalaInstallation.ScalaSwingPath)).sortBy(_.toOSString())
 
-        assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.sortBy(_.toOSString()))
+        assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
+
+        val expectedAllSourceJars = Seq(
+          bundlePath.append(BundledScalaInstallation.ScalaLibrarySourcesPath),
+          bundlePath.append(BundledScalaInstallation.ScalaCompilerSourcesPath),
+          bundlePath.append(BundledScalaInstallation.ScalaActorSourcesPath),
+          bundlePath.append(BundledScalaInstallation.ScalaReflectSourcesPath),
+          bundlePath.append(BundledScalaInstallation.ScalaSwingSourcesPath)).sortBy(_.toOSString())
+
+        assertEquals("Wrong all source jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
 
       case v =>
         fail(s"Unsupported Scala version: $v")
@@ -103,16 +112,25 @@ class ScalaInstallationTest {
         null
     }
 
-    assertEquals("Wrong library jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId), scalaInstallation.libraryJar)
-    assertEquals("Wrong compiler jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId), scalaInstallation.compilerJar)
+    assertEquals("Wrong library jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId), scalaInstallation.library.classJar)
+    assertEquals("Wrong compiler jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId), scalaInstallation.compiler.classJar)
 
     val expectedAllJars = Seq(
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
+      
+    assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
+      
+    val expectedAllSourceJars = Seq(
+      bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId + ".source"),
+      bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId + ".source"),
+      bundlePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId + ".source"),
+      bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId + ".source")).sortBy(_.toOSString())
 
-    assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.sortBy(_.toOSString()))
+    assertEquals("Wrong all sources jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
+      
   }
 
 }

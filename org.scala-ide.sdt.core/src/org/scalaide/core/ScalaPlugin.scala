@@ -86,11 +86,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
   def pluginId = "org.scala-ide.sdt.core"
-  def compilerPluginId = "org.scala-lang.scala-compiler"
   def libraryPluginId = "org.scala-lang.scala-library"
-  def actorsPluginId = "org.scala-lang.scala-actors"
-  def reflectPluginId = "org.scala-lang.scala-reflect"
-  def swingPluginId = "org.scala-lang.modules.scala-swing"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
   lazy val sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
@@ -142,10 +138,10 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val shortScalaVer = CompilerUtils.shortString(scalaVer)
 
   lazy val sdtCoreBundle = getBundle()
-  lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
-  lazy val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
-  lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
-  lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
+//  lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
+//  lazy val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
+//  lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
+//  lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
 
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
@@ -154,34 +150,15 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
 
-  lazy val scalaLibBundle = {
-    // all library bundles
-    val bundles = Option(Platform.getBundles(libraryPluginId, null)).getOrElse(Array[Bundle]())
-    logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
-    bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
-      eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
-      Platform.getBundle(libraryPluginId)
-    }
-  }
-
-  lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
-  lazy val libSources = libClasses.flatMap(l => EclipseUtils.computeSourcePath(libraryPluginId, l))
-  //  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
-
-  // 2.10 specific libraries
-  lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
-  lazy val actorsClasses = OSGiUtils.getBundlePath(scalaActorsBundle)
-  lazy val actorsSources = actorsClasses.flatMap(l => EclipseUtils.computeSourcePath(actorsPluginId, l))
-  //  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
-
-  lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
-  lazy val reflectClasses = OSGiUtils.getBundlePath(scalaReflectBundle)
-  lazy val reflectSources = reflectClasses.flatMap(l => EclipseUtils.computeSourcePath(reflectPluginId, l))
-  //  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
-
-  // TODO: 2.10 swing support
-  lazy val swingClasses = OSGiUtils.getBundlePath(Platform.getBundle(swingPluginId))
-  lazy val swingSources = swingClasses.flatMap(l => EclipseUtils.computeSourcePath(swingPluginId, l))
+//  lazy val scalaLibBundle = {
+//    // all library bundles
+//    val bundles = Option(Platform.getBundles(libraryPluginId, null)).getOrElse(Array[Bundle]())
+//    logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
+//    bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
+//      eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
+//      Platform.getBundle(libraryPluginId)
+//    }
+//  }
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
@@ -199,7 +176,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
-    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
+//    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
   }
 
   override def stop(context: BundleContext) = {

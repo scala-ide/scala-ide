@@ -42,6 +42,7 @@ import org.scalaide.core.internal.repl.EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
 import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.core.internal.project.ScalaInstallation
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -169,9 +170,9 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
-    for { opt <- Seq( ScalaPlugin.plugin.swingClasses,
-                      ScalaPlugin.plugin.libClasses )
-          p <- opt ; s = p.toOSString }
+    for {
+      s <- (ScalaInstallation.platformInstallation.extraJars.map(_.classJar) :+ ScalaInstallation.platformInstallation.library.classJar).map(_.toOSString())
+    }
       if(!cp.contains(s))
         cp = s + java.io.File.pathSeparator + cp
     settings.classpath.value = cp

@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import org.scalaide.logging.LogManager
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
@@ -37,8 +38,8 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     messageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
     messageField.setText(
         "Scala plugin version: " + ScalaPlugin.plugin.getBundle.getVersion + "\n\n" +
-        "Scala compiler version:\t" + ScalaPlugin.plugin.scalaCompilerBundleVersion + "\n" +
-        "Scala library version:\t" + ScalaPlugin.plugin.scalaLibBundle.getVersion + "\n" +
+//        "Scala compiler version:\t" + ScalaPlugin.plugin.scalaCompilerBundleVersion + "\n" +
+        "Scala library version:\t" + ScalaInstallation.platformInstallation.version + "\n" +
         "Eclipse version: " + Platform.getBundle("org.eclipse.platform").getVersion)
 
     val group2 = new Group(control, SWT.SHADOW_NONE)
