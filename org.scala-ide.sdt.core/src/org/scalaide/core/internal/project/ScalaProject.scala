@@ -478,7 +478,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
     val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
-    p.addPropertyChangeListener(new IPropertyChangeListener{ def propertyChange(event: PropertyChangeEvent) = {compatibilityModeCache = Some(getCompatibilityMode()); classpathHasChanged()} })
+    p.addPropertyChangeListener(new IPropertyChangeListener {
+      def propertyChange(event: PropertyChangeEvent) = {
+        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
+          compatibilityModeCache = Some(getCompatibilityMode())
+          classpathHasChanged()
+        }
+      }
+    })
     p
   }
 
