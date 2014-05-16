@@ -17,7 +17,7 @@ trait RichStatusHandler extends IStatusHandler {
           // The current thread is the display thread, execute synchronously
           doHandleStatus(status, source);
         } else {
-          DisplayThread.asyncExec(doHandleStatus(status, source))
+          DisplayThread.syncExec(doHandleStatus(status, source))
         }
       }
     }

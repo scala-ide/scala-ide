@@ -480,8 +480,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
     p.addPropertyChangeListener(new IPropertyChangeListener {
       def propertyChange(event: PropertyChangeEvent) = {
-        compatibilityModeCache = Some(getCompatibilityMode());
-        classpathHasChanged()
+        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
+          compatibilityModeCache = Some(getCompatibilityMode())
+          classpathHasChanged()
+        }
       }
     })
     p

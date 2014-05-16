@@ -12,6 +12,7 @@ import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.CompilerUtils
+import scala.concurrent.Promise
 
 object ClasspathErrorPromptStatusHandler {
 
@@ -26,7 +27,11 @@ object ClasspathErrorPromptStatusHandler {
 class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
 
   def doHandleStatus(status: IStatus, source: Object) = {
-    val scalaProject = source.asInstanceOfOpt[ScalaProject]
+    val (scalaProject, continuation) = source match {
+      case (p: ScalaProject, c: Promise[() => Unit]) => (Some(p), Some(c))
+      case (_, c: Promise[() => Unit]) => (None, Some(c))
+      case _ => (None, None)
+    }
     val shell = ScalaPlugin.getShell
 
     val title = "Prior Scala library version detected in this project"
@@ -64,8 +69,9 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
         1)
       dialog.open()
       val buttonId = dialog.getReturnCode()
-      if (buttonId == IDialogConstants.OK_ID) Utils.tryExecute(toggleProjectSpecificSettingsAndSetXsource())
-    }
+      if (buttonId == IDialogConstants.OK_ID) continuation.get trySuccess {() => Utils.tryExecute(toggleProjectSpecificSettingsAndSetXsource())}
+      else continuation.get trySuccess {() => }
+    } else continuation map { _ failure (new IllegalArgumentException)}
   }
 
 }

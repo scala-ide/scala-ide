@@ -172,14 +172,14 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
           null
       } finally {
         val messageShown = pcInitMessageShown.getAndSet(true)
-        if (!messageShown && !pcScalaMissingStatuses.isEmpty) {
+        if (!messageShown && pcScalaMissingStatuses.nonEmpty) {
           val firstStatus = pcScalaMissingStatuses.head
           val statuses: Array[IStatus] = pcScalaMissingStatuses.tail.toArray
           val status = new MultiStatus(ScalaPlugin.plugin.pluginId, org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, statuses, firstStatus.getMessage(), firstStatus.getException())
           val handler = DebugPlugin.getDefault().getStatusHandler(status)
           // Don't allow asyncExec bec. of the concurrent nature of this call,
           // we're create()-ing instances repeatedly otherwise
-          if (handler != null) DisplayThread.syncExec(handler.handleStatus(status, this))
+          if (handler != null) handler.handleStatus(status, this)
         }
       }
     }
