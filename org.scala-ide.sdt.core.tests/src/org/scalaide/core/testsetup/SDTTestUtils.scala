@@ -162,6 +162,11 @@ object SDTTestUtils {
     units.flatMap(findProblemMarkers).toList
   }
 
+  def getErrorMessages(project: IProject): Seq[(Int, String)] = {
+    for (m <- project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE))
+      yield (m.getAttribute(IMarker.SEVERITY).asInstanceOf[Int], m.getAttribute(IMarker.MESSAGE).toString)
+  }
+
   def getErrorMessages(units: ICompilationUnit*): List[String] =
     for (p <- getProblemMarkers(units: _*)) yield p.getAttribute(IMarker.MESSAGE).toString
 
@@ -223,6 +228,7 @@ object SDTTestUtils {
     prj.javaProject.setRawClasspath(existing ++ entries, null)
   }
 
+  /** Create Scala projects, equiped with the Scala nature, Scala library container and a '/src' folder. */
   def createProjects(names: String*): Seq[ScalaProject] =
     names map (n => simulator.createProjectInWorkspace(n, true))
 

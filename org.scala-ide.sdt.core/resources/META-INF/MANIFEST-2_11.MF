@@ -39,13 +39,15 @@ Require-Bundle:
  org.eclipse.ui.workbench.texteditor,
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
- org.scala-lang.scala-library,
- org.scala-lang.scala-actors,
- org.scala-lang.scala-reflect,
- org.scala-lang.scala-compiler,
+ org.scala-lang.scala-library;bundle-version="[2.11,2.12)",
+ org.scala-lang.scala-actors;bundle-version="[2.11,2.12)",
+ org.scala-lang.scala-reflect;bundle-version="[2.11,2.12)",
+ org.scala-lang.scala-compiler;bundle-version="[2.11,2.12)",
  org.scala-refactoring.library,
+ org.scala-lang.modules.scala-xml;bundle-version="[1.0.1,1.0.1]",
  org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
- org.scala-ide.sbt.compiler.interface;bundle-version="[0.13,0.14)",
+ org.scala-ide.sbt.compiler211.interface;bundle-version="[0.13,0.14)",
+ org.scala-ide.scala210.jars,
  scalariform,
  org.eclipse.ui.browser;bundle-version="3.3.0"
 Import-Package: 
@@ -66,9 +68,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
- scala.xml,
- scala.xml.parsing
+ scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
  org.scalaide.core,
  org.scalaide.core.compiler,

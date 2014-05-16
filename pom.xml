@@ -37,14 +37,13 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.19.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.5</scala.plugin.version>
+    <tycho.plugin.version>0.20.0</tycho.plugin.version>
+    <scala.plugin.version>3.1.6</scala.plugin.version>
     <aspectj.plugin.version>1.6</aspectj.plugin.version>
     <aspectj.version>1.7.4</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
-    <maven-source.plugin.version>2.1.2</maven-source.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
     <!-- Weaving plugin version -->
@@ -56,23 +55,33 @@
     <tycho.test.weaving>-XX:+UnlockDiagnosticVMOptions -XX:+UnsyncloadClass -Dosgi.classloader.lock=classname</tycho.test.weaving>
     <tycho.test.jvmArgs>-Xmx1024m -XX:MaxPermSize=256m -Dsdtcore.headless -Dsdtcore.notimeouts -DretryFlakyTests=${retryFlakyTests} ${tycho.test.weaving} ${tycho.test.OSspecific}</tycho.test.jvmArgs>
 
+    <!-- base versions -->
+    <!-- Scala 2.10.x -->
+    <scala210.version>2.10.5-SNAPSHOT</scala210.version>
+    <!-- Scala 2.11.x -->
+    <scala211.version>2.11.1-SNAPSHOT</scala211.version>
+    <scala211.binary.version>2.11</scala211.binary.version>
+    <scala211.scala-xml.version>1.0.1</scala211.scala-xml.version>
+    <scala211.scala-parser-combinators.version>1.0.1</scala211.scala-parser-combinators.version>
+    <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
+
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>Select a profile</eclipse.codename>
     <repo.eclipse>Select a profile</repo.eclipse>
     <repo.ajdt>Select a profile</repo.ajdt>
 
-     <!-- default values, can be overwritten by profiles -->
-     <scala.version>2.10.0</scala.version>
-     <scala.library.version>${scala.version}</scala.library.version>
-     <version.suffix>2_10</version.suffix>
-     <version.tag>local</version.tag>
-     <sbt.version>0.13.0</sbt.version>
-     <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
+    <!-- default values, can be overwritten by profiles -->
+    <scala.version>select a profile</scala.version>
+    <scala.short.version>select a profile</scala.short.version>
+    <scala.minor.version>select a profile</scala.minor.version>
+    <version.suffix>select a profile</version.suffix>
+    <version.tag>local</version.tag>
+    <sbt.version>0.13.2</sbt.version>
 
     <!-- the repos containing the Scala dependencies -->
-    <repo.scala-refactoring>Select a profile</repo.scala-refactoring>
-    <repo.scalariform>Select a profile</repo.scalariform>
-    <repo.typesafe>Select a profile</repo.typesafe>
+    <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
+    <repo.scalariform>${repo.scala-ide.root}/scalariform-${scala.short.version}x</repo.scalariform>
+    <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>
 
@@ -87,71 +96,23 @@
     <profile>
       <id>scala-2.10.x</id>
       <properties>
-        <scala.version>2.10.4-SNAPSHOT</scala.version>
+        <scala.version>${scala210.version}</scala.version>
+        <scala.short.version>210</scala.short.version>
+        <scala.minor.version>2.10</scala.minor.version>
         <version.suffix>2_10</version.suffix>
 
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-210x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-210x</repo.scalariform>
-        <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.10</repo.typesafe>
       </properties>
-
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-actors</artifactId>
-            <version>${scala.library.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-swing</artifactId>
-            <version>${scala.library.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-
     </profile>
 
     <profile>
       <id>scala-2.11.x</id>
       <properties>
-        <scala.version>2.11.0-SNAPSHOT</scala.version>
-        <scala.binary.version>2.11.0-RC1</scala.binary.version>
-        <scala-xml.version>1.0.0</scala-xml.version>
-        <scala-parser-combinators.version>1.0.0</scala-parser-combinators.version>
-        <scala-swing.version>1.0.0</scala-swing.version>
-
+        <scala.version>${scala211.version}</scala.version>
+        <scala.short.version>211</scala.short.version>
+        <scala.minor.version>2.11</scala.minor.version>
         <version.suffix>2_11</version.suffix>
 
-        <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-211x</repo.scala-refactoring>
-        <repo.scalariform>${repo.scala-ide.root}/scalariform-211x</repo.scalariform>
-        <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-2.11</repo.typesafe>
       </properties>
-
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-actors</artifactId>
-            <version>${scala.library.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-swing_${scala.binary.version}</artifactId>
-            <version>${scala-swing.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-xml_${scala.binary.version}</artifactId>
-            <version>${scala-xml.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.scala-lang.modules</groupId>
-            <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-            <version>${scala-parser-combinators.version}</version>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
     </profile>
 
     <profile>
@@ -264,10 +225,11 @@
     </profile>
 
     <profile>
-      <id>set-features</id>
+      <id>set-version-specific-files</id>
       <properties>
-        <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
-        <sdt.source.feature.dir>org.scala-ide.sdt.source.feature</sdt.source.feature.dir>
+        <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
+        <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
+        <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
       </properties>
       <build>
         <plugins>
@@ -280,11 +242,14 @@
                 <id>default-cli</id>
                 <configuration>
                   <target>
-                    <copy file="${sdt.feature.dir}/resources/feature-${version.suffix}.xml"
-                        tofile="${sdt.feature.dir}/feature.xml"
+                    <copy file="${sdt.core.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
+                        tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
                         overwrite="true" />
-                    <copy file="${sdt.source.feature.dir}/resources/feature-${version.suffix}.xml"
-                        tofile="${sdt.source.feature.dir}/feature.xml"
+                    <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
+                        tofile="${sdt.debug.dir}/META-INF/MANIFEST.MF"
+                        overwrite="true" />
+                    <copy file="${sdt.update-site.dir}/resources/site-${version.suffix}.xml"
+                        tofile="${sdt.update-site.dir}/site.xml"
                         overwrite="true" />
                   </target>
                 </configuration>
@@ -319,30 +284,8 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- toolchain, Scala library -->
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-reflect</artifactId>
-        <version>${scala.library.version}</version>
-      </dependency>
-      <!-- toolchain, Scala compiler -->
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-compiler</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-reflect</artifactId>
-        <version>${scala.version}</version>
-      </dependency>
       <!-- toolchain, sbt -->
-      <dependency>
+<!--      <dependency>
         <groupId>com.typesafe.sbt</groupId>
         <artifactId>sbt-interface</artifactId>
         <version>${sbt.ide.version}</version>
@@ -356,7 +299,7 @@
         <groupId>com.typesafe.sbt</groupId>
         <artifactId>incremental-compiler</artifactId>
         <version>${sbt.ide.version}</version>
-      </dependency>
+      </dependency> -->
       <!-- sdt.core dependencies -->
       <dependency>
         <groupId>com.miglayout</groupId>
@@ -473,11 +416,11 @@
           <version>${buildnumber-maven.plugin.version}</version>
         </plugin>
         <!-- creating maven source artefact -->
-        <plugin>
+<!--        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
           <version>${maven-source.plugin.version}</version>
-        </plugin>
+        </plugin> -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
