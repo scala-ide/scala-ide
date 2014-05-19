@@ -172,14 +172,32 @@ final class TypesContext() {
       case any => Some(any)
     }
 
-    (tpe match {
-      case typeRef: universe.TypeRef @unchecked => Some(typeRef.typeSymbol.fullName)
-      case singleType: universe.SingleType @unchecked => Some(singleType.typeSymbol.fullName)
-      case method: universe.MethodType @unchecked => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
-      case constantType: universe.ConstantType @unchecked => Some(constantType.typeSymbol.fullName)
-      case thisType: universe.ThisType @unchecked => Some(thisType.typeSymbol.fullName)
-      case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
-    }).flatMap(correctTypes)
+    rawType(tpe).flatMap(correctTypes)
+  }
+
+  private def rawType(tpe: universe.Type): Option[String] = tpe match {
+    case typeRef: universe.TypeRef@unchecked => Some(typeRef.typeSymbol.fullName)
+    case singleType: universe.SingleType@unchecked => Some(singleType.typeSymbol.fullName)
+    case method: universe.MethodType@unchecked => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
+    case constantType: universe.ConstantType@unchecked => Some(constantType.typeSymbol.fullName)
+    case thisType: universe.ThisType@unchecked => Some(thisType.typeSymbol.fullName)
+    case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
+  }
+
+  def jvmTypeForClass(tpe: universe.Type): String = {
+    tpe.typeConstructor match {
+      case universe.TypeRef(parent, sym, _) =>
+        parent.typeConstructor match {
+          case objectType if !objectType.typeSymbol.isPackage =>
+            val className = sym.name
+            val parentName = jvmTypeForClass(parent)
+            s"$parentName$$$className"
+          case _ =>
+            tpe.typeSymbol.fullName
+        }
+      case _ =>
+        tpe.typeSymbol.fullName
+    }
   }
 
   private val customProxyTypeMap = functionToProxyMap ++ primitiveToProxyMap
@@ -215,8 +233,8 @@ final class TypesContext() {
 
   /** Excludes functions that should not be stubbed */
   private def shouldBeStubbed(function: FunctionStub): Boolean = function match {
-    case FunctionStub("toString", Some("java.lang.String"), Seq(Seq()), Seq()) => false
-    case FunctionStub(ScalaOther.constructorFunctionName, _, _, _) => false
+    case FunctionStub("toString", _, Some("java.lang.String"), Seq(Seq()), Seq()) => false
+    case FunctionStub(ScalaOther.constructorFunctionName, _, _, _, _) => false
     case _ => true
   }
 
@@ -237,7 +255,9 @@ final class TypesContext() {
   private def generateStubForNewClass(name: String): String = {
     val data = state.newCodeClasses(name)
     val proxtParentClass = functionToProxyMap(data.parentClassName)
-    s"""case class ${typeNameFor(name)}(context: JdiContext) extends $proxtParentClass { override val className = "${data.className}"}"""
+    val className = typeNameFor(name)
+    val realClassName = data.className
+    s"""case class $className(context: JdiContext) extends $proxtParentClass { override val className = "$realClassName"}"""
   }
 
   /** Generate stub for single type */
@@ -262,8 +282,7 @@ final class TypesContext() {
     DebuggerSpecific.contextFullName,
     DebuggerSpecific.contextObjFullName) ++
     functionToProxyMap.values ++
-    functionToProxyMap.keys ++
-    ScalaRichTypes.all
+    functionToProxyMap.keys
 
   /** Could class with given name be stubbed. */
   private def couldBeStubbed(stub: String): Boolean = {
@@ -343,4 +362,5 @@ protected object TypesContext {
     // strange value that shows up instead of above one
     val thisList = "immutable.this.List"
   }
+
 }

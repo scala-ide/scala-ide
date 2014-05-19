@@ -40,8 +40,12 @@ private[context] trait JdiMethodInvoker
    *
    *  Wraps `invokeUnboxed` with a `valueProxy`.
    */
-  override def invokeMethod[Result <: JdiProxy](on: JdiProxy, name: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result =
-    valueProxy(invokeUnboxed[Value](on, name, args, implicits)).asInstanceOf[Result]
+  override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
+                                                onRealType: Option[String],
+                                                name: String,
+                                                args: Seq[Seq[JdiProxy]] = Seq.empty,
+                                                implicits: Seq[JdiProxy] = Seq.empty): Result =
+    valueProxy(invokeUnboxed[Value](on, onRealType, name, args, implicits)).asInstanceOf[Result]
 
   /**
    * Implements method invokation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
@@ -49,17 +53,28 @@ private[context] trait JdiMethodInvoker
    * Tries to call normal method, if it fails proceeds to vararg version and String contatenation.
    * If all above fails, throws `java.lang.NoSuchMethodError`
    */
-  override final def invokeUnboxed[Result <: Value](proxy: JdiProxy, name: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result = {
+  override final def invokeUnboxed[Result <: Value](proxy: JdiProxy, onRealType: Option[String], name: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result = {
     val methodArgs = args.flatten ++ implicits
 
     def noSuchMethod: Nothing = throw new NoSuchMethodError(s"field of type ${proxy.objectType.name}" +
       s" has no method named $name with arguments: ${methodArgs.map(_.objectType.name).mkString(", ")}")
 
+    (tryInvokeUnboxed(proxy, onRealType, name, args, implicits) getOrElse noSuchMethod)
+      .asInstanceOf[Result]
+  }
+
+  /** invokeUnboxed method that  returns option instead of throwing an exception */
+  private def tryInvokeUnboxed(proxy: JdiProxy,
+                               onRealType: Option[String],
+                               name: String,
+                               args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[Value] = {
+    val methodArgs = args.flatten ++ implicits
     val standardMethod = StandardMethod(proxy, name, methodArgs)
     val varArgMethod = VarArgsMethod(proxy, name, methodArgs)
     val stringConcat = StringConcatenationMethod(proxy, name, methodArgs)
+    val anyValMethod = AnyValMethodCalls(proxy, name, methodArgs, onRealType)
 
-    (standardMethod() orElse varArgMethod() orElse stringConcat() getOrElse noSuchMethod).asInstanceOf[Result]
+    standardMethod() orElse varArgMethod() orElse stringConcat() orElse anyValMethod()
   }
 
   /**
@@ -70,12 +85,19 @@ private[context] trait JdiMethodInvoker
    */
   override final def newInstance(className: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): JdiProxy = {
     val methodArgs = args.flatten ++ implicits
-    val standardMethod = ConstructorMethod(className, methodArgs)
 
     def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className" +
       s" has no constructor with arguments: ${methodArgs.map(_.objectType.name).mkString(", ")}")
 
-    valueProxy(ConstructorMethod(className, methodArgs)() getOrElse noSuchConstructor)
+    tryNewInstance(className, args, implicits) getOrElse noSuchConstructor
+
+  }
+
+  /** newInstance method that  returns option instead of throwing an exception */
+  private def tryNewInstance(className: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[JdiProxy] = {
+    val methodArgs = args.flatten ++ implicits
+
+    ConstructorMethod(className, methodArgs)().map(valueProxy)
   }
 
   /** Common interface for method invokers. */
@@ -148,10 +170,13 @@ private[context] trait JdiMethodInvoker
      * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
      */
     protected final def generateArguments(method: Method): Seq[Value] =
-      method.argumentTypes().zip(args).map {
-        case (expected: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
-        case (a, proxy) => proxy.underlying
-      }
+      method.argumentTypes().zip(args).map(mapSingleArgument)
+
+    private def mapSingleArgument(args: (Type, JdiProxy)): Value = args match {
+      case (primitive, parent: JdiProxyWrapper) => mapSingleArgument(primitive -> parent.outer)
+      case (expected: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
+      case (a, proxy) => proxy.underlying
+    }
 
     //search for all methods
     private def allMethods = objectType.methodsByName(encoded)
@@ -220,7 +245,7 @@ private[context] trait JdiMethodInvoker
 
     private def candidates = proxy.underlying.referenceType().methodsByName(name)
       .filter(method =>
-        method.argumentTypeNames().size() <= args.size)
+      method.argumentTypeNames().size() <= args.size)
 
     private def testResArgs(rest: Seq[Type]): Boolean = rest.reverse.zip(args).forall {
       case (tpe, proxy) => conformsTo(proxy, tpe)
@@ -249,7 +274,7 @@ private[context] trait JdiMethodInvoker
     private def stringify(proxy: JdiProxy) = StringJdiProxy(context, context.callToString(proxy))
 
     private def callConcatMethod(proxy: JdiProxy, arg: JdiProxy) =
-      context.invokeUnboxed[Value](proxy, "concat", Seq(Seq(stringify(arg))))
+      context.invokeUnboxed[Value](proxy, None, "concat", Seq(Seq(stringify(arg))))
 
     override def apply(): Option[Value] = (name, args) match {
       case ("+" | "$plus", Seq(arg)) =>
@@ -260,6 +285,40 @@ private[context] trait JdiMethodInvoker
         }
       case _ => None
     }
+  }
+
+  /**
+ * Custom handler for anyval calss
+ *
+ * those call is replaced with CompanionObject.method(this, restOfParams)
+ */
+  private case class AnyValMethodCalls(proxy: JdiProxy, name: String, args: Seq[JdiProxy], realThisType: Option[String]) extends MethodType {
+    private val context = proxy.context
+
+    private def companionObject = {
+      realThisType.map(context.objectByName).map(objectReference => new JdiProxy {
+        protected[expression] def underlying: ObjectReference = objectReference
+
+        protected[expression] def context: JdiContext = AnyValMethodCalls.this.context
+      })
+    }
+
+    private def invokeDelegate: Option[Value] = for {
+      companionObject <- companionObject
+      extensionName = name + "$extension"
+      newArgs = proxy +: args
+      value <- context.tryInvokeUnboxed(companionObject, None, extensionName, Seq(newArgs))
+    } yield value
+
+    private def invokedBoxed: Option[Value] = for {
+      className <- realThisType
+      boxed <- tryNewInstance(className, Seq(Seq(proxy)))
+      res <- context.tryInvokeUnboxed(boxed, None, name, Seq(args))
+    } yield res
+
+
+    /** invoke delegate or box value and invoke method */
+    override def apply(): Option[Value] = invokeDelegate orElse invokedBoxed
   }
 
 }

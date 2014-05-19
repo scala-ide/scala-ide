@@ -21,11 +21,12 @@ import com.sun.jdi.Value
 case class ByteJdiProxy(context: JdiContext, underlying: ObjectReference)
   extends IntegerNumberJdiProxy[Byte, ByteJdiProxy](ByteJdiProxy) {
 
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichByte")
+
   override def unary_- : IntJdiProxy = context.proxy(-primitiveValue)
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[ByteValue].value()
-  protected override def numberProxy = new RichByte(primitiveValue)
 }
 
 object ByteJdiProxy extends BoxedJdiProxyCompanion[Byte, ByteJdiProxy](JavaBoxed.Byte, JavaPrimitives.byte) {

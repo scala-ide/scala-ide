@@ -21,11 +21,13 @@ import com.sun.jdi.Value
 case class ShortJdiProxy(context: JdiContext, underlying: ObjectReference)
   extends IntegerNumberJdiProxy[Short, ShortJdiProxy](ShortJdiProxy) {
 
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichShort")
+
   override def unary_- : IntJdiProxy = context.proxy(-primitiveValue)
+
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[ShortValue].value()
-  protected override def numberProxy = new RichShort(primitiveValue)
 }
 
 object ShortJdiProxy extends BoxedJdiProxyCompanion[Short, ShortJdiProxy](JavaBoxed.Short, JavaPrimitives.short) {

@@ -23,6 +23,7 @@ object Values extends App {
     val long = 1l
     val long2 = 2l
     val libClass = LibClass(1)
+    val anyVal:LibAnyVal  = 2
 
     val objectVal = Libs
 
@@ -31,7 +32,6 @@ object Values extends App {
     }
 
     def multipleParamers(a: Int)(b: Int) = a + b
-
 
     testFunction()
 

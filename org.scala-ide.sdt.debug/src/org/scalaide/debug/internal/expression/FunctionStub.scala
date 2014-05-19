@@ -12,14 +12,16 @@ import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
  * Stubs function call.
  *
  * @param name name of the function
+ * @param thisType type of 'this' from scala point of view (eg. RichInt instead of int)
  * @param returnType fully qualified name of return type
  * @argumentTypes
  * @implicitArgumentTypes
  */
 case class FunctionStub(name: String,
-  returnType: Option[String],
-  argumentTypes: Seq[Seq[String]] = Seq.empty,
-  implicitArgumentTypes: Seq[String] = Seq.empty) {
+                        thisType: String,
+                        returnType: Option[String],
+                        argumentTypes: Seq[Seq[String]] = Seq.empty,
+                        implicitArgumentTypes: Seq[String] = Seq.empty) {
 
   /** All types that are used inside this function */
   final def allTypes: Seq[String] = returnType.toSeq ++ implicitArgumentTypes ++ argumentTypes.flatten
@@ -45,7 +47,7 @@ final class StubCodeGenerator(typesContext: TypesContext) {
     val arguments = argumentsCode(stub.argumentTypes)
     val implicits = generateImplicitParameterList(stub)
     val signature = s"def ${stub.name} $arguments $implicits: $returnType"
-    val implementation = generateCall(stub.name, stubType, stub.argumentTypes, stub.implicitArgumentTypes)
+    val implementation = generateCall(stub.name, stub.thisType, stubType, stub.argumentTypes, stub.implicitArgumentTypes)
     s"$signature = $implementation"
   }
 
@@ -92,13 +94,13 @@ final class StubCodeGenerator(typesContext: TypesContext) {
       returnType == DebuggerSpecific.proxyFullName
 
   /** Generates function body - basicly context.invokeMethod call */
-  private def generateCall(stubName: String, stubType: String, argumentTypes: Seq[Seq[String]], implicitArgumentTypes: Seq[String]) = {
+  private def generateCall(stubName: String, stubRealThisType: String, stubType: String, argumentTypes: Seq[Seq[String]], implicitArgumentTypes: Seq[String]) = {
     val arguments = callArguments(argumentTypes)
     val implicits = callImplicits(implicitArgumentTypes)
 
     def creationCode(returnType: String = "JdiProxy") = {
       import DebuggerSpecific._
-      s"""$contextParamName.$invokeMethodName[$returnType](proxy, "$stubName", $arguments, $implicits)"""
+      s"""$contextParamName.$invokeMethodName[$returnType](proxy,Some("$stubRealThisType"), "$stubName", $arguments, $implicits)"""
     }
 
     if (stubType == ScalaOther.unitType) {

@@ -36,10 +36,10 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
       val functionName = extractFunctionName(select)
       val onType = typesContext.treeTypeName(qualifier)
       val retType = typesContext.treeTypeName(select)
+      val thisType = typesContext.jvmTypeForClass(qualifier.tpe)
 
       // obtains name, this type and return type
-
-      onType.map(_ -> FunctionStub(functionName, retType))
+      onType.map(_ -> FunctionStub(functionName, thisType, retType))
     }
 
     /**

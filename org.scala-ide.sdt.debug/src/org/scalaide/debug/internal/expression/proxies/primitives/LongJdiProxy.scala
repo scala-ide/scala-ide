@@ -22,15 +22,12 @@ import com.sun.jdi.Value
 case class LongJdiProxy(context: JdiContext, underlying: ObjectReference)
   extends IntegerNumberJdiProxy[Long, LongJdiProxy](LongJdiProxy) {
 
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.LongChar")
+
   override def unary_- : LongJdiProxy = context.proxy(-primitiveValue)
   override def unary_~ : LongJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[LongValue].value()
-  protected override def numberProxy = new RichLong(primitiveValue)
-
-  def toBinaryString: StringJdiProxy = context.proxy(java.lang.Long.toBinaryString(primitiveValue))
-  def toHexString: StringJdiProxy = context.proxy(java.lang.Long.toHexString(primitiveValue))
-  def toOctalString: StringJdiProxy = context.proxy(java.lang.Long.toOctalString(primitiveValue))
 
 }
 

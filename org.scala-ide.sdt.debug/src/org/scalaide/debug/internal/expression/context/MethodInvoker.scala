@@ -18,23 +18,32 @@ trait MethodInvoker extends Any {
    * If you change it's name, package or behavior, make sure to change it also.
    *
    * @param proxy
+   * @param onRealType type of 'this' from scala point of view
    * @param methodName
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments
    * @return JdiProxy with a result of a method call
    */
-  def invokeMethod[Result <: JdiProxy](proxy: JdiProxy, methodName: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result
+  def invokeMethod[Result <: JdiProxy](proxy: JdiProxy,
+                                       onRealType: Option[String],
+                                       methodName: String,
+                                       args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result
 
   /**
    * Invokes a method on a proxy. Returns unboxed value.
    *
    * @param proxy
+   * @param onRealType type of 'this' from scala point of view
    * @param methodName
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments
    * @return jdi unboxed Value with a result of a method call
    */
-  def invokeUnboxed[Result <: Value](proxy: JdiProxy, methodName: String, args: Seq[Seq[JdiProxy]], implicits: Seq[JdiProxy] = Seq.empty): Result
+  def invokeUnboxed[Result <: Value](proxy: JdiProxy,
+                                     onRealType: Option[String],
+                                     methodName: String,
+                                     args: Seq[Seq[JdiProxy]],
+                                     implicits: Seq[JdiProxy] = Seq.empty): Result
 
   /**
    * Creates new instance of given class.

@@ -30,24 +30,28 @@ trait JdiProxy extends Dynamic {
   /** Type of underlying reference. */
   protected[expression] def objectType = underlying.referenceType
 
+  /** Some if proxy is have generic this type other then jdi type
+  * iI applies mostly to primitives that are of Rich* class and should be boxed for some methods */
+  protected[expression] def genericThisType: Option[String] = None
+
   /** Implementation of method application. */
   def applyDynamic(name: String)(args: Any*): JdiProxy = try {
-    context.invokeMethod[JdiProxy](this, name, Seq(args.map(_.asInstanceOf[JdiProxy])))
+    context.invokeMethod[JdiProxy](this, genericThisType, name, Seq(args.map(_.asInstanceOf[JdiProxy])))
   } catch {
     case e: Throwable => println(s"$name, ${args.mkString}"); throw e
   }
 
   /** Implementation of field selection. */
   def selectDynamic(name: String): JdiProxy =
-    context.invokeMethod[JdiProxy](this, name, Seq())
+    context.invokeMethod[JdiProxy](this, genericThisType, name, Seq())
 
   /** Implementation of variable mutation. */
   def updateDynamic(name: String)(value: Any): Unit =
-    context.invokeMethod[JdiProxy](this, s"${name}_=", Seq(Seq(value.asInstanceOf[JdiProxy])))
+    context.invokeMethod[JdiProxy](this, genericThisType, s"${name}_=", Seq(Seq(value.asInstanceOf[JdiProxy])))
 
   /** Forwards equality to debugged jvm */
   def ==(other: JdiProxy): BooleanJdiProxy =
-    context.invokeMethod[BooleanJdiProxy](this, "equals", Seq(Seq(other)))
+    context.invokeMethod[BooleanJdiProxy](this, genericThisType, "equals", Seq(Seq(other)))
 
   /** Forwards inequality to debugged jvm */
   def !=(other: JdiProxy): BooleanJdiProxy =
@@ -66,7 +70,7 @@ trait JdiProxyCompanion[Proxy <: JdiProxy] {
   def apply(on: JdiProxy): Proxy =
     on match {
       case wrapper: JdiProxyWrapper => apply(wrapper.outer)
-      case boxed: (Proxy @unchecked) => boxed
+      case boxed: (Proxy@unchecked) => boxed
       case _ => throw new RuntimeException("Proxy is not supported: " + on)
     }
 }

@@ -8,6 +8,7 @@ package org.scalaide.debug.internal.expression.proxies.primitives.operations
 import org.junit.Test
 import org.junit.Ignore
 import org.scalaide.debug.internal.expression.JavaBoxed
+import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.TestValues
@@ -72,22 +73,22 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
     eval("char.reverseBytes", char.reverseBytes, JavaBoxed.Character)
   }
 
-  @Ignore("TODO - add support for range operations on Integrals")
+  //@Ignore("TODO - add support for range operations on Integrals")
   @Test
   def testRangeOperationsOnIntegral(): Unit = {
-    eval("int to int2", int to int2, "TODO")
-    eval("int.to(int2, 1)", int.to(int2, 1), "TODO")
-    eval("int until int2", int until int2, "TODO")
-    eval("int.until(int2, 1)", int.until(int2, 1), "TODO")
+    eval("int to int2", int to int2, ScalaOther.rangeInclusive)
+    eval("int.to(int2, 1)", int.to(int2, 1), ScalaOther.rangeInclusive)
+    eval("int until int2 mkString", int until int2 mkString, JavaBoxed.String)
+    eval("int.until(int2, 1).mkString", int.until(int2, 1).mkString, JavaBoxed.String)
   }
 
-  @Ignore("TODO - add support for range operations on Fractionals")
+  //@Ignore("TODO - add support for range operations on Fractionals")
   @Test
   def testRangeOperationsOnFractional(): Unit = {
-    eval("double to double2", double to double2, "TODO")
-    eval("double.to(double2, 0.5)", double.to(double2, 0.5), "TODO")
-    eval("double until double2", double until double2, "TODO")
-    eval("double.until(double2, 0.5)", double.until(double2, 0.5), "TODO")
+    eval("double to double2 by(1) mkString", double to double2 by(1) mkString, JavaBoxed.String)
+    eval("double.to(double2, 0.5).mkString", double.to(double2, 0.5).mkString, JavaBoxed.String)
+    eval("double until double2 by(1) mkString", double until double2 by(1) mkString, JavaBoxed.String)
+    eval("double.until(double2, 0.5).mkString", double.until(double2, 0.5).mkString, JavaBoxed.String)
   }
 
   @Test

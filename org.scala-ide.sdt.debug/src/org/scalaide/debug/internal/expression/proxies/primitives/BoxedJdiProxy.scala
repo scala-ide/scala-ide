@@ -34,7 +34,7 @@ abstract class BoxedJdiProxy[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]
 
   /** Implementation of string addition. */
   def +(proxy: StringJdiProxy): StringJdiProxy =
-    StringJdiProxy(context.invokeMethod[JdiProxy](this, "+", Seq(Seq(proxy))))
+    StringJdiProxy(context.invokeMethod[JdiProxy](this, None,"+", Seq(Seq(proxy))))
 }
 
 /**
@@ -61,7 +61,7 @@ abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitiv
   final def primitive(proxy: Proxy): Value = {
     val method = proxy.objectType.methodsByName(unboxedName + "Value").head
 
-    proxy.context.invokeUnboxed[Value](proxy, method.name, Seq.empty, Seq.empty)
+    proxy.context.invokeUnboxed[Value](proxy, None, method.name, Seq.empty, Seq.empty)
   }
 
   /** Creates proxy from primitive using proxy context */

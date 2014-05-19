@@ -84,7 +84,11 @@ trait Mocks extends PrimitiveMocks {
       ret
     }
 
-    override def invokeMethod[Result <: JdiProxy](on: JdiProxy, name: String, args: Seq[Seq[JdiProxy]], implicits: Seq[JdiProxy]): Result = {
+    override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
+                                                  thisType: Option[String],
+                                                  name: String,
+                                                  args: Seq[Seq[JdiProxy]],
+                                                  implicits: Seq[JdiProxy]): Result = {
 
       def extractCalls(proxy: JdiProxy): Seq[MockCall] = proxy match {
         case m: MockVariable => m.calls

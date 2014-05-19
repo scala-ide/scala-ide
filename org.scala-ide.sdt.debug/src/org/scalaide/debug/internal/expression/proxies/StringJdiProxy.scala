@@ -15,7 +15,7 @@ import com.sun.jdi.ObjectReference
 case class StringJdiProxy(context: JdiContext, underlying: ObjectReference) extends JdiProxy {
 
   final def +(proxy: JdiProxy): StringJdiProxy =
-    StringJdiProxy(context.invokeMethod[JdiProxy](this, "+", Seq(Seq(proxy))))
+    StringJdiProxy(context.invokeMethod[JdiProxy](this, None, "+", Seq(Seq(proxy))))
 
 }
 

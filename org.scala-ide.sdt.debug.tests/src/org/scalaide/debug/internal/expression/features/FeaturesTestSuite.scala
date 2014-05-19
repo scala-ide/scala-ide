@@ -33,5 +33,6 @@ import org.junit.runners.Suite
     classOf[ImplicitTest],
     classOf[VarargsTest],
     classOf[PartialFunctionLambdaTest],
+    classOf[AnyValTest],
     classOf[ControlStructuresTest]))
 class FeaturesTestSuite

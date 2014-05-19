@@ -29,20 +29,6 @@ abstract class NumberJdiProxy[Primitive: Numeric, Proxy <: NumberJdiProxy[Primit
   extends BoxedJdiProxy[Primitive, Proxy](companion)
   with NumberConversion[Primitive]
   with NumericComparison { self: Proxy =>
-
-  protected def numberProxy: ScalaNumberProxy[Primitive]
-
-  def min(that: NumberJdiProxy[Primitive, Proxy]): Proxy = companion.fromPrimitive(numberProxy.min(that.primitiveValue), context)
-  def max(that: NumberJdiProxy[Primitive, Proxy]): Proxy = companion.fromPrimitive(numberProxy.max(that.primitiveValue), context)
-  def abs: Proxy = companion.fromPrimitive(numberProxy.abs, context)
-  def signum: IntJdiProxy = context.proxy(numberProxy.signum)
-
-  def isValidByte = context.proxy(numberProxy.isValidByte)
-  def isValidShort = context.proxy(numberProxy.isValidShort)
-  def isValidInt = context.proxy(numberProxy.isValidInt)
-  def isValidChar = context.proxy(numberProxy.isValidChar)
-
-  def isWhole() = context.proxy(numberProxy.isWhole())
 }
 
 /**
@@ -76,6 +62,4 @@ abstract class FloatingPointNumberJdiProxy[Primitive: Fractional, Proxy <: Float
   with FloatingPointNumericOperations
   with UnaryMinus[FloatingPointNumberJdiProxy[_, _]]
   with UnaryPlus[FloatingPointNumberJdiProxy[_, _]] { self: Proxy =>
-
-  protected implicit def integralNum: Integral[Primitive]
 }

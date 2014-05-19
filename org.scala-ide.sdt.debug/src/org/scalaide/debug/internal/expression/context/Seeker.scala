@@ -40,7 +40,7 @@ trait Seeker {
   }
 
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
-  protected final def objectByName(name: String): ObjectReference = {
+  final def objectByName(name: String): ObjectReference = {
     val clazz = this.classByName(name + "$")
     val field = clazz.fieldByName("MODULE$")
     clazz.getValue(field).asInstanceOf[ObjectReference]

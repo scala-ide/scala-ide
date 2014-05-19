@@ -142,6 +142,9 @@ object ScalaOther {
     "applyDynamic")
 
   val scalaList = "scala.collection.immutable.::"
+
+  val rangeInclusive = "scala.collection.immutable.Range$Inclusive"
+  val range = "scala.collection.immutable.Range"
 }
 
 object DebuggerSpecific {

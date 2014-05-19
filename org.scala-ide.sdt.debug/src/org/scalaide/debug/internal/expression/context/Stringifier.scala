@@ -19,7 +19,7 @@ trait Stringifier {
 
   /** Calls `toString` on given proxy, returns jdi String reference. */
   final def callToString(proxy: JdiProxy): StringReference =
-    invokeUnboxed[StringReference](proxy, "toString", Seq.empty)
+    invokeUnboxed[StringReference](proxy,None, "toString", Seq.empty)
 
   /**
    * Calls `toString` on given proxy, returns StringJdiProxy.
@@ -28,7 +28,7 @@ trait Stringifier {
    * If you change it's name, package or behavior, make sure to change it also.
    */
   final def stringify(proxy: JdiProxy): StringJdiProxy =
-    this.invokeMethod[StringJdiProxy](proxy, "toString")
+    this.invokeMethod[StringJdiProxy](proxy, None,"toString")
 
   /**
    * String representation of given proxy. Contains value and type.

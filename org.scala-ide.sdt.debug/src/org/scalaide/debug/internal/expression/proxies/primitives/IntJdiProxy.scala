@@ -20,15 +20,13 @@ import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 case class IntJdiProxy(context: JdiContext, underlying: ObjectReference)
   extends IntegerNumberJdiProxy[Int, IntJdiProxy](IntJdiProxy) {
 
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichInt")
+
   override def unary_- = context.proxy(-primitiveValue)
+
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[IntegerValue].value()
-  protected override def numberProxy = new RichInt(primitiveValue)
-
-  def toBinaryString: StringJdiProxy = context.proxy(java.lang.Integer.toBinaryString(primitiveValue))
-  def toHexString: StringJdiProxy = context.proxy(java.lang.Integer.toHexString(primitiveValue))
-  def toOctalString: StringJdiProxy = context.proxy(java.lang.Integer.toOctalString(primitiveValue))
 }
 
 object IntJdiProxy extends BoxedJdiProxyCompanion[Int, IntJdiProxy](JavaBoxed.Integer, JavaPrimitives.int) {
