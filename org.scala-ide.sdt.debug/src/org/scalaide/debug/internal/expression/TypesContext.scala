@@ -252,9 +252,6 @@ final class TypesContext() {
     ScalaOther.nothingType,
     ScalaOther.unitType,
 
-    // rich types
-    ScalaRichTypes.Boolean,
-
     //JdiProxy in all forms
     DebuggerSpecific.proxyName,
     DebuggerSpecific.proxyFullName,
@@ -263,7 +260,10 @@ final class TypesContext() {
     //JdiContext in all forms
     DebuggerSpecific.contextName,
     DebuggerSpecific.contextFullName,
-    DebuggerSpecific.contextObjFullName) ++ functionToProxyMap.values ++ functionToProxyMap.keys
+    DebuggerSpecific.contextObjFullName) ++
+    functionToProxyMap.values ++
+    functionToProxyMap.keys ++
+    ScalaRichTypes.all
 
   /** Could class with given name be stubbed. */
   private def couldBeStubbed(stub: String): Boolean = {
@@ -314,6 +314,13 @@ protected object TypesContext {
     ScalaOther.unitType -> classOf[UnitJdiProxy].getSimpleName,
 
     ScalaRichTypes.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
+    ScalaRichTypes.Byte -> classOf[ByteJdiProxy].getSimpleName,
+    ScalaRichTypes.Char -> classOf[CharJdiProxy].getSimpleName,
+    ScalaRichTypes.Double -> classOf[DoubleJdiProxy].getSimpleName,
+    ScalaRichTypes.Float -> classOf[FloatJdiProxy].getSimpleName,
+    ScalaRichTypes.Int -> classOf[IntJdiProxy].getSimpleName,
+    ScalaRichTypes.Long -> classOf[LongJdiProxy].getSimpleName,
+    ScalaRichTypes.Short -> classOf[ShortJdiProxy].getSimpleName,
 
     JavaBoxed.Byte -> classOf[ByteJdiProxy].getSimpleName,
     JavaBoxed.Short -> classOf[ShortJdiProxy].getSimpleName,

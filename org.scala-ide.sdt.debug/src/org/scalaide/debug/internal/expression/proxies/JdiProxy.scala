@@ -31,8 +31,11 @@ trait JdiProxy extends Dynamic {
   protected[expression] def objectType = underlying.referenceType
 
   /** Implementation of method application. */
-  def applyDynamic(name: String)(args: Any*): JdiProxy =
+  def applyDynamic(name: String)(args: Any*): JdiProxy = try {
     context.invokeMethod[JdiProxy](this, name, Seq(args.map(_.asInstanceOf[JdiProxy])))
+  } catch {
+    case e: Throwable => println(s"$name, ${args.mkString}"); throw e
+  }
 
   /** Implementation of field selection. */
   def selectDynamic(name: String): JdiProxy =

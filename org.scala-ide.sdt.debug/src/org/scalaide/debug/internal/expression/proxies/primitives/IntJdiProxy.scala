@@ -5,13 +5,14 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
+import scala.runtime.RichInt
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
-
 import com.sun.jdi.IntegerValue
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
+import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 /**
  * JdiProxy implementation for `int`, `scala.Int` and `java.lang.Integer`.
@@ -23,6 +24,11 @@ case class IntJdiProxy(context: JdiContext, underlying: ObjectReference)
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[IntegerValue].value()
+  protected override def numberProxy = new RichInt(primitiveValue)
+
+  def toBinaryString: StringJdiProxy = context.proxy(java.lang.Integer.toBinaryString(primitiveValue))
+  def toHexString: StringJdiProxy = context.proxy(java.lang.Integer.toHexString(primitiveValue))
+  def toOctalString: StringJdiProxy = context.proxy(java.lang.Integer.toOctalString(primitiveValue))
 }
 
 object IntJdiProxy extends BoxedJdiProxyCompanion[Int, IntJdiProxy](JavaBoxed.Integer, JavaPrimitives.int) {

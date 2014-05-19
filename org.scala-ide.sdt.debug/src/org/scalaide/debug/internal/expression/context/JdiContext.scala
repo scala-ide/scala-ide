@@ -5,25 +5,10 @@
  */
 package org.scalaide.debug.internal.expression.context
 
-import scala.collection.JavaConversions._
-import scala.reflect.NameTransformer
-
 import org.scalaide.debug.internal.expression.DebuggerSpecific
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
 
-import com.sun.jdi.ClassObjectReference
-import com.sun.jdi.ClassType
-import com.sun.jdi.Method
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.StackFrame
-import com.sun.jdi.StringReference
 import com.sun.jdi.ThreadReference
-import com.sun.jdi.Value
 import com.sun.jdi.VirtualMachine
-
-import javax.xml.bind.DatatypeConverter
 
 /**
  * Companion for JdiContext, contains names to be used in reflective compilation.

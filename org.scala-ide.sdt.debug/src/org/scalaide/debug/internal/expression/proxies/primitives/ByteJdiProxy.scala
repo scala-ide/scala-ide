@@ -5,6 +5,8 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
+import scala.runtime.RichByte
+
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
@@ -23,6 +25,7 @@ case class ByteJdiProxy(context: JdiContext, underlying: ObjectReference)
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[ByteValue].value()
+  protected override def numberProxy = new RichByte(primitiveValue)
 }
 
 object ByteJdiProxy extends BoxedJdiProxyCompanion[Byte, ByteJdiProxy](JavaBoxed.Byte, JavaPrimitives.byte) {

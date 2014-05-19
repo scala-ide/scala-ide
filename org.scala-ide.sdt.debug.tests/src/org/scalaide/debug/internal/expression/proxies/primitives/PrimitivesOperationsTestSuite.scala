@@ -17,6 +17,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.operations.nume
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[RichTypesOperationsTest],
     classOf[TypeConversionsTest],
     classOf[BooleanComparisonTest],
     classOf[ComplexOperationsTest],

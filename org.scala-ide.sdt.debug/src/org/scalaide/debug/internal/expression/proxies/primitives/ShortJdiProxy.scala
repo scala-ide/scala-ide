@@ -5,6 +5,8 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
+import scala.runtime.RichShort
+
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
@@ -23,6 +25,7 @@ case class ShortJdiProxy(context: JdiContext, underlying: ObjectReference)
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
   protected override def primitiveValue = this.primitive.asInstanceOf[ShortValue].value()
+  protected override def numberProxy = new RichShort(primitiveValue)
 }
 
 object ShortJdiProxy extends BoxedJdiProxyCompanion[Short, ShortJdiProxy](JavaBoxed.Short, JavaPrimitives.short) {

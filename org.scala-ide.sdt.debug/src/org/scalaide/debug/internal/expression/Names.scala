@@ -83,6 +83,15 @@ object ScalaPrimitivesUnified {
  */
 object ScalaRichTypes {
   val Boolean = classOf[scala.runtime.RichBoolean].getName
+  val Byte = classOf[scala.runtime.RichByte].getName
+  val Char = classOf[scala.runtime.RichChar].getName
+  val Double = classOf[scala.runtime.RichDouble].getName
+  val Float = classOf[scala.runtime.RichFloat].getName
+  val Int = classOf[scala.runtime.RichInt].getName
+  val Long = classOf[scala.runtime.RichLong].getName
+  val Short = classOf[scala.runtime.RichShort].getName
+
+  val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short)
 }
 
 object ScalaFunctions {
