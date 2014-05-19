@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.scala210.feature"
-      label="Scala 2.10.x"
+      label="Scala ${scala210.version}"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-lang.scala-library">
 
    <description url="http://scala-ide.org">
-     Scala 2.10.x library, compiler and associated jars.
+     Scala ${scala210.version} library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.scala211.source.feature"
-      label="Scala 2.11.x sources"
+      label="Scala ${scala211.version} sources"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Sources for Scala 2.11.x library, compiler and associated jars.
+     Sources for Scala ${scala211.version} library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">

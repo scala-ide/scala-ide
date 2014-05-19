@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.sbt.feature"
-      label="sbt"
+      label="sbt ${sbt.version}"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.sbt.full.library">
 
    <description url="http://scala-ide.org">
-     sbt incremental compiler jars
+     sbt ${sbt.version} incremental compiler jars
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">

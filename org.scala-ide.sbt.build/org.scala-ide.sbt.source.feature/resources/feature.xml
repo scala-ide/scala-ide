@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.sbt.source.feature"
-      label="sbt"
+      label="sbt ${sbt.version} sources"
       version="4.0.0.qualifier"
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Source for sbt for Scala IDE.
+     Sources for sbt ${sbt.version} incremental compiler jars
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">

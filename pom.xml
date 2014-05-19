@@ -227,12 +227,126 @@
     <profile>
       <id>set-version-specific-files</id>
       <properties>
+        <sbt.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.feature</sbt.feature.dir>
+        <sbt.source.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.source.feature</sbt.source.feature.dir>
+        <scala210.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.feature</scala210.feature.dir>
+        <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
+        <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>
+        <scala211.source.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.source.feature</scala211.source.feature.dir>
         <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
       </properties>
       <build>
         <plugins>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.6</version>
+            <executions>
+              <execution>
+                <id>copy-resources-sbt-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${sbt.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${sbt.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-sbt-source-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${sbt.source.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${sbt.source.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala210-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala210.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala210.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala210-source-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala210.source.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala210.source.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala211-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala211.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala211.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala211-source-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala211.source.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala211.source.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>

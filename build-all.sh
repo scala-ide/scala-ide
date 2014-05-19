@@ -23,6 +23,11 @@ echo "Building parent project in $ROOT_DIR"
 cd ${ROOT_DIR}
 mvn ${MVN_ARGS}
 
+# set custom configuration files
+echo "Setting custom configuration files"
+mvn ${MVN_ARGS} -Pset-version-specific-files antrun:run
+
+
 echo "Building the toolchain"
 # the toolchain
 cd ${ROOT_DIR}/org.scala-ide.build-toolchain
@@ -42,10 +47,6 @@ then
 else
   echo "Not running UpdateScalaIDEManifests."
 fi
-
-# set features.xml
-echo "Setting features.xml"
-mvn ${MVN_P2_ARGS} -Pset-version-specific-files antrun:run
 
 # the plugins
 echo "Building plugins"
