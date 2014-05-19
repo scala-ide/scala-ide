@@ -57,6 +57,8 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
+import org.eclipse.core.runtime.IPath
+import java.io.File
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -79,13 +81,20 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
+
+  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
+
   def pluginId = "org.scala-ide.sdt.core"
   def compilerPluginId = "org.scala-lang.scala-compiler"
   def libraryPluginId = "org.scala-lang.scala-library"
   def actorsPluginId = "org.scala-lang.scala-actors"
   def reflectPluginId = "org.scala-lang.scala-reflect"
+  def swingPluginId = "org.scala-lang.modules.scala-swing"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
-  def sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
+  lazy val sbtCompilerInterfaceId = {
+    val ShortScalaVersion(major, minor) = scalaVer
+    s"org.scala-ide.sbt.compiler$major$minor.interface"
+  }
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name
@@ -117,8 +126,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val scalaFileExtn = ".scala"
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
-
-  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
    /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
@@ -162,20 +169,60 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
+  /**
+   * Returns the location of the source bundle for the bundle.
+   *
+   * @param bundleId the bundle id
+   * @param bundelPath the bundle location
+   */
+  def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
+    val jarFile = bundlePath.lastSegment()
+    val parentFolder = bundlePath.removeLastSegments(1)
+
+    val sourceBundleId = bundleId + ".source"
+    // the expected filename for the source jar
+    val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
+
+    // the source jar location when the files are from the plugins folder
+    val installedLocation = parentFolder.append(sourceJarFile)
+
+    if (installedLocation.toFile().exists()) {
+      // found in the plugins folder
+      Some(installedLocation)
+    } else {
+      val versionString = parentFolder.lastSegment()
+      val groupFolder = parentFolder.removeLastSegments(2)
+      // the source jar location when the files are from a local m2 repo
+      val buildLocation = groupFolder.append(sourceBundleId).append(versionString).append(sourceJarFile)
+      if (buildLocation.toFile().exists()) {
+        // found in the m2 repo
+        Some(buildLocation)
+      } else {
+        // not found
+        None
+      }
+    }
+
+  }
+
   lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
-  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
+  lazy val libSources = libClasses.flatMap(l => computeSourcePath(libraryPluginId, l))
+  //  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
 
   // 2.10 specific libraries
   lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
-  lazy val actorsClasses = OSGiUtils.getBundlePath(Platform.getBundle(actorsPluginId))
-  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
+  lazy val actorsClasses = OSGiUtils.getBundlePath(scalaActorsBundle)
+  lazy val actorsSources = actorsClasses.flatMap(l => computeSourcePath(actorsPluginId, l))
+  //  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
 
   lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
-  lazy val reflectClasses = OSGiUtils.getBundlePath(Platform.getBundle(reflectPluginId))
-  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
+  lazy val reflectClasses = OSGiUtils.getBundlePath(scalaReflectBundle)
+  lazy val reflectSources = reflectClasses.flatMap(l => computeSourcePath(reflectPluginId, l))
+  //  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
 
-  lazy val swingClasses = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/lib/scala-swing.jar")
-  lazy val swingSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-swing-src.jar")
+  // TODO: 2.10 swing support
+  lazy val swingClasses = OSGiUtils.getBundlePath(Platform.getBundle(swingPluginId))
+  lazy val swingSources = swingClasses.flatMap(l => computeSourcePath(swingPluginId, l))
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null

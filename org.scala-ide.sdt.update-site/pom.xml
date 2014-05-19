@@ -11,6 +11,27 @@
   <artifactId>org.scala-ide.sdt.update-site</artifactId>
   <packaging>eclipse-update-site</packaging>
 
+  <profiles>
+    <profile>
+      <id>scala-2.10.x</id>
+
+    </profile>
+
+    <profile>
+      <id>scala-2.11.x</id>
+
+      <repositories>
+        <!-- TODO enable back when multiple bundles of Scala are supported -->
+<!--        <repository>
+          <id>scala210</id>
+          <name>Scala 210 library and jars</name>
+          <layout>p2</layout>
+          <url>file:../org.scala-ide.scala210.build/org.scala-ide.scala210.update-site/target/site</url>
+        </repository>-->
+      </repositories>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>

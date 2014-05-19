@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.scala-ide</groupId>
+    <artifactId>org.scala-ide.build-toolchain</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+    <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
+  </parent>
+  <artifactId>org.scala-ide.scala210.jars</artifactId>
+  <packaging>eclipse-plugin</packaging>
+
+  <dependencies>
+    <!-- toolchain, Scala library -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala210.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <version>${scala210.version}</version>
+    </dependency>
+    <!-- toolchain, Scala compiler -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>${scala210.version}</version>
+    </dependency>
+    <!-- modules -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-actors</artifactId>
+      <version>${scala210.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-swing</artifactId>
+      <version>${scala210.version}</version>
+    </dependency>
+    <!-- sources -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala210.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <version>${scala210.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+    <!-- toolchain, Scala compiler -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>${scala210.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+    <!-- modules -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-actors</artifactId>
+      <version>${scala210.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-swing</artifactId>
+      <version>${scala210.version}</version>
+      <classifier>sources</classifier>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- copy the jars to create a container bundle -->
+            <id>copy.modules</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <!-- toolchain, Scala library -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-library</artifactId>
+                  <type>jar</type>
+                  <destFileName>scala-library.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-reflect</artifactId>
+                  <type>jar</type>
+                  <destFileName>scala-reflect.jar</destFileName>
+                </artifactItem>
+                <!-- toolchain, Scala compiler -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <type>jar</type>
+                  <destFileName>scala-compiler.jar</destFileName>
+                </artifactItem>
+                <!-- modules -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-actors</artifactId>
+                  <type>jar</type>
+                  <destFileName>scala-actor.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-swing</artifactId>
+                  <type>jar</type>
+                  <destFileName>scala-swing.jar</destFileName>
+                </artifactItem>
+                <!-- sources -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-library</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-library-src.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-reflect</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-reflect-src.jar</destFileName>
+                </artifactItem>
+                <!-- toolchain, Scala compiler -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-compiler</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-compiler-src.jar</destFileName>
+                </artifactItem>
+                <!-- modules -->
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-actors</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-actor-src.jar</destFileName>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scala-swing</artifactId>
+                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <destFileName>scala-swing-src.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/jars</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- enable tycho to support eclipse type artifacts -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-maven-plugin</artifactId>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <!-- configuration to be able to use maven bundle as osgi bundles -->
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>target-platform-configuration</artifactId>
+        <configuration>
+          <resolver>p2</resolver>
+          <pomDependencies>consider</pomDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -69,134 +69,29 @@
       <layout>p2</layout>
       <url>${repo.equinox.launcher}</url>
     </repository>
+    <repository>
+      <id>sbt</id>
+      <name>sbt</name>
+      <layout>p2</layout>
+      <url>file:../org.scala-ide.sbt.build/org.scala-ide.sbt.update-site/target/site</url>
+    </repository>
+    <repository>
+      <id>scala${scala.short.version}</id>
+      <name>Scala ${scala.short.version} library and jars</name>
+      <layout>p2</layout>
+      <url>file:../org.scala-ide.scala${scala.short.version}.build/org.scala-ide.scala${scala.short.version}.update-site/target/site</url>
+    </repository>
   </repositories>
-
-  <dependencies>
-    <!-- POM-first dependencies (Scala OSGi bundles or bnd-ified dependencies  -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-reflect</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.full.library</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.full.library.source</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler.interface</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <!-- Source dependencies -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.library.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-reflect</artifactId>
-      <classifier>sources</classifier>
-      <version>${scala.version}</version>
-    </dependency>
-  </dependencies>
 
   <profiles>
     <profile>
       <id>scala-2.10.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-actors</artifactId>
-        </dependency>
 
-        <!-- Source dependencies -->
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-swing</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala.library.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-actors</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala.library.version}</version>
-        </dependency>
-      </dependencies>
     </profile>
 
     <profile>
       <id>scala-2.11.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-actors</artifactId>
-        </dependency>
 
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-xml_${scala.binary.version}</artifactId>
-        </dependency>
-
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-        </dependency>
-
-        <!-- Source dependencies -->
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-actors</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala.library.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-xml_${scala.binary.version}</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala-xml.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala-parser-combinators.version}</version>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-swing_${scala.binary.version}</artifactId>
-          <classifier>sources</classifier>
-          <version>${scala-swing.version}</version>
-        </dependency>
-      </dependencies>
     </profile>
   </profiles>
 
@@ -214,7 +109,6 @@
         <artifactId>target-platform-configuration</artifactId>
         <configuration>
           <resolver>p2</resolver>
-          <pomDependencies>consider</pomDependencies>
         </configuration>
       </plugin>
       <plugin>
@@ -246,7 +140,7 @@
         </configuration>
       </plugin>
       <!-- create a package with the sources -->
-      <plugin>
+<!--      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <executions>
@@ -257,7 +151,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin> -->
       <!-- create the source plug-in -->
       <plugin>
         <groupId>org.eclipse.tycho</groupId>

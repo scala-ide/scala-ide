@@ -11,36 +11,17 @@
   <artifactId>org.scala-ide.sbt.full.library</artifactId>
   <packaging>bundle</packaging>
 
-  <profiles>
-    <profile>
-      <!--- the profile using the default values. Scala 2.10.x -->
-      <id>scala-2.10.x</id>
-    </profile>
-    <profile>
-      <!--- the profile using the default values. Scala 2.11.x -->
-      <id>scala-2.11.x</id>
-      <dependencies>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-xml_${scala.binary.version}</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>org.scala-lang.modules</groupId>
-          <artifactId>scala-parser-combinators_${scala.binary.version}</artifactId>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
-
   <dependencies>
     <dependency>
         <groupId>com.typesafe.sbt</groupId>
         <artifactId>sbt-interface</artifactId>
+        <version>${sbt.ide.version}</version>
         <optional>true</optional>
     </dependency>
     <dependency>
         <groupId>com.typesafe.sbt</groupId>
         <artifactId>incremental-compiler</artifactId>
+        <version>${sbt.ide.version}</version>
         <optional>true</optional>
     </dependency>
     <dependency>
