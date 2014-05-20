@@ -35,16 +35,15 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   // raw stats
   private var hits, misses = 0
 
-  //OSGiUtils.getBundlePath(Platform.getBundle(plugin.sbtCompilerInterfaceId + ".source")).map(_.toFile)
   private lazy val compilerInterfaceSrc =
-    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).map(computeSourcePath(plugin.sbtCompilerInterfaceId, _)).flatten
+    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(computeSourcePath(plugin.sbtCompilerInterfaceId, _))
 
   private lazy val sbtFullJar = OSGiUtils.getBundlePath(plugin.sbtCompilerBundle)
 
   /** Return the location of a compiler-interface.jar
    *
    *  This method will attempt to reuse interfaces for a given Scala version. It
-   *  me be long running the first time for a given version (it needs to compile the interface)
+   *  may be long running the first time for a given version (it needs to compile the interface)
    *
    *  @retur An instance of Right(path) if successful, an error message inside `Left` otherwise.
    */
@@ -76,7 +75,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   def getStats: (Int, Int) = (hits, misses)
 
   private def cacheDir(installation: ScalaInstallation): IPath =
-    compilerInterfacesDir / s"${installation.version.unparse}"
+    compilerInterfacesDir / installation.version.unparse
 
   private def interfaceJar(installation: ScalaInstallation): IPath = {
     cacheDir(installation) / compilerInterfaceName
@@ -126,7 +125,9 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
     def trace(x: xsbti.F0[Throwable]): Unit = {}
 
     def error(x: xsbti.F0[String]): Unit = {
-      errors += x()
+      val msg = x() // don't force it more than once, in case of side-effects
+      logger.debug(msg)
+      errors += msg
     }
 
     def info(x: xsbti.F0[String]): Unit = {
