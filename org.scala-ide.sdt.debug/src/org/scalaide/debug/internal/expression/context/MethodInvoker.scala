@@ -18,7 +18,7 @@ trait MethodInvoker extends Any {
    * If you change it's name, package or behavior, make sure to change it also.
    *
    * @param proxy
-   * @param onRealType type of 'this' from scala point of view
+   * @param onScalaType scala type (not jvm implementation) of object laying under proxy (eg. for 1.toDouble it will be RichInt)    *  if you are not aware which type Scala see for object or you are not interested in eg. AnyVal method calls just pass None here
    * @param methodName
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments
@@ -33,7 +33,8 @@ trait MethodInvoker extends Any {
    * Invokes a method on a proxy. Returns unboxed value.
    *
    * @param proxy
-   * @param onRealType type of 'this' from scala point of view
+   * @param onScalaType scala type (not jvm implementation) of object laying under proxy (eg. for 1.toDouble it will be RichInt)
+   *  if you are not aware which type Scala see for object or you are not interested in eg. AnyVal method calls just pass None here
    * @param methodName
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments

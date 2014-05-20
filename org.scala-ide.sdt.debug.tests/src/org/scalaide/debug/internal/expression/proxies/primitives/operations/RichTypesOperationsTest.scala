@@ -73,7 +73,6 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
     eval("char.reverseBytes", char.reverseBytes, JavaBoxed.Character)
   }
 
-  //@Ignore("TODO - add support for range operations on Integrals")
   @Test
   def testRangeOperationsOnIntegral(): Unit = {
     eval("int to int2", int to int2, ScalaOther.rangeInclusive)
@@ -82,7 +81,6 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
     eval("int.until(int2, 1).mkString", int.until(int2, 1).mkString, JavaBoxed.String)
   }
 
-  //@Ignore("TODO - add support for range operations on Fractionals")
   @Test
   def testRangeOperationsOnFractional(): Unit = {
     eval("double to double2 by(1) mkString", double to double2 by(1) mkString, JavaBoxed.String)

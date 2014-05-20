@@ -24,27 +24,33 @@ trait Seeker {
 
   protected def jvm: VirtualMachine
 
+
+  /** real name of class - replace all object name prefix */
+  private def realClassName(name: String) = if (name.startsWith(DebuggerSpecific.objNamePrefix)) name.drop(3) else name
+
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType = {
-    val realName = if (name.startsWith(DebuggerSpecific.objNamePrefix)) name.drop(3) else name
+    tryClassByName(name).getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
+  }
 
-    def getClassType() = jvm.classesByName(realName).headOption
+  private def tryClassByName(name: String): Option[ClassType] = {
+    def getClassType() = jvm.classesByName(realClassName(name)).headOption.map(_.asInstanceOf[ClassType])
 
-    val classType = getClassType().orElse {
-      loadClass(realName)
+    getClassType().orElse {
+      loadClass(realClassName(name))
       getClassType()
     }
-
-    classType.getOrElse(throw new RuntimeException("Class or object not found: " + realName))
-      .asInstanceOf[ClassType]
   }
 
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
-  final def objectByName(name: String): ObjectReference = {
-    val clazz = this.classByName(name + "$")
-    val field = clazz.fieldByName("MODULE$")
-    clazz.getValue(field).asInstanceOf[ObjectReference]
-  }
+  final def objectByName(name: String): ObjectReference =
+    tryObjectByName(name).getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
+
+  private[expression] final def tryObjectByName(name: String): Option[ObjectReference] =
+    for {
+      clazz <- tryClassByName(name + "$")
+      field <- Option(clazz.fieldByName("MODULE$"))
+    } yield clazz.getValue(field).asInstanceOf[ObjectReference]
 
   /** Helper for getting methods from given class name */
   protected final def methodOn(className: String, methodName: String): Method = {

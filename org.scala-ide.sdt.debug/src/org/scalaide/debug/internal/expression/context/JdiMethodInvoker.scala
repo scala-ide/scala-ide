@@ -13,9 +13,7 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.ScalaOther
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.JdiProxyWrapper
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
+import org.scalaide.debug.internal.expression.proxies.{SimpleJdiProxy, JdiProxy, JdiProxyWrapper, StringJdiProxy}
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
 import com.sun.jdi.ClassNotLoadedException
@@ -36,16 +34,16 @@ private[context] trait JdiMethodInvoker
   self: JdiContext =>
 
   /**
-   *  Implements method invokation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
+   *  Implements method invocation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
    *
    *  Wraps `invokeUnboxed` with a `valueProxy`.
    */
   override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
-                                                onRealType: Option[String],
+                                                onScalaType: Option[String],
                                                 name: String,
                                                 args: Seq[Seq[JdiProxy]] = Seq.empty,
                                                 implicits: Seq[JdiProxy] = Seq.empty): Result =
-    valueProxy(invokeUnboxed[Value](on, onRealType, name, args, implicits)).asInstanceOf[Result]
+    valueProxy(invokeUnboxed[Value](on, onScalaType, name, args, implicits)).asInstanceOf[Result]
 
   /**
    * Implements method invokation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
@@ -64,7 +62,7 @@ private[context] trait JdiMethodInvoker
   }
 
   /** invokeUnboxed method that  returns option instead of throwing an exception */
-  private def tryInvokeUnboxed(proxy: JdiProxy,
+  private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
                                onRealType: Option[String],
                                name: String,
                                args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[Value] = {
@@ -76,6 +74,7 @@ private[context] trait JdiMethodInvoker
 
     standardMethod() orElse varArgMethod() orElse stringConcat() orElse anyValMethod()
   }
+
 
   /**
    * Creates new instance of given class
@@ -274,13 +273,13 @@ private[context] trait JdiMethodInvoker
     private def stringify(proxy: JdiProxy) = StringJdiProxy(context, context.callToString(proxy))
 
     private def callConcatMethod(proxy: JdiProxy, arg: JdiProxy) =
-      context.invokeUnboxed[Value](proxy, None, "concat", Seq(Seq(stringify(arg))))
+      context.tryInvokeUnboxed(proxy, None, "concat", Seq(Seq(stringify(arg))))
 
     override def apply(): Option[Value] = (name, args) match {
       case ("+" | "$plus", Seq(arg)) =>
         (proxy.objectType.name, arg.objectType.name) match {
-          case (JavaBoxed.String, _) => Some(callConcatMethod(proxy, arg))
-          case (_, JavaBoxed.String) => Some(callConcatMethod(stringify(proxy), arg))
+          case (JavaBoxed.String, _) => callConcatMethod(proxy, arg)
+          case (_, JavaBoxed.String) => callConcatMethod(stringify(proxy), arg)
           case _ => None
         }
       case _ => None
@@ -288,24 +287,21 @@ private[context] trait JdiMethodInvoker
   }
 
   /**
- * Custom handler for anyval calss
- *
- * those call is replaced with CompanionObject.method(this, restOfParams)
- */
-  private case class AnyValMethodCalls(proxy: JdiProxy, name: String, args: Seq[JdiProxy], realThisType: Option[String]) extends MethodType {
+   * Custom handler for AnyVal calls
+   * Call like on.method(restOfParams) is replaced with CompanionObject.method(on, restOfParams) or (new BoxingClass(on).method(restOfParams)
+   */
+  private case class AnyValMethodCalls(proxy: JdiProxy, methodName: String, args: Seq[JdiProxy], realThisType: Option[String]) extends MethodType {
     private val context = proxy.context
 
-    private def companionObject = {
-      realThisType.map(context.objectByName).map(objectReference => new JdiProxy {
-        protected[expression] def underlying: ObjectReference = objectReference
+    private def companionObject = for {
+      companionObjectName <- realThisType
+      objectReference <- tryObjectByName(companionObjectName)
+    } yield new SimpleJdiProxy(context, objectReference)
 
-        protected[expression] def context: JdiContext = AnyValMethodCalls.this.context
-      })
-    }
 
     private def invokeDelegate: Option[Value] = for {
       companionObject <- companionObject
-      extensionName = name + "$extension"
+      extensionName = methodName + "$extension"
       newArgs = proxy +: args
       value <- context.tryInvokeUnboxed(companionObject, None, extensionName, Seq(newArgs))
     } yield value
@@ -313,7 +309,7 @@ private[context] trait JdiMethodInvoker
     private def invokedBoxed: Option[Value] = for {
       className <- realThisType
       boxed <- tryNewInstance(className, Seq(Seq(proxy)))
-      res <- context.tryInvokeUnboxed(boxed, None, name, Seq(args))
+      res <- context.tryInvokeUnboxed(boxed, None, methodName, Seq(args))
     } yield res
 
 
