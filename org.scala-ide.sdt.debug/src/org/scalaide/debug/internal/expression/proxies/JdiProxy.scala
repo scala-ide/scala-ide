@@ -30,9 +30,8 @@ trait JdiProxy extends Dynamic {
   /** Type of underlying reference. */
   protected[expression] def objectType = underlying.referenceType
 
-  /** Some if proxy is have generic this type other then jdi type
-  * iI applies mostly to primitives that are of Rich* class and should be boxed for some methods */
-  protected[expression] def genericThisType: Option[String] = None
+  /** Applies mostly to primitives that are of Rich* class and should be boxed for some methods */
+  protected def genericThisType: Option[String] = None
 
   /** Implementation of method application. */
   def applyDynamic(name: String)(args: Any*): JdiProxy =
@@ -67,7 +66,7 @@ trait JdiProxyCompanion[Proxy <: JdiProxy] {
   def apply(on: JdiProxy): Proxy =
     on match {
       case wrapper: JdiProxyWrapper => apply(wrapper.outer)
-      case boxed: (Proxy@unchecked) => boxed
+      case boxed: (Proxy @unchecked) => boxed
       case _ => throw new RuntimeException("Proxy is not supported: " + on)
     }
 }

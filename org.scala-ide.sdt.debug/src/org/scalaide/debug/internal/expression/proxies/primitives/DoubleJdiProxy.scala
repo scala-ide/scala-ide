@@ -5,8 +5,6 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.runtime.RichDouble
-
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext

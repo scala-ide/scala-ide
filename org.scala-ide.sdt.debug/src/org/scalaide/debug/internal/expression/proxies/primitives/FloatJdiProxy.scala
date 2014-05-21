@@ -5,8 +5,6 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.runtime.RichFloat
-
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
@@ -22,7 +20,6 @@ case class FloatJdiProxy(context: JdiContext, underlying: ObjectReference)
   extends FloatingPointNumberJdiProxy[Float, FloatJdiProxy](FloatJdiProxy) {
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichFloat")
-
 
   def unary_- = context.proxy(-primitiveValue)
 

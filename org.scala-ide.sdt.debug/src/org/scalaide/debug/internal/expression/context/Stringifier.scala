@@ -5,11 +5,13 @@
  */
 package org.scalaide.debug.internal.expression.context
 
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import com.sun.jdi.StringReference
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import scala.reflect.NameTransformer
+
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
+
+import com.sun.jdi.StringReference
 
 /**
  * Part of JdiContext responsible for converting proxies to their string representations.
@@ -19,7 +21,7 @@ trait Stringifier {
 
   /** Calls `toString` on given proxy, returns jdi String reference. */
   final def callToString(proxy: JdiProxy): StringReference =
-    invokeUnboxed[StringReference](proxy,None, "toString", Seq.empty)
+    invokeUnboxed[StringReference](proxy, None, "toString", Seq.empty)
 
   /**
    * Calls `toString` on given proxy, returns StringJdiProxy.
@@ -28,7 +30,7 @@ trait Stringifier {
    * If you change it's name, package or behavior, make sure to change it also.
    */
   final def stringify(proxy: JdiProxy): StringJdiProxy =
-    this.invokeMethod[StringJdiProxy](proxy, None,"toString")
+    this.invokeMethod[StringJdiProxy](proxy, None, "toString")
 
   /**
    * String representation of given proxy. Contains value and type.

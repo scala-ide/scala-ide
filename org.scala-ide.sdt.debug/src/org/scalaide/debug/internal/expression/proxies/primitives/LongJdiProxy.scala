@@ -5,12 +5,9 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.runtime.RichLong
-
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 import com.sun.jdi.LongValue
 import com.sun.jdi.ObjectReference

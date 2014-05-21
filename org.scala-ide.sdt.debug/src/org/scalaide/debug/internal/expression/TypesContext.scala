@@ -158,6 +158,21 @@ final class TypesContext() {
   }
 
   /**
+   * TODO - Krzysiek - document this
+   */
+  def jvmTypeForClass(tpe: universe.Type): String = {
+    import universe.TypeRefTag
+    tpe.typeConstructor match {
+      case universe.TypeRef(parent, sym, _) if !parent.typeConstructor.typeSymbol.isPackage =>
+        val className = sym.name
+        val parentName = jvmTypeForClass(parent)
+        parentName + "$" + className
+      case _ =>
+        tpe.typeSymbol.fullName
+    }
+  }
+
+  /**
    * Obtains type name for given tree.
    *
    * @param tree tree to search for
@@ -176,28 +191,12 @@ final class TypesContext() {
   }
 
   private def rawType(tpe: universe.Type): Option[String] = tpe match {
-    case typeRef: universe.TypeRef@unchecked => Some(typeRef.typeSymbol.fullName)
-    case singleType: universe.SingleType@unchecked => Some(singleType.typeSymbol.fullName)
-    case method: universe.MethodType@unchecked => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
-    case constantType: universe.ConstantType@unchecked => Some(constantType.typeSymbol.fullName)
-    case thisType: universe.ThisType@unchecked => Some(thisType.typeSymbol.fullName)
+    case typeRef: universe.TypeRef @unchecked => Some(typeRef.typeSymbol.fullName)
+    case singleType: universe.SingleType @unchecked => Some(singleType.typeSymbol.fullName)
+    case method: universe.MethodType @unchecked => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
+    case constantType: universe.ConstantType @unchecked => Some(constantType.typeSymbol.fullName)
+    case thisType: universe.ThisType @unchecked => Some(thisType.typeSymbol.fullName)
     case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
-  }
-
-  def jvmTypeForClass(tpe: universe.Type): String = {
-    tpe.typeConstructor match {
-      case universe.TypeRef(parent, sym, _) =>
-        parent.typeConstructor match {
-          case objectType if !objectType.typeSymbol.isPackage =>
-            val className = sym.name
-            val parentName = jvmTypeForClass(parent)
-            s"$parentName$$$className"
-          case _ =>
-            tpe.typeSymbol.fullName
-        }
-      case _ =>
-        tpe.typeSymbol.fullName
-    }
   }
 
   private val customProxyTypeMap = functionToProxyMap ++ primitiveToProxyMap
@@ -254,10 +253,10 @@ final class TypesContext() {
   /**  Generate stub for class that will be loaded in JVM - generated for this expression */
   private def generateStubForNewClass(name: String): String = {
     val data = state.newCodeClasses(name)
-    val proxtParentClass = functionToProxyMap(data.parentClassName)
+    val proxyParentClass = functionToProxyMap(data.parentClassName)
     val className = typeNameFor(name)
     val realClassName = data.className
-    s"""case class $className(context: JdiContext) extends $proxtParentClass { override val className = "$realClassName"}"""
+    s"""case class $className(context: JdiContext) extends $proxyParentClass { override val className = "$realClassName"}"""
   }
 
   /** Generate stub for single type */

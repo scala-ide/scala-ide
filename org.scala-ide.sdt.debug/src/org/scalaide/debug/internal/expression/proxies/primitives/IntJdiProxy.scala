@@ -5,14 +5,13 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.runtime.RichInt
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.context.JdiContext
+
 import com.sun.jdi.IntegerValue
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 /**
  * JdiProxy implementation for `int`, `scala.Int` and `java.lang.Integer`.

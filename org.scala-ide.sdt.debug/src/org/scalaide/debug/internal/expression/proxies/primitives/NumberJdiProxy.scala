@@ -5,8 +5,6 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.runtime.ScalaNumberProxy
-
 import org.scalaide.debug.internal.expression.proxies.primitives.operations.BitwiseOperations
 import org.scalaide.debug.internal.expression.proxies.primitives.operations.FloatingPointNumericOperations
 import org.scalaide.debug.internal.expression.proxies.primitives.operations.IntegerNumericOperations

@@ -18,10 +18,10 @@ import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
  * @implicitArgumentTypes
  */
 case class FunctionStub(name: String,
-                        thisType: String,
-                        returnType: Option[String],
-                        argumentTypes: Seq[Seq[String]] = Seq.empty,
-                        implicitArgumentTypes: Seq[String] = Seq.empty) {
+  thisType: String,
+  returnType: Option[String],
+  argumentTypes: Seq[Seq[String]] = Seq.empty,
+  implicitArgumentTypes: Seq[String] = Seq.empty) {
 
   /** All types that are used inside this function */
   final def allTypes: Seq[String] = returnType.toSeq ++ implicitArgumentTypes ++ argumentTypes.flatten

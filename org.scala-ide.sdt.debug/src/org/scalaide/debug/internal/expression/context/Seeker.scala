@@ -24,9 +24,11 @@ trait Seeker {
 
   protected def jvm: VirtualMachine
 
-
   /** real name of class - replace all object name prefix */
-  private def realClassName(name: String) = if (name.startsWith(DebuggerSpecific.objNamePrefix)) name.drop(3) else name
+  private def realClassName(name: String) = {
+    import DebuggerSpecific._
+    if (name.startsWith(objNamePrefix)) name.drop(objNamePrefix.length) else name
+  }
 
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType = {

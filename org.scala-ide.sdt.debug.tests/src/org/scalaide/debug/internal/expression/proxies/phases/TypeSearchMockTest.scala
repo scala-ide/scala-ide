@@ -52,26 +52,28 @@ class TypeSearchMockTest {
         ${codeLine}
       """, Map(listType -> functions.toSet))
 
+  private val listTypeScala = "scala.package$List"
+
   //tests
 
   @Test
   def function_only_parameter_list(): Unit = {
     testOnList("list.apply(1)") {
-      FunctionStub("apply", "scala.package$List", Some(intType), Seq(Seq(intType)))
+      FunctionStub("apply", listTypeScala, Some(intType), Seq(Seq(intType)))
     }
   }
 
   @Test
   def function_only_name(): Unit = {
     testOnList("list.size") {
-      FunctionStub("size", "scala.package$List", Some(intType))
+      FunctionStub("size", listTypeScala, Some(intType))
     }
   }
 
   @Test
   def function_only_parameter_list_with_apply(): Unit = {
     testOnList("list(1)") {
-      FunctionStub("apply", "scala.package$List", Some(intType), Seq(Seq(intType)))
+      FunctionStub("apply", listTypeScala, Some(intType), Seq(Seq(intType)))
     }
   }
 
@@ -81,22 +83,23 @@ class TypeSearchMockTest {
       """var b: List[Int] = null
         |list.endsWith(b)
         | """.stripMargin) {
-      FunctionStub("endsWith", "scala.package$List", Some(booleanType), Seq(Seq(listType)))
-    }
+        FunctionStub("endsWith", listTypeScala, Some(booleanType), Seq(Seq(listType)))
+      }
   }
 
   @Test
   def function_with_typeApply(): Unit = {
     testOnList("list.sum") {
-      FunctionStub("sum", "scala.package$List", Some(intType), implicitArgumentTypes = Seq(JdiContext.toObject("scala.math.Numeric.IntIsIntegral")))
+      FunctionStub("sum", listTypeScala, Some(intType), implicitArgumentTypes = Seq(JdiContext.toObject("scala.math.Numeric.IntIsIntegral")))
     }
   }
 
   @Test
   def function_with_typeApply_parameter_and_implicit(): Unit = {
+    val cbf = "scala.collection.generic.CanBuildFrom"
     testWithListCode("list.map(_ + 1)")(
-      (listType, Set(FunctionStub("map", "scala.package$List", Some(listType), Seq(Seq("scala.Function1")), Seq("scala.collection.generic.CanBuildFrom")))),
-      (JdiContext.toObject(listType), Set(FunctionStub("canBuildFrom", "scala.collection.immutable.List", Some("scala.collection.generic.CanBuildFrom"), List(), List()))),
+      (listType, Set(FunctionStub("map", listTypeScala, Some(listType), Seq(Seq("scala.Function1")), Seq(cbf)))),
+      (JdiContext.toObject(listType), Set(FunctionStub("canBuildFrom", listType, Some(cbf), List(), List()))),
       (intType -> Set(FunctionStub("+", "scala.Int", Some(intType), Seq(Seq(intType))))))
   }
 }

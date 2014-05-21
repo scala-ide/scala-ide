@@ -13,7 +13,10 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.ScalaOther
-import org.scalaide.debug.internal.expression.proxies.{SimpleJdiProxy, JdiProxy, JdiProxyWrapper, StringJdiProxy}
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.JdiProxyWrapper
+import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
 import com.sun.jdi.ClassNotLoadedException
@@ -39,10 +42,10 @@ private[context] trait JdiMethodInvoker
    *  Wraps `invokeUnboxed` with a `valueProxy`.
    */
   override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
-                                                onScalaType: Option[String],
-                                                name: String,
-                                                args: Seq[Seq[JdiProxy]] = Seq.empty,
-                                                implicits: Seq[JdiProxy] = Seq.empty): Result =
+    onScalaType: Option[String],
+    name: String,
+    args: Seq[Seq[JdiProxy]] = Seq.empty,
+    implicits: Seq[JdiProxy] = Seq.empty): Result =
     valueProxy(invokeUnboxed[Value](on, onScalaType, name, args, implicits)).asInstanceOf[Result]
 
   /**
@@ -63,9 +66,9 @@ private[context] trait JdiMethodInvoker
 
   /** invokeUnboxed method that  returns option instead of throwing an exception */
   private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
-                               onRealType: Option[String],
-                               name: String,
-                               args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[Value] = {
+    onRealType: Option[String],
+    name: String,
+    args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[Value] = {
     val methodArgs = args.flatten ++ implicits
     val standardMethod = StandardMethod(proxy, name, methodArgs)
     val varArgMethod = VarArgsMethod(proxy, name, methodArgs)
@@ -74,7 +77,6 @@ private[context] trait JdiMethodInvoker
 
     standardMethod() orElse varArgMethod() orElse stringConcat() orElse anyValMethod()
   }
-
 
   /**
    * Creates new instance of given class
@@ -243,8 +245,7 @@ private[context] trait JdiMethodInvoker
     }
 
     private def candidates = proxy.underlying.referenceType().methodsByName(name)
-      .filter(method =>
-      method.argumentTypeNames().size() <= args.size)
+      .filter(method => method.argumentTypeNames.size <= args.size)
 
     private def testResArgs(rest: Seq[Type]): Boolean = rest.reverse.zip(args).forall {
       case (tpe, proxy) => conformsTo(proxy, tpe)
@@ -298,7 +299,6 @@ private[context] trait JdiMethodInvoker
       objectReference <- tryObjectByName(companionObjectName)
     } yield new SimpleJdiProxy(context, objectReference)
 
-
     private def invokeDelegate: Option[Value] = for {
       companionObject <- companionObject
       extensionName = methodName + "$extension"
@@ -311,7 +311,6 @@ private[context] trait JdiMethodInvoker
       boxed <- tryNewInstance(className, Seq(Seq(proxy)))
       res <- context.tryInvokeUnboxed(boxed, None, methodName, Seq(args))
     } yield res
-
 
     /** invoke delegate or box value and invoke method */
     override def apply(): Option[Value] = invokeDelegate orElse invokedBoxed
