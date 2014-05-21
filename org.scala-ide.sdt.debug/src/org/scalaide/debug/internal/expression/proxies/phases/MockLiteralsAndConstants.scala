@@ -34,17 +34,23 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Create code to replace literal.
    * Created code is parsed and literal is replaced by it
    */
-  private def literalCode(literal: Literal): String = {
+  private def literalCode(literal: Literal): Tree = {
+    import DebuggerSpecific._
     if (constantTransformMap.contains(literal.toString)) {
       literalConstantCode(literal)
     } else if (literal.toString == ScalaOther.unitLiteral) {
-      import DebuggerSpecific._
       val unitProxy = classOf[UnitJdiProxy].getSimpleName
-      s"$unitProxy($contextParamName)"
+      Apply(
+        SelectApplyMethod(unitProxy),
+        List(Ident(newTermName(contextParamName))))
     } else {
       val literalStub = typesContext.treeTypeFromContext(literal).get
-      import DebuggerSpecific._
-      s"$literalStub($contextParamName.$proxyMethodName($literal))"
+      Apply(
+        SelectApplyMethod(literalStub),
+        List(
+          Apply(
+            SelectMethod(contextParamName, proxyMethodName),
+            List(literal))))
     }
   }
 
@@ -53,16 +59,24 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Generate code __context.proxy(Type.Constant)
    * where types are Float and Double and Constant are NegativeInfinity, PositiveInfinity and NaN
    */
-  private def literalConstantCode(literal: Literal): String = {
+  private def literalConstantCode(literal: Literal): Tree = {
     val literalStub = typesContext.treeTypeFromContext(literal).get
 
-    val literalCode = if (literalStub.contains("Float"))
-      s"Float.${constantTransformMap(literal.toString)}"
-    else
-      s"Double.${constantTransformMap(literal.toString)}"
+    def literalCodeFor(typeName: String): Tree =
+      SelectMethod(typeName, constantTransformMap(literal.toString))
+
+    val literalCode =
+      if (literalStub.contains("Float")) literalCodeFor("Float")
+      else literalCodeFor("Double")
 
     import DebuggerSpecific._
-    s"$literalStub($contextParamName.$proxyMethodName($literalCode))"
+
+    Apply(
+      SelectApplyMethod(literalStub),
+      List(
+        Apply(
+          SelectMethod(contextParamName, proxyMethodName),
+          List(literalCode))))
   }
 
   /**
@@ -73,7 +87,7 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
 
   /** See `AstTransformer.transformSingleTree`. */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case literal: Literal if shouldBeProxied(literal) => toolbox.parse(literalCode(literal))
+    case literal: Literal if shouldBeProxied(literal) => literalCode(literal)
     case any => transformFurther(tree)
   }
 }

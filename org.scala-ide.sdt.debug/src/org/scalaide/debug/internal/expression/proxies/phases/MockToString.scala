@@ -25,7 +25,11 @@ case class MockToString(toolbox: ToolBox[universe.type], typesContext: TypesCont
 
   /** Creates a proxy to replace `toString` call. */
   private def createProxy(proxy: Tree): Tree =
-    toolbox.parse(s"""${DebuggerSpecific.contextParamName}.${DebuggerSpecific.stringifyMethodName}($proxy)""")
+    Apply(
+      Select(
+        Ident(newTermName(DebuggerSpecific.contextParamName)),
+        newTermName(DebuggerSpecific.stringifyMethodName)),
+      List(proxy))
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case Apply(Select(on, name), _) if isToString(name) => createProxy(on)

@@ -5,8 +5,8 @@
  */
 package org.scalaide.debug.internal.expression
 
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
 /**
  * Names of Java boxed types, used in multiple places.
@@ -30,6 +30,8 @@ object JavaBoxed {
   val Byte = classOf[java.lang.Byte].getName
 
   val Short = classOf[java.lang.Short].getName
+
+  val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short)
 }
 
 /**

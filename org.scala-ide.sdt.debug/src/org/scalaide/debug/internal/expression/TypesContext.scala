@@ -319,7 +319,7 @@ protected object TypesContext {
     ScalaFunctions.Function21 -> classOf[Function21JdiProxy].getSimpleName,
     ScalaFunctions.Function22 -> classOf[Function22JdiProxy].getSimpleName)
 
-  private val primitiveToProxyMap = Map(
+  private[expression] val primitiveToProxyMap = Map(
     ScalaPrimitivesUnified.Byte -> classOf[ByteJdiProxy].getSimpleName,
     ScalaPrimitivesUnified.Short -> classOf[ShortJdiProxy].getSimpleName,
     ScalaPrimitivesUnified.Int -> classOf[IntJdiProxy].getSimpleName,

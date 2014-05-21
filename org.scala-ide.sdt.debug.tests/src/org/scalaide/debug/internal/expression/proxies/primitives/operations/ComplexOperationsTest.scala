@@ -82,7 +82,6 @@ class ComplexOperationsTest extends BaseIntegrationTest(ComplexOperationsTest) {
       ((6.0 / double2).toLong ^ (float2 * short).toByte) < (-int ^ 2) / 1 + double - float,
       JavaBoxed.Boolean)
 
-  @Ignore("TODO - O-5254 - Support for creation of Java boxed types using new")
   @Test
   def operationForJavaBoxedType(): Unit =
     eval("new java.lang.Integer(1) / 4.0 + new java.lang.Double(0.1)", 0.35, JavaBoxed.Double)

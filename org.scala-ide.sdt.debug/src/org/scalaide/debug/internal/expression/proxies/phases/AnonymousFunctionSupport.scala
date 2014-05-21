@@ -75,7 +75,9 @@ trait AnonymousFunctionSupport {
   }
 
   protected def lambdaProxy(proxyClass: String): Tree =
-    toolbox.parse(s"$proxyClass(${DebuggerSpecific.contextParamName})")
+    Apply(
+      Select(Ident(newTermName(proxyClass)), newTermName("apply")),
+      List(Ident(newTermName(DebuggerSpecific.contextParamName))))
 
   protected def extractByNameParams(select: Tree): Option[Seq[Boolean]] = Try {
 

@@ -11,16 +11,16 @@ import scala.reflect.runtime.universe._
 import org.scalaide.debug.internal.expression.context.JdiContext
 
 /**
-* Abstract representation of transformation phase, just transform expression tree to another tree
-*/
+ * Abstract representation of transformation phase, just transform expression tree to another tree
+ */
 trait TransformationPhase {
 
   /**
-  * Tranforms current tree to new form.
-  * It is called only once per object livetime.
-  * Result of this method is passed to another TransformationPhase instance.
-  * @param baseTree tree to transform
-  */
+   * Tranforms current tree to new form.
+   * It is called only once per object livetime.
+   * Result of this method is passed to another TransformationPhase instance.
+   * @param baseTree tree to transform
+   */
   def transform(baseTree: universe.Tree): universe.Tree
 
   /** Breaks block of code into Seq of matching trees */
@@ -38,9 +38,9 @@ trait TransformationPhase {
 }
 
 /**
-* This is proxy-aware transformer.
-* It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
-*/
+ * This is proxy-aware transformer.
+ * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
+ */
 abstract class AstTransformer(typesContext: TypesContext)
   extends TransformationPhase {
 
@@ -69,4 +69,11 @@ abstract class AstTransformer(typesContext: TypesContext)
         transformSingleTree(baseTree, super.transform)
     }
   }
+
+  /** Helper for creating Select on 'apply' method */
+  protected def SelectApplyMethod(typeName: String): Select = SelectMethod(typeName, "apply")
+
+  /** Helper for creating Select on given method */
+  protected def SelectMethod(typeName: String, methodName: String): Select =
+    Select(Ident(newTermName(typeName)), newTermName(methodName))
 }

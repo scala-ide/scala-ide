@@ -13,8 +13,8 @@ sealed trait ExpressionException { self: Throwable => }
 /**
  * Raised when code run in debug context throws an exception.
  */
-class MethodInvocationException(reason: String)
-  extends RuntimeException(s"""Exception was thrown from debugged code, message: "$reason".""")
+class MethodInvocationException(reason: String, underlying: Throwable)
+  extends RuntimeException(s"""Exception was thrown from debugged code, message: "$reason".""", underlying)
   with ExpressionException
 
 class NothingTypeInferred

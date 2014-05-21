@@ -21,7 +21,7 @@ case class MockThis(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   import toolbox.u._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case This(thisName) => toolbox.parse(DebuggerSpecific.thisValName)
+    case This(thisName) => Ident(newTermName(DebuggerSpecific.thisValName))
     case other => transformFurther(other)
   }
 }

@@ -10,7 +10,7 @@ import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.DebuggerSpecific
-import org.scalaide.debug.internal.expression.ExpressionEvaluator
+import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.TypesContext
 
@@ -32,8 +32,8 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
    */
   private def extractParameters(tree: Tree): List[List[Tree]] = tree match {
     case select: Select => Nil
-    case typeApply @ TypeApply(fun, _) => extractParameters(fun)
-    case apply @ Apply(fun, args) => args :: extractParameters(fun)
+    case TypeApply(fun, _) => extractParameters(fun)
+    case Apply(fun, args) => args :: extractParameters(fun)
     case _ => throw new RuntimeException(s"Bad part of call function tree: $tree")
   }
 
@@ -45,32 +45,39 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
     val params = (args +: extractParameters(fun)).reverse
 
     // responsible for ""package.Class"" part of expression
-    val classTypeCode = toolbox.parse('"' + classType + '"')
-
-    // responsible for "Seq" parts of expression
-    val Apply(seqApplyFunction, _) = toolbox.parse("Seq()")
+    val classTypeCode: Tree = Literal(Constant(classType))
 
     // responsible for "__context.newInstance" part of expression
-    val newInstanceFunc = toolbox.parse(s"${DebuggerSpecific.contextParamName}.newInstance")
+    val newInstance = SelectMethod(DebuggerSpecific.contextParamName, "newInstance")
 
     // responsible for "Seq(a), Seq(a)" part of expression
     val argumentSeqArgumentSeqs: List[Tree] = params.map {
-      list => Apply(seqApplyFunction, list)
+      list => Apply(SelectApplyMethod("Seq"), list)
     }
 
     // responsible for "Seq(Seq(a), Seq(a))" part of expression
-    val argsCode = Apply(seqApplyFunction, argumentSeqArgumentSeqs)
+    val argsCode = Apply(SelectApplyMethod("Seq"), argumentSeqArgumentSeqs)
 
+    val result = Apply(newInstance, List(classTypeCode, argsCode))
     // whole expression
-    Apply(newInstanceFunc, List(classTypeCode, argsCode))
+    if (JavaBoxed.all contains classType) wrapInPrimitiveProxy(result, classType)
+    else result
   }
+
+  /**
+   * Wraps reslult with primitive proxy if needed.
+   */
+  private def wrapInPrimitiveProxy(tree: Tree, primitiveType: String): Tree =
+    Apply(
+      SelectApplyMethod(TypesContext.primitiveToProxyMap(primitiveType)),
+      List(tree))
 
   /** Transformer */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = {
     currentTrees = tree +: currentTrees
     val retTree = tree match {
       case newTree @ Apply(fun, args) if fun.symbol.name.toString == ScalaOther.constructorFunctionName =>
-        proxiedNewCode(fun, args, newTree.tpe.toString)
+        proxiedNewCode(fun, args, newTree.tpe.typeSymbol.fullName)
       case any => transformFurther(tree)
     }
     currentTrees = currentTrees.tail

@@ -23,7 +23,6 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
   def `new LibClass2Lists(1)(2)`(): Unit =
     eval("new LibClass2Lists(1)(2)", "LibClass2Lists(1)", "debug.LibClass2Lists")
 
-  @Ignore("TODO - O-5254 - support for creation of Java boxed types using new")
   @Test
   def createNewInstanceOfPrimitiveType(): Unit =
     eval("new java.lang.Integer(12345)", "12345", "java.lang.Integer")

@@ -39,7 +39,7 @@ class JdiExpressionEvaluator(debugTarget: ScalaDebugTarget, thread: ThreadRefere
       res <- Try(compiledExpression.apply(context)).recoverWith {
         case ie: InvocationException =>
           val underlying = context.valueProxy(ie.exception)
-          Failure(new MethodInvocationException(context.show(underlying, withType = false)))
+          Failure(new MethodInvocationException(context.show(underlying, withType = false), ie))
         case nothingInferred: NothingTypeInferred =>
           Failure(nothingInferred)
         case jdiProxyFunctionParameter: JdiProxyFunctionParameter =>
