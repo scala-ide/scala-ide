@@ -65,7 +65,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
   }
 
   /**
-   * Wraps reslult with primitive proxy if needed.
+   * Wraps result with primitive proxy if needed.
    */
   private def wrapInPrimitiveProxy(tree: Tree, primitiveType: String): Tree =
     Apply(
