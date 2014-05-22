@@ -38,7 +38,7 @@ object TestValues {
   val varargsLineNumber = 43
 
   val variablesFileName = "Variables"
-  val variablesLineNumber = 15
+  val variablesLineNumber = 17
 
   val visibilityFileName = "Visibility"
   val visibilityLineNumber = 23

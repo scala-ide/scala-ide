@@ -19,7 +19,8 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
 
   private def testAssignment(on: String, tpe: String, values: String*) = values.foreach { value =>
     runCode(s"$on = $value")
-    eval(s"$on", value, tpe)
+    val (resultValue, _) = runCode(value)
+    eval(code = s"$on", expectedValue = resultValue, expectedType = tpe)
   }
 
   @Test
@@ -38,6 +39,27 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
   @Test
   def testFieldVariableAssignmentWithExplicitThis(): Unit =
     testAssignment("this.fieldInt", JavaBoxed.Integer, values = "1", "2", "3")
+
+  @Ignore("TODO - O-5398 - Using same variable on LHS and RHS")
+  @Test
+  def testAssignmentWithSameVariableOnLhsAndRhs(): Unit =
+    testAssignment("fieldInt", JavaBoxed.Integer, "fieldInt + 1")
+
+  @Ignore("TODO - O-5398 - Using tmp variable on RHS")
+  @Test
+  def testAssignmentWithTmpVariable(): Unit = {
+    runCode("val tmp = fieldInt + 1; fieldInt = tmp")
+    eval(code = "fieldInt", expectedValue = "2", expectedType = JavaBoxed.Integer)
+  }
+
+  @Ignore("TODO - O-5398 - Using variable on RHS")
+  @Test
+  def testAssignmentWithVariableOnRhs(): Unit =
+    testAssignment("fieldInt", JavaBoxed.Integer, "state.int + 1")
+
+  @Test
+  def testStringToStringAssignment(): Unit =
+    testAssignment("fieldString", JavaBoxed.String, "anotherStringField")
 
   @Test
   def testSetterMethod(): Unit = {

@@ -7,6 +7,8 @@ class State {
 object Variables extends App {
 
   var fieldInt: Int = 1
+  var fieldString = "Ala"
+  var anotherStringField = "Ola"
 
   def foo() {
     var localInt: Int = 2
