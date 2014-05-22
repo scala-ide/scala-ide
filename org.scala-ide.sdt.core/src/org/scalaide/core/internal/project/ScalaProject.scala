@@ -478,7 +478,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
     val p = new PropertyStore(new ProjectScope(underlying), plugin.pluginId)
-    p.addPropertyChangeListener(new IPropertyChangeListener{ def propertyChange(event: PropertyChangeEvent) = {compatibilityModeCache = Some(getCompatibilityMode()); classpathHasChanged()} })
+    p.addPropertyChangeListener(new IPropertyChangeListener {
+      def propertyChange(event: PropertyChangeEvent) = {
+        compatibilityModeCache = Some(getCompatibilityMode());
+        classpathHasChanged()
+      }
+    })
     p
   }
 
@@ -490,6 +495,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (usesProjectSettings) projectSpecificStorage else ScalaPlugin.prefStore
   }
 
+  @deprecated("This method is not called from anywhere, consider removing in the next release", "4.0.0")
   def isStandardSource(file: IFile, qualifiedName: String): Boolean = {
     val pathString = file.getLocation.toString
     val suffix = qualifiedName.replace(".", "/") + ".scala"

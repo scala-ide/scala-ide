@@ -3,9 +3,7 @@ package org.scalaide.core.internal.project
 import java.util.Properties
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-
 import scala.tools.nsc.settings.ScalaVersion
-
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
@@ -16,8 +14,9 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.eclipse.OSGiUtils
-
 import xsbti.compile.ScalaInstance
+import java.net.URLClassLoader
+import scala.tools.nsc.settings.SpecificScalaVersion
 
 /** This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
@@ -76,10 +75,10 @@ class PlatformScalaInstallation extends ScalaInstallation {
       Seq(libraryJar, compilerJar) ++ extraJars
   }
 
-  override def scalaInstance: xsbti.compile.ScalaInstance = {
+  /** We make this ScalaInstance a val since this can't change without restarting Eclipse. */
+  override val scalaInstance: xsbti.compile.ScalaInstance = {
     // we use the current classloader since this installation is the same as the one we're running in
     val platformLoader = getClass.getClassLoader
-    // TODO: new one everytime?
     new sbt.ScalaInstance(version.unparse, platformLoader, libraryJar.toFile, compilerJar.toFile, extraJars.map(_.toFile).toList, None)
   }
 }
@@ -104,11 +103,10 @@ case class BundledScalaInstallation(
     libraryJar +: compilerJar +: extraJars
 
   override def scalaInstance: ScalaInstance = {
-    // TODO: copied from PlatformScalaInstallation, do we need something different?
-    // we use the current classloader since this installation is the same as the one we're running in
-    val platformLoader = getClass.getClassLoader
-    // TODO: new one everytime?
-    new sbt.ScalaInstance(version.unparse, platformLoader, libraryJar.toFile, compilerJar.toFile, extraJars.map(_.toFile).toList, None)
+    val store = ScalaPlugin.plugin.classLoaderStore
+    val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
+
+    new sbt.ScalaInstance(version.unparse, scalaLoader, libraryJar.toFile, compilerJar.toFile, extraJars.map(_.toFile).toList, None)
   }
 }
 
@@ -166,11 +164,20 @@ case class MultiBundleScalaInstallation(
     libraryJar +: compilerJar +: extraJars
 
   override def scalaInstance: ScalaInstance = {
-    // TODO: copied from PlatformScalaInstallation, do we need something different?
-    // we use the current classloader since this installation is the same as the one we're running in
-    val platformLoader = getClass.getClassLoader
-    // TODO: new one everytime?
-    new sbt.ScalaInstance(version.unparse, platformLoader, libraryJar.toFile, compilerJar.toFile, extraJars.map(_.toFile).toList, None)
+    val store = ScalaPlugin.plugin.classLoaderStore
+    val scalaLoader = store.getOrUpdate(this)(classLoader)
+
+    new sbt.ScalaInstance(version.unparse, scalaLoader, libraryJar.toFile, compilerJar.toFile, extraJars.map(_.toFile).toList, None)
+  }
+
+  /** We reuse the current class loader if this installation is the platform installation */
+  private def classLoader: ClassLoader = {
+    import ScalaPlugin.plugin
+
+    if (plugin.libClasses == Option(libraryJar) && plugin.compilerClasses == Option(compilerJar))
+      ScalaInstallation.platformInstallation.scalaInstance.loader()
+    else
+      new URLClassLoader(allJars.map(_.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader)
   }
 }
 
@@ -249,4 +256,22 @@ object ScalaInstallation {
 
   }
 
+  /** Return the closest installation to the given Scala version.
+   *
+   *  @return An existing ScalaInstallation.
+   */
+  def findBestMatch(desiredVersion: SpecificScalaVersion, available: Seq[ScalaInstallation] = ScalaInstallation.availableInstallations): ScalaInstallation = {
+    def versionDistance(v: ScalaVersion) = v match {
+      case SpecificScalaVersion(major, minor, micro, build) =>
+        import Math._
+        abs(major - desiredVersion.major) * 1000000 +
+          abs(minor - desiredVersion.minor) * 10000 +
+          abs(micro - desiredVersion.rev)     * 100 +
+          abs(build.compare(desiredVersion.build))
+
+      case _ =>
+        0
+    }
+    available.minBy(i => versionDistance(i.version))
+  }
 }
