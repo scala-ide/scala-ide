@@ -44,6 +44,8 @@ class JdiExpressionEvaluator(debugTarget: ScalaDebugTarget, thread: ThreadRefere
           Failure(nothingInferred)
         case jdiProxyFunctionParameter: JdiProxyFunctionParameter =>
           Failure(jdiProxyFunctionParameter)
+        case cannotCompileLambda: CannotCompileLambda =>
+          Failure(cannotCompileLambda)
         case cnl: ClassNotLoadedException =>
           logger.error(s"Class with name: ${cnl.className} was not loaded.")
           handleUnknownException(cnl)

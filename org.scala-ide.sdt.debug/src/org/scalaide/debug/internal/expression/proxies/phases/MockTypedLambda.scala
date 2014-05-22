@@ -2,8 +2,10 @@ package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
+import scala.tools.reflect.ToolBoxError
 
 import org.scalaide.debug.internal.expression.AstTransformer
+import org.scalaide.debug.internal.expression.CannotCompileLambda
 import org.scalaide.debug.internal.expression.DebuggerSpecific
 import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.TypesContext
@@ -81,7 +83,12 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
    */
   protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
     case fun @ Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
-      val typedFunction = toolbox.typeCheck(fun)
+      // TODO - add custom exception here
+      val typedFunction = try {
+        toolbox.typeCheck(fun)
+      } catch {
+        case toolboxError: ToolBoxError => throw new CannotCompileLambda(toolboxError)
+      }
       createStubedFunction(typedFunction.asInstanceOf[Function])
     case fun @ Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
       createStubedPartialFunction(fun)

@@ -10,6 +10,23 @@ package org.scalaide.debug.internal.expression
  */
 sealed trait ExpressionException { self: Throwable => }
 
+/** Long messages are placed here for readability */
+object ExpressionException {
+
+  val nothingTypeInferredMessage =
+    "scala.Nothing was inferred as a result of an expression, which makes no sense and thus is not supported."
+
+  val jdiProxyFunctionParameterMessage =
+    """Provided lambda has not inferred type of argument.
+      |It is typically cause by lack of generic in JVM.
+      |Provide valid type arguments to make it work.""".stripMargin
+
+  val cannotCompileLambdaMessage =
+    """One of lambdas used in the code could not be compiled.
+      |This may be caused by closing over some value, which is not supported,
+      |or some problems with generic types and erasure.""".stripMargin
+}
+
 /**
  * Raised when code run in debug context throws an exception.
  */
@@ -18,10 +35,13 @@ class MethodInvocationException(reason: String, underlying: Throwable)
   with ExpressionException
 
 class NothingTypeInferred
-  extends RuntimeException("scala.Nothing was inferred as a result of an expression, which makes no sense and thus is not supported.")
+  extends RuntimeException(ExpressionException.nothingTypeInferredMessage)
   with ExpressionException
 
 class JdiProxyFunctionParameter
-  extends RuntimeException("Provided lambda has not inferred type of argument. It is typically cause by lack of generic in JVM. Provide valid type for type arguments to make it work.")
+  extends RuntimeException(ExpressionException.jdiProxyFunctionParameterMessage)
   with ExpressionException
 
+class CannotCompileLambda(underlying: Throwable)
+  extends RuntimeException(ExpressionException.cannotCompileLambdaMessage, underlying)
+  with ExpressionException

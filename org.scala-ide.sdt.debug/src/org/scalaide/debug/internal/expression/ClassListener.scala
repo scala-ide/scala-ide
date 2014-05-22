@@ -6,7 +6,9 @@
 package org.scalaide.debug.internal.expression
 
 import java.io.File
+
 import scala.io.Source
+import scala.tools.reflect.ToolBoxError
 
 /** Listens for new classes on request. To work options must be passed to toolbox that is used. */
 object ClassListener {
@@ -38,7 +40,11 @@ object ClassListener {
 
     def findNewClassDirectory() = {
       val filesBeforeCompilation = parentDirFile.list().toSet
-      compile()
+      try {
+        compile()
+      } catch {
+        case toolboxError: ToolBoxError => throw new CannotCompileLambda(toolboxError)
+      }
       val filesAfterCompilation = parentDirFile.list().toSet
       val Seq(newClassDir) = (filesAfterCompilation diff filesBeforeCompilation).toSeq
       newClassDir

@@ -77,15 +77,15 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
   def testRangeOperationsOnIntegral(): Unit = {
     eval("int to int2", int to int2, ScalaOther.rangeInclusive)
     eval("int.to(int2, 1)", int.to(int2, 1), ScalaOther.rangeInclusive)
-    eval("int until int2 mkString", int until int2 mkString, JavaBoxed.String)
+    eval("(int until int2).mkString", (int until int2).mkString, JavaBoxed.String)
     eval("int.until(int2, 1).mkString", int.until(int2, 1).mkString, JavaBoxed.String)
   }
 
   @Test
   def testRangeOperationsOnFractional(): Unit = {
-    eval("double to double2 by(1) mkString", double to double2 by(1) mkString, JavaBoxed.String)
+    eval("(double to double2 by 1).mkString", (double to double2 by 1).mkString, JavaBoxed.String)
     eval("double.to(double2, 0.5).mkString", double.to(double2, 0.5).mkString, JavaBoxed.String)
-    eval("double until double2 by(1) mkString", double until double2 by(1) mkString, JavaBoxed.String)
+    eval("(double until double2 by 1).mkString", (double until double2 by 1).mkString, JavaBoxed.String)
     eval("double.until(double2, 0.5).mkString", double.until(double2, 0.5).mkString, JavaBoxed.String)
   }
 

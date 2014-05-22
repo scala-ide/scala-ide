@@ -75,12 +75,20 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
   @Test
   def testDisplayIllegalNothingTypeInferred(): Unit = withExpressionManager(
     code = "None.get",
-    expectedError = Some("Nothing was inferred"),
+    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
     expectedResult = None)
 
   @Test
-  def `lambda without inferred type`(): Unit =
-    withExpressionManager("list.map(_ - 1)", None, Some("Provided lambda has not inferred type of argument"))
+  def testDisplayMessageForLambdaWithoutInferredType(): Unit = withExpressionManager(
+    code = "list.map(_ - 1)",
+    expectedError = Some(ExpressionException.jdiProxyFunctionParameterMessage),
+    expectedResult = None)
+
+  @Test
+  def testDisplayMessageForLambdaWithClosure(): Unit = withExpressionManager(
+    code = "libClass.performTwice(libClass.incrementAndGet())",
+    expectedError = Some(ExpressionException.cannotCompileLambdaMessage),
+    expectedResult = None)
 
 }
 
