@@ -92,10 +92,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def reflectPluginId = "org.scala-lang.scala-reflect"
   def swingPluginId = "org.scala-lang.modules.scala-swing"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
-  lazy val sbtCompilerInterfaceId = {
-    val ShortScalaVersion(major, minor) = scalaVer
-    s"org.scala-ide.sbt.compiler$major$minor.interface"
-  }
+  lazy val sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name

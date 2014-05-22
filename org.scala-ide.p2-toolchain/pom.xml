@@ -49,14 +49,6 @@
         <configuration>
           <resolver>p2</resolver>
           <pomDependencies>consider</pomDependencies>
-        </configuration>
-      </plugin>
-      <plugin>
-        <!-- using the Scala jars from the local repo generates version conflicts
-             this option disable the checks -->
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>target-platform-configuration</artifactId>
-        <configuration>
           <allowConflictingDependencies>true</allowConflictingDependencies>
         </configuration>
       </plugin>
