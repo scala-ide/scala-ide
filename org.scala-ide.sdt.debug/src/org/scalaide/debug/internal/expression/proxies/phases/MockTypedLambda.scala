@@ -83,7 +83,6 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
    */
   protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
     case fun @ Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
-      // TODO - add custom exception here
       val typedFunction = try {
         toolbox.typeCheck(fun)
       } catch {
