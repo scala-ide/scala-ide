@@ -2,65 +2,31 @@ package org.scalaide.core
 package quickassist
 
 import org.eclipse.jdt.internal.core.util.SimpleDocument
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
-import java.util.ArrayList
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
-import testsetup.SDTTestUtils
 import scala.util.control.Exception
 
-object ExplicitTypeAssistTest {
-  var project: ScalaProject = _
-  var simulator = new EclipseUserSimulator
-
+object ExplicitTypeAssistTest extends QuickAssistTest {
   @BeforeClass
-  def createProject() {
-    project = simulator.createProjectInWorkspace("assist")
-  }
-
-  def createSourceFile(packageName: String, unitName: String)(contents: String): ScalaSourceFile = {
-    val pack = SDTTestUtils.createSourcePackage(packageName)(project)
-    simulator.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
-  }
+  def createProject() = create("assist")
 
   @AfterClass
-  def deleteProject() {
-    Exception.ignoring(classOf[Exception]) { project.underlying.delete(true, null) }
-  }
-
+  def deleteProject() = delete()
 }
 
 /** This test suite requires the UI. */
-class ExplicitTypeAssistTest {
+class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   import ExplicitTypeAssistTest._
 
-  def noAssistsFor(contents: String) = {
-    runExplicitTypeWith(contents) { p =>
-      Assert.assertTrue(s"Unexpected explicit type $p", p.isEmpty)
-    }
-  }
+  val quickAssist = ExplicitReturnType
 
-  def runExplicitTypeWith(contents: String)(f: Option[IJavaCompletionProposal] => Unit) = {
-    val unit = createSourceFile("test", "Test.scala")(contents.filterNot(_ == '^'))
-
-    try {
-      val Seq(pos) = SDTTestUtils.positionsOf(contents.toCharArray(), "^")
-      val proposals = new ArrayList[IJavaCompletionProposal]
-      // get all corrections for the problem
-
-      f(ExplicitReturnType.suggestsFor(unit, pos).headOption)
-    } finally
-      unit.delete(true, null)
-
-  }
+  def createSource(packageName: String, unitName: String)(contents: String) = createSourceFile(packageName, unitName)(contents)
 
   def assistsFor(contents: String, expected: String): Unit =
-    runExplicitTypeWith(contents) { p =>
+    runQuickAssistWith(contents) { p =>
       Assert.assertTrue("Add explicit type proposal not found", p.nonEmpty)
 
       val doc = new SimpleDocument(contents.filterNot(_ == '^'))

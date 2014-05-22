@@ -45,6 +45,9 @@ class ClasspathTests {
   import ClasspathTests._
   val classpathMarkerId = ScalaPlugin.plugin.classpathProblemMarkerId
 
+  // 60s should be enough even for Jenkins builds running under high-load
+  // (increased from 10s)
+  val TIMEOUT = 60000
 
   val simulator = new EclipseUserSimulator
 
@@ -561,7 +564,7 @@ class ClasspathTests {
     assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
     var actualMarkers = (0, 0)
-    SDTTestUtils.waitUntil(10000) {
+    SDTTestUtils.waitUntil(TIMEOUT) {
       actualMarkers = collectMarkers(scalaProject)
       actualMarkers == ((expectedNbOfErrorMarker, expectedNbOfWarningMarker))
     }
@@ -605,7 +608,7 @@ class ClasspathTests {
     job.addJobChangeListener(jobListener)
     job.schedule()
 
-    SDTTestUtils.waitUntil(10000) { jobDone }
+    SDTTestUtils.waitUntil(TIMEOUT) { jobDone }
     actualMarkers
   }
 

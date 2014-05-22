@@ -41,6 +41,7 @@ import org.eclipse.jdt.internal.core.util.Util
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.ScalaWordFinder
+import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 
 class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
   /*
@@ -341,6 +342,27 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    */
   def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
     inherited: Boolean, viaView: Symbol, context: CompletionContext): CompletionProposal = {
+
+    /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
+     *  source. This function adds the back-ticks to a given identifier, if necessary.
+     */
+    def addBackTicksIfNecessary(identifier: String): String = {
+      def needsBackTicks(identifier: String) = {
+        import scalariform.lexer.Tokens._
+
+        try {
+          val tokens = ScalaLexer.tokenise(identifier)  // The last token is always EOF
+          tokens.size match {
+            case 1 => true    // whitespace
+            case 2 => !(IDS contains tokens.head.tokenType)
+            case more => true
+          }
+        } catch {case _: ScalaLexerException => true  /* Illegal chars encountered */}
+      }
+
+      if(needsBackTicks(identifier)) s"`$identifier`" else identifier
+    }
+
     import org.scalaide.core.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
@@ -405,7 +427,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       kind,
       context,
       start,
-      name,
+      addBackTicksIfNecessary(name),
       signature,
       container,
       relevance,
