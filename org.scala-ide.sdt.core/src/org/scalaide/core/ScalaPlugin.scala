@@ -57,8 +57,8 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
-import org.eclipse.core.runtime.IPath
-import java.io.File
+import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -81,7 +81,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-
   import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
   def pluginId = "org.scala-ide.sdt.core"
@@ -169,60 +168,24 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
-  /**
-   * Returns the location of the source bundle for the bundle.
-   *
-   * @param bundleId the bundle id
-   * @param bundelPath the bundle location
-   */
-  def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
-    val jarFile = bundlePath.lastSegment()
-    val parentFolder = bundlePath.removeLastSegments(1)
-
-    val sourceBundleId = bundleId + ".source"
-    // the expected filename for the source jar
-    val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
-
-    // the source jar location when the files are from the plugins folder
-    val installedLocation = parentFolder.append(sourceJarFile)
-
-    if (installedLocation.toFile().exists()) {
-      // found in the plugins folder
-      Some(installedLocation)
-    } else {
-      val versionString = parentFolder.lastSegment()
-      val groupFolder = parentFolder.removeLastSegments(2)
-      // the source jar location when the files are from a local m2 repo
-      val buildLocation = groupFolder.append(sourceBundleId).append(versionString).append(sourceJarFile)
-      if (buildLocation.toFile().exists()) {
-        // found in the m2 repo
-        Some(buildLocation)
-      } else {
-        // not found
-        None
-      }
-    }
-
-  }
-
   lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
-  lazy val libSources = libClasses.flatMap(l => computeSourcePath(libraryPluginId, l))
+  lazy val libSources = libClasses.flatMap(l => EclipseUtils.computeSourcePath(libraryPluginId, l))
   //  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
 
   // 2.10 specific libraries
   lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
   lazy val actorsClasses = OSGiUtils.getBundlePath(scalaActorsBundle)
-  lazy val actorsSources = actorsClasses.flatMap(l => computeSourcePath(actorsPluginId, l))
+  lazy val actorsSources = actorsClasses.flatMap(l => EclipseUtils.computeSourcePath(actorsPluginId, l))
   //  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
 
   lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
   lazy val reflectClasses = OSGiUtils.getBundlePath(scalaReflectBundle)
-  lazy val reflectSources = reflectClasses.flatMap(l => computeSourcePath(reflectPluginId, l))
+  lazy val reflectSources = reflectClasses.flatMap(l => EclipseUtils.computeSourcePath(reflectPluginId, l))
   //  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
 
   // TODO: 2.10 swing support
   lazy val swingClasses = OSGiUtils.getBundlePath(Platform.getBundle(swingPluginId))
-  lazy val swingSources = swingClasses.flatMap(l => computeSourcePath(swingPluginId, l))
+  lazy val swingSources = swingClasses.flatMap(l => EclipseUtils.computeSourcePath(swingPluginId, l))
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
@@ -248,6 +211,9 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     super.stop(context)
     ScalaPlugin.plugin = null
   }
+
+  /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
+  lazy val compilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
