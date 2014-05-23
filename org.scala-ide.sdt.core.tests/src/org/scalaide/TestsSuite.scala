@@ -1,4 +1,4 @@
-package org.scalaide.core
+package org.scalaide
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
@@ -39,10 +39,6 @@ import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
 
-/**
- * To run this class DO NOT FORGET to set the config.ini in the  "configuration" tab.
- * @author ratiu
- */
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
