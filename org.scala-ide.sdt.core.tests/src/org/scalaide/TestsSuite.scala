@@ -36,6 +36,7 @@ import org.scalaide.core.sbtbuilder.TodoBuilderTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
+import org.scalaide.ui.wizards.WizardTests
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -75,5 +76,7 @@ import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
     classOf[QualifiedNameSupportTest],
     classOf[ScalaWordFinderTest],
     classOf[ScalaInstallationTest],
-    classOf[MultiScalaVersionTest]))
+    classOf[MultiScalaVersionTest],
+    classOf[WizardTests]
+))
 class TestsSuite
