@@ -56,11 +56,11 @@ class SbtInputs(sourceFiles: Seq[File],
   def reporter = scalaReporter
 
   def incOptions: sbt.inc.IncOptions = {
-    sbt.inc.IncOptions.Default.copy(
-      apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name)),
-      relationsDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name)),
-      newClassfileManager = ClassfileManager.transactional(tempDir),
-      apiDumpDirectory = None)
+    sbt.inc.IncOptions.Default.
+      withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
+      withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
+      withNewClassfileManager(ClassfileManager.transactional(tempDir)).
+      withApiDumpDirectory(None)
   }
 
   def options = new Options {
