@@ -17,7 +17,7 @@ import org.scalaide.debug.internal.expression.TypesContext
  * Searches for used types and adds them to TypesContext.
  */
 case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext)
+  extends AstTransformer
   with AnonymousFunctionSupport {
 
   import toolbox.u._

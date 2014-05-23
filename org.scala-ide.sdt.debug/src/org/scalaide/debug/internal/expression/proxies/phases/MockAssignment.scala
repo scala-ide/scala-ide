@@ -7,21 +7,20 @@ package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
-
 import org.scalaide.debug.internal.expression.AstTransformer
+import org.scalaide.debug.internal.expression.TransformationPhase
 import org.scalaide.debug.internal.expression.DebuggerSpecific
 import org.scalaide.debug.internal.expression.TypesContext
 
-/**
- * Transformer for converting `this` usages into special variable that stubs calls to `this`.
- */
-case class MockThis(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer {
+case class MockAssignment(toolbox: ToolBox[universe.type], typesContext: TypesContext) extends AstTransformer {
 
   import toolbox.u._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case This(thisName) => Ident(newTermName(DebuggerSpecific.thisValName))
+    case Assign(Ident(termName), value) if typesContext.unboundVariables.contains(termName.toString) =>
+      Apply(
+        Select(Ident(newTermName(DebuggerSpecific.thisValName)), newTermName(termName + "_$eq")),
+        List(value))
     case other => transformFurther(other)
   }
 }

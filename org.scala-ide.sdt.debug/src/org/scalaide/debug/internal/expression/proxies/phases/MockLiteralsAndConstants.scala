@@ -21,7 +21,7 @@ import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
  * All found ones are transformed to `__context.proxy(literal)`
  */
 case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 

@@ -9,8 +9,7 @@ import org.junit.Assert._
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-
-import org.scalaide.debug.internal.expression.context.VariableContext
+import org.scalaide.debug.internal.expression.TypesContext
 
 @RunWith(classOf[JUnit4])
 class VariableProxiesTest extends HasEvaluator {
@@ -18,13 +17,9 @@ class VariableProxiesTest extends HasEvaluator {
   private def testVariables(variables: String*)(in: String) {
     val code = Evaluator.parse(in)
 
-    val mockContext = new VariableContext {
-      override def getType(variableName: String) = None
-      override def getThisPackage = None
-    }
-
-    val mockVariables = MockVariables(Evaluator.toolbox, mockContext)
-    val foundVariables = new mockVariables.VariableProxyTraverser(code).findUnboundNames()
+    val typesContext = new TypesContext()
+    SearchForUnboundVariables(Evaluator.toolbox, typesContext).transform(code)
+    val foundVariables = typesContext.unboundVariables
 
     assertEquals(
       s"mismatch variables in: $in \n tree: ${Evaluator.toolbox.u.showRaw(code)}  \n",

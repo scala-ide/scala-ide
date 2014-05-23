@@ -15,7 +15,7 @@ import org.scalaide.debug.internal.expression.TypesContext
  * Thanks to it boolean proxies can be used as condition in if-else, while and do-while expressions.
  */
 case class MockConditionalExpressions(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 

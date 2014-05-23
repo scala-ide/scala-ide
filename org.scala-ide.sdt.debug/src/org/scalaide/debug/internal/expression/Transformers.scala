@@ -41,7 +41,7 @@ trait TransformationPhase {
  * This is proxy-aware transformer.
  * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
  */
-abstract class AstTransformer(typesContext: TypesContext)
+abstract class AstTransformer
   extends TransformationPhase {
 
   /**

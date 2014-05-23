@@ -17,7 +17,7 @@ import org.scalaide.debug.internal.expression.ClassListener.NewClassContext
  * New function is named like '_randomString._randomString$CustomFunction2v4'
  */
 case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext)
+  extends AstTransformer
   with AnonymousFunctionSupport {
 
   import toolbox.u._

@@ -18,7 +18,7 @@ import org.scalaide.debug.internal.expression.FunctionStub
  * This class use heavyly TypeContext
  */
 case class MockTypes(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 

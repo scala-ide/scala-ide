@@ -8,26 +8,30 @@ package org.scalaide.debug.internal.expression
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 import scala.util.Try
+
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.phases._
-import org.scalaide.logging.HasLogger
-import com.sun.jdi.ThreadReference
-import org.scalaide.debug.internal.expression.proxies.phases.MockLambdas
-import org.scalaide.debug.internal.expression.proxies.phases.MockTypes
-import org.scalaide.debug.internal.expression.proxies.phases.PackInFunction
-import org.scalaide.debug.internal.expression.proxies.phases.GenerateStubs
-import org.scalaide.debug.internal.expression.proxies.phases.MockObjects
-import org.scalaide.debug.internal.expression.proxies.phases.MockConditionalExpressions
-import org.scalaide.debug.internal.expression.proxies.phases.MockNewOperator
-import org.scalaide.debug.internal.expression.proxies.phases.TypeCheck
-import org.scalaide.debug.internal.expression.proxies.phases.MockThis
-import org.scalaide.debug.internal.expression.proxies.phases.TypeSearch
-import org.scalaide.debug.internal.expression.proxies.phases.MockToString
-import org.scalaide.debug.internal.expression.proxies.phases.ImplementValues
-import org.scalaide.debug.internal.expression.proxies.phases.MockVariables
-import org.scalaide.debug.internal.expression.proxies.phases.MockLiteralsAndConstants
 import org.scalaide.debug.internal.expression.context.VariableContext
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.phases.GenerateStubs
+import org.scalaide.debug.internal.expression.proxies.phases.ImplementTypedLambda
+import org.scalaide.debug.internal.expression.proxies.phases.ImplementValues
+import org.scalaide.debug.internal.expression.proxies.phases.MockAssignment
+import org.scalaide.debug.internal.expression.proxies.phases.MockConditionalExpressions
+import org.scalaide.debug.internal.expression.proxies.phases.MockLambdas
+import org.scalaide.debug.internal.expression.proxies.phases.MockLiteralsAndConstants
+import org.scalaide.debug.internal.expression.proxies.phases.MockNewOperator
+import org.scalaide.debug.internal.expression.proxies.phases.MockObjects
+import org.scalaide.debug.internal.expression.proxies.phases.MockThis
+import org.scalaide.debug.internal.expression.proxies.phases.MockToString
+import org.scalaide.debug.internal.expression.proxies.phases.MockTypedLambda
+import org.scalaide.debug.internal.expression.proxies.phases.MockTypes
+import org.scalaide.debug.internal.expression.proxies.phases.MockVariables
+import org.scalaide.debug.internal.expression.proxies.phases.PackInFunction
+import org.scalaide.debug.internal.expression.proxies.phases.ResetTypeInformation
+import org.scalaide.debug.internal.expression.proxies.phases.SearchForUnboundVariables
+import org.scalaide.debug.internal.expression.proxies.phases.TypeCheck
+import org.scalaide.debug.internal.expression.proxies.phases.TypeSearch
+import org.scalaide.logging.HasLogger
 
 object ExpressionEvaluator {
   type ExpressionFunc = JdiContext => JdiProxy
@@ -102,7 +106,9 @@ abstract class ExpressionEvaluator(val classLoader: ClassLoader)
     }
 
   private def genPhases(context: VariableContext, typesContext: TypesContext): Seq[TransformationPhase] = Seq(
-    MockVariables(toolbox, context),
+    SearchForUnboundVariables(toolbox, typesContext),
+    MockAssignment(toolbox, typesContext),
+    MockVariables(toolbox, context, typesContext),
     PackInFunction(toolbox, context.getThisPackage),
     MockThis(toolbox, typesContext),
     MockTypedLambda(toolbox, typesContext),

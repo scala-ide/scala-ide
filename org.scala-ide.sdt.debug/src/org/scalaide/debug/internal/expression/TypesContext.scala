@@ -62,17 +62,26 @@ final class TypesContextState() {
   /** Maps function names to it's stubs */
   private var _newCodeClasses: Map[String, ClassData] = Map.empty
 
+  /** Holds all unbound variables */
+  private var _unboundVariables: Set[String] = Set.empty
+
   /** Gets all types with function that are called   */
   def stubs: Map[String, Set[FunctionStub]] = _stubs
 
   /** Gets all newly generated class */
   def newCodeClasses: Map[String, ClassData] = _newCodeClasses
 
+  /** Gets all unbound variables */
+  def unboundVariables: Set[String] = _unboundVariables
+
   /** Adds new stub to type state */
   def addStub(typeName: String, functions: Set[FunctionStub]): Unit = _stubs += typeName -> functions
 
   /** Adds new class to type state */
   def addNewClass(name: String, data: ClassData): Unit = _newCodeClasses += name -> data
+
+  /** Add unbound variables to scope */
+  def addUnboundVariables(variables: Set[String]): Unit = _unboundVariables ++= variables
 }
 
 /**
@@ -94,6 +103,12 @@ final class TypesContext() {
 
   /** Function stubs */
   def stubs: Map[String, Set[FunctionStub]] = state.stubs
+
+  /** Gets all unbound variables */
+  def unboundVariables: Set[String] = state.unboundVariables
+
+  /** Add unbound variables to scope */
+  def addUnboundVariables(variables: Set[String]): Unit = state.addUnboundVariables(variables)
 
   /**
    * Obtains type name for given tree

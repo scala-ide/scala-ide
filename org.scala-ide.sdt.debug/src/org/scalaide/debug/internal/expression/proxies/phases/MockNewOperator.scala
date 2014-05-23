@@ -21,7 +21,7 @@ import org.scalaide.debug.internal.expression.TypesContext
  *
  */
 case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 

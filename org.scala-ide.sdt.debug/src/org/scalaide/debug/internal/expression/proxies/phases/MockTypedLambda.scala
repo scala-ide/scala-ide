@@ -14,7 +14,8 @@ import org.scalaide.debug.internal.expression.TypesContext
  * Mock all lambdas that has arguments with explicit types
  */
 case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) with AnonymousFunctionSupport {
+  extends AstTransformer
+  with AnonymousFunctionSupport {
 
   import toolbox.u._
 
@@ -23,7 +24,6 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
   //should we mock this lambda?
   private def allParamsTyped(params: Seq[ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
-
 
   /** all val def and binds have type adnotation? */
   private def treeFullyTyped(tree: Tree): Boolean = tree match {
@@ -57,7 +57,6 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
     val code = s"""$contextName.$placeholderPartialFunctionName[$ret]("$newFunctionType")"""
     toolbox.parse(code)
   }
-
 
   /** Compile lambda, create new class form lambda and create mock that represent this lambda*/
   private def createStubedFunction(function: Function): Tree = {

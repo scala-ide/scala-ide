@@ -12,7 +12,8 @@ import org.scalaide.debug.internal.expression.TypesContext
  * Implement all mock lambdas created durinf 'MockTypedLabdas' phase
  */
 case class ImplementTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) with AnonymousFunctionSupport {
+  extends AstTransformer
+  with AnonymousFunctionSupport {
 
   import toolbox.u._
 
@@ -31,7 +32,6 @@ case class ImplementTypedLambda(toolbox: ToolBox[universe.type], typesContext: T
     treeString.startsWith(placeholderPartialFuncitonString) ||
       treeString.startsWith(placeholderFuncitonString)
   }
-
 
   protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
     case Apply(TypeApply(fun, _), List(Literal(Constant(proxyType)))) if isPlaceholerFunction(fun) =>

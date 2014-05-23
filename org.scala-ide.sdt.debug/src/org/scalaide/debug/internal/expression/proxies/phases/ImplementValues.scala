@@ -16,7 +16,7 @@ import org.scalaide.debug.internal.expression.TypesContext
  * Transformation phase changing code defining mock proxies into code that actually implements them.
  */
 case class ImplementValues(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 

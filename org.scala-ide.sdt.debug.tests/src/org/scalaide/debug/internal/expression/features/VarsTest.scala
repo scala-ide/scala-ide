@@ -13,8 +13,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.TestValues
 
-class Foo(var a: Int)
-
 class VarsTest extends BaseIntegrationTest(VarsTest) {
 
   private def testAssignment(on: String, tpe: String, values: String*) = values.foreach { value =>
@@ -40,19 +38,19 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
   def testFieldVariableAssignmentWithExplicitThis(): Unit =
     testAssignment("this.fieldInt", JavaBoxed.Integer, values = "1", "2", "3")
 
-  @Ignore("TODO - O-5398 - Using same variable on LHS and RHS")
+  @Ignore("TODO - O-5640 - fix return types on arithmetic operations")
   @Test
   def testAssignmentWithSameVariableOnLhsAndRhs(): Unit =
     testAssignment("fieldInt", JavaBoxed.Integer, "fieldInt + 1")
 
-  @Ignore("TODO - O-5398 - Using tmp variable on RHS")
+  @Ignore("TODO - O-5640 - fix return types on arithmetic operations")
   @Test
   def testAssignmentWithTmpVariable(): Unit = {
     runCode("val tmp = fieldInt + 1; fieldInt = tmp")
     eval(code = "fieldInt", expectedValue = "2", expectedType = JavaBoxed.Integer)
   }
 
-  @Ignore("TODO - O-5398 - Using variable on RHS")
+  @Ignore("TODO - O-5640 - fix return types on arithmetic operations")
   @Test
   def testAssignmentWithVariableOnRhs(): Unit =
     testAssignment("fieldInt", JavaBoxed.Integer, "state.int + 1")

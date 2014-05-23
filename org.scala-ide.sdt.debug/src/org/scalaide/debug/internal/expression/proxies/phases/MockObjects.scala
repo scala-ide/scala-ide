@@ -21,7 +21,7 @@ import org.scalaide.debug.internal.expression.TypesContext
  * - __proxy.objectProxy("ala.package.Ala") - obtain object from context
  */
 case class MockObjects(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer(typesContext) {
+  extends AstTransformer {
 
   import toolbox.u._
 
