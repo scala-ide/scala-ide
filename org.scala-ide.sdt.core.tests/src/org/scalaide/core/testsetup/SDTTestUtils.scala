@@ -31,11 +31,12 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
 
 /** Utility functions for setting up test projects.
  *
  */
-object SDTTestUtils {
+object SDTTestUtils extends HasLogger {
 
   def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName) //"org.scala-ide.sdt.core.tests"
@@ -66,7 +67,7 @@ object SDTTestUtils {
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
       val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
-      println("copying %s to %s".format(src, dst))
+      logger.debug("copying %s to %s".format(src, dst))
       FileUtils.copyDirectory(src, dst)
       val project = workspace.getRoot.getProject(name)
       project.create(null)
@@ -173,7 +174,7 @@ object SDTTestUtils {
   def buildWith(resource: IResource, contents: String, unitsToWatch: Seq[ICompilationUnit]): List[String] = {
     SDTTestUtils.changeContentOfFile(resource.asInstanceOf[IFile], contents)
 
-    println("=== Rebuilding workspace === ")
+    logger.debug("=== Rebuilding workspace === ")
     SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
 
     val problems = getProblemMarkers(unitsToWatch: _*)

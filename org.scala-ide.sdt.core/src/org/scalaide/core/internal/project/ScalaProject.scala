@@ -649,6 +649,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (buildManager0 != null)
       buildManager0.clean(monitor)
     cleanOutputFolders
+    logger.info("Resetting compilers due to Project.clean")
     resetCompilers // reset them only after the output directory is emptied
   }
 

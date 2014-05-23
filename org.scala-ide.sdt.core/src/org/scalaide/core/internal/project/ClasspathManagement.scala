@@ -213,10 +213,12 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     classpathCheckLock.synchronized {
       // mark as in progress
       classpathHasBeenChecked = false
+      val wasValid = classpathValid
       checkClasspath()
-      if (classpathValid) {
+      if (!wasValid && classpathValid) {
         // no point to reset the compilers on an invalid classpath,
         // it would not work anyway
+        logger.info("Resetting compilers because the classpath is now valid.")
         resetCompilers()
       }
     }
