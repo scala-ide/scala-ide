@@ -10,13 +10,20 @@ import org.scalaide.util.internal.eclipse.ProjectUtils
 
 import scalariform.lexer._
 
+object ScalaFileCreator {
+  val VariableTypeName = "type_name"
+  val VariablePackageName = "package_name"
+}
+
 trait ScalaFileCreator extends FileCreator {
+  import ScalaFileCreator._
   import ProjectUtils._
 
   private[wizards] type FileExistenceCheck = IProject => Validation
 
   override def templateVariables(project: IProject, name: String): Map[String, String] = {
-    ???
+    val srcDirs = sourceDirs(project.getProject()).map(_.lastSegment())
+    generateTemplateVariables(srcDirs, name)
   }
 
   override def initialPath(project: IResource): String = {
@@ -140,6 +147,28 @@ trait ScalaFileCreator extends FileCreator {
         Invalid("Type already exists")
       else
         Valid
+    }
+  }
+
+  private[wizards] def generateTemplateVariables(srcDirs: Seq[String], name: String): Map[String, String] = {
+    val isFolderNotation = name.count(_ == '/') != 1
+
+    if (isFolderNotation)
+      Map()
+    else {
+      val Seq(folder, pkg) = Commons.split(name, '/')
+
+      if (!srcDirs.contains(folder))
+        Map()
+      else {
+        val splitPos = pkg.lastIndexOf('.')
+        if (splitPos < 0)
+          Map(VariableTypeName -> pkg)
+        else
+          Map(
+            VariablePackageName -> pkg.substring(0, splitPos),
+            VariableTypeName -> pkg.substring(splitPos+1))
+      }
     }
   }
 }
