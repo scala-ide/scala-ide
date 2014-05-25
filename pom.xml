@@ -29,6 +29,7 @@
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
+    <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
 
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>

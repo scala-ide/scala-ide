@@ -36,7 +36,7 @@ object ScalaImages {
   val NEW_CLASS = fromCoreBundle("/icons/full/etool16/newclass_wiz.gif")
   val CORRECTION_RENAME = fromCoreBundle("/icons/full/obj16/correction_rename.gif")
 
-  private def fromCoreBundle(path: String): ImageDescriptor =
+  private[ui] def fromCoreBundle(path: String): ImageDescriptor =
     imageDescriptor(ScalaPlugin.plugin.pluginId, path) getOrElse MISSING_ICON
 
   /**
