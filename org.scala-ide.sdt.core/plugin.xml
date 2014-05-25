@@ -1092,6 +1092,17 @@
             id="org.scalaide.core.handler.indentGuide"
             name="Show Indent Guide">
       </command>
+      <command
+            categoryId="org.scalaide.ui.wizards"
+            description="Opens a new file wizard"
+            id="org.scalaide.ui.wizards.wizardHandler"
+            name="Wizard Handler">
+      </command>
+      <category
+            description="New File Wizards"
+            id="org.scalaide.ui.wizards"
+            name="New File Wizards">
+      </category>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -1169,6 +1180,9 @@
     </contextType>
     <include
         file="templates/default-templates.xml">
+    </include>
+    <include
+          file="templates/wizard-templates.xml">
     </include>
   </extension>
 
@@ -1263,6 +1277,10 @@
     <handler
           class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
           commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
+    </handler>
+    <handler
+          class="org.scalaide.ui.internal.wizards.WizardHandler"
+          commandId="org.scalaide.ui.wizards.wizardHandler">
     </handler>
  </extension>
  <extension
@@ -1568,5 +1586,15 @@
           Shows Scala specific icons
        </description>
     </decorator>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.fileCreator">
+    <fileCreator
+          class="org.scalaide.ui.wizards.ClassCreator"
+          icon="icons/full/etool16/newclass_wiz.gif"
+          id="org.scalaide.ui.wizards.classCreator"
+          name="Scala Class"
+          templateId="org.scalaide.core.templates.wizards.class">
+    </fileCreator>
  </extension>
 </plugin>
