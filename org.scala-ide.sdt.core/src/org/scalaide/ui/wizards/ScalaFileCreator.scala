@@ -14,6 +14,12 @@ import scalariform.lexer._
 object ScalaFileCreator {
   val VariableTypeName = "type_name"
   val VariablePackageName = "package_name"
+
+  import scala.reflect.runtime._
+  private[this] val st = universe.asInstanceOf[JavaUniverse]
+
+  val ScalaKeywords = st.nme.keywords map (_.toString())
+  val JavaKeywords = st.javanme.keywords map (_.toString())
 }
 
 trait ScalaFileCreator extends FileCreator {
@@ -91,16 +97,19 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   private[wizards] def doValidation(srcDirs: Seq[String], name: String): Either[Invalid, FileExistenceCheck] = {
-    def isValidScalaIdent(str: String) = {
+    def isValidScalaPackageIdent(str: String) = {
       val validIdent =
         str.nonEmpty &&
         Character.isJavaIdentifierStart(str.head) &&
         str.tail.forall(Character.isJavaIdentifierPart)
 
-      def noKeyword =
-        !Tokens.KEYWORDS(ScalaLexer.tokenise(str, forgiveErrors = true).head.tokenType)
+      validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
+    }
 
-      validIdent && noKeyword
+    def isValidScalaTypeIdent(str: String) = {
+      val conformsToIdentToken = ScalaLexer.tokenise(str, forgiveErrors = true).size == 2
+
+      conformsToIdentToken && !ScalaKeywords.contains(str)
     }
 
     val rawPath = Commons.split(name, '/')
@@ -120,15 +129,22 @@ trait ScalaFileCreator extends FileCreator {
       Left(Invalid(s"Incorrect syntax for file path. Has to be <folder>/<package>.<filename>"))
     else {
       val fullyQualifiedType = rawPath(1)
-      val packages = Commons.split(fullyQualifiedType, '.')
+      val parts = Commons.split(fullyQualifiedType, '.')
 
-      if (packages.last.isEmpty)
+      if (parts.last.isEmpty)
         Left(Invalid("No type name specified"))
-      else
-        packages.find(!isValidScalaIdent(_)) match {
-          case Some(e) => Left(Invalid(s"'$e' is not a valid package name"))
+      else {
+        def packageIdentCheck =
+          parts.init.find(!isValidScalaPackageIdent(_)) map (e => s"'$e' is not a valid package name")
+
+        def typeIdentCheck =
+          Seq(parts.last).find(!isValidScalaTypeIdent(_)) map (e => s"'$e' is not a valid type name")
+
+        packageIdentCheck orElse typeIdentCheck match {
+          case Some(e) => Left(Invalid(e))
           case _       => Right(checkTypeExists(_, fullyQualifiedType, name.replace('.', '/')))
         }
+      }
     }
   }
 
