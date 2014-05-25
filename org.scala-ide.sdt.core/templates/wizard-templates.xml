@@ -31,4 +31,19 @@ trait ${type_name} {
   ${cursor}
 }</template>
 
+<template
+  name="wizard_object"
+  description="New object template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.object"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+object ${type_name} {
+  ${cursor}
+}</template>
+
 </templates>

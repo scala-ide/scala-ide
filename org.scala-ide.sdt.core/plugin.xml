@@ -1633,5 +1633,12 @@
           name="Scala Trait"
           templateId="org.scalaide.core.templates.wizards.trait">
     </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.ObjectCreator"
+          icon="icons/full/etool16/newobject_wiz.gif"
+          id="org.scalaide.ui.wizards.objectCreator"
+          name="Scala Object"
+          templateId="org.scalaide.core.templates.wizards.object">
+    </fileCreator>
  </extension>
 </plugin>
