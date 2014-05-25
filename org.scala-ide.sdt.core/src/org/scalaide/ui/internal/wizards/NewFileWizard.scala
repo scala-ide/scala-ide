@@ -11,6 +11,7 @@ import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateContext
 import org.eclipse.jface.text.templates.TemplateProposal
 import org.eclipse.jface.text.templates.TemplateVariableResolver
+import org.eclipse.nebula.widgets.tablecombo.TableCombo
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
@@ -20,11 +21,11 @@ import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
-import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Shell
+import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PartInitException
 import org.eclipse.ui.PlatformUI
@@ -32,6 +33,7 @@ import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
@@ -56,10 +58,11 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
 
   private var btOk: Button = _
   private var btProject: Button = _
-  private var cmTemplate: Combo = _
+  private var cmTemplate: TableCombo = _
   private var lbError: Label = _
   private var tName: Text = _
 
+  private var disposables = Seq[{def dispose(): Unit}](Red)
   private var selectedProject: IJavaProject = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
 
@@ -83,7 +86,7 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
     val lbName = new Label(c, SWT.NONE)
     tName = new Text(c, SWT.BORDER)
     val lbTemplate = new Label(c, SWT.NONE)
-    cmTemplate = new Combo(c, SWT.DROP_DOWN | SWT.READ_ONLY)
+    cmTemplate = new TableCombo(c, SWT.BORDER | SWT.READ_ONLY)
     lbError = new Label(c, SWT.NONE)
 
     lbName.setText("Name:")
@@ -158,10 +161,14 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
       tName.setSelection(path.length())
     }
 
-    cmTemplate.setItems(Array.fill(fileCreatorMappings.size)(""))
     fileCreatorMappings.zipWithIndex foreach {
       case (m, i) =>
-        cmTemplate.setItem(i, m.name)
+        val ti = new TableItem(cmTemplate.getTable(), SWT.NONE)
+        ti.setText(m.name)
+        val img = ScalaImages.fromCoreBundle(m.iconPath).createImage()
+        disposables +:= img
+        ti.setImage(0, img)
+
         if (m.id == fileCreatorId)
           cmTemplate.select(i)
     }
@@ -190,7 +197,8 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
   }
 
   override def close(): Boolean = {
-    Red.dispose()
+    import scala.language.reflectiveCalls
+    disposables foreach { _.dispose() }
     super.close()
   }
 
