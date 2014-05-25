@@ -16,4 +16,19 @@ class ${type_name} {
   ${cursor}
 }</template>
 
+<template
+  name="wizard_trait"
+  description="New trait template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.trait"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+trait ${type_name} {
+  ${cursor}
+}</template>
+
 </templates>
