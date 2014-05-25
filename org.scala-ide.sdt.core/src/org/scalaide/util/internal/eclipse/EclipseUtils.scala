@@ -32,8 +32,9 @@ import scala.tools.nsc.interactive.RangePositions
 import scala.reflect.internal.util.RangePosition
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.jobs.ISchedulingRule
+import org.scalaide.logging.HasLogger
 
-object EclipseUtils {
+object EclipseUtils extends HasLogger {
 
   implicit class PimpedAdaptable(adaptable: IAdaptable) {
 
@@ -164,5 +165,25 @@ object EclipseUtils {
 
     def /(other: IPath): IPath =
       p append other
+  }
+
+  /**
+   * Returns all existing configuration elements of a given extension point ID.
+   * Returns an empty array if the ID is not found.
+   */
+  def configElementsForExtension(id: String): Array[IConfigurationElement] =
+    Platform.getExtensionRegistry().getConfigurationElementsFor(id)
+
+  /**
+   * Executes a given function in a safe runner that catches potential occuring
+   * exceptions and logs them if this is the case.
+   */
+  def withSafeRunner(f: => Unit): Unit = {
+    SafeRunner.run(new ISafeRunnable {
+      override def handleException(e: Throwable) =
+        eclipseLog.error("Error occured while executing extension.", e)
+
+      override def run() = f
+    })
   }
 }
