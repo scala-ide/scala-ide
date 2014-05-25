@@ -70,9 +70,22 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
   }
 
   @Test
-  def path_with_special_sign_is_invalid() = {
+  def package_with_special_sign_is_invalid() = {
     validateFailure("src/a.b-b.c.File")
     validateFailure("src/a.b.c.File/")
+  }
+
+  @Test
+  def special_signs_in_file_names_are_valid_if_they_are_part_of_a_Scala_identifier() = {
+    validateSuccess("src/***")
+    validateSuccess("src/a.b.c.***")
+    validateSuccess("src/a.b.c.File_***")
+  }
+
+  @Test
+  def special_signs_in_file_names_are_invalid_if_they_are_not_part_of_a_Scala_identifier() = {
+    validateFailure("src/A***")
+    validateFailure("src/a.b.c.A***")
   }
 
   @Test
@@ -84,9 +97,11 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
     validateSuccess("folder/a/b/c/File.scala")
 
   @Test
-  def no_keywords_allowed_in_package_notation() = {
+  def no_scala_keywords_allowed_in_package_notation() = {
     validateFailure("src/trait.File")
     validateFailure("src/a.trait")
+    validateFailure("src/=>")
+    validateFailure("src/a.>:")
   }
 
   @Test
@@ -94,6 +109,14 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
     validateSuccess("trait/a.File")
     validateSuccess("a-b/a.File")
   }
+
+  @Test
+  def java_keywords_are_not_allowed_as_package_name() =
+    validateFailure("src/int.File")
+
+  @Test
+  def java_keywords_are_allowed_as_file_name() =
+    validateSuccess("src/a.int")
 
   @Test
   def no_file_name_validation_in_folder_notation() =
