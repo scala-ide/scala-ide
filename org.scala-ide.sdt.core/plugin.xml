@@ -1626,5 +1626,12 @@
           name="Scala Class"
           templateId="org.scalaide.core.templates.wizards.class">
     </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.TraitCreator"
+          icon="icons/full/etool16/newtrait_wiz.gif"
+          id="org.scalaide.ui.wizards.traitCreator"
+          name="Scala Trait"
+          templateId="org.scalaide.core.templates.wizards.trait">
+    </fileCreator>
  </extension>
 </plugin>
