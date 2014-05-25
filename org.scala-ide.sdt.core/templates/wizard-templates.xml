@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+<template
+  name="wizard_class"
+  description="New class template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.class"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+class ${type_name} {
+  ${cursor}
+}</template>
+
+</templates>
