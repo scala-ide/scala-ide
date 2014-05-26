@@ -14,6 +14,13 @@ class PackageObjectCreator extends ScalaFileCreator {
 
   import ScalaFileCreator._
 
+  /**
+   * The initial path of a package object can be valid, therefore we want to
+   * show users immediately when the initial path is not valid.
+   */
+  override def showErrorMessageAtStartup: Boolean =
+    true
+
   private[wizards] override def generateInitialPath(path: Seq[String], srcDirs: Seq[String], isDirectory: Boolean): String = {
     val p = super.generateInitialPath(path, srcDirs, isDirectory)
     if (p.isEmpty()) "" else p.init
