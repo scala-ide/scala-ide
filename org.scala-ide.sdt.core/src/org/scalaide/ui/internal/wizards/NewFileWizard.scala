@@ -69,8 +69,10 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
   override def createContents(parent: Composite): Control = {
     val c = super.createContents(parent)
     validateInput()
-    // don't show any errors at wizard creation
-    lbError.setText("")
+    selectedFileCreatorMapping.withInstance(_.showErrorMessageAtStartup) foreach { show =>
+      if (!show)
+        lbError.setText("")
+    }
     c
   }
 

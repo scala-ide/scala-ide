@@ -73,4 +73,11 @@ trait FileCreator {
    * resource that was selected right before the new file wizard was invoked.
    */
   def initialPath(res: IResource): String
+
+  /**
+   * When the new file wizard is created this controls if in case of an invalid
+   * initial path an error message is shown to users.
+   */
+  def showErrorMessageAtStartup: Boolean =
+    false
 }
