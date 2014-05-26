@@ -61,4 +61,19 @@ package object ${type_name} {
   ${cursor}
 }</template>
 
+<template
+  name="wizard_app"
+  description="New App template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.app"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+object ${type_name} extends App {
+  ${cursor}
+}</template>
+
 </templates>
