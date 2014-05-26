@@ -46,4 +46,19 @@ object ${type_name} {
   ${cursor}
 }</template>
 
+<template
+  name="wizard_package_object"
+  description="New package object template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.packageObject"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+package object ${type_name} {
+  ${cursor}
+}</template>
+
 </templates>
