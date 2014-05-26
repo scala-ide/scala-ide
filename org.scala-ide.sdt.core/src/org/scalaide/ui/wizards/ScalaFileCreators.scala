@@ -48,3 +48,5 @@ class PackageObjectCreator extends ScalaFileCreator {
     cu.getPath()
   }
 }
+
+class AppCreator extends ScalaFileCreator
