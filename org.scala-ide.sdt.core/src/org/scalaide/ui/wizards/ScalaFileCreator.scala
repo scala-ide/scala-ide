@@ -97,21 +97,6 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   private[wizards] def doValidation(srcDirs: Seq[String], name: String): Either[Invalid, FileExistenceCheck] = {
-    def isValidScalaPackageIdent(str: String) = {
-      val validIdent =
-        str.nonEmpty &&
-        Character.isJavaIdentifierStart(str.head) &&
-        str.tail.forall(Character.isJavaIdentifierPart)
-
-      validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
-    }
-
-    def isValidScalaTypeIdent(str: String) = {
-      val conformsToIdentToken = ScalaLexer.tokenise(str, forgiveErrors = true).size == 2
-
-      conformsToIdentToken && !ScalaKeywords.contains(str)
-    }
-
     val rawPath = Commons.split(name, '/')
     val noFolder = rawPath.size == 1
     val noPackageNotation = rawPath.size > 2
@@ -127,25 +112,42 @@ trait ScalaFileCreator extends FileCreator {
         Right(checkFileExists(_, name))
     else if (noPackageNotation)
       Left(Invalid(s"Incorrect syntax for file path. Has to be <folder>/<package>.<filename>"))
+    else
+      validateFullyQualifiedType(rawPath(1), name)
+  }
+
+  private[wizards] def validateFullyQualifiedType(fullyQualifiedType: String, name: String): Either[Invalid, FileExistenceCheck] = {
+    def isValidScalaTypeIdent(str: String) = {
+      val conformsToIdentToken = ScalaLexer.tokenise(str, forgiveErrors = true).size == 2
+
+      conformsToIdentToken && !ScalaKeywords.contains(str)
+    }
+
+    val parts = Commons.split(fullyQualifiedType, '.')
+
+    if (parts.last.isEmpty)
+      Left(Invalid("No type name specified"))
     else {
-      val fullyQualifiedType = rawPath(1)
-      val parts = Commons.split(fullyQualifiedType, '.')
+      def packageIdentCheck =
+        parts.init.find(!isValidScalaPackageIdent(_)) map (e => s"'$e' is not a valid package name")
 
-      if (parts.last.isEmpty)
-        Left(Invalid("No type name specified"))
-      else {
-        def packageIdentCheck =
-          parts.init.find(!isValidScalaPackageIdent(_)) map (e => s"'$e' is not a valid package name")
+      def typeIdentCheck =
+        Seq(parts.last).find(!isValidScalaTypeIdent(_)) map (e => s"'$e' is not a valid type name")
 
-        def typeIdentCheck =
-          Seq(parts.last).find(!isValidScalaTypeIdent(_)) map (e => s"'$e' is not a valid type name")
-
-        packageIdentCheck orElse typeIdentCheck match {
-          case Some(e) => Left(Invalid(e))
-          case _       => Right(checkTypeExists(_, fullyQualifiedType, name.replace('.', '/')))
-        }
+      packageIdentCheck orElse typeIdentCheck match {
+        case Some(e) => Left(Invalid(e))
+        case _       => Right(checkTypeExists(_, fullyQualifiedType, name.replace('.', '/')))
       }
     }
+  }
+
+  private[wizards] def isValidScalaPackageIdent(str: String): Boolean = {
+    val validIdent =
+      str.nonEmpty &&
+      Character.isJavaIdentifierStart(str.head) &&
+      str.tail.forall(Character.isJavaIdentifierPart)
+
+    validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
   }
 
   private[wizards] def checkFileExists(project: IProject, path: String): Validation = {

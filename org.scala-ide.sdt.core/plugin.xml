@@ -1654,5 +1654,12 @@
           name="Scala Object"
           templateId="org.scalaide.core.templates.wizards.object">
     </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.PackageObjectCreator"
+          icon="icons/full/etool16/newpackage_object_wiz.png"
+          id="org.scalaide.ui.wizards.packageObjectCreator"
+          name="Scala Package Object"
+          templateId="org.scalaide.core.templates.wizards.packageObject">
+    </fileCreator>
  </extension>
 </plugin>
