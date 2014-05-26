@@ -16,6 +16,9 @@
    <feature url="features/org.scala-ide.sdt.source.feature_0.0.0.jar" id="org.scala-ide.sdt.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature>
+   <feature url="features/org.scala-ide.sbt.source.feature_0.0.0.jar" id="org.scala-ide.sbt.source.feature" version="0.0.0">
+      <category name="sdt-source"/>
+   </feature>
 <!-- TODO enable back when multiple bundles of Scala are supported -->
 <!--   <feature url="features/org.scala-ide.scala210.source.feature_0.0.0.jar" id="org.scala-ide.scala210.source.feature" version="0.0.0">
       <category name="sdt-source"/>
