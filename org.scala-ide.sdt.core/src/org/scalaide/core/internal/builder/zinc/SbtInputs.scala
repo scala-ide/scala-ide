@@ -47,7 +47,7 @@ class SbtInputs(sourceFiles: Seq[File],
       Maybe.just(Analysis.Empty)
     else
       allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
-        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis)
+        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
         case None                                     => Maybe.just(Analysis.Empty)
       }
 
@@ -60,7 +60,9 @@ class SbtInputs(sourceFiles: Seq[File],
       withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
       withNewClassfileManager(ClassfileManager.transactional(tempDir)).
-      withApiDumpDirectory(None)
+      withApiDumpDirectory(None).
+      withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
+      withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
   }
 
   def options = new Options {
