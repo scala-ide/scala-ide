@@ -81,8 +81,16 @@ class SbtInputs(installation: ScalaInstallation,
       }.toArray
     }
 
-    // remove -Xsource arguments (it is relevant only for the presentation compiler)
-    def options = project.scalacArguments.filter(!_.startsWith("-Xsource")).toArray
+    // remove arguments not understood by build compiler
+    def options =
+      if (project.isUsingCompatibilityMode())
+        project.scalacArguments.filter(buildCompilerOption).toArray
+      else
+        project.scalacArguments.toArray
+
+    /** Remove the source-level related arguments */
+    private def buildCompilerOption(arg: String): Boolean =
+      !arg.startsWith("-Xsource") && !(arg == "-Ymacro-expand:none")
 
     def javacOptions = Array() // Not used.
 
