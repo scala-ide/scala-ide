@@ -223,7 +223,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         useProjectSettingsWidget.get.addTo(outer)
         val other = new Composite(outer, SWT.SHADOW_ETCHED_IN)
         other.setLayout(new GridLayout(1, false))
-        dslWidget = Some(new DesiredSourceLevelWidget(other))
+        if (ScalaPlugin.plugin.scalaVer >= ScalaVersion("2.11")) dslWidget = Some(new DesiredSourceLevelWidget(other))
         val tmp = new Group(outer, SWT.SHADOW_ETCHED_IN)
         tmp.setText("Project Compiler Settings")
         val layout = new GridLayout(1, false)
