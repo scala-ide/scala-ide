@@ -36,7 +36,9 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.util.internal.CompilerUtils
+import org.eclipse.jface.util.StatusHandler
+import org.eclipse.debug.core.DebugPlugin
+import scala.concurrent.Promise
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -194,6 +196,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   @volatile
   private var classpathValid = false;
 
+  def isCheckingClassPath(): Boolean = java.lang.Thread.holdsLock(classpathCheckLock)
+
   /** Return <code>true</code> if the classpath is deemed valid.
    *  Check the classpath if it has not been checked yet.
    */
@@ -209,7 +213,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  It is said valid if it contains one and only scala library jar, with a version compatible
    *  with the one from the scala-ide plug-in
    */
-  def classpathHasChanged() {
+  def classpathHasChanged() = {
     classpathCheckLock.synchronized {
       // mark as in progress
       classpathHasBeenChecked = false
@@ -310,11 +314,23 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     classpathHasBeenChecked = true
   }
 
+  private var classpathContinuation = Promise[() => Unit]
+  private var messageWasShown = new java.util.concurrent.atomic.AtomicBoolean(false)
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import org.scalaide.util.internal.CompilerUtils._
+    import org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler
+
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
       case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), this)
       case _                               => false
     }
+
+    val scalaVersion = plugin.scalaVer.unparse
+    val expectedVersion = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
+      case ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
+      case _ => "none"
+    } else scalaVersion
 
     fragmentRoots.length match {
       case 0 => // unable to find any trace of scala library
@@ -329,17 +345,22 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             Nil
           case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
             // compatible version (major, minor are the same). Still, add warning message
-            (IMarker.SEVERITY_WARNING, "The version of scala library found in the build path is different from the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Make sure you know what you are doing.") :: Nil
-          case Some(v) if (CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) =>
+            (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.") :: Nil
+          case Some(v) if (isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
+            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, "", null)
+            if (!messageWasShown.getAndSet(true)) try {
+              val handler = DebugPlugin.getDefault().getStatusHandler(status)
+              if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
+              classpathContinuation.future onSuccess {
+                case f => f()
+              }
+            } finally { classpathContinuation = Promise[() => Unit]; messageWasShown.set(false) }
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is prior to the one provided by scala IDE: " + v + ". Expected: " + plugin.scalaVer.unparse + ". Please use the -Xsource flag.") :: Nil
+            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is prior to the one provided by scala IDE ($scalaVersion). Please use the source level flags in this project's compiler options.") :: Nil
+          }
           case Some(v) => {
-            val expectedVer = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
-              case CompilerUtils.ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
-              case _ => "none"
-            } else plugin.scalaVer.unparse
             // incompatible version
-            (IMarker.SEVERITY_ERROR, "The version of scala library found in the build path is incompatible with the one provided by scala IDE: " + v + ". Expected: " + expectedVer + ". Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
+            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
           }
           case None =>
             // no version found

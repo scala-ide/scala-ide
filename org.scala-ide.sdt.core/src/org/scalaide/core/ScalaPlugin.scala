@@ -139,10 +139,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   }
 
   lazy val scalaVer = ScalaVersion.current
-  lazy val shortScalaVer = scalaVer match {
-    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
-    case _ => "none"
-  }
+  lazy val shortScalaVer = CompilerUtils.shortString(scalaVer)
 
   lazy val sdtCoreBundle = getBundle()
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
@@ -294,7 +291,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
           innerDelta.getElement() match {
             // classpath change should only impact projects
             case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach(_.classpathHasChanged())
+              asScalaProject(javaProject.getProject()).foreach{ (p) => if (!p.isCheckingClassPath()) p.classpathHasChanged() }
             }
             case _ =>
           }

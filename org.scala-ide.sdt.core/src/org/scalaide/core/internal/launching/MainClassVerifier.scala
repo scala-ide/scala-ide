@@ -5,6 +5,7 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
+import org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler
 
 object MainClassVerifier {
   private final val ModuleClassSuffix = "$"
@@ -36,7 +37,7 @@ class MainClassVerifier {
     if (mainClass.nonEmpty && mainModuleClass.isEmpty) new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
     else if (hasBuildErrors) {
       val msg = s"Project ${project.underlying.getName} contains build errors."
-      new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg)
+      new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, CompilerLaunchErrorHandler.STATUS_CODE_LAUNCH_ERROR, msg, null)
     }
     else new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
   }
