@@ -48,6 +48,8 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import java.util.concurrent.atomic.AtomicIntegerArray
 import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.Final
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -223,7 +225,9 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         useProjectSettingsWidget.get.addTo(outer)
         val other = new Composite(outer, SWT.SHADOW_ETCHED_IN)
         other.setLayout(new GridLayout(1, false))
-        dslWidget = Some(new DesiredSourceLevelWidget(other))
+        if (ScalaPlugin.plugin.scalaVer >= SpecificScalaVersion(2, 11, 0, Final)) {
+          dslWidget = Some(new DesiredSourceLevelWidget(other))
+        }
         val tmp = new Group(outer, SWT.SHADOW_ETCHED_IN)
         tmp.setText("Project Compiler Settings")
         val layout = new GridLayout(1, false)
