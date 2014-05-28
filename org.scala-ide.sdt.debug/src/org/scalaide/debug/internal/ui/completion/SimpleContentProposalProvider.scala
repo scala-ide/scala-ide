@@ -7,11 +7,14 @@ package org.scalaide.debug.internal.ui.completion
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.reflect.NameTransformer
+import scala.reflect.runtime.universe
 import scala.reflect.runtime.{ universe => ru }
+
 import org.eclipse.jface.fieldassist.ContentProposal
 import org.eclipse.jface.fieldassist.IContentProposal
 import org.eclipse.jface.fieldassist.IContentProposalProvider
 import org.scalaide.debug.internal.expression.ExpressionManager
+
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 
@@ -68,16 +71,7 @@ class SimpleContentProposalProvider extends IContentProposalProvider {
 }
 
 object SimpleContentProposalProvider {
-  private lazy val javaTypesFromJdiToScalaTypesMappings = Map(
-    "boolean" -> "Boolean",
-    "char" -> "Char",
-    "byte" -> "Byte",
-    "short" -> "Short",
-    "int" -> "Int",
-    "long" -> "Long",
-    "float" -> "Float",
-    "double" -> "Double",
-    "void" -> "Unit")
+  import org.scalaide.debug.internal.ui.TypeNameMappings.javaTypesFromJdiToScalaTypes
 
   private lazy val constantProposals = createConstantProposals()
 
@@ -137,7 +131,7 @@ object SimpleContentProposalProvider {
   private def getAccessibleVariablesProposals(stackFrame: StackFrame) =
     stackFrame.visibleVariables().map { variable =>
       val typeName = variable.typeName()
-      (variable.name(), s"${variable.name()}: ${javaTypesFromJdiToScalaTypesMappings.get(typeName).getOrElse(typeName)}")
+      (variable.name(), s"${variable.name()}: ${javaTypesFromJdiToScalaTypes.getOrElse(typeName, typeName)}")
     }.groupBy { case (content, label) => content }
       .map {
         case (_, proposals) =>
@@ -152,7 +146,7 @@ object SimpleContentProposalProvider {
         if (shouldBeProposal(name)) {
           // this is type visible from Java so it's e.g. void instead of Unit
           val returnedType = NameTransformer.decode(m.returnType().name())
-          val returnedScalaType = javaTypesFromJdiToScalaTypesMappings.get(returnedType).getOrElse(returnedType)
+          val returnedScalaType = javaTypesFromJdiToScalaTypes.getOrElse(returnedType, returnedType)
           List((name, s"$name: ${returnedScalaType}"))
         } else Nil
       }(collection.breakOut)

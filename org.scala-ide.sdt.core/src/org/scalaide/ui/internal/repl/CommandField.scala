@@ -35,6 +35,8 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
   import CommandField.Evaluator
 
+  var clearTextAfterEvaluation = true
+
   def isEmpty = getCharCount() == 0
 
   protected case class MaskedKeyCode(code: Int, mask: Int) {
@@ -83,7 +85,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       if (command.nonEmpty) {
         appendHistory(command)
         evaluator.eval(command)
-        setText("")
+        if (clearTextAfterEvaluation) setText("")
       }
     }
 
@@ -137,21 +139,22 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     import org.eclipse.swt.events.FocusListener
     import org.eclipse.swt.events.FocusEvent
     textWidget.addFocusListener(new FocusListener {
-      override def focusGained(e: FocusEvent) {
-        if (helpTextDisplayed) {
-          helpTextDisplayed = false
-          textWidget.setForeground(defaultBgColor)
-          textWidget.setText("")
-        }
-      }
-      override def focusLost(e: FocusEvent) {
-        maybeShowHelpText()
-      }
+      override def focusGained(e: FocusEvent): Unit = hideHelpText()
+
+      override def focusLost(e: FocusEvent): Unit = maybeShowHelpText()
     })
 
     def isHelpTextDisplayed = helpTextDisplayed
 
-    private def maybeShowHelpText() {
+    def hideHelpText() {
+      if (helpTextDisplayed) {
+        helpTextDisplayed = false
+        textWidget.setForeground(defaultBgColor)
+        textWidget.setText("")
+      }
+    }
+
+    def maybeShowHelpText() {
       if (textWidget.getText().isEmpty) {
         helpTextDisplayed = true
         textWidget.setForeground(codeBgColor)
@@ -177,16 +180,16 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   /** Allows to plug a different evaluation strategy for the typed command. */
   def setEvaluator(_evaluator: Evaluator) { evaluator = _evaluator }
 
-  def clear() {
-    inputFieldListener.reset()
-  }
+  def clear(): Unit = inputFieldListener.reset()
 
-  def clearHistory() {
-    inputFieldListener.clearHistory()
-  }
+  def clearHistory(): Unit = inputFieldListener.clearHistory()
 
   // to be able to execute evaluation in other way than key event and still be able to add something to history
-  def forceEvaluation() = inputFieldListener.evaluate(getText())
+  def executeEvaluation(): Unit = inputFieldListener.evaluate(getText())
+
+  def hideHelpText(): Unit = fieldHelp.hideHelpText()
+
+  def maybeShowHelpText(): Unit = fieldHelp.maybeShowHelpText()
 
   def isHelpTextDisplayed = fieldHelp.isHelpTextDisplayed
 

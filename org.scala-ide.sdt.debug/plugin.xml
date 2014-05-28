@@ -105,7 +105,7 @@
                 id="org.scalaide.debug.internal.ui.ExpressionEvaluation"
                 name="Scala Expression Evaluator"
                 category="org.eclipse.debug.ui"
-                class="org.scalaide.debug.internal.ui.ExpressionEvaluatorConsoleView"
+                class="org.scalaide.debug.internal.ui.ExpressionEvaluatorView"
                 allowMultiple="false"
                 />
     </extension>

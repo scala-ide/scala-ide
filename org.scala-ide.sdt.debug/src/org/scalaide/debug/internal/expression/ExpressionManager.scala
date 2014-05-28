@@ -9,7 +9,6 @@ import scala.collection.JavaConversions.asScalaBuffer
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.IDebugEventSetListener
 import org.eclipse.debug.core.model.IBreakpoint
@@ -18,10 +17,11 @@ import org.eclipse.jdt.internal.debug.core.model.JDIThread
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.logging.HasLogger
-
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.ObjectReference
+import org.scalaide.debug.internal.expression.context.JdiContext
 
 /**
  * Main entry point to expression evaluation.
@@ -78,7 +78,7 @@ trait ExpressionManager {
    * @param resultCallback side-effecting function that is called when expression is correctly evaluated
    * @param errorCallback side-effecting function that is called when expression ends with exception
    */
-  def compute(exp: String, resultCallback: String => Unit, errorCallback: String => Unit): Unit = {
+  def compute(exp: String, resultCallback: (ObjectReference, String) => Unit, errorCallback: String => Unit): Unit = {
     def prettify(msg: String) = s"<<< $msg >>>"
     val debugNotRunning = prettify("Expression evaluation works only when debug is running and jvm is suspended")
     val errorDuringEval = prettify("Expression evaluation failed")
@@ -87,9 +87,9 @@ trait ExpressionManager {
     def show(proxy: JdiProxy): String = proxy.context.show(proxy)
 
     def computeInEvaluator(evaluator: JdiExpressionEvaluator): Unit = {
-      evaluator(exp).map(show) match {
+      evaluator(exp) match {
         case Success(result) =>
-          resultCallback(result)
+          resultCallback(result.underlying, show(result))
         case Failure(exception) =>
           logger.error(exception)
           errorCallback(s"$errorDuringEval\n${exception.getMessage}")

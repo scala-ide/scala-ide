@@ -36,7 +36,7 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
 
     var error: String = null
 
-    ExpressionManager.compute(code, s => result = Some(s), s => error = s)
+    ExpressionManager.compute(code, (objectReference, string) => result = Some(string), s => error = s)
 
     expectedError.foreach(expected => assertTrue(s"'$error' does not contain '$expected'", error.contains(expected)))
     assertEquals(expectedResult, result)

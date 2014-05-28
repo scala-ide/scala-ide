@@ -45,11 +45,11 @@ class BaseConditionalBreakpointTest(val companion: BaseConditionalBreakpointTest
   private def runInEclipse(code: String, conditionContext: Option[ConditionContext]): Option[JdiProxy] = {
     val evaluator: Option[JdiExpressionEvaluator] = companion.expressionEvaluator(conditionContext)
     if (companion.shouldHitBreakpoint(conditionContext)) {
-      val r = evaluator.get.apply(code) match {
+      val res = evaluator.get.apply(code) match {
         case Success(result) => result
         case Failure(exception) => throw exception
       }
-      Some(r)
+      Some(res)
     } else {
       None
     }

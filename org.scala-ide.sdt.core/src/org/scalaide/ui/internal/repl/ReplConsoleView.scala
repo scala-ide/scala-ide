@@ -19,7 +19,6 @@ import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.debug.internal.ui.DebugPluginImages
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.action.IAction
@@ -63,30 +62,35 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       import EclipseRepl._
       import scala.tools.nsc.interpreter.Results._
 
-      override def done(exec: Exec, result: Result, output: String) {run{
-        if (exec ne ReplConsoleView.HideBareExit) {
-          view.displayCode(exec)
-          result match {
-            case Success => view.displayOutput(output)
-            case Error => view.displayError(output)
-            case Incomplete => view.displayError(
-              (if (output.isEmpty) "" else output+"\n")
-                + ReplConsoleView.WarnIncomplete )
+      override def done(exec: Exec, result: Result, output: String) {
+        run {
+          if (exec ne ReplConsoleView.HideBareExit) {
+            view.displayCode(exec)
+            result match {
+              case Success => view.displayOutput(output)
+              case Error => view.displayError(output)
+              case Incomplete => view.displayError(
+                (if (output.isEmpty) "" else output + "\n")
+                  + ReplConsoleView.WarnIncomplete)
+            }
           }
-        }}}
-      override def failed(req: Any, thrown: Throwable, output: String) {run{
-        val b = new java.io.StringWriter
-        val p = new java.io.PrintWriter(b)
-        p.println("exception with: "+req)
-        if (!output.isEmpty) p.println(output)
-        p.println(thrown.getMessage)
-        thrown.printStackTrace(p)
-        view.displayError(b.toString)
-        if (req.isInstanceOf[Settings]) setStopped
-        }}
-  })
+        }
+      }
+      override def failed(req: Any, thrown: Throwable, output: String) {
+        run {
+          val b = new java.io.StringWriter
+          val p = new java.io.PrintWriter(b)
+          p.println("exception with: " + req)
+          if (!output.isEmpty) p.println(output)
+          p.println(thrown.getMessage)
+          thrown.printStackTrace(p)
+          view.displayError(b.toString)
+          if (req.isInstanceOf[Settings]) setStopped
+        }
+      }
+    })
 
-  override def evaluate(text:String) {
+  override def evaluate(text: String) {
     if (isStopped)
       setStarted
     repl.exec(text)
@@ -174,11 +178,12 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
-    for { opt <- Seq( ScalaPlugin.plugin.swingClasses,
-                      ScalaPlugin.plugin.libClasses )
-          p <- opt ; s = p.toOSString }
-      if(!cp.contains(s))
-        cp = s + java.io.File.pathSeparator + cp
+    for {
+      opt <- Seq(ScalaPlugin.plugin.swingClasses,
+        ScalaPlugin.plugin.libClasses)
+      p <- opt; s = p.toOSString
+    } if (!cp.contains(s))
+      cp = s + java.io.File.pathSeparator + cp
     settings.classpath.value = cp
     // end to do ? move
     repl.init(settings)
@@ -293,9 +298,9 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
    * Reset the project list to the current set of open projects
    */
   def refreshProjectList() {
-    val scalaProjectNames = for (project <- ResourcesPlugin.getWorkspace().getRoot().getProjects()
-        if project.isOpen && project.hasNature(org.eclipse.jdt.core.JavaCore.NATURE_ID))
-      yield project.getName()
+    val scalaProjectNames = for (
+      project <- ResourcesPlugin.getWorkspace().getRoot().getProjects() if project.isOpen && project.hasNature(org.eclipse.jdt.core.JavaCore.NATURE_ID)
+    ) yield project.getName()
     projectList.setItems(scalaProjectNames)
   }
 
@@ -328,12 +333,12 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setPartName("Scala Interpreter (" + projectName + ")")
 
     // Register the interpreter for the project
-    scalaProject= ScalaPlugin.plugin.getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
+    scalaProject = ScalaPlugin.plugin.getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
     stopReplAction.run()
     setStarted
   }
 
-  override def setFocus() { }
+  override def setFocus() {}
 
   override def dispose() {
     super.dispose()
@@ -349,11 +354,10 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   }
 }
 
-object ReplConsoleView
-{
+object ReplConsoleView {
   private def show(mode: Int, project: IProject, page: IWorkbenchPage): ReplConsoleView = {
-    if (! project.isOpen)
-      throw new org.eclipse.ui.PartInitException("project is not open ("+project.getName+")");
+    if (!project.isOpen)
+      throw new org.eclipse.ui.PartInitException("project is not open (" + project.getName + ")");
     ScalaPlugin.plugin.getScalaProject(project) // creates if given project isn't already
     val viewPart = page.showView("org.scala-ide.sdt.core.consoleView", project.getName, mode)
     viewPart.asInstanceOf[ReplConsoleView]
