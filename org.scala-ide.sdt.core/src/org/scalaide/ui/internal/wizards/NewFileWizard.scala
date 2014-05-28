@@ -136,6 +136,9 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
     lbTemplate.setText("Kind:")
 
     cmTemplate.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
+    cmTemplate.addSelectionListener { e: SelectionEvent =>
+      validateInput()
+    }
 
     lbError.setLayoutData({
       val l = new GridData(SWT.FILL, SWT.FILL, true, false)
