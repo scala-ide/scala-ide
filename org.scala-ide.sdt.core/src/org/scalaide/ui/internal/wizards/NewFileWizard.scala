@@ -4,12 +4,12 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.IDialogConstants
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateContext
-import org.eclipse.jface.text.templates.TemplateProposal
 import org.eclipse.jface.text.templates.TemplateVariableResolver
 import org.eclipse.nebula.widgets.tablecombo.TableCombo
 import org.eclipse.swt.SWT
@@ -34,9 +34,11 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
+import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.ui.Dialogs
@@ -220,17 +222,43 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
       }
     }
 
-    def createTemplateContext(template: Template, viewer: ITextViewer) = {
-      val region = new Region(0, 0)
-      val ctx = new ScalaTemplateManager().makeTemplateCompletionProcessor().createContext(viewer, region)
-      ctx.getContextType().addResolver(PackageVariableResolver)
+    def applyTemplate(template: Template, ctx: ScalaTemplateContext) = {
+      val doc = ctx.getDocument()
+      doc.replace(0, 0, template.getPattern())
 
-      val tp = new TemplateProposal(template, ctx, region, null)
+      val tb = ctx.evaluate(template)
+      val vars = tb.getVariables()
+      val replacements = vars flatMap { v =>
+        val len = v.getName().length() + "${}".length()
+        val value = v.getDefaultValue()
+        v.getOffsets() map (off => (off, len, value))
+      }
+
+      replacements.sortBy(_._1) foreach {
+        case (off, len, value) =>
+          doc.replace(off, len, value)
+      }
+
+      EditorUtils.doWithCurrentEditor { editor =>
+        val cursorPos = vars
+            .find(_.getType() == GlobalTemplateVariables.Cursor.NAME)
+            .map(_.getOffsets().head)
+            .getOrElse(tb.getString().length())
+        editor.setHighlightRange(cursorPos, 0, /*moveCursor*/ true)
+      }
+    }
+
+    def createTemplateContext(doc: IDocument): ScalaTemplateContext = {
+      val tm = new ScalaTemplateManager()
+      val ctxType = tm.contextTypeRegistry.getContextType(tm.CONTEXT_TYPE)
+      val ctx = new ScalaTemplateContext(ctxType, doc, 0, 0)
+
+      ctx.getContextType().addResolver(PackageVariableResolver)
       m.withInstance(_.templateVariables(selectedProject.getProject(), tName.getText())) foreach { vars =>
         for ((name, value) <- vars)
           ctx.setVariable(name, value)
       }
-      tp.apply(viewer, 0, 0, 0)
+      ctx
     }
 
     val path = m.withInstance(_.createFileFromName(selectedProject.getProject(), tName.getText()))
@@ -238,7 +266,8 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
       openEditor(p) { viewer =>
         findTemplateById(m.templateId) match {
           case Some(template) =>
-            createTemplateContext(template, viewer)
+            val ctx = createTemplateContext(viewer.getDocument())
+            applyTemplate(template, ctx)
           case _ =>
             eclipseLog.error(s"Template '${m.templateId}' not found. Creating an empty document.")
         }
