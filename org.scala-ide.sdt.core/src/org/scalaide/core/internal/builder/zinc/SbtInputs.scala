@@ -24,18 +24,22 @@ import xsbti.Maybe
 import xsbti.Reporter
 import xsbti.compile._
 import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.ScalaPlugin
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
  */
-class SbtInputs(sourceFiles: Seq[File],
+class SbtInputs(installation: ScalaInstallation,
+  sourceFiles: Seq[File],
   project: ScalaProject,
   javaMonitor: SubMonitor,
   scalaProgress: CompileProgress,
   tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics
-  scalaReporter: Reporter,
   logger: Logger) {
 
   def cache = CompilerCache.fresh // May want to explore caching possibilities.
@@ -47,20 +51,20 @@ class SbtInputs(sourceFiles: Seq[File],
       Maybe.just(Analysis.Empty)
     else
       allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
-        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis)
+        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
         case None                                     => Maybe.just(Analysis.Empty)
       }
 
   def progress = Maybe.just(scalaProgress)
 
-  def reporter = scalaReporter
-
   def incOptions: sbt.inc.IncOptions = {
-    sbt.inc.IncOptions.Default.copy(
-      apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name)),
-      relationsDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name)),
-      newClassfileManager = ClassfileManager.transactional(tempDir),
-      apiDumpDirectory = None)
+    sbt.inc.IncOptions.Default.
+      withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
+      withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
+      withNewClassfileManager(ClassfileManager.transactional(tempDir)).
+      withApiDumpDirectory(None).
+      withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
+      withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
   }
 
   def options = new Options {
@@ -77,7 +81,16 @@ class SbtInputs(sourceFiles: Seq[File],
       }.toArray
     }
 
-    def options = project.scalacArguments.toArray
+    // remove arguments not understood by build compiler
+    def options =
+      if (project.isUsingCompatibilityMode())
+        project.scalacArguments.filter(buildCompilerOption).toArray
+      else
+        project.scalacArguments.toArray
+
+    /** Remove the source-level related arguments */
+    private def buildCompilerOption(arg: String): Boolean =
+      !arg.startsWith("-Xsource") && !(arg == "-Ymacro-expand:none")
 
     def javacOptions = Array() // Not used.
 
@@ -92,15 +105,20 @@ class SbtInputs(sourceFiles: Seq[File],
     }
   }
 
-  def compilers = new Compilers[AnalyzingCompiler] {
-    def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-    def scalac = {
-      val scalaInstance = ScalaInstallation.platformInstallation.scalaInstance
-      val compilerInterface = plugin.sbtCompilerInterface map (_.toFile) getOrElse (throw new RuntimeException("compiler-interface not found"))
+  /** @return Right-biased instance of Either (error message in Left, value in Right)
+   */
+  def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
+    val scalaInstance = installation.scalaInstance
+    val store = ScalaPlugin.plugin.compilerInterfaceStore
 
-      // prevent Sbt from adding things to the (boot)classpath
-      val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
-      IC.newScalaCompiler(scalaInstance, compilerInterface, cpOptions, logger)
+    store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
+      compilerInterface =>
+        // prevent Sbt from adding things to the (boot)classpath
+        val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
+        new Compilers[AnalyzingCompiler] {
+          def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
+          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions, logger)
+        }
     }
   }
 }

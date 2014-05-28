@@ -60,12 +60,6 @@
       <artifactId>org.scala-ide.scala210.jars</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- sbt interface -->
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler211.interface</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- sources -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -108,11 +102,6 @@
       <artifactId>scala-swing_${scala211.binary.version}</artifactId>
       <version>${scala211.scala-swing.version}</version>
       <classifier>sources</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler211.interface.source</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

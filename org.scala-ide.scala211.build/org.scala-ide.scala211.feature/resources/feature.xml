@@ -106,13 +106,6 @@ SUCH DAMAGE.
          version="0.0.0"
          unpack="false"/>
 
-   <plugin
-         id="org.scala-ide.sbt.compiler211.interface"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
    <!-- TODO remove when multiple bundles of Scala are supported -->
    <plugin
          id="org.scala-ide.scala210.jars"

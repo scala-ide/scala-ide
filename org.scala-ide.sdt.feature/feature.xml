@@ -61,6 +61,10 @@ SUCH DAMAGE.
          id="org.scala-ide.sdt.weaving.feature"
          version="0.0.0"/>
 
+   <includes
+         id="org.scala-ide.sbt.feature"
+         version="0.0.0"/>
+
    <requires>
       <import plugin="org.eclipse.equinox.weaving.aspectj"/>
       <import plugin="org.eclipse.core.runtime"/>

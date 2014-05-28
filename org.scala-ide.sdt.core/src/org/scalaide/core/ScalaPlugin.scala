@@ -57,8 +57,10 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
-import org.eclipse.core.runtime.IPath
-import java.io.File
+import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.FixedSizeCache
+import org.scalaide.core.internal.project.ScalaInstallation
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -81,7 +83,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-
   import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
   def pluginId = "org.scala-ide.sdt.core"
@@ -91,10 +92,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def reflectPluginId = "org.scala-lang.scala-reflect"
   def swingPluginId = "org.scala-lang.modules.scala-swing"
   def sbtPluginId = "org.scala-ide.sbt.full.library"
-  lazy val sbtCompilerInterfaceId = {
-    val ShortScalaVersion(major, minor) = scalaVer
-    s"org.scala-ide.sbt.compiler$major$minor.interface"
-  }
+  lazy val sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
   def wizardPath = pluginId + ".wizards"
   def wizardId(name: String) = wizardPath + ".new" + name
@@ -141,10 +139,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   }
 
   lazy val scalaVer = ScalaVersion.current
-  lazy val shortScalaVer = scalaVer match {
-    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
-    case _ => "none"
-  }
+  lazy val shortScalaVer = CompilerUtils.shortString(scalaVer)
 
   lazy val sdtCoreBundle = getBundle()
   lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
@@ -169,60 +164,24 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
-  /**
-   * Returns the location of the source bundle for the bundle.
-   *
-   * @param bundleId the bundle id
-   * @param bundelPath the bundle location
-   */
-  def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
-    val jarFile = bundlePath.lastSegment()
-    val parentFolder = bundlePath.removeLastSegments(1)
-
-    val sourceBundleId = bundleId + ".source"
-    // the expected filename for the source jar
-    val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
-
-    // the source jar location when the files are from the plugins folder
-    val installedLocation = parentFolder.append(sourceJarFile)
-
-    if (installedLocation.toFile().exists()) {
-      // found in the plugins folder
-      Some(installedLocation)
-    } else {
-      val versionString = parentFolder.lastSegment()
-      val groupFolder = parentFolder.removeLastSegments(2)
-      // the source jar location when the files are from a local m2 repo
-      val buildLocation = groupFolder.append(sourceBundleId).append(versionString).append(sourceJarFile)
-      if (buildLocation.toFile().exists()) {
-        // found in the m2 repo
-        Some(buildLocation)
-      } else {
-        // not found
-        None
-      }
-    }
-
-  }
-
   lazy val libClasses = OSGiUtils.getBundlePath(scalaLibBundle)
-  lazy val libSources = libClasses.flatMap(l => computeSourcePath(libraryPluginId, l))
+  lazy val libSources = libClasses.flatMap(l => EclipseUtils.computeSourcePath(libraryPluginId, l))
   //  lazy val libSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-library-src.jar")
 
   // 2.10 specific libraries
   lazy val scalaActorsBundle = Platform.getBundle(actorsPluginId)
   lazy val actorsClasses = OSGiUtils.getBundlePath(scalaActorsBundle)
-  lazy val actorsSources = actorsClasses.flatMap(l => computeSourcePath(actorsPluginId, l))
+  lazy val actorsSources = actorsClasses.flatMap(l => EclipseUtils.computeSourcePath(actorsPluginId, l))
   //  lazy val actorsSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-actors-src.jar")
 
   lazy val scalaReflectBundle = Platform.getBundle(reflectPluginId)
   lazy val reflectClasses = OSGiUtils.getBundlePath(scalaReflectBundle)
-  lazy val reflectSources = reflectClasses.flatMap(l => computeSourcePath(reflectPluginId, l))
+  lazy val reflectSources = reflectClasses.flatMap(l => EclipseUtils.computeSourcePath(reflectPluginId, l))
   //  lazy val reflectSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-reflect-src.jar")
 
   // TODO: 2.10 swing support
   lazy val swingClasses = OSGiUtils.getBundlePath(Platform.getBundle(swingPluginId))
-  lazy val swingSources = swingClasses.flatMap(l => computeSourcePath(swingPluginId, l))
+  lazy val swingSources = swingClasses.flatMap(l => EclipseUtils.computeSourcePath(swingPluginId, l))
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
@@ -248,6 +207,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     super.stop(context)
     ScalaPlugin.plugin = null
   }
+
+  /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
+  lazy val compilerInterfaceStore: CompilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
+
+  /** A LRU cache of class loaders for Scala builders */
+  lazy val classLoaderStore: FixedSizeCache[ScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
@@ -326,7 +291,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
           innerDelta.getElement() match {
             // classpath change should only impact projects
             case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach(_.classpathHasChanged())
+              asScalaProject(javaProject.getProject()).foreach{ (p) => if (!p.isCheckingClassPath()) p.classpathHasChanged() }
             }
             case _ =>
           }

@@ -31,11 +31,12 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
 
 /** Utility functions for setting up test projects.
  *
  */
-object SDTTestUtils {
+object SDTTestUtils extends HasLogger {
 
   def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName) //"org.scala-ide.sdt.core.tests"
@@ -66,7 +67,7 @@ object SDTTestUtils {
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
       val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
-      println("copying %s to %s".format(src, dst))
+      logger.debug("copying %s to %s".format(src, dst))
       FileUtils.copyDirectory(src, dst)
       val project = workspace.getRoot.getProject(name)
       project.create(null)
@@ -162,13 +163,18 @@ object SDTTestUtils {
     units.flatMap(findProblemMarkers).toList
   }
 
+  def getErrorMessages(project: IProject): Seq[(Int, String)] = {
+    for (m <- project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE))
+      yield (m.getAttribute(IMarker.SEVERITY).asInstanceOf[Int], m.getAttribute(IMarker.MESSAGE).toString)
+  }
+
   def getErrorMessages(units: ICompilationUnit*): List[String] =
     for (p <- getProblemMarkers(units: _*)) yield p.getAttribute(IMarker.MESSAGE).toString
 
   def buildWith(resource: IResource, contents: String, unitsToWatch: Seq[ICompilationUnit]): List[String] = {
     SDTTestUtils.changeContentOfFile(resource.asInstanceOf[IFile], contents)
 
-    println("=== Rebuilding workspace === ")
+    logger.debug("=== Rebuilding workspace === ")
     SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
 
     val problems = getProblemMarkers(unitsToWatch: _*)
@@ -223,6 +229,7 @@ object SDTTestUtils {
     prj.javaProject.setRawClasspath(existing ++ entries, null)
   }
 
+  /** Create Scala projects, equiped with the Scala nature, Scala library container and a '/src' folder. */
   def createProjects(names: String*): Seq[ScalaProject] =
     names map (n => simulator.createProjectInWorkspace(n, true))
 

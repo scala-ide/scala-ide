@@ -38,12 +38,6 @@
       <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
     </dependency>
-    <!-- sbt interface -->
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler210.interface</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <!-- sources -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -70,12 +64,6 @@
       <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
-    </dependency>
-    <!-- sbt interface -->
-    <dependency>
-      <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler210.interface.source</artifactId>
-      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

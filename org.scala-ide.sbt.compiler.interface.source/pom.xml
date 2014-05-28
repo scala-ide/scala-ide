@@ -8,14 +8,14 @@
     <version>4.0.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.compiler211.interface.source</artifactId>
+  <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbt</groupId>
       <artifactId>compiler-interface-precompiled</artifactId>
-      <version>${sbt.scala211.version}</version>
+      <version>${sbt.ide.version}</version>
       <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>
@@ -34,7 +34,7 @@
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${sbt.osgi.light.version}</Bundle-Version>
             <!-- This defines the bundle we provide the source for -->
-            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler211.interface;version="${sbt.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
+            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler.interface;version="${sbt.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
             <!-- Extract all sources into this bundle -->
             <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>

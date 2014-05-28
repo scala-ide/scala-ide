@@ -46,7 +46,7 @@ Require-Bundle:
  org.scala-refactoring.library,
  org.scala-lang.modules.scala-xml;bundle-version="[1.0.1,1.0.1]",
  org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
- org.scala-ide.sbt.compiler211.interface;bundle-version="[0.13,0.14)",
+ org.scala-ide.sbt.compiler.interface;bundle-version="[0.13,0.14)",
  org.scala-ide.scala210.jars,
  scalariform,
  org.eclipse.ui.browser;bundle-version="3.3.0"
