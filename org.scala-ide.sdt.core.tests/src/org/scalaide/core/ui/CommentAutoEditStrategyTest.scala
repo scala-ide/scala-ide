@@ -592,4 +592,14 @@ xxxxxxtestxtestxtests^
      */
   """ after Add("x")
 
+  @Test
+  def auto_break_on_first_line_of_comment() = """
+    /* test test test^
+     */
+  """ becomes """
+    /* test test
+     * testx^
+     */
+  """ after Add("x")
+
 }

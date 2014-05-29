@@ -112,10 +112,16 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
       val systemLineSeparator = TextUtilities.getDefaultLineDelimiter(doc)
       val endOfIndent = findEndOfWhiteSpace(doc, line.getOffset(), cmd.offset)
       val innerIndentNeeded = doc.getChar(endOfIndent) == '*'
+      val isCommentStart = doc.getChar(endOfIndent) == '/'
+
+      val alignment =
+        if (innerIndentNeeded) 1
+        else if (doc.getChar(endOfIndent+3) != '*') 2
+        else 3
 
       val textStart =
-        if (innerIndentNeeded)
-          findEndOfWhiteSpace(doc, endOfIndent+1, cmd.offset)
+        if (innerIndentNeeded || isCommentStart)
+          findEndOfWhiteSpace(doc, endOfIndent+alignment, cmd.offset)
         else
           endOfIndent
 
@@ -123,12 +129,15 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
       val canSplitText = wordOff != textStart
 
       if (canSplitText) {
-        val newLine = Seq(
-            systemLineSeparator,
-            doc.get(line.getOffset(), endOfIndent-line.getOffset()),
-            doc.get(endOfIndent, textStart-endOfIndent),
-            doc.get(wordOff, wordLen),
-            cmd.text)
+        val indent = doc.get(line.getOffset(), endOfIndent-line.getOffset())
+        val word = doc.get(wordOff, wordLen)
+        val commentIndent =
+          if (isCommentStart)
+            " *" + doc.get(endOfIndent+alignment, textStart-endOfIndent-alignment)
+          else
+            doc.get(endOfIndent, textStart-endOfIndent)
+
+        val newLine = Seq(systemLineSeparator, indent, commentIndent, word, cmd.text)
 
         val wsLen = trimRightLen(doc.get(textStart, wordOff-textStart))
 
