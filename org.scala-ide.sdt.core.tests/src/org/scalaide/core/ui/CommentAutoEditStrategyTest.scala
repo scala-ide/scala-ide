@@ -602,4 +602,16 @@ xxxxxxtestxtestxtests^
      */
   """ after Add("x")
 
+ @Test
+  def do_not_move_cursor_to_another_position_after_auto_break() = """
+    /*
+     * test testx^test
+     */
+  """ becomes """
+    /*
+     * test
+     * testxx^test
+     */
+  """ after Add("x")
+
 }
