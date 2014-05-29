@@ -28,7 +28,7 @@ class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(S
     assertEquals(1, proposals.length)
     val p = proposals(0)
     assertEquals("alue", p.getContent())
-    assertEquals("mysteriousValue: Double", p.getLabel())
+    assertEquals("mysteriousValue: scala.Double", p.getLabel())
     assertNull(p.getDescription())
   }
 }
