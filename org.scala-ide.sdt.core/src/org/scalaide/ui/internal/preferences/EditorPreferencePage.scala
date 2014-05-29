@@ -51,6 +51,9 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_SMART_PARENS, "With (parenthesis)", surround)
     checkBox(P_ENABLE_SMART_QUOTES, "With \"quotes\"", surround)
 
+    val insertion = group("Enable smart insertion mode", base)
+    checkBox(P_ENABLE_SMART_INSERTION_SEMICOLONS, "For Semicolons", insertion)
+
     val typing = group("Typing", base)
     checkBox(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", typing)
     checkBox(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", typing)
@@ -109,6 +112,8 @@ object EditorPreferencePage {
   final val P_ENABLE_SMART_PARENS = BASE + "smartParens"
   final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
 
+  final val P_ENABLE_SMART_INSERTION_SEMICOLONS = BASE + "smartInsertionSemicolons"
+
   final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
   final val P_ENABLE_AUTO_CLOSING_COMMENTS = BASE + "autoClosingComments"
   final val P_ENABLE_AUTO_ESCAPE_LITERALS = BASE + "autoEscapeLiterals"
@@ -134,6 +139,8 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_SMART_BRACES, false)
     store.setDefault(P_ENABLE_SMART_PARENS, false)
     store.setDefault(P_ENABLE_SMART_QUOTES, false)
+
+    store.setDefault(P_ENABLE_SMART_INSERTION_SEMICOLONS, false)
 
     store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
     store.setDefault(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
