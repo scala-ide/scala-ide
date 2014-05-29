@@ -12,6 +12,7 @@ import scala.tools.reflect.ToolBox
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.DebuggerSpecific
+import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.TransformationPhase
 import org.scalaide.debug.internal.expression.TypesContext
 import org.scalaide.debug.internal.expression.context.VariableContext
@@ -19,7 +20,7 @@ import org.scalaide.debug.internal.expression.context.VariableContext
 case class MockVariables(toolbox: ToolBox[universe.type], context: VariableContext, typesContext: TypesContext)
   extends TransformationPhase {
 
-  import toolbox.u.{Try => _, _}
+  import toolbox.u.{ Try => _, _ }
 
   /**
    * Insert mock proxy code for unbound variables into given code tree
@@ -64,11 +65,19 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
      */
     private def buildProxyDefinition(context: VariableContext)(name: String): Option[String] = {
       import DebuggerSpecific._
-      context.getType(name).map {
-        typeName =>
-          val typeParams: String = buildTypeParameterSig(typeName)
-          s"""val $name: $typeName$typeParams = $contextName.$placeholderName""" + (
-            if (name == thisValName && typeName != proxyName) s"\nimport $name._" else "")
+
+      def isArray(typeName: String) = typeName endsWith "[]"
+
+      def typeOfArray(typeName: String) = typeName dropRight 2
+
+      context.getType(name).map { typeName =>
+        val typeParams: String = typeName match {
+          case ScalaOther.Array(_) => ""
+          case other => buildTypeParameterSig(other)
+        }
+
+        s"""val $name: $typeName$typeParams = $contextName.$placeholderName""" + (
+          if (name == thisValName && typeName != proxyName) s"\nimport $name._" else "")
       }
     }
 

@@ -13,12 +13,14 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.ScalaOther
+import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxyWrapper
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
+import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ClassType
 import com.sun.jdi.InterfaceType
@@ -37,9 +39,9 @@ private[context] trait JdiMethodInvoker
   self: JdiContext =>
 
   /**
-   *  Implements method invocation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
+   * Implements method invocation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
    *
-   *  Wraps `invokeUnboxed` with a `valueProxy`.
+   * Wraps `invokeUnboxed` with a `valueProxy`.
    */
   override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
     onScalaType: Option[String],
@@ -64,7 +66,7 @@ private[context] trait JdiMethodInvoker
       .asInstanceOf[Result]
   }
 
-  /** invokeUnboxed method that  returns option instead of throwing an exception */
+  /** invokeUnboxed method that returns option instead of throwing an exception */
   private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
     onRealType: Option[String],
     name: String,
@@ -112,6 +114,8 @@ private[context] trait JdiMethodInvoker
      */
     protected final def conformsTo(proxy: JdiProxy, tpe: Type): Boolean =
       (tpe, proxy, proxy.underlying.referenceType) match {
+
+        case (arrayType: ArrayType, arrayProxy: ArrayJdiProxy, _) => true
 
         case (_, wrapper: JdiProxyWrapper, _) => conformsTo(wrapper.outer, tpe)
 

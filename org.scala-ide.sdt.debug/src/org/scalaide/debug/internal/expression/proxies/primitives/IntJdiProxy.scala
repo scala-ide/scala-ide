@@ -25,7 +25,7 @@ case class IntJdiProxy(context: JdiContext, underlying: ObjectReference)
 
   override def unary_~ : IntJdiProxy = context.proxy(~primitiveValue)
 
-  protected override def primitiveValue = this.primitive.asInstanceOf[IntegerValue].value()
+  protected[proxies] override def primitiveValue = this.primitive.asInstanceOf[IntegerValue].value()
 }
 
 object IntJdiProxy extends BoxedJdiProxyCompanion[Int, IntJdiProxy](JavaBoxed.Integer, JavaPrimitives.int) {

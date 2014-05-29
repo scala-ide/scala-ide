@@ -8,10 +8,10 @@ package org.scalaide.debug.internal.expression.context
 import scala.collection.JavaConversions._
 
 import org.scalaide.debug.internal.expression.JavaBoxed
+import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxyCompanion
@@ -22,7 +22,9 @@ import org.scalaide.debug.internal.expression.proxies.primitives.FloatJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.LongJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.ShortJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
+import com.sun.jdi.ArrayReference
 import com.sun.jdi.BooleanValue
 import com.sun.jdi.ByteValue
 import com.sun.jdi.CharValue
@@ -63,6 +65,8 @@ private[context] trait Proxyfier {
 
   /** Creates a proxy for a given value. */
   final def valueProxy(value: Value): JdiProxy = value match {
+    case arrayReference: ArrayReference =>
+      ArrayJdiProxy(this, arrayReference)
     case objectReference: ObjectReference =>
       val name = objectReference.`type`.name
       javaBoxedMap

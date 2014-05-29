@@ -3,9 +3,10 @@
  * are made available under the terms of the Scala License which accompanies this distribution, and
  * is available at http://www.scala-lang.org/node/146
  */
-package org.scalaide.debug.internal.expression.proxies
+package org.scalaide.debug.internal.expression.proxies.primitives
 
 import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
 import com.sun.jdi.ObjectReference
 

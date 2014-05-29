@@ -54,6 +54,9 @@ object JavaPrimitives {
   val byte = "byte"
 
   val short = "short"
+
+  /** Regex for matching Java arrays */
+  val Array = """(.*)\[\]""".r
 }
 
 /**
@@ -135,6 +138,8 @@ object ScalaOther {
 
   val unitLiteral = "()"
 
+  val arrayType = "scala.Array"
+
   val partialFunctionType = classOf[PartialFunction[_, _]].getName
 
   /** Supported methods from `scala.Dynamic` */
@@ -147,6 +152,19 @@ object ScalaOther {
 
   val rangeInclusive = "scala.collection.immutable.Range$Inclusive"
   val range = "scala.collection.immutable.Range"
+
+  /** Regex for matching Scala arrays */
+  val Array = """Array\[(.*)\]""".r
+
+  def Array(typeName: String) = s"Array[$typeName]"
+
+  val nil = "scala.collection.immutable.Nil"
+  // strange value that shows up instead of above one
+  val thisNil = "immutable.this.Nil"
+
+  val list = "scala.collection.immutable.List"
+  // strange value that shows up instead of above one
+  val thisList = "immutable.this.List"
 }
 
 object DebuggerSpecific {

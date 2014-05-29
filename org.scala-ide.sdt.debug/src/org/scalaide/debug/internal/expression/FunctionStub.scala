@@ -6,7 +6,7 @@
 package org.scalaide.debug.internal.expression
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 /**
  * Stubs function call.

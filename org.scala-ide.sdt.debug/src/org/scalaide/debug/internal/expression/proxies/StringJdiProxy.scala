@@ -19,4 +19,4 @@ case class StringJdiProxy(context: JdiContext, underlying: ObjectReference) exte
 
 }
 
-object StringJdiProxy extends JdiProxyCompanion[StringJdiProxy]
+object StringJdiProxy extends JdiProxyCompanion[StringJdiProxy, ObjectReference]

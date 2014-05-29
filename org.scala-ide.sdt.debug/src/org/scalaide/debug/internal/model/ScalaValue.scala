@@ -23,7 +23,6 @@ import com.sun.jdi.Field
 import com.sun.jdi.Method
 import org.scalaide.debug.internal.JDIUtil
 import com.sun.jdi.ReferenceType
-import org.scalaide.debug.internal.expression.JavaBoxed
 
 object ScalaValue {
 
@@ -142,7 +141,7 @@ class ScalaPrimitiveValue(typeName: String, value: String, override val underlyi
 
 class ScalaStringReference(override val underlying: StringReference, target: ScalaDebugTarget) extends ScalaObjectReference(underlying, target) {
 
-  protected override def doGetReferenceTypeName() = JavaBoxed.String
+  protected override def doGetReferenceTypeName() = "java.lang.String"
   protected override def doGetValueString(): String = """"%s" (id=%d)""".format(underlying.value, underlying.uniqueID)
 
 }

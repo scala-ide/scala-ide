@@ -5,21 +5,24 @@
  */
 package org.scalaide.debug.internal.ui
 
+import org.scalaide.debug.internal.expression.ScalaOther
+
 object TypeNameMappings {
   lazy val javaTypesFromJdiToScalaTypes = Map(
-    "boolean" -> "Boolean",
-    "char" -> "Char",
-    "byte" -> "Byte",
-    "short" -> "Short",
-    "int" -> "Int",
-    "long" -> "Long",
-    "float" -> "Float",
-    "double" -> "Double",
-    "void" -> "Unit")
+    "boolean" -> classOf[Boolean].getSimpleName,
+    "char" -> classOf[Char].getSimpleName,
+    "byte" -> classOf[Byte].getSimpleName,
+    "short" -> classOf[Short].getSimpleName,
+    "int" -> classOf[Int].getSimpleName,
+    "long" -> classOf[Long].getSimpleName,
+    "float" -> classOf[Float].getSimpleName,
+    "double" -> classOf[Double].getSimpleName,
+    "void" -> classOf[Unit].getSimpleName)
 
-  def javaNameToScalaName(typeName: String) =
-    if (typeName.endsWith("[]")) {
-      val nonarrayType = typeName.substring(0, typeName.length() - 2)
-      s"Array[${javaTypesFromJdiToScalaTypes.getOrElse(nonarrayType, nonarrayType)}]"
-    } else javaTypesFromJdiToScalaTypes.getOrElse(typeName, typeName)
+  import ScalaOther.Array
+
+  def javaNameToScalaName(typeName: String) = typeName match {
+    case Array(innerType) => Array(javaTypesFromJdiToScalaTypes.getOrElse(innerType, innerType))
+    case _ => javaTypesFromJdiToScalaTypes.getOrElse(typeName, typeName)
+  }
 }

@@ -57,10 +57,10 @@ trait JdiProxy extends Dynamic {
 /**
  * Base for companion objects for [[org.scalaide.debug.internal.expression.proxies.JdiProxy]].
  */
-trait JdiProxyCompanion[Proxy <: JdiProxy] {
+trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
 
   /** Creates a JdiProxy for object using context */
-  def apply(proxyContext: JdiContext, underlying: ObjectReference): Proxy
+  def apply(proxyContext: JdiContext, underlying: Underlying): Proxy
 
   /** Creates a JdiProxy based on existing one */
   def apply(on: JdiProxy): Proxy =

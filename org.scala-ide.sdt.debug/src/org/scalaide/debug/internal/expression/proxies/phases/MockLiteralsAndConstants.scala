@@ -10,10 +10,9 @@ import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.DebuggerSpecific
-import org.scalaide.debug.internal.expression.ExpressionEvaluator
-import org.scalaide.debug.internal.expression.TypesContext
 import org.scalaide.debug.internal.expression.ScalaOther
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
+import org.scalaide.debug.internal.expression.TypesContext
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 /**
  * Transformer for literals and constants (`NaN` and `Infinity`)

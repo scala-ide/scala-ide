@@ -5,13 +5,16 @@
  */
 package org.scalaide.debug.internal.expression.context
 
+import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
+import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.StringReference
+import com.sun.jdi.Value
 
 /**
  * Part of JdiContext responsible for converting proxies to their string representations.
@@ -37,11 +40,30 @@ trait Stringifier {
    */
   def show(proxy: JdiProxy, withType: Boolean = true): String = proxy match {
     case unit: UnitJdiProxy => "() (of type: scala.Unit)"
-    case _ => {
+
+    case array: ArrayJdiProxy => {
+
+      // responsible for converting value to its string rep
+      def inner(value: Value): String = {
+        var x = value.toString
+        val isString = x.head == '\"' && x.last == '\"'
+        // remove " from strings
+        if (isString) x = x.drop(1).dropRight(1)
+        val haveTrailingWhitespace = x.head.isWhitespace || x.last.isWhitespace
+        // if elements starts/ends with whitespace add them back
+        if (haveTrailingWhitespace) "\"" + x + "\"" else x
+      }
+
+      val stringValue = array.underlying.getValues
+        .map(inner)
+        .mkString("Array(", ", ", ")")
+      s"$stringValue (of type: scala.Array)" // TODO - type of array?
+    }
+
+    case _ =>
       val stringValue = callToString(proxy).value
       val underlyingType = proxy.underlying.referenceType.name
       val typeDecoded = NameTransformer.decode(underlyingType)
       if (withType) s"$stringValue (of type: $typeDecoded)" else stringValue
-    }
   }
 }

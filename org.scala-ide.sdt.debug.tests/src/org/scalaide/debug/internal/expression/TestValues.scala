@@ -13,6 +13,9 @@ object TestValues {
   val argumentsFileName = "Arguments"
   val argumentsLine = 11
 
+  val arraysFileName = "Arrays"
+  val arraysLine = 12
+
   val codeCompletionFileName = "CodeCompletion"
   val codeCompletionLineNumber = 26
 
@@ -42,6 +45,12 @@ object TestValues {
 
   val visibilityFileName = "Visibility"
   val visibilityLineNumber = 23
+
+  object Arrays {
+    val intArray = Array(1, 2, 3)
+    val stringArray = Array("Ala", "Ola", "Ula")
+    val arrayIdentity = "arrayIdentity"
+  }
 
   object Nested {
     val outerUsed = 1

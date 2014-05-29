@@ -14,6 +14,7 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[ArrayTest],
     classOf[MethodArgumentsAccessTest],
     classOf[ThisTest],
     classOf[VisibilityTest],

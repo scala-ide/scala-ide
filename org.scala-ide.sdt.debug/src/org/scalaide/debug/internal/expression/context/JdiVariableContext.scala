@@ -9,6 +9,7 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.expression.DebuggerSpecific
 import org.scalaide.debug.internal.expression.JavaPrimitives
+import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.ScalaPrimitivesUnified
 
 import com.sun.jdi.ObjectReference
@@ -36,10 +37,11 @@ private[context] trait JdiVariableContext
   override def getType(variableName: String): Option[String] = {
     import DebuggerSpecific._
 
-    (if (variableName == thisValName) Some(topFrame.thisObject)
-    else valueFromFrame(topFrame, variableName)).map(valueTypeAsString).map {
-      name => if (onClassPath(expressionClassLoader, name)) name else proxyName
-    }.map(getScalaNameFromType)
+    val name = if (variableName == thisValName) Some(topFrame.thisObject) else valueFromFrame(topFrame, variableName)
+
+    name.map(valueTypeAsString)
+      .map(name => if (onClassPath(expressionClassLoader, name)) name else proxyName)
+      .map(getScalaNameFromType)
   }
 
   /** Changes all `$` and `_` to `.`, if type ends with `$` changes it to `.type` */
@@ -70,6 +72,7 @@ private[context] trait JdiVariableContext
     case JavaPrimitives.long => ScalaPrimitivesUnified.Long
     case JavaPrimitives.char => ScalaPrimitivesUnified.Char
     case JavaPrimitives.boolean => ScalaPrimitivesUnified.Boolean
+    case JavaPrimitives.Array(innerType) => ScalaOther.Array(javaPrimitivesToScala(innerType))
     case other => other
   }
 
@@ -85,6 +88,9 @@ private[context] trait JdiVariableContext
 
     val prefixes = Seq("", "scala.", "java.")
 
-    prefixes.exists(prefix => tryClassName(prefix + typeName))
+    typeName match {
+      case ScalaOther.Array(innerType) => prefixes.exists(prefix => tryClassName(prefix + innerType))
+      case other => prefixes.exists(prefix => tryClassName(prefix + typeName))
+    }
   }
 }

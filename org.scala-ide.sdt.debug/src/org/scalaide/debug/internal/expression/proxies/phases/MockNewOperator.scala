@@ -13,6 +13,7 @@ import org.scalaide.debug.internal.expression.DebuggerSpecific
 import org.scalaide.debug.internal.expression.JavaBoxed
 import org.scalaide.debug.internal.expression.ScalaOther
 import org.scalaide.debug.internal.expression.TypesContext
+import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
 /**
  * Proxies all constructors in code.
@@ -69,7 +70,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
    */
   private def wrapInPrimitiveProxy(tree: Tree, primitiveType: String): Tree =
     Apply(
-      SelectApplyMethod(TypesContext.primitiveToProxyMap(primitiveType)),
+      SelectApplyMethod(BoxedJdiProxy.primitiveToProxyMap(primitiveType)),
       List(tree))
 
   /** Transformer */

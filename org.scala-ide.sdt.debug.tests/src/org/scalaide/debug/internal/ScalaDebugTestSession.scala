@@ -166,7 +166,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     removeBreakpoint(breakpoint)
 
     val expectedState = getExpectedState(conditionContext)
-    assertEquals("Bad state after runToBreakpoint", expectedState, state)
+    assertEquals(s"Bad state after runToBreakpoint(typeName = $typeName, line = $breakpointLine)", expectedState, state)
 
     actionResult
   }

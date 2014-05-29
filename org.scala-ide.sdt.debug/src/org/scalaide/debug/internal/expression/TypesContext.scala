@@ -6,8 +6,12 @@
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
+
 import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
+import org.scalaide.debug.internal.expression.proxies.FunctionJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.ByteJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.CharJdiProxy
@@ -16,31 +20,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.FloatJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.LongJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.ShortJdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function1JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function10JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function6JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function13JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function15JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function11JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function20JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function7JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function17JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function5JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function19JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function8JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function18JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function0JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function16JdiProxy
-import org.scalaide.debug.internal.expression.proxies.PartialFunctionProxy
-import org.scalaide.debug.internal.expression.proxies.Function3JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function12JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function14JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function4JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function9JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function22JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function21JdiProxy
-import org.scalaide.debug.internal.expression.proxies.Function2JdiProxy
-import org.scalaide.debug.internal.expression.proxies.UnitJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
 /**
  * Represents new class to be loaded on remote .
@@ -94,8 +74,6 @@ final class TypesContextState() {
  */
 final class TypesContext() {
 
-  import TypesContext._
-
   private val state: TypesContextState = new TypesContextState()
 
   /** Classes to be loaded on debuged jvm. */
@@ -115,7 +93,7 @@ final class TypesContext() {
    * @param tree tree to search for
    */
   def treeTypeName(tree: universe.Tree): Option[String] = {
-    if (tree.toString == names.thisNil) Some(names.nil)
+    if (tree.toString == ScalaOther.thisNil) Some(ScalaOther.nil)
     else typeName(tree.tpe, Option(tree.symbol).map(_.isModule).getOrElse(false))
   }
 
@@ -130,7 +108,7 @@ final class TypesContext() {
   def typeNameFor(name: String): String = typeFromContext(name)
 
   /** Type of proxy for by-name function paramater (that is, Function0JdiProxy) */
-  val byNameType: String = functionToProxyMap(ScalaFunctions.Function0)
+  val byNameType: String = FunctionJdiProxy.functionToProxyMap(ScalaFunctions.Function0)
 
   /**
    * Creates a new type that will be loaded in debugged jvm.
@@ -195,8 +173,8 @@ final class TypesContext() {
    */
   private def typeName(tpe: universe.Type, isObject: Boolean): Option[String] = {
     def correctTypes(oldName: String): Option[String] = oldName match {
-      case names.thisList => Some(names.list)
-      case names.thisNil => Some(names.nil)
+      case ScalaOther.thisList => Some(ScalaOther.list)
+      case ScalaOther.thisNil => Some(ScalaOther.nil)
       case any if isObject => Some(JdiContext.toObject(any))
       case ScalaOther.nothingType => None
       case any => Some(any)
@@ -214,17 +192,18 @@ final class TypesContext() {
     case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
   }
 
-  private val customProxyTypeMap = functionToProxyMap ++ primitiveToProxyMap
-
   /** Genereate stub name for given type - if not a special case just replace . with _ on full name */
-  private def stubName(orginalType: String): String = {
-    orginalType match {
-      case DebuggerSpecific.proxyFullName => DebuggerSpecific.proxyName
-      case DebuggerSpecific.contextFullName => DebuggerSpecific.contextName
-      case DebuggerSpecific.proxyName => DebuggerSpecific.proxyName
-      case DebuggerSpecific.contextName => DebuggerSpecific.contextName
-      case other => other.replace(".", "_")
-    }
+  private def stubName(orginalType: String): String = orginalType match {
+    case DebuggerSpecific.proxyFullName => DebuggerSpecific.proxyName
+    case DebuggerSpecific.contextFullName => DebuggerSpecific.contextName
+    case DebuggerSpecific.proxyName => DebuggerSpecific.proxyName
+    case DebuggerSpecific.contextName => DebuggerSpecific.contextName
+    case other => other.replace(".", "_")
+  }
+
+  private def getProxyForType(typeName: String): Option[String] = typeName match {
+    case "scala.Array" => Some(classOf[ArrayJdiProxy].getSimpleName)
+    case _ => (FunctionJdiProxy.functionToProxyMap ++ BoxedJdiProxy.primitiveToProxyMap).get(typeName)
   }
 
   /**
@@ -234,12 +213,11 @@ final class TypesContext() {
    * If not stubbable, `typeName` is returned.
    */
   private def typeFromContext(typeName: String): String = {
-    customProxyTypeMap.get(typeName).getOrElse {
+    getProxyForType(typeName).getOrElse(
       if (couldBeStubbed(typeName)) {
         state.addStub(typeName, getFunctionsForType(typeName))
         stubName(typeName)
-      } else typeName
-    }
+      } else typeName)
   }
 
   /** return all function for given type */
@@ -268,7 +246,7 @@ final class TypesContext() {
   /**  Generate stub for class that will be loaded in JVM - generated for this expression */
   private def generateStubForNewClass(name: String): String = {
     val data = state.newCodeClasses(name)
-    val proxyParentClass = functionToProxyMap(data.parentClassName)
+    val proxyParentClass = FunctionJdiProxy.functionToProxyMap(data.parentClassName)
     val className = typeNameFor(name)
     val realClassName = data.className
     s"""case class $className(context: JdiContext) extends $proxyParentClass { override val className = "$realClassName"}"""
@@ -285,6 +263,7 @@ final class TypesContext() {
   private val notStubbable = Set(
     ScalaOther.nothingType,
     ScalaOther.unitType,
+    ScalaOther.arrayType,
 
     //JdiProxy in all forms
     DebuggerSpecific.proxyName,
@@ -295,86 +274,12 @@ final class TypesContext() {
     DebuggerSpecific.contextName,
     DebuggerSpecific.contextFullName,
     DebuggerSpecific.contextObjFullName) ++
-    functionToProxyMap.values ++
-    functionToProxyMap.keys
+    FunctionJdiProxy.functionToProxyMap.values ++
+    FunctionJdiProxy.functionToProxyMap.keys
 
   /** Could class with given name be stubbed. */
   private def couldBeStubbed(stub: String): Boolean = {
     def isPrimitive(name: String) = ScalaPrimitivesUnified.all.contains(name)
     !(notStubbable.contains(stub) || isPrimitive(stub))
   }
-}
-
-/** Some static data (names and relations) used in TypesContext. */
-protected object TypesContext {
-
-  private val functionToProxyMap = Map(
-    ScalaFunctions.PartialFunction -> classOf[PartialFunctionProxy].getSimpleName,
-    ScalaFunctions.Function0 -> classOf[Function0JdiProxy].getSimpleName,
-    ScalaFunctions.Function1 -> classOf[Function1JdiProxy].getSimpleName,
-    ScalaFunctions.Function2 -> classOf[Function2JdiProxy].getSimpleName,
-    ScalaFunctions.Function3 -> classOf[Function3JdiProxy].getSimpleName,
-    ScalaFunctions.Function4 -> classOf[Function4JdiProxy].getSimpleName,
-    ScalaFunctions.Function5 -> classOf[Function5JdiProxy].getSimpleName,
-    ScalaFunctions.Function6 -> classOf[Function6JdiProxy].getSimpleName,
-    ScalaFunctions.Function7 -> classOf[Function7JdiProxy].getSimpleName,
-    ScalaFunctions.Function8 -> classOf[Function8JdiProxy].getSimpleName,
-    ScalaFunctions.Function9 -> classOf[Function9JdiProxy].getSimpleName,
-    ScalaFunctions.Function10 -> classOf[Function10JdiProxy].getSimpleName,
-    ScalaFunctions.Function11 -> classOf[Function11JdiProxy].getSimpleName,
-    ScalaFunctions.Function12 -> classOf[Function12JdiProxy].getSimpleName,
-    ScalaFunctions.Function13 -> classOf[Function13JdiProxy].getSimpleName,
-    ScalaFunctions.Function14 -> classOf[Function14JdiProxy].getSimpleName,
-    ScalaFunctions.Function15 -> classOf[Function15JdiProxy].getSimpleName,
-    ScalaFunctions.Function16 -> classOf[Function16JdiProxy].getSimpleName,
-    ScalaFunctions.Function17 -> classOf[Function17JdiProxy].getSimpleName,
-    ScalaFunctions.Function18 -> classOf[Function18JdiProxy].getSimpleName,
-    ScalaFunctions.Function19 -> classOf[Function19JdiProxy].getSimpleName,
-    ScalaFunctions.Function20 -> classOf[Function20JdiProxy].getSimpleName,
-    ScalaFunctions.Function21 -> classOf[Function21JdiProxy].getSimpleName,
-    ScalaFunctions.Function22 -> classOf[Function22JdiProxy].getSimpleName)
-
-  private[expression] val primitiveToProxyMap = Map(
-    ScalaPrimitivesUnified.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Short -> classOf[ShortJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Int -> classOf[IntJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Long -> classOf[LongJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Float -> classOf[FloatJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Char -> classOf[CharJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
-
-    ScalaOther.unitType -> classOf[UnitJdiProxy].getSimpleName,
-
-    ScalaRichTypes.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
-    ScalaRichTypes.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    ScalaRichTypes.Char -> classOf[CharJdiProxy].getSimpleName,
-    ScalaRichTypes.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    ScalaRichTypes.Float -> classOf[FloatJdiProxy].getSimpleName,
-    ScalaRichTypes.Int -> classOf[IntJdiProxy].getSimpleName,
-    ScalaRichTypes.Long -> classOf[LongJdiProxy].getSimpleName,
-    ScalaRichTypes.Short -> classOf[ShortJdiProxy].getSimpleName,
-
-    JavaBoxed.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    JavaBoxed.Short -> classOf[ShortJdiProxy].getSimpleName,
-    JavaBoxed.Integer -> classOf[IntJdiProxy].getSimpleName,
-    JavaBoxed.Long -> classOf[LongJdiProxy].getSimpleName,
-    JavaBoxed.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    JavaBoxed.Float -> classOf[FloatJdiProxy].getSimpleName,
-    JavaBoxed.Character -> classOf[CharJdiProxy].getSimpleName,
-    JavaBoxed.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
-    JavaBoxed.String -> classOf[StringJdiProxy].getSimpleName)
-
-  object names {
-    val partialFunction = "scala.PartialFunction"
-
-    val nil = "scala.collection.immutable.Nil"
-    // strange value that shows up instead of above one
-    val thisNil = "immutable.this.Nil"
-
-    val list = "scala.collection.immutable.List"
-    // strange value that shows up instead of above one
-    val thisList = "immutable.this.List"
-  }
-
 }
