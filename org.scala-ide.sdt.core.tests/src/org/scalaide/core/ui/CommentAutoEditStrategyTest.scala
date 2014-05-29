@@ -579,4 +579,17 @@ xxxxxxtestxtestxtests^
      *  ^
      */
   """ after Add(" ")
+
+  @Test
+  def auto_break_on_whitespace_and_not_on_ident_start() = """
+    /*
+     * test test `tes^
+     */
+  """ becomes """
+    /*
+     * test test
+     * `tesx^
+     */
+  """ after Add("x")
+
 }

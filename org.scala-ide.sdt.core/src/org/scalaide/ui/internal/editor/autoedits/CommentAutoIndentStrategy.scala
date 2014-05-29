@@ -89,6 +89,25 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     def trimRightLen(str: String) =
       str.reverse.takeWhile(Character.isWhitespace).length()
 
+    /**
+     * Returns `(wordStart, wordLength)` of the word at the given offset.
+     * Delimiter sign is whitespace.
+     */
+    def wordRange(off: Int): (Int, Int) = {
+      def valid(i: Int) = !Character.isWhitespace(doc.getChar(i))
+
+      var start = off-1
+      while (start >= 0 && valid(start))
+        start -= 1
+
+      val len = doc.getLength()
+      var end = off
+      while (end < len && valid(end))
+        end += 1
+
+      (start+1, end-start-1)
+    }
+
     def doAutoBreak(line: IRegion) = {
       val systemLineSeparator = TextUtilities.getDefaultLineDelimiter(doc)
       val endOfIndent = findEndOfWhiteSpace(doc, line.getOffset(), cmd.offset)
@@ -100,22 +119,22 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
         else
           endOfIndent
 
-      val lastWord = ScalaWordFinder.findWord(doc, cmd.offset)
-      val canSplitText = lastWord.getOffset() != textStart
+      val (wordOff, wordLen) = wordRange(cmd.offset)
+      val canSplitText = wordOff != textStart
 
       if (canSplitText) {
         val newLine = Seq(
             systemLineSeparator,
             doc.get(line.getOffset(), endOfIndent-line.getOffset()),
             doc.get(endOfIndent, textStart-endOfIndent),
-            doc.get(lastWord.getOffset(), lastWord.getLength()),
+            doc.get(wordOff, wordLen),
             cmd.text)
 
-        val wsLen = trimRightLen(doc.get(textStart, lastWord.getOffset()-textStart))
+        val wsLen = trimRightLen(doc.get(textStart, wordOff-textStart))
 
         cmd.text = newLine.mkString
-        cmd.offset = lastWord.getOffset()-wsLen
-        cmd.length = lastWord.getLength()+wsLen
+        cmd.offset = wordOff-wsLen
+        cmd.length = wordLen+wsLen
       }
     }
 
