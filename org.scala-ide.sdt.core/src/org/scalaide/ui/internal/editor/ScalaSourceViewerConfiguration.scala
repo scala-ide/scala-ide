@@ -16,7 +16,6 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
-import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.preference.IPreferenceStore
@@ -180,18 +179,18 @@ class ScalaSourceViewerConfiguration(
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
+          new SmartInsertionAutoEditStrategy(partitioning, ScalaPlugin.prefStore),
           new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
           new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
+          new SmartInsertionAutoEditStrategy(partitioning, ScalaPlugin.prefStore),
           new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
+          new SmartInsertionAutoEditStrategy(partitioning, ScalaPlugin.prefStore),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
           new AutoIndentStrategy(ScalaPlugin.prefStore),
           new BracketAutoEditStrategy(ScalaPlugin.prefStore),
