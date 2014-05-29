@@ -146,7 +146,7 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     val enableAutoBreaking = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_BREAKING_COMMENTS)
 
-    if (enableAutoBreaking) {
+    if (enableAutoBreaking && cmd.text.nonEmpty) {
       val marginColumn = prefStore.getInt(EDITOR_PRINT_MARGIN_COLUMN)
       val line = doc.getLineInformationOfOffset(cmd.offset)
       val exceedMarginColumn = line.getLength() + cmd.text.length > marginColumn

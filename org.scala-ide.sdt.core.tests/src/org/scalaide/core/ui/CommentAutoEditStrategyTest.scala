@@ -614,4 +614,14 @@ xxxxxxtestxtestxtests^
      */
   """ after Add("x")
 
+  @Test
+  def no_auto_break_on_first_line_when_backspace_is_hit() = """
+    /** testxtestxtestxtest
+^
+     */
+  """ becomes """
+    /** testxtestxtestxtest^
+     */
+  """ after Remove("\n")
+
 }
