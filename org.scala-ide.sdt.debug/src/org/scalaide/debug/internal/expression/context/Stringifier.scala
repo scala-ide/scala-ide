@@ -8,11 +8,13 @@ package org.scalaide.debug.internal.expression.context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
+import org.scalaide.debug.internal.expression.TypeNameMappings
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
+import com.sun.jdi.ArrayType
 import com.sun.jdi.StringReference
 import com.sun.jdi.Value
 
@@ -57,7 +59,13 @@ trait Stringifier {
       val stringValue = array.underlying.getValues
         .map(inner)
         .mkString("Array(", ", ", ")")
-      s"$stringValue (of type: scala.Array)" // TODO - type of array?
+
+      val typeString = array.underlying.`type` match {
+        case arrayType: ArrayType =>
+          val argumentType = TypeNameMappings.javaNameToScalaName(arrayType.componentTypeName)
+          s"scala.Array[$argumentType]"
+      }
+      s"$stringValue (of type: $typeString)"
     }
 
     case _ =>

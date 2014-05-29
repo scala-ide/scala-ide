@@ -66,10 +66,6 @@ case class MockVariables(toolbox: ToolBox[universe.type], context: VariableConte
     private def buildProxyDefinition(context: VariableContext)(name: String): Option[String] = {
       import DebuggerSpecific._
 
-      def isArray(typeName: String) = typeName endsWith "[]"
-
-      def typeOfArray(typeName: String) = typeName dropRight 2
-
       context.getType(name).map { typeName =>
         val typeParams: String = typeName match {
           case ScalaOther.Array(_) => ""

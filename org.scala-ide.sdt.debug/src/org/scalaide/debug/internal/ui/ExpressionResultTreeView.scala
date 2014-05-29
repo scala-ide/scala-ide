@@ -34,7 +34,6 @@ import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.preferences.DebuggerPreferencePage
-import org.scalaide.debug.internal.ui.TypeNameMappings.javaNameToScalaName
 import org.scalaide.ui.internal.repl.SimpleSelectionListener
 import org.scalaide.ui.internal.repl.StyledTextWithSimpleMenu
 
@@ -244,7 +243,7 @@ class ExpressionResultTreeView(parent: Composite) {
 }
 
 object ExpressionResultTreeView {
-  import org.scalaide.debug.internal.ui.TypeNameMappings.javaNameToScalaName
+  import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
 
   private val sessionDisconnectedText = "Cannot load node info. Session disconnected."
   private val preferenceStore = ScalaDebugPlugin.plugin.getPreferenceStore()

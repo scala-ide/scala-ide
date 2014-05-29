@@ -55,8 +55,10 @@ object JavaPrimitives {
 
   val short = "short"
 
+  val void  = "void"
+
   /** Regex for matching Java arrays */
-  val Array = """(.*)\[\]""".r
+  val Array = """(.+)\[\]""".r
 }
 
 /**
@@ -154,7 +156,7 @@ object ScalaOther {
   val range = "scala.collection.immutable.Range"
 
   /** Regex for matching Scala arrays */
-  val Array = """Array\[(.*)\]""".r
+  val Array = """Array\[(.+)\]""".r
 
   def Array(typeName: String) = s"Array[$typeName]"
 

@@ -14,7 +14,7 @@ object TestValues {
   val argumentsLine = 11
 
   val arraysFileName = "Arrays"
-  val arraysLine = 12
+  val arraysLine = 23
 
   val codeCompletionFileName = "CodeCompletion"
   val codeCompletionLineNumber = 26
@@ -48,7 +48,19 @@ object TestValues {
 
   object Arrays {
     val intArray = Array(1, 2, 3)
+
     val stringArray = Array("Ala", "Ola", "Ula")
+
+    val nestedArray = Array(
+      Array(1, 2, 3),
+      Array(4, 5, 6),
+      Array(7, 8, 9))
+
+    val nestedObjectArray = Array(
+      Array("1", "2", "3"),
+      Array("4", "5", "6"),
+      Array("7", "8", "9"))
+
     val arrayIdentity = "arrayIdentity"
   }
 

@@ -8,9 +8,8 @@ package org.scalaide.debug.internal.expression.context
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.DebuggerSpecific
-import org.scalaide.debug.internal.expression.JavaPrimitives
 import org.scalaide.debug.internal.expression.ScalaOther
-import org.scalaide.debug.internal.expression.ScalaPrimitivesUnified
+import org.scalaide.debug.internal.expression.TypeNameMappings
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
@@ -60,21 +59,8 @@ private[context] trait JdiVariableContext
   }
 
   /** Type of given value, as String */
-  private def valueTypeAsString(value: Value): String = javaPrimitivesToScala(value.`type`.toString)
-
-  /** Maps java primitives to Scala unified names. Other names are unchanged. */
-  private def javaPrimitivesToScala(typeName: String): String = typeName match {
-    case JavaPrimitives.byte => ScalaPrimitivesUnified.Byte
-    case JavaPrimitives.short => ScalaPrimitivesUnified.Short
-    case JavaPrimitives.int => ScalaPrimitivesUnified.Int
-    case JavaPrimitives.double => ScalaPrimitivesUnified.Double
-    case JavaPrimitives.float => ScalaPrimitivesUnified.Float
-    case JavaPrimitives.long => ScalaPrimitivesUnified.Long
-    case JavaPrimitives.char => ScalaPrimitivesUnified.Char
-    case JavaPrimitives.boolean => ScalaPrimitivesUnified.Boolean
-    case JavaPrimitives.Array(innerType) => ScalaOther.Array(javaPrimitivesToScala(innerType))
-    case other => other
-  }
+  private def valueTypeAsString(value: Value): String =
+    TypeNameMappings.javaNameToScalaName(value.`type`.toString)
 
   /** Reference to object referenced by `this` */
   private def thisObject: ObjectReference = topFrame.thisObject
@@ -89,7 +75,7 @@ private[context] trait JdiVariableContext
     val prefixes = Seq("", "scala.", "java.")
 
     typeName match {
-      case ScalaOther.Array(innerType) => prefixes.exists(prefix => tryClassName(prefix + innerType))
+      case ScalaOther.Array(innerType) => onClassPath(classLoader, innerType)
       case other => prefixes.exists(prefix => tryClassName(prefix + typeName))
     }
   }

@@ -18,32 +18,32 @@ trait AbstractFunctionJdiProxy extends BaseNewClassProxy {
 
 private[expression] object FunctionJdiProxy {
 
-  /** Maps Scala function types to it's proxies. */
+  /** Maps Scala function types to their proxies. */
   val functionToProxyMap = Map(
-    ScalaFunctions.PartialFunction -> classOf[PartialFunctionProxy].getSimpleName,
-    ScalaFunctions.Function0 -> classOf[Function0JdiProxy].getSimpleName,
-    ScalaFunctions.Function1 -> classOf[Function1JdiProxy].getSimpleName,
-    ScalaFunctions.Function2 -> classOf[Function2JdiProxy].getSimpleName,
-    ScalaFunctions.Function3 -> classOf[Function3JdiProxy].getSimpleName,
-    ScalaFunctions.Function4 -> classOf[Function4JdiProxy].getSimpleName,
-    ScalaFunctions.Function5 -> classOf[Function5JdiProxy].getSimpleName,
-    ScalaFunctions.Function6 -> classOf[Function6JdiProxy].getSimpleName,
-    ScalaFunctions.Function7 -> classOf[Function7JdiProxy].getSimpleName,
-    ScalaFunctions.Function8 -> classOf[Function8JdiProxy].getSimpleName,
-    ScalaFunctions.Function9 -> classOf[Function9JdiProxy].getSimpleName,
-    ScalaFunctions.Function10 -> classOf[Function10JdiProxy].getSimpleName,
-    ScalaFunctions.Function11 -> classOf[Function11JdiProxy].getSimpleName,
-    ScalaFunctions.Function12 -> classOf[Function12JdiProxy].getSimpleName,
-    ScalaFunctions.Function13 -> classOf[Function13JdiProxy].getSimpleName,
-    ScalaFunctions.Function14 -> classOf[Function14JdiProxy].getSimpleName,
-    ScalaFunctions.Function15 -> classOf[Function15JdiProxy].getSimpleName,
-    ScalaFunctions.Function16 -> classOf[Function16JdiProxy].getSimpleName,
-    ScalaFunctions.Function17 -> classOf[Function17JdiProxy].getSimpleName,
-    ScalaFunctions.Function18 -> classOf[Function18JdiProxy].getSimpleName,
-    ScalaFunctions.Function19 -> classOf[Function19JdiProxy].getSimpleName,
-    ScalaFunctions.Function20 -> classOf[Function20JdiProxy].getSimpleName,
-    ScalaFunctions.Function21 -> classOf[Function21JdiProxy].getSimpleName,
-    ScalaFunctions.Function22 -> classOf[Function22JdiProxy].getSimpleName)
+    ScalaFunctions.PartialFunction -> classOf[PartialFunctionProxy],
+    ScalaFunctions.Function0 -> classOf[Function0JdiProxy],
+    ScalaFunctions.Function1 -> classOf[Function1JdiProxy],
+    ScalaFunctions.Function2 -> classOf[Function2JdiProxy],
+    ScalaFunctions.Function3 -> classOf[Function3JdiProxy],
+    ScalaFunctions.Function4 -> classOf[Function4JdiProxy],
+    ScalaFunctions.Function5 -> classOf[Function5JdiProxy],
+    ScalaFunctions.Function6 -> classOf[Function6JdiProxy],
+    ScalaFunctions.Function7 -> classOf[Function7JdiProxy],
+    ScalaFunctions.Function8 -> classOf[Function8JdiProxy],
+    ScalaFunctions.Function9 -> classOf[Function9JdiProxy],
+    ScalaFunctions.Function10 -> classOf[Function10JdiProxy],
+    ScalaFunctions.Function11 -> classOf[Function11JdiProxy],
+    ScalaFunctions.Function12 -> classOf[Function12JdiProxy],
+    ScalaFunctions.Function13 -> classOf[Function13JdiProxy],
+    ScalaFunctions.Function14 -> classOf[Function14JdiProxy],
+    ScalaFunctions.Function15 -> classOf[Function15JdiProxy],
+    ScalaFunctions.Function16 -> classOf[Function16JdiProxy],
+    ScalaFunctions.Function17 -> classOf[Function17JdiProxy],
+    ScalaFunctions.Function18 -> classOf[Function18JdiProxy],
+    ScalaFunctions.Function19 -> classOf[Function19JdiProxy],
+    ScalaFunctions.Function20 -> classOf[Function20JdiProxy],
+    ScalaFunctions.Function21 -> classOf[Function21JdiProxy],
+    ScalaFunctions.Function22 -> classOf[Function22JdiProxy]).mapValues(_.getSimpleName)
 
 }
 

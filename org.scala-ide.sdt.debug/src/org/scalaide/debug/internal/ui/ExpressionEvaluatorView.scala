@@ -40,7 +40,7 @@ import org.scalaide.ui.internal.repl.InterpreterConsoleView
  * UI component for debug expression evaluation.
  */
 class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
-  // TODO it would be nice to add support for undo and redo (ctrl+z / ctrl+y)
+  // TODO - O-5696 - it would be nice to add support for undo and redo (ctrl+z / ctrl+y)
 
   import ExpressionEvaluatorView.ExpressionEvaluatorViewLayoutAction
   import ExpressionEvaluatorViewLayoutType.ONLY_CONSOLE

@@ -78,35 +78,35 @@ abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitiv
 
 private[expression] object BoxedJdiProxy {
 
-  /** Maps java and scala primitive type names to appriopriate proxies. */
+  /** Maps java and scala primitive type names to appropriate proxies. */
   val primitiveToProxyMap = Map(
-    ScalaPrimitivesUnified.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Short -> classOf[ShortJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Int -> classOf[IntJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Long -> classOf[LongJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Float -> classOf[FloatJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Char -> classOf[CharJdiProxy].getSimpleName,
-    ScalaPrimitivesUnified.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
+    ScalaPrimitivesUnified.Byte -> classOf[ByteJdiProxy],
+    ScalaPrimitivesUnified.Short -> classOf[ShortJdiProxy],
+    ScalaPrimitivesUnified.Int -> classOf[IntJdiProxy],
+    ScalaPrimitivesUnified.Long -> classOf[LongJdiProxy],
+    ScalaPrimitivesUnified.Double -> classOf[DoubleJdiProxy],
+    ScalaPrimitivesUnified.Float -> classOf[FloatJdiProxy],
+    ScalaPrimitivesUnified.Char -> classOf[CharJdiProxy],
+    ScalaPrimitivesUnified.Boolean -> classOf[BooleanJdiProxy],
 
-    ScalaOther.unitType -> classOf[UnitJdiProxy].getSimpleName,
+    ScalaOther.unitType -> classOf[UnitJdiProxy],
 
-    ScalaRichTypes.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
-    ScalaRichTypes.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    ScalaRichTypes.Char -> classOf[CharJdiProxy].getSimpleName,
-    ScalaRichTypes.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    ScalaRichTypes.Float -> classOf[FloatJdiProxy].getSimpleName,
-    ScalaRichTypes.Int -> classOf[IntJdiProxy].getSimpleName,
-    ScalaRichTypes.Long -> classOf[LongJdiProxy].getSimpleName,
-    ScalaRichTypes.Short -> classOf[ShortJdiProxy].getSimpleName,
+    ScalaRichTypes.Boolean -> classOf[BooleanJdiProxy],
+    ScalaRichTypes.Byte -> classOf[ByteJdiProxy],
+    ScalaRichTypes.Char -> classOf[CharJdiProxy],
+    ScalaRichTypes.Double -> classOf[DoubleJdiProxy],
+    ScalaRichTypes.Float -> classOf[FloatJdiProxy],
+    ScalaRichTypes.Int -> classOf[IntJdiProxy],
+    ScalaRichTypes.Long -> classOf[LongJdiProxy],
+    ScalaRichTypes.Short -> classOf[ShortJdiProxy],
 
-    JavaBoxed.Byte -> classOf[ByteJdiProxy].getSimpleName,
-    JavaBoxed.Short -> classOf[ShortJdiProxy].getSimpleName,
-    JavaBoxed.Integer -> classOf[IntJdiProxy].getSimpleName,
-    JavaBoxed.Long -> classOf[LongJdiProxy].getSimpleName,
-    JavaBoxed.Double -> classOf[DoubleJdiProxy].getSimpleName,
-    JavaBoxed.Float -> classOf[FloatJdiProxy].getSimpleName,
-    JavaBoxed.Character -> classOf[CharJdiProxy].getSimpleName,
-    JavaBoxed.Boolean -> classOf[BooleanJdiProxy].getSimpleName,
-    JavaBoxed.String -> classOf[StringJdiProxy].getSimpleName)
+    JavaBoxed.Byte -> classOf[ByteJdiProxy],
+    JavaBoxed.Short -> classOf[ShortJdiProxy],
+    JavaBoxed.Integer -> classOf[IntJdiProxy],
+    JavaBoxed.Long -> classOf[LongJdiProxy],
+    JavaBoxed.Double -> classOf[DoubleJdiProxy],
+    JavaBoxed.Float -> classOf[FloatJdiProxy],
+    JavaBoxed.Character -> classOf[CharJdiProxy],
+    JavaBoxed.Boolean -> classOf[BooleanJdiProxy],
+    JavaBoxed.String -> classOf[StringJdiProxy]).mapValues(_.getSimpleName)
 }

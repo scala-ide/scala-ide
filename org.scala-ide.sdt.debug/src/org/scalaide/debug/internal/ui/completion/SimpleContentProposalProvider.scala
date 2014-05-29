@@ -71,7 +71,7 @@ class SimpleContentProposalProvider extends IContentProposalProvider {
 }
 
 object SimpleContentProposalProvider {
-  import org.scalaide.debug.internal.ui.TypeNameMappings.javaTypesFromJdiToScalaTypes
+  import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
 
   private lazy val constantProposals = createConstantProposals()
 
@@ -131,7 +131,7 @@ object SimpleContentProposalProvider {
   private def getAccessibleVariablesProposals(stackFrame: StackFrame) =
     stackFrame.visibleVariables().map { variable =>
       val typeName = variable.typeName()
-      (variable.name(), s"${variable.name()}: ${javaTypesFromJdiToScalaTypes.getOrElse(typeName, typeName)}")
+      (variable.name(), s"${variable.name()}: ${javaNameToScalaName(typeName)}")
     }.groupBy { case (content, label) => content }
       .map {
         case (_, proposals) =>
@@ -146,7 +146,7 @@ object SimpleContentProposalProvider {
         if (shouldBeProposal(name)) {
           // this is type visible from Java so it's e.g. void instead of Unit
           val returnedType = NameTransformer.decode(m.returnType().name())
-          val returnedScalaType = javaTypesFromJdiToScalaTypes.getOrElse(returnedType, returnedType)
+          val returnedScalaType = javaNameToScalaName(returnedType)
           List((name, s"$name: ${returnedScalaType}"))
         } else Nil
       }(collection.breakOut)
