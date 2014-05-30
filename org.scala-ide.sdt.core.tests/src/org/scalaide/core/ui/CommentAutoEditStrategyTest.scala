@@ -579,4 +579,49 @@ xxxxxxtestxtestxtests^
      *  ^
      */
   """ after Add(" ")
+
+  @Test
+  def auto_break_on_whitespace_and_not_on_ident_start() = """
+    /*
+     * test test `tes^
+     */
+  """ becomes """
+    /*
+     * test test
+     * `tesx^
+     */
+  """ after Add("x")
+
+  @Test
+  def auto_break_on_first_line_of_comment() = """
+    /* test test test^
+     */
+  """ becomes """
+    /* test test
+     * testx^
+     */
+  """ after Add("x")
+
+ @Test
+  def do_not_move_cursor_to_another_position_after_auto_break() = """
+    /*
+     * test testx^test
+     */
+  """ becomes """
+    /*
+     * test
+     * testxx^test
+     */
+  """ after Add("x")
+
+  @Test
+  def no_auto_break_on_first_line_when_backspace_is_hit() = """
+    /** testxtestxtestxtest
+^
+     */
+  """ becomes """
+    /** testxtestxtestxtest^
+     */
+  """ after Remove("\n")
+
 }
