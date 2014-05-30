@@ -91,8 +91,9 @@ trait ExpressionManager {
         case Success(result) =>
           resultCallback(result.underlying, show(result))
         case Failure(exception) =>
-          logger.error(exception)
-          errorCallback(s"$errorDuringEval\n${exception.getMessage}")
+          val errorMessage = s"$errorDuringEval\n${exception.getMessage}"
+          logger.error(errorMessage, exception)
+          errorCallback(errorMessage)
       }
     }
 

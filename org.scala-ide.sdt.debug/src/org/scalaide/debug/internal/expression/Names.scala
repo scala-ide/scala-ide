@@ -55,7 +55,7 @@ object JavaPrimitives {
 
   val short = "short"
 
-  val void  = "void"
+  val void = "void"
 
   /** Regex for matching Java arrays */
   val Array = """(.+)\[\]""".r
@@ -134,7 +134,13 @@ object ScalaOther {
 
   val constructorFunctionName = "<init>"
 
+  val emptyType = "<none>"
+
+  val wildcardType = "?"
+
   val nothingType = "scala.Nothing"
+
+  val simpleNothingType = "Nothing"
 
   val unitType = "scala.Unit"
 

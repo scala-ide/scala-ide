@@ -183,13 +183,19 @@ final class TypesContext() {
     rawType(tpe).flatMap(correctTypes)
   }
 
-  private def rawType(tpe: universe.Type): Option[String] = tpe match {
-    case typeRef: universe.TypeRef @unchecked => Some(typeRef.typeSymbol.fullName)
-    case singleType: universe.SingleType @unchecked => Some(singleType.typeSymbol.fullName)
-    case method: universe.MethodType @unchecked => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
-    case constantType: universe.ConstantType @unchecked => Some(constantType.typeSymbol.fullName)
-    case thisType: universe.ThisType @unchecked => Some(thisType.typeSymbol.fullName)
-    case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
+  private def rawType(tpe: universe.Type): Option[String] = {
+    import universe._
+    tpe match {
+      case typeRef: TypeRef => Some(typeRef.typeSymbol.fullName)
+      case singleType: SingleType => Some(singleType.typeSymbol.fullName)
+      case constantType: ConstantType => Some(constantType.typeSymbol.fullName)
+      case thisType: ThisType => Some(thisType.typeSymbol.fullName)
+      case method: MethodType => typeName(method.resultType, isObject = method.resultType.typeSymbol.isModule)
+      case noneType if tpe.typeSymbol.toString == ScalaOther.emptyType => Some(ScalaOther.simpleNothingType)
+      case polyType: PolyType => rawType(polyType.erasure)
+      case wildcard if wildcard.toString == ScalaOther.wildcardType => Some(ScalaOther.simpleNothingType)
+      case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
+    }
   }
 
   /** Genereate stub name for given type - if not a special case just replace . with _ on full name */

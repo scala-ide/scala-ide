@@ -7,14 +7,13 @@ package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
-
-import org.scalaide.debug.internal.expression.JdiProxyFunctionParameter
-import org.scalaide.debug.internal.expression.ClassListener
-import org.scalaide.debug.internal.expression.DebuggerSpecific
-import org.scalaide.debug.internal.expression.TypesContext
-
-import org.scalaide.debug.internal.expression.ClassListener.NewClassContext
 import scala.util.Try
+
+import org.scalaide.debug.internal.expression.ClassListener
+import org.scalaide.debug.internal.expression.ClassListener.NewClassContext
+import org.scalaide.debug.internal.expression.DebuggerSpecific
+import org.scalaide.debug.internal.expression.JdiProxyFunctionParameter
+import org.scalaide.debug.internal.expression.TypesContext
 
 /**
  * Author: Krzysztof Romanowski
@@ -40,7 +39,10 @@ trait AnonymousFunctionSupport {
   }
 
   protected def compilePartialFunction(partialFunction: Tree): NewClassContext = {
-    ClassListener.listenForClasses(newClassName)(() => toolbox.compile(partialFunction))
+    ClassListener.listenForClasses(newClassName) { () =>
+      toolbox.compile(partialFunction)
+      ResetTypeInformation.fixToolbox(toolbox)
+    }
   }
 
   protected def compileFunction(params: List[ValDef], body: Tree): NewClassContext = {
@@ -60,7 +62,10 @@ trait AnonymousFunctionSupport {
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, List(constructor, newApplyFunction)))
     val functionReseted = ResetTypeInformation(toolbox).transform(newFunctionClass)
 
-    ClassListener.listenForClasses(newClassName)(() => toolbox.compile(functionReseted))
+    ClassListener.listenForClasses(newClassName) { () =>
+      toolbox.compile(functionReseted)
+      ResetTypeInformation.fixToolbox(toolbox)
+    }
   }
 
   // creates and compiles new function class
@@ -86,12 +91,14 @@ trait AnonymousFunctionSupport {
         case poly @ PolyType(_, realType) =>
           innerArgs(realType)
         case method @ MethodType(params, resultType) =>
-          params.map(byName)
+          params.map(isByNameParam)
         case _ => Nil
       }
 
-    def byName(symbol: Symbol): Boolean =
-      symbol.typeSignature.toString.startsWith("=>")
+    def isByNameParam(symbol: Symbol): Boolean = symbol match {
+      case termSymbol: TermSymbol => termSymbol.isByNameParam
+      case _ => false
+    }
 
     innerArgs(select.tpe)
   }.toOption

@@ -99,11 +99,14 @@ abstract class ExpressionEvaluator(val classLoader: ClassLoader)
   }
 
   /** Compiles a Tree to Expression */
-  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression =
-    toolbox.compile(tree).apply() match {
+  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
+    val result = toolbox.compile(tree)
+    ResetTypeInformation.fixToolbox(toolbox)
+    result.apply() match {
       case function: ExpressionFunc @unchecked => JdiExpression(function, newClasses)
       case other => throw new IllegalArgumentException("Bad compilation result!")
     }
+  }
 
   private def genPhases(context: VariableContext, typesContext: TypesContext): Seq[TransformationPhase] = Seq(
     SearchForUnboundVariables(toolbox, typesContext),

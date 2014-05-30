@@ -68,7 +68,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
 
       val argumentTypes = extractByNameParams(func).map {
         byNames =>
-          args zip byNames map {
+          args.zip(byNames.toStream ++ Stream.continually(false)) map {
             case (arg, true) => typesContext.byNameType
             case (arg, false) => typeForArgument(arg)
           }

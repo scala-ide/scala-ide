@@ -6,9 +6,9 @@
 package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
-import org.scalaide.debug.internal.expression.TransformationPhase
 import scala.tools.reflect.ToolBox
-import scala.reflect.api.{JavaUniverse => universe}
+
+import org.scalaide.debug.internal.expression.TransformationPhase
 
 /**
  * Used for 2.11-2.10 source compatibility.
@@ -17,4 +17,11 @@ case class ResetTypeInformation(toolbox: ToolBox[universe.type]) extends Transfo
   override def transform(tree: universe.Tree): universe.Tree = {
     toolbox.resetAllAttrs(tree)
   }
+}
+
+/**
+ * Used for 2.11-2.10 source compatibility.
+ */
+object ResetTypeInformation {
+  final def fixToolbox(tb: ToolBox[_]): Unit = () // does nothing in 2.10 branch where toolbox works as expected
 }
