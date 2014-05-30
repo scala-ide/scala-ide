@@ -97,4 +97,8 @@ object ScalaWordFinder extends IScalaWordFinder {
     else
       new Region(offset, 0)
   }
+
+  /** Returns the length of the identifier which is located at the offset position. */
+  def identLenAtOffset(doc: IDocument, offset: Int): Int =
+    ScalaWordFinder.findWord(doc, offset).getLength()
 }
