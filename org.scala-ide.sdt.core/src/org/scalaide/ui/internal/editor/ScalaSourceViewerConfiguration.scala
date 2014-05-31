@@ -34,7 +34,6 @@ import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
 import scalariform.ScalaVersions
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
@@ -182,26 +181,26 @@ class ScalaSourceViewerConfiguration(
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
+          new MultiLineStringAutoIndentStrategy(partitioning, combinedPrefStore),
+          new MultiLineStringAutoEditStrategy(partitioning, combinedPrefStore))
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
+          new StringAutoEditStrategy(partitioning, combinedPrefStore))
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(ScalaPlugin.prefStore),
-          new BracketAutoEditStrategy(ScalaPlugin.prefStore),
-          new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
+          new AutoIndentStrategy(combinedPrefStore),
+          new BracketAutoEditStrategy(combinedPrefStore),
+          new LiteralAutoEditStrategy(combinedPrefStore))
 
       case _ =>
         Array(
             new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-            new AutoIndentStrategy(ScalaPlugin.prefStore))
+            new AutoIndentStrategy(combinedPrefStore))
     }
   }
 
