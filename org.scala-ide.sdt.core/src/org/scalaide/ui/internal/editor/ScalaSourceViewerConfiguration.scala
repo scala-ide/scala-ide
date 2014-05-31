@@ -53,19 +53,19 @@ class ScalaSourceViewerConfiguration(
       Array(scalaPreferenceStore, javaPreferenceStore))
 
   private val codeHighlightingScanners = {
-    val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
-    val singleLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
-    val multiLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
-    val scaladocScanner = new ScaladocTokenScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
-    val scaladocCodeBlockScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.SCALADOC_CODE_BLOCK)
-    val stringScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.STRING)
-    val characterScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.CHARACTER)
-    val multiLineStringScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.MULTI_LINE_STRING)
-    val xmlTagScanner = new XmlTagScanner(scalaPreferenceStore)
-    val xmlCommentScanner = new XmlCommentScanner(scalaPreferenceStore)
-    val xmlCDATAScanner = new XmlCDATAScanner(scalaPreferenceStore)
-    val xmlPCDATAScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.DEFAULT)
-    val xmlPIScanner = new XmlPIScanner(scalaPreferenceStore)
+    val scalaCodeScanner = new ScalaCodeScanner(combinedPrefStore, ScalaVersions.DEFAULT)
+    val singleLineCommentScanner = new ScalaCommentScanner(combinedPrefStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
+    val multiLineCommentScanner = new ScalaCommentScanner(combinedPrefStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
+    val scaladocScanner = new ScaladocTokenScanner(combinedPrefStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
+    val scaladocCodeBlockScanner = new SingleTokenScanner(combinedPrefStore, SSC.SCALADOC_CODE_BLOCK)
+    val stringScanner = new StringTokenScanner(combinedPrefStore, SSC.ESCAPE_SEQUENCE, SSC.STRING)
+    val characterScanner = new StringTokenScanner(combinedPrefStore, SSC.ESCAPE_SEQUENCE, SSC.CHARACTER)
+    val multiLineStringScanner = new SingleTokenScanner(combinedPrefStore, SSC.MULTI_LINE_STRING)
+    val xmlTagScanner = new XmlTagScanner(combinedPrefStore)
+    val xmlCommentScanner = new XmlCommentScanner(combinedPrefStore)
+    val xmlCDATAScanner = new XmlCDATAScanner(combinedPrefStore)
+    val xmlPCDATAScanner = new SingleTokenScanner(combinedPrefStore, SSC.DEFAULT)
+    val xmlPIScanner = new XmlPIScanner(combinedPrefStore)
 
     Map(
       IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
@@ -85,7 +85,7 @@ class ScalaSourceViewerConfiguration(
   }
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
-    scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+    combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 
   /**
    * Indent prefixes are all possible variations of strings of a given
@@ -102,8 +102,8 @@ class ScalaSourceViewerConfiguration(
    * fill a full indent depth.
    */
   override def getIndentPrefixes(sourceViewer: ISourceViewer, contentType: String): Array[String] = {
-    val spaceWidth = scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
-    val useTabs = scalaPreferenceStore.getBoolean(IndentWithTabs.eclipseKey)
+    val spaceWidth = combinedPrefStore.getInt(IndentSpaces.eclipseKey)
+    val useTabs = combinedPrefStore.getBoolean(IndentWithTabs.eclipseKey)
 
     val spacePrefix = " " * spaceWidth
     val prefixes = 0 until spaceWidth map (i => " " * i + "\t")

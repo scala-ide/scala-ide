@@ -49,11 +49,10 @@ class ScaladocTokenScannerTest {
     val macroClass = mock(classOf[ScalaSyntaxClass])
     val taskTagClass = mock(classOf[ScalaSyntaxClass])
 
-    val scalaPreferenceStore = mock(classOf[IPreferenceStore])
-    val javaPreferenceStore = mock(classOf[IPreferenceStore])
+    val prefStore = mock(classOf[IPreferenceStore])
 
     val sampleTaskTags = "XXX,TODO,@todo,$todo,!todo"
-    when(javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)).thenReturn(sampleTaskTags)
+    when(prefStore.getString(JavaCore.COMPILER_TASK_TAGS)).thenReturn(sampleTaskTags)
 
     val scaladocAtt = mock(classOf[TextAttribute])
     val annotationAtt = mock(classOf[TextAttribute])
@@ -70,14 +69,13 @@ class ScaladocTokenScannerTest {
     this.macroAtt = macroAtt.toString()
     this.taskTagAtt = taskTagAtt.toString()
 
-    when(scaladocClass.getTextAttribute(scalaPreferenceStore)).thenReturn(scaladocAtt)
-    when(annotationClass.getTextAttribute(scalaPreferenceStore)).thenReturn(annotationAtt)
-    when(macroClass.getTextAttribute(scalaPreferenceStore)).thenReturn(macroAtt)
-    when(taskTagClass.getTextAttribute(scalaPreferenceStore)).thenReturn(taskTagAtt)
+    when(scaladocClass.getTextAttribute(prefStore)).thenReturn(scaladocAtt)
+    when(annotationClass.getTextAttribute(prefStore)).thenReturn(annotationAtt)
+    when(macroClass.getTextAttribute(prefStore)).thenReturn(macroAtt)
+    when(taskTagClass.getTextAttribute(prefStore)).thenReturn(taskTagAtt)
 
     val scanner = new ScaladocTokenScanner(
-        scalaPreferenceStore,
-        javaPreferenceStore,
+        prefStore,
         scaladocClass,
         annotationClass,
         macroClass,
