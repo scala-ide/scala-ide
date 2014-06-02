@@ -28,6 +28,26 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
   def testStringArray(): Unit =
     eval("stringArray", ScalaRunTime.stringOf(stringArray), "scala.Array[java.lang.String]")
 
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testIntArrayCreation(): Unit =
+    eval("Array(1,2,3)", ScalaRunTime.stringOf(Array[Int](1, 2, 3)), "scala.Array[scala.Int]")
+
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testStringArrayCreation(): Unit =
+    eval("""Array("ala", "ola", "ula")""", ScalaRunTime.stringOf(Array("ala", "ola", "ula")), "scala.Array[java.lang.String]")
+
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testIntArrayCreationWithNew(): Unit =
+    eval("new Array[Int](2)", ScalaRunTime.stringOf(new Array[Int](2)), "scala.Array[scala.Int]")
+
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testStringArrayCreationWithNew(): Unit =
+    eval("new Array[String](10)", ScalaRunTime.stringOf(new Array[String](10)), "scala.Array[java.lang.String]")
+
   @Test
   def testIntArrayAccess(): Unit =
     eval("intArray(1)", intArray(1), JavaBoxed.Integer)
@@ -69,6 +89,16 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
   @Test
   def testMethodTakingStringArray(): Unit =
     eval(s"$arrayIdentity(stringArray)", ScalaRunTime.stringOf(stringArray), "scala.Array[java.lang.String]")
+
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testMethodTakingNewIntArray(): Unit =
+    eval(s"$arrayIdentity(new Array[Int](2))", ScalaRunTime.stringOf(new Array[Int](2)), "scala.Array[scala.Int]")
+
+  @Ignore("TODO - O-5695 - add support for new array creation")
+  @Test
+  def testMethodTakingNewStringArray(): Unit =
+    eval(s"$arrayIdentity(new Array[String](10))", ScalaRunTime.stringOf(new Array[String](10)), "scala.Array[java.lang.String]")
 
   @Ignore("TODO - O-5695 - add support for rich methods on arrays")
   @Test

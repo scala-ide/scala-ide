@@ -5,12 +5,13 @@
  */
 package org.scalaide.debug.internal.expression.proxies
 
+import scala.language.dynamics
+import scala.reflect.ClassTag
+
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 
 import com.sun.jdi.ObjectReference
-
-import scala.language.dynamics
 
 /**
  * Base for all proxies using JDI. Extends `scala.Dynamic` to proxy all method calls to debugged jvm using
@@ -63,11 +64,11 @@ trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
   def apply(proxyContext: JdiContext, underlying: Underlying): Proxy
 
   /** Creates a JdiProxy based on existing one */
-  def apply(on: JdiProxy): Proxy =
+  def apply(on: JdiProxy)(implicit tag: ClassTag[Proxy]): Proxy =
     on match {
       case wrapper: JdiProxyWrapper => apply(wrapper.outer)
-      case boxed: (Proxy @unchecked) => boxed
-      case _ => throw new RuntimeException("Proxy is not supported: " + on)
+      case boxed: Proxy => boxed
+      case _ => throw new RuntimeException(s"Cannot create proxy of type ${this.getClass.getSimpleName} from $on")
     }
 }
 

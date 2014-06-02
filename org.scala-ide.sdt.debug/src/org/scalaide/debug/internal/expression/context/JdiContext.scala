@@ -84,4 +84,6 @@ class JdiContext protected (
   protected def jvm: VirtualMachine = currentThread.virtualMachine()
 
   protected def topFrame = currentThread.frame(0)
+
+  override def toString: String = s"JdiContext(thread = ${currentThread.name})"
 }

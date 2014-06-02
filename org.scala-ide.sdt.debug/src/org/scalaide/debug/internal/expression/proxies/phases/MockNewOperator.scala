@@ -26,8 +26,6 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
 
   import toolbox.u._
 
-  private var currentTrees: Seq[Tree] = Nil
-
   /**
    * Traverse throught function call and returns arguments
    */
@@ -61,6 +59,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
 
     val result = Apply(newInstance, List(classTypeCode, argsCode))
     // whole expression
+    // TODO - O-5640, O-5700 - newInstance should be parameterized and return concrete proxy types
     if (JavaBoxed.all contains classType) wrapInPrimitiveProxy(result, classType)
     else result
   }
@@ -68,20 +67,18 @@ case class MockNewOperator(toolbox: ToolBox[universe.type], typesContext: TypesC
   /**
    * Wraps result with primitive proxy if needed.
    */
+  // TODO - O-5640, O-5700 - this method should be used in some other places
   private def wrapInPrimitiveProxy(tree: Tree, primitiveType: String): Tree =
     Apply(
       SelectApplyMethod(BoxedJdiProxy.primitiveToProxyMap(primitiveType)),
       List(tree))
 
+  private def isConstructor(symbol: Symbol) = symbol.name.toString == ScalaOther.constructorFunctionName
+
   /** Transformer */
-  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = {
-    currentTrees = tree +: currentTrees
-    val retTree = tree match {
-      case newTree @ Apply(fun, args) if fun.symbol.name.toString == ScalaOther.constructorFunctionName =>
-        proxiedNewCode(fun, args, newTree.tpe.typeSymbol.fullName)
-      case any => transformFurther(tree)
-    }
-    currentTrees = currentTrees.tail
-    retTree
+  override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
+      proxiedNewCode(fun, args, newTree.tpe.typeSymbol.fullName)
+    case any => transformFurther(tree)
   }
 }

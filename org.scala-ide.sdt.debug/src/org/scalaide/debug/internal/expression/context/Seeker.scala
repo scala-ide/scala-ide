@@ -31,9 +31,9 @@ trait Seeker {
   }
 
   /** Looks up a class for given name and returns jdi reference to it. */
-  final def classByName(name: String): ClassType = {
-    tryClassByName(name).getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
-  }
+  final def classByName(name: String): ClassType =
+    tryClassByName(name)
+      .getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
 
   private def tryClassByName(name: String): Option[ClassType] = {
     def getClassType() = jvm.classesByName(realClassName(name)).headOption.map(_.asInstanceOf[ClassType])
