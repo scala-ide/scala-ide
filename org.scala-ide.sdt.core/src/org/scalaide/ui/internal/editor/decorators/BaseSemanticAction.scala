@@ -26,6 +26,8 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.ui.internal.editor.decorators.macros.MacroExpansionAnnotation
+import org.scalaide.ui.internal.editor.decorators.macros.MacroNames
 
 /**
  * Represents basic properties - enabled, bold an italic.
@@ -124,13 +126,22 @@ abstract class BaseSemanticAction(
         }
       }
 
+      var implicitEnabled = false
+      val macroEnabled = pluginStore.getBoolean(MacroNames.enabledPreference)
       val annotationsToAdd: Map[Annotation, JFacePosition] = propertiesOpt match {
-        case Some(properties) if pluginStore.getBoolean(properties.active) => findAnnotations()
-        case None => findAnnotations() // properties disabled, count as active
+        case Some(properties) if pluginStore.getBoolean(properties.active) || macroEnabled =>
+          if(pluginStore.getBoolean(properties.active)) implicitEnabled = true
+          findAnnotations()
+        case None =>
+          implicitEnabled = true
+          findAnnotations() // properties disabled, count as active
         case _ => Map.empty
       }
 
-      AnnotationUtils.update(sourceViewer, annotationId, annotationsToAdd)
+      val (implicitAnnotations, macroExpansionAnnotations) = annotationsToAdd.partition(_._1.getType == annotationId)
+
+      AnnotationUtils.update(sourceViewer, annotationId, if(implicitEnabled) implicitAnnotations else Map.empty)
+      AnnotationUtils.update(sourceViewer, MacroExpansionAnnotation.ID, if(macroEnabled) macroExpansionAnnotations else  Map.empty)
     }
   }
 
@@ -139,7 +150,7 @@ abstract class BaseSemanticAction(
       propertiesOpt.foreach { properties =>
         val changed = event.getProperty() match {
           case properties.bold | properties.italic | P_COLOR => true
-          case properties.active => {
+          case properties.active | MacroNames.enabledPreference => {
             refresh()
             false
           }

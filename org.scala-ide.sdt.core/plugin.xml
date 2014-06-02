@@ -105,6 +105,12 @@
             name="Implicits">
       </page>
       <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.MacrosPreferencePage"
+            id="org.scalaide.ui.preferences.editor.macros"
+            name="Macros">
+      </page>
+      <page
             category="org.scalaide.ui.preferences"
             class="org.scalaide.logging.ui.preferences.LoggingPreferencePage"
             id="org.scalaide.ui.preferences.logging"
@@ -1109,6 +1115,10 @@
          id="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay"
          name="Toggle Implicits Display"/>
       <command
+         categoryId="scala.tools.eclipse.category"
+         id="org.scala-ide.sdt.core.commands.ToggleMacrosDisplay"
+         name="Toggle Macros Display"/>   
+      <command
          categoryId="org.eclipse.debug.ui.category.run"
          id="org.scalaide.core.handler.RunSelection"
          name="Send Selection to Scala Interpreter"/>
@@ -1203,6 +1213,11 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
+       commandId="org.scala-ide.sdt.core.commands.ToggleMacrosDisplay"
+       schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+       contextId="scala.tools.eclipse.scalaEditorScope"
+       sequence="M1+M2+M"/>
+   <key
        commandId="org.scalaide.core.handler.RunSelection"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
@@ -1230,6 +1245,10 @@
     <handler
           class="org.scalaide.ui.internal.editor.decorators.implicits.ToggleImplicitsDisplayHandler"
           commandId="org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay">
+    </handler>
+    <handler
+          class="org.scalaide.ui.internal.editor.decorators.macros.ToggleMacrosDisplayHandler"
+          commandId="org.scala-ide.sdt.core.commands.ToggleMacrosDisplay">
     </handler>
     <handler
           class="org.scalaide.ui.internal.actions.ShowTypeOfSelectionCommand"
@@ -1312,6 +1331,13 @@
                 icon="icons/full/elcl16/implicit_co.gif"
                 id="org.scala-ide.sdt.core.toolbar.ToggleImplicitsDisplay"
                 label="Toggle Implicits Display"
+                style="toggle">
+          </command>
+          <command
+                commandId="org.scala-ide.sdt.core.commands.ToggleMacrosDisplay"
+                icon="icons/full/elcl16/macro_icon.png"
+                id="org.scala-ide.sdt.core.toolbar.ToggleMacosDisplay"
+                label="Toggle Macros Display"
                 style="toggle">
           </command>
           <command
@@ -1615,6 +1641,111 @@
           Shows Scala specific icons
        </description>
     </decorator>
+ </extension>
+ <extension
+        id="org.scalaide.ui.editor.macroMarker"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+ </extension>
+ <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="org.scalaide.ui.editor.macroMarker"
+	         name="org.scalaide.ui.editor.macroMarker">
+	   </type>
+	</extension>
+  
+ <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="org.scalaide.ui.editor.macroMarker"
+         colorPreferenceKey="org.scalaide.ui.editor.macroMarker.color"
+         colorPreferenceValue="192,255,192"
+         contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
+         highlightPreferenceKey="org.scalaide.ui.editor.macroMarker.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="org.scalaide.ui.editor.macroMarker.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 textPreferenceKey="org.scalaide.ui.editor.macroMarker.text"
+ 		 textPreferenceValue="true"
+ 		 textStylePreferenceValue="BOX"
+ 		 verticalRulerPreferenceKey="org.scalaide.ui.editor.macroMarker.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+ </extension>
+ <extension
+        id="org.scalaide.ui.editor.macro2expand"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+ </extension>
+  
+ <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="org.scalaide.ui.editor.macro2expand"
+	         name="org.scalaide.ui.editor.macro2expand">
+	   </type>
+	</extension>
+  
+ <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="org.scalaide.ui.editor.macro2expand"
+         colorPreferenceKey="org.scalaide.ui.editor.macro2expand.color"
+         colorPreferenceValue="153,153,153"
+         contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
+         highlightPreferenceKey="org.scalaide.ui.editor.macro2expand.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="org.scalaide.ui.editor.macro2expand.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 verticalRulerPreferenceKey="org.scalaide.ui.editor.macro2expand.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+ </extension>
+ <extension
+       point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+          annotationType="org.scalaide.ui.editor.MacroExpansionAnnotation"
+          colorPreferenceKey="org.scalaide.ui.editor.MacroExpansionAnnotation.color"
+          colorPreferenceValue="153,153,153"
+          contributesToHeader="false"
+          icon="icons/full/elcl16/macro_icon.png"
+          includeOnPreferencePage="true"
+          label="Scala Macro Expansion"
+          overviewRulerPreferenceKey="org.scalaide.ui.editor.MacroExpansionAnnotation.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
+          textStylePreferenceValue="UNDERLINE"
+          verticalRulerPreferenceKey="org.scalaide.ui.editor.MacroExpansionAnnotation.ruler"
+          verticalRulerPreferenceValue="true">
+     </specification>
+ </extension>
+ <extension
+        point="org.eclipse.ui.editorActions">
+     <editorContribution
+           targetID="scala.tools.eclipse.ScalaSourceFileEditor"
+           id="scala.tools.eclipse.macroAnnotationActionId">
+           <action
+           	 label="ScalaExpandMacros"
+           	 class="org.scalaide.ui.internal.editor.macros.MacroAnnotationActionDelegate"
+           	 actionID="RulerClick"
+           	 id="scala.tools.eclipse.macroAnnotationActionId">
+           </action>
+     </editorContribution>
  </extension>
  <extension
        point="org.scala-ide.sdt.core.fileCreator">

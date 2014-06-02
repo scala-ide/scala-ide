@@ -1,10 +1,8 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -60,10 +58,42 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
+import org.eclipse.ui.IEditorInput
+import org.scalaide.ui.internal.editor.macros._
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor { self =>
   import ScalaSourceFileEditor._
+
+  import org.eclipse.jface.text.source.IVerticalRulerColumn
+  import org.eclipse.jface.text.source.IChangeRulerColumn
+  override protected def createLineNumberRulerColumn(): IVerticalRulerColumn = {
+    val verticalRuler = new LineNumberChangeRulerColumnWithMacro(getSharedColors)
+    verticalRuler.asInstanceOf[IChangeRulerColumn].setHover(createChangeHover)
+    initializeLineNumberRulerColumn(verticalRuler)
+    verticalRuler
+  }
+
+  var isDirtyState: Option[Boolean] = None
+  def macroReplaceStart(dirtyState: Boolean) {
+    isDirtyState = Some(dirtyState)
+  }
+  def macroReplaceEnd() {
+    isDirtyState = None
+  }
+
+  override def isDirty =
+    if (isDirtyState.isDefined) isDirtyState.get
+    else super.isDirty()
+
+  override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
+    try{
+      collapseMacros()
+    } finally{
+      super.performSave(overwrite, progressMonitor)
+    }
+    expandMacros()
+  }
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurrencesFinder: ScalaOccurrencesFinder = _
