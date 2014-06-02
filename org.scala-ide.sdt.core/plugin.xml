@@ -1585,4 +1585,27 @@
    </specification>
 </extension>
 
+  <extension
+       point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+          annotationType="scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation"
+          colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
+          colorPreferenceValue="153,153,153"
+          contributesToHeader="false"
+          icon="icons/full/elcl16/macro_icon.png"
+          includeOnPreferencePage="true"
+          label="Scala Macro Expansion"
+          overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
+          textStylePreferenceValue="UNDERLINE"
+          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
+          verticalRulerPreferenceValue="true">
+     </specification>
+ + </extension>
+
 </plugin>

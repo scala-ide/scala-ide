@@ -88,8 +88,19 @@ object ImplicitHighlightingPresenter {
       val pos = mkPosition(t.pos, txt)
       (annotation, pos)
     }
+    
+    def mkMacroExpansionAnnotation(t: Tree) = {
+      val Some(macroExpansionAttachment) = t.attachments.get[compiler.analyzer.MacroExpansionAttachment]
+      val originalMacroPos = macroExpansionAttachment.expandee.pos
+
+      val annotation = new MacroExpansionAnnotation
+      val pos = new Position(originalMacroPos.start,originalMacroPos.end)
+      (annotation, pos)
+    }
+
 
     var implicits = Map[Annotation, Position]()
+    var macroExpansions = Map[Annotation, Position]()
 
     new Traverser {
       override def traverse(t: Tree): Unit = {
@@ -100,12 +111,15 @@ object ImplicitHighlightingPresenter {
           case v: ApplyToImplicitArgs if !pluginStore.getBoolean(ImplicitsPreferencePage.P_CONVERSIONS_ONLY) =>
             val (annotation, pos) = mkImplicitArgumentAnnotation(v)
             implicits += (annotation -> pos)
+          case v if v.attachments.get[compiler.analyzer.MacroExpansionAttachment].isDefined =>
+            val (annotation, pos) = mkMacroExpansionAnnotation(v)
+            macroExpansions += (annotation -> pos)
           case _ =>
         }
         super.traverse(t)
       }
     }.traverse(compiler.loadedType(sourceFile).fold(identity, _ => compiler.EmptyTree))
 
-    implicits
+    implicits ++ macroExpansions
   }
 }
