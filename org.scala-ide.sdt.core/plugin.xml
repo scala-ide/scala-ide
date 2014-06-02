@@ -1548,4 +1548,41 @@
        </description>
     </decorator>
  </extension>
+   <extension
+        id="scala.tools.eclipse.macroMarkerId"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+  </extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="scala.tools.eclipse.macroMarkerId"
+	         name="scala.tools.eclipse.macroMarkerId">
+	   </type>
+	</extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="scala.tools.eclipse.macroMarkerId"
+         colorPreferenceKey="scala.tools.eclipse.macroMarkerId.color"
+         colorPreferenceValue="192,255,192"
+         contributesToHeader="false"
+         highlightPreferenceKey="scala.tools.eclipse.macroMarkerId.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="scala.tools.eclipse.macroMarkerId.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 textPreferenceKey="scala.tools.eclipse.macroMarkerId.text"
+ 		 textPreferenceValue="true"
+ 		 textStylePreferenceValue="BOX"
+ 		 verticalRulerPreferenceKey="scala.tools.eclipse.macroMarkerId.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+</extension>
+
 </plugin>
