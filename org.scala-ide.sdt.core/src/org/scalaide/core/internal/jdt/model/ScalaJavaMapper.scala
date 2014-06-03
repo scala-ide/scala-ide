@@ -36,17 +36,23 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     assert(sym ne null)
     if (sym == NoSymbol) return None
 
+    // this can be computed only once, to minimize the number of askOption calls
+    val (symName, symParamsTpe) = askOption { () =>
+      val symName = if (sym.isConstructor)
+        sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "")
+      else sym.name.toString
+
+      val symParamsTpe = sym.paramss.flatten.map(param => mapParamTypeSignature(param.tpe))
+      (symName, symParamsTpe)
+    } getOrElse (("", Nil))
+
     def matchesMethod(meth: IMethod): Boolean = {
       import Signature._
-      askOption { () =>
-        lazy val methName = meth.getElementName
-        lazy val symName = (if(sym.isConstructor) sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "") else sym.name.toString)
-        lazy val sameName = methName == symName
-        lazy val methParamsTpe = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
-        lazy val symParamsTpe = sym.paramss.flatten.map(param => mapParamTypeSignature(param.tpe))
-        lazy val sameParams = methParamsTpe.sameElements(symParamsTpe)
-        sameName && sameParams
-      }.getOrElse(false)
+      val sameName = meth.getElementName == symName
+      sameName && {
+        val methParamsTpe = meth.getParameterTypes.map(tp => getTypeErasure(getElementType(tp)))
+        methParamsTpe.sameElements(symParamsTpe)
+      }
     }
 
     if (sym.isPackage) {
