@@ -50,6 +50,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.Final
+import org.eclipse.jface.preference.StringFieldEditor
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -241,6 +242,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     val tabFolder = new TabFolder(composite, SWT.TOP)
+    // set as a 2-column grid Layout, filled by label + field editor of the eclipse boxes
+    val tabGridData = new GridData(GridData.FILL)
+    tabGridData.horizontalSpan = 2
+    tabFolder.setLayoutData(tabGridData)
 
     eclipseBoxes.foreach(eBox => {
       val group = new Group(tabFolder, SWT.SHADOW_ETCHED_IN)
@@ -258,7 +263,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       tabItem.setControl(group)
     })
 
-    additionalParamsWidget = (new AdditionalParametersWidget).addTo(composite)
+    additionalParamsWidget = (new AdditionalParametersWidget(composite)).addTo()
 
     //Make sure we check enablement of compiler settings here...
     useProjectSettingsWidget.foreach(_.handleToggle())
@@ -350,20 +355,20 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     this += ((e) => handleToggle())
 
     /** Pulls our current value from the preference store */
-    private def getValue() = getPreferenceStore().getBoolean(getPreferenceName())
+    private def getStoreValue() = getPreferenceStore().getBoolean(getPreferenceName())
 
     /** Toggles the use of a property page */
     def handleToggle() {
-      val selected = getChangeControl(parent).getSelection
+      val selected = getBooleanValue()
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       additionalParamsWidget.setEnabled(selected)
       dslWidget foreach (_.setEnabled(selected))
       updateApplyButton
     }
 
-    def isChanged = getValue() != getChangeControl(parent).getSelection
+    def isChanged = getStoreValue() != getChangeControl(parent).getSelection
 
-    def isUseEnabled = getValue()
+    def isUseEnabled = getStoreValue()
 
     @deprecated("Use store()", "4.0.0")
     def save() = store()
@@ -382,29 +387,16 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
-  class AdditionalParametersWidget {
+  class AdditionalParametersWidget(parent:Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent) {
     import org.scalaide.util.internal.eclipse.SWTUtils._
+    setPreferenceStore(preferenceStore0)
+    load()
+    val additionalParametersControl: Text = getTextControl(parent)
 
-    var additionalParametersControl: Text = _
     var additionalCompParams = originalValue
-    def originalValue = preferenceStore0.getString(CompilerSettings.ADDITIONAL_PARAMS)
+    def originalValue = getPreferenceStore().getString(getPreferenceName())
 
-    def addTo(parent: Composite): this.type = {
-      val additionalGroup = new Composite(parent, SWT.NONE)
-      additionalGroup.setLayout(new GridLayout(2, false))
-
-      val grabAllHorizontal = new GridData(GridData.FILL_HORIZONTAL)
-      grabAllHorizontal.grabExcessHorizontalSpace = true
-      grabAllHorizontal.horizontalIndent = errorIndicator.getImage().getBounds().width + 5
-      grabAllHorizontal.horizontalAlignment = GridData.FILL
-      additionalGroup.setLayoutData(grabAllHorizontal)
-
-      val txt = new Label(additionalGroup, SWT.BORDER)
-      txt.setText("Additional command line parameters:")
-
-      additionalParametersControl = new Text(additionalGroup, SWT.SINGLE | SWT.BORDER)
-      additionalParametersControl.setText(additionalCompParams)
-      additionalParametersControl.setLayoutData(grabAllHorizontal)
+    def addTo(): this.type = {
 
       additionalParametersControl.addModifyListener { (event: ModifyEvent) =>
         val errors = new StringBuffer
@@ -445,7 +437,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         Array('-'))
 
       proposal.setFilterStyle(ContentProposalAdapter.FILTER_NONE)
-      additionalGroup.pack()
       this
     }
 
