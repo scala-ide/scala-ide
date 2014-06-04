@@ -13,9 +13,10 @@ object ImplAbstractMembers {
     implAbstractMember(ssf, offset)
 
   def implAbstractMember(ssf: ScalaSourceFile, offset: Int): List[IJavaCompletionProposal] = {
-    ssf.withSourceFile { (srcFile, compiler) =>
+    ssf.scalaProject.presentationCompiler.internal { compiler =>
       import compiler._
 
+      val srcFile = ssf.lastSourceMap().sourceFile
       def implAbstractProposals(tree: ImplDef): List[IJavaCompletionProposal] =
         compiler.asyncExec {
           val tp = tree.symbol.tpe
