@@ -80,6 +80,9 @@ class ScalaAutoIndentStrategy(
   // TODO This could be in a singleton as in the original, but that sucks.
   private val fgScanner = ToolFactory.createScanner(false, false, false, false)
 
+  private def javaHeuristicScanner(d: IDocument) =
+    new JavaHeuristicScanner(d, ScalaPartitions.SCALA_PARTITIONING, ScalaPartitions.SCALA_DEFAULT_CONTENT)
+
   /**
    * Determine the count of brackets within a given area of the document
    */
@@ -184,7 +187,7 @@ class ScalaAutoIndentStrategy(
       val start = d.getLineOffset(line)
       val whiteend = findEndOfWhiteSpace(d, start, c.offset)
 
-      val scanner = new JavaHeuristicScanner(d)
+      val scanner = javaHeuristicScanner(d)
       val indenter = createIndenter(d, scanner)
 
       // shift only when line does not contain any text up to the closing bracket
@@ -214,7 +217,7 @@ class ScalaAutoIndentStrategy(
     if (c.offset < 1 || d.getLength() == 0)
       return
 
-    val scanner = new JavaHeuristicScanner(d)
+    val scanner = javaHeuristicScanner(d)
 
     val p = if (c.offset == d.getLength()) c.offset - 1 else c.offset
 
@@ -253,7 +256,7 @@ class ScalaAutoIndentStrategy(
   }
 
   private def smartIndentAfterNewLine(d : IDocument, c : DocumentCommand) : Unit = {
-    val scanner = new JavaHeuristicScanner(d)
+    val scanner = javaHeuristicScanner(d)
     val indenter = createIndenter(d, scanner)
     var indent = indenter.computeIndentation(c.offset)
     if (indent == null)
@@ -348,7 +351,7 @@ class ScalaAutoIndentStrategy(
     // return the position behind the closing parenthesis if it looks like a method declaration
     // or an expression for an if, while, for, catch statement
 
-    val scanner = new JavaHeuristicScanner(document)
+    val scanner = javaHeuristicScanner(document)
     val pos = offset
     val length = max
     var scanTo = scanner.scanForward(pos, length, '}')
@@ -613,7 +616,7 @@ class ScalaAutoIndentStrategy(
     String newText= command.text;
 
     try {
-      JavaHeuristicScanner scanner= new JavaHeuristicScanner(document);
+      JavaHeuristicScanner scanner= javaHeuristicScanner(document);
       ScalaIndenter indenter= new ScalaIndenter(document, scanner, fProject);
       int offset= newOffset;
 
@@ -642,7 +645,7 @@ class ScalaAutoIndentStrategy(
       // handle the indentation computation inside a temporary document
       Document temp= new Document(prefix + newText);
       DocumentRewriteSession session= temp.startRewriteSession(DocumentRewriteSessionType.STRICTLY_SEQUENTIAL);
-      scanner= new JavaHeuristicScanner(temp);
+      scanner= javaHeuristicScanner(temp);
       indenter= new ScalaIndenter(temp, scanner, fProject);
       installJavaStuff(temp);
 
@@ -956,8 +959,8 @@ class ScalaAutoIndentStrategy(
     installJavaStuff(pasted)
     var firstPeer = command.offset
 
-    val pScanner = new JavaHeuristicScanner(pasted)
-    val dScanner = new JavaHeuristicScanner(document)
+    val pScanner = javaHeuristicScanner(pasted)
+    val dScanner = javaHeuristicScanner(document)
 
     // add scope relevant after context to peer search
     val afterToken = dScanner.nextToken(command.offset + command.length, JavaHeuristicScanner.UNBOUND)
@@ -1087,7 +1090,7 @@ class ScalaAutoIndentStrategy(
     try {
       val content = d.get(c.offset - 3, 3)
       if (content.equals("els")) {
-        val scanner= new JavaHeuristicScanner(d)
+        val scanner= javaHeuristicScanner(d)
         val p= c.offset - 3
 
         // current line
@@ -1125,7 +1128,7 @@ class ScalaAutoIndentStrategy(
       }
 
       if (content.equals("cas")) {
-        val scanner = new JavaHeuristicScanner(d)
+        val scanner = javaHeuristicScanner(d)
         val p = c.offset - 3
 
         // current line
@@ -1249,7 +1252,7 @@ class ScalaAutoIndentStrategy(
 
   private def getCompilationUnitForMethod(document : IDocument, offset : Int) : CompilationUnitInfo = {
     try {
-      val scanner = new JavaHeuristicScanner(document)
+      val scanner = javaHeuristicScanner(document)
 
       val sourceRange = scanner.findSurroundingBlock(offset)
       if (sourceRange == null)
@@ -1294,7 +1297,7 @@ class ScalaAutoIndentStrategy(
     var begin = offset
     var end = offset - 1
 
-    val scanner = new JavaHeuristicScanner(document)
+    val scanner = javaHeuristicScanner(document)
 
     while (true) {
       begin = scanner.findOpeningPeer(begin - 1, '{', '}')
