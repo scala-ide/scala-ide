@@ -136,6 +136,13 @@
       <describer class="org.scalaide.core.internal.jdt.model.ScalaClassFileDescriber"/>
     </content-type>
   </extension>
+  <extension
+        point="org.eclipse.core.filebuffers.documentSetup">
+     <participant
+           class="org.scalaide.ui.internal.editor.ScalaDocumentSetupParticipant"
+           contentTypeId="scala.tools.eclipse.scalaSource">
+     </participant>
+  </extension>
 
    <extension
          point="org.eclipse.ui.editors">
