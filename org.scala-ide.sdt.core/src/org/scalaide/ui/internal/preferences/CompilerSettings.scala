@@ -165,7 +165,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     val additionalSourceLevelParameter = ScalaPlugin.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) filter {s => s.startsWith("-Xsource")} headOption
     val sourceLevelString = additionalSourceLevelParameter flatMap ("""-Xsource:(\d\.\d+(?:\.\d)*)""".r unapplySeq(_)) flatMap (_.headOption)
 
-    useProjectSettingsWidget foreach (_.save())
+    useProjectSettingsWidget.foreach(_.store())
     additionalParamsWidget.save()
     dslWidget foreach ( _.store())
 
@@ -221,8 +221,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         //Create "Use Workspace Settings" button if on properties page...
         val outer = new Composite(parent, SWT.NONE)
         outer.setLayout(new GridLayout(1, false))
-        useProjectSettingsWidget = Some(new UseProjectSettingsWidget())
-        useProjectSettingsWidget.get.addTo(outer)
+        useProjectSettingsWidget = Some(new UseProjectSettingsWidget(outer))
         val other = new Composite(outer, SWT.SHADOW_ETCHED_IN)
         other.setLayout(new GridLayout(1, false))
         if (ScalaPlugin.plugin.scalaVer >= SpecificScalaVersion(2, 11, 0, Final)) {
@@ -340,51 +339,34 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     additionalParamsWidget.reset
   }
 
-  /** This widget should only be used on property pages. */
-  class UseProjectSettingsWidget {
+  /** This widget should only be used on project property pages. */
+  class UseProjectSettingsWidget(parent:Composite) extends SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent) {
     import SettingConverterUtil._
 
     // TODO - Does this belong here?  For now it's the only place we can really check...
-    if (!preferenceStore0.contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
-      preferenceStore0.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
+    if (!getPreferenceStore().contains(USE_PROJECT_SETTINGS_PREFERENCE)) {
+      getPreferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
     }
-
-    var control: Button = _
-    def layout = new GridData()
+    this += ((e) => handleToggle())
 
     /** Pulls our current value from the preference store */
-    private def getValue = preferenceStore0.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
-
-    /** Adds our widget to the Property Page */
-    def addTo(page: Composite) = {
-      //Create Check Box
-      control = new Button(page, SWT.CHECK)
-      control.setText("Use Project Settings")
-      control.setSelection(getValue)
-      control.redraw
-      control.addSelectionListener(new SelectionListener() {
-        override def widgetDefaultSelected(e: SelectionEvent) {}
-        override def widgetSelected(e: SelectionEvent) { handleToggle }
-      })
-    }
+    private def getValue() = getPreferenceStore().getBoolean(getPreferenceName())
 
     /** Toggles the use of a property page */
     def handleToggle() {
-      val selected = control.getSelection
+      val selected = getChangeControl(parent).getSelection
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       additionalParamsWidget.setEnabled(selected)
       dslWidget foreach (_.setEnabled(selected))
       updateApplyButton
     }
 
-    def isChanged = getValue != control.getSelection
+    def isChanged = getValue() != getChangeControl(parent).getSelection
 
-    def isUseEnabled = preferenceStore0.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE)
+    def isUseEnabled = getValue()
 
-    /** Saves our value into the preference store*/
-    def save() {
-      preferenceStore0.setValue(USE_PROJECT_SETTINGS_PREFERENCE, control.getSelection)
-    }
+    @deprecated("Use store()", "4.0.0")
+    def save() = store()
   }
 
   class DesiredSourceLevelWidget(parent:Composite) extends
