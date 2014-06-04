@@ -93,8 +93,8 @@ object ImplicitHighlightingPresenter {
       val Some(macroExpansionAttachment) = t.attachments.get[compiler.analyzer.MacroExpansionAttachment]
       val originalMacroPos = macroExpansionAttachment.expandee.pos
 
-      val annotation = new MacroExpansionAnnotation
-      val pos = new Position(originalMacroPos.start,originalMacroPos.end)
+      val annotation = new MacroExpansionAnnotation(macroExpansionAttachment.expanded.toString)
+      val pos = new Position(originalMacroPos.start,originalMacroPos.end - originalMacroPos.start)
       (annotation, pos)
     }
 

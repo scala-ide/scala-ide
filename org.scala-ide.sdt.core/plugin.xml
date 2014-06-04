@@ -1570,6 +1570,7 @@
          colorPreferenceKey="scala.tools.eclipse.macroMarkerId.color"
          colorPreferenceValue="192,255,192"
          contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
          highlightPreferenceKey="scala.tools.eclipse.macroMarkerId.highlight"
          highlightPreferenceValue="true"
          includeOnPreferencePage="true"
@@ -1607,5 +1608,17 @@
           verticalRulerPreferenceValue="true">
      </specification>
  + </extension>
-
+  <extension
+        point="org.eclipse.ui.editorActions">
+     <editorContribution
+           targetID="scala.tools.eclipse.ScalaSourceFileEditor"
+           id="scala.tools.eclipse.macroAnnotationActionId">
+           <action
+           	 label="ScalaExpandMacros"
+           	 class="org.scalaide.ui.internal.editor.MacroAnnotationActionDelegate"
+           	 actionID="RulerClick"
+           	 id="scala.tools.eclipse.macroAnnotationActionId">
+           </action>
+     </editorContribution>
+  </extension>
 </plugin>
