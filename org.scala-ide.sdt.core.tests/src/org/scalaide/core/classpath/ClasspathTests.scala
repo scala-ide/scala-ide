@@ -26,6 +26,8 @@ import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import scala.tools.nsc.Settings
 import org.scalaide.util.internal.SettingConverterUtil
+import scala.tools.nsc.settings.SpecificScalaVersion
+import org.scalaide.util.internal.CompilerUtils
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
@@ -542,7 +544,12 @@ class ClasspathTests {
   }
 
   private def getPreviousScalaVersion: String = {
-    if (ScalaPlugin.plugin.shortScalaVer == "2.10") "2.9" else "2.10"
+    ScalaPlugin.plugin.scalaVer match {
+      case SpecificScalaVersion(major, minor, micro, build) =>
+        CompilerUtils.shortString(SpecificScalaVersion(major, minor - 1, micro, build))
+      case _ =>
+        "2.9"
+    }
   }
 
   // for these tests' purposes of comparing minors, it's enough to get "none" if the plugin version is unparseable
