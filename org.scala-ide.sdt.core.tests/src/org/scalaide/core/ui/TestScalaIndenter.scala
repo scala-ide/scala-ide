@@ -26,8 +26,8 @@ import org.eclipse.jface.text.TextUtilities
 import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.scalaide.core.internal.lexical.ScalaPartitions
 
 @RunWith(classOf[JUnit4ClassRunner])
 class TestScalaIndenter {
@@ -82,7 +82,7 @@ class TestScalaIndenter {
     val document = new Document(textSoFar.replace(CARET, ""))
     val partitioner = new ScalaDocumentPartitioner
     partitioner.connect(document)
-    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
+    document.setDocumentPartitioner(ScalaPartitions.SCALA_PARTITIONING, partitioner)
 
 
     // Create the command with all needed information
@@ -112,7 +112,7 @@ class TestScalaIndenter {
 
     val project = new JavaProject()
 
-    val indentStrategy = new TestScalaAutoIndentStrategy(IJavaPartitions.JAVA_PARTITIONING, project, null, preferenceProvider)
+    val indentStrategy = new TestScalaAutoIndentStrategy(ScalaPartitions.SCALA_PARTITIONING, project, null, preferenceProvider)
     indentStrategy.customizeDocumentCommand(document, command)
 
     // Allow for not moving the offset

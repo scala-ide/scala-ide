@@ -2,7 +2,6 @@ package org.scalaide.ui.internal.editor.autoedits
 
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
@@ -10,6 +9,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
 import org.scalaide.util.internal.ScalaWordFinder
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.internal.lexical.ScalaPartitions
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -19,7 +19,7 @@ import org.eclipse.jface.text.IRegion
  *  - allows to enlarge a comment block without adding a star to the following line
  *    by pressing enter on an empty line
  */
-class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends AutoIndentStrategy(prefStore) with HasLogger {
+class CommentAutoIndentStrategy(partitioning: String, prefStore: IPreferenceStore) extends AutoIndentStrategy(prefStore) with HasLogger {
 
   override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
     try {
@@ -178,5 +178,8 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     scaladocPartitions(partition.getType()) || isProbablyString
   }
 
-  private val scaladocPartitions = Set(IJavaPartitions.JAVA_DOC, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
+  private val scaladocPartitions = {
+    import org.scalaide.core.internal.lexical.ScalaPartitions._
+    Set(SCALADOC, SCALA_MULTI_LINE_COMMENT)
+  }
 }

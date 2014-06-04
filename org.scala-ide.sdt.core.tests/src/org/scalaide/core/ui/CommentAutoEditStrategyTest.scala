@@ -1,14 +1,14 @@
 package org.scalaide.core.ui
 
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.junit.Before
 import org.junit.Test
+import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.ui.internal.editor.autoedits.CommentAutoIndentStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
 class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
 
-  val strategy = new CommentAutoIndentStrategy(prefStore, IJavaPartitions.JAVA_PARTITIONING)
+  val strategy = new CommentAutoIndentStrategy(ScalaPartitions.SCALA_PARTITIONING, prefStore)
 
   val newline = Add("\n")
 

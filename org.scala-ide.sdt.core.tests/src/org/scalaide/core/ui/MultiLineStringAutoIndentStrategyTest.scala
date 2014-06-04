@@ -1,9 +1,9 @@
 package org.scalaide.core.ui
 
-import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Before
 import org.junit.Test
 import org.scalaide.core.internal.formatter.FormatterPreferences._
+import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.ui.internal.editor.autoedits.MultiLineStringAutoIndentStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
@@ -11,7 +11,7 @@ import scalariform.formatter.preferences._
 
 class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
 
-  val strategy = new MultiLineStringAutoIndentStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
+  val strategy = new MultiLineStringAutoIndentStrategy(ScalaPartitions.SCALA_PARTITIONING, prefStore)
 
   implicit class ToMultiLineString(s: String) {
     def mls = s.replaceAll("```", "\"\"\"").replaceAll("""\\t""", "\t").stripMargin

@@ -1,29 +1,22 @@
 package org.scalaide.ui.internal.editor
 
 import scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider.ISpellingEngineProvider
-import org.scalaide.core.internal.lexical.ScalaPartitions._
 
-import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
-
-import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
 import org.eclipse.core.runtime.AssertionFailedException
 import org.eclipse.core.runtime.IProgressMonitor
-
+import org.eclipse.jdt.internal.ui.text.spelling.JavaSpellingProblem
+import org.eclipse.jdt.internal.ui.text.spelling.SpellCheckIterator
+import org.eclipse.jdt.internal.ui.text.spelling.SpellingEngine
+import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellChecker
+import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellEvent
+import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellEventListener
+import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.ITypedRegion
 import org.eclipse.jface.text.TextUtilities
-
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
-
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.ui.text.IJavaPartitions._
-import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellChecker
-import org.eclipse.jdt.internal.ui.text.spelling.SpellCheckIterator
-import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellEventListener
-import org.eclipse.jdt.internal.ui.text.spelling.engine.ISpellEvent
-import org.eclipse.jdt.internal.ui.text.spelling.JavaSpellingProblem
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 
 /**
  * Provides a replacement for {@link org.eclipse.jdt.internal.ui.text.spelling.JavaSpellingEngine} which is aware of Scala partitions,
@@ -41,7 +34,7 @@ class ScalaSpellingEngineProvider extends ISpellingEngineProvider {
       try {
         for {
           region <- regions
-          partition <- TextUtilities.computePartitioning(document, JAVA_PARTITIONING, region.getOffset, region.getLength, false)
+          partition <- TextUtilities.computePartitioning(document, SCALA_PARTITIONING, region.getOffset, region.getLength, false)
           if spellCheckablePartitionTypes contains partition.getType
         } {
           if (monitor != null && monitor.isCanceled || listener.isProblemsThresholdReached)
@@ -56,8 +49,8 @@ class ScalaSpellingEngineProvider extends ISpellingEngineProvider {
 
     private def getSpellCheckablePartitionTypes = {
       val ignoreStrings = PreferenceConstants.getPreferenceStore.getBoolean(PreferenceConstants.SPELLING_IGNORE_JAVA_STRINGS)
-      Set(JAVA_DOC, JAVA_MULTI_LINE_COMMENT, JAVA_SINGLE_LINE_COMMENT) ++
-        (if (ignoreStrings) Set() else Set(JAVA_STRING, SCALA_MULTI_LINE_STRING))
+      Set(SCALADOC, SCALA_MULTI_LINE_COMMENT, SCALA_SINGLE_LINE_COMMENT) ++
+        (if (ignoreStrings) Set() else Set(SCALA_STRING, SCALA_MULTI_LINE_STRING))
     }
 
     private class SpellEventListener(collector: ISpellingProblemCollector, document: IDocument) extends ISpellEventListener {

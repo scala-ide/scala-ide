@@ -6,6 +6,7 @@ import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
 import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical._
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
 import org.scalaide.ui.internal.editor.autoedits._
@@ -39,6 +40,7 @@ import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 
+
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
   scalaPreferenceStore: IPreferenceStore,
@@ -47,7 +49,7 @@ class ScalaSourceViewerConfiguration(
       JavaPlugin.getDefault.getJavaTextTools.getColorManager,
       javaPreferenceStore,
       editor,
-      IJavaPartitions.JAVA_PARTITIONING) {
+      SCALA_PARTITIONING) {
 
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
@@ -68,19 +70,19 @@ class ScalaSourceViewerConfiguration(
     val xmlPIScanner = new XmlPIScanner(combinedPrefStore)
 
     Map(
-      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
-      IJavaPartitions.JAVA_DOC -> scaladocScanner,
-      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
-      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
-      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
-      IJavaPartitions.JAVA_STRING -> stringScanner,
-      IJavaPartitions.JAVA_CHARACTER -> characterScanner,
-      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
-      ScalaPartitions.XML_TAG -> xmlTagScanner,
-      ScalaPartitions.XML_COMMENT -> xmlCommentScanner,
-      ScalaPartitions.XML_CDATA -> xmlCDATAScanner,
-      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner,
-      ScalaPartitions.XML_PI -> xmlPIScanner
+      SCALA_DEFAULT_CONTENT -> scalaCodeScanner,
+      SCALADOC -> scaladocScanner,
+      SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
+      SCALA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
+      SCALA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
+      SCALA_STRING -> stringScanner,
+      SCALA_CHARACTER -> characterScanner,
+      SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
+      XML_TAG -> xmlTagScanner,
+      XML_COMMENT -> xmlCommentScanner,
+      XML_CDATA -> xmlCDATAScanner,
+      XML_PCDATA -> xmlPCDATAScanner,
+      XML_PI -> xmlPIScanner
     )
   }
 
@@ -175,21 +177,21 @@ class ScalaSourceViewerConfiguration(
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
 
     contentType match {
-      case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
+      case SCALA_MULTI_LINE_COMMENT | SCALADOC | SCALADOC_CODE_BLOCK =>
+        Array(new CommentAutoIndentStrategy(partitioning, combinedPrefStore))
 
-      case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
+      case SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new MultiLineStringAutoIndentStrategy(partitioning, combinedPrefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, combinedPrefStore))
+          new MultiLineStringAutoEditStrategy(combinedPrefStore))
 
-      case IJavaPartitions.JAVA_STRING =>
+      case SCALA_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new StringAutoEditStrategy(partitioning, combinedPrefStore))
 
-      case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
+      case SCALA_CHARACTER | SCALA_DEFAULT_CONTENT =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
@@ -199,13 +201,13 @@ class ScalaSourceViewerConfiguration(
 
       case _ =>
         Array(
-            new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-            new AutoIndentStrategy(combinedPrefStore))
+          new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new AutoIndentStrategy(combinedPrefStore))
     }
   }
 
   override def getContentFormatter(sourceViewer: ISourceViewer): IContentFormatter = {
-    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
+    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), SCALA_DEFAULT_CONTENT)
     formatter.setMasterStrategy(new ScalaFormattingStrategy(editor))
     formatter
   }
@@ -215,13 +217,11 @@ class ScalaSourceViewerConfiguration(
     codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
   }
 
-  /**
-   * Adds Scala related partition types to the list of configured content types,
-   * in order that they are available for several features of the IDE.
-   */
   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] =
-    super.getConfiguredContentTypes(sourceViewer) ++
-      Seq(ScalaPartitions.SCALA_MULTI_LINE_STRING, ScalaPartitions.SCALADOC_CODE_BLOCK)
+    Array(
+      SCALA_DEFAULT_CONTENT,
+      SCALA_MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK,
+      SCALA_MULTI_LINE_STRING, SCALA_STRING, SCALA_CHARACTER)
 
   override def affectsTextPresentation(event: PropertyChangeEvent) = true
 
