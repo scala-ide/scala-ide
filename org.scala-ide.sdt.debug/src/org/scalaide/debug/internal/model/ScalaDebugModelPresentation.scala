@@ -119,12 +119,12 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
       case stackFrame: ScalaStackFrame =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
-      case variable: IVariable =>
-        // TODO: right image depending on ?
-        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
       case variable: IndexedVariablePartition =>
         // variable used to split large arrays
         // TODO: see ScalaVariable before
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+      case variable: IVariable =>
+        // TODO: right image depending on ?
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
       case asyncSF: IStackFrame =>
         // TODO: right image depending of state
