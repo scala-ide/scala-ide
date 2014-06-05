@@ -13,6 +13,8 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
 
+    val isAutoClosingEnabled = prefStore.getBoolean(
+        EditorPreferencePage.P_ENABLE_AUTO_CLOSING_STRINGS)
     val isAutoEscapeSignEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_SIGN)
     val isAutoRemoveEscapedSignEnabled = prefStore.getBoolean(
@@ -31,9 +33,11 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''') || ch(-2, ''') || isIdentStart) {
         return
       }
-      command.caretOffset = command.offset + 1
-      command.text += command.text
-      command.shiftsCaret = false
+      if (isAutoClosingEnabled) {
+        command.caretOffset = command.offset + 1
+        command.text += command.text
+        command.shiftsCaret = false
+      }
     }
 
     def removeLiteral() {
@@ -80,9 +84,11 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def handleClosingMultiLineLiteral() {
-      command.caretOffset = command.offset + 1
-      command.text = command.text * 4
-      command.shiftsCaret = false
+      if (isAutoClosingEnabled) {
+        command.caretOffset = command.offset + 1
+        command.text = command.text * 4
+        command.shiftsCaret = false
+      }
     }
 
     def customizeLiteral() {

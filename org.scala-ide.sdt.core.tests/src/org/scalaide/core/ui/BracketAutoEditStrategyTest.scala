@@ -11,18 +11,37 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Before
   def startUp() {
+    enable(P_ENABLE_AUTO_CLOSING_PARENS, true)
+    enable(P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS, true)
+    enable(P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS, true)
     enable(P_ENABLE_AUTO_CLOSING_BRACES, true)
+    enable(P_ENABLE_SMART_INSERTION_BRACES, true)
   }
 
   @Test
-  def auto_closing_opening_brace() {
+  def auto_closing_on_enabled_feature() {
+    test(input = "^", expectedOutput = "(^)", operation = Add("("))
+    test(input = "^", expectedOutput = "[^]", operation = Add("["))
+    test(input = "^", expectedOutput = "<^>", operation = Add("<"))
     test(input = "^", expectedOutput = "{^}", operation = Add("{"))
   }
 
   @Test
-  def auto_closing_opening_brace_on_disabled_feature() {
+  def no_auto_closing_on_disabled_feature() {
+    enable(P_ENABLE_AUTO_CLOSING_PARENS, false)
+    enable(P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS, false)
+    enable(P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS, false)
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
-    test(input = "^", expectedOutput = "{^}", operation = Add("{"))
+    test(input = "^", expectedOutput = "(^", operation = Add("("))
+    test(input = "^", expectedOutput = "[^", operation = Add("["))
+    test(input = "^", expectedOutput = "<^", operation = Add("<"))
+    test(input = "^", expectedOutput = "{^", operation = Add("{"))
+  }
+
+  @Test
+  def auto_closing_opening_brace_on_disabled_smart_behavior() {
+    enable(P_ENABLE_SMART_INSERTION_BRACES, false)
+    test(input = "^}", expectedOutput = "{^}}", operation = Add("{"))
   }
 
   @Test
@@ -52,19 +71,16 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Test
   def auto_closing_nested_opening_brace() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "{^}", expectedOutput = "{{^}}", operation = Add("{"))
   }
 
   @Test
   def auto_closing_brace_after_pending_closing_brace() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "} map {^}", expectedOutput = "} map {{^}}", operation = Add("{"))
   }
 
   @Test
   def prevent_auto_closing_brace_when_caret_before_non_white_space() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map ^(_+1)",
         expectedOutput = "List(1) map {^(_+1)",
@@ -72,7 +88,8 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def not_prevent_auto_closing_brace_when_caret_non_white_space() {
+  def not_prevent_auto_closing_brace_when_caret_before_non_white_space_and_smart_behavior_disabled() {
+    enable(P_ENABLE_SMART_INSERTION_BRACES, false)
     test(
         input = "List(1) map ^(_+1)",
         expectedOutput = "List(1) map {^}(_+1)",
@@ -81,7 +98,6 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Test
   def auto_closing_brace_when_caret_before_white_space() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map^ (_+1)",
         expectedOutput = "List(1) map{^} (_+1)",
@@ -90,13 +106,11 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Test
   def auto_closing_brace_before_white_space() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "^   ", expectedOutput = "{^}   ", operation = Add("{"))
   }
 
   @Test
   def no_auto_closing_brace_on_missing_opening_bracket() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map {^}}",
         expectedOutput = "List(1) map {{^}}",
@@ -105,7 +119,6 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
 
   @Test
   def auto_closing_brace_before_matching_braces() {
-    enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map {^{}}",
         expectedOutput = "List(1) map {{^}{}}",

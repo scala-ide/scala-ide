@@ -22,7 +22,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def no_close_on_deactiveted_feature() {
+  def no_close_on_deactivated_feature() {
     enable(P_ENABLE_AUTO_CLOSING_COMMENTS, false)
     """
     /**^
