@@ -25,7 +25,7 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import scala.tools.eclipse.debug.async.RetainedStackManager
+import org.scalaide.debug.internal.async.RetainedStackManager
 
 object ScalaDebugTarget extends HasLogger {
 

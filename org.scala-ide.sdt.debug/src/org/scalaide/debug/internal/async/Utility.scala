@@ -1,11 +1,11 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Method
 import scala.collection.JavaConverters._
-import scala.tools.eclipse.debug.model.JdiRequestFactory
-import scala.tools.eclipse.debug.model.ScalaDebugTarget
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.debug.internal.model.JdiRequestFactory
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.logging.HasLogger
 import scala.actors.Actor
 import com.sun.jdi.request.EventRequest
 

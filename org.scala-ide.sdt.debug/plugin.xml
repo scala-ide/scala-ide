@@ -84,7 +84,7 @@
          point="org.eclipse.ui.views">
       <view
             category="org.scala-ide.sdt.core.viewCategory"
-            class="scala.tools.eclipse.debug.views.AsyncDebugView"
+            class="org.scalaide.debug.internal.views.AsyncDebugView"
             id="org.scala-ide.sdt.debug.asyncView"
             name="Async Debugger"
             restorable="true">
@@ -128,7 +128,7 @@
    <extension
          point="org.eclipse.ui.handlers">
       <handler
-            class="scala.tools.eclipse.debug.command.StepMessageOut"
+            class="org.scalaide.debug.internal.command.StepMessageOut"
             commandId="org.scala-ide.sdt.debug.stepMessageOut">
       </handler>
    </extension>

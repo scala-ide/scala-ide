@@ -1,4 +1,4 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
 import org.apache.commons.collections4.map.{ LRUMap => CommonsLRUMap }
 import scala.collection.convert.Wrappers.JMapWrapper

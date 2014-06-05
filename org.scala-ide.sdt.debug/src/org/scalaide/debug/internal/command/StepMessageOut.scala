@@ -7,7 +7,7 @@ import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.ui.handlers.HandlerUtil
 import org.eclipse.jface.viewers.IStructuredSelection
-import scala.tools.eclipse.debug.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaStackFrame
 
 
 class StepMessageOut extends AbstractHandler {

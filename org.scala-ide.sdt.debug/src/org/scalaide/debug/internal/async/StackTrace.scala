@@ -1,4 +1,4 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
 import com.sun.jdi.Value
 import org.eclipse.debug.core.model.IValue
@@ -6,7 +6,7 @@ import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.DebugElement
 import org.eclipse.debug.core.model.IVariable
-import scala.tools.eclipse.debug.ScalaDebugPlugin
+import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.eclipse.debug.core.model.IThread
 
 case class Location(sourceName: String, declaringTypeName: String, line: Int) {

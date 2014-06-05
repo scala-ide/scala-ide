@@ -22,7 +22,7 @@ import com.sun.jdi.VMCannotBeModifiedException
 import org.eclipse.debug.core.model.IStackFrame
 import com.sun.jdi.IncompatibleThreadStateException
 import org.scalaide.logging.HasLogger
-import scala.tools.eclipse.debug.async.StepMessageOut
+import org.scalaide.debug.internal.async.StepMessageOut
 
 class ThreadNotSuspendedException extends Exception
 

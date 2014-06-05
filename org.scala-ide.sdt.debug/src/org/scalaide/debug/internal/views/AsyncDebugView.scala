@@ -1,4 +1,4 @@
-package scala.tools.eclipse.debug.views
+package org.scalaide.debug.internal.views
 
 import org.eclipse.debug.ui.AbstractDebugView
 import org.eclipse.jface.viewers.Viewer
@@ -10,35 +10,32 @@ import org.eclipse.swt.SWT
 import org.eclipse.debug.ui.IDebugUIConstants
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.debug.ui.contexts.DebugContextEvent
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IViewSite
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jface.viewers.TreeViewer
 import org.eclipse.jface.viewers.ITreeContentProvider
-import scala.tools.eclipse.debug.model.ScalaThread
-import scala.tools.eclipse.debug.model.ScalaStackFrame
-import scala.tools.eclipse.debug.model.ScalaVariable
+import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaVariable
 import org.eclipse.debug.core.model.IVariable
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.debug.internal.ui.model.elements.DebugElementLabelProvider
 import org.eclipse.jface.viewers.ITableLabelProvider
-import scala.tools.eclipse.debug.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.eclipse.debug.core.model.IDebugElement
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.jface.viewers.IBaseLabelProvider
 import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.debug.core.model.IStackFrame
-import scala.tools.eclipse.debug.model.ScalaDebugModelPresentation
+import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.jface.viewers.ISelection
 import com.sun.jdi.ObjectReference
-import scala.tools.eclipse.debug.model.ScalaObjectReference
+import org.scalaide.debug.internal.model.ScalaObjectReference
 import com.sun.jdi.StackFrame
-import scala.tools.eclipse.debug.async.AsyncStackTrace
-import scala.tools.eclipse.debug.async.AsyncStackFrame
-import scala.tools.eclipse.debug.async.AsyncLocalVariable
-import scala.tools.eclipse.debug.async.AsyncStackFrame
+import org.scalaide.debug.internal.async._
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.SelectionChangedEvent
@@ -50,7 +47,6 @@ import org.eclipse.jface.viewers.TableViewer
 import org.eclipse.jface.viewers.IColorProvider
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.widgets.Display
-import scala.tools.eclipse.debug.async.AsyncStackFrame
 
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
 

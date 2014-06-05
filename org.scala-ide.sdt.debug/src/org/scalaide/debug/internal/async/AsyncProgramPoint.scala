@@ -1,4 +1,4 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
 /** A fully qualified name of a method, on whose entry we want to capture
  *  a stack trace.

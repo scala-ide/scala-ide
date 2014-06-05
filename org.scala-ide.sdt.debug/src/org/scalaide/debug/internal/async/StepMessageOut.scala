@@ -1,14 +1,14 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
-import scala.tools.eclipse.debug.BaseDebuggerActor
-import scala.tools.eclipse.debug.model.ScalaDebugTarget
-import scala.tools.eclipse.debug.model.ScalaThread
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.eclipse.debug.core.DebugEvent
 import com.sun.jdi.event.BreakpointEvent
-import scala.tools.eclipse.logging.HasLogger
+import org.scalaide.logging.HasLogger
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.request.EventRequest
-import scala.tools.eclipse.debug.model.JdiRequestFactory
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.StepRequest
 

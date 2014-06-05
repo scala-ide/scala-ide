@@ -1,20 +1,20 @@
-package scala.tools.eclipse.debug.async
+package org.scalaide.debug.internal.async
 
 import com.sun.jdi.ObjectReference
 
 import com.sun.jdi.StackFrame
 import scala.collection.mutable
-import scala.tools.eclipse.debug.model.ScalaDebugTarget
-import scala.tools.eclipse.debug.BaseDebuggerActor
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.BaseDebuggerActor
 import com.sun.jdi.event._
 import scala.collection.JavaConverters._
-import scala.tools.eclipse.debug.model.JdiRequestFactory
+import org.scalaide.debug.internal.model.JdiRequestFactory
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
-import scala.tools.eclipse.logging.HasLogger
-import scala.tools.eclipse.debug.model.ScalaValue
-import scala.tools.eclipse.util.Utils
+import org.scalaide.logging.HasLogger
+import org.scalaide.debug.internal.model.ScalaValue
+import org.scalaide.util.internal.Utils
 import com.sun.jdi.Method
 
 /** Install breakpoints in key places and collect stack frames.

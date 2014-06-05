@@ -14,7 +14,7 @@ import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jface.viewers.ILabelProviderListener
-import scala.tools.eclipse.debug.async.AsyncStackFrame
+import org.scalaide.debug.internal.async.AsyncStackFrame
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IVariable
 import org.eclipse.debug.ui.IInstructionPointerPresentation
