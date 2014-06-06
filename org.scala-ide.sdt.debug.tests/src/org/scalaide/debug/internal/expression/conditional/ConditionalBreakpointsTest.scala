@@ -8,6 +8,7 @@ package org.scalaide.debug.internal.expression.conditional
 import org.junit.Test
 import org.scalaide.debug.internal.ConditionContext
 import org.scalaide.debug.internal.expression.JavaBoxed
+import org.junit.Ignore
 
 object ConditionalBreakpointsTest extends BaseConditionalBreakpointTestCompanion
 
@@ -39,6 +40,7 @@ class ConditionalBreakpointsTest extends BaseConditionalBreakpointTest(Condition
     testWithCondition("int", ConditionContext("int == 1", shouldSuspend = false))
   }
 
+  @Ignore("Currently this test hangs during a build on Jenkins")
   @Test
   def shouldStopOnExceptionInCondition(): Unit = {
     testWithCondition("int", ConditionContext("???", shouldSuspend = true))
