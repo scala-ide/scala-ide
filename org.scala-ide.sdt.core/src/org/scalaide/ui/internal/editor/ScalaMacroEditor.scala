@@ -118,16 +118,17 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
       val document = iTextEditor.getDocumentProvider.getDocument(editorInput)
       
       //Get MacroExpansionAnnotation annotatations on clicked line
-      val annotations = for {
+      val annotations2Expand = (for {
         annotationNoType <- annotationModel.getAnnotationIterator
         annotation = annotationNoType.asInstanceOf[Annotation]
         if annotation.getType == "scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation"
         pos = annotationModel.getPosition(annotation)
-        if document.getLineOfOffset(pos.offset) <= line && line <= document.getLineOfOffset(pos.offset + pos.length) 
-      } yield annotation
+        if document.getLineOfOffset(pos.offset) == line/* && line <= document.getLineOfOffset(pos.offset + pos.length)*/ 
+      } yield annotation).toList
       
-      //CRLF creates another annotation?
-      annotations.foreach(annotation => {
+      //CRLF creates another annotation
+      
+      annotations2Expand.foreach(annotation => {
         val position = annotationModel.getPosition(annotation)
         val macroExpandee = document.get(position.offset, position.length)
       
@@ -147,12 +148,34 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
       marker.setAttribute(IMarker.CHAR_END, position.offset + indentedMacroExpansion.length)
       marker.setAttribute("macroExpandee", macroExpandee)
 
-//      position.delete Does not work as expected
-      annotationModel.getPosition(annotation).delete
-
-      myLog.log("run")
+      position.delete
       })
-      val annotation = annotations.buffered.head      
+      
+      if(!annotations2Expand.isEmpty) return
+      
+      val annotations2Collapse = for {
+        annotationNoType <- annotationModel.getAnnotationIterator
+        annotation = annotationNoType.asInstanceOf[Annotation]
+        if annotation.getType == "scala.tools.eclipse.macroMarkerId"
+        pos = annotationModel.getPosition(annotation)
+        if document.getLineOfOffset(pos.offset) == line/* && line <= document.getLineOfOffset(pos.offset + pos.length)*/ 
+      } yield annotation
+      
+      annotations2Collapse.foreach(annotation => {
+        val position = annotationModel.getPosition(annotation)
+      
+        val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker
+      val macroExpandee = marker.getAttribute("macroExpandee").asInstanceOf[String]
+      
+      
+      
+      val macroLineStartPos = document.getLineOffset(document.getLineOfOffset(position.offset))
+      val prefix = document.get(macroLineStartPos, position.offset - macroLineStartPos).takeWhile(_ == ' ')
+      
+      document.replace(position.offset, position.length, macroExpandee)
+      
+      marker.delete
+      })
     }
   }
 
