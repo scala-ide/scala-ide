@@ -45,11 +45,11 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   private def appHit(thread: ThreadReference, app: AsyncProgramPoint) {
     val topFrame = thread.frame(0)
     val args = topFrame.getArgumentValues()
-    logger.debug(s"$app hit: topFrame arguments: $args")
+//    logger.debug(s"$app hit: topFrame arguments: $args")
 
     val body = args.get(app.paramIdx)
     val frames = thread.frames().asScala.toList
-    logger.debug(s"Added ${frames.size} stack frames in cache.")
+//    logger.debug(s"Added ${frames.size} stack frames in cache.")
     stackFrames += (body.asInstanceOf[ObjectReference]) -> mkStackTrace(frames)
   }
 
@@ -119,7 +119,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     val res = op
     val end = System.nanoTime()
 
-    logger.debug("%s: \t %,3d ns".format(name, end - start))
+//    logger.debug("%s: \t %,3d ns".format(name, end - start))
     res
   }
 

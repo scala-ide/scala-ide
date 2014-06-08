@@ -15,6 +15,7 @@ import com.sun.jdi.request.StepRequest
 case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) extends HasLogger {
 
   private var watchedMessage: Option[ObjectReference] = None
+  private val senderFrameLocation = thread.threadRef.frame(0).location
 
   val programSends = List(
     AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
@@ -37,15 +38,34 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   }
 
   object internalActor extends BaseDebuggerActor {
+    import scala.collection.JavaConverters._
+
+    private def interceptMessage(ev: BreakpointEvent): Boolean = {
+      // only intercept messages going out from the current thread and frame (no messages sent by methods below us)
+      if (sendRequests(ev.request)
+        && (ev.thread() == thread.threadRef)) {
+        println("? intercept send: " + ev.thread.frame(0).getArgumentValues())
+        ev.thread.frames.asScala.take(15).foreach { f =>
+          logger.debug(s"\t${f.location}")
+        }
+        true
+      } else false
+      //        && (ev.thread.frame(1).location == senderFrameLocation))
+    }
+
     override protected def behavior = {
-      case breakpointEvent: BreakpointEvent if sendRequests(breakpointEvent.request()) =>
+      case breakpointEvent: BreakpointEvent if interceptMessage(breakpointEvent) =>
         val app = breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint]
         val topFrame = breakpointEvent.thread().frame(0)
         val args = topFrame.getArgumentValues()
-        logger.debug(s"message out intercepted: topFrame arguments: $args")
+        logger.debug(s"MESSAGE OUT intercepted: topFrame arguments: $args")
         watchedMessage = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
 
         reply(false) // don't suspend this thread
+      //        logger.debug(s"Suspending thread ${breakpointEvent.thread.name()}")
+      //        // most likely the breakpoint was hit on a different thread than the one we started with, so we find it here
+      //        debugTarget.getScalaThread(breakpointEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
+      //        reply(true) // suspend here!
 
       case breakpointEvent: BreakpointEvent if receiveRequests(breakpointEvent.request()) =>
         val app = breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint]
@@ -54,7 +74,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         logger.debug(s"receive intercepted: topFrame arguments: $args")
         val msg = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
         if (watchedMessage == msg) {
-          logger.debug(s"Intercepted a good receive! $msg")
+          logger.debug(s"MESSAGE IN! $msg")
 
           val targetThread = debugTarget.getScalaThread(breakpointEvent.thread())
           targetThread foreach { thread =>
@@ -76,9 +96,10 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         reply(true) // suspend here!
 
       case stepEvent: StepEvent =>
-//        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
+        //        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
         steps += 1
         reply(false) // resume VM
+      case _ => reply(false)
     }
 
     private def disable() {
