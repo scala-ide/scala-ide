@@ -70,7 +70,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
   def stepMessageOut(): Unit = {
     (new StepMessageOut(getDebugTarget, this)).step
   }
-  
+
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
   override def canResume: Boolean = suspended // TODO: need real logic
