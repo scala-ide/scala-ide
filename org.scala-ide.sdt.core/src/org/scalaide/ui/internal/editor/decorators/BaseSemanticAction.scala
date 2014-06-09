@@ -26,6 +26,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.ui.internal.editor.decorators.implicits.MacroExpansionAnnotation
 
 /**
  * Represents basic properties - enabled, bold an italic.
@@ -129,8 +130,11 @@ abstract class BaseSemanticAction(
         case None => findAnnotations() // properties disabled, count as active
         case _ => Map.empty
       }
-
-      AnnotationUtils.update(sourceViewer, annotationId, annotationsToAdd)
+      
+      val (implicitAnnotations, macroExpansionAnnotations) = annotationsToAdd.partition(_._1.getType == annotationId)
+      
+      AnnotationUtils.update(sourceViewer, annotationId, implicitAnnotations)
+      AnnotationUtils.update(sourceViewer, MacroExpansionAnnotation.ID, macroExpansionAnnotations)
     }
   }
 

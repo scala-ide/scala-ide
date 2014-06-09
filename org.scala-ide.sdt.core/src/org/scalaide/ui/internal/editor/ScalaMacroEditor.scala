@@ -42,7 +42,7 @@ trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
 
   var macroExpansionLines: List[MyRange] = Nil
 
-  var correspondingLineNumbers = new Array[Int](1000)   // FIXME: get length of document.
+  var correspondingLineNumbers = new Array[Int](10000)   // FIXME: get length of document.
   
   def computeCorrespondingLineNumbers{
     val ranges = getMacroExpansionNotCountedLines
@@ -105,28 +105,6 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
     private val annotationModel: IAnnotationModel = iTextEditor.getDocumentProvider.getAnnotationModel(editorInput)
     private val document = iTextEditor.getDocumentProvider.getDocument(editorInput)
 
-    //    val lines = iTextEditor
-
-    /* Used because if editing after the annotation eclipse adds extra 
-     * annotations with the same positions*/
-    private def annotationsUniquePos(annotations: List[Annotation]) = {
-      import scala.collection.mutable.Set
-      val setToDrop = Set[(Int, Int)]()
-      val t = (for {
-        annotation <- annotations
-        pos = annotationModel.getPosition(annotation)
-      } yield {
-        if (setToDrop.contains(pos.offset, pos.length)) {
-          annotationModel.removeAnnotation(annotation)
-          None
-        } else {
-          setToDrop.add((pos.offset, pos.length))
-          Some(annotation)
-        }
-      })
-      t.flatten
-    }
-
     private def findAnnotationsOnLine(line: Int, annotationType: String) = {
       val annotationIterator = for {
         annotationNoType <- annotationModel.getAnnotationIterator
@@ -141,7 +119,7 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
     override def run {     
       val line = iVerticalRulerInfo.getLineOfLastMouseButtonActivity
 
-      val annotations2Expand = annotationsUniquePos(findAnnotationsOnLine(line, "scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation"))
+      val annotations2Expand = findAnnotationsOnLine(line, "scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation")
 
       annotations2Expand.foreach(annotation => if (!annotation.isMarkedDeleted) {
         val position = annotationModel.getPosition(annotation)
@@ -163,6 +141,7 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
         marker.setAttribute(IMarker.CHAR_START, pOffset)
         marker.setAttribute(IMarker.CHAR_END, pOffset + indentedMacroExpansion.length)
         marker.setAttribute("macroExpandee", macroExpandee)
+        marker.setAttribute("macroExpansion", indentedMacroExpansion)
 
         annotationModel.removeAnnotation(annotation)
       })
@@ -213,7 +192,8 @@ trait ScalaMacroEditor extends CompilationUnitEditor with ScalaMacroLineNumbers 
 
   override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
     removeMacroExpansions
-    super.performSave(overwrite, progressMonitor)
+    super.performSave(overwrite, progressMonitor)    
+    expandMacroExpansions
   }
 
   override def doSetInput(iEditorInput: IEditorInput) {
@@ -225,6 +205,25 @@ trait ScalaMacroEditor extends CompilationUnitEditor with ScalaMacroLineNumbers 
     }
   }
 
+  private def expandMacroExpansions {
+    val annotations = annotationModel.map(_.getAnnotationIterator)
+    for {
+      doc <- document
+      annotationModel <- annotationModel
+      annotations <- annotations
+      annotationNoType <- annotations
+    } {
+      val annotation = annotationNoType.asInstanceOf[Annotation]
+      if (annotation.getType == "scala.tools.eclipse.macroMarkerId") {
+        val pos = annotationModel.getPosition(annotation)
+
+        val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker
+
+        doc.replace(pos.offset, pos.length, marker.getAttribute("macroExpansion").asInstanceOf[String])
+      }
+    }
+  }
+  
   private def removeMacroExpansions {
     val annotations = annotationModel.map(_.getAnnotationIterator)
     for {
@@ -240,7 +239,6 @@ trait ScalaMacroEditor extends CompilationUnitEditor with ScalaMacroLineNumbers 
         val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker
 
         doc.replace(pos.offset, pos.length, marker.getAttribute("macroExpandee").asInstanceOf[String])
-        marker.delete
       }
     }
   }
