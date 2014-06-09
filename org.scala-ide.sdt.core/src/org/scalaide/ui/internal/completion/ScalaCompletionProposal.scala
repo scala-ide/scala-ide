@@ -117,6 +117,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
               val ui = mkEditorLinkedMode(d, viewer, mkLinkedModeModel(d), cursorPos)
               ui.enter()
             }
+            else
+              EditorUtils.doWithCurrentEditor { _.selectAndReveal(cursorPos, 0) }
         }
         None
       }

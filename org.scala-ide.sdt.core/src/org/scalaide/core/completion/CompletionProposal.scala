@@ -145,7 +145,7 @@ case class CompletionProposal(
     !terminatesExprProbably(terminationChar)
   }
 
-    /**
+  /**
    * Applies the actual completion to the document, while considering if completion
    * overwrite is enabled.
    *
@@ -179,8 +179,6 @@ case class CompletionProposal(
         (context.contextType != CompletionContext.ImportContext
         && (!overwrite || !paramsProbablyExists)
         && explicitParamNames.flatten.nonEmpty)
-
-      val exitPosition = if (applyLinkedMode) startPos + completionFullString.length() else endPos
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
