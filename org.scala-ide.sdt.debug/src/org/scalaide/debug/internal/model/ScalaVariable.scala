@@ -17,19 +17,33 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
   override def verifyValue(value: IValue): Boolean = ???
   override def verifyValue(value: String): Boolean = ???
 
-  // Members declared in org.eclipse.debug.core.model.IVariable
+  /** Remove private name mangling (taken from Scala compiler and adapted to work on Strings. */
+  def unexpandedName(name: String): String = name lastIndexOf "$$" match {
+    case 0 | -1 => name
+    case idx0 =>
+      // Sketchville - We've found $$ but if it's part of $$$ or $$$$
+      // or something we need to keep the bonus dollars, so e.g. foo$$$outer
+      // has an original name of $outer.
+      var idx = idx0
+      while (idx > 0 && name.charAt(idx - 1) == '$')
+        idx -= 1
+      name drop idx + 2
+  }
 
+  // Members declared in org.eclipse.debug.core.model.IVariable
   final override def getValue(): IValue =
     wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
 
   final override def getName(): String =
-    wrapJDIException("Exception while retrieving variable's name") { doGetName() }
+    wrapJDIException("Exception while retrieving variable's name") { unexpandedName(doGetName()) }
 
   final override def getReferenceTypeName(): String =
     wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
 
   override def hasValueChanged: Boolean = false // TODO: need real logic
 
+  def isStatic: Boolean = false
+  def isFinal: Boolean = false
   protected def doGetValue(): IValue
   protected def doGetName(): String
   protected def doGetReferenceTypeName(): String
@@ -55,7 +69,7 @@ class ScalaLocalVariable(underlying: LocalVariable, stackFrame: ScalaStackFrame)
   override protected def doGetValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(underlying), getDebugTarget)
 }
 
-class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference. getDebugTarget) {
+class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
@@ -68,6 +82,9 @@ class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference)
 class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) extends ScalaVariable(objectReference.getDebugTarget) {
 
   // Members declared in org.eclipse.debug.core.model.IVariable
+
+  override def isStatic: Boolean = field.isStatic()
+  override def isFinal: Boolean = field.isFinal
 
   override protected def doGetName(): String = field.name
   override protected def doGetReferenceTypeName(): String = field.typeName

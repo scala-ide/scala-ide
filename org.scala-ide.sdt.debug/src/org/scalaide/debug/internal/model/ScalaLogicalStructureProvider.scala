@@ -10,15 +10,18 @@ import org.eclipse.debug.core.model.IValue
 
 import com.sun.jdi.ClassType
 
+import org.scalaide.debug.internal.JDIUtil._
+
 class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
 
-  override def getLogicalStructureTypes(value: IValue) : Array[ILogicalStructureType] = {
+  override def getLogicalStructureTypes(value: IValue): Array[ILogicalStructureType] = {
     value match {
       case objectReference: ScalaObjectReference =>
         if (isScalaCollection(objectReference)) {
           Array(ScalaCollectionLogicalStructureType)
-        } else {
-          Array() // TODO: return fixed empty Array
+        } else AkkaActorLogicalStructure.enclosingActor(objectReference) match {
+          case Some(actorReference) => Array(AkkaActorLogicalStructure)
+          case _                    => Array()
         }
       case _ =>
         Array() // TODO: return fixed empty Array
@@ -34,14 +37,6 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
           false
       }
     }
-  }
-
-  /**
-   * Checks 'implements' with Java meaning
-   */
-  private def implements(classType: ClassType, interfaceName: String): Boolean = {
-    import scala.collection.JavaConverters._
-    classType.allInterfaces.asScala.exists(_.name == interfaceName)
   }
 }
 
@@ -92,4 +87,51 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
   // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
 
   override def getDescription(value: IValue): String = getDescription
+}
+
+object AkkaActorLogicalStructure extends ILogicalStructureType with HasLogger {
+  def getDescription(): String =
+    "Actor logical structure"
+
+  def getDescription(v: IValue): String =
+    getDescription
+
+  def getId(): String =
+    ScalaDebugPlugin.id + "logicalstructure.actor"
+
+  def getLogicalStructure(obj: IValue): IValue = obj match {
+    case ref: ScalaObjectReference =>
+      val Some(actor) = enclosingActor(ref)
+      implicit val target = actor.getDebugTarget()
+      val actorContext = actor.invokeMethod("context", ScalaDebugger.currentThread).asInstanceOf[ScalaObjectReference]
+      val sender = actor.invokeMethod("sender", ScalaDebugger.currentThread)
+      val parent = actorContext.invokeMethod("parent", "()Lakka/actor/ActorRef;", ScalaDebugger.currentThread)
+      val supervisingStrategy = actor.invokeMethod("supervisorStrategy", ScalaDebugger.currentThread)
+      
+      VirtualValue("Actor", actor.invokeMethod("self", ScalaDebugger.currentThread).getValueString())
+        .withFields(
+            VirtualVariable("<parent>", parent.getReferenceTypeName(), parent),
+            VirtualVariable("<sender>", sender.getReferenceTypeName(), sender),
+            VirtualVariable("<supervisorStrategy>", supervisingStrategy.getReferenceTypeName(), supervisingStrategy))
+        .withFields(
+            ref.getVariables(): _*)
+    case _ =>
+      obj
+  }
+
+  def enclosingActor(obj: ScalaObjectReference): Option[ScalaObjectReference] = {
+    obj.wrapJDIException("Exception while computing logical structures for actor") {
+      def walkOuterPath(obj: ScalaObjectReference): Option[ScalaObjectReference] = {
+        if (implements(obj.classType, "akka.actor.Actor")) Some(obj)
+        else (for {
+          _ <- Option(obj.referenceType().fieldByName("$outer"))
+          outer = obj.fieldValue("$outer").asInstanceOf[ScalaObjectReference]
+        } yield walkOuterPath(outer)).flatten
+      }
+
+      walkOuterPath(obj)
+    }
+  }
+
+  def providesLogicalStructure(v: IValue): Boolean = !v.isInstanceOf[VirtualValue]
 }

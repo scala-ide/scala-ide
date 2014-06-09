@@ -104,6 +104,11 @@
             id="org.scala-ide.sdt.debug.stepMessageOut"
             name="Step Message Out">
       </command>
+      <command
+            description="Break execution when a message is sent to dead letters"
+            id="org.scala-ide.sdt.debug.stopOnDeadLetters"
+            name="Break on DeadLetter">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -124,12 +129,27 @@
             </command>
          </toolbar>
       </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.debug.ui.BreakpointView">
+          <command
+                commandId="org.scala-ide.sdt.debug.stopOnDeadLetters"
+                icon="icons/envelope-blue.png"
+                label="Break on Dead Letters"
+                style="toggle"
+                tooltip="Break when a message arrives in dead letters">
+          </command>
+      </menuContribution>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
       <handler
             class="org.scalaide.debug.internal.command.StepMessageOut"
             commandId="org.scala-ide.sdt.debug.stepMessageOut">
+      </handler>
+      <handler
+            class="org.scalaide.debug.internal.command.BreakOnDeadLettersAction"
+            commandId="org.scala-ide.sdt.debug.stopOnDeadLetters">
       </handler>
    </extension>
    <extension

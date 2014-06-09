@@ -19,6 +19,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
 
   val programSends = List(
     AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
+    AsyncProgramPoint("akka.actor.LocalActorRef", "$bang", 0),
     AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
 
   val programReceives = List(
@@ -30,7 +31,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   private var steps = 0
 
   def step() {
-    sendRequests = programSends.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
+    sendRequests = programSends.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor, thread.threadRef)).toSet
     receiveRequests = programReceives.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
     internalActor.start()
     // CLIENT_REQUEST seems to be the only event that correctly updates the UI
@@ -42,15 +43,18 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
 
     private def interceptMessage(ev: BreakpointEvent): Boolean = {
       // only intercept messages going out from the current thread and frame (no messages sent by methods below us)
-      if (sendRequests(ev.request)
-        && (ev.thread() == thread.threadRef)) {
+      println(s"GENERAL SEND: ${ev.thread.frame(0).getArgumentValues()} THREAD: ${ev.thread.name()} looking for thread: ${thread.threadRef.name}: ${ev.thread == thread.threadRef}")
+      if (sendRequests(ev.request)) {
         println("? intercept send: " + ev.thread.frame(0).getArgumentValues())
-        ev.thread.frames.asScala.take(15).foreach { f =>
-          logger.debug(s"\t${f.location}")
-        }
         true
       } else false
       //        && (ev.thread.frame(1).location == senderFrameLocation))
+    }
+
+    private def isReceiveHandler(loc: com.sun.jdi.Location): Boolean = {
+      val typeName = loc.declaringType().name
+      (loc.method().name().contains("applyOrElse")
+        && !typeName.startsWith("akka"))
     }
 
     override protected def behavior = {
@@ -75,6 +79,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         val msg = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
         if (watchedMessage == msg) {
           logger.debug(s"MESSAGE IN! $msg")
+          deleteSendRequests()
 
           val targetThread = debugTarget.getScalaThread(breakpointEvent.thread())
           targetThread foreach { thread =>
@@ -87,7 +92,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         }
         reply(false)
 
-      case stepEvent: StepEvent if stepEvent.location().method().name().contains("applyOrElse") =>
+      case stepEvent: StepEvent if isReceiveHandler(stepEvent.location) =>
         disable()
         poison()
         logger.debug(s"Suspending thread ${stepEvent.thread.name()}")
@@ -95,11 +100,30 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         debugTarget.getScalaThread(stepEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
         reply(true) // suspend here!
 
+      case stepEvent: StepEvent if steps >= 20 =>
+        disable()
+        poison()
+        logger.debug(s"Giving up on stepping after 15 steps")
+        reply(false)
+
       case stepEvent: StepEvent =>
         //        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
         steps += 1
+        logger.debug(s"Step $steps: ${stepEvent.location.declaringType}.${stepEvent.location.method}")
         reply(false) // resume VM
       case _ => reply(false)
+    }
+
+    private def deleteSendRequests() {
+      val eventDispatcher = debugTarget.eventDispatcher
+      val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+
+      for (request <- sendRequests) {
+        request.disable()
+        eventDispatcher.unsetActorFor(request)
+        eventRequestManager.deleteEventRequest(request)
+      }
+      sendRequests = Set()
     }
 
     private def disable() {

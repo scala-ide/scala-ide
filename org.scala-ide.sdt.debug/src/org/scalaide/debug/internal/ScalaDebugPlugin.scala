@@ -6,6 +6,9 @@ import org.osgi.framework.BundleContext
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
+import org.eclipse.jface.resource.ImageRegistry
+import org.scalaide.ui.internal.ScalaImages
+import org.eclipse.ui.PlatformUI
 
 object ScalaDebugPlugin {
   @volatile var plugin: ScalaDebugPlugin = _
@@ -16,6 +19,7 @@ object ScalaDebugPlugin {
 
   def wrapInErrorStatus(message: String, e: Throwable) = new Status(IStatus.ERROR, ScalaDebugPlugin.id, message, e)
 
+  final val IMG_ACTOR = "images.actor"
 }
 
 class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
@@ -38,4 +42,13 @@ class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
     ScalaDebugger.init()
   }
 
+  lazy val registry = {
+    val reg = new ImageRegistry(PlatformUI.getWorkbench().getDisplay())
+    def declareImage(key: String, path: String) {
+      ScalaImages.imageDescriptor(ScalaDebugPlugin.id, path) foreach (reg.put(key, _))
+    }
+    declareImage(ScalaDebugPlugin.IMG_ACTOR, "icons/actor-2.png")
+
+    reg
+  }
 }

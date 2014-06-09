@@ -24,6 +24,7 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.debug.internal.ui.DebugUIMessages
 import org.eclipse.debug.internal.ui.InstructionPointerAnnotation
+import org.scalaide.debug.internal.ScalaDebugPlugin
 
 /** Utility methods for the ScalaDebugModelPresentation class
  *  This object doesn't use any internal field, and is thread safe.
@@ -123,6 +124,10 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
         // variable used to split large arrays
         // TODO: see ScalaVariable before
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+      case VirtualVariable("<sender>", _, _) =>
+        ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
+      case VirtualVariable("<parent>", _, _) =>
+        ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
       case variable: IVariable =>
         // TODO: right image depending on ?
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)

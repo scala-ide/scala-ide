@@ -130,7 +130,9 @@ trait BaseDebuggerActor extends Actor with HasLogger {
     // Given we have a highly asynchronous system, `VMDisconnectedException` can happen simply because the user has stopped a debug session
     // while some debug actor was executing some logic that requires the underline virtual machine to be up and running. These sort of
     // exception do not provide any meaningful information, hence we simply swallow it.
-    case vme: VMDisconnectedException => ()
+    case vme: VMDisconnectedException =>
+      logger.debug("actor exception: " + vme)
+      ()
     case e: Exception =>
       eclipseLog.error("Shutting down " + this + " because of", e)
       val reason = UncaughtException(this, Some("Unhandled exception while actor %s was still running.".format(this)), Some(sender), Thread.currentThread(), e)

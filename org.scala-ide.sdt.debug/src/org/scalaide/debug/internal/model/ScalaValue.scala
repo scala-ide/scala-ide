@@ -23,6 +23,8 @@ import com.sun.jdi.Field
 import com.sun.jdi.Method
 import org.scalaide.debug.internal.JDIUtil
 import com.sun.jdi.ReferenceType
+import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin
+import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants
 
 object ScalaValue {
 
@@ -165,9 +167,16 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
     }
   }
 
+  private def isVisible(field: ScalaVariable): Boolean = {
+    !field.isStatic //&& {
+//      val store = JDIDebugUIPlugin.getDefault().getPreferenceStore()
+//      val statics = context.getId() + "." + IJDIPreferencesConstants.PREF_SHOW_STATIC_VARIABLES
+//      store.getBoolean(statics)
+//    })
+  }
   protected override def doGetVariables(): Array[IVariable] = {
     import scala.collection.JavaConverters._
-    referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).sortBy(_.getName).toArray
+    referenceType.allFields.asScala.map(new ScalaFieldVariable(_, this)).filter(isVisible).sortBy(_.getName).toArray
   }
   protected override def doHasVariables(): Boolean = !referenceType.allFields.isEmpty
 

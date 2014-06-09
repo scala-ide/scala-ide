@@ -5,7 +5,6 @@ import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaSourceLookupParticipant
 import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
 import org.scalaide.logging.HasLogger
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -26,6 +25,7 @@ import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
 import org.scalaide.debug.internal.async.RetainedStackManager
+import org.scalaide.debug.internal.async.BreakOnDeadLetters
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -135,6 +135,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
   private[debug] val companionActor: BaseDebuggerActor
   private[debug] val cache: ScalaDebugCache
   val retainedStack: RetainedStackManager
+  val breakOnDeadLetters: BreakOnDeadLetters = new BreakOnDeadLetters(this)
 
   /** Initialize the dependent components
    */
@@ -318,6 +319,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     initializeThreads(virtualMachine.allThreads.asScala.toList)
     retainedStack.start()
     breakpointManager.init()
+    breakOnDeadLetters.start()
+
     fireChangeEvent(DebugEvent.CONTENT)
   }
 
@@ -328,6 +331,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
     eventDispatcher.dispose()
     breakpointManager.dispose()
     cache.dispose()
+    breakOnDeadLetters.dispose()
     disposeThreads()
     fireTerminateEvent()
   }

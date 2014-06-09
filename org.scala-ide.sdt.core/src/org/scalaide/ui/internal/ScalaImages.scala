@@ -45,7 +45,7 @@ object ScalaImages {
    * stopped. If that is not the case or if the the path to the image is invalid
    * `None` is returned.
    */
-  private def imageDescriptor(bundleId: String, path: String): Option[ImageDescriptor] =
+  def imageDescriptor(bundleId: String, path: String): Option[ImageDescriptor] =
     Option(Platform.getBundle(bundleId)) flatMap { bundle =>
       val state = bundle.getState()
       if (state != Bundle.ACTIVE && state != Bundle.STARTING && state != Bundle.RESOLVED)
