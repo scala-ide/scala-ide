@@ -33,18 +33,18 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
+import org.eclipse.swt.custom.VerifyKeyListener
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchCommandConstants
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
-import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.logging.HasLogger
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.RefactoringMenu
@@ -56,13 +56,13 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPrese
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.internal.Utils
+import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with HasLogger { self =>
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
@@ -282,6 +282,22 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+    /*
+     * Removes the Java component that provides the "automatically close ..."
+     * behavior. The component is accessed with reflection, because
+     * [[super.createPartControl]], which defines it, needs to be called.
+     */
+    def removeBracketInserter() = {
+      try {
+        val fBracketInserter = classOf[CompilationUnitEditor].getDeclaredField("fBracketInserter")
+        fBracketInserter.setAccessible(true)
+        sourceViewer.removeVerifyKeyListener(fBracketInserter.get(this).asInstanceOf[VerifyKeyListener])
+      } catch {
+        case e: NoSuchFieldException =>
+          eclipseLog.error("The name of field 'fBracketInserter' has changed", e)
+      }
+    }
+
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     RefactoringMenu.fillQuickMenu(this)
@@ -289,6 +305,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
         sourceViewer.prependVerifyKeyListener(new SurroundSelectionStrategy(getSourceViewer))
+        removeBracketInserter()
       case _ =>
     }
   }

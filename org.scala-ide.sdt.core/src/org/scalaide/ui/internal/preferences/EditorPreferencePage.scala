@@ -51,9 +51,19 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_SMART_PARENS, "With (parenthesis)", surround)
     checkBox(P_ENABLE_SMART_QUOTES, "With \"quotes\"", surround)
 
+    val insertion = group("Enable smart insertion mode", base)
+    checkBox(P_ENABLE_SMART_INSERTION_SEMICOLONS, "For Semicolons", insertion)
+    checkBox(P_ENABLE_SMART_INSERTION_BRACES, "Close braces but close only when necessary", insertion)
+
+    val autoClose = group("Automatically close", base)
+    checkBox(P_ENABLE_AUTO_CLOSING_STRINGS, "\"Strings\", \"\"\"Multi line strings\"\"\" and 'Chars'", autoClose)
+    checkBox(P_ENABLE_AUTO_CLOSING_PARENS, "(Parentheses)", autoClose)
+    checkBox(P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS, "[Square] brackets", autoClose)
+    checkBox(P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS, "<Angle> brackets", autoClose)
+    checkBox(P_ENABLE_AUTO_CLOSING_BRACES, "{Braces}", autoClose)
+    checkBox(P_ENABLE_AUTO_CLOSING_COMMENTS, "/*Multi line comments*/ and /**Scaladoc*/", autoClose)
+
     val typing = group("Typing", base)
-    checkBox(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", typing)
-    checkBox(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", typing)
     checkBox(P_ENABLE_AUTO_ESCAPE_LITERALS, "Automatically escape \" signs in string literals", typing)
     checkBox(P_ENABLE_AUTO_ESCAPE_SIGN, "Automatically escape \\ signs in string and character literals", typing)
     checkBox(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, "Automatically remove complete escaped sign in string and character literals", typing)
@@ -109,8 +119,16 @@ object EditorPreferencePage {
   final val P_ENABLE_SMART_PARENS = BASE + "smartParens"
   final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
 
-  final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
+  final val P_ENABLE_SMART_INSERTION_SEMICOLONS = BASE + "smartInsertionSemicolons"
+  final val P_ENABLE_SMART_INSERTION_BRACES = BASE + "smartAutoClosingBraces"
+
+  final val P_ENABLE_AUTO_CLOSING_STRINGS = BASE + "autoClosingStrings"
+  final val P_ENABLE_AUTO_CLOSING_PARENS = BASE + "autoClosingParens"
+  final val P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS = BASE + "autoClosingSquareBrackets"
+  final val P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS = BASE + "autoClosingAngleBrackets"
+  final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBraces"
   final val P_ENABLE_AUTO_CLOSING_COMMENTS = BASE + "autoClosingComments"
+
   final val P_ENABLE_AUTO_ESCAPE_LITERALS = BASE + "autoEscapeLiterals"
   final val P_ENABLE_AUTO_ESCAPE_SIGN = BASE + "autoEscapeSign"
   final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = BASE + "autoRemoveEscapedSign"
@@ -135,8 +153,15 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_SMART_PARENS, false)
     store.setDefault(P_ENABLE_SMART_QUOTES, false)
 
+    store.setDefault(P_ENABLE_SMART_INSERTION_SEMICOLONS, false)
+
+    store.setDefault(P_ENABLE_AUTO_CLOSING_STRINGS, true)
+    store.setDefault(P_ENABLE_AUTO_CLOSING_PARENS, true)
+    store.setDefault(P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS, true)
+    store.setDefault(P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS, false)
     store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
     store.setDefault(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
+
     store.setDefault(P_ENABLE_AUTO_ESCAPE_LITERALS, false)
     store.setDefault(P_ENABLE_AUTO_ESCAPE_SIGN, false)
     store.setDefault(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)

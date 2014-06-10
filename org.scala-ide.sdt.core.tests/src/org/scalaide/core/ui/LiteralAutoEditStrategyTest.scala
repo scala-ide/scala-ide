@@ -13,6 +13,13 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
   def startUp() {
     enable(P_ENABLE_AUTO_ESCAPE_SIGN, true)
     enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, true)
+    enable(P_ENABLE_AUTO_CLOSING_STRINGS, true)
+  }
+
+  @Test
+  def not_auto_close_string_literal_if_feature_disabled() {
+    enable(P_ENABLE_AUTO_CLOSING_STRINGS, false)
+    test(input = "^", expectedOutput = "\"^", operation = Add("\""))
   }
 
   @Test
@@ -39,6 +46,12 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
   @Test
   def no_auto_close_on_existing_string_literal_after_caret() {
     test(input = "^\"", expectedOutput = "\"^\"", operation = Add("\""))
+  }
+
+  @Test
+  def not_auto_close_character_literal_if_feature_disabled() {
+    enable(P_ENABLE_AUTO_CLOSING_STRINGS, false)
+    test(input = "^", expectedOutput = "'^", operation = Add("'"))
   }
 
   @Test
@@ -174,6 +187,12 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   // the following tests belong to multi-line string literals
+
+  @Test
+  def not_auto_close_multi_line_string_literal_if_feature_disabled() {
+    enable(P_ENABLE_AUTO_CLOSING_STRINGS, false)
+    test(input = " \"\"^ ", expectedOutput = " \"\"\"^ ", operation = Add("\""))
+  }
 
   @Test
   def auto_close_multi_line_string_literal() {

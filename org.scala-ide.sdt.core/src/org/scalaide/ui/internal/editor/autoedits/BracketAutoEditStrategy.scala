@@ -50,33 +50,52 @@ class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
+    def addClosing(pref: String, pair: String) = {
+      val isAutoClosingEnabled = prefStore.getBoolean(pref)
+
+      if (isAutoClosingEnabled) {
+        command.text = pair
+        command.caretOffset = command.offset + 1
+        command.shiftsCaret = false
+      }
+    }
+
     def addClosingBrace() {
       val isAutoClosingEnabled = prefStore.getBoolean(
           EditorPreferencePage.P_ENABLE_AUTO_CLOSING_BRACES)
+      val isSmartAutoClosingEnabled = prefStore.getBoolean(
+          EditorPreferencePage.P_ENABLE_SMART_INSERTION_BRACES)
 
-      if (isAutoClosingEnabled || autoClosingRequired) {
-        command.text = "{}"
+      if (isAutoClosingEnabled) {
+        if (!isSmartAutoClosingEnabled || (isSmartAutoClosingEnabled && autoClosingRequired))
+          command.text = "{}"
       }
       command.caretOffset = command.offset + 1
       command.shiftsCaret = false
     }
 
-    def jumpOverClosingBrace() {
-      if (ch(0, '}')) {
+    def jumpOver(c: Char) {
+      if (ch(0, c)) {
         command.text = ""
         command.caretOffset = command.offset + 1
       }
     }
 
     def removeClosingBrace() {
-      if (ch(0, '{') && ch(1, '}')) {
+      if (ch(0, '{') && ch(1, '}')
+          || ch(0, '(') && ch(1, ')')
+          || ch(0, '[') && ch(1, ']')
+          || ch(0, '<') && ch(1, '>')) {
         command.length = 2
       }
     }
 
     command.text match {
       case "{" => addClosingBrace()
-      case "}" => jumpOverClosingBrace()
+      case c @ ("}" | ")" | "]" | ">") => jumpOver(c.head)
+      case "(" => addClosing(EditorPreferencePage.P_ENABLE_AUTO_CLOSING_PARENS, "()")
+      case "[" => addClosing(EditorPreferencePage.P_ENABLE_AUTO_CLOSING_SQUARE_BRACKETS, "[]")
+      case "<" => addClosing(EditorPreferencePage.P_ENABLE_AUTO_CLOSING_ANGLE_BRACKETS, "<>")
       case ""  => removeClosingBrace()
       case _   =>
     }
