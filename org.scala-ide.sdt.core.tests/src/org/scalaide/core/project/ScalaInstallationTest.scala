@@ -120,9 +120,9 @@ class ScalaInstallationTest {
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
-      
+
     assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
-      
+
     val expectedAllSourceJars = Seq(
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId + ".source"),
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId + ".source"),
@@ -130,7 +130,7 @@ class ScalaInstallationTest {
       bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId + ".source")).sortBy(_.toOSString())
 
     assertEquals("Wrong all sources jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
-      
+
   }
 
 }

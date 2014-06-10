@@ -1,6 +1,7 @@
 package org.scalaide.core.sbtbuilder
 
-import org.junit.{ Test, Assert }
+import org.junit.Test
+import org.junit.Assert
 import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.runtime.IPath

@@ -67,6 +67,8 @@ case class BundledScalaInstallation(
 
   import BundledScalaInstallation._
 
+  def osgiVersion = bundle.getVersion()
+
   override lazy val extraJars =
     Seq(
       findExtraJar(bundle, ScalaReflectPath, ScalaReflectSourcesPath),
@@ -136,10 +138,12 @@ case class MultiBundleScalaInstallation(
 
   import MultiBundleScalaInstallation._
 
+  def osgiVersion = libraryBundleVersion
+
   override lazy val extraJars = Seq(
-      findLibrayForBundle(ScalaReflectBundleId, libraryBundleVersion),
-      findLibrayForBundle(ScalaActorsBundleId, libraryBundleVersion),
-      findLibrayForBundle(ScalaSwingBundleId, libraryBundleVersion)).flatten
+      findLibraryForBundle(ScalaReflectBundleId, libraryBundleVersion),
+      findLibraryForBundle(ScalaActorsBundleId, libraryBundleVersion),
+      findLibraryForBundle(ScalaSwingBundleId, libraryBundleVersion)).flatten
 
   override def scalaInstance: ScalaInstance = {
     val store = ScalaPlugin.plugin.classLoaderStore
@@ -179,7 +183,7 @@ object MultiBundleScalaInstallation {
   private def findBundlePath(bundleId: String, version: Version): Option[IPath] =
     findBundle(bundleId, version).map(bundlePath)
 
-  private def findLibrayForBundle(bundleId: String, version: Version): Option[ScalaModule] = {
+  private def findLibraryForBundle(bundleId: String, version: Version): Option[ScalaModule] = {
     val classPath = findBundle(bundleId, version).map(bundlePath)
     classPath.map(cp => ScalaModule(cp, EclipseUtils.computeSourcePath(bundleId, cp)))
   }
@@ -190,7 +194,7 @@ object MultiBundleScalaInstallation {
     for {
       version <- ScalaInstallation.extractVersion(bundlePath(libraryBundle))
       library = bundlePath(libraryBundle)
-      compiler <- findLibrayForBundle(ScalaCompilerBundleId, libraryBundleVersion)
+      compiler <- findLibraryForBundle(ScalaCompilerBundleId, libraryBundleVersion)
     } yield MultiBundleScalaInstallation(
         version,
         libraryBundleVersion,

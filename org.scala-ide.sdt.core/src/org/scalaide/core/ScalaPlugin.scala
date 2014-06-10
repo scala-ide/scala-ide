@@ -138,10 +138,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   lazy val shortScalaVer = CompilerUtils.shortString(scalaVer)
 
   lazy val sdtCoreBundle = getBundle()
-//  lazy val scalaCompilerBundle = Platform.getBundle(compilerPluginId)
-//  lazy val scalaCompilerBundleVersion = scalaCompilerBundle.getVersion()
-//  lazy val compilerClasses = OSGiUtils.getBundlePath(scalaCompilerBundle)
-//  lazy val compilerSources = OSGiUtils.pathInBundle(sdtCoreBundle, "/target/src/scala-compiler-src.jar")
 
   lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
@@ -149,16 +145,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
   //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
-
-//  lazy val scalaLibBundle = {
-//    // all library bundles
-//    val bundles = Option(Platform.getBundles(libraryPluginId, null)).getOrElse(Array[Bundle]())
-//    logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
-//    bundles.find(b => b.getVersion().getMajor() == scalaCompilerBundleVersion.getMajor() && b.getVersion().getMinor() == scalaCompilerBundleVersion.getMinor()).getOrElse {
-//      eclipseLog.error("Could not find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")), null)
-//      Platform.getBundle(libraryPluginId)
-//    }
-//  }
 
   lazy val templateManager = new ScalaTemplateManager()
   lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
@@ -176,8 +162,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
-//    logger.info("Scala compiler bundle: " + scalaCompilerBundle.getLocation)
-  }
+    logger.info("Scala compiler bundle: " + ScalaInstallation.platformInstallation.compiler.classJar.toOSString() )
+    }
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)

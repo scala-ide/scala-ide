@@ -130,6 +130,5 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
     import plugin._
     import ScalaInstallation.platformInstallation._
     allJars.map(_.classJar.toOSString())
-//    (libraryJar :: compilerJar :: (swingClasses :: reflectClasses :: Nil).flatMap(_.toList)).map(_.toOSString)
   }
 }
