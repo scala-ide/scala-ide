@@ -128,6 +128,8 @@
         <scala.short.version>212</scala.short.version>
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
+        <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
+        <sbt.version>0.13.6-SNAPSHOT</sbt.version>
 
       </properties>
     </profile>
