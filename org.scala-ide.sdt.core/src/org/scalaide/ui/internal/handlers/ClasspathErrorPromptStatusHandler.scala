@@ -23,7 +23,7 @@ object ClasspathErrorPromptStatusHandler {
    *  on classpath. Linked to ClassPathErrorPromptStatusHandler
    *  via our statusHandlers extension (see plugin.xml)
    */
-  final val STATUS_CODE_PREV_CLASSPATH = 1001;
+  final val STATUS_CODE_PREV_CLASSPATH = 1001
 
 }
 

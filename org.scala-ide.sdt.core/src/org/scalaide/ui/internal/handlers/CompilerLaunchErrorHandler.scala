@@ -20,7 +20,7 @@ object CompilerLaunchErrorHandler {
    * Status code indicating there was an error at launch time
    *  Linked to ScalaLaunchDelegate via our statusHandlers extension (see plugin.xml)
    */
-  final val STATUS_CODE_LAUNCH_ERROR = 1003;
+  final val STATUS_CODE_LAUNCH_ERROR = 1003
 
 }
 
