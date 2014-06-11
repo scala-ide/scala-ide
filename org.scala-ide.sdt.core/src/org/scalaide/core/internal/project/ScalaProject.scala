@@ -47,6 +47,9 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.core.internal.containers.ScalaClasspathContainerHandler
+import org.eclipse.jdt.core.IClasspathContainer
+import org.eclipse.core.runtime.NullProgressMonitor
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -97,6 +100,16 @@ object ScalaProject {
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
+  import org.scalaide.core.internal.containers.ScalaClasspathContainerHandler
+  import org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer
+
+  lazy val libraryClassPathContainerManager = new ScalaClasspathContainerHandler() {
+
+    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(libraryEntries).toArray
+
+    override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaLibraryClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, javaProject, container)
+
+  }
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -491,6 +504,19 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
+  def bestScalaBundleForVersion(scalaVersion: ScalaVersion) = {
+    import org.scalaide.util.internal.CompilerUtils.isBinarySame
+    val available = ScalaInstallation.availableInstallations
+    available.filter{si => isBinarySame(scalaVersion, si.version)}.sortBy(_.version).lastOption
+  }
+
+  def updateLibraryBundleFromSourceLevel(scalaVersion: ScalaVersion) = {
+    val entries = javaProject.getRawClasspath()
+    val newEntry = bestScalaBundleForVersion(scalaVersion) flatMap {best => Option(libraryClassPathContainerManager.getAndUpdateScalaClasspathContainerEntry(ScalaPlugin.plugin.scalaLibId, "Scala Library Container", best.version.unparse, javaProject, best, entries))}
+    newEntry foreach {e => javaProject.setRawClasspath((e +: entries).distinct, new NullProgressMonitor())}
+  }
+
+
   def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)), slReason: String = "requested Source Level change"): Unit = {
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
@@ -504,8 +530,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
       }
     }
+    // The ordering until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     projectSpecificStorage.save()
+    updateLibraryBundleFromSourceLevel(scalaVersion)
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }

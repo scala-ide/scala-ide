@@ -47,7 +47,8 @@ object ClasspathContainerSaveHelper {
 
       override protected def replaceObject(o: Object): Object = o match {
         case e: IClasspathContainer => new ClasspathContainerReplace(e)
-        case e: IClasspathEntry if (e.getEntryKind() == IClasspathEntry.CPE_PROJECT) => new ProjectEntryReplace(e)
+        //TODO: find a better way to disambiguate betw the 2 statuses below
+        case e: IClasspathEntry if (e.getEntryKind() == IClasspathEntry.CPE_PROJECT || e.getEntryKind() == IClasspathContainer.K_SYSTEM) => new ProjectEntryReplace(e)
         case e: IClasspathEntry if (e.getEntryKind() == IClasspathEntry.CPE_LIBRARY) => new LibraryEntryReplace(e)
         case e: IClasspathAttribute => new ClasspathAttributeReplace(e)
         case e: IAccessRule => new AccessRuleReplace(e)
