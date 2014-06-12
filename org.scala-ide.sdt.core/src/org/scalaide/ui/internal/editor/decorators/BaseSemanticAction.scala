@@ -130,9 +130,9 @@ abstract class BaseSemanticAction(
         case None => findAnnotations() // properties disabled, count as active
         case _ => Map.empty
       }
-      
+
       val (implicitAnnotations, macroExpansionAnnotations) = annotationsToAdd.partition(_._1.getType == annotationId)
-      
+
       AnnotationUtils.update(sourceViewer, annotationId, implicitAnnotations)
       AnnotationUtils.update(sourceViewer, MacroExpansionAnnotation.ID, macroExpansionAnnotations)
     }

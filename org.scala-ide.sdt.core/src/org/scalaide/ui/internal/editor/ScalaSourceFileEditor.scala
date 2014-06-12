@@ -74,7 +74,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     initializeLineNumberRulerColumn(verticalRuler)
     verticalRuler
   }
-  
+
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurrencesFinder: ScalaOccurrencesFinder = _
   private var occurencesFinderInstalled = false

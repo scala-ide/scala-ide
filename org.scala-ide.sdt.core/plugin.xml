@@ -1586,6 +1586,39 @@
    </specification>
 </extension>
 
+<extension
+        id="scala.tools.eclipse.macro2expand"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+  </extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="scala.tools.eclipse.macro2expand"
+	         name="scala.tools.eclipse.macro2expand">
+	   </type>
+	</extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="scala.tools.eclipse.macro2expand"
+         contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
+         highlightPreferenceKey="scala.tools.eclipse.macro2expand.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="scala.tools.eclipse.macro2expand.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 verticalRulerPreferenceKey="scala.tools.eclipse.macro2expand.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+  </extension>
+
   <extension
        point="org.eclipse.ui.editors.markerAnnotationSpecification">
     <specification
