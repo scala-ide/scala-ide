@@ -1605,6 +1605,8 @@
       point="org.eclipse.ui.editors.markerAnnotationSpecification">
    <specification
          annotationType="scala.tools.eclipse.macro2expand"
+         colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
+         colorPreferenceValue="153,153,153"
          contributesToHeader="false"
          icon="icons/full/elcl16/macro_icon_disabled.png"
          highlightPreferenceKey="scala.tools.eclipse.macro2expand.highlight"

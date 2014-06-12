@@ -36,6 +36,14 @@ import org.scalaide.ui.internal.editor.decorators.implicits.MacroExpansionAnnota
 //  }
 //}
 
+//FOR DEBUG
+//import java.io.PrintWriter
+//import java.io.File
+//val writer = new PrintWriter(new File("/home/nikiforo/logger.log"))
+//writer.write("SECRET PHRASE I")
+//writer.flush
+  
+
 trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
   import org.eclipse.jface.text.source.LineNumberChangeRulerColumn
   import org.eclipse.jface.text.source.ISharedTextColors
@@ -44,29 +52,27 @@ trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
 
   var macroExpansionLines: List[MyRange] = Nil
 
-  var correspondingLineNumbers: Option[Array[Int]] = None
+  var correspondingLineNumbers: Array[Int] = new Array[Int](10000)  //FIXME: size of array for real-pseudo lines
 
   def computeCorrespondingLineNumbers {
     val ranges = getMacroExpansionNotCountedLines
     def containedInMacroExpansion(lineNum: Int) = {
-      val rangesThatContain = ranges.filter(x => x.startLine + 1 <= lineNum && lineNum <= x.endLine)
+      val rangesThatContain = ranges.filter(x => x.startLine <= lineNum && lineNum <= x.endLine)
       !rangesThatContain.isEmpty
     }
-    correspondingLineNumbers.map(correspondingLineNumbers => {
-      correspondingLineNumbers(0) = 0
-      val l = correspondingLineNumbers.length
-      for (lineNum <- 1 to correspondingLineNumbers.length - 1) {
-        if (containedInMacroExpansion(lineNum)) correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1)
-        else correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1) + 1
-      }
-    })
+    correspondingLineNumbers(0) = 0
+    val l = correspondingLineNumbers.length
+    for (lineNum <- 1 to correspondingLineNumbers.length -1) {
+      if (containedInMacroExpansion(lineNum)) correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1)
+      else correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1) + 1
+    }
   }
 
   class LineNumberChangeRulerColumnWithMacro(sharedColors: ISharedTextColors)
     extends LineNumberChangeRulerColumn(sharedColors) {
     override def createDisplayString(line: Int): String = {
-      if (!correspondingLineNumbers.isDefined) (line + 1).toString
-      else (correspondingLineNumbers.get.apply(line + 1)).toString
+//      if (!correspondingLineNumbers.isDefined) (line + 1).toString
+      (correspondingLineNumbers(line) + 1).toString
     }
   }
 
@@ -94,7 +100,7 @@ trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
       doc <- document
     } yield new MyRange(
       doc.getLineOfOffset(currentMacroPosition.offset) + 1, //First expanded line is the line of macroExpandee
-      doc.getLineOfOffset(currentMacroPosition.offset + currentMacroPosition.length) + 1)
+      doc.getLineOfOffset(currentMacroPosition.offset + currentMacroPosition.length))
   }
 }
 
@@ -140,15 +146,21 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
         val indentedMacroExpansion = (splittedMacroExpansion.head +:
           splittedMacroExpansion.tail.map(prefix + _)).mkString("\n")
 
-        document.replace(pOffset, pLength, indentedMacroExpansion)
-
-        val marker = editorInput.asInstanceOf[FileEditorInput].getFile.createMarker("scala.tools.eclipse.macroMarkerId")
-        marker.setAttribute(IMarker.CHAR_START, pOffset)
-        marker.setAttribute(IMarker.CHAR_END, pOffset + indentedMacroExpansion.length)
-        marker.setAttribute("macroExpandee", macroExpandee)
-        marker.setAttribute("macroExpansion", indentedMacroExpansion)
+        if(!annotationModel.getAnnotationIterator.toList.map(_.asInstanceOf[Annotation]).exists(annotation =>{
+          val pos = annotationModel.getPosition(annotation)
+          annotation.getType == "scala.tools.eclipse.macroMarkerId" &&
+          pos.offset <= pOffset &&
+          pOffset + pLength <= pos.offset + pos.length
+        })){
+          val marker = editorInput.asInstanceOf[FileEditorInput].getFile.createMarker("scala.tools.eclipse.macroMarkerId")
+          marker.setAttribute(IMarker.CHAR_START, pOffset)
+          marker.setAttribute(IMarker.CHAR_END, pOffset + pLength)
+          marker.setAttribute("macroExpandee", macroExpandee)
+          marker.setAttribute("macroExpansion", indentedMacroExpansion)
+        }
 
         annotationModel.removeAnnotation(annotation)
+        document.replace(pOffset, pLength, indentedMacroExpansion)
       })
 
       if (annotations2Expand.isEmpty) {
@@ -169,10 +181,8 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
           annotationModel.removeAnnotation(annotation)
         })
       }
-      for (doc <- iTextEditor.asInstanceOf[ScalaMacroEditor].document) {
-        iTextEditor.asInstanceOf[ScalaMacroLineNumbers].correspondingLineNumbers = Some(new Array[Int](doc.getNumberOfLines))
-        iTextEditor.asInstanceOf[ScalaMacroLineNumbers].computeCorrespondingLineNumbers
-      }
+//      iTextEditor.asInstanceOf[ScalaMacroLineNumbers].correspondingLineNumbers = Some(new Array[Int](document.getNumberOfLines))
+      iTextEditor.asInstanceOf[ScalaMacroLineNumbers].computeCorrespondingLineNumbers
     }
   }
 
