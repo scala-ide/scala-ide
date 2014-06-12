@@ -42,7 +42,7 @@ import org.scalaide.ui.internal.editor.decorators.implicits.MacroExpansionAnnota
 //val writer = new PrintWriter(new File("/home/nikiforo/logger.log"))
 //writer.write("SECRET PHRASE I")
 //writer.flush
-  
+
 
 trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
   import org.eclipse.jface.text.source.LineNumberChangeRulerColumn
