@@ -41,6 +41,8 @@ import java.io.FileInputStream
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
+import org.eclipse.jface.viewers.LabelProvider
 
 trait ScalaClasspathContainerHandler extends ClasspathContainerSerializer with HasLogger {
 
@@ -181,10 +183,11 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   override def entries = Array(libraryEntries(compiler))
 }
 
-abstract class ScalaClasspathContainerPage(id: String, name: String, title: String, desc: String) extends NewElementWizardPage(name)
+abstract class ScalaClasspathContainerPage(id: String, name: String, override val title: String, desc: String) extends NewElementWizardPage(name)
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
-  with IClasspathContainerPageExtension {
+  with IClasspathContainerPageExtension
+  with ScalaInstallationUIProviders {
 
   private var chosenScalaInstallation: ScalaInstallation = null
   private var existingEntries: Array[IClasspathEntry] = null
@@ -196,10 +199,6 @@ abstract class ScalaClasspathContainerPage(id: String, name: String, title: Stri
   setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY)
 
   override def finish() = true
-
-  private def hasCustomContainer(cp: IPath): Boolean = {
-   existingEntries.exists(e => e.getEntryKind() == IClasspathContainer.K_SYSTEM && e.getPath().equals(cp))
-  }
 
   override def getSelection(): IClasspathEntry = getAndUpdateScalaClasspathContainerEntry(id, desc, versionString, project, chosenScalaInstallation, existingEntries)
 
@@ -239,33 +238,6 @@ abstract class ScalaClasspathContainerPage(id: String, name: String, title: Stri
     })
 
     setControl(composite)
-  }
-
-  private class ContentProvider extends IStructuredContentProvider {
-    override def dispose(): Unit = {}
-
-    override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
-
-    override def getElements(input: Any): Array[Object] = {
-      input match {
-        case l: List[ScalaInstallation] =>
-          l.toArray
-      }
-    }
-  }
-
-  private class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
-
-    override def getText(element: Any): String = {
-      element match {
-        case s: BundledScalaInstallation =>
-          s"$title: bundled ${s.version.unparse}"
-        case s: MultiBundleScalaInstallation =>
-          s"$title: multi bundles ${s.version.unparse}"
-        case s: ScalaInstallation =>
-          s"unknown ${s.version.unparse}"
-      }
-    }
   }
 
 }

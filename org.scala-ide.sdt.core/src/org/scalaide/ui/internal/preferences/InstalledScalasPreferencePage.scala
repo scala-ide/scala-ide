@@ -16,8 +16,11 @@ import org.eclipse.jface.viewers.Viewer
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
+import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 
-class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
+class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders {
+
+  def title = "Scala Installation"
 
   def createContents(parent: Composite): Control = {
     val composite = new Composite(parent, SWT.NONE)
@@ -35,38 +38,11 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
     buttons.setLayout(new FillLayout(SWT.VERTICAL))
 
     val button1 = new Button(buttons, SWT.PUSH)
-    button1.setText("button1")
+    button1.setText("Add")
 
     composite
   }
 
   def init(workbench: IWorkbench): Unit = {}
-
-  private class ContentProvider extends IStructuredContentProvider {
-    override def dispose(): Unit = {}
-
-    override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
-
-    override def getElements(input: Any): Array[Object] = {
-      input match {
-        case l: List[ScalaInstallation] =>
-          l.toArray
-      }
-    }
-  }
-
-  private class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
-
-    override def getText(element: Any): String = {
-      element match {
-        case s: BundledScalaInstallation =>
-          s"bundled ${s.version.unparse}"
-        case s: MultiBundleScalaInstallation =>
-          s"multi bundles ${s.version.unparse}"
-        case s: ScalaInstallation =>
-          s"unknown ${s.version.unparse}"
-      }
-    }
-  }
 
 }

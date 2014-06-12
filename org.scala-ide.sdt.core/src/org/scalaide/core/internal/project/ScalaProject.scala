@@ -530,7 +530,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
       }
     }
-    // The ordering until reactivating the listener is important
+    // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     projectSpecificStorage.save()
     updateLibraryBundleFromSourceLevel(scalaVersion)

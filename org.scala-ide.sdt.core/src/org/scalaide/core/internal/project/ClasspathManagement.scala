@@ -440,7 +440,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       entry.lastSegment() match {
         case VersionInFile(version) =>
           if (!plugin.isCompatibleVersion(version, this))
-            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case this report is mistaken, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version)))
+            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case this report is mistaken, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version.unparse)))
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
