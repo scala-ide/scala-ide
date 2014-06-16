@@ -43,107 +43,13 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 import org.eclipse.jface.viewers.LabelProvider
-
-trait ScalaClasspathContainerHandler extends ClasspathContainerSerializer with HasLogger {
-
-  def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry]
-
-  def containerUpdater(containerPath: IPath, container: IClasspathContainer)
-
-  private def hasCustomContainer(existingEntries: Array[IClasspathEntry], cp: IPath): Boolean = {
-   existingEntries.exists(e => e.getEntryKind() == IClasspathContainer.K_SYSTEM && e.getPath().equals(cp))
-  }
-
-  def getAndUpdateScalaClasspathContainerEntry(id: String, desc: String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): IClasspathEntry = {
-    val containerPath: IPath = if (project != null) new Path(id).append(project.getPath()) else new Path(id)
-
-    val customContainer : IClasspathContainer = new IClasspathContainer() {
-      override def getClasspathEntries() = classpathEntriesOfScalaInstallation(si)
-      override def getDescription(): String = desc + s" [ $versionString ]"
-      override def getKind(): Int = IClasspathContainer.K_SYSTEM
-      override def getPath(): IPath = containerPath
-    }
-
-   if (!hasCustomContainer(existingEntries, containerPath)) {
-      logger.debug(s"Did not find a container for $id on classpath when asked to update to $versionString — adding Container")
-      JavaCore.setClasspathContainer(containerPath, Array(project),Array(customContainer), null)
-   }
-   else {
-     logger.debug(s"Found container for $id on classpath when asked to update to $versionString — updating existing semantics")
-     containerUpdater(containerPath, customContainer)
-   }
-   saveContainerState(project.getProject(), customContainer)
-   // JavaCore.setClasspathContainer(containerPath, Array(project),Array(customContainer), null)
-   if (!hasCustomContainer(existingEntries, containerPath)) JavaCore.newContainerEntry(containerPath) else null
-  }
-}
-
-trait ClasspathContainerSerializer extends HasLogger {
-  import org.scalaide.core.internal.jdt.util.ClasspathContainerSaveHelper._
-
-  protected def libraryEntries(lib: ScalaModule): IClasspathEntry = {
-    if (lib.sourceJar.isEmpty) logger.debug(s"No source attachements for ${lib.classJar.lastSegment()}")
-
-    JavaCore.newLibraryEntry(lib.classJar, lib.sourceJar.orNull, null)
-  }
-
-  def getContainerStateFile(project:IProject) = {
-    new File(ScalaPlugin.plugin.getStateLocation().toFile(), project.getName() + ".container")
-  }
-
-  def saveContainerState(project: IProject, container: IClasspathContainer): Unit = {
-    val containerStateFile = getContainerStateFile(project)
-    val containerStateFilePath = containerStateFile.getPath()
-    logger.debug(s"Trying to write classpath container state to $containerStateFilePath")
-    var is: FileOutputStream = null
-    try {
-      is = new FileOutputStream(containerStateFile)
-      writeContainer(container, is)
-    } catch {
-      case ex: IOException =>
-        logger.error("Can't save classpath container state for " + project.getName(), ex)
-    } finally {
-      if (is != null) {
-        try {
-          is.close();
-        } catch {
-          case ex: IOException => logger.error("Can't close output stream for " + containerStateFile.getAbsolutePath(), ex)
-        } finally logger.debug(s"Successfully wrote classpath container state to $containerStateFilePath")
-      }
-
-    }
-  }
-
-  def getSavedContainer(project: IProject): Option[IClasspathContainer] = {
-    val containerStateFile = getContainerStateFile(project)
-    val containerStateFilePath = containerStateFile.getPath()
-    logger.debug(s"Trying to read classpath container state from $containerStateFilePath")
-    if (!containerStateFile.exists()) None
-    else {
-      var is: FileInputStream = null
-      try {
-        is = new FileInputStream(containerStateFile)
-        Some(readContainer(is))
-      } catch {
-        case ex: IOException =>
-          throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, -1,
-            "Can't read classpath container state for " + project.getName(), ex))
-        case ex: ClassNotFoundException =>
-          throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, -1,
-            "Can't read classpath container state for " + project.getName(), ex))
-      } finally {
-        if (is != null) {
-          try {
-            is.close();
-          } catch {
-            case ex: IOException => logger.error("Can't close output stream for " + containerStateFile.getAbsolutePath(), ex)
-          } finally logger.debug(s"Successfully read classpath container state from $containerStateFilePath")
-        }
-      }
-    }
-  }
-
-}
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.eclipse.core.resources.ProjectScope
+import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSerializer
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with ClasspathContainerSerializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -151,18 +57,25 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
   override def canUpdateClasspathContainer(containerPath: IPath, project: IJavaProject)= true
 
   override def initialize(containerPath: IPath, project: IJavaProject) = {
-    val savedContainer = getSavedContainer(project.getProject())
+    val iProject = project.getProject()
+    val savedContainer = getSavedContainer(iProject)
     if (savedContainer.isDefined) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
     else {
-      logger.info(s"Initializing classpath container $desc: ${library.classJar}")
-      logger.info(s"Initializing classpath container $desc with sources: ${library.sourceJar}")
+      val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
+      val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+      if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL))
+        new ClasspathContainerSetter(project).updateLibraryBundleFromSourceLevel(ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
+      else {
+        logger.info(s"Initializing classpath container $desc: ${library.classJar}")
+        logger.info(s"Initializing classpath container $desc with sources: ${library.sourceJar}")
 
-      JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
-        override def getPath = containerPath
-        override def getClasspathEntries = entries
-        override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
-        override def getKind = IClasspathContainer.K_SYSTEM
-      }), null)
+        JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
+          override def getPath = containerPath
+          override def getClasspathEntries = entries
+          override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
+          override def getKind = IClasspathContainer.K_SYSTEM
+        }), null)
+      }
     }
   }
 
