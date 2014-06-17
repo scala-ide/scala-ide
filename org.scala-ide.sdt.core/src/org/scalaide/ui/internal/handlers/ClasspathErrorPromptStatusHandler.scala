@@ -46,7 +46,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
       case CompilerUtils.ShortScalaVersion(major, minor) => {
         // This is technically incorrect for an epoch change, but the Xsource flag won't be enough to cover for that anyway
         val lesserMinor = minor - 1
-        f"$major%d.$lesserMinor%2d"
+        f"$major%d.$lesserMinor%d"
       }
       case _ => "none"
     }

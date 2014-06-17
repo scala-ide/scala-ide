@@ -328,7 +328,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     val scalaVersion = plugin.scalaVer.unparse
     val expectedVersion = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
-      case ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%2d"}
+      case ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%d"}
       case _ => "none"
     } else scalaVersion
 
