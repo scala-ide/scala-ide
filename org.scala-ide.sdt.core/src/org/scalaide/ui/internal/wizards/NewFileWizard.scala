@@ -2,8 +2,6 @@ package org.scalaide.ui.internal.wizards
 
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.dialogs.Dialog
-import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextViewer
@@ -17,7 +15,6 @@ import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Color
-import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
@@ -46,19 +43,11 @@ import org.scalaide.util.internal.ui.Dialogs
 /**
  * Wizard of the Scala IDE to create new files. It can not only create new
  * Scala files, but arbitrary ones as long as an extension exists for them.
- *
- * @constructor Takes a `Shell` to run on and the id of the extension which
- * invoked the wizard. The template provided by this extension is used as the
- * default selection of the template selection choices.
  */
-class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) with HasLogger {
+trait NewFileWizard extends AnyRef with HasLogger {
 
   private val Red = new Color(shell.getDisplay(), 255, 0, 0)
-  private val TitleText = "New File Wizard"
-  private val TemplateId = "org.scala-ide.sdt.core.templates"
-  private val MinimalDialogSize = 500
 
-  private var btOk: Button = _
   private var btProject: Button = _
   private var cmTemplate: TableCombo = _
   private var lbError: Label = _
@@ -68,17 +57,19 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
   private var selectedProject: IJavaProject = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
 
-  override def createContents(parent: Composite): Control = {
-    val c = super.createContents(parent)
-    validateInput()
-    selectedFileCreatorMapping.withInstance(_.showErrorMessageAtStartup) foreach { show =>
-      if (!show)
-        lbError.setText("")
-    }
-    c
-  }
+  /** The `Shell` to be used by this wizard. */
+  def shell: Shell
 
-  override def createDialogArea(parent: Composite): Control = {
+  /** The id of the component which created this wizard. */
+  def fileCreatorId: String
+
+  /**
+   * The ok button is not controlled by this wizard, therefore this method
+   * allows to set the state of the ok button.
+   */
+  def enableOkButton(b: Boolean): Unit
+
+  def createContents(parent: Composite): Control = {
     import SWTUtils._
 
     val c = new Composite(parent, SWT.NONE)
@@ -180,36 +171,22 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
           cmTemplate.select(i)
     }
 
+    validateInput()
+    selectedFileCreatorMapping.withInstance(_.showErrorMessageAtStartup) foreach { show =>
+      if (!show)
+        lbError.setText("")
+    }
+
     // select text field on wizard creation
     tName.forceFocus()
   }
 
-  /** Overwritten in order to be able to access the ok button. */
-  override def createButtonsForButtonBar(parent: Composite): Unit = {
-    btOk = createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true)
-    createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false)
-  }
-
-  /** Overwritten in order to set title text. */
-  override def configureShell(sh: Shell): Unit = {
-    super.configureShell(sh)
-    sh.setText(TitleText)
-  }
-
-  /** Overwritten in order to be able to set a better dialog size. */
-  override def getInitialSize(): Point = {
-    val p = super.getInitialSize()
-    p.x = math.max(MinimalDialogSize, p.x)
-    p
-  }
-
-  override def close(): Boolean = {
+  def dispose(): Unit = {
     import scala.language.reflectiveCalls
     disposables foreach { _.dispose() }
-    super.close()
   }
 
-  override def okPressed(): Unit = {
+  def okPressed(): Unit = {
     val m = selectedFileCreatorMapping
 
     object PackageVariableResolver extends TemplateVariableResolver {
@@ -273,8 +250,6 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
         }
       }
     }
-
-    super.okPressed()
   }
 
   /**
@@ -293,7 +268,7 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
    */
   private def validateInput() = {
     def showError(msg: String) = {
-      btOk.setEnabled(false)
+      enableOkButton(false)
       lbError.setText(msg)
     }
 
@@ -307,7 +282,7 @@ class NewFileWizard(shell: Shell, fileCreatorId: String) extends Dialog(shell) w
     else
       validatedFileName foreach {
         case Valid =>
-          btOk.setEnabled(true)
+          enableOkButton(true)
           lbError.setText("")
         case Invalid(errorMsg) =>
           showError(errorMsg)
