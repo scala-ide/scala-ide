@@ -1128,17 +1128,6 @@
             id="org.scalaide.core.handler.indentGuide"
             name="Show Indent Guide">
       </command>
-      <command
-            categoryId="org.scalaide.ui.wizards"
-            description="Opens a new file wizard"
-            id="org.scalaide.ui.wizards.wizardHandler"
-            name="Wizard Handler">
-      </command>
-      <category
-            description="New File Wizards"
-            id="org.scalaide.ui.wizards"
-            name="New File Wizards">
-      </category>
 </extension>
 
    <extension point="org.eclipse.ui.contexts">
@@ -1295,10 +1284,6 @@
     <handler
           class="org.scalaide.ui.internal.actions.RunSelection"
           commandId="org.scalaide.core.handler.RunSelection">
-    </handler>
-    <handler
-          class="org.scalaide.ui.internal.wizards.WizardHandler"
-          commandId="org.scalaide.ui.wizards.wizardHandler">
     </handler>
  </extension>
  <extension
