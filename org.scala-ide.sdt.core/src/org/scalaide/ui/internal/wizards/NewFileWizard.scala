@@ -54,6 +54,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private var tName: Text = _
 
   private var disposables = Seq[{def dispose(): Unit}](Red)
+  /** See [[pathOfCreatedFile]] for the purpose of this variable. */
+  private var filePath: IPath = _
   private var selectedProject: IJavaProject = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
 
@@ -64,10 +66,25 @@ trait NewFileWizard extends AnyRef with HasLogger {
   def fileCreatorId: String
 
   /**
+   * A type name, which is shown additionally to the default type path in the
+   * type name text field immediately after creation of the wizard. The default
+   * type path is computed by [[org.scalaide.ui.wizards.FileCreator#initialPath]]
+   * of the given `fileCreatorId`.
+   */
+  def defaultTypeName: String
+
+  /**
    * The ok button is not controlled by this wizard, therefore this method
    * allows to set the state of the ok button.
    */
   def enableOkButton(b: Boolean): Unit
+
+  /**
+   * Returns the path to the file created by the wizard. Returns `None` as long
+   * as the wizard did not yet create a new file.
+   */
+  def pathOfCreatedFile: Option[IPath] =
+    Option(filePath)
 
   def createContents(parent: Composite): Control = {
     import SWTUtils._
@@ -155,8 +172,9 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
       btProject.setText(p.getProject().getName())
 
-      tName.setText(path)
-      tName.setSelection(path.length())
+      val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
+      tName.setText(str)
+      tName.setSelection(str.length())
     }
 
     fileCreatorMappings.zipWithIndex foreach {
@@ -240,6 +258,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     val path = m.withInstance(_.createFileFromName(selectedProject.getProject(), tName.getText()))
     path foreach { p =>
+      filePath = p
       openEditor(p) { viewer =>
         findTemplateById(m.templateId) match {
           case Some(template) =>
