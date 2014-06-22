@@ -1620,6 +1620,7 @@
        point="org.scala-ide.sdt.core.fileCreator">
     <fileCreator
           class="org.scalaide.ui.wizards.ClassCreator"
+          description="Create a Scala Class"
           icon="icons/full/etool16/newclass_wiz.gif"
           id="org.scalaide.ui.wizards.classCreator"
           name="Scala Class"
@@ -1627,6 +1628,7 @@
     </fileCreator>
     <fileCreator
           class="org.scalaide.ui.wizards.TraitCreator"
+          description="Create a Scala Trait"
           icon="icons/full/etool16/newtrait_wiz.gif"
           id="org.scalaide.ui.wizards.traitCreator"
           name="Scala Trait"
@@ -1634,6 +1636,7 @@
     </fileCreator>
     <fileCreator
           class="org.scalaide.ui.wizards.ObjectCreator"
+          description="Create a Scala Object"
           icon="icons/full/etool16/newobject_wiz.gif"
           id="org.scalaide.ui.wizards.objectCreator"
           name="Scala Object"
@@ -1641,6 +1644,7 @@
     </fileCreator>
     <fileCreator
           class="org.scalaide.ui.wizards.PackageObjectCreator"
+          description="Create a Scala Package Object"
           icon="icons/full/etool16/newpackage_object_wiz.png"
           id="org.scalaide.ui.wizards.packageObjectCreator"
           name="Scala Package Object"
@@ -1648,6 +1652,7 @@
     </fileCreator>
     <fileCreator
           class="org.scalaide.ui.wizards.AppCreator"
+          description="Create a Scala App"
           icon="icons/full/etool16/scala_app.gif"
           id="org.scalaide.ui.wizards.appCreator"
           name="Scala App"
