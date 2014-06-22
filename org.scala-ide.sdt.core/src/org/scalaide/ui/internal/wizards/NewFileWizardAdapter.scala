@@ -13,19 +13,25 @@ import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
  *
  * @constructor Takes the id of the extension which invoked the wizard. The
  * template provided by this extension is used as the default selection of the
- * template selection choices.
+ * template selection choices. Furthermore, this also takes `defaultTypeName`,
+ * see [[org.scalaide.ui.internal.wizards.NewFileWizard#defaultTypeName]] for
+ * its purpose.
  */
-final class NewFileWizardAdapter(fileCreatorId: String) extends BasicNewResourceWizard { self =>
+final class NewFileWizardAdapter(
+    fileCreatorId: String,
+    defaultTypeName: String = "")
+      extends BasicNewResourceWizard { self =>
 
   setWindowTitle("New File Wizard")
 
-  private val page = new WizardPage("create-file-page") with NewFileWizard {
+  private[scalaide] val page = new WizardPage("create-file-page") with NewFileWizard {
 
     setTitle("Create New File")
     setDescription("Creates a new file based on the contents of a template")
 
     override def shell = Display.getCurrent().getActiveShell()
     override def fileCreatorId = self.fileCreatorId
+    override def defaultTypeName = self.defaultTypeName
 
     override def createControl(parent: Composite): Unit = {
       setControl(createContents(parent))
