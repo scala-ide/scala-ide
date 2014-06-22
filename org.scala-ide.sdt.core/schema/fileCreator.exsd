@@ -2,9 +2,9 @@
 <!-- Schema file written by PDE -->
 <schema targetNamespace="org.scala-ide.sdt.core" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appinfo>
+      <appInfo>
          <meta.schema plugin="org.scala-ide.sdt.core" id="fileCreator" name="File Creator"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          File creator that appears as choice in the new file wizard. The new file wizard creates files based on templates, this means that each file creator also needs to provide a template.
       </documentation>
@@ -12,9 +12,9 @@
 
    <element name="extension">
       <annotation>
-         <appinfo>
+         <appInfo>
             <meta.element />
-         </appinfo>
+         </appInfo>
       </annotation>
       <complexType>
          <choice minOccurs="1" maxOccurs="unbounded">
@@ -39,9 +39,9 @@
                <documentation>
                   
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute translatable="true"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
       </complexType>
@@ -68,9 +68,9 @@
                <documentation>
                   A fully qualified name of the class implementing org.scalaide.ui.wizards.FileCreator.
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute kind="java" basedOn=":org.scalaide.ui.wizards.FileCreator"/>
-               </appinfo>
+               </appInfo>
             </annotation>
          </attribute>
          <attribute name="templateId" type="string" use="required">
@@ -85,36 +85,43 @@
                <documentation>
                   A relative path to an icon that will be used together with the name to represent this file creator as one of the choices in the wizard.
                </documentation>
-               <appinfo>
+               <appInfo>
                   <meta.attribute kind="resource"/>
-               </appinfo>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="description" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="since"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          Scala IDE 4.0
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="examples"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          For an example on how to implement your own file creator see the interface org.scalaide.ui.wizards.ScalaFileCreator.
       </documentation>
    </annotation>
 
    <annotation>
-      <appinfo>
+      <appInfo>
          <meta.section type="apiinfo"/>
-      </appinfo>
+      </appInfo>
       <documentation>
          See the interface org.scalaide.ui.wizards.FileCreator for more information on how to implement a file creator.
       </documentation>
