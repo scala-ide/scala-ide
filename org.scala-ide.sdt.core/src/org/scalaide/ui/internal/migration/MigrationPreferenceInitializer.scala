@@ -27,6 +27,11 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     // do not run in an UI less environment
     if (!IScalaPlugin().headlessMode) {
       copyKeyBindings()
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ClassCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.TraitCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ObjectCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.PackageObjectCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.AppCreatorWizId)
     }
   }
 
