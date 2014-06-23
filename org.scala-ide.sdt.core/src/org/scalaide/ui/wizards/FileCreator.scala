@@ -1,8 +1,6 @@
 package org.scalaide.ui.wizards
 
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.resources.IProject
 
