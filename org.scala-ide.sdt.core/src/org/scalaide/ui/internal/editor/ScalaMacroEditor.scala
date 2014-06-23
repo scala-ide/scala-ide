@@ -23,27 +23,6 @@ import org.eclipse.jface.text.source.IVerticalRulerInfo
 import org.eclipse.jface.text.source.IAnnotationModelListener
 import org.scalaide.ui.internal.editor.decorators.implicits.MacroExpansionAnnotation
 
-//object myLog { //TODO: remove
-//  import java.io.PrintWriter
-//  import java.io.File
-//  val writer = new PrintWriter(new File("/home/nikiforo/logger.log"))
-//  def log(s: String) {
-//    writer.write(s + "\n")
-//    writer.flush
-//  }
-//  def log(any: Any) {
-//    log(any.toString + "\n")
-//  }
-//}
-
-//FOR DEBUG
-//import java.io.PrintWriter
-//import java.io.File
-//val writer = new PrintWriter(new File("/home/nikiforo/logger.log"))
-//writer.write("SECRET PHRASE I")
-//writer.flush
-
-
 trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
   import org.eclipse.jface.text.source.LineNumberChangeRulerColumn
   import org.eclipse.jface.text.source.ISharedTextColors
@@ -62,7 +41,7 @@ trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
     }
     correspondingLineNumbers(0) = 0
     val l = correspondingLineNumbers.length
-    for (lineNum <- 1 to correspondingLineNumbers.length -1) {
+    for (lineNum <- 1 to correspondingLineNumbers.length - 1) {
       if (containedInMacroExpansion(lineNum)) correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1)
       else correspondingLineNumbers(lineNum) = correspondingLineNumbers(lineNum - 1) + 1
     }
@@ -71,7 +50,6 @@ trait ScalaMacroLineNumbers { self: ScalaMacroEditor =>
   class LineNumberChangeRulerColumnWithMacro(sharedColors: ISharedTextColors)
     extends LineNumberChangeRulerColumn(sharedColors) {
     override def createDisplayString(line: Int): String = {
-//      if (!correspondingLineNumbers.isDefined) (line + 1).toString
       (correspondingLineNumbers(line) + 1).toString
     }
   }
@@ -146,12 +124,12 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
         val indentedMacroExpansion = (splittedMacroExpansion.head +:
           splittedMacroExpansion.tail.map(prefix + _)).mkString("\n")
 
-        if(!annotationModel.getAnnotationIterator.toList.map(_.asInstanceOf[Annotation]).exists(annotation =>{
+        if (!annotationModel.getAnnotationIterator.toList.map(_.asInstanceOf[Annotation]).exists(annotation => {
           val pos = annotationModel.getPosition(annotation)
           annotation.getType == "scala.tools.eclipse.macroMarkerId" &&
-          pos.offset <= pOffset &&
-          pOffset + pLength <= pos.offset + pos.length
-        })){
+            pos.offset <= pOffset &&
+            pOffset + pLength <= pos.offset + pos.length
+        })) {
           val marker = editorInput.asInstanceOf[FileEditorInput].getFile.createMarker("scala.tools.eclipse.macroMarkerId")
           marker.setAttribute(IMarker.CHAR_START, pOffset)
           marker.setAttribute(IMarker.CHAR_END, pOffset + pLength)
@@ -181,7 +159,6 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
           annotationModel.removeAnnotation(annotation)
         })
       }
-//      iTextEditor.asInstanceOf[ScalaMacroLineNumbers].correspondingLineNumbers = Some(new Array[Int](document.getNumberOfLines))
       iTextEditor.asInstanceOf[ScalaMacroLineNumbers].computeCorrespondingLineNumbers
     }
   }
@@ -253,14 +230,9 @@ trait ScalaMacroEditor extends CompilationUnitEditor with ScalaMacroLineNumbers 
     }
   }
 
-  protected var iEditor: Option[IEditorInput] = None
+  var iEditor: Option[IEditorInput] = None
   def document: Option[IDocument] = iEditor.map(getDocumentProvider.getDocument(_))
-  protected def annotationModel: Option[IAnnotationModel] = iEditor.map(getDocumentProvider.getAnnotationModel(_))
-
-  override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
-    removeMacroExpansions
-    super.performSave(overwrite, progressMonitor)
-  }
+  def annotationModel: Option[IAnnotationModel] = iEditor.map(getDocumentProvider.getAnnotationModel(_))
 
   override def doSetInput(iEditorInput: IEditorInput) {
     iEditor = Option(iEditorInput)
@@ -269,7 +241,12 @@ trait ScalaMacroEditor extends CompilationUnitEditor with ScalaMacroLineNumbers 
     annotationModel.map(_.addAnnotationModelListener(new Test))
   }
 
-  private def removeMacroExpansions {
+  override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
+    removeMacroExpansions
+    super.performSave(overwrite, progressMonitor)
+  }
+
+  def removeMacroExpansions {
     val annotations = annotationModel.map(_.getAnnotationIterator)
     for {
       doc <- document

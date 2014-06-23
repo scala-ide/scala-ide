@@ -62,10 +62,9 @@ import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor_ with ScalaLineNumberMacroEditor { self =>
   import ScalaSourceFileEditor._
 
-    //TODO: move to trait ScalaMacroLineNumbers if possible
   import org.eclipse.jface.text.source.IVerticalRulerColumn
   import org.eclipse.jface.text.source.IChangeRulerColumn
   override protected def createLineNumberRulerColumn(): IVerticalRulerColumn = {
@@ -73,6 +72,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     verticalRuler.asInstanceOf[IChangeRulerColumn].setHover(createChangeHover)
     initializeLineNumberRulerColumn(verticalRuler)
     verticalRuler
+  }
+
+  override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
+    removeMacroExpansions()
+    annotationModel.removeAnnotationModelListener(macroAnnotationModelListener)
+    super.performSave(overwrite, progressMonitor)
+    annotationModel.addAnnotationModelListener(macroAnnotationModelListener)
   }
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
