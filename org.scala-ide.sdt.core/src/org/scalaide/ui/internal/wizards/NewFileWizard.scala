@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PartInitException
 import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.scalaide.core.ScalaPlugin
@@ -313,25 +314,44 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * file whose location is described by `path` and opens the file afterwards.
    * `f` needs to return the position where the cursor should point to after the
    * file is opened.
+   * If `path` doesn't point to a file in a source folder `f` is not applied and
+   * the file is opened with the default text editor.
    */
   private def openEditor(path: IPath)(f: IDocument => Int): Unit = {
     val page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-    val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(path)
 
-    try {
+    def openFileInSrcDir(): Unit = {
+      val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(path)
       val doc = new Document()
       val cursorPos = f(doc)
       file.setContents(
           new java.io.ByteArrayInputStream(doc.get().getBytes()),
-          /* force */ true, /* keepHistory*/ false,
+          /* force */ true, /* keepHistory */ false,
           new NullProgressMonitor)
 
       val e = IDE.openEditor(page, file, /* activate */ true)
       EditorUtils.textEditor(e) foreach { _.selectAndReveal(cursorPos, 0) }
     }
+
+    def openFileOutsideOfSrcDir(): Unit = {
+      IDE.openEditor(
+          page, path.toFile().toURI(),
+          EditorsUI.DEFAULT_TEXT_EDITOR_ID, /* activate */ true)
+    }
+
+    val srcDir = path.segment(1)
+    val p = selectedProject.getProject()
+    val isInSrcDir = ProjectUtils.sourceDirs(p).exists(_.lastSegment() == srcDir)
+
+    try {
+      if (isInSrcDir)
+        openFileInSrcDir()
+      else
+        openFileOutsideOfSrcDir()
+    }
     catch {
       case e: PartInitException =>
-        eclipseLog.error(s"Failed to initialize editor for file '$file'", e)
+        eclipseLog.error(s"Failed to initialize editor for file '${path.toOSString()}'", e)
     }
   }
 
