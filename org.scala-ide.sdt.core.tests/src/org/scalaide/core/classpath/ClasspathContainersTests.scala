@@ -64,7 +64,6 @@ class ClasspathContainersTests {
 
   @After
   def deleteProjects() {
-    import ClasspathContainers.simulator
     EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)

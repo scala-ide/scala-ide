@@ -58,16 +58,15 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
-    val savedContainer = getSavedContainer(iProject)
+    val savedContainer = getSavedContainerForPath(iProject, containerPath)
     if (savedContainer.isDefined) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
     else {
       val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
       val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
       if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL))
-        new ClasspathContainerSetter(project).updateLibraryBundleFromSourceLevel(ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
+        new ClasspathContainerSetter(project).updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
       else {
-        logger.info(s"Initializing classpath container $desc: ${library.classJar}")
-        logger.info(s"Initializing classpath container $desc with sources: ${library.sourceJar}")
+        logger.info(s"Initializing classpath container $desc: ${entries foreach (_.getPath())}")
 
         JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
           override def getPath = containerPath
@@ -96,7 +95,7 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   override def entries = Array(libraryEntries(compiler))
 }
 
-abstract class ScalaClasspathContainerPage(id: String, name: String, override val title: String, desc: String) extends NewElementWizardPage(name)
+abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val title: String, desc: String) extends NewElementWizardPage(name)
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
   with IClasspathContainerPageExtension
@@ -113,7 +112,7 @@ abstract class ScalaClasspathContainerPage(id: String, name: String, override va
 
   override def finish() = true
 
-  override def getSelection(): IClasspathEntry = getAndUpdateScalaClasspathContainerEntry(id, desc, versionString, project, chosenScalaInstallation, existingEntries)
+  override def getSelection(): IClasspathEntry = getAndUpdateScalaClasspathContainerEntry(containerPath, desc, versionString, project, chosenScalaInstallation, existingEntries)
 
   override def initialize(javaProject: IJavaProject, currentEntries: Array[IClasspathEntry]) = {
     project = javaProject
@@ -157,18 +156,18 @@ abstract class ScalaClasspathContainerPage(id: String, name: String, override va
 
 class ScalaCompilerClasspathContainerPage extends
   ScalaClasspathContainerPage(
-    ScalaPlugin.plugin.scalaCompilerId,
+    new Path(ScalaPlugin.plugin.scalaCompilerId),
     "ScalaCompilerContainerPage",
-    "Scala Compiler Container",
+    "Scala Compiler container",
     "Scala compiler container") {
     override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = Array(libraryEntries(si.compiler))
     override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaCompilerClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)
 }
 
 class ScalaLibraryClasspathContainerPage extends
-  ScalaClasspathContainerPage(ScalaPlugin.plugin.scalaLibId,
+  ScalaClasspathContainerPage(new Path(ScalaPlugin.plugin.scalaLibId),
     "ScalaLibraryContainerPage",
-    "Scala Library Container",
+    "Scala Library container",
     "Scala library container") {
     override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(libraryEntries).toArray
     override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaLibraryClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)

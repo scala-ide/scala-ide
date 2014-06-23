@@ -47,7 +47,6 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
@@ -513,7 +512,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     projectSpecificStorage.save()
-    new ClasspathContainerSetter(javaProject).updateLibraryBundleFromSourceLevel(scalaVersion)
+    val updater = new ClasspathContainerSetter(javaProject)
+    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
+    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
