@@ -83,18 +83,12 @@ trait ScalaMacroEditor { self: ScalaSourceFileEditor =>
 
   class MacroAnnotationsModelListener extends IAnnotationModelListener {
     override def modelChanged(model: IAnnotationModel) {
-//      if(semaphore) return
       val annotations = model.getAnnotationIterator.toList
       val expandAnnotations = for {
         annotationNoType <- annotations
         annotation = annotationNoType.asInstanceOf[Annotation]
         if annotation.getType == Marker2Expand.ID
       } yield annotation
-
-//      if(expandAnnotations.isEmpty){
-//        model.removeAnnotationModelListener(this)
-//        return
-//      }
 
       val correspondingAnnotations = for {
         annotation <- expandAnnotations
