@@ -23,6 +23,14 @@ object MacroExpansionAnnotation {
   final val ID = "scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation"
 }
 
+object Marker2Expand {
+  final val ID = "scala.tools.eclipse.macro2expand"
+}
+
+object ScalaMacroMarker {
+  final val ID = "scala.tools.eclipse.macroMarkerId"
+}
+
 class MacroExpansionAnnotation(text: String = "") extends Annotation(MacroExpansionAnnotation.ID, /*isPersistent*/ false, text)
 
 
