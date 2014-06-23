@@ -1650,7 +1650,7 @@
            id="scala.tools.eclipse.macroAnnotationActionId">
            <action
            	 label="ScalaExpandMacros"
-           	 class="org.scalaide.ui.internal.editor.MacroAnnotationActionDelegate_"
+           	 class="org.scalaide.ui.internal.editor.MacroAnnotationActionDelegate"
            	 actionID="RulerClick"
            	 id="scala.tools.eclipse.macroAnnotationActionId">
            </action>

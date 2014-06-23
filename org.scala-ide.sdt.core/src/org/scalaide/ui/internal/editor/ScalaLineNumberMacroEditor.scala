@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.editor
 
-trait ScalaLineNumberMacroEditor { self: ScalaMacroEditor_ =>
+trait ScalaLineNumberMacroEditor { self: ScalaMacroEditor =>
   import org.eclipse.jface.text.source.ISharedTextColors
   import org.eclipse.jface.text.source.LineNumberChangeRulerColumn
 

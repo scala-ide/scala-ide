@@ -9,7 +9,7 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.core.resources.IMarker
 import org.eclipse.ui.texteditor.MarkerAnnotation
 
-class MacroAnnotationActionDelegate_ extends AbstractRulerActionDelegate {
+class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate {
   import org.eclipse.jface.action.Action
   import org.eclipse.jface.action.IAction
   import org.eclipse.ui.texteditor.TextEditorAction
@@ -89,7 +89,7 @@ class MacroAnnotationActionDelegate_ extends AbstractRulerActionDelegate {
         })
       }
 
-      iTextEditor.asInstanceOf[ScalaMacroEditor_].refreshMacroExpansionRegions()
+      iTextEditor.asInstanceOf[ScalaMacroEditor].refreshMacroExpansionRegions()
     }
   }
 

@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.junit.Test
 import org.junit.Assert
 import org.junit.Before
-import org.scalaide.ui.internal.editor.ScalaMacroEditor_
+import org.scalaide.ui.internal.editor.ScalaMacroEditor
 import org.junit.runner.RunWith
 import org.junit.internal.runners.JUnit4ClassRunner
 import org.scalaide.ui.internal.editor.ScalaLineNumberMacroEditor
@@ -15,7 +15,7 @@ import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 class ScalaLineNumberMacroEditorTests{
   @Test
   def setMyRange() {
-    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor_ with ScalaLineNumberMacroEditor
+    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor
     scalaMacroEditor.macroExpansionRegions = List(new MyRange(1,2), new MyRange(4,5))
     val expectedLineNumbers = Array(0,1,1,2,3,3,4,5,6,7)
     var counter = 0;
@@ -27,7 +27,7 @@ class ScalaLineNumberMacroEditorTests{
 
   @Test
   def notResetedMyRange() {
-    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor_ with ScalaLineNumberMacroEditor
+    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor
     scalaMacroEditor.macroExpansionRegions = List(new MyRange(1,2), new MyRange(4,5))
     val expectedLineNumbers = Array(0,1,1,2,3,3,4,5,6,7)
     var counter = 0;
@@ -46,7 +46,7 @@ class ScalaLineNumberMacroEditorTests{
 
   @Test
   def resetMyRange() {
-    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor_ with ScalaLineNumberMacroEditor
+    val scalaMacroEditor = new ScalaSourceFileEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor
     scalaMacroEditor.macroExpansionRegions = List(new MyRange(1,2), new MyRange(4,5))
     val expectedLineNumbers = Array(0,1,1,2,3,3,4,5,6,7)
     var counter = 0;

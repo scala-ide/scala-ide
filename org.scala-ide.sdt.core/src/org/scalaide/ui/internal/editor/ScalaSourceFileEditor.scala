@@ -1,10 +1,8 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -60,9 +58,10 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
+import org.eclipse.ui.IEditorInput
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor_ with ScalaLineNumberMacroEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor { self =>
   import ScalaSourceFileEditor._
 
   import org.eclipse.jface.text.source.IVerticalRulerColumn
@@ -76,10 +75,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
   override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
     removeMacroExpansions()
-    annotationModel.removeAnnotationModelListener(macroAnnotationModelListener)
+//    annotationModel.removeAnnotationModelListener(macroAnnotationModelListener)
     super.performSave(overwrite, progressMonitor)
-    annotationModel.addAnnotationModelListener(macroAnnotationModelListener)
   }
+
+//  override def doSetInput(input: IEditorInput){
+//    super.doSetInput(input)
+//    annotationModel.addAnnotationModelListener(macroAnnotationModelListener)
+//  }
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurrencesFinder: ScalaOccurrencesFinder = _
