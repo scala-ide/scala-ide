@@ -1,10 +1,10 @@
 package org.scalaide.ui.internal.wizards
 
 import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.ITextOperationTarget
-import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateContext
@@ -234,13 +234,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
           doc.replace(off, len, value)
       }
 
-      EditorUtils.doWithCurrentEditor { editor =>
-        val cursorPos = vars
-            .find(_.getType() == GlobalTemplateVariables.Cursor.NAME)
-            .map(_.getOffsets().head)
-            .getOrElse(tb.getString().length())
-        editor.setHighlightRange(cursorPos, 0, /*moveCursor*/ true)
-      }
+      val cursorPos = vars
+          .find(_.getType() == GlobalTemplateVariables.Cursor.NAME)
+          .map(_.getOffsets().head)
+          .getOrElse(tb.getString().length())
+
+      cursorPos
     }
 
     def createTemplateContext(doc: IDocument): ScalaTemplateContext = {
@@ -259,13 +258,14 @@ trait NewFileWizard extends AnyRef with HasLogger {
     val path = m.withInstance(_.createFileFromName(selectedProject.getProject(), tName.getText()))
     path foreach { p =>
       filePath = p
-      openEditor(p) { viewer =>
+      openEditor(p) { doc =>
         findTemplateById(m.templateId) match {
           case Some(template) =>
-            val ctx = createTemplateContext(viewer.getDocument())
+            val ctx = createTemplateContext(doc)
             applyTemplate(template, ctx)
           case _ =>
             eclipseLog.error(s"Template '${m.templateId}' not found. Creating an empty document.")
+            0
         }
       }
     }
@@ -309,21 +309,29 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   /**
-   * Opens the file of a given path in an editor and applies `f` if the opening
-   * succeeded.
+   * Applies `f` to the document whose content is mapped to the newly created
+   * file whose location is described by `path` and opens the file afterwards.
+   * `f` needs to return the position where the cursor should point to after the
+   * file is opened.
    */
-  private def openEditor(path: IPath)(f: ITextViewer => Unit): Unit = {
+  private def openEditor(path: IPath)(f: IDocument => Int): Unit = {
     val page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
     val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(path)
 
     try {
+      val doc = new Document()
+      val cursorPos = f(doc)
+      file.setContents(
+          new java.io.ByteArrayInputStream(doc.get().getBytes()),
+          /* force */ true, /* keepHistory*/ false,
+          new NullProgressMonitor)
+
       val e = IDE.openEditor(page, file, /* activate */ true)
-      f(e.getAdapter(classOf[ITextOperationTarget]).asInstanceOf[ITextViewer])
+      EditorUtils.textEditor(e) foreach { _.selectAndReveal(cursorPos, 0) }
     }
     catch {
       case e: PartInitException =>
         eclipseLog.error(s"Failed to initialize editor for file '$file'", e)
-        None
     }
   }
 
