@@ -55,7 +55,6 @@ trait ScalaFileCreator extends FileCreator {
 
   override def createFileFromName(project: IProject, name: String): IPath = {
     val isFolderNotation = name.count(_ == '/') != 1
-    val srcDirs = ProjectUtils.sourceDirs(project)
 
     if (isFolderNotation)
       createFile(project, name)
@@ -80,7 +79,7 @@ trait ScalaFileCreator extends FileCreator {
     if (path.size < 3)
       ""
     else {
-      val Seq(project, topFolder, rawSubPath @ _*) = path
+      val Seq(_, topFolder, rawSubPath @ _*) = path
       val subPath = if (isDirectory) rawSubPath else rawSubPath.init
 
       def generatePath(delimiter: String) = {
