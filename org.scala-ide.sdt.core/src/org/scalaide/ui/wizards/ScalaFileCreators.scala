@@ -12,8 +12,6 @@ class ObjectCreator extends ScalaFileCreator
 
 class PackageObjectCreator extends ScalaFileCreator {
 
-  import ScalaFileCreator._
-
   /**
    * The initial path of a package object can be valid, therefore we want to
    * show users immediately when the initial path is not valid.
