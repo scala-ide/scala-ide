@@ -76,6 +76,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
     removeMacroExpansions()
     super.performSave(overwrite, progressMonitor)
+//    annotationModel.addAnnotationModelListener(macroAnnotationModelListener)
+    expandMacros()
   }
 
   private var occurrenceAnnotations: Set[Annotation] = Set()

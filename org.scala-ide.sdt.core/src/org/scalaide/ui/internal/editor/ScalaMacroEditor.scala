@@ -33,7 +33,10 @@ trait ScalaMacroEditor { self: ScalaSourceFileEditor =>
       val marker = annotationNoType.asInstanceOf[MarkerAnnotation].getMarker
       val pos = annotationModel.getPosition(annotation)
       val macroExpandee = document.get(pos.offset, pos.length)
-      val macroExpansion = marker.getAttribute("MacroExpansion") .asInstanceOf[String]
+      val macroExpansion = marker.getAttribute("macroExpansion") .asInstanceOf[String]
+
+      marker.delete
+      annotationModel.removeAnnotation(annotation)
 
       document.replace(pos.offset, pos.length, macroExpansion)
 
@@ -42,6 +45,8 @@ trait ScalaMacroEditor { self: ScalaSourceFileEditor =>
       marker2.setAttribute(IMarker.CHAR_END, pos.offset + macroExpansion.length)
       marker2.setAttribute("macroExpandee", macroExpandee)
       marker2.setAttribute("macroExpansion", macroExpansion)
+
+      refreshMacroExpansionRegions()
     }
   }
 
@@ -89,6 +94,11 @@ trait ScalaMacroEditor { self: ScalaSourceFileEditor =>
         annotation = annotationNoType.asInstanceOf[Annotation]
         if annotation.getType == Marker2Expand.ID
       } yield annotation
+
+      if(expandAnnotations.isEmpty){
+        model.removeAnnotationModelListener(this)
+        return
+      }
 
       val correspondingAnnotations = for {
         annotation <- expandAnnotations
