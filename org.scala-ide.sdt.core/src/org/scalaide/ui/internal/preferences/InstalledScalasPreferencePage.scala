@@ -39,6 +39,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
 
     val button1 = new Button(buttons, SWT.PUSH)
     button1.setText("Add")
+    button1.setEnabled(false)
 
     composite
   }
