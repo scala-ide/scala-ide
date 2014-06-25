@@ -419,6 +419,9 @@
       </type>
       <type
             name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
+      <type
+            markerType="org.scalaide.refactoring.extractionScope"
+            name="org.scalaide.refactoring.extractionScope"/>
    </extension>
 
    <extension
@@ -442,6 +445,32 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
+     <specification 
+          annotationType="org.scalaide.refactoring.extractionScope"
+          colorPreferenceKey="extractionScope.color"
+          colorPreferenceValue="192,255,192"
+          contributesToHeader="false"
+          highlightPreferenceKey="extractionScope.highlight"
+          highlightPreferenceValue="true"
+          includeOnPreferencePage="true"
+          label="Code Selection Marker"
+          overviewRulerPreferenceKey="extractionScopeOverview"
+          overviewRulerPreferenceValue="true"
+          presentationLayer="0"
+          textPreferenceKey="extractionScope.text"
+          textPreferenceValue="true"
+          textStylePreferenceValue="BOX"
+          verticalRulerPreferenceKey="extractionScope.ruler"
+          verticalRulerPreferenceValue="true">
+     </specification>
+   </extension>
+
+   <extension
+     id="org.scalaide.refactoring.extractionScope"
+     name="Extraction Scope"
+     point="org.eclipse.core.resources.markers">
+     <super
+       type="org.eclipse.core.resources.textmarker"/>
    </extension>
 
     <extension
@@ -1031,16 +1060,16 @@
          name="Move Class/Object/Trait"/>
       <command
          categoryId="org.scalaide.ui.menu.refactoring"
-         id="org.scalaide.refactoring.ExtractMethod"
-         name="Extract Method"/>
-      <command
-         categoryId="org.scalaide.ui.menu.refactoring"
          id="org.scalaide.refactoring.ExtractLocal"
          name="Extract Local"/>
       <command
          categoryId="org.scalaide.ui.menu.refactoring"
          id="org.scalaide.refactoring.InlineLocal"
          name="Inline Local"/>
+      <command
+         categoryId="org.scalaide.ui.menu.refactoring"
+         id="org.scalaide.refactoring.Extract"
+         name="Extract..."/>
       <command
          categoryId="org.scalaide.ui.menu.refactoring"
          id="org.scalaide.refactoring.OrganizeImports"
@@ -1124,6 +1153,11 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+I"/>
+   <key
+   		 commandId="org.scalaide.refactoring.Extract"
+   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+   		 contextId="scala.tools.eclipse.scalaEditorScope"
+   		 sequence="M2+M3+E"/>
    <key
    		 commandId="org.scalaide.refactoring.Rename"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
@@ -1250,6 +1284,10 @@
              </test>
           </with>
        </enabledWhen>
+    </handler>
+    <handler
+          class="org.scalaide.refactoring.internal.extract.Extract"
+          commandId="org.scalaide.refactoring.Extract">
     </handler>
     <handler
           class="org.scalaide.refactoring.internal.move.MoveClass"
@@ -1392,6 +1430,16 @@
                 label="Split parameter lists"
                 style="push"
                 tooltip="Split parameter lists">
+          </command>
+          <separator
+                name="org.scalaide.refactoring.separator.codeExtractionGroup"
+                visible="true">
+          </separator>
+          <command
+                commandId="org.scalaide.refactoring.Extract"
+                label="Extract..."
+                style="push"
+                tooltip="Extract...">
           </command>
           <separator
                 name="org.scalaide.refactoring.separator.sourceGeneratorGroup"

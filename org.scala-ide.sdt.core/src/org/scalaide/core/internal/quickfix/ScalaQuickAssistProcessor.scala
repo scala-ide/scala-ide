@@ -11,6 +11,7 @@ import org.eclipse.jdt.ui.text.java.IQuickAssistProcessor
 import org.eclipse.jface.text.Position
 import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
 import org.scalaide.core.internal.quickfix.abstractimpl.ImplAbstractMembers
+import org.scalaide.refactoring.internal.extract.ExtractionProposal
 
 /**
  * Enables all quick fixes that don't resolve errors in the document. Instead they
@@ -36,10 +37,12 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
           }
           corrections.toArray.distinct
         }
-        val allAssists = ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++
-        ImplAbstractMembers.suggestsFor(ssf, context.getSelectionOffset) ++ assists
 
-        if(allAssists.isEmpty) null
+        val allAssists = ExplicitReturnType.suggestsFor(ssf, context.getSelectionOffset).toArray ++
+          ImplAbstractMembers.suggestsFor(ssf, context.getSelectionOffset) ++ assists ++
+          ExtractionProposal.getQuickAssistProposals(ssf, context.getSelectionOffset(), context.getSelectionOffset() + context.getSelectionLength())
+
+        if (allAssists.isEmpty) null
         else allAssists
       case _ => null
     }
@@ -54,8 +57,8 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
     refactoringSuggestions ++
       (problemMessage match {
         case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, location))
-        case ImplicitArgFound(s)        => List(new ImplicitArgumentExpandingProposal(s, location))
-        case _                          => Nil
+        case ImplicitArgFound(s) => List(new ImplicitArgumentExpandingProposal(s, location))
+        case _ => Nil
       })
   }
 }
@@ -66,10 +69,7 @@ object ScalaQuickAssistProcessor {
   private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
 
   val availableAssists = Seq(
-    ExtractLocalProposal,
     ExpandCaseClassBindingProposal,
-    InlineLocalProposal,
-    ExtractMethodProposal
-  )
+    InlineLocalProposal)
 }
 

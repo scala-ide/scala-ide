@@ -101,6 +101,7 @@ Export-Package:
  org.scalaide.logging.log4j,
  org.scalaide.logging.ui.preferences,
  org.scalaide.refactoring.internal,
+ org.scalaide.refactoring.internal.extract,
  org.scalaide.refactoring.internal.method,
  org.scalaide.refactoring.internal.method.ui,
  org.scalaide.refactoring.internal.move,
