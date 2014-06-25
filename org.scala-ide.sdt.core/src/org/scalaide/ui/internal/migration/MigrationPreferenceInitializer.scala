@@ -84,5 +84,6 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer {
     copyKeyBinding("scala.tools.eclipse.refactoring.command.Rename", "org.scalaide.refactoring.Rename")
     copyKeyBinding("scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding", "org.scalaide.refactoring.ExpandCaseClassBinding")
     copyKeyBinding("scala.tools.eclipse.refactoring.commands.quickMenu", "org.scalaide.ui.menu.quickMenu")
+    copyKeyBinding("scala.tools.eclipse.interpreter.RunSelection", "org.scalaide.core.handler.RunSelection")
   }
 }
