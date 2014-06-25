@@ -1088,7 +1088,7 @@
          name="Toggle Implicits Display"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
-         id="scala.tools.eclipse.interpreter.RunSelection"
+         id="org.scalaide.core.handler.RunSelection"
          name="Send Selection to Scala Interpreter"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1186,7 +1186,7 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
-       commandId="scala.tools.eclipse.interpreter.RunSelection"
+       commandId="org.scalaide.core.handler.RunSelection"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>
@@ -1301,6 +1301,10 @@
           class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
           commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
     </handler>
+    <handler
+          class="org.scalaide.ui.internal.actions.RunSelection"
+          commandId="org.scalaide.core.handler.RunSelection">
+    </handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1334,6 +1338,14 @@
                 icon="icons/indent_guide.png"
                 label="Show Indent Guide"
                 style="toggle">
+          </command>
+          <command
+                commandId="org.scalaide.core.handler.RunSelection"
+                disabledIcon="icons/full/dtool16/run_interpreter.gif"
+                icon="icons/full/etool16/run_interpreter.gif"
+                label="Run Selection in Scala Interpreter"
+                style="push"
+                tooltip="Run Selection in Scala Interpreter">
           </command>
        </toolbar>
     </menuContribution>
