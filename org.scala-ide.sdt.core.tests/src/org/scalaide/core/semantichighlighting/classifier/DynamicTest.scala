@@ -105,4 +105,35 @@ class DynamicTest extends AbstractSymbolClassifierTest {
       Map("METH" -> DynamicApplyNamed, "ARG" -> Param))
   }
 
+  @Test
+  def dynamicWithTypeParameter() {
+    checkSymbolClassification("""
+      object X {
+        val d = new D
+        d.field[Int]
+        d.method[Int](10)
+        d.method[Int](value = 10)
+      }
+      import language.dynamics
+      class D extends Dynamic {
+        def selectDynamic[A](name: String): A = ???
+        def applyDynamic[A](name: String)(value: Any): A = ???
+        def applyDynamicNamed[A](name: String)(value: (String, Any)): A = ???
+      }
+      """, """
+      object X {
+        val d = new D
+        d.$VAR$[$C$]
+        d.$METH$[$C$](10)
+        d.$DAN $[$C$](10)
+      }
+      import language.dynamics
+      class D extends Dynamic {
+        def selectDynamic[A](name: String): A = ???
+        def applyDynamic[A](name: String)(value: Any): A = ???
+        def applyDynamicNamed[A](name: String)(value: (String, Any)): A = ???
+      }
+      """,
+      Map("METH" -> DynamicApply, "VAR" -> DynamicSelect, "DAN" -> DynamicApplyNamed, "C" -> Class))
+  }
 }
