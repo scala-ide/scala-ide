@@ -17,9 +17,17 @@ import org.scalaide.util.internal.eclipse.OSGiUtils
 import xsbti.compile.ScalaInstance
 import java.net.URLClassLoader
 import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.collection.immutable.Set
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.core.runtime.IStatus
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import org.eclipse.core.runtime.CoreException
+import java.io.File
+import org.eclipse.core.runtime.Status
 
 sealed trait ScalaInstallationLabel extends Serializable
 case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
@@ -65,7 +73,7 @@ trait ScalaInstallation {
  *  A tag for serializable tagging of Scala Installations
  */
 trait LabeledScalaInstallation extends ScalaInstallation {
-      val label: ScalaInstallationLabel
+      def label: ScalaInstallationLabel
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -228,15 +236,18 @@ object ScalaInstallation {
   lazy val platformInstallation: ScalaInstallation =
     multiBundleInstallations.find(_.version == ScalaVersion.current).get
 
-  lazy val bundledInstallations: List[ScalaInstallation] =
+  lazy val bundledInstallations: List[LabeledScalaInstallation] =
     BundledScalaInstallation.detectBundledInstallations()
 
-  lazy val multiBundleInstallations: List[ScalaInstallation] =
+  lazy val multiBundleInstallations: List[LabeledScalaInstallation] =
     MultiBundleScalaInstallation.detectInstallations()
 
-  def availableInstallations: List[ScalaInstallation] = {
+  def availableInstallations: List[LabeledScalaInstallation] = {
     multiBundleInstallations ++ bundledInstallations ++ customInstallations
   }
+
+  val installationsTracker = new ScalaInstallationSaver()
+  def savedScalaInstallations = installationsTracker.getSavedInstallations()
 
   val LibraryPropertiesPath = "library.properties"
 

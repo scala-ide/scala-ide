@@ -25,7 +25,6 @@ import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import org.eclipse.jface.dialogs.InputDialog
 import org.eclipse.jface.dialogs.IInputValidator
-import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.eclipse.jface.window.Window
 import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 import org.eclipse.core.runtime.IStatus
@@ -33,16 +32,21 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
 import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.project.ModifiedScalaInstallations
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import scala.collection.mutable.Publisher
 
-class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders {
+class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders with Publisher[ModifiedScalaInstallations] {
 
   def itemTitle = "Scala Installation"
   var customInstallations = ScalaInstallation.customInstallations
+  subscribe(ScalaInstallation.installationsTracker)
+
   override def performOk(): Boolean = {
     ScalaInstallation.customInstallations = customInstallations
+    publish(ModifiedScalaInstallations())
     super.performOk()
   }
 
