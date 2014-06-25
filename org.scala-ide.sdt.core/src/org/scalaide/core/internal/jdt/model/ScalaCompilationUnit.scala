@@ -63,7 +63,14 @@ trait ScalaCompilationUnit extends Openable
   with InteractiveCompilationUnit
   with HasLogger {
 
-  override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  override def scalaProject = {
+    if (getJavaProject == null){
+      ScalaPlugin.plugin.resetAllPresentationCompilers()
+      logger.error("Null obtained getting a handle on a java project, possible #1001871 occurrence, please report")
+    }
+    ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject())
+  }
+
 
   val file : AbstractFile
 
