@@ -86,7 +86,9 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
       var symbolInfos = IndexedSeq.empty[SymbolInfo]
       new Traverser {
         override def traverse(t: Tree): Unit = {
-          if (!progressMonitor.isCanceled() && (t.symbol != NoSymbol || t.isType) && isSourceTree(t)) {
+          def symExists = global.askOption(() => t.symbol != NoSymbol).getOrElse(false)
+
+          if (!progressMonitor.isCanceled() && isSourceTree(t) && (t.hasSymbol || t.isType || symExists)) {
             val ds = findDynamicInfo(t)
             val xs = if (ds.isEmpty) findSymbolInfo(t) else ds.toList
             symbolInfos ++= xs

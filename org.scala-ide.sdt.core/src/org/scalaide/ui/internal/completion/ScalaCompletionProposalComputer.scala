@@ -59,6 +59,6 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
 
     import collection.JavaConversions._
 
-    res.map(ScalaCompletionProposal(context.getViewer().getSelectionProvider)): java.util.List[ICompletionProposal]
+    res.map(new ScalaCompletionProposal(_)): java.util.List[ICompletionProposal]
   }
 }

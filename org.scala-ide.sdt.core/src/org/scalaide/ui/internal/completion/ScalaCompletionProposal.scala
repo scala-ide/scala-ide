@@ -1,10 +1,5 @@
 package org.scalaide.ui.internal.completion
 
-import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.core.completion._
-import scala.tools.refactoring.common.TextChange
-import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -12,7 +7,6 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
@@ -34,6 +28,9 @@ import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
+import org.scalaide.core.completion._
+import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
 
 /** A UI class for displaying completion proposals.
@@ -41,7 +38,7 @@ import org.scalaide.util.internal.eclipse.EditorUtils
  *  It adds parenthesis at the end of a proposal if it has parameters, and places the caret
  *  between them.
  */
-class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: ISelectionProvider)
+class ScalaCompletionProposal(proposal: CompletionProposal)
   extends IJavaCompletionProposal
   with ICompletionProposalExtension
   with ICompletionProposalExtension2
@@ -50,10 +47,9 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   import proposal._
   import ScalaCompletionProposal._
 
-  private var cachedStyleRange: StyleRange = null
+  private var viewer: ITextViewer = _
+  private var cachedStyleRange: StyleRange = _
   private val ScalaProposalCategory = "ScalaProposal"
-
-  override def getRelevance = relevance
 
   private lazy val image = {
     import MemberKind._
@@ -72,35 +68,11 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     }
   }
 
-  override def getImage = image
-
-  /** `getParamNames` is expensive, save this result once computed.
-   *
-   *  @note This field should be lazy to avoid unnecessary computation.
-   */
-  private lazy val explicitParamNames = getParamNames()
-
-  /** The string that will be inserted in the document if this proposal is chosen.
-   *  By default, it consists of the method name, followed by all explicit parameter sections,
-   *  and inside each section the parameter names, delimited by commas. If `overwrite`
-   *  is on, it won't add parameter names
-   *
-   *  @note It triggers the potentially expensive `getParameterNames` operation.
-   */
-  def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean) = {
-    if (context.contextType == CompletionContext.ImportContext || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist))
-      completion
-    else {
-      val buffer = new StringBuffer(completion)
-
-      for (section <- explicitParamNames)
-        buffer.append(section.mkString("(", ", ", ")"))
-      buffer.toString
-    }
-  }
-
   /** Position after the opening parenthesis of this proposal */
   val startOfArgumentList = startPos + completion.length + 1
+
+  override def getRelevance = relevance
+  override def getImage = image
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   override def getContextInformation(): IContextInformation =
@@ -132,89 +104,25 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
-    val d: IDocument = viewer.getDocument()
-    val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
+    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
 
-    val tooltipsOnly = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
+    if (!showOnlyTooltips) {
+      val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
+      val d = viewer.getDocument()
 
-    /**
-     * This is a heuristic that is only called when 'completion overwrite' is enabled.
-     * It checks if an expression _probably_ has already its parameter list. Without
-     * this heuristic the IDE would in cases like
-     * {{{
-     *   List(1).map^
-     * }}}
-     * not know if the parameter list should be added or not.
-     *
-     * Because this is a heuristic it will only work in some cases, but hopefully in
-     * the most important ones.
-     */
-    lazy val doParamsProbablyExist = {
-      // - inner method exists to make a return possible
-      // - lazy val necessary because the operation may be unnecessary and the
-      //   underlying document changes during completion insertion
-      def check: Boolean = {
-        def terminatesExprProbably(c: Char) =
-          c.toString matches "[a-zA-Z_;)},.\n]"
-
-        val terminationChar = Iterator
-          .from(offset)
-          // prevent BadLocationException at end of file
-          .filter(c => if (c < d.getLength()) true else return false)
-          .map(d.getChar)
-          .dropWhile(Character.isJavaIdentifierPart)
-          .dropWhile(" \t" contains _)
-          .next()
-
-        !terminatesExprProbably(terminationChar)
-      }
-      check
-    }
-
-    val completionFullString = completionString(overwrite, doParamsProbablyExist)
-    val importSize = EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
-      var changes: List[TextChange] = Nil
-
-      if (!tooltipsOnly) {
-        scalaSourceFile.withSourceFile { (sourceFile, _) =>
-          val endPos = if (overwrite) startPos + existingIdentifier(d, offset).getLength() else offset
-          changes :+= TextChange(sourceFile, startPos, endPos, completionFullString)
+      EditorUtils.withScalaFileAndSelection { (scalaSourceFile, _) =>
+        applyCompletionToDocument(d, scalaSourceFile, offset, overwrite) foreach {
+          case (cursorPos, applyLinkedMode) =>
+            if (applyLinkedMode) {
+              val ui = mkEditorLinkedMode(d, viewer, mkLinkedModeModel(d), cursorPos)
+              ui.enter()
+            }
+            else
+              EditorUtils.doWithCurrentEditor { _.selectAndReveal(cursorPos, 0) }
         }
+        None
       }
 
-      val importStmt = if (needImport) { // add an import statement if required
-        scalaSourceFile.withSourceFile { (_, compiler) =>
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
-        } getOrElse (Nil)
-      } else {
-        Nil
-      }
-
-      changes ++= importStmt
-
-      // Apply the two changes in one step, if done separately we would need an
-      // another `waitLoadedType` to update the positions for the refactoring
-      // to work properly.
-      EditorUtils.applyChangesToFileWhileKeepingSelection(
-        d, textSelection, scalaSourceFile.file, changes)
-
-      importStmt.headOption.map(_.text.length)
-    }
-
-    def adjustCursorPosition() = EditorUtils.doWithCurrentEditor { editor =>
-      editor.selectAndReveal(startPos + completionFullString.length() + importSize.getOrElse(0), 0)
-    }
-
-    if (!tooltipsOnly && context.contextType != CompletionContext.ImportContext) {
-      if (!overwrite || !doParamsProbablyExist) selectionProvider match {
-        case viewer: ITextViewer if explicitParamNames.flatten.nonEmpty =>
-          addArgumentTemplates(d, viewer, completionFullString)
-        case _ =>
-          adjustCursorPosition()
-      }
-      else
-        adjustCursorPosition()
     }
   }
 
@@ -223,75 +131,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
 
   override def isValidFor(d: IDocument, pos: Int) =
     prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
-
-  /** Insert a completion proposal, with placeholders for each explicit argument.
-   *  For each argument, it inserts its name, and puts the editor in linked mode.
-   *  This means that TAB can be used to navigate to the next argument, and Enter or Esc
-   *  can be used to exit this mode.
-   */
-  def addArgumentTemplates(document: IDocument, textViewer: ITextViewer, completionFullString: String) {
-    val model = new LinkedModeModel()
-
-    document.addPositionCategory(ScalaProposalCategory)
-    var offset = startPos + completion.length
-
-    for (section <- explicitParamNames) {
-      offset += 1 // open parenthesis
-      var idx = 0 // the index of the current argument
-      for (proposal <- section) {
-        val group = new LinkedPositionGroup()
-        val positionOffset = offset + 2 * idx // each argument is followed by ", "
-        val positionLength = proposal.length
-        offset += positionLength
-
-        document.addPosition(ScalaProposalCategory, new Position(positionOffset, positionLength))
-        group.addPosition(new LinkedPosition(document, positionOffset, positionLength, LinkedPositionGroup.NO_STOP))
-        model.addGroup(group)
-        idx += 1
-      }
-      offset += 1 + 2 * (idx - 1) // close parenthesis around section (and the last argument isn't followed by comma and space)
-    }
-
-    model.addLinkingListener(new ILinkedModeListener() {
-      override def left(environment: LinkedModeModel, flags: Int) {
-        document.removePositionCategory(ScalaProposalCategory)
-      }
-
-      override def suspend(environment: LinkedModeModel) {}
-      override def resume(environment: LinkedModeModel, flags: Int) {}
-    })
-
-    model.forceInstall()
-
-    val ui = mkEditorLinkedMode(document, textViewer, model, completionFullString.length)
-    ui.enter()
-  }
-
-  /** Prepare a linked mode for the given editor. */
-  private def mkEditorLinkedMode(document: IDocument, textViewer: ITextViewer, model: LinkedModeModel, len: Int): EditorLinkedModeUI = {
-    val ui = new EditorLinkedModeUI(model, textViewer)
-    ui.setExitPosition(textViewer, startPos + len, 0, Integer.MAX_VALUE)
-    ui.setExitPolicy(new IExitPolicy {
-      override def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
-        event.character match {
-          case ';' =>
-            // go to the end of the completion proposal
-            new ExitFlags(ILinkedModeListener.UPDATE_CARET, !environment.anyPositionContains(offset))
-
-          case SWT.CR if (offset > 0 && document.getChar(offset - 1) == '{') =>
-            // if we hit enter after opening a brace, it's probably a closure. Exit linked mode
-            new ExitFlags(ILinkedModeListener.EXIT_ALL, true)
-
-          case _ =>
-            // stay in linked mode otherwise
-            null
-        }
-      }
-    })
-    ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT)
-    ui.setDoContextInfo(true)
-    ui
-  }
 
   /** Highlight the part of the text that would be overwritten by the current selection
    */
@@ -316,6 +155,66 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     viewer.asInstanceOf[ITextViewerExtension4].removeTextPresentationListener(presListener)
     repairPresentation(viewer)
     cachedStyleRange = null
+  }
+
+  override def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean =
+    isValidFor(doc, offset)
+
+  /** Insert a completion proposal, with placeholders for each explicit argument.
+   *  For each argument, it inserts its name, and puts the editor in linked mode.
+   *  This means that TAB can be used to navigate to the next argument, and Enter or Esc
+   *  can be used to exit this mode.
+   */
+  private def mkLinkedModeModel(document: IDocument): LinkedModeModel = {
+    val model = new LinkedModeModel()
+
+    document.addPositionCategory(ScalaProposalCategory)
+
+    linkedModeGroups foreach {
+      case (offset, len) =>
+        document.addPosition(ScalaProposalCategory, new Position(offset, len))
+        val group = new LinkedPositionGroup()
+        group.addPosition(new LinkedPosition(document, offset, len, LinkedPositionGroup.NO_STOP))
+        model.addGroup(group)
+    }
+
+    model.addLinkingListener(new ILinkedModeListener() {
+      override def left(environment: LinkedModeModel, flags: Int) {
+        document.removePositionCategory(ScalaProposalCategory)
+      }
+
+      override def suspend(environment: LinkedModeModel) {}
+      override def resume(environment: LinkedModeModel, flags: Int) {}
+    })
+
+    model.forceInstall()
+    model
+  }
+
+  /** Prepare a linked mode for the given editor. */
+  private def mkEditorLinkedMode(document: IDocument, textViewer: ITextViewer, model: LinkedModeModel, cursorPosition: Int): EditorLinkedModeUI = {
+    val ui = new EditorLinkedModeUI(model, textViewer)
+    ui.setExitPosition(textViewer, cursorPosition, 0, Integer.MAX_VALUE)
+    ui.setExitPolicy(new IExitPolicy {
+      override def doExit(environment: LinkedModeModel, event: VerifyEvent, offset: Int, length: Int) = {
+        event.character match {
+          case ';' =>
+            // go to the end of the completion proposal
+            new ExitFlags(ILinkedModeListener.UPDATE_CARET, !environment.anyPositionContains(offset))
+
+          case SWT.CR if (offset > 0 && document.getChar(offset - 1) == '{') =>
+            // if we hit enter after opening a brace, it's probably a closure. Exit linked mode
+            new ExitFlags(ILinkedModeListener.EXIT_ALL, true)
+
+          case _ =>
+            // stay in linked mode otherwise
+            null
+        }
+      }
+    })
+    ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT)
+    ui.setDoContextInfo(true)
+    ui
   }
 
   private def repairPresentation(viewer: ITextViewer) {
@@ -352,19 +251,13 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
     if (modelCaret > startPos + completion.length)
       return null
 
-    val region = existingIdentifier(viewer.getDocument(), modelCaret)
-    val length = startPos + region.getLength() - modelCaret
+    val wordLen = ScalaWordFinder.identLenAtOffset(viewer.getDocument(), modelCaret)
+    val length = startPos + wordLen - modelCaret
 
     new StyleRange(modelCaret, length, getForegroundColor, getBackgroundColor)
   }
 
-  private def existingIdentifier(doc: IDocument, offset: Int): IRegion = {
-    ScalaWordFinder.findWord(doc, offset)
-  }
-
-  private var viewer: ITextViewer = null
-
-  object presListener extends ITextPresentationListener {
+  private object presListener extends ITextPresentationListener {
     override def applyTextPresentation(textPresentation: TextPresentation) {
       if (viewer ne null) {
         cachedStyleRange = createStyleRange(viewer)
@@ -372,10 +265,6 @@ class ScalaCompletionProposal(proposal: CompletionProposal, selectionProvider: I
           textPresentation.mergeStyleRange(cachedStyleRange)
       }
     }
-  }
-
-  override def validate(doc: IDocument, offset: Int, event: DocumentEvent): Boolean = {
-    isValidFor(doc, offset)
   }
 }
 
@@ -393,7 +282,8 @@ object ScalaCompletionProposal {
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
 
-  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal, selectionProvider)
+  @deprecated("Use the constructor of ScalaCompletionProposal instead", "4.0")
+  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal)
 
   def insertCompletion(): Boolean = {
     val preference = JavaPlugin.getDefault().getPreferenceStore()

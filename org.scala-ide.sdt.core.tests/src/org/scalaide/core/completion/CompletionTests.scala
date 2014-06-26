@@ -21,6 +21,7 @@ import scala.reflect.internal.util.OffsetPosition
 
 object CompletionTests extends TestProjectSetup("completion")
 
+@deprecated("Don't use this test class anymore. Use the test suite in org.scalaide.ui.completion instead", "4.0")
 class CompletionTests {
   import CompletionTests._
 
@@ -126,72 +127,6 @@ class CompletionTests {
   }
 
   /**
-   * Test that completion shows only accessible members.
-   */
-  @Test
-  def accessibilityTests() {
-    val oraclePos14 = List("secretPrivate: Unit",
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-
-    val oraclePos16 = List("secretPrivate: Unit",
-      "secretPrivateThis: Unit",
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos22 = List(
-      "secretProtected: Unit",
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos28 = List(
-      "secretProtectedInPackage: Unit",
-      "secretPublic: Unit")
-    val oraclePos37 = List(
-      "secretPublic: Unit")
-
-    runTest("accessibility/AccessibilityTest.scala", true)(oraclePos14, oraclePos16, oraclePos22, oraclePos28, oraclePos37)
-  }
-
-  @Test
-  def ticket1000475() {
-    val oraclePos73 = List("toString(): String")
-    val oraclePos116 = List("forallChar => Boolean: Boolean")
-    val oraclePos147 = List("forallChar => Boolean: Boolean")
-
-    runTest("ticket_1000475/Ticket1000475.scala", false)(oraclePos73, oraclePos116, oraclePos147)
-  }
-
-  /**
-   * Test completion for 'any' Java type visible in the project
-   */
-  @Test
-  def ticket1000476() {
-    val oraclePos4_26 = List("ArrayList", "ArrayList", "ArrayLister") // ArrayList also from java.util.Arrays
-    val oraclePos6_33 = List("ArrayList")
-    val oraclePos11_16 = List("TreeSet")
-
-    runTest("ticket_1000476/Ticket1000476.scala", true)(oraclePos4_26, oraclePos6_33, oraclePos11_16)
-  }
-
-  @Test
-  def ticket1000654() {
-    val oraclePos10_13 = List("t654_a(String): Unit", "t654_a(Int): Unit")
-
-    runTest("ticket_1000654/Ticket1000654.scala", true)(oraclePos10_13)
-  }
-
-  @Test
-  def ticket1000772() {
-    val OracleNames = List(List("param1", "param2"), List("secondSectionParam1"))
-    withCompletions("ticket_1000772/CompletionsWithName.scala") { (idx, position, completions) =>
-      assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
-      assertEquals("Expected the following names: %s".format(OracleNames),
-        OracleNames, completions(0).getParamNames())
-    }
-  }
-
-  /**
    * This is more a structure builder problem, but it is visible through completion
    */
 
@@ -214,35 +149,6 @@ class CompletionTests {
   }
 
   @Test
-  @Ignore("Enable this test once the ticket is fixed.")
-  def t1001014() {
-    val oracle = List("xx")
-
-    val unit = scalaCompilationUnit("t1001014/F.scala")
-    reload(unit)
-
-    runTest("t1001014/F.scala", false)(oracle)
-  }
-
-  @Test
-  def t1001207() {
-    val unit = scalaCompilationUnit("ticket_1001207/T1207.scala")
-    reload(unit)
-
-    withCompletions("ticket_1001207/T1207.scala") {
-      (index, position, completions) =>
-        assertEquals("There is only one completion location", 0, index)
-        assertTrue("The completion should return java.util", completions.exists(
-          _ match {
-            case CompletionProposal(MemberKind.Package, _, _, "util", _, _, _, _, _, _, _, _) =>
-              true
-            case _ =>
-              false
-          }))
-    }
-  }
-
-  @Test
   def relevanceSortingTests() {
     val unit = scalaCompilationUnit("relevance/RelevanceCompletions.scala")
     reload(unit)
@@ -253,27 +159,6 @@ class CompletionTests {
           assertEquals("Relevance", "__stringLikeClass", proposals.head.completion)
         case 1 =>
           assertEquals("Relevance", "List", proposals.head.completion)
-        case _ =>
-          assert(false, "Unhandled completion position")
-      }
-    }
-  }
-
-  @Test
-  def empty_parens_completion_ticket1001766() {
-    withCompletions("ticket_1001766/Ticket1001766.scala") {
-      (index, position, completions) =>
-        index match {
-        case 0 =>
-          assertTrue("The completion should return the `buz` method name with empty-parens", completions.exists {
-            case CompletionProposal(MemberKind.Def, _, _, "buz", _, _, _, _, getParamNames, _, _, _) =>
-              getParamNames() == List(Nil) // List(Nil) is how an empty-args list is encoded
-        })
-        case 1 =>
-          assertTrue("The completion should return the `bar` method name with NO empty-parens", completions.exists {
-            case CompletionProposal(MemberKind.Def, _, _, "bar", _, _, _, _, getParamNames, _, _, _) =>
-              getParamNames() == Nil
-          })
         case _ =>
           assert(false, "Unhandled completion position")
       }
@@ -304,21 +189,6 @@ class CompletionTests {
     reload(unit)
 
     runTest("t1001272/A.scala", false)(oraclePos16_18, oraclePos17_18, oraclePos18_20, oraclePos19_26)
-  }
-
-  @Test
-  def t1001125() {
-    withCompletions("t1001125/Ticket1001125.scala") {
-      (index, position, completions) =>
-        assertEquals("There is only one completion location", 1, completions.size)
-        assertTrue("The completion should return doNothingWith", completions.exists(
-          _ match {
-            case c:CompletionProposal =>
-              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
-            case _ =>
-              false
-          }))
-    }
   }
 
   @Ignore("Enable this when ticket #1001919 is fixed.")

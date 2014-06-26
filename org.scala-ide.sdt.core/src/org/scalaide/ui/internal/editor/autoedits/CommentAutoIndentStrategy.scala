@@ -89,40 +89,64 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     def trimRightLen(str: String) =
       str.reverse.takeWhile(Character.isWhitespace).length()
 
+    /**
+     * Returns the start of the word at the given offset.
+     * Delimiter sign is whitespace.
+     */
+    def wordStart(off: Int) = {
+      def valid(i: Int) = !Character.isWhitespace(doc.getChar(i))
+
+      var start = off-1
+      while (start >= 0 && valid(start))
+        start -= 1
+
+      start+1
+    }
+
     def doAutoBreak(line: IRegion) = {
       val systemLineSeparator = TextUtilities.getDefaultLineDelimiter(doc)
       val endOfIndent = findEndOfWhiteSpace(doc, line.getOffset(), cmd.offset)
       val innerIndentNeeded = doc.getChar(endOfIndent) == '*'
+      val isCommentStart = doc.getChar(endOfIndent) == '/'
+
+      val alignment =
+        if (innerIndentNeeded) 1
+        else if (doc.getChar(endOfIndent+3) != '*') 2
+        else 3
 
       val textStart =
-        if (innerIndentNeeded)
-          findEndOfWhiteSpace(doc, endOfIndent+1, cmd.offset)
+        if (innerIndentNeeded || isCommentStart)
+          findEndOfWhiteSpace(doc, endOfIndent+alignment, cmd.offset)
         else
           endOfIndent
 
-      val lastWord = ScalaWordFinder.findWord(doc, cmd.offset)
-      val canSplitText = lastWord.getOffset() != textStart
+      val wordOff = wordStart(cmd.offset)
+      val canSplitText = wordOff != textStart
 
       if (canSplitText) {
-        val newLine = Seq(
-            systemLineSeparator,
-            doc.get(line.getOffset(), endOfIndent-line.getOffset()),
-            doc.get(endOfIndent, textStart-endOfIndent),
-            doc.get(lastWord.getOffset(), lastWord.getLength()),
-            cmd.text)
+        val indent = doc.get(line.getOffset(), endOfIndent-line.getOffset())
+        val word = doc.get(wordOff, cmd.offset-wordOff)
 
-        val wsLen = trimRightLen(doc.get(textStart, lastWord.getOffset()-textStart))
+        val commentIndent =
+          if (isCommentStart)
+            " *" + doc.get(endOfIndent+alignment, textStart-endOfIndent-alignment)
+          else
+            doc.get(endOfIndent, textStart-endOfIndent)
+
+        val newLine = Seq(systemLineSeparator, indent, commentIndent, word, cmd.text)
+
+        val wsLen = trimRightLen(doc.get(textStart, wordOff-textStart))
 
         cmd.text = newLine.mkString
-        cmd.offset = lastWord.getOffset()-wsLen
-        cmd.length = lastWord.getLength()+wsLen
+        cmd.length = cmd.offset-wordOff+wsLen
+        cmd.offset = wordOff-wsLen
       }
     }
 
     val enableAutoBreaking = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_BREAKING_COMMENTS)
 
-    if (enableAutoBreaking) {
+    if (enableAutoBreaking && cmd.text.nonEmpty) {
       val marginColumn = prefStore.getInt(EDITOR_PRINT_MARGIN_COLUMN)
       val line = doc.getLineInformationOfOffset(cmd.offset)
       val exceedMarginColumn = line.getLength() + cmd.text.length > marginColumn
