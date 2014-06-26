@@ -21,6 +21,11 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 
+sealed trait ScalaInstallationLabel extends Serializable
+case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
+case class MultiBundleScalaInstallationLabel() extends ScalaInstallationLabel
+case class CustomScalaInstallationLabel(label: String) extends ScalaInstallationLabel
+
 /** This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
  *
@@ -56,6 +61,13 @@ trait ScalaInstallation {
     s"Scala $version: \n\t${allJars.mkString("\n\t")})"
 }
 
+/**
+ *  A tag for serializable tagging of Scala Installations
+ */
+trait LabeledScalaInstallation extends ScalaInstallation {
+      val label: ScalaInstallationLabel
+}
+
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
 
   def libraryEntries(): IClasspathEntry = {
@@ -75,10 +87,11 @@ case class BundledScalaInstallation(
   override val version: ScalaVersion,
   bundle: Bundle,
   override val library: ScalaModule,
-  override val compiler: ScalaModule) extends ScalaInstallation {
+  override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import BundledScalaInstallation._
 
+  override val label =  BundledScalaInstallationLabel()
   def osgiVersion = bundle.getVersion()
 
   override lazy val extraJars =
@@ -147,10 +160,11 @@ case class MultiBundleScalaInstallation(
   override val version: ScalaVersion,
   libraryBundleVersion: Version,
   override val library: ScalaModule,
-  override val compiler: ScalaModule) extends ScalaInstallation {
+  override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import MultiBundleScalaInstallation._
 
+  override val label =  MultiBundleScalaInstallationLabel()
   def osgiVersion = libraryBundleVersion
 
   override lazy val extraJars = Seq(
@@ -208,6 +222,8 @@ object MultiBundleScalaInstallation {
 
 object ScalaInstallation {
 
+  var customInstallations: Set[LabeledDirectoryScalaInstallation] = Set()
+
   /** Return the Scala installation currently running in Eclipse. */
   lazy val platformInstallation: ScalaInstallation =
     multiBundleInstallations.find(_.version == ScalaVersion.current).get
@@ -218,8 +234,8 @@ object ScalaInstallation {
   lazy val multiBundleInstallations: List[ScalaInstallation] =
     MultiBundleScalaInstallation.detectInstallations()
 
-  lazy val availableInstallations: List[ScalaInstallation] = {
-    multiBundleInstallations ++ bundledInstallations
+  def availableInstallations: List[ScalaInstallation] = {
+    multiBundleInstallations ++ bundledInstallations ++ customInstallations
   }
 
   val LibraryPropertiesPath = "library.properties"

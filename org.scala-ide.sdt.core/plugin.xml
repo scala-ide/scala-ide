@@ -504,7 +504,13 @@
       </classpathContainerPage>
    </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
-        <statusHandler
+      <statusHandler
+       id="GenericHandler"
+       class="org.scalaide.ui.internal.handlers.GenericExceptionStatusHandler"
+       plugin="org.scala-ide.sdt.core"
+       code="1010">
+     </statusHandler>
+      <statusHandler
        id="Xsource"
        class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
        plugin="org.scala-ide.sdt.core"

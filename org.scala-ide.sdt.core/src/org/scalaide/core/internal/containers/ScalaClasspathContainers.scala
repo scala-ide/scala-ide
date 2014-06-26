@@ -78,7 +78,7 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   override def entries = Array(compiler.libraryEntries())
 }
 
-abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val title: String, desc: String) extends NewElementWizardPage(name)
+abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val itemTitle: String, desc: String) extends NewElementWizardPage(name)
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
   with IClasspathContainerPageExtension
@@ -89,7 +89,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
   protected var project: IJavaProject = null
   private var versionString: String = " none "
 
-  setTitle(title)
+  setTitle(itemTitle)
   setDescription(desc)
   setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY)
 

@@ -5,10 +5,12 @@ import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.jface.viewers.Viewer
+import org.scalaide.core.internal.project.LabeledScalaInstallation
+import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 
 trait ScalaInstallationUIProviders {
 
-  def title() : String
+  def itemTitle(): String
 
   class ContentProvider extends IStructuredContentProvider {
     override def dispose(): Unit = {}
@@ -25,14 +27,18 @@ trait ScalaInstallationUIProviders {
 
    class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
 
+    val labels = Array("bundled", "multi bundles", "unknown")
+
     override def getText(element: Any): String = {
       element match {
         case s: BundledScalaInstallation =>
-          s"$title: bundled ${s.version.unparse}"
+          s"$itemTitle: ${labels(0)} ${s.version.unparse}"
         case s: MultiBundleScalaInstallation =>
-          s"$title: multi bundles ${s.version.unparse}"
+          s"$itemTitle: ${labels(1)} ${s.version.unparse}"
+        case s: LabeledDirectoryScalaInstallation =>
+          s"$itemTitle: ${s.getName()} ${s.version.unparse}"
         case s: ScalaInstallation =>
-          s"unknown ${s.version.unparse}"
+          s"$itemTitle: ${labels(2)} ${s.version.unparse}"
       }
     }
   }

@@ -65,9 +65,9 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
     // for now this means we return whatever we could find: it may not be enough (missing scala-reflect, etc)
     prefixes flatMap { p =>
       val optionalVersion = """(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?"""
-      val versionedString = s"$p$optionalVersion\.jar"
+      val versionedString = s"$p$optionalVersion\\.jar"
       val versionedRegex = versionedString.r
-      val versionedSrcString = s"$p-src$optionalVersion\.jar"
+      val versionedSrcString = s"$p-src$optionalVersion\\.jar"
       val versionedSrcRegex = versionedSrcString.r
 
       def jarLookup(r: scala.util.matching.Regex): Option[File] = extantJars flatMap (_.find { (f: File) => r.pattern.matcher(f.getName()).matches })
@@ -91,6 +91,8 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
   if (!compilerCandidate.isDefined) throw new IllegalArgumentException("Can not recognize a Scala compiler jar in this directory.")
   if (!libraryCandidate.isDefined) throw new IllegalArgumentException("Can not recogize a Scala library jar in this directory.")
   if (!versionCandidate.isDefined) throw new IllegalArgumentException("The Scala library jar in this directory has incorrect or missing version information, aborting.")
+  // TODO : this hard-coded hook will need changing
+  if (versionCandidate.isDefined && versionCandidate.get < ScalaVersion("2.10.0")) throw new IllegalArgumentException("This Scala version is too old for the presentation compiler to use. Please provide a 2.10 scala (or later).")
 
   override lazy val extraJars = findScalaJars(List(scalaActorPrefix, scalaReflectPrefix, scalaSwingPrefix, scalaReflectPrefix))
   override lazy val compiler = compilerCandidate.get
@@ -104,4 +106,10 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
     new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
   }
 
+}
+
+class LabeledDirectoryScalaInstallation(name:String, directory: IPath) extends DirectoryScalaInstallation(directory) with LabeledScalaInstallation {
+    override val label = CustomScalaInstallationLabel(name)
+
+    def this(name: String, dsi: DirectoryScalaInstallation) = this(name, dsi.directory)
 }
