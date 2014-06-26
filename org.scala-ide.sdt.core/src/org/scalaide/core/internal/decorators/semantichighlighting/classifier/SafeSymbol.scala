@@ -64,6 +64,9 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
     case Apply(Select(_, DynamicName(sym)), List(name)) =>
       Some(sym -> name.pos)
 
+    case Apply(TypeApply(Select(_, DynamicName(sym)), _), List(name)) =>
+      Some(sym -> name.pos)
+
     case _ =>
       None
   }

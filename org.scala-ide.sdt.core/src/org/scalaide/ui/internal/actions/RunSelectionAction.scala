@@ -1,23 +1,18 @@
 package org.scalaide.ui.internal.actions
 
-import org.eclipse.jface.action.IAction
+import org.eclipse.core.commands.AbstractHandler
+import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jface.text.ITextSelection
-import org.eclipse.ui.actions.ActionDelegate
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.ui.IWorkbenchWindow
-import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IFileEditorInput
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.ui.internal.repl.ReplConsoleView
-import org.scalaide.util.internal.Utils._
+import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 
-class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDelegate {
-  var workbenchWindow: IWorkbenchWindow = null
+class RunSelection extends AbstractHandler {
 
-  def init(window: IWorkbenchWindow) {
-    workbenchWindow = window
-  }
-
-  override def run(action: IAction) {
+  override def execute(e: ExecutionEvent): AnyRef = {
+    val workbenchWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 
     for (editor <- Option(workbenchWindow.getActivePage.getActiveEditor);
         input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput];
@@ -46,5 +41,7 @@ class RunSelectionAction extends ActionDelegate with IWorkbenchWindowActionDeleg
         ReplConsoleView.makeVisible(project,workbenchWindow.getActivePage).evaluate(text)
       }
     }
+
+    null
   }
 }

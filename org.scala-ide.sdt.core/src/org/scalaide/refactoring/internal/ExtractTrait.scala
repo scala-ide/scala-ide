@@ -37,7 +37,7 @@ class ExtractTrait extends RefactoringExecutorWithWizard {
     def refactoringParameters = refactoring.RefactoringParameters(traitName, name => selectedMembers contains name)
 
     // The preparation result provides a list of members that can be extracted
-    private val extractableMembers = preparationResult.right.get.extractableMembers
+    private val extractableMembers = preparationResult.right.toOption.map(_.extractableMembers).getOrElse(List())
 
     // The members selected for extraction in the wizard
     private var selectedMembers: List[refactoring.global.ValOrDefDef] = Nil

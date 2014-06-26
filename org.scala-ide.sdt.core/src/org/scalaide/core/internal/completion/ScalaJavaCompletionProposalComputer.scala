@@ -69,7 +69,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
         if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
           jc.getCompilationUnit match {
           case scu: ScalaCompilationUnit => javaEmptyList()
-          case _ => mixedInCompletions(jc.getCompilationUnit(), jc.getInvocationOffset(), jc.getViewer().getSelectionProvider(), monitor)
+          case _ => mixedInCompletions(jc.getCompilationUnit(), jc.getInvocationOffset(), monitor)
         } else
           javaEmptyList()
       case _ => javaEmptyList()
@@ -79,7 +79,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   /**
    * Return completion proposals for mixed-in methods.
    */
-  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, selectionProvider: ISelectionProvider, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
+  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
@@ -126,7 +126,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
           val prop = compiler.mkCompletionProposal(prefix.toCharArray, start, sym = sym,
             tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext)
-          new ScalaCompletionProposal(prop, selectionProvider)
+          new ScalaCompletionProposal(prop)
         }
       }.getOrElse(Nil)
     } getOrElse (Nil)
