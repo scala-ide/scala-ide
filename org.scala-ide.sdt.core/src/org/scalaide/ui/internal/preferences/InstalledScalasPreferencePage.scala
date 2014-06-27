@@ -37,6 +37,9 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import scala.collection.mutable.Publisher
+import org.scalaide.core.internal.project.CustomScalaInstallationLabel
+import org.scalaide.core.internal.project.LabeledScalaInstallation
+import scala.PartialFunction.cond
 
 class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders with Publisher[ModifiedScalaInstallations] {
 
@@ -45,7 +48,8 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
   subscribe(ScalaInstallation.installationsTracker)
 
   override def performOk(): Boolean = {
-    ScalaInstallation.customInstallations = customInstallations
+    ScalaInstallation.customInstallations &~ customInstallations foreach {ScalaInstallation.customInstallations.remove(_)}
+    customInstallations &~ ScalaInstallation.customInstallations foreach {ScalaInstallation.customInstallations.add(_)}
     publish(ModifiedScalaInstallations())
     super.performOk()
   }
@@ -99,7 +103,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
                 val dlg = new InputDialog(shell, "", "Enter a name for this Scala Installation", "", new IInputValidator() {
                   override def isValid(newText: String): String = {
                     if (installationLabels.labels contains newText) "This is a reserved name."
-                    else if (customInstallations.map(_.getName()) contains newText) "This name is already used by a custom Scala installation."
+                    else if (customInstallations.flatMap(_.getName()) contains newText) "This name is already used by a custom Scala installation."
                     else null
                   }
                 })
@@ -123,13 +127,12 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
     buttonRemove.addSelectionListener(new SelectionAdapter() {
       override def widgetSelected(e: SelectionEvent) = {
         val selection = list.getSelection().asInstanceOf[IStructuredSelection]
-        selection.iterator().asScala foreach {s =>
+        selection.iterator().asScala foreach { s =>
           s match {
-            case d : LabeledDirectoryScalaInstallation =>
+            case d: LabeledScalaInstallation if cond(d.label) { case CustomScalaInstallationLabel(tag) => true } =>
               customInstallations -= d
               list.remove(d)
             case _ => ()
-
           }
         }
       }

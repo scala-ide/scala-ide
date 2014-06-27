@@ -18,11 +18,29 @@ import scala.tools.nsc.settings.NoScalaVersion
 import org.scalaide.core.ScalaPlugin
 import sbt.ScalaInstance
 import java.net.URLClassLoader
+import java.io.ObjectStreamClass
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import org.eclipse.core.runtime.CoreException
+
+class ContextualizedObjectInputStream(in: InputStream) extends ObjectInputStream(in) {
+
+  override def resolveClass(desc: ObjectStreamClass) = {
+
+    val res  = Try(Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
+    res match {
+      case Success(cl) => cl
+      case Failure(thrown) => throw new IllegalAccessException("Something went horribly wrong deserializing")
+    }
+  }
+
+}
 
 object LabeledScalaInstallationsSaveHelper {
 
   def readInstallations(input: InputStream): List[LabeledScalaInstallation] = {
-    val is = new ObjectInputStream(new BufferedInputStream(input)) {
+    val is = new ContextualizedObjectInputStream(new BufferedInputStream(input)) {
       enableResolveObject(true)
 
       override protected def resolveObject(o: Object): Object = o match {
@@ -33,7 +51,8 @@ object LabeledScalaInstallationsSaveHelper {
       }
     }
 
-    is.readObject().asInstanceOf[List[LabeledScalaInstallation]]
+    val res = is.readObject().asInstanceOf[List[LabeledScalaInstallation]]
+    res
   }
 
   def writeInstallations(scalaInstallations: Seq[ScalaInstallation], output: OutputStream): Unit = {
@@ -52,8 +71,7 @@ object LabeledScalaInstallationsSaveHelper {
     os.flush()
   }
 
-  /**
-   * A ScalaModule replacement used for object serialization
+  /** A ScalaModule replacement used for object serialization
    */
   class ScalaModuleReplace(val classJar: IPath, val srcJar: Option[IPath]) extends Serializable {
     private val serialVersionUID = 1001667379327078799L
@@ -61,13 +79,11 @@ object LabeledScalaInstallationsSaveHelper {
     def getScalaModule() = ScalaModule(classJar, srcJar)
   }
 
-  /**
-   * A ScalaInstallation replacement used for object serialization
+  /** A ScalaInstallation replacement used for object serialization
    */
-
   class LabeledScalaInstallationReplace(val name: ScalaInstallationLabel, val compilerMod: ScalaModule, val libraryMod: ScalaModule, val extraJarsMods: Seq[ScalaModule]) extends Serializable {
     private val serialVersionUID = 3901667379327078799L
-    def this(ins:LabeledScalaInstallation) = this(ins.label, ins.compiler, ins.library, ins.extraJars)
+    def this(ins: LabeledScalaInstallation) = this(ins.label, ins.compiler, ins.library, ins.extraJars)
     def getLabeledScalaInstallation() = new LabeledScalaInstallation() {
       override def label = name
       override def compiler = compilerMod
@@ -83,12 +99,11 @@ object LabeledScalaInstallationsSaveHelper {
     }
   }
 
-  /**
-   * An IPath replacement used for object serialization
+  /** An IPath replacement used for object serialization
    */
   class PathReplace(val path: String) extends Serializable {
     private val serialVersionUID = -2361259525684491181L
-    def this(ip:IPath) = this(ip.toPortableString())
+    def this(ip: IPath) = this(ip.toPortableString())
     def getPath() = Path.fromPortableString(path)
   }
 

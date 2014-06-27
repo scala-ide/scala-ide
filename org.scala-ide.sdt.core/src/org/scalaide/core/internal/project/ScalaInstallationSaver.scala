@@ -14,7 +14,7 @@ import scala.collection.mutable.Subscriber
 
 case class ModifiedScalaInstallations()
 
-trait LabeledScalaInstallationSerializer extends HasLogger {
+trait LabeledScalaInstallationSerializer {
   import org.scalaide.core.internal.jdt.util.LabeledScalaInstallationsSaveHelper._
 
   private def getInstallationsStateFile() = {
@@ -24,21 +24,21 @@ trait LabeledScalaInstallationSerializer extends HasLogger {
   def saveInstallationsState(installations: List[LabeledScalaInstallation]): Unit = {
     val installationsStateFile = getInstallationsStateFile()
     val installationsStateFilePath = installationsStateFile.getPath()
-    logger.debug(s"Trying to write Scala installations state to $installationsStateFilePath")
+    //logger.debug(s"Trying to write Scala installations state to $installationsStateFilePath")
     var is: FileOutputStream = null
     try {
       is = new FileOutputStream(installationsStateFile)
       writeInstallations(installations, is)
     } catch {
       case ex: IOException =>
-        logger.error("Can't save scala installations", ex)
+        //logger.error("Can't save scala installations", ex)
     } finally {
       if (is != null) {
         try {
           is.close();
         } catch {
-          case ex: IOException => logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
-        } finally logger.debug(s"Successfully wrote classpath container state to $installationsStateFilePath")
+          case ex: IOException => //logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
+        } finally ()//logger.debug(s"Successfully wrote installations state to $installationsStateFilePath")
       }
 
     }
@@ -47,7 +47,7 @@ trait LabeledScalaInstallationSerializer extends HasLogger {
   def getSavedInstallations(): List[LabeledScalaInstallation] = {
     val installationsStateFile = getInstallationsStateFile()
     val installationsStateFilePath = installationsStateFile.getPath()
-    logger.debug(s"Trying to read classpath container state from $installationsStateFilePath")
+    //logger.debug(s"Trying to read classpath container state from $installationsStateFilePath")
     if (!installationsStateFile.exists()) Nil
     else {
       var is: FileInputStream = null
@@ -57,14 +57,14 @@ trait LabeledScalaInstallationSerializer extends HasLogger {
       } catch {
         case ex @ (_: IOException | _: ClassNotFoundException) =>
           throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, -1,
-            "Can't read scala installations", ex))
+            s"Can't read scala installations from $installationsStateFilePath", ex))
       } finally {
         if (is != null) {
           try {
             is.close();
           } catch {
-            case ex: IOException => logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
-          } finally logger.debug(s"Successfully read scala installations from $installationsStateFilePath")
+            case ex: IOException => //logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
+          } finally () //logger.debug(s"Successfully read scala installations from $installationsStateFilePath")
         }
       }
     }

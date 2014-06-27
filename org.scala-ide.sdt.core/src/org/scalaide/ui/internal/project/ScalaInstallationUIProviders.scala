@@ -35,8 +35,8 @@ trait ScalaInstallationUIProviders {
           s"$itemTitle: ${labels(0)} ${s.version.unparse}"
         case s: MultiBundleScalaInstallation =>
           s"$itemTitle: ${labels(1)} ${s.version.unparse}"
-        case s: LabeledDirectoryScalaInstallation =>
-          s"$itemTitle: ${s.getName()} ${s.version.unparse}"
+        case s: LabeledScalaInstallation =>
+          s"$itemTitle: ${s.getName().getOrElse("")} ${s.version.unparse}"
         case s: ScalaInstallation =>
           s"$itemTitle: ${labels(2)} ${s.version.unparse}"
       }
