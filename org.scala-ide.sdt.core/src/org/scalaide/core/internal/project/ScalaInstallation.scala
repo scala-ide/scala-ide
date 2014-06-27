@@ -287,7 +287,16 @@ object ScalaInstallation {
 
   val LibraryPropertiesPath = "library.properties"
 
+  def labelInFile(scalaPath: IPath) : Option[String] = {
+    val scalaJarRegex = """scala-(\w+)(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?.jar""".r
+    scalaPath.toFile().getName() match {
+      case scalaJarRegex(qualifier) => Some(qualifier + ".properties")
+      case _ => None
+    }
+  }
+
   def extractVersion(scalaLibrary: IPath): Option[ScalaVersion] = {
+    val propertiesPath = labelInFile(scalaLibrary).getOrElse(LibraryPropertiesPath)
     val zipFile = new ZipFile(scalaLibrary.toFile())
     try {
       def getVersion(propertiesEntry: ZipEntry) = {
@@ -297,7 +306,7 @@ object ScalaInstallation {
       }
 
       for {
-        propertiesEntry <- Option(zipFile.getEntry(LibraryPropertiesPath))
+        propertiesEntry <- Option(zipFile.getEntry(propertiesPath))
         version <- getVersion(propertiesEntry)
       } yield ScalaVersion(version)
     } finally {
