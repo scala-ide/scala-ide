@@ -51,7 +51,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
   private var btProject: Button = _
   private var cmTemplate: TableCombo = _
-  private var lbError: Label = _
   private var tName: Text = _
 
   private var disposables = Seq[{def dispose(): Unit}](Red)
@@ -81,6 +80,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
   def enableOkButton(b: Boolean): Unit
 
   /**
+   * Shows an error message in the wizard. If the error message should be
+   * removed, an empty string needs to be passed.
+   */
+  def showErrorMessage(msg: String): Unit
+
+  /**
    * Returns the path to the file created by the wizard. Returns `None` as long
    * as the wizard did not yet create a new file.
    */
@@ -100,7 +105,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
     btProject = new Button(c, SWT.BORDER | SWT.LEFT)
     val lbName = new Label(c, SWT.NONE)
     tName = new Text(c, SWT.BORDER)
-    lbError = new Label(c, SWT.NONE)
 
     lbName.setText("Name:")
 
@@ -151,13 +155,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
       validateInput()
     }
 
-    lbError.setLayoutData({
-      val l = new GridData(SWT.FILL, SWT.FILL, true, false)
-      l.horizontalSpan = 2
-      l
-    })
-    lbError.setForeground(Red)
-
     initComponents()
     c
   }
@@ -193,7 +190,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
     validateInput()
     selectedFileCreatorMapping.withInstance(_.showErrorMessageAtStartup) foreach { show =>
       if (!show)
-        lbError.setText("")
+        showErrorMessage("")
     }
 
     // select text field on wizard creation
@@ -287,9 +284,9 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * error message is shown and the ok-button is disbled.
    */
   private def validateInput() = {
-    def showError(msg: String) = {
-      enableOkButton(false)
-      lbError.setText(msg)
+    def handleError(msg: String) = {
+      enableOkButton(msg.isEmpty())
+      showErrorMessage(msg)
     }
 
     def validatedFileName =
@@ -298,14 +295,13 @@ trait NewFileWizard extends AnyRef with HasLogger {
       }
 
     if (selectedProject == null)
-      showError("No project selected")
+      handleError("No project selected")
     else
       validatedFileName foreach {
         case Valid =>
-          enableOkButton(true)
-          lbError.setText("")
+          handleError("")
         case Invalid(errorMsg) =>
-          showError(errorMsg)
+          handleError(errorMsg)
       }
   }
 
