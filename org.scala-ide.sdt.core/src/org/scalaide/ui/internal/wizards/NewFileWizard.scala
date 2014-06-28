@@ -111,6 +111,14 @@ trait NewFileWizard extends AnyRef with HasLogger {
       Dialogs.chooseProjectWithDialog(shell) foreach { p =>
         selectedProject = p
         btProject.setText(p.getProject().getName())
+
+        if (tName.getText().isEmpty())
+          selectedFileCreatorMapping.withInstance(
+              _.initialPathAfterProjectSelection(p.getProject())) foreach { path =>
+            tName.setText(path)
+            tName.setSelection(path.length())
+          }
+
         validateInput()
       }
       tName.forceFocus()

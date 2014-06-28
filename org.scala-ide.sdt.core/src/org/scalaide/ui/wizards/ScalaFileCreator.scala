@@ -41,6 +41,11 @@ trait ScalaFileCreator extends FileCreator {
         isDirectory = project.getType() == IResource.FOLDER)
   }
 
+  override def initialPathAfterProjectSelection(project: IProject): String = {
+    val srcDirs = sourceDirs(project.getProject())
+    srcDirs.headOption.map(_.lastSegment()+"/").getOrElse("")
+  }
+
   override def validateName(project: IProject, name: String): Validation = {
     if (!ScalaPlugin.plugin.isScalaProject(project))
       Invalid("Not a Scala project")

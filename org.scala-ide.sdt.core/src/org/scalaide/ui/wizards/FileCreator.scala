@@ -73,6 +73,19 @@ trait FileCreator {
   def initialPath(res: IResource): String
 
   /**
+   * This method is called whenever a new project is selected in the new file
+   * wizard and when at the same time the file name field is empty.
+   *
+   * The returned path is shown in the file name field immediately after the
+   * project selection window has disappeared. If nothing should be shown, an
+   * empty string needs to be returned.
+   *
+   * An example of a path that should be shown can be the name of a source
+   * folder of a Java project.
+   */
+  def initialPathAfterProjectSelection(project: IProject): String
+
+  /**
    * When the new file wizard is created this controls if in case of an invalid
    * initial path an error message is shown to users.
    */
