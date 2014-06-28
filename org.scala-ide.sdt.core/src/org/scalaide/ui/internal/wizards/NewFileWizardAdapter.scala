@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.wizards
 
 import org.eclipse.core.runtime.IConfigurationElement
+import org.eclipse.jface.dialogs.IMessageProvider
 import org.eclipse.jface.wizard.WizardPage
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Display
@@ -32,6 +33,9 @@ final class NewFileWizardAdapter(
     override def shell = Display.getCurrent().getActiveShell()
     override def fileCreatorId = self.fileCreatorId
     override def defaultTypeName = self.defaultTypeName
+
+    override def showErrorMessage(msg: String) =
+      setMessage(msg, if (msg.isEmpty()) IMessageProvider.NONE else IMessageProvider.ERROR)
 
     override def createControl(parent: Composite): Unit = {
       setControl(createContents(parent))
