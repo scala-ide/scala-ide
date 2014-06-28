@@ -94,12 +94,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
     c.setLayout(new GridLayout(2, false))
     c.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
 
+    val lbTemplate = new Label(c, SWT.NONE)
+    cmTemplate = new TableCombo(c, SWT.BORDER | SWT.READ_ONLY)
     val lbProject = new Label(c, SWT.NONE)
     btProject = new Button(c, SWT.BORDER | SWT.LEFT)
     val lbName = new Label(c, SWT.NONE)
     tName = new Text(c, SWT.BORDER)
-    val lbTemplate = new Label(c, SWT.NONE)
-    cmTemplate = new TableCombo(c, SWT.BORDER | SWT.READ_ONLY)
     lbError = new Label(c, SWT.NONE)
 
     lbName.setText("Name:")
