@@ -108,14 +108,17 @@ trait ScalaFileCreator extends FileCreator {
     if (name.isEmpty())
       Left(Invalid("No file path specified"))
     else if (noFolder)
-      Right(checkFileExists(_, name))
+      if (srcDirs.contains(rawPath.head))
+        Left(Invalid("No type name specified"))
+      else
+        Left(Invalid("No source folder specified"))
     else if (!srcDirs.contains(rawPath.head))
       if (name.endsWith("/"))
-        Left(Invalid("No file name specified"))
+        Left(Invalid("No type name specified"))
       else
-        Right(checkFileExists(_, name))
+        Left(Invalid(s"Source folder '${rawPath.head}' does not exist"))
     else if (noPackageNotation)
-      Left(Invalid(s"Incorrect syntax for file path. Has to be <folder>/<package>.<filename>"))
+      Left(Invalid(s"Incorrect syntax for file path. Has to be <src dir>/<package>.<type name>"))
     else
       validateFullyQualifiedType(rawPath(1), name)
   }

@@ -28,29 +28,14 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
     validateFailure("")
 
   @Test
-  def file_not_in_folder_is_valid() =
-    validateSuccess("File")
-
-  @Test
   def file_in_default_package_is_valid() =
     validateSuccess("src/File")
-
-  @Test
-  def file_not_in_source_folder_is_valid() =
-    validateSuccess("folder/File")
 
   @Test
   def file_and_package_is_valid() = {
     validateSuccess("src/a.File")
     validateSuccess("src/a.b.File")
     validateSuccess("src/a.b.c.File")
-  }
-
-  @Test
-  def file_and_subfolder_is_valid() = {
-    validateSuccess("folder/a/File")
-    validateSuccess("folder/a/b/File")
-    validateSuccess("folder/a/b/c/File")
   }
 
   @Test
@@ -93,21 +78,11 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
     validateSuccess("src/a.b.c.File.scala")
 
   @Test
-  def file_ending_addition_is_supported_in_folder_notation() =
-    validateSuccess("folder/a/b/c/File.scala")
-
-  @Test
   def no_scala_keywords_allowed_in_package_notation() = {
     validateFailure("src/trait.File")
     validateFailure("src/a.trait")
     validateFailure("src/=>")
     validateFailure("src/a.>:")
-  }
-
-  @Test
-  def keyword_and_special_signs_allowed_as_source_folder_name() = {
-    validateSuccess("trait/a.File")
-    validateSuccess("a-b/a.File")
   }
 
   @Test
@@ -117,10 +92,6 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
   @Test
   def java_keywords_are_allowed_as_file_name() =
     validateSuccess("src/a.int")
-
-  @Test
-  def no_file_name_validation_in_folder_notation() =
-    validateSuccess("fo?lder/a-bc/trait/a.b/class.")
 
   @Test
   def no_slash_allowed_in_package_notation() =
