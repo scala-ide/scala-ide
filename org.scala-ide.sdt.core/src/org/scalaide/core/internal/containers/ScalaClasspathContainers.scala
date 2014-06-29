@@ -56,9 +56,18 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 
   override def canUpdateClasspathContainer(containerPath: IPath, project: IJavaProject)= true
 
+  def isValid(container: IClasspathContainer): Boolean = {
+    val entries = container.getClasspathEntries()
+    entries forall { e =>
+      val fileValid = e.getPath().toFile().isFile()
+      val sourceValid = Option(e.getSourceAttachmentPath()) forall { p => p.toFile().isFile() }
+      fileValid && sourceValid
+    }
+  }
+
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
-    val savedContainer = getSavedContainerForPath(iProject, containerPath)
+    val savedContainer = getSavedContainerForPath(iProject, containerPath) filter isValid
     if (savedContainer.isDefined) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
     else {
       val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
