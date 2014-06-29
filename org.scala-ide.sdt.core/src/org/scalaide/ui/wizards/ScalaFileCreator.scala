@@ -33,12 +33,12 @@ trait ScalaFileCreator extends FileCreator {
     generateTemplateVariables(srcDirs, name)
   }
 
-  override def initialPath(project: IResource): String = {
-    val srcDirs = sourceDirs(project.getProject()).map(_.lastSegment())
+  override def initialPath(res: IResource): String = {
+    val srcDirs = sourceDirs(res.getProject()).map(_.lastSegment())
     generateInitialPath(
-        path = project.getFullPath().segments(),
+        path = res.getFullPath().segments(),
         srcDirs = srcDirs,
-        isDirectory = project.getType() == IResource.FOLDER)
+        isDirectory = res.getType() == IResource.FOLDER)
   }
 
   override def initialPathAfterProjectSelection(project: IProject): String = {
