@@ -32,11 +32,31 @@ import org.scalaide.logging.HasLogger
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import org.scalaide.util.internal.CompilerUtils.isBinarySame
 
 sealed trait ScalaInstallationLabel extends Serializable
 case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
 case class MultiBundleScalaInstallationLabel() extends ScalaInstallationLabel
 case class CustomScalaInstallationLabel(label: String) extends ScalaInstallationLabel
+
+/**
+ *  A type that marks the choice of a Labeled Scala Installation : either a Scala Version,
+ *  which will dereference to the latest available bundle with the same binary version, or
+ *  a scala installation hashcode, which will dereference to the Labeled installation which
+ *  hashes to it, if available.
+ *
+ *  @see ScalaInstallation.resolve
+ */
+case class ScalaInstallationChoice (marker: Either[ScalaVersion, Int]) extends Serializable{
+  override def toString() = marker match {
+    case Left(version) => version.unparse
+    case Right(hash) => hash.toString
+  }
+
+  def apply(si: LabeledScalaInstallation) = new ScalaInstallationChoice(Right(si.getHashString().hashCode()))
+  def apply(version: ScalaVersion) = new ScalaInstallationChoice(Left(version))
+
+}
 
 /** This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
@@ -88,6 +108,7 @@ trait LabeledScalaInstallation extends ScalaInstallation {
         this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
 
       def getName():Option[String] = PartialFunction.condOpt(label) {case CustomScalaInstallationLabel(tag) => tag}
+      def getHashString(): String = getName().fold(allJars map (_.getHashString()))(str => str +: (allJars map (_.getHashString()))).mkString
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -99,6 +120,8 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
   def libraryEntries(): IClasspathEntry = {
     JavaCore.newLibraryEntry(classJar, sourceJar.orNull, null)
   }
+
+  def getHashString(): String = sourceJar.fold(classJar.toPortableString())(s => classJar.toPortableString() + s.toPortableString())
 }
 
 object ScalaModule {
@@ -281,6 +304,10 @@ object ScalaInstallation {
   lazy val multiBundleInstallations: List[LabeledScalaInstallation] =
     MultiBundleScalaInstallation.detectInstallations()
 
+  def availableBundledInstallations : List[LabeledScalaInstallation] = {
+    multiBundleInstallations ++ bundledInstallations
+  }
+
   def availableInstallations: List[LabeledScalaInstallation] = {
     multiBundleInstallations ++ bundledInstallations ++ customInstallations
   }
@@ -333,4 +360,10 @@ object ScalaInstallation {
     }
     available.minBy(i => versionDistance(i.version))
   }
+
+  def resolve(choice: ScalaInstallationChoice): Option[ScalaInstallation] = choice.marker match{
+    case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
+    case Right(hash) => availableInstallations.find(si => si.getHashString().hashCode() == hash)
+  }
+
 }

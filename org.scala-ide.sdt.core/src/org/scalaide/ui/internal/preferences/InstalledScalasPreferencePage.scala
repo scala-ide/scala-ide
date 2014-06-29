@@ -102,7 +102,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
                 // give a label to this DirectoryScalaInstallation
                 val dlg = new InputDialog(shell, "", "Enter a name for this Scala Installation", "", new IInputValidator() {
                   override def isValid(newText: String): String = {
-                    if (installationLabels.labels contains newText) "This is a reserved name."
+                    if (labels contains newText) "This is a reserved name."
                     else if (customInstallations.flatMap(_.getName()) contains newText) "This name is already used by a custom Scala installation."
                     else null
                   }

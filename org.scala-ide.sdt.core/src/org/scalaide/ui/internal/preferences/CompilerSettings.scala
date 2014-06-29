@@ -51,6 +51,9 @@ import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.Final
 import org.eclipse.jface.preference.StringFieldEditor
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
+import org.scalaide.core.internal.project.ScalaInstallationChoice
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -144,7 +147,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   var useProjectSettingsWidget: Option[UseProjectSettingsWidget] = None
   var additionalParamsWidget: AdditionalParametersWidget = _
-  var dslWidget: Option[DesiredSourceLevelWidget] = None
+  var dslWidget: Option[DesiredInstallationWidget] = None
 
   def save(): Unit = {
     val project = getConcernedProject()
@@ -156,7 +159,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         event.getProperty() match {
           case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasClasspathChanged.lazySet(0, 1)
           case CompilerSettings.ADDITIONAL_PARAMS => wasClasspathChanged.lazySet(1, 1)
-          case SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL => wasClasspathChanged.lazySet(2, 1)
+          case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasClasspathChanged.lazySet(2, 1)
           case _ =>
         }
       }
@@ -174,9 +177,10 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     //the final save.
     save(userBoxes, preferenceStore0)
 
-    if (wasClasspathChanged.get(2) > 0) scalaProject foreach (_.setDesiredSourceLevel()) // this triggers a classpath check on its own
+    if (wasClasspathChanged.get(2) > 0) scalaProject foreach (_.setDesiredInstallation()) // this triggers a classpath check on its own
     else {
       // this occurs if the user has manually added the -Xsource:2.xx to the compiler parameters but NOT toggled the sourceLevel
+      // OR set a scala Installation
       // => we deduce the correct sourceLevel Value and execute it
       if (sourceLevelString.isDefined)
       scalaProject foreach (_.setDesiredSourceLevel(ScalaVersion(sourceLevelString.get))) //this triggers a classpath check on its own
@@ -226,7 +230,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         val other = new Composite(outer, SWT.SHADOW_ETCHED_IN)
         other.setLayout(new GridLayout(1, false))
         if (ScalaPlugin.plugin.scalaVer >= SpecificScalaVersion(2, 11, 0, Final)) {
-          dslWidget = Some(new DesiredSourceLevelWidget(other))
+          dslWidget = Some(new DesiredInstallationWidget(other))
         }
         val tmp = new Group(outer, SWT.SHADOW_ETCHED_IN)
         tmp.setText("Project Compiler Settings")
@@ -374,11 +378,20 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     def save() = store()
   }
 
-  class DesiredSourceLevelWidget(parent:Composite) extends
-    ComboFieldEditor(
-        SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL,
-        "Scala Source Level",
-        Array(Array("2.11", "2.11"),Array("2.10", "2.10")),
+  def labeler = new ScalaInstallationUIProviders {
+    def itemTitle = "Fixed Scala Installation"
+  }
+
+   def choicesOfScalaInstallations(): Array[Array[String]] = {
+      (Array("Latest 2.11 bundle (dynamic)", "2.11") ::
+      (Array("Latest 2.10 bundle (dynamic)", "2.10") ::
+      ScalaInstallation.availableInstallations.map{si => Array(labeler.getDecoration(si), si.getHashString().hashCode().toString())})).toArray
+    }
+
+  class DesiredInstallationWidget(parent:Composite) extends ComboFieldEditor(
+        SettingConverterUtil.SCALA_DESIRED_INSTALLATION,
+        "Scala Installation",
+        choicesOfScalaInstallations(),
         parent) {
     setPreferenceStore(preferenceStore0)
     load()

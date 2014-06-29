@@ -50,6 +50,9 @@ import org.scalaide.util.internal.CompilerUtils
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -496,7 +499,34 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)), slReason: String = "requested Source Level change"): Unit = {
+  def parseScalaInstallation(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
+    case Success(int) => Some(ScalaInstallationChoice(Right(int)))
+    case Failure(t) => t match {
+      case ex: NumberFormatException => Try(ScalaVersion(str)) match {
+        case Success(version) => Some(ScalaInstallationChoice(Left(version)))
+        case Failure(thrown) => None
+      }
+    }
+  }
+
+  def setDesiredInstallation(choice: ScalaInstallationChoice = parseScalaInstallation(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)).getOrElse(ScalaInstallationChoice(Left(ScalaPlugin.plugin.scalaVer)))): Unit = {
+    val optsi = ScalaInstallation.resolve(choice)
+    val sourceLevel = optsi map {si => CompilerUtils.shortString(si.version)}
+
+    def bundleUpdater(si: ScalaInstallation): () => Unit = {() =>
+      val updater = new ClasspathContainerSetter(javaProject)
+      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaLibId), si)
+      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaCompilerId), si)
+    }
+
+    // This is a precaution against scala installation loss and does not set anything by itself, see `SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL`
+    sourceLevel foreach {sl => projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, sl)}
+    optsi foreach {si => setDesiredSourceLevel(si.version, "requested Scala Installation change", Some(bundleUpdater(si)))}
+  }
+
+  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)),
+      slReason: String = "requested Source Level change",
+      customBundleUpdater: Option[() => Unit] = None): Unit = {
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
     // is the required sourceLevel the bundled scala version ?
@@ -512,9 +542,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     projectSpecificStorage.save()
-    val updater = new ClasspathContainerSetter(javaProject)
-    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
-    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
+    val updater = customBundleUpdater.getOrElse({() =>
+      val setter = new ClasspathContainerSetter(javaProject)
+      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
+      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
+      }
+    )
+    updater()
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
@@ -556,8 +590,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   val compilerSettingsListener = new IPropertyChangeListener {
       def propertyChange(event: PropertyChangeEvent) = {
-        if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) {
-          setDesiredSourceLevel()
+        if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
+          setDesiredInstallation()
         }
         if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE){
           if (isUnderlyingValid) classpathHasChanged()

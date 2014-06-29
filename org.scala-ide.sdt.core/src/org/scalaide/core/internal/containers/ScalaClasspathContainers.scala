@@ -35,7 +35,15 @@ import org.scalaide.core.internal.project.ScalaModule
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
+import org.eclipse.jface.viewers.LabelProvider
 import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.eclipse.core.resources.ProjectScope
+import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
+import java.util.zip.ZipFile
+import java.util.Properties
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -47,6 +55,11 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
     val setter = new ClasspathContainerSetter(project)
     val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
+    if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_INSTALLATION) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)) {
+      val desiredInstallChoice = ScalaPlugin.plugin.asScalaProject(iProject) flatMap (_.parseScalaInstallation(storage.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)))
+      desiredInstallChoice foreach {sc => ScalaInstallation.resolve(sc) foreach (setter.updateBundleFromScalaInstallation(containerPath, _))}
+    }
+    else
     if (usesProjectSettings && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) {
       setter.updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
     } else {

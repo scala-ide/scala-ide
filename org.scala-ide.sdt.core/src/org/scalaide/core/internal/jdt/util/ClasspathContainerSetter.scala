@@ -69,7 +69,7 @@ class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClass
 
   def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {
     import org.scalaide.util.internal.CompilerUtils.isBinarySame
-    val available = ScalaInstallation.availableInstallations
+    val available = ScalaInstallation.availableBundledInstallations
     available.filter { si => isBinarySame(scalaVersion, si.version) }.sortBy(_.version).lastOption
   }
 

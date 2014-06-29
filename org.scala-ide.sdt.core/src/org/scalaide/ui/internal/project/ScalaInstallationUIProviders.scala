@@ -10,6 +10,21 @@ import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 
 trait ScalaInstallationUIProviders {
 
+  val labels = Array("bundled", "multi bundles", "unknown")
+
+  def getDecoration(si: ScalaInstallation): String = {
+    si match {
+        case s: BundledScalaInstallation =>
+          s"$itemTitle: ${labels(0)} ${s.version.unparse}"
+        case s: MultiBundleScalaInstallation =>
+          s"$itemTitle: ${labels(1)} ${s.version.unparse}"
+        case s: LabeledScalaInstallation =>
+          s"$itemTitle: ${s.getName().getOrElse("")} ${s.version.unparse}"
+        case s: ScalaInstallation =>
+          s"$itemTitle: ${labels(2)} ${s.version.unparse}"
+      }
+  }
+
   def itemTitle(): String
 
   class ContentProvider extends IStructuredContentProvider {
@@ -27,20 +42,7 @@ trait ScalaInstallationUIProviders {
 
    class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
 
-    val labels = Array("bundled", "multi bundles", "unknown")
-
-    override def getText(element: Any): String = {
-      element match {
-        case s: BundledScalaInstallation =>
-          s"$itemTitle: ${labels(0)} ${s.version.unparse}"
-        case s: MultiBundleScalaInstallation =>
-          s"$itemTitle: ${labels(1)} ${s.version.unparse}"
-        case s: LabeledScalaInstallation =>
-          s"$itemTitle: ${s.getName().getOrElse("")} ${s.version.unparse}"
-        case s: ScalaInstallation =>
-          s"$itemTitle: ${labels(2)} ${s.version.unparse}"
-      }
-    }
+   override def getText(element: Any): String = PartialFunction.condOpt(element){case si: ScalaInstallation => getDecoration(si)}.getOrElse("")
   }
 
 }
