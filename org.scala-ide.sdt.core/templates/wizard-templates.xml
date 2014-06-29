@@ -76,4 +76,11 @@ object ${type_name} extends App {
   ${cursor}
 }</template>
 
+<template
+  name="wizard_empty"
+  description="New empty file template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.empty"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+></template>
 </templates>
