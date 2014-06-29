@@ -1658,5 +1658,13 @@
           name="Scala App"
           templateId="org.scalaide.core.templates.wizards.app">
     </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.EmptyFileCreator"
+          description="Creates an empty file"
+          icon="icons/full/etool16/newfile_wiz.gif"
+          id="org.scalaide.ui.wizards.empty"
+          name="Empty File"
+          templateId="org.scalaide.core.templates.wizards.empty">
+    </fileCreator>
  </extension>
 </plugin>
