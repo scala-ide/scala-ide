@@ -15,12 +15,8 @@ class ScalaFileCreatorInitialPathTest extends ScalaFileCreator {
   }
 
   @Test
-  def no_initial_path_when_no_file_is_selected() =
-    "P" === ""
-
-  @Test
-  def no_initial_path_when_file_is_not_in_a_folder() =
-    "P/file.scala" === ""
+  def source_folder_when_no_file_is_selected() =
+    "P" === "src/"
 
   @Test
   def only_source_folder_name_when_file_is_in_default_package() =
@@ -41,20 +37,6 @@ class ScalaFileCreatorInitialPathTest extends ScalaFileCreator {
   }
 
   @Test
-  def only_folder_name_when_file_is_in_no_source_folder() =
-    "P/folder/file.scala" === "folder/"
-
-  @Test
-  def no_package_path_when_file_is_in_subfolder_outside_of_source_folder() = {
-    "P/folder/a/file.scala" === "folder/a/"
-    "P/folder/a/b/file.scala" === "folder/a/b/"
-    "P/folder/a/b/c/file.scala" === "folder/a/b/c/"
-  }
-
-  @Test
-  def inital_path_to_inner_folder_when_no_file_is_selected_outside_of_source_folder() = {
-    "P/folder/a" === "folder/a/"
-    "P/folder/a/b" === "folder/a/b/"
-    "P/folder/a/b/c" === "folder/a/b/c/"
-  }
+  def source_folder_when_selected_file_is_in_no_source_folder() =
+    "P/folder/file.scala" === "src/"
 }
