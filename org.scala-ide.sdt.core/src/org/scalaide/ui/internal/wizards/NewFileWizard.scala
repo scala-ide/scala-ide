@@ -209,10 +209,11 @@ trait NewFileWizard extends AnyRef with HasLogger {
       setType("package_name")
       setDescription("A dot separated name of the package")
 
-      override def resolve(ctx: TemplateContext) = {
-        val pkg = super.resolve(ctx)
-        if (pkg.isEmpty()) "" else s"package $pkg"
-      }
+      override def resolve(ctx: TemplateContext) =
+        Option(super.resolve(ctx))
+          .filter(_.nonEmpty)
+          .map(pkg => s"package $pkg")
+          .getOrElse("")
     }
 
     def applyTemplate(template: Template, ctx: ScalaTemplateContext) = {
