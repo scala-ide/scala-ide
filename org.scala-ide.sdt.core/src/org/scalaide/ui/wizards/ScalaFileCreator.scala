@@ -76,8 +76,9 @@ trait ScalaFileCreator extends FileCreator {
    * directory.
    */
   private[wizards] def generateInitialPath(path: Seq[String], srcDirs: Seq[String], isDirectory: Boolean): String = {
+    def srcDirAsDefaultPath = srcDirs.headOption.getOrElse("")+"/"
     if (path.size < 3)
-      ""
+      srcDirAsDefaultPath
     else {
       val Seq(_, topFolder, rawSubPath @ _*) = path
       val subPath = if (isDirectory) rawSubPath else rawSubPath.init
@@ -91,7 +92,10 @@ trait ScalaFileCreator extends FileCreator {
           s"$topFolder/$p$delimiter"
       }
 
-      generatePath(if (srcDirs contains topFolder) "." else "/")
+      if (srcDirs contains topFolder)
+        generatePath(".")
+      else
+        srcDirAsDefaultPath
     }
   }
 
@@ -184,24 +188,18 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   private[wizards] def generateTemplateVariables(srcDirs: Seq[String], name: String): Map[String, String] = {
-    val isFolderNotation = name.count(_ == '/') != 1
+    val Seq(folder, pkg) = Commons.split(name, '/')
 
-    if (isFolderNotation)
+    if (!srcDirs.contains(folder))
       Map()
     else {
-      val Seq(folder, pkg) = Commons.split(name, '/')
-
-      if (!srcDirs.contains(folder))
-        Map()
-      else {
-        val splitPos = pkg.lastIndexOf('.')
-        if (splitPos < 0)
-          Map(VariableTypeName -> pkg)
-        else
-          Map(
-            VariablePackageName -> pkg.substring(0, splitPos),
-            VariableTypeName -> pkg.substring(splitPos+1))
-      }
+      val splitPos = pkg.lastIndexOf('.')
+      if (splitPos < 0)
+        Map(VariableTypeName -> pkg)
+      else
+        Map(
+          VariablePackageName -> pkg.substring(0, splitPos),
+          VariableTypeName -> pkg.substring(splitPos+1))
     }
   }
 

@@ -16,14 +16,6 @@ class ScalaFileCreatorTemplateVariablesTest extends ScalaFileCreator {
   }
 
   @Test
-  def no_variables() = {
-    "File" === Map()
-    "File.scala" === Map()
-    "folder/File" === Map()
-    "folder/a/b/c/File" === Map()
-  }
-
-  @Test
   def only_file_variable() =
     "src/File" === Map(VariableTypeName -> "File")
 

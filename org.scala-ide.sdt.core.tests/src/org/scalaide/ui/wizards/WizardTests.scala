@@ -7,6 +7,7 @@ import org.junit.runners.Suite
 @Suite.SuiteClasses(Array(
   classOf[ScalaFileCreatorInitialPathTest],
   classOf[ScalaFileCreatorValidationTest],
-  classOf[ScalaFileCreatorTemplateVariablesTest]
+  classOf[ScalaFileCreatorTemplateVariablesTest],
+  classOf[EmptyFileCreatorInitialPathTest]
 ))
 class WizardTests
