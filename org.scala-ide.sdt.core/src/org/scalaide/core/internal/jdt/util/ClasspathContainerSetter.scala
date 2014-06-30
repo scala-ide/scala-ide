@@ -136,7 +136,7 @@ class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClass
     else if (path.toPortableString() == ScalaPlugin.plugin.scalaCompilerId) "Scala Compiler container"
     else "Scala Container"
 
-  private def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {
+  def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {
     import org.scalaide.util.internal.CompilerUtils.isBinarySame
     val available = ScalaInstallation.availableInstallations
     available.filter { si => isBinarySame(scalaVersion, si.version) }.sortBy(_.version).lastOption

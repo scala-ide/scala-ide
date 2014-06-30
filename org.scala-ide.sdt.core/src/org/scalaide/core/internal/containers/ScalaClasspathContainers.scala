@@ -50,13 +50,15 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSerializer
+import java.util.zip.ZipFile
+import java.util.Properties
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with ClasspathContainerSerializer with HasLogger {
   def entries: Array[IClasspathEntry]
 
   override def canUpdateClasspathContainer(containerPath: IPath, project: IJavaProject)= true
 
-  def isValid(container: IClasspathContainer): Boolean = {
+  private def isValid(container: IClasspathContainer): Boolean = {
     val entries = container.getClasspathEntries()
     entries forall { e =>
       val fileValid = e.getPath().toFile().isFile()
@@ -65,26 +67,43 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
     }
   }
 
+  private def conforms(container: IClasspathContainer, versionCheck: ScalaVersion => Boolean) = {
+      val entries = container.getClasspathEntries()
+      val libentry = entries find {e => ("""scala-library(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
+      val zipLib = libentry map {entry => new ZipFile(entry.getPath().toPortableString())}
+      val props = new Properties()
+      zipLib map {lib => lib.getEntry("library.properties")} foreach {entry => zipLib foreach {lib => props.load(lib.getInputStream(entry))}}
+      Option(props.getProperty("version.number")) map (ScalaVersion(_)) forall (versionCheck(_))
+    }
+
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
     val savedContainer = getSavedContainerForPath(iProject, containerPath) filter isValid
-    if (savedContainer.isDefined) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
-    else {
-      val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
-      val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-      if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL))
-        new ClasspathContainerSetter(project).updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
-      else {
-        logger.info(s"Initializing classpath container $desc: ${entries foreach (_.getPath())}")
 
-        JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
-          override def getPath = containerPath
-          override def getClasspathEntries = entries
-          override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
-          override def getKind = IClasspathContainer.K_SYSTEM
-        }), null)
+    val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
+    val setter = new ClasspathContainerSetter(project)
+    val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+    def strictConformity(referenceVersion: ScalaVersion)(scalaVersion: ScalaVersion) = setter.bestScalaBundleForVersion(referenceVersion) forall (_ == scalaVersion)
+
+    if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) {
+      if (savedContainer.isDefined && conforms(savedContainer.get, strictConformity(ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))))
+        // the serialized container is ok w.r.t source Level & latest available bundles, but may contain attributes, so we take it
+        JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
+      else
+        setter.updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
+    } else // The source level has been left as default ! We still check conformity w.r.t latest bundle
+    if (savedContainer.isDefined && conforms(savedContainer.get, strictConformity(ScalaPlugin.plugin.scalaVer))) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
+    else {
+      logger.info(s"Initializing classpath container $desc: ${entries foreach (_.getPath())}")
+
+      JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
+        override def getPath = containerPath
+        override def getClasspathEntries = entries
+        override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
+        override def getKind = IClasspathContainer.K_SYSTEM
+      }), null)
       }
-    }
+
   }
 
 }
