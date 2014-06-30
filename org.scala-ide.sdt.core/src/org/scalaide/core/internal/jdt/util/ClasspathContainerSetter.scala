@@ -26,8 +26,6 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 
   def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry]
 
-  def containerUpdater(containerPath: IPath, container: IClasspathContainer)
-
   private def hasCustomContainer(existingEntries: Array[IClasspathEntry], cp: IPath): Boolean = {
    existingEntries.exists(e => e.getEntryKind() == IClasspathContainer.K_SYSTEM && e.getPath().equals(cp))
   }
@@ -45,13 +43,7 @@ trait ScalaClasspathContainerHandler extends HasLogger {
       override def getPath(): IPath = containerPath
     }
 
-   if (!hasCustomContainer(existingEntries, containerPath)) {
-      logger.debug(s"Did not find a container for ${containerPath.toPortableString()} on classpath when asked to update to $versionString — adding Container")
-      JavaCore.setClasspathContainer(containerPath, Array(project),Array(customContainer), null)
-   } else {
-     logger.debug(s"Found container for ${containerPath.toPortableString()} on classpath when asked to update to $versionString — updating existing semantics")
-     containerUpdater(containerPath, customContainer)
-   }
+   JavaCore.setClasspathContainer(containerPath, Array(project),Array(customContainer), null)
    if (!hasCustomContainer(existingEntries, containerPath)) JavaCore.newContainerEntry(containerPath) else null
   }
 }
@@ -59,8 +51,6 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClasspathContainerHandler {
 
   override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(_.libraryEntries()).toArray
-
-  override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaLibraryClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, javaProject, container)
 
   def descOfScalaPath(path: IPath) =
     if (path.toPortableString() == ScalaPlugin.plugin.scalaLibId) "Scala Library container"

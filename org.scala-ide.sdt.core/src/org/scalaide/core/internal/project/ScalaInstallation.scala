@@ -52,10 +52,6 @@ case class ScalaInstallationChoice (marker: Either[ScalaVersion, Int]) extends S
     case Left(version) => version.unparse
     case Right(hash) => hash.toString
   }
-
-  def apply(si: LabeledScalaInstallation) = new ScalaInstallationChoice(Right(si.getHashString().hashCode()))
-  def apply(version: ScalaVersion) = new ScalaInstallationChoice(Left(version))
-
 }
 
 /** This class represents a valid Scala installation. It encapsulates

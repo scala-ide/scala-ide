@@ -2,9 +2,7 @@ package org.scalaide.core.internal.containers
 
 import java.util.Properties
 import java.util.zip.ZipFile
-
 import scala.tools.nsc.settings.ScalaVersion
-
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
@@ -44,6 +42,12 @@ import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import java.util.zip.ZipFile
 import java.util.Properties
+import org.scalaide.core.internal.project.LabeledScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallationChoice
+import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
+import org.scalaide.util.internal.CompilerUtils.shortString
+import org.eclipse.jface.viewers.IStructuredContentProvider
+import org.eclipse.jface.viewers.Viewer
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -73,7 +77,6 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
       }), null)
     }
   }
-
 }
 
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala library container") {
@@ -91,31 +94,56 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   override def entries = Array(compiler.libraryEntries())
 }
 
-abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val itemTitle: String, desc: String) extends NewElementWizardPage(name)
+abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, itemTitle: String, desc: String) extends NewElementWizardPage(name)
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
-  with IClasspathContainerPageExtension
-  with ScalaInstallationUIProviders {
+  with IClasspathContainerPageExtension {
 
-  private var chosenScalaInstallation: ScalaInstallation = null
-  private var existingEntries: Array[IClasspathEntry] = null
+  class ContentProvider extends IStructuredContentProvider {
+    override def dispose(): Unit = {}
+
+    override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
+
+    override def getElements(input: Any): Array[Object] = {
+      input match {
+        case l: List[ScalaInstallationChoice] =>
+          l.toArray
+      }
+    }
+  }
+
+  class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
+
+    override def getText(element: Any): String = element match {
+      case ch: ScalaInstallationChoice => ch.marker match {
+        case Left(scalaVersion) => s"Dynamic $itemTitle : ${shortString(scalaVersion)}"
+        case Right(hashcode) => s"Fixed $itemTitle : ${ScalaInstallation.resolve(ch) map (_.version.unparse) getOrElse " none "}"
+      }
+    }
+  }
+
+  private var choiceOfScalaInstallation: ScalaInstallationChoice = null
   protected var project: IJavaProject = null
-  private var versionString: String = " none "
 
   setTitle(itemTitle)
   setDescription(desc)
   setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY)
 
-  override def finish() = true
+  override def finish() = {
+    val proj = ScalaPlugin.plugin.asScalaProject(project.getProject())
+    proj foreach {pr =>
+      pr.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choiceOfScalaInstallation.toString())
+    }
+    proj.isDefined
+  }
 
-  override def getSelection(): IClasspathEntry = getAndUpdateScalaClasspathContainerEntry(containerPath, desc, versionString, project, chosenScalaInstallation, existingEntries)
+  override def getSelection(): IClasspathEntry = { JavaCore.newContainerEntry(containerPath) }
 
   override def initialize(javaProject: IJavaProject, currentEntries: Array[IClasspathEntry]) = {
     project = javaProject
-    existingEntries = currentEntries
   }
 
-  override def setSelection(containerEntry: IClasspathEntry) {}
+  override def setSelection(containerEntry: IClasspathEntry) = {}
 
   override def createControl(parent: Composite) = {
     val composite = new Composite(parent, SWT.NONE)
@@ -126,20 +154,22 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
     list.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
     list.setContentProvider(new ContentProvider())
     list.setLabelProvider(new LabelProvider)
-    list.setInput(ScalaInstallation.availableInstallations)
+    val previousVersionChoice = PartialFunction.condOpt(ScalaInstallation.platformInstallation.version) {case ShortScalaVersion(major, minor) => ScalaInstallationChoice(Left(ScalaVersion(f"$major%d.${minor-1}%d")))}
+    def previousVersionPrepender(l:List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
+
+    list.setInput( previousVersionPrepender(ScalaInstallationChoice(Left(ScalaInstallation.platformInstallation.version)) :: ScalaInstallation.availableInstallations.map(si => ScalaInstallationChoice(Right(si.getHashString().hashCode())))) )
 
     list.addSelectionChangedListener(new ISelectionChangedListener() {
       def selectionChanged(event: SelectionChangedEvent) {
         try {
           val sel = event.getSelection().asInstanceOf[IStructuredSelection]
-          val si = sel.getFirstElement().asInstanceOf[ScalaInstallation]
-          chosenScalaInstallation = si
-          versionString = si.version.unparse
+          val sc = sel.getFirstElement().asInstanceOf[ScalaInstallationChoice]
+          choiceOfScalaInstallation = sc
           setPageComplete(true)
         } catch {
           case e: Exception =>
             logger.error("Exception during selection of a scala bundle", e)
-            chosenScalaInstallation = null
+            choiceOfScalaInstallation = null
             setPageComplete(false)
         }
       }
@@ -157,7 +187,6 @@ class ScalaCompilerClasspathContainerPage extends
     "Scala Compiler container",
     "Scala compiler container") {
     override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = Array(si.compiler.libraryEntries())
-    override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaCompilerClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)
 }
 
 class ScalaLibraryClasspathContainerPage extends
@@ -166,5 +195,4 @@ class ScalaLibraryClasspathContainerPage extends
     "Scala Library container",
     "Scala library container") {
     override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(_.libraryEntries()).toArray
-    override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaLibraryClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)
 }
