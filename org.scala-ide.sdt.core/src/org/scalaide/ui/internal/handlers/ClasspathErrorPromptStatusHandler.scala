@@ -42,14 +42,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
     val projectName = scalaProject map ( _.underlying.getName()) getOrElse("")
     val message = s"The version of scala library found in the build path of $projectName is prior to the one provided by scala IDE. We rather expected: $expectedVer Turn on the source level flags for this specific project ?"
 
-    val previousScalaVer = ScalaPlugin.plugin.scalaVer match {
-      case CompilerUtils.ShortScalaVersion(major, minor) => {
-        // This is technically incorrect for an epoch change, but the Xsource flag won't be enough to cover for that anyway
-        val lesserMinor = minor - 1
-        f"$major%d.$lesserMinor%d"
-      }
-      case _ => "none"
-    }
+    val previousScalaVer = CompilerUtils.previousShortString(ScalaPlugin.plugin.scalaVer)
 
     if (scalaProject.isDefined) {
       val project = scalaProject.get
