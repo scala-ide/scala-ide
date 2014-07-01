@@ -1139,11 +1139,6 @@
          contextId="scala.tools.eclipse.scalaEditorScope"
          sequence="M2+M3+T"/>
    <key
-   		 commandId="org.scalaide.refactoring.ExtractMethod"
-   		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-   		 contextId="scala.tools.eclipse.scalaEditorScope"
-   		 sequence="M2+M3+M"/>
-   <key
    		 commandId="org.scalaide.refactoring.ExtractLocal"
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
@@ -1258,32 +1253,6 @@
     <handler
           class="org.scalaide.refactoring.internal.InlineLocal"
           commandId="org.scalaide.refactoring.InlineLocal">
-    </handler>
-    <handler
-          class="org.scalaide.refactoring.internal.ExtractLocal"
-          commandId="org.scalaide.refactoring.ExtractLocal">
-       <enabledWhen>
-          <with
-                variable="selection">
-             <test
-                   property="org.scalaide.ui.internal.editor.nonEmpty"
-                   value="true">
-             </test>
-          </with>
-       </enabledWhen>
-    </handler>
-    <handler
-          class="org.scalaide.refactoring.internal.ExtractMethod"
-          commandId="org.scalaide.refactoring.ExtractMethod">
-       <enabledWhen>
-          <with
-                variable="selection">
-             <test
-                   property="org.scalaide.ui.internal.editor.nonEmpty"
-                   value="true">
-             </test>
-          </with>
-       </enabledWhen>
     </handler>
     <handler
           class="org.scalaide.refactoring.internal.extract.Extract"
@@ -1480,12 +1449,6 @@
                 label="Extract Local"
                 style="push"
                 tooltip="Extract Local">
-          </command>
-          <command
-                commandId="org.scalaide.refactoring.ExtractMethod"
-                label="Extract Method"
-                style="push"
-                tooltip="Extract Method">
           </command>
           <command
                 commandId="org.scalaide.refactoring.MoveClass"
