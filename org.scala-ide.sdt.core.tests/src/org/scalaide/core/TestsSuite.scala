@@ -38,6 +38,7 @@ import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
+import org.scalaide.core.project.DirectoryScalaInstallationTest
 
 /**
  * To run this class DO NOT FORGET to set the config.ini in the  "configuration" tab.
@@ -83,6 +84,7 @@ import org.scalaide.core.ui.completion.CompletionTestSuite
     classOf[ScalaWordFinderTest],
     classOf[ScalaInstallationTest],
     classOf[MultiScalaVersionTest],
-    classOf[CompletionTestSuite]
+    classOf[CompletionTestSuite],
+    classOf[DirectoryScalaInstallationTest]
 ))
 class TestsSuite

@@ -36,12 +36,10 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
   final val scalaCompilerPrefix = "scala-compiler"
   final val scalaSwingPrefix = "scala-swing"
   final val scalaActorPrefix = "scala-actor"
-  final val scalaXmlPrefix = "scala-xml"
-  final val scalaContinuationsPrefix = "scala-continuations"
 
   private val dirAsValidFile: Option[File] = {
     val f = directory.toFile()
-    if (f.exists() && f.isDirectory()) Some(f) else None
+    if (f.isDirectory()) Some(f) else None
   }
 
   private val extantJars: Option[Array[File]] = dirAsValidFile.map { f =>
@@ -98,14 +96,10 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
         case None => jarLookup((s"$p$optionalVersion\\.jar").r)
       }
       val foundVersion = classJarResult flatMap versionOfFileName
-      val requiredSrcVersion =
-        // if we have satisfied the requirement in presumedVersion, we look for that version
-        if (presumedVersion.isDefined && foundVersion.isDefined && foundVersion.get == presumedVersion) requiredVersion
-        // otherwise we try whatever matches what we have found
-        else (foundVersion map (_.replaceAll("""\.""", """\\."""))) getOrElse optionalVersion
+      val requiredSrcVersion = foundVersion getOrElse ""
 
-      val versionedSrcString = s"$p-src$requiredSrcVersion\\.jar"
-      val versionedSrcRegex = versionedSrcString.r
+      val versionedSrcString = s"$p-src$requiredSrcVersion.jar"
+      val versionedSrcRegex = versionedSrcString.replaceAll("""\.""", """\\.""").r
 
       classJarResult map { j =>
         ScalaModule(new Path(j.getCanonicalPath()), jarLookup(versionedSrcRegex) map { f => new Path(f.getCanonicalPath()) })
@@ -131,9 +125,7 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
 
   override lazy val extraJars = findScalaJars(List(scalaActorPrefix,
       scalaReflectPrefix,
-      scalaSwingPrefix,
-      scalaXmlPrefix,
-      scalaContinuationsPrefix), presumedLibraryVersionString).filter {
+      scalaSwingPrefix), presumedLibraryVersionString).filter {
     module => versionCandidate forall (looksBinaryCompatible(_, module))
     }
   override lazy val compiler = compilerCandidate.get

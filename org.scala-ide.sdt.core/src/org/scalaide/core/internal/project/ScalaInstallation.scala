@@ -299,7 +299,7 @@ object ScalaInstallation {
     }
   }
 
-  lazy val customInstallations: Set[LabeledScalaInstallation] = Set() ++ initialScalaInstallations.map(customize(_))
+  lazy val customInstallations: Set[LabeledScalaInstallation] = initialScalaInstallations.map(customize(_))(collection.breakOut)
 
   /** Return the Scala installation currently running in Eclipse. */
   lazy val platformInstallation: LabeledScalaInstallation =
