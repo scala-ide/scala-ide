@@ -18,6 +18,8 @@ import xsbti.compile.ScalaInstance
 import java.net.URLClassLoader
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.JavaCore
 
 /** This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
@@ -49,7 +51,12 @@ trait ScalaInstallation {
     s"Scala $version: ${allJars.mkString(", ")})"
 }
 
-case class ScalaModule(classJar: IPath, sourceJar: Option[IPath])
+case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
+
+  def libraryEntries(): IClasspathEntry = {
+    JavaCore.newLibraryEntry(classJar, sourceJar.orNull, null)
+  }
+}
 
 object ScalaModule {
   def apply(bundleId: String, classJar: IPath): ScalaModule = {

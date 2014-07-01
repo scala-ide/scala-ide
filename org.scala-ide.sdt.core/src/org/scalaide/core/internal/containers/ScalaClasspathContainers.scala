@@ -1,5 +1,11 @@
 package org.scalaide.core.internal.containers
 
+import java.util.Properties
+import java.util.zip.ZipFile
+
+import scala.tools.nsc.settings.ScalaVersion
+
+import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.ClasspathContainerInitializer
@@ -9,91 +15,41 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage
+import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension
 import org.eclipse.jdt.ui.wizards.NewElementWizardPage
-import org.eclipse.swt.SWT
-import org.eclipse.swt.widgets.Composite
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation._
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.internal.project.ScalaModule
-import org.eclipse.jface.viewers.IStructuredContentProvider
-import org.scalaide.core.internal.project.BundledScalaInstallation
-import org.eclipse.jface.viewers.Viewer
-import org.scalaide.core.internal.project.MultiBundleScalaInstallation
-import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.layout.GridData
-import org.eclipse.jface.viewers.ListViewer
-import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.widgets.Button
-import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension
-import java.io.IOException
-import java.io.FileOutputStream
-import org.eclipse.core.resources.IProject
-import java.io.File
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSaveHelper
-import org.eclipse.core.runtime.IStatus
-import java.io.FileInputStream
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
-import org.eclipse.jface.viewers.LabelProvider
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.ui.internal.preferences.PropertyStore
-import org.eclipse.core.resources.ProjectScope
-import scala.tools.nsc.settings.ScalaVersion
+import org.eclipse.jface.viewers.ListViewer
+import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.swt.SWT
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.widgets.Composite
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSerializer
-import java.util.zip.ZipFile
-import java.util.Properties
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation.compiler
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation.library
+import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
+import org.scalaide.util.internal.SettingConverterUtil
 
-abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with ClasspathContainerSerializer with HasLogger {
+abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
-
-  override def canUpdateClasspathContainer(containerPath: IPath, project: IJavaProject)= true
-
-  private def isValid(container: IClasspathContainer): Boolean = {
-    val entries = container.getClasspathEntries()
-    entries forall { e =>
-      val fileValid = e.getPath().toFile().isFile()
-      val sourceValid = Option(e.getSourceAttachmentPath()) forall { p => p.toFile().isFile() }
-      fileValid && sourceValid
-    }
-  }
-
-  private def conforms(container: IClasspathContainer, versionCheck: ScalaVersion => Boolean) = {
-      val entries = container.getClasspathEntries()
-      val libentry = entries find {e => ("""scala-library(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
-      val zipLib = libentry map {entry => new ZipFile(entry.getPath().toPortableString())}
-      val props = new Properties()
-      zipLib map {lib => lib.getEntry("library.properties")} foreach {entry => zipLib foreach {lib => props.load(lib.getInputStream(entry))}}
-      Option(props.getProperty("version.number")) map (ScalaVersion(_)) forall (versionCheck(_))
-    }
 
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
-    val savedContainer = getSavedContainerForPath(iProject, containerPath) filter isValid
 
     val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
     val setter = new ClasspathContainerSetter(project)
     val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
-    def strictConformity(referenceVersion: ScalaVersion)(scalaVersion: ScalaVersion) = setter.bestScalaBundleForVersion(referenceVersion) forall (_ == scalaVersion)
 
-    if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) {
-      if (savedContainer.isDefined && conforms(savedContainer.get, strictConformity(ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))))
-        // the serialized container is ok w.r.t source Level & latest available bundles, but may contain attributes, so we take it
-        JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
-      else
-        setter.updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
-    } else // The source level has been left as default ! We still check conformity w.r.t latest bundle
-    if (savedContainer.isDefined && conforms(savedContainer.get, strictConformity(ScalaPlugin.plugin.scalaVer))) JavaCore.setClasspathContainer(containerPath, Array(project), Array(savedContainer.get), new NullProgressMonitor())
-    else {
+    if (usesProjectSettings && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) {
+      setter.updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
+    } else {
       logger.info(s"Initializing classpath container $desc: ${entries foreach (_.getPath())}")
 
       JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
@@ -102,8 +58,7 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
         override def getDescription = desc + " [" + scala.util.Properties.scalaPropOrElse("version.number", "none") + "]"
         override def getKind = IClasspathContainer.K_SYSTEM
       }), null)
-      }
-
+    }
   }
 
 }
@@ -112,7 +67,7 @@ class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerI
   val plugin = ScalaPlugin.plugin
   import plugin._
 
-  override def entries = (library +: ScalaInstallation.platformInstallation.extraJars).map {libraryEntries}.to[Array]
+  override def entries = (library +: ScalaInstallation.platformInstallation.extraJars).map {_.libraryEntries()}.to[Array]
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala compiler container") {
@@ -120,7 +75,7 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   import plugin._
   import ScalaInstallation.platformInstallation._
 
-  override def entries = Array(libraryEntries(compiler))
+  override def entries = Array(compiler.libraryEntries())
 }
 
 abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val title: String, desc: String) extends NewElementWizardPage(name)
@@ -188,7 +143,7 @@ class ScalaCompilerClasspathContainerPage extends
     "ScalaCompilerContainerPage",
     "Scala Compiler container",
     "Scala compiler container") {
-    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = Array(libraryEntries(si.compiler))
+    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = Array(si.compiler.libraryEntries())
     override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaCompilerClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)
 }
 
@@ -197,6 +152,6 @@ class ScalaLibraryClasspathContainerPage extends
     "ScalaLibraryContainerPage",
     "Scala Library container",
     "Scala library container") {
-    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(libraryEntries).toArray
+    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(_.libraryEntries()).toArray
     override def containerUpdater(containerPath: IPath, container: IClasspathContainer) = (new ScalaLibraryClasspathContainerInitializer()).requestClasspathContainerUpdate(containerPath, project, container)
 }
