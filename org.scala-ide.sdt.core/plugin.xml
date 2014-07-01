@@ -114,6 +114,12 @@
             id="org.scalaide.ui.preferences.editor"
             name="Editor">
       </page>
+      <page
+            category="org.scalaide.ui.preferences"
+            class="org.scalaide.ui.internal.preferences.InstalledScalasPreferencePage"
+            id="org.scalaide.ui.preferences.scalas"
+            name="Installed Scalas">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
