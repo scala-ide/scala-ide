@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension-point id="sourcefileprovider" name="Source file Providers" schema="schema/sourceFileProviders.exsd"/>
+   <extension-point id="scalaHoverDebugOverride" name="Scala Hover Debug Override" schema="schema/scalaHoverDebugOverride.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page

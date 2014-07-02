@@ -14,6 +14,8 @@ import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.ui.IEditorInput
 import org.eclipse.jface.viewers.ILabelProviderListener
+import org.eclipse.debug.core.model.IVariable
+import scala.util.Try
 
 /**
  * Utility methods for the ScalaDebugModelPresentation class
@@ -35,6 +37,12 @@ object ScalaDebugModelPresentation {
       case _ =>
         ???
     }
+  }
+
+  def textFor(variable: IVariable): String = {
+    val name = Try{variable.getName} getOrElse "Unavailable Name"
+    val value = Try{variable.getValue} map {computeDetail(_)} getOrElse "Unavailable Value"
+    s"$name = $value"
   }
 
   /** Return the a toString() equivalent for an Array
@@ -125,6 +133,8 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         getScalaThreadText(thread)
       case stackFrame: ScalaStackFrame =>
         getScalaStackFrameText(stackFrame)
+      case variable: IVariable =>
+        ScalaDebugModelPresentation.textFor(variable)
     }
   }
 
