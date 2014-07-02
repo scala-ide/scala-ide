@@ -347,25 +347,6 @@ object ScalaInstallation {
 
   }
 
-  /** Return the closest installation to the given Scala version.
-   *
-   *  @return An existing ScalaInstallation.
-   */
-  def findBestMatch(desiredVersion: SpecificScalaVersion, available: Seq[ScalaInstallation] = ScalaInstallation.availableInstallations): ScalaInstallation = {
-    def versionDistance(v: ScalaVersion) = v match {
-      case SpecificScalaVersion(major, minor, micro, build) =>
-        import Math._
-        abs(major - desiredVersion.major) * 1000000 +
-          abs(minor - desiredVersion.minor) * 10000 +
-          abs(micro - desiredVersion.rev)     * 100 +
-          abs(build.compare(desiredVersion.build))
-
-      case _ =>
-        0
-    }
-    available.minBy(i => versionDistance(i.version))
-  }
-
   def resolve(choice: ScalaInstallationChoice): Option[ScalaInstallation] = choice.marker match{
     case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
     case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
