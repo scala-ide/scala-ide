@@ -33,6 +33,7 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import org.scalaide.util.internal.CompilerUtils.isBinarySame
+import org.scalaide.util.internal.CompilerUtils.shortString
 
 sealed trait ScalaInstallationLabel extends Serializable
 case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
@@ -47,11 +48,16 @@ case class CustomScalaInstallationLabel(label: String) extends ScalaInstallation
  *
  *  @see ScalaInstallation.resolve
  */
-case class ScalaInstallationChoice (marker: Either[ScalaVersion, Int]) extends Serializable{
+case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Serializable{
   override def toString() = marker match {
-    case Left(version) => version.unparse
+    case Left(version) => shortString(version)
     case Right(hash) => hash.toString
   }
+}
+
+object ScalaInstallationChoice {
+  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice(Right(si.getHashString().hashCode()))
+  def apply(sv: ScalaVersion): ScalaInstallationChoice = ScalaInstallationChoice(Left(sv))
 }
 
 /** This class represents a valid Scala installation. It encapsulates
@@ -104,7 +110,10 @@ trait LabeledScalaInstallation extends ScalaInstallation {
         this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
 
       def getName():Option[String] = PartialFunction.condOpt(label) {case CustomScalaInstallationLabel(tag) => tag}
-      def getHashString(): String = getName().fold(allJars map (_.getHashString()))(str => str +: (allJars map (_.getHashString()))).mkString
+      def getHashString(): String = {
+        val jarSeq = allJars map (_.getHashString())
+        getName().fold(jarSeq)(str => str +: jarSeq).mkString
+      }
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -279,7 +288,7 @@ object ScalaInstallation {
   def customize(install: LabeledScalaInstallation) = install.label match {
     case CustomScalaInstallationLabel(tag) => install
     case BundledScalaInstallationLabel() | MultiBundleScalaInstallationLabel() => new LabeledScalaInstallation() {
-      override def label = new CustomScalaInstallationLabel(s"legacy bundle ${install.hashCode()}")
+      override def label = new CustomScalaInstallationLabel(s"legacy bundle ${ScalaInstallationChoice(install).toString()}")
       override def compiler = install.compiler
       override def library = install.library
       override def extraJars = install.extraJars
@@ -291,7 +300,7 @@ object ScalaInstallation {
   lazy val customInstallations: Set[LabeledScalaInstallation] = Set() ++ initialScalaInstallations.map(customize(_))
 
   /** Return the Scala installation currently running in Eclipse. */
-  lazy val platformInstallation: ScalaInstallation =
+  lazy val platformInstallation: LabeledScalaInstallation =
     multiBundleInstallations.find(_.version == ScalaVersion.current).get
 
   lazy val bundledInstallations: List[LabeledScalaInstallation] =
@@ -359,7 +368,7 @@ object ScalaInstallation {
 
   def resolve(choice: ScalaInstallationChoice): Option[ScalaInstallation] = choice.marker match{
     case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
-    case Right(hash) => availableInstallations.find(si => si.getHashString().hashCode() == hash)
+    case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
   }
 
 }

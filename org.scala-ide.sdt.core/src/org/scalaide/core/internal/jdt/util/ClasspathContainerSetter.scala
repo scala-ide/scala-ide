@@ -24,8 +24,6 @@ import org.eclipse.core.runtime.Status
 
 trait ScalaClasspathContainerHandler extends HasLogger {
 
-  def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry]
-
   private def hasCustomContainer(existingEntries: Array[IClasspathEntry], cp: IPath): Boolean = {
    existingEntries.exists(e => e.getEntryKind() == IClasspathContainer.K_SYSTEM && e.getPath().equals(cp))
   }
@@ -35,9 +33,15 @@ trait ScalaClasspathContainerHandler extends HasLogger {
   }
 
   def getAndUpdateScalaClasspathContainerEntry(containerPath: IPath, desc: String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): IClasspathEntry = {
+    val classpathEntriesOfScalaInstallation : Array[IClasspathEntry]=
+      if (containerPath.toPortableString() startsWith(ScalaPlugin.plugin.scalaLibId))
+        (si.library +: si.extraJars).map(_.libraryEntries()).toArray
+      else if (containerPath.toPortableString() startsWith(ScalaPlugin.plugin.scalaCompilerId))
+        Array((si.compiler).libraryEntries())
+      else Array()
 
     val customContainer : IClasspathContainer = new IClasspathContainer() {
-      override def getClasspathEntries() = classpathEntriesOfScalaInstallation(si)
+      override def getClasspathEntries() = classpathEntriesOfScalaInstallation
       override def getDescription(): String = desc + s" [ $versionString ]"
       override def getKind(): Int = IClasspathContainer.K_SYSTEM
       override def getPath(): IPath = containerPath
@@ -49,8 +53,6 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 }
 
 class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClasspathContainerHandler {
-
-  override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(_.libraryEntries()).toArray
 
   def descOfScalaPath(path: IPath) =
     if (path.toPortableString() == ScalaPlugin.plugin.scalaLibId) "Scala Library container"

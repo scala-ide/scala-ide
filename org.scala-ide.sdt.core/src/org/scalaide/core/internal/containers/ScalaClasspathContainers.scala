@@ -57,16 +57,11 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 
     val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
     val setter = new ClasspathContainerSetter(project)
-    val usesProjectSettings = storage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+    val proj =     ScalaPlugin.plugin.asScalaProject(iProject)
+    val install = proj map (_.getDesiredInstallation())
 
-    if (usesProjectSettings && storage.contains(SettingConverterUtil.SCALA_DESIRED_INSTALLATION) && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)) {
-      val desiredInstallChoice = ScalaPlugin.plugin.asScalaProject(iProject) flatMap (_.parseScalaInstallation(storage.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)))
-      desiredInstallChoice foreach {sc => ScalaInstallation.resolve(sc) foreach (setter.updateBundleFromScalaInstallation(containerPath, _))}
-    }
-    else
-    if (usesProjectSettings && !storage.isDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) {
-      setter.updateBundleFromSourceLevel(containerPath, ScalaVersion(storage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)))
-    } else {
+    if (proj.isDefined) setter.updateBundleFromScalaInstallation(containerPath, install.get)
+    else {
       logger.info(s"Initializing classpath container $desc: ${entries foreach (_.getPath())}")
 
       JavaCore.setClasspathContainer(containerPath, Array(project), Array(new IClasspathContainer {
@@ -119,6 +114,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
         case Left(scalaVersion) => s"Dynamic $itemTitle : ${shortString(scalaVersion)}"
         case Right(hashcode) => s"Fixed $itemTitle : ${ScalaInstallation.resolve(ch) map (_.version.unparse) getOrElse " none "}"
       }
+      case _ => "[ unparseable ]"
     }
   }
 
@@ -154,10 +150,9 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
     list.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
     list.setContentProvider(new ContentProvider())
     list.setLabelProvider(new LabelProvider)
-    val previousVersionChoice = PartialFunction.condOpt(ScalaInstallation.platformInstallation.version) {case ShortScalaVersion(major, minor) => ScalaInstallationChoice(Left(ScalaVersion(f"$major%d.${minor-1}%d")))}
+    val previousVersionChoice = PartialFunction.condOpt(ScalaInstallation.platformInstallation.version) {case ShortScalaVersion(major, minor) => ScalaInstallationChoice(ScalaVersion(f"$major%d.${minor-1}%d"))}
     def previousVersionPrepender(l:List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
-
-    list.setInput( previousVersionPrepender(ScalaInstallationChoice(Left(ScalaInstallation.platformInstallation.version)) :: ScalaInstallation.availableInstallations.map(si => ScalaInstallationChoice(Right(si.getHashString().hashCode())))) )
+    list.setInput( ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer) :: previousVersionPrepender(ScalaInstallation.availableInstallations.map(si => ScalaInstallationChoice(si))) )
 
     list.addSelectionChangedListener(new ISelectionChangedListener() {
       def selectionChanged(event: SelectionChangedEvent) {
@@ -185,14 +180,10 @@ class ScalaCompilerClasspathContainerPage extends
     new Path(ScalaPlugin.plugin.scalaCompilerId),
     "ScalaCompilerContainerPage",
     "Scala Compiler container",
-    "Scala compiler container") {
-    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = Array(si.compiler.libraryEntries())
-}
+    "Scala compiler container") {}
 
 class ScalaLibraryClasspathContainerPage extends
   ScalaClasspathContainerPage(new Path(ScalaPlugin.plugin.scalaLibId),
     "ScalaLibraryContainerPage",
     "Scala Library container",
-    "Scala library container") {
-    override def classpathEntriesOfScalaInstallation(si: ScalaInstallation): Array[IClasspathEntry] = (si.library +: si.extraJars).map(_.libraryEntries()).toArray
-}
+    "Scala library container") {}

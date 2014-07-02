@@ -410,7 +410,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
    def choicesOfScalaInstallations(): Array[Array[String]] = {
       (Array("Latest 2.11 bundle (dynamic)", "2.11") ::
       (Array("Latest 2.10 bundle (dynamic)", "2.10") ::
-      ScalaInstallation.availableInstallations.map{si => Array(labeler.getDecoration(si), si.getHashString().hashCode().toString())})).toArray
+      ScalaInstallation.availableInstallations.map{si => Array(labeler.getDecoration(si), ScalaInstallationChoice(si).toString())})).toArray
     }
 
   class DesiredInstallationWidget(parent:Composite) extends ComboFieldEditor(
