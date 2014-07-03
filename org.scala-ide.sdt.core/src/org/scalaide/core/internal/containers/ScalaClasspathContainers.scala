@@ -48,6 +48,8 @@ import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.CompilerUtils.shortString
 import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.Viewer
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.StructuredSelection
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -153,6 +155,8 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
     val previousVersionChoice = PartialFunction.condOpt(ScalaInstallation.platformInstallation.version) {case ShortScalaVersion(major, minor) => ScalaInstallationChoice(ScalaVersion(f"$major%d.${minor-1}%d"))}
     def previousVersionPrepender(l:List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
     list.setInput( ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer) :: previousVersionPrepender(ScalaInstallation.availableInstallations.map(si => ScalaInstallationChoice(si))) )
+    val initialSelection = ScalaPlugin.plugin.asScalaProject(project.getProject()) map (_.getDesiredInstallationChoice())
+    initialSelection foreach { choice => list.setSelection(new StructuredSelection(choice)) }
 
     list.addSelectionChangedListener(new ISelectionChangedListener() {
       def selectionChanged(event: SelectionChangedEvent) {
