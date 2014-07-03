@@ -39,6 +39,7 @@ import org.scalaide.ui.wizards.Valid
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.internal.ui.AutoCompletionOverlay
 import org.scalaide.util.internal.ui.Dialogs
 
 /**
@@ -58,6 +59,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private var filePath: IPath = _
   private var selectedProject: IJavaProject = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
+  /** Code completion component for the text field. */
+  private var completionOverlay: AutoCompletionOverlay = _
 
   /** The `Shell` to be used by this wizard. */
   def shell: Shell
@@ -105,6 +108,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
     btProject = new Button(c, SWT.BORDER | SWT.LEFT)
     val lbName = new Label(c, SWT.NONE)
     tName = new Text(c, SWT.BORDER)
+    completionOverlay = new AutoCompletionOverlay(tName)
 
     lbName.setText("Name:")
 
@@ -142,7 +146,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
         // CR is sent at creation of the wizard, we don't want to handle that one
         if (e.keyCode != SWT.CR) {
-          checkKeys()
+          if (!completionOverlay.isPopupOpened)
+            checkKeys()
           validateInput()
         }
       }
@@ -301,6 +306,10 @@ trait NewFileWizard extends AnyRef with HasLogger {
       validatedFileName foreach {
         case Valid =>
           handleError("")
+          val completions = selectedFileCreatorMapping.withInstance(
+              _.completionEntries(selectedProject.getProject(), tName.getText()))
+
+          completions foreach completionOverlay.setProposals
         case Invalid(errorMsg) =>
           handleError(errorMsg)
       }

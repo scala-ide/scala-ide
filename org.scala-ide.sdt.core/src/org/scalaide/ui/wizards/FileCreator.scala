@@ -73,6 +73,15 @@ trait FileCreator {
   def initialPath(res: IResource): String
 
   /**
+   * This method is called whenever [[validateName]] returns valid `Validation`.
+   * It should return all the entries that are shown to the user in a code
+   * completion component. The selected entry will replace everything the user
+   * typed, therefore it needs to contain all the information an user expects to
+   * see.
+   */
+  def completionEntries(project: IProject, name: String): Seq[String]
+
+  /**
    * When the new file wizard is created this controls if in case of an invalid
    * initial path an error message is shown to users.
    */

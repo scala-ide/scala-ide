@@ -69,6 +69,19 @@ trait ScalaFileCreator extends FileCreator {
     }
   }
 
+  override def completionEntries(project: IProject, name: String): Seq[String] = {
+    val Seq(srcFolder, typePath) = Commons.split(name, '/')
+    val ret = projectAsJavaProject(project) map { jp =>
+      val root = jp.findPackageFragmentRoot(project.getFullPath().append(srcFolder))
+      val pkgs = root.getChildren().map(_.getElementName())
+      val ignoreCaseMatcher = s"(?i)\\Q$typePath\\E.*"
+
+      pkgs.filter(_.matches(ignoreCaseMatcher))
+    }
+
+    ret.fold(Seq[String]())(_.map(e => s"$srcFolder/$e"))
+  }
+
   /**
    * `path` contains the path starting from the project to a given element.
    * `srcFolders` contains the names of all source folders of a given project.
