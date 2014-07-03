@@ -39,6 +39,7 @@ import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
 import org.scalaide.core.project.DirectoryScalaInstallationTest
+import org.scalaide.core.classpath.DesiredScalaInstallationTests
 
 /**
  * To run this class DO NOT FORGET to set the config.ini in the  "configuration" tab.
@@ -52,6 +53,7 @@ import org.scalaide.core.project.DirectoryScalaInstallationTest
     classOf[ClasspathContainersTests],
     classOf[CompilerSettingsTest],
     classOf[CompletionTests],
+    classOf[DesiredScalaInstallationTests],
     classOf[RunAsTest],
     // classOf[ScalaJavaCompletionTests], FIXME: Uncomment as soon as this regression is fixed.
     classOf[FindReferencesTests],
@@ -84,7 +86,7 @@ import org.scalaide.core.project.DirectoryScalaInstallationTest
     classOf[ScalaWordFinderTest],
     classOf[ScalaInstallationTest],
     classOf[MultiScalaVersionTest],
-    classOf[CompletionTestSuite],
-    classOf[DirectoryScalaInstallationTest]
+    classOf[DirectoryScalaInstallationTest],
+    classOf[CompletionTestSuite]
 ))
 class TestsSuite

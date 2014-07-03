@@ -52,6 +52,14 @@ case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Se
     case Left(version) => shortString(version)
     case Right(hash) => hash.toString
   }
+
+  override def equals(o: Any) = PartialFunction.cond(o) {
+    case that: ScalaInstallationChoice => (marker, that.marker) match {
+      case (Right(h1), Right(h2)) => h1 == h2
+      case (Left(v1), Left(v2)) => isBinarySame(v1, v2)
+      case _ => false
+    }
+  }
 }
 
 object ScalaInstallationChoice {
@@ -113,6 +121,8 @@ trait LabeledScalaInstallation extends ScalaInstallation {
         val jarSeq = allJars map (_.getHashString())
         getName().fold(jarSeq)(str => str +: jarSeq).mkString
       }
+
+      override def hashCode() = getHashString().hashCode()
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -349,7 +359,7 @@ object ScalaInstallation {
 
   }
 
-  def resolve(choice: ScalaInstallationChoice): Option[ScalaInstallation] = choice.marker match{
+  def resolve(choice: ScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match{
     case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
     case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
   }

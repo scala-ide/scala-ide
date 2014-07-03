@@ -530,7 +530,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   private var unResolvedInstallContinuation = Promise[() => Unit]()
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
-  def getDesiredInstallation(): ScalaInstallation = {
+  def getDesiredInstallation(): LabeledScalaInstallation = {
     import scala.concurrent.ExecutionContext.Implicits.global
     import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
     val choice = getDesiredInstallationChoice()
