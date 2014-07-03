@@ -45,9 +45,8 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler with HasLogger
     val shell = ScalaPlugin.getShell
 
     val title = "Prior Scala library version detected in this project"
-    val expectedVer = ScalaPlugin.plugin.scalaVer.unparse
     val projectName = scalaProject map ( _.underlying.getName()) getOrElse("")
-    val message = s"The version of scala library found in the build path of $projectName is prior to the one provided by scala IDE. We rather expected: $expectedVer. Configure a Scala Installation for this specific project ?"
+    val message = status.getMessage()
 
     val previousScalaVer = CompilerUtils.previousShortString(ScalaPlugin.plugin.scalaVer)
 

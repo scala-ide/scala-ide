@@ -348,16 +348,21 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.") :: Nil
           case Some(v) if (isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
-            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, "", null)
-            if (!messageWasShown.getAndSet(true)) try {
+            val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). "
+            val handlerSuffix = "Configure a Scala Installation for this specific project ?"
+            val markerSuffix = "Please set a Scala Installation in this project's compiler Options"
+            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
+            try {
+             if (!messageWasShown.getAndSet(true)) {
               val handler = DebugPlugin.getDefault().getStatusHandler(status)
-              if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
-              classpathContinuation.future onSuccess {
+                if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
+                classpathContinuation.future onSuccess {
                 case f => f()
-              }
+                }
+             }
+             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
+             (IMarker.SEVERITY_ERROR, msg + markerSuffix) :: Nil
             } finally { classpathContinuation = Promise[() => Unit]; messageWasShown.set(false) }
-            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is prior to the one provided by scala IDE ($scalaVersion). Please use the source level flags in this project's compiler options.") :: Nil
           }
           case Some(v) => {
             // incompatible version
@@ -434,14 +439,28 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private def validateBinaryVersionsOnClasspath(): Seq[(Int, String)] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler
+
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
 
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
         case VersionInFile(version) =>
-          if (!plugin.isCompatibleVersion(version, this))
-            errors += ((IMarker.SEVERITY_ERROR, "%s is cross-compiled with an incompatible version of Scala (%s). In case this report is mistaken, this check can be disabled in the compiler preference page.".format(entry.lastSegment, version.unparse)))
+          if (!plugin.isCompatibleVersion(version, this)) {
+            val msg = s"${entry.lastSegment()} is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
+            val handlerSuffix = "Configure a Scala Installation for this specific project ?"
+            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
+            try{
+            val handler = DebugPlugin.getDefault().getStatusHandler(status)
+              if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
+              classpathContinuation.future onSuccess {
+                case f => f()
+              }
+            } finally { classpathContinuation = Promise[() => Unit]}
+            errors += ((IMarker.SEVERITY_ERROR, msg))
+          }
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }

@@ -20,6 +20,7 @@ class ScalaInstallationChoiceListDialog(shell: Shell, project:ScalaProject, labe
   setElements(inputs.toArray)
   setTitle("Scala Installations")
   setMessage("Choose a Scala Installation")
+  // TODO: filter available elements based on installs valid for the project (provided by computation based on classpath management inputs)
   setInitialElementSelections(List(project.getDesiredInstallationChoice()).asJava)
   setMultipleSelection(false)
 
@@ -34,7 +35,7 @@ class ScalaInstallationChoiceListDialog(shell: Shell, project:ScalaProject, labe
 object ScalaInstallationChoiceListDialog{
 
   def apply(shell: Shell, project:ScalaProject): ScalaInstallationChoiceListDialog = {
-    val choices = new ScalaInstallationChoiceUIProviders() { override def itemTitle = "Scala Installations"}
+    val choices = new ScalaInstallationChoiceUIProviders() { override def itemTitle = "Scala Installation"}
     new ScalaInstallationChoiceListDialog(shell, project, new choices.LabelProvider())
   }
 }
