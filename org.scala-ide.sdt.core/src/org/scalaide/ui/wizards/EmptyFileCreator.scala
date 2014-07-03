@@ -20,6 +20,9 @@ class EmptyFileCreator extends ScalaFileCreator {
         path = res.getFullPath().segments(),
         isDirectory = res.getType() == IResource.FOLDER)
 
+  override def completionEntries(project: IProject, name: String): Seq[String] =
+    Seq()
+
   override def initialPathAfterProjectSelection(project: IProject): String =
     ""
 
