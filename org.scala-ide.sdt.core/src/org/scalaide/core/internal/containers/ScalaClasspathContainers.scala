@@ -50,6 +50,7 @@ import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.Viewer
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.StructuredSelection
+import org.scalaide.core.internal.project.ScalaProject
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -95,6 +96,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
   with IClasspathContainerPageExtension {
+  import org.scalaide.util.internal.eclipse.SWTUtils._
 
   class ContentProvider extends IStructuredContentProvider {
     override def dispose(): Unit = {}
@@ -121,24 +123,25 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
   }
 
   private var choiceOfScalaInstallation: ScalaInstallationChoice = null
-  protected var project: IJavaProject = null
+  protected var scalaProject: Option[ScalaProject] = None
 
   setTitle(itemTitle)
   setDescription(desc)
   setImageDescriptor(JavaPluginImages.DESC_WIZBAN_ADD_LIBRARY)
 
   override def finish() = {
-    val proj = ScalaPlugin.plugin.asScalaProject(project.getProject())
-    proj foreach {pr =>
-      pr.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choiceOfScalaInstallation.toString())
+    scalaProject foreach { pr =>
+      Option(choiceOfScalaInstallation) foreach { sc =>
+        pr.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, sc.toString())
+      }
     }
-    proj.isDefined
+    scalaProject.isDefined
   }
 
   override def getSelection(): IClasspathEntry = { JavaCore.newContainerEntry(containerPath) }
 
   override def initialize(javaProject: IJavaProject, currentEntries: Array[IClasspathEntry]) = {
-    project = javaProject
+    scalaProject = ScalaPlugin.plugin.asScalaProject(javaProject.getProject())
   }
 
   override def setSelection(containerEntry: IClasspathEntry) = {}
@@ -155,11 +158,10 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
     val previousVersionChoice = PartialFunction.condOpt(ScalaInstallation.platformInstallation.version) {case ShortScalaVersion(major, minor) => ScalaInstallationChoice(ScalaVersion(f"$major%d.${minor-1}%d"))}
     def previousVersionPrepender(l:List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
     list.setInput( ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer) :: previousVersionPrepender(ScalaInstallation.availableInstallations.map(si => ScalaInstallationChoice(si))) )
-    val initialSelection = ScalaPlugin.plugin.asScalaProject(project.getProject()) map (_.getDesiredInstallationChoice())
+    val initialSelection = scalaProject map (_.getDesiredInstallationChoice())
     initialSelection foreach { choice => list.setSelection(new StructuredSelection(choice)) }
 
-    list.addSelectionChangedListener(new ISelectionChangedListener() {
-      def selectionChanged(event: SelectionChangedEvent) {
+    list.addSelectionChangedListener({(event: SelectionChangedEvent) =>
         try {
           val sel = event.getSelection().asInstanceOf[IStructuredSelection]
           val sc = sel.getFirstElement().asInstanceOf[ScalaInstallationChoice]
@@ -171,7 +173,6 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, i
             choiceOfScalaInstallation = null
             setPageComplete(false)
         }
-      }
     })
 
     setControl(composite)

@@ -126,7 +126,10 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
     JavaCore.newLibraryEntry(classJar, sourceJar.orNull, null)
   }
 
-  def getHashString(): String = sourceJar.fold(classJar.toPortableString())(s => classJar.toPortableString() + s.toPortableString())
+  private def relativizedString(path: IPath) = {
+    path.makeRelativeTo(ScalaPlugin.plugin.getStateLocation()).toPortableString()
+  }
+  def getHashString(): String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
 }
 
 object ScalaModule {

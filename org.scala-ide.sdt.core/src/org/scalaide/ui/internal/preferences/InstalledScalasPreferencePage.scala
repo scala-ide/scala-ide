@@ -55,6 +55,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
   }
 
   def createContents(parent: Composite): Control = {
+    import org.scalaide.util.internal.eclipse.SWTUtils._
     val composite = new Composite(parent, SWT.NONE)
 
     composite.setLayout(new GridLayout(2, false))
@@ -74,47 +75,45 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
     buttonAdd.setText("Add")
     buttonAdd.setEnabled(true)
 
-    buttonAdd.addSelectionListener(new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) = {
-        import org.scalaide.ui.internal.handlers.{ GenericExceptionStatusHandler => GS }
-        val shell = parent.getShell()
-        val dirDialog = new DirectoryDialog(shell)
-        dirDialog.setText("Select your scala directory")
-        val selectedDir = dirDialog.open()
-        if (selectedDir != null) {
-          def genericExceptionStatus(e: IllegalArgumentException) = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, GS.STATUS_CODE_EXCEPTION, "", e)
-          def manageStatus(status: IStatus) = {
-            val handler = DebugPlugin.getDefault().getStatusHandler(status)
-            handler.handleStatus(status, this)
-          }
+    buttonAdd.addSelectionListener({ (e: SelectionEvent) =>
+      import org.scalaide.ui.internal.handlers.{ GenericExceptionStatusHandler => GS }
+      val shell = parent.getShell()
+      val dirDialog = new DirectoryDialog(shell)
+      dirDialog.setText("Select your scala directory")
+      val selectedDir = dirDialog.open()
+      if (selectedDir != null) {
+        def genericExceptionStatus(e: IllegalArgumentException) = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, GS.STATUS_CODE_EXCEPTION, "", e)
+        def manageStatus(status: IStatus) = {
+          val handler = DebugPlugin.getDefault().getStatusHandler(status)
+          handler.handleStatus(status, this)
+        }
 
-          val dir = new Path(selectedDir)
-          if (!dir.toFile().isDirectory()) {
-            val errorStatus = genericExceptionStatus(new IllegalArgumentException("This selection is not a valid directory !"))
-            manageStatus(errorStatus)
-          } else {
-            Try(new DirectoryScalaInstallation(dir)) match {
-              case Failure(thrown) => thrown match {
-                case e: IllegalArgumentException => manageStatus(genericExceptionStatus(e))
-                case _ => throw (thrown)
-              }
-              case Success(si) =>
-                // give a label to this DirectoryScalaInstallation
-                val dlg = new InputDialog(shell, "", "Enter a name for this Scala Installation", "", new IInputValidator() {
-                  override def isValid(newText: String): String = {
-                    if (labels contains newText) "This is a reserved name."
-                    else if (customInstallations.flatMap(_.getName()) contains newText) "This name is already used by a custom Scala installation."
-                    else null
-                  }
-                })
-
-                if (dlg.open() == Window.OK) {
-                  // User clicked OK; update the label with the input
-                  val lsi = new LabeledDirectoryScalaInstallation(dlg.getValue(), si)
-                  customInstallations += lsi
-                  list.add(lsi)
-                }
+        val dir = new Path(selectedDir)
+        if (!dir.toFile().isDirectory()) {
+          val errorStatus = genericExceptionStatus(new IllegalArgumentException("This selection is not a valid directory !"))
+          manageStatus(errorStatus)
+        } else {
+          Try(new DirectoryScalaInstallation(dir)) match {
+            case Failure(thrown) => thrown match {
+              case e: IllegalArgumentException => manageStatus(genericExceptionStatus(e))
+              case _ => throw (thrown)
             }
+            case Success(si) =>
+              // give a label to this DirectoryScalaInstallation
+              val dlg = new InputDialog(shell, "", "Enter a name for this Scala Installation", "", new IInputValidator() {
+                override def isValid(newText: String): String = {
+                  if (labels contains newText) "This is a reserved name."
+                  else if (customInstallations.flatMap(_.getName()) contains newText) "This name is already used by a custom Scala installation."
+                  else null
+                }
+              })
+
+              if (dlg.open() == Window.OK) {
+                // User clicked OK; update the label with the input
+                val lsi = new LabeledDirectoryScalaInstallation(dlg.getValue(), si)
+                customInstallations += lsi
+                list.add(lsi)
+              }
           }
         }
       }
@@ -124,25 +123,21 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
     buttonRemove.setText("Remove")
     buttonRemove.setEnabled(false)
 
-    buttonRemove.addSelectionListener(new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) = {
-        val selection = list.getSelection().asInstanceOf[IStructuredSelection]
-        selection.iterator().asScala foreach { s =>
-          s match {
-            case d: LabeledScalaInstallation if cond(d.label) { case CustomScalaInstallationLabel(tag) => true } =>
-              customInstallations -= d
-              list.remove(d)
-            case _ => ()
-          }
+    buttonRemove.addSelectionListener({ (e: SelectionEvent) =>
+      val selection = list.getSelection().asInstanceOf[IStructuredSelection]
+      selection.iterator().asScala foreach { s =>
+        s match {
+          case d: LabeledScalaInstallation if cond(d.label) { case CustomScalaInstallationLabel(tag) => true } =>
+            customInstallations -= d
+            list.remove(d)
+          case _ => ()
         }
       }
     })
 
-    list.addSelectionChangedListener(new ISelectionChangedListener() {
-      override def selectionChanged(event: SelectionChangedEvent) {
-        val selection = event.getSelection()
-        if (selection.isEmpty()) buttonRemove.setEnabled(false) else buttonRemove.setEnabled(true)
-      }
+    list.addSelectionChangedListener({ (event: SelectionChangedEvent) =>
+      val selection = event.getSelection()
+      if (selection.isEmpty()) buttonRemove.setEnabled(false) else buttonRemove.setEnabled(true)
     })
 
     composite

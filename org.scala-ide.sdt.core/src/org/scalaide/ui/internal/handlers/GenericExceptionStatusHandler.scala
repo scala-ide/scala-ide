@@ -3,6 +3,8 @@ package org.scalaide.ui.internal.handlers
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.ui.UIStatusesConverter
+import org.eclipse.swt.SWT
 
 object GenericExceptionStatusHandler {
 
@@ -21,7 +23,7 @@ class GenericExceptionStatusHandler extends RichStatusHandler {
 
   def doHandleStatus(status: IStatus, source: Object) = {
       if (!ScalaPlugin.plugin.headlessMode) {
-        MessageDialog.openError(ScalaPlugin.getShell, "An exception occurred", status.getException().getMessage())
+        MessageDialog.open(UIStatusesConverter.MessageDialogOfIStatus(status.getSeverity()), ScalaPlugin.getShell, "An exception occurred", status.getException().getMessage(), SWT.NONE)
       }
   }
 

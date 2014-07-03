@@ -628,22 +628,22 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def usesProjectSettings: Boolean =
     projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
-
-  val compilerSettingsListener = new IPropertyChangeListener {
+  import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
+  val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
+    {
       import org.scalaide.util.internal.Utils._
-      def propertyChange(event: PropertyChangeEvent) = {
-        if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
-          val installString = (event.getNewValue()).asInstanceOfOpt[String]
-          val installChoice = installString flatMap (parseScalaInstallationChoice(_))
-          // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
-          // will not turn on the project settings and depends on them being set right beforehand
-          installChoice foreach (setDesiredInstallation(_))
-        }
-        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE){
-          if (isUnderlyingValid) classpathHasChanged()
-        }
+      if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
+        val installString = (event.getNewValue()).asInstanceOfOpt[String]
+        val installChoice = installString flatMap (parseScalaInstallationChoice(_))
+        // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
+        // will not turn on the project settings and depends on them being set right beforehand
+        installChoice foreach (setDesiredInstallation(_))
+      }
+      if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
+        if (isUnderlyingValid) classpathHasChanged()
       }
     }
+  }
 
   /** Return a the project-specific preference store. This does not take into account the
    *  user-preference whether to use project-specific compiler settings or not.

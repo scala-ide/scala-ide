@@ -16,6 +16,8 @@ import org.scalaide.util.internal.CompilerUtils
 import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.util.internal.ui.UIStatusesConverter
+import org.eclipse.ui.dialogs.PreferencesUtil.createPreferenceDialogOn
 
 object ClasspathErrorPromptStatusHandler {
 
@@ -46,13 +48,13 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
 
     if (scalaProject.isDefined) {
       val project = scalaProject.get
-
+      val severity = UIStatusesConverter.MessageDialogOfIStatus(status.getSeverity())
       val dialog = new MD(
         shell,
         title,
         null,
         message,
-        MD.WARNING,
+        severity,
         Array(IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL),
         1)
       dialog.open()

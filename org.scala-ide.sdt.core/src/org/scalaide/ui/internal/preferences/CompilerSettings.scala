@@ -115,6 +115,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
 class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage
   with Subscriber[ScalaInstallationChange, Publisher[ScalaInstallationChange]] {
+  import org.scalaide.util.internal.eclipse.SWTUtils._
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
   // has changed from the saved value
 
@@ -149,6 +150,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   /** Returns the id of what preference page we use */
+  @deprecated("This class is only instantiated through extension points, making this hard to call. Use PAGE_ID instead.", "4.0")
   def getPageId = ScalaPlugin.plugin.pluginId
 
   import EclipseSetting.toEclipseBox
@@ -170,15 +172,13 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     val scalaProject = project flatMap (ScalaPlugin.plugin.asScalaProject(_))
     scalaProject foreach (p => preferenceStore0.removePropertyChangeListener(p.compilerSettingsListener))
     var wasClasspathChanged = new AtomicIntegerArray(3)
-    val countingListener = new IPropertyChangeListener{
-      def propertyChange(event: PropertyChangeEvent) = {
+    val countingListener: IPropertyChangeListener = {(event: PropertyChangeEvent) =>
         event.getProperty() match {
           case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasClasspathChanged.lazySet(0, 1)
           case CompilerSettings.ADDITIONAL_PARAMS => wasClasspathChanged.lazySet(1, 1)
           case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasClasspathChanged.lazySet(2, 1)
           case _ =>
         }
-      }
     }
     preferenceStore0.addPropertyChangeListener(countingListener)
 
@@ -570,4 +570,5 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
 object CompilerSettings {
   final val ADDITIONAL_PARAMS = "scala.compiler.additionalParams"
+  val PAGE_ID = "org.scalaide.ui.preferences.compiler"
 }
