@@ -5,19 +5,24 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.IStatusHandler
 import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.jface.dialogs.{MessageDialog => MD}
-import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.Utils
-import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.ui.UIStatusesConverter
-import org.eclipse.ui.dialogs.PreferencesUtil.createPreferenceDialogOn
+import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallationChoice
+import org.scalaide.util.internal.CompilerUtils
+import org.eclipse.ui.dialogs.ElementListSelectionDialog
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.project.ScalaInstallationChoiceListDialog
+import org.scalaide.util.internal.Utils
 
 object ClasspathErrorPromptStatusHandler {
 
@@ -29,7 +34,7 @@ object ClasspathErrorPromptStatusHandler {
 
 }
 
-class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
+class ClasspathErrorPromptStatusHandler extends RichStatusHandler with HasLogger {
 
   def doHandleStatus(status: IStatus, source: Object) = {
     val (scalaProject, continuation)  = source match {
@@ -42,7 +47,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
     val title = "Prior Scala library version detected in this project"
     val expectedVer = ScalaPlugin.plugin.scalaVer.unparse
     val projectName = scalaProject map ( _.underlying.getName()) getOrElse("")
-    val message = s"The version of scala library found in the build path of $projectName is prior to the one provided by scala IDE. We rather expected: $expectedVer Turn on the source level flags for this specific project ?"
+    val message = s"The version of scala library found in the build path of $projectName is prior to the one provided by scala IDE. We rather expected: $expectedVer. Configure a Scala Installation for this specific project ?"
 
     val previousScalaVer = CompilerUtils.previousShortString(ScalaPlugin.plugin.scalaVer)
 
@@ -59,8 +64,13 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
         1)
       dialog.open()
       val buttonId = dialog.getReturnCode()
-      if (buttonId == IDialogConstants.OK_ID) continuation.get trySuccess {() => Utils.tryExecute(project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")) }
-      else continuation.get trySuccess { () => }
+      if (buttonId == IDialogConstants.OK_ID) {
+        val installationChoiceList = ScalaInstallationChoiceListDialog(shell, project)
+        val rCode = installationChoiceList.open()
+        val res = installationChoiceList.getInstallationChoice()
+        if (res.isDefined) continuation.get trySuccess { () => Utils.tryExecute(project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, res.get.toString())) }
+        else continuation.get trySuccess { () => }
+      } else continuation.get trySuccess { () => }
     } else continuation map { _ failure (new IllegalArgumentException) }
   }
 

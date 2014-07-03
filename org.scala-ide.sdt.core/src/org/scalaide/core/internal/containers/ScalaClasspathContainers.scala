@@ -51,6 +51,7 @@ import org.eclipse.jface.viewers.Viewer
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.StructuredSelection
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -92,35 +93,12 @@ class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainer
   override def entries = Array(compiler.libraryEntries())
 }
 
-abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, itemTitle: String, desc: String) extends NewElementWizardPage(name)
+abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, override val itemTitle: String, desc: String) extends NewElementWizardPage(name)
   with ScalaClasspathContainerHandler
   with IClasspathContainerPage
-  with IClasspathContainerPageExtension {
+  with IClasspathContainerPageExtension
+  with ScalaInstallationChoiceUIProviders {
   import org.scalaide.util.internal.eclipse.SWTUtils._
-
-  class ContentProvider extends IStructuredContentProvider {
-    override def dispose(): Unit = {}
-
-    override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
-
-    override def getElements(input: Any): Array[Object] = {
-      input match {
-        case l: List[ScalaInstallationChoice] =>
-          l.toArray
-      }
-    }
-  }
-
-  class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
-
-    override def getText(element: Any): String = element match {
-      case ch: ScalaInstallationChoice => ch.marker match {
-        case Left(scalaVersion) => s"Dynamic $itemTitle : ${shortString(scalaVersion)}"
-        case Right(hashcode) => s"Fixed $itemTitle : ${ScalaInstallation.resolve(ch) map (_.version.unparse) getOrElse " none "}"
-      }
-      case _ => "[ unparseable ]"
-    }
-  }
 
   private var choiceOfScalaInstallation: ScalaInstallationChoice = null
   protected var scalaProject: Option[ScalaProject] = None
