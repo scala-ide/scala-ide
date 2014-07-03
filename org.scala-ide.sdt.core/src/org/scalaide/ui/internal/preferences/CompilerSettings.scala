@@ -57,6 +57,9 @@ import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
+import org.eclipse.jdt.core.IClasspathContainer
+import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
+import org.eclipse.jface.preference.FieldEditor
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -289,6 +292,26 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     composite
   }
 
+  override def okToLeave(): Boolean = {
+    val res = if (isChanged) {
+      val title = "Setting Compiler Options"
+      val message = "The Compiler Settings Property page contains unsaved modifications. Do you want to apply those modifications so that other compiler-dependent pages can take those settings into account ?"
+      val buttonLabels: Array[String] = Array(
+        PreferencesMessages.BuildPathsPropertyPage_unsavedchanges_button_save,
+        PreferencesMessages.BuildPathsPropertyPage_unsavedchanges_button_ignore
+      )
+      val dialog: MessageDialog = new MessageDialog(getShell(), title, null, message, MessageDialog.QUESTION, buttonLabels, 0);
+      val res = dialog.open();
+      if (res == 0) { //save
+        performOk() && super.okToLeave()
+      } else {
+        super.okToLeave()
+      }
+    } else super.okToLeave()
+    res
+  }
+
+
   /** We override this so we can update the status of the apply button after all components have been added */
   override def createControl(parent: Composite): Unit = {
     super.createControl(parent)
@@ -353,7 +376,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }.toString)
 
     //check all our other settings
-    additionalParamsWidget.isChanged || super.isChanged
+    (dslWidget exists {w => w.isChanged()}) || additionalParamsWidget.isChanged || super.isChanged
   }
 
   override def performDefaults() {
@@ -421,10 +444,29 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     setPreferenceStore(preferenceStore0)
     getConcernedProject() flatMap (ScalaPlugin.plugin.asScalaProject(_)) foreach {_.subscribe(this)}
     load()
+    // This is just here to implement a status/dirtiness check, not to get values
+    // however, owing to the policy of the FieldEditor subclasses not to change values outside of the store,
+    // it has to be done through value tracking
+    private val initialValue = preferenceStore0.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
+    private var currentValue = initialValue
+
+    def isChanged() = !(currentValue equals initialValue)
 
     override def notify(pub: Publisher[ScalaInstallationChange], event: ScalaInstallationChange): Unit = {
       doLoad()
     }
+
+    override def fireValueChanged(property: String, oldValue: Object, newValue: Object) {
+      import org.scalaide.util.internal.Utils._
+      if (property == FieldEditor.VALUE) {
+        val oldVal = oldValue.asInstanceOfOpt[String]
+        val newVal = newValue.asInstanceOfOpt[String]
+        newVal filter { nV => oldVal exists (_ != nV) } foreach { currentValue = _ }
+      }
+      super.fireValueChanged(property, oldValue, newValue)
+      updateApplyButton()
+    }
+
 
     override def dispose() = {
       getConcernedProject() flatMap (ScalaPlugin.plugin.asScalaProject(_)) foreach { _.removeSubscription(this) }
