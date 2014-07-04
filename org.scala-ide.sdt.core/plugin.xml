@@ -512,7 +512,7 @@
      </statusHandler>
       <statusHandler
        id="Xsource"
-       class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+       class="org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler"
        plugin="org.scala-ide.sdt.core"
        code="1001">
      </statusHandler>

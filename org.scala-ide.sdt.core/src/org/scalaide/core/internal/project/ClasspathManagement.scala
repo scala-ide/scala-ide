@@ -319,7 +319,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     import org.scalaide.util.internal.CompilerUtils._
-    import org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler
+    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
       case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), this)
@@ -351,7 +351,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). "
             val handlerSuffix = "Configure a Scala Installation for this specific project ?"
             val markerSuffix = "Please set a Scala Installation in this project's compiler Options"
-            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
+            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
             try {
              if (!messageWasShown.getAndSet(true)) {
               val handler = DebugPlugin.getDefault().getStatusHandler(status)
@@ -440,7 +440,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def validateBinaryVersionsOnClasspath(): Seq[(Int, String)] = {
     import scala.concurrent.ExecutionContext.Implicits.global
-    import org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler
+    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
 
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
@@ -451,7 +451,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           if (!plugin.isCompatibleVersion(version, this)) {
             val msg = s"${entry.lastSegment()} is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
             val handlerSuffix = "Configure a Scala Installation for this specific project ?"
-            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, ClasspathErrorPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
+            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
             try{
             val handler = DebugPlugin.getDefault().getStatusHandler(status)
               if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))

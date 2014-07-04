@@ -24,17 +24,17 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.project.ScalaInstallationChoiceListDialog
 import org.scalaide.util.internal.Utils
 
-object ClasspathErrorPromptStatusHandler {
+object BadScalaInstallationPromptStatusHandler {
 
   /** Status code indicating there was a previous scala library detected
-   *  on classpath. Linked to ClassPathErrorPromptStatusHandler
+   *  on classpath. Linked to BadScalaInstallationPromptStatusHandler
    *  via our statusHandlers extension (see plugin.xml)
    */
   final val STATUS_CODE_PREV_CLASSPATH = 1001
 
 }
 
-class ClasspathErrorPromptStatusHandler extends RichStatusHandler with HasLogger {
+class BadScalaInstallationPromptStatusHandler extends RichStatusHandler with HasLogger {
 
   def doHandleStatus(status: IStatus, source: Object) = {
     val (scalaProject, continuation)  = source match {
@@ -44,11 +44,9 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler with HasLogger
     }
     val shell = ScalaPlugin.getShell
 
-    val title = "Prior Scala library version detected in this project"
+    val title = "Wrong Scala library version detected in this project"
     val projectName = scalaProject map ( _.underlying.getName()) getOrElse("")
     val message = status.getMessage()
-
-    val previousScalaVer = CompilerUtils.previousShortString(ScalaPlugin.plugin.scalaVer)
 
     if (scalaProject.isDefined) {
       val project = scalaProject.get
@@ -69,7 +67,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler with HasLogger
         val res = installationChoiceList.getInstallationChoice()
         if (res.isDefined) continuation.get trySuccess { () => Utils.tryExecute(project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, res.get.toString())) }
         else continuation.get trySuccess { () => }
-      } else continuation.get trySuccess { () => }
+      } else continuation.get trySuccess { () => Utils.tryExecute(project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer).toString())) }
     } else continuation map { _ failure (new IllegalArgumentException) }
   }
 

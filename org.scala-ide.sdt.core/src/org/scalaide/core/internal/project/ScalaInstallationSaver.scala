@@ -14,7 +14,7 @@ import scala.collection.mutable.Subscriber
 
 case class ModifiedScalaInstallations()
 
-trait LabeledScalaInstallationSerializer {
+trait LabeledScalaInstallationSerializer extends HasLogger{
   import org.scalaide.core.internal.jdt.util.LabeledScalaInstallationsSaveHelper._
 
   private def getInstallationsStateFile() = {
@@ -24,7 +24,7 @@ trait LabeledScalaInstallationSerializer {
   def saveInstallationsState(installations: List[LabeledScalaInstallation]): Unit = {
     val installationsStateFile = getInstallationsStateFile()
     val installationsStateFilePath = installationsStateFile.getPath()
-    //logger.debug(s"Trying to write Scala installations state to $installationsStateFilePath")
+    logger.debug(s"Trying to write Scala installations state to $installationsStateFilePath")
     var is: FileOutputStream = null
     try {
       is = new FileOutputStream(installationsStateFile)
@@ -37,8 +37,8 @@ trait LabeledScalaInstallationSerializer {
         try {
           is.close();
         } catch {
-          case ex: IOException => //logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
-        } finally ()//logger.debug(s"Successfully wrote installations state to $installationsStateFilePath")
+          case ex: IOException => logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
+        } finally logger.debug(s"Successfully wrote installations state to $installationsStateFilePath")
       }
 
     }

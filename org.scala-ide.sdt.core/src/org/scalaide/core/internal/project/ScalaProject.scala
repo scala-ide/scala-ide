@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
-
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.collection.mutable.Publisher
@@ -12,7 +11,6 @@ import scala.tools.nsc.settings.ScalaVersion
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -55,6 +53,10 @@ import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.debug.core.DebugPlugin
+import scala.concurrent.Promise
+import org.eclipse.core.runtime.Status
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -476,44 +478,77 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.buildManager.name))
 
+  case class WithValidation[A, B](isValid: A => Boolean, unsafeGetter: A => B, registerDefault: (A, B) => WithValidation[A,B]) {
+    def get(key: A)(implicit default: B): B = {
+      if (!isValid(key)) registerDefault(key, default).unsafeGetter(key)
+      else unsafeGetter(key)
+    }
+  }
+
+  implicit private def validatedProjectPrefStore(p:IPreferenceStore): WithValidation[String, String] =
+    WithValidation(
+        p.contains,
+        p.getString,
+        { (key:String, default:String) => eclipseLog.warn(s"Preference ${key} was uninitialized, setting default to ${default}.")
+          p.setDefault(key, default); validatedProjectPrefStore(p) }
+    )
+
+  // this is technically generic and could apply to any A => Option[B]
+  implicit private def validatedScalaInstallationChoice(parse: String => Option[ScalaInstallationChoice]): WithValidation[String, ScalaInstallationChoice] =
+    WithValidation(
+        ((str: String) => parse(str).isDefined),
+        ((str: String) => parse(str).get),
+        { (key: String, default: ScalaInstallationChoice) =>
+          eclipseLog.warn(s"Found an unparseable preference set for ${key}, resetting to ${default.toString}.")
+          validatedScalaInstallationChoice({ (str: String) => if (str equals key) Some(default) else parse(str) }) }
+    )
+
   /** Which Scala source level is this project configured to work with ? */
   def getDesiredSourceLevel(): String = {
+    implicit val sourceLevelDefault = ScalaPlugin.plugin.shortScalaVer
+    val sourceLevelPrefName = SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL
     if (!usesProjectSettings) {
-      eclipseLog.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel")
-      ScalaPlugin.plugin.shortScalaVer
+      eclipseLog.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel.")
+      sourceLevelDefault
     }
-    else {
-      if (!projectSpecificStorage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL))
-        projectSpecificStorage.setDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, ScalaPlugin.plugin.shortScalaVer)
-      projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)
-    }
+    else projectSpecificStorage.get(sourceLevelPrefName)
   }
 
   /** Which Scala installation is this project wished to work with ? - always returns a valid choice, but it may or not resolve */
   def getDesiredInstallationChoice(): ScalaInstallationChoice = {
+    implicit val desiredInstallationChoiceDefault: ScalaInstallationChoice = ScalaInstallationChoice(ScalaVersion(getDesiredSourceLevel()))
+    implicit val desiredInstallationChoicePrefDefault: String = desiredInstallationChoiceDefault.toString()
+    val desiredInstallationChoicePrefName = SettingConverterUtil.SCALA_DESIRED_INSTALLATION
     if (!usesProjectSettings) {
-      eclipseLog.warn(s"Project ${this.underlying.getName()} runs on platform default installation")
-      ScalaInstallationChoice(ScalaInstallation.platformInstallation)
+      eclipseLog.warn(s"Project ${this.underlying.getName()} runs on platform default installation.")
+      desiredInstallationChoiceDefault
     }
     else {
-      // TODO: hook in a handler in case this choice does not parse
-      if (!projectSpecificStorage.contains(SettingConverterUtil.SCALA_DESIRED_INSTALLATION) || parseScalaInstallationChoice(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)).isEmpty){
-        if (!projectSpecificStorage.contains(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)) eclipseLog.warn(s"Found uninitialized scala installation choice for ${this.underlying.getName()}, setting default")
-        else eclipseLog.warn(s"Found unparseable choice for ${this.underlying.getName()}, setting default")
-        // use setDefault here, so that a propertyChange event is not fired
-        projectSpecificStorage.setDefault(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(ScalaVersion(getDesiredSourceLevel())).toString()) // This one always parses
-      }
-      parseScalaInstallationChoice(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)).getOrElse(
-          parseScalaInstallationChoice(projectSpecificStorage.getDefaultString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)).get
-      )
+      (parseScalaInstallationChoice _ ).get(projectSpecificStorage.get(desiredInstallationChoicePrefName))
     }
   }
 
+  private var unResolvedInstallContinuation = Promise[() => Unit]()
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
   def getDesiredInstallation(): ScalaInstallation = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
     val choice = getDesiredInstallationChoice()
-    // TODO: hook in a handler in case this does not resolve
-    if (ScalaInstallation.resolve(choice).isEmpty) setDesiredInstallation(parseScalaInstallationChoice(projectSpecificStorage.getDefaultString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)).get)
+    if (ScalaInstallation.resolve(choice).isEmpty) {
+      val displayChoice: String = choice.marker match {
+        case Left(version) => s"Dynamic Scala Version ${CompilerUtils.shortString(version)}"
+        case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
+      }
+      val msg = s"The specified installation choice for this project ($displayChoice) could not be resolved. Configure a Scala Installation for this specific project ?"
+      val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg, null)
+            try {
+              val handler = DebugPlugin.getDefault().getStatusHandler(status)
+                if (!unResolvedInstallContinuation.isCompleted) handler.handleStatus(status, (this, unResolvedInstallContinuation))
+                unResolvedInstallContinuation.future onSuccess {
+                case f => f()
+                }
+             }  finally { unResolvedInstallContinuation = Promise[() => Unit]() }
+    }
     ScalaInstallation.resolve(getDesiredInstallationChoice()).get
   }
 
