@@ -96,6 +96,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
     cmd.text match {
       case _ if isAutoIndentEnabled && isNewlineSign => autoIndentAfterNewLine()
       case "\t" if isAutoIndentEnabled               => indentOnTab(doc, cmd, indentWithTabs, tabSize)
+      case "\t"                                      => cmd.text = oneIndent(indentWithTabs, tabSize)
       case _                                         =>
     }
   }

@@ -25,6 +25,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
     enable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, true)
     enable(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, true)
     setIntPref(IndentSpaces.eclipseKey, 2)
+    enable(IndentWithTabs.eclipseKey, false)
   }
 
   @Test
@@ -80,7 +81,7 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
     |""".mls becomes """
     |val str = ```text
     |    more text
-    |\t^```
+    |  ^```
     |""".mls after tab
   }
 
@@ -155,6 +156,26 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
     |more text
     |    ^```
     |""".mls after tab
+
+  @Test
+  def indent_with_tabs_when_smart_indent_disabled() = {
+    enable(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, false)
+    enable(IndentWithTabs.eclipseKey, true)
+
+    """
+    |class X {
+    |  val str = ```
+    |^
+    |  ```
+    |}
+    |""".mls becomes """
+    |class X {
+    |  val str = ```
+    |\t^
+    |  ```
+    |}
+    |""".mls after tab
+  }
 
   @Test
   def add_no_strip_margin_when_auto_indent_is_disabled_while_strip_margin_feature_is_enabled() = disabled(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING) { """
