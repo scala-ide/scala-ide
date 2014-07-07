@@ -19,7 +19,7 @@ import org.eclipse.swt.widgets.DirectoryDialog
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
-import org.scalaide.core.internal.project.DirectoryScalaInstallation
+import org.scalaide.core.internal.project.DirectoryScalaInstallation.directoryScalaInstallationFactory
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 import scala.collection.JavaConverters.asScalaIteratorConverter
@@ -93,7 +93,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
           val errorStatus = genericExceptionStatus(new IllegalArgumentException("This selection is not a valid directory !"))
           manageStatus(errorStatus)
         } else {
-          Try(new DirectoryScalaInstallation(dir)) match {
+          directoryScalaInstallationFactory(dir) match {
             case Failure(thrown) => thrown match {
               case e: IllegalArgumentException => manageStatus(genericExceptionStatus(e))
               case _ => throw (thrown)

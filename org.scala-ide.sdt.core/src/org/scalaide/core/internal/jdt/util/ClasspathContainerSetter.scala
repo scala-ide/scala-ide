@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
-import org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer
 import org.eclipse.core.runtime.IStatus
 import java.io.FileInputStream
 import org.scalaide.core.internal.project.ScalaModule

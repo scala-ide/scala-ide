@@ -6,7 +6,6 @@ import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.jface.viewers.Viewer
 import org.scalaide.core.internal.project.LabeledScalaInstallation
-import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 
 trait ScalaInstallationUIProviders {
 

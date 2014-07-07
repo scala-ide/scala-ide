@@ -28,7 +28,6 @@ import java.io.IOException
 import org.eclipse.core.runtime.CoreException
 import java.io.File
 import org.eclipse.core.runtime.Status
-import org.scalaide.logging.HasLogger
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success

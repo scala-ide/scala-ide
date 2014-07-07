@@ -31,7 +31,7 @@ trait LabeledScalaInstallationSerializer extends HasLogger{
       writeInstallations(installations, is)
     } catch {
       case ex: IOException =>
-        //logger.error("Can't save scala installations", ex)
+        logger.error("Can't save scala installations", ex)
     } finally {
       if (is != null) {
         try {

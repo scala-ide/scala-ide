@@ -15,7 +15,6 @@ import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.ui.UIStatusesConverter
-import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.util.internal.CompilerUtils

@@ -32,7 +32,6 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaModule
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.PropertyStore
-import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
 import org.eclipse.jface.viewers.LabelProvider
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.PropertyStore
@@ -42,7 +41,6 @@ import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import java.util.zip.ZipFile
 import java.util.Properties
-import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.CompilerUtils.shortString
@@ -80,14 +78,12 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala library container") {
   val plugin = ScalaPlugin.plugin
-  import plugin._
 
   override def entries = (library +: ScalaInstallation.platformInstallation.extraJars).map {_.libraryEntries()}.to[Array]
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala compiler container") {
   val plugin = ScalaPlugin.plugin
-  import plugin._
   import ScalaInstallation.platformInstallation._
 
   override def entries = Array(compiler.libraryEntries())
@@ -122,9 +118,9 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
     scalaProject = ScalaPlugin.plugin.asScalaProject(javaProject.getProject())
   }
 
-  override def setSelection(containerEntry: IClasspathEntry) = {}
+  override def setSelection(containerEntry: IClasspathEntry): Unit = {}
 
-  override def createControl(parent: Composite) = {
+  override def createControl(parent: Composite): Unit = {
     val composite = new Composite(parent, SWT.NONE)
 
     composite.setLayout(new GridLayout(2, false))

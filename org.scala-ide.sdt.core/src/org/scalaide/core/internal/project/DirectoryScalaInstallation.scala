@@ -17,6 +17,7 @@ import sbt.ScalaInstance
 import java.util.zip.ZipEntry
 import org.scalaide.util.internal.CompilerUtils.isBinarySame
 import org.scalaide.core.internal.project.ScalaInstallation.extractVersion
+import scala.util.Try
 
 /**
  * This class tries to collect a valid scala installation (library, compiler jars) from a directory.
@@ -145,6 +146,12 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
 
     new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
   }
+
+}
+
+object DirectoryScalaInstallation {
+
+  def directoryScalaInstallationFactory(dir: IPath): Try[DirectoryScalaInstallation] = Try(new DirectoryScalaInstallation(dir))
 
 }
 

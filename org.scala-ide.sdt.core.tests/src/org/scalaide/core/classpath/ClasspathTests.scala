@@ -3,6 +3,7 @@ package org.scalaide.core.classpath
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
+import org.junit.AfterClass
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -29,7 +30,16 @@ import org.scalaide.util.internal.SettingConverterUtil
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.CompilerUtils
 
-object ClasspathTests extends TestProjectSetup("classpath")
+object ClasspathTests extends TestProjectSetup("classpath") {
+
+  @AfterClass
+  def deleteProject() {
+    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+      project.underlying.delete(true, null)
+    }
+  }
+
+}
 
 /** This test class relies on JARs located in "test-workspace/classpath/lib/${Scala.shortVersion}.x".
  *  If you need to support a new Scala major version, you'll have to:
