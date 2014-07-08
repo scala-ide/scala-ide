@@ -45,10 +45,15 @@ trait ScalaInstallation {
     library +: compiler +: extraJars
 
   /** Create an Sbt-compatible ScalaInstance */
-  def scalaInstance: ScalaInstance
+  def scalaInstance: ScalaInstance = {
+    val store = ScalaPlugin.plugin.classLoaderStore
+    val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
+
+    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
+  }
 
   override def toString() =
-    s"Scala $version: ${allJars.mkString(", ")})"
+    s"Scala $version: \n\t${allJars.mkString("\n\t")})"
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -83,16 +88,9 @@ case class BundledScalaInstallation(
       findExtraJar(bundle, ScalaSwingPath, ScalaSwingSourcesPath)).flatten
 
   private def findExtraJar(bundle: Bundle, classPath: String, sourcePath: String): Option[ScalaModule] = {
-    OSGiUtils.pathInBundle(bundle, classPath).map {p =>
+    OSGiUtils.pathInBundle(bundle, classPath).map { p =>
       ScalaModule(p, OSGiUtils.pathInBundle(bundle, sourcePath))
     }
-  }
-
-  override def scalaInstance: ScalaInstance = {
-    val store = ScalaPlugin.plugin.classLoaderStore
-    val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
-
-    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
   }
 }
 
@@ -115,10 +113,10 @@ object BundledScalaInstallation {
       version <- ScalaInstallation.extractVersion(scalaLibrary)
       scalaCompiler <- OSGiUtils.pathInBundle(bundle, ScalaCompilerPath)
     } yield BundledScalaInstallation(
-        version,
-        bundle,
-        ScalaModule(scalaLibrary, OSGiUtils.pathInBundle(bundle, ScalaLibrarySourcesPath)),
-        ScalaModule(scalaCompiler, OSGiUtils.pathInBundle(bundle, ScalaCompilerSourcesPath)))
+      version,
+      bundle,
+      ScalaModule(scalaLibrary, OSGiUtils.pathInBundle(bundle, ScalaLibrarySourcesPath)),
+      ScalaModule(scalaCompiler, OSGiUtils.pathInBundle(bundle, ScalaCompilerSourcesPath)))
   }
 
   val ScalaBundleJarsRegex = "org\\.scala-ide\\.scala[0-9]{3}\\.jars".r
@@ -136,6 +134,14 @@ object BundledScalaInstallation {
 }
 
 /** Represent a version of Scala installed as a set of bundles, each bundle with an identical version.
+ *
+ *  TODO: We SHOULD reuse the current class loader if this installation is the platform installation.
+ *
+ *  @note We don't reuse it because of weird interactions between the OSGi classloader and the compiler-interface.jar,
+ *        resulting in AbstractMethodErrors. The `Reporter` interface is defined in scala-reflect, but implemented in
+ *        compiler-interface.jar (which is NOT a bundle), and `info0` is not seen.
+ *
+ *        See ticket #1002175
  */
 case class MultiBundleScalaInstallation(
   override val version: ScalaVersion,
@@ -148,26 +154,9 @@ case class MultiBundleScalaInstallation(
   def osgiVersion = libraryBundleVersion
 
   override lazy val extraJars = Seq(
-      findLibraryForBundle(ScalaReflectBundleId, libraryBundleVersion),
-      findLibraryForBundle(ScalaActorsBundleId, libraryBundleVersion),
-      findLibraryForBundle(ScalaSwingBundleId, libraryBundleVersion)).flatten
-
-  override def scalaInstance: ScalaInstance = {
-    val store = ScalaPlugin.plugin.classLoaderStore
-    val scalaLoader = store.getOrUpdate(this)(classLoader)
-
-    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
-  }
-
-  /** We reuse the current class loader if this installation is the platform installation */
-  private def classLoader: ClassLoader = {
-    import ScalaPlugin.plugin
-
-    if (ScalaInstallation.platformInstallation.library == library && ScalaInstallation.platformInstallation.compiler == compiler)
-      ScalaInstallation.getClass.getClassLoader()
-    else
-      new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader)
-  }
+    findLibraryForBundle(ScalaReflectBundleId, libraryBundleVersion),
+    findLibraryForBundle(ScalaActorsBundleId, libraryBundleVersion),
+    findLibraryForBundle(ScalaSwingBundleId, libraryBundleVersion)).flatten
 }
 
 object MultiBundleScalaInstallation {
@@ -203,10 +192,10 @@ object MultiBundleScalaInstallation {
       library = bundlePath(libraryBundle)
       compiler <- findLibraryForBundle(ScalaCompilerBundleId, libraryBundleVersion)
     } yield MultiBundleScalaInstallation(
-        version,
-        libraryBundleVersion,
-        ScalaModule(bundlePath(libraryBundle), EclipseUtils.computeSourcePath(ScalaLibraryBundleId, library)),
-        compiler)
+      version,
+      libraryBundleVersion,
+      ScalaModule(bundlePath(libraryBundle), EclipseUtils.computeSourcePath(ScalaLibraryBundleId, library)),
+      compiler)
   }
 
   def detectInstallations(): List[MultiBundleScalaInstallation] = {
@@ -264,7 +253,7 @@ object ScalaInstallation {
         import Math._
         abs(major - desiredVersion.major) * 1000000 +
           abs(minor - desiredVersion.minor) * 10000 +
-          abs(micro - desiredVersion.rev)     * 100 +
+          abs(micro - desiredVersion.rev) * 100 +
           abs(build.compare(desiredVersion.build))
 
       case _ =>
