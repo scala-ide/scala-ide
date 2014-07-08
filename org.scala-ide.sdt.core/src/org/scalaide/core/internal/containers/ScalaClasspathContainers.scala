@@ -29,8 +29,6 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Link
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
-import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation.compiler

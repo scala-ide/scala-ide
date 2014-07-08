@@ -56,6 +56,12 @@ class DesiredScalaInstallationTests {
     libraryContainer.getClasspathEntries() find {e => (""".*scala-library(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
+  val compilerId = ScalaPlugin.plugin.scalaCompilerId
+  def getCompilerJar(project: ScalaProject) = {
+    val compilerContainer = JavaCore.getClasspathContainer(new Path(compilerId), project.javaProject)
+    compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
+  }
+
   def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.filter { si => si != dsi }.headOption
 
   def createProject(): ScalaProject = {
@@ -111,6 +117,17 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
+  def legacy_is_not_binary_compatible(){
+    val project = createProject()
+    val current_dsi  = project.getDesiredInstallation()
+    val current_choice_before = project.getDesiredInstallationChoice()
+    val otherInstallation = anotherBundle(current_dsi)
+    val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)} // the .version ensures a dynamic choice
+    expectedChoice foreach {si => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, si.toString())}
+    assertTrue(s"Switching to a former bundle should show a change in desired installation choices, Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallationChoice() != current_choice_before)
+  }
+
+  @Test
   def change_to_legacy_registers_choice_constant(){
     val project = createProject()
     val current_dsi  = project.getDesiredInstallation()
@@ -149,6 +166,32 @@ class DesiredScalaInstallationTests {
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
     assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallation() == otherInstallation.get)
+  }
+
+  @Test
+  def change_to_legacy_registers_on_classpath(){
+    val project = createProject()
+    val current_dsi = project.getDesiredInstallation()
+    val otherInstallation = anotherBundle(current_dsi)
+    val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
+    expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
+
+    val libraryPath = getLibraryJar(project) map (_.getPath())
+    val newVersion = libraryPath flatMap (ScalaInstallation.extractVersion(_))
+    assertTrue(s"Switching to a former bundle should show that bundle's version on the library classpath Container. Found ${newVersion map {_.unparse}}. Expected ${otherInstallation.map(_.version)}", newVersion == otherInstallation.map{_.version})
+  }
+
+  @Test
+  def change_to_legacy_registers_on_compiler_classpath(){
+    val project = createProject()
+    val current_dsi = project.getDesiredInstallation()
+    val otherInstallation = anotherBundle(current_dsi)
+    val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
+    expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
+
+    val compilerPath = getCompilerJar(project) map (_.getPath())
+    val newVersion = compilerPath flatMap (ScalaInstallation.extractVersion(_))
+    assertTrue(s"Switching to a former bundle should show that bundle's version on the compiler classpath Container. Found ${newVersion map {_.unparse}}. Expected ${otherInstallation.map(_.version)}", newVersion == otherInstallation.map{_.version})
   }
 
 }

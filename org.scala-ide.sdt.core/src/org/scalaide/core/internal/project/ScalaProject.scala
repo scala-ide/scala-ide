@@ -109,8 +109,6 @@ object ScalaProject {
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with Publisher[ScalaInstallationChange] with HasLogger {
   import ScalaPlugin.plugin
-  import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
-  import org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
