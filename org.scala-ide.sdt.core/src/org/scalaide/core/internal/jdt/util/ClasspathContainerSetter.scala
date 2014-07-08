@@ -23,8 +23,8 @@ import org.eclipse.core.runtime.Status
 
 trait ScalaClasspathContainerHandler extends HasLogger {
 
-  private def hasCustomContainer(existingEntries: Array[IClasspathEntry], cp: IPath): Boolean = {
-   existingEntries.exists(e => e.getEntryKind() == IClasspathContainer.K_SYSTEM && e.getPath().equals(cp))
+  protected def hasCustomContainer(existingEntries: Array[IClasspathEntry], cp: IPath, context: Int = IClasspathContainer.K_SYSTEM): Boolean = {
+   existingEntries.exists(e => (e.getEntryKind() == context && e.getPath().equals(cp)))
   }
 
   def updateScalaClasspathContainerEntry(containerPath: IPath, desc:String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): Unit = {
