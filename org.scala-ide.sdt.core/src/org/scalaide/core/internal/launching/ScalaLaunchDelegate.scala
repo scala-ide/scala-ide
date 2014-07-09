@@ -6,7 +6,7 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.jdt.launching.IRuntimeClasspathEntry
 import org.eclipse.jdt.launching.VMRunnerConfiguration
 import org.eclipse.jdt.launching.ExecutionArguments
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import com.ibm.icu.text.MessageFormat
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.CoreException
@@ -36,6 +36,7 @@ import org.eclipse.debug.internal.core.IInternalDebugCoreConstants
 import org.eclipse.jface.dialogs.MessageDialogWithToggle
 import org.eclipse.jface.dialogs.IDialogConstants
 import java.util.concurrent.atomic.AtomicBoolean
+import org.scalaide.core.SdtConstants
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   /** This code is very heavily inspired from `JavaLaunchDelegate`. */
@@ -125,7 +126,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   override protected def isLaunchProblem(problemMarker: IMarker): Boolean =
     super.isLaunchProblem(problemMarker) || {
       val isError = Option(problemMarker.getAttribute(IMarker.SEVERITY)).map(_.asInstanceOf[Integer].intValue >= IMarker.SEVERITY_ERROR).getOrElse(false)
-      isError && ScalaPlugin.plugin.scalaErrorMarkers.contains(problemMarker.getType())
+      isError && SdtConstants.ScalaErrorMarkerIds.contains(problemMarker.getType())
     }
 
   /** Stop a launch if the main class does not exist. */
@@ -133,7 +134,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
     // verify that the main classfile exists
     val project = getJavaProject(configuration)
     val mainTypeName = getMainTypeName(configuration)
-    ScalaPlugin.plugin.asScalaProject(project.getProject) map { scalaProject =>
+    IScalaPlugin().asScalaProject(project.getProject) map { scalaProject =>
       val mainClassVerifier = new MainClassVerifier
       val status = mainClassVerifier.execute(scalaProject, mainTypeName, existsProblems(project.getProject))
       if (!status.isOK) {
@@ -152,7 +153,7 @@ class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
 
   private def missingScalaLibraries(included: List[String], configuration: ILaunchConfiguration): List[String] = {
     val entries = JavaRuntime.computeUnresolvedRuntimeClasspath(configuration).toList
-    val libid = Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)
+    val libid = Path.fromPortableString(SdtConstants.ScalaLibContId)
     val found = entries.find(e => e.getClasspathEntry != null && e.getClasspathEntry.getPath == libid)
     found match {
       case Some(e) =>

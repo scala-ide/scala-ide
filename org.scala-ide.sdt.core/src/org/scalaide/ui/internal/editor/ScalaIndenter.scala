@@ -17,7 +17,7 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import java.lang.Math.min
 import scala.collection.mutable.Map
 import scala.annotation.tailrec
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import scalariform.formatter.preferences.IndentSpaces
 import scala.util.control.Exception

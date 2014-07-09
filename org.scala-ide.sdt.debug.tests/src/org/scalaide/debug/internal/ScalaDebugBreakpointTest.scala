@@ -8,7 +8,7 @@ import org.junit.Before
 import org.junit.AfterClass
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Test
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.SpecificScalaVersion
 
 object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
@@ -242,7 +242,7 @@ class ScalaDebugBreakpointTest {
     try {
       session.runToLine(DI_TYPENAME, 5)
 
-      ScalaPlugin.plugin.scalaVer match {
+      IScalaPlugin().scalaVersion match {
         case SpecificScalaVersion(2, 10, _, _) =>
           session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)
         case _ =>

@@ -4,7 +4,7 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
@@ -38,6 +38,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.ClassInstanceCreation
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.scalaide.core.completion.CompletionContext
+import org.scalaide.core.internal.project.ScalaProject
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
@@ -66,7 +67,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     context match {
       case jc: JavaContentAssistInvocationContext =>
-        if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
+        if (ScalaProject.isScalaProject(jc.getProject()))
           jc.getCompilationUnit match {
           case scu: ScalaCompilationUnit => javaEmptyList()
           case _ => mixedInCompletions(jc.getCompilationUnit(), jc.getInvocationOffset(), monitor)
@@ -107,7 +108,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     // offset of the start of the element to complete
     val start = invocationOffset - prefix.length
 
-    val prj = ScalaPlugin.plugin.getScalaProject(unit.getJavaProject.getProject)
+    val prj = IScalaPlugin().getScalaProject(unit.getJavaProject.getProject)
     val completionProposals = prj.presentationCompiler { compiler =>
       import compiler._
 

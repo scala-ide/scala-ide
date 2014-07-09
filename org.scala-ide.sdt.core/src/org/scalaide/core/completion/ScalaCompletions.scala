@@ -13,7 +13,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
 import org.scalaide.util.internal.Utils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import CompletionContext.ContextType
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
@@ -158,7 +158,7 @@ class ScalaCompletions extends HasLogger {
           IJavaSearchConstants.TYPE,
           SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
           requestor,
-          if (ScalaPlugin.plugin.noTimeoutMode) {
+          if (IScalaPlugin().noTimeoutMode) {
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH
           } else {
             IJavaSearchConstants.FORCE_IMMEDIATE_SEARCH

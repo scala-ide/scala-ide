@@ -4,12 +4,11 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.Commons
 import org.scalaide.util.internal.eclipse.ProjectUtils
-
 import scalariform.lexer.ScalaLexer
-
+import org.scalaide.core.internal.project.ScalaProject
 
 object ScalaFileCreator {
   val VariableTypeName = "type_name"
@@ -40,7 +39,7 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   override def validateName(folder: IFolder, name: String): Validation = {
-    if (!ScalaPlugin.plugin.isScalaProject(folder.getProject()))
+    if (!ScalaProject.isScalaProject(folder.getProject()))
       Invalid("Not a Scala project")
     else
       doValidation(name) match {
@@ -127,7 +126,7 @@ trait ScalaFileCreator extends FileCreator {
     if (folder.getFile(s"$path.scala").exists())
       Invalid("File already exists")
     else {
-      val scalaProject = ScalaPlugin.plugin.asScalaProject(folder.getProject())
+      val scalaProject = IScalaPlugin().asScalaProject(folder.getProject())
       val typeExists = scalaProject flatMap { scalaProject =>
         scalaProject.presentationCompiler { compiler =>
           compiler.askOption { () =>

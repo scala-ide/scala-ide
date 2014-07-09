@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -41,7 +41,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
       newProject.open(null)
       JavaCore.create(newProject)
     }
-    ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(scalaProjectName))
+    IScalaPlugin().getScalaProject(workspace.getRoot.getProject(scalaProjectName))
   }
 
   lazy val scalaSrcPackageRoot: IPackageFragmentRoot = {

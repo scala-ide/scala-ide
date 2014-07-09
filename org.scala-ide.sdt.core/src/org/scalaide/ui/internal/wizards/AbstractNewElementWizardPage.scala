@@ -48,11 +48,11 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import collection.Seq
 import collection.mutable.Buffer
-import org.scalaide.core.ScalaPlugin._
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.ScalaFormatterCleanUpProvider
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.project.ScalaProject
 
 abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") with HasLogger {
 
@@ -60,7 +60,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
   val imageName = "new" + declarationType.replace(' ', '_').toLowerCase + "_wiz.gif"
   val iPath = new Path("icons/full/wizban").append(imageName)
-  val url = FileLocator.find(plugin.getBundle, iPath, null)
+  val url = FileLocator.find(IScalaPlugin().getBundle, iPath, null)
 
   setImageDescriptor(ImageDescriptor.createFromURL(url))
   setTitle("Scala " + declarationType)
@@ -434,7 +434,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
         def getContents() = underlying.getContents()
       }
 
-      val scalaProject = ScalaPlugin.plugin.asScalaProject(parentCU.getJavaProject.getProject).get
+      val scalaProject = IScalaPlugin().asScalaProject(parentCU.getJavaProject.getProject).get
 
       scalaProject.presentationCompiler { compiler =>
         compiler.askOption[Unit] { () =>
@@ -523,9 +523,9 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
     if (pack != null) {
 
       val project = pack.getJavaProject
-      val scalaProject = plugin.asScalaProject(project.getProject)
+      val scalaProject = IScalaPlugin().asScalaProject(project.getProject)
       try {
-        if (!plugin.isScalaProject(project.getProject)) {
+        if (!ScalaProject.isScalaProject(project.getProject)) {
           val msg = project.getElementName + " is not a Scala project"
           logger.info(msg)
           status.setError(msg)

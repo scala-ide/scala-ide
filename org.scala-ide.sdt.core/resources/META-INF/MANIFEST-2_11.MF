@@ -7,7 +7,7 @@ Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
 Bundle-Activator: 
- org.scalaide.core.ScalaPlugin
+ org.scalaide.core.internal.ScalaPlugin
 Require-Bundle: 
  org.eclipse.core.expressions,
  org.eclipse.core.filesystem,

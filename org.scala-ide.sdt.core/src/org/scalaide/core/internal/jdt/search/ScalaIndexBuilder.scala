@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IFile
 
 import scala.tools.nsc.symtab.Flags
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This

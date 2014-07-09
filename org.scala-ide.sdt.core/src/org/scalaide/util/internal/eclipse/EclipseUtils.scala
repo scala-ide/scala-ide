@@ -181,4 +181,7 @@ object EclipseUtils extends HasLogger {
       override def run() = f
     })
   }
+
+  def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
+
 }

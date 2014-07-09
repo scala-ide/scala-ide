@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.repl
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -80,7 +80,7 @@ trait InterpreterConsoleView { self: ViewPart =>
    * Display the string with code formatting
    */
   protected def displayCode(text: String) = displayPadded(codeBgColor) {
-    val prefStore = ScalaPlugin.plugin.getPreferenceStore
+    val prefStore = IScalaPlugin().getPreferenceStore
     for (token <- ScalaLexer.rawTokenise(text, forgiveErrors = true)) {
       val textAttribute = ScalariformToSyntaxClass(token).getTextAttribute(prefStore)
       val bgColor = Option(textAttribute.getBackground) getOrElse codeBgColor

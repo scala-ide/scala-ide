@@ -3,7 +3,7 @@ package org.scalaide.logging.ui.preferences
 import org.scalaide.logging.Level
 import org.scalaide.logging.LogManager
 import org.scalaide.ui.internal.actions.OpenExternalFile
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.jface.preference.ComboFieldEditor
@@ -17,7 +17,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 
 class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
 
-  setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
+  setPreferenceStore(IScalaPlugin().getPreferenceStore)
 
   setDescription("General settings for managing logging information in the plugin.")
 
@@ -45,8 +45,8 @@ class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPre
 
 class LoggingPreferencePageInitializer extends AbstractPreferenceInitializer {
   override def initializeDefaultPreferences() {
-    val store = ScalaPlugin.plugin.getPreferenceStore
-    if(ScalaPlugin.plugin.headlessMode) {
+    val store = IScalaPlugin().getPreferenceStore
+    if(IScalaPlugin().headlessMode) {
       store.setDefault(LoggingPreferenceConstants.LogLevel, Level.DEBUG.toString)
       store.setDefault(LoggingPreferenceConstants.IsConsoleAppenderEnabled, true)
       store.setDefault(LoggingPreferenceConstants.RedirectStdErrOut, false)

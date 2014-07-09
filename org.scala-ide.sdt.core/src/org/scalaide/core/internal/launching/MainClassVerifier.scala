@@ -1,11 +1,13 @@
 package org.scalaide.core.internal.launching
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.api.ScalaProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler
+import org.scalaide.core.SdtConstants
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object MainClassVerifier {
   private final val ModuleClassSuffix = "$"
@@ -34,12 +36,12 @@ class MainClassVerifier {
     val mainClass = findClassFile(project, mainTypeName)
     def mainModuleClass = findClassFile(project, mainTypeName + MainClassVerifier.ModuleClassSuffix)
 
-    if (mainClass.nonEmpty && mainModuleClass.isEmpty) new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
+    if (mainClass.nonEmpty && mainModuleClass.isEmpty) new Status(IStatus.ERROR, SdtConstants.PluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
     else if (hasBuildErrors) {
       val msg = s"Project ${project.underlying.getName} contains build errors."
-      new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, CompilerLaunchErrorHandler.STATUS_CODE_LAUNCH_ERROR, msg, null)
+      new Status(IStatus.ERROR, SdtConstants.PluginId, CompilerLaunchErrorHandler.STATUS_CODE_LAUNCH_ERROR, msg, null)
     }
-    else new Status(IStatus.OK, ScalaPlugin.plugin.pluginId, "")
+    else new Status(IStatus.OK, SdtConstants.PluginId, "")
   }
 
   private def findClassFile(project: ScalaProject, mainTypeName: String): Option[IResource] = {
@@ -48,7 +50,7 @@ class MainClassVerifier {
     (for {
       outputLocation <- outputLocations
       classFileLocation = outputLocation.append(s"${classFileName}.class")
-      classFile <- Option(ScalaPlugin.plugin.workspaceRoot.findMember(classFileLocation))
+      classFile <- Option(EclipseUtils.workspaceRoot.findMember(classFileLocation))
     } yield classFile).headOption
   }
 }

@@ -4,7 +4,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.core.api
 import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.eclipse.OSGiUtils
@@ -25,7 +25,7 @@ class ScalaInstallationTest {
   def bundledInstallationsTest() {
     val bundledInstallations = ScalaInstallation.bundledInstallations
 
-    ScalaPlugin.plugin.scalaVer match {
+    IScalaPlugin().scalaVersion match {
       case SpecificScalaVersion(2, 10, _, _) =>
         assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case SpecificScalaVersion(2, 11, _, _) =>
@@ -72,7 +72,7 @@ class ScalaInstallationTest {
   def multiBundleInstallationsTest() {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
 
-    ScalaPlugin.plugin.scalaVer match {
+    IScalaPlugin().scalaVersion match {
       case SpecificScalaVersion(2, 10, _, _) =>
         assertEquals("Unexpected Scala bundle", 1, multiBundleInstallations.length)
         checkMultiBundleInstallation(2, 10, multiBundleInstallations.head)
@@ -99,7 +99,7 @@ class ScalaInstallationTest {
         version.getMinor() == minor
     }
 
-    val libraryBundle = ScalaPlugin.plugin.getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
+    val libraryBundle = IScalaPlugin().getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
 
     val libraryPath = OSGiUtils.getBundlePath(libraryBundle).get
 

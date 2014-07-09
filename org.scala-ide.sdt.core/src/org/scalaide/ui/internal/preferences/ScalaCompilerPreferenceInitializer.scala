@@ -3,10 +3,11 @@ package org.scalaide.ui.internal.preferences
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
 import scala.tools.nsc.Settings
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil._
 import org.scalaide.util.internal.Utils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 /**
  * This is responsible for initializing Scala Compiler
@@ -17,7 +18,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
     Utils.tryExecute {
-      val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, ScalaPlugin.plugin.pluginId)
+      val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, SdtConstants.PluginId)
 
       def defaultPreference(s: Settings#Setting) {
         val preferenceName = convertNameToProperty(s.name)
@@ -32,7 +33,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(preferenceName, default)
       }
 
-      IDESettings.shownSettings(ScalaPlugin.defaultScalaSettings()).foreach {_.userSettings.foreach (defaultPreference)}
+      IDESettings.shownSettings(ScalaPresentationCompiler.defaultScalaSettings()).foreach {_.userSettings.foreach (defaultPreference)}
       IDESettings.buildManagerSettings.foreach {_.userSettings.foreach(defaultPreference)}
       store.setDefault(convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name), true)
       store.setDefault(convertNameToProperty(ScalaPluginSettings.relationsDebug.name), false)

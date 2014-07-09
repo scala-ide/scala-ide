@@ -2,7 +2,7 @@ package org.scalaide.ui.internal.templates
 
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.texteditor.templates.TemplatePreferencePage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 
 /**
  */
@@ -12,7 +12,7 @@ class TemplatePreferences extends TemplatePreferencePage with IWorkbenchPreferen
 
   override def isShowFormatterSetting() = false
 
-  setPreferenceStore(ScalaPlugin.prefStore)
-  setTemplateStore(ScalaPlugin.plugin.templateManager.templateStore)
-  setContextTypeRegistry(ScalaPlugin.plugin.templateManager.contextTypeRegistry)
+  setPreferenceStore(ScalaPlugin().getPreferenceStore())
+  setTemplateStore(ScalaPlugin().templateManager.templateStore)
+  setContextTypeRegistry(ScalaPlugin().templateManager.contextTypeRegistry)
 }

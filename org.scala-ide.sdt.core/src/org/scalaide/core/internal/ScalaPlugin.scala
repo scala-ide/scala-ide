@@ -1,4 +1,4 @@
-package org.scalaide.core
+package org.scalaide.core.internal
 
 import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable
@@ -55,92 +55,30 @@ import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.PluginLogConfigurator
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.api
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.api.ScalaInstallation
-import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.eclipse.core.runtime.content.IContentType
+import org.scalaide.core.SdtConstants
+import org.scalaide.ui.internal.migration.RegistryExtender
+import org.scalaide.core.IScalaPlugin
 
 object ScalaPlugin {
-  final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
 
-  private final val HeadlessTest = "sdtcore.headless"
-  private final val NoTimeouts = "sdtcore.notimeouts"
+  @volatile private var plugin: ScalaPlugin = _
 
-  @volatile var plugin: ScalaPlugin = _
+  def apply(): ScalaPlugin = plugin
 
-  def prefStore = plugin.getPreferenceStore
-
-  def getWorkbenchWindow = {
-    val workbench = PlatformUI.getWorkbench
-    Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
-  }
-
-  def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
-
-  def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 }
 
-class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  import CompilerUtils.{isBinaryPrevious, isBinarySame }
+class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
+  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
-  def pluginId = "org.scala-ide.sdt.core"
-  def libraryPluginId = "org.scala-lang.scala-library"
-  def sbtPluginId = "org.scala-ide.sbt.full.library"
-  lazy val sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
-
-  def wizardPath = pluginId + ".wizards"
-  def wizardId(name: String) = wizardPath + ".new" + name
-  def classWizId = wizardId("Class")
-  def traitWizId = wizardId("Trait")
-  def objectWizId = wizardId("Object")
-  def packageObjectWizId = wizardId("PackageObject")
-  def applicationWizId = wizardId("Application")
-  def projectWizId = wizardId("Project")
-  def netProjectWizId = wizardId("NetProject")
-
-  def scalaPerspectiveId = "org.scala-ide.sdt.core.perspective"
-
-  def classCreator = "org.scalaide.ui.wizards.classCreator"
-  def traitCreator = "org.scalaide.ui.wizards.traitCreator"
-  def objectCreator = "org.scalaide.ui.wizards.objectCreator"
-  def packageObjectCreator = "org.scalaide.ui.wizards.packageObjectCreator"
-  def appCreator = "org.scalaide.ui.wizards.appCreator"
-  def emptyFileCreator = "org.scalaide.ui.wizards.empty"
-  def scalaFileCreator = "org.scalaide.ui.wizards.scalaCreator"
-
-  def editorId = "scala.tools.eclipse.ScalaSourceFileEditor"
-  def builderId = pluginId + ".scalabuilder"
-  def natureId = pluginId + ".scalanature"
-  def launchId = "org.scala-ide.sdt.launching"
-  val scalaCompiler = "SCALA_COMPILER_CONTAINER"
-  val scalaLib = "SCALA_CONTAINER"
-  def scalaCompilerId = launchId + "." + scalaCompiler
-  def scalaLibId = launchId + "." + scalaLib
-  def launchTypeId = "scala.application"
-  def problemMarkerId = pluginId + ".problem"
-  def classpathProblemMarkerId = pluginId + ".classpathProblem"
-  def scalaVersionProblemMarkerId = pluginId + ".scalaVersionProblem"
-  def settingProblemMarkerId = pluginId + ".settingProblem"
-  def taskMarkerId = pluginId + ".task"
-
-  lazy val scalaSourceFileContentType: IContentType =
-    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaSource")
-
-  lazy val scalaClassFileContentType: IContentType =
-    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaClass")
-
-  /** All Scala error markers. */
-  val scalaErrorMarkers = Set(classpathProblemMarkerId, problemMarkerId, settingProblemMarkerId)
-
-  val scalaFileExtn = ".scala"
-  val javaFileExtn = ".java"
-  val jarFileExtn = ".jar"
+  import org.scalaide.core.SdtConstants._
 
    /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
@@ -148,37 +86,33 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
    *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: ScalaVersion, project: api.ScalaProject): Boolean = {
+  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
     if (project.isUsingCompatibilityMode())
       isBinaryPrevious(ScalaVersion.current, version)
     else
       isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
   }
 
-  lazy val scalaVer = ScalaVersion.current
-  lazy val shortScalaVer = CompilerUtils.shortString(scalaVer)
+  private lazy val sdtCoreBundle = getBundle()
 
-  lazy val sdtCoreBundle = getBundle()
-
-  lazy val sbtCompilerBundle = Platform.getBundle(sbtPluginId)
-  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(sbtCompilerInterfaceId)
+  lazy val sbtCompilerBundle = Platform.getBundle(SbtPluginId)
+  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SbtCompilerInterfacePluginId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
-  // Disable for now, until we introduce a way to have multiple scala libraries, compilers available for the builder
-  //lazy val sbtScalaLib = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-library.jar")
-  //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
 
   lazy val templateManager = new ScalaTemplateManager()
-  lazy val headlessMode = System.getProperty(ScalaPlugin.HeadlessTest) ne null
-  lazy val noTimeoutMode = System.getProperty(ScalaPlugin.NoTimeouts) ne null
 
-  private val projects = new mutable.HashMap[IProject, ScalaProject]
+  lazy val scalaSourceFileContentType: IContentType =
+    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaSource")
+
+  lazy val scalaClassFileContentType: IContentType =
+    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaClass")
 
   override def start(context: BundleContext) = {
     ScalaPlugin.plugin = this
     super.start(context)
 
     if (!headlessMode) {
-      PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
+      PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", SdtConstants.EditorId)
       diagnostic.StartupDiagnostics.run
 
       new RegistryExtender().perform()
@@ -200,15 +134,32 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   /** A LRU cache of class loaders for Scala builders */
   lazy val classLoaderStore: FixedSizeCache[ScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
-  def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
-
-  def getJavaProject(project: IProject) = JavaCore.create(project)
+  // Scala project instances
+  private val projects = new mutable.HashMap[IProject, ScalaProject]
 
   def getScalaProject(project: IProject): ScalaProject = projects.synchronized {
     projects.get(project) getOrElse {
-        val scalaProject = ScalaProject(project)
-        projects(project) = scalaProject
-        scalaProject
+      val scalaProject = ScalaProject(project)
+      projects(project) = scalaProject
+      scalaProject
+    }
+  }
+
+  def asScalaProject(project: IProject): Option[ScalaProject] = {
+    if (ScalaProject.isScalaProject(project)) {
+      Some(getScalaProject(project))
+    } else {
+      logger.debug("`%s` is not a Scala Project.".format(project.getName()))
+      None
+    }
+  }
+
+  def disposeProject(project: IProject): Unit = {
+    projects.synchronized {
+      projects.get(project) foreach { (scalaProject) =>
+        projects.remove(project)
+        scalaProject.dispose()
+      }
     }
   }
 
@@ -223,41 +174,11 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     } scalaProject.presentationCompiler.askRestart()
   }
 
-  /** Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
-   */
-  def asScalaProject(project: IProject): Option[ScalaProject] = {
-    if (isScalaProject(project)) {
-      Some(getScalaProject(project))
-    } else {
-      logger.debug("`%s` is not a Scala Project.".format(project.getName()))
-      None
-    }
-  }
-
-  def isScalaProject(project: IJavaProject): Boolean =
-    (project ne null) && isScalaProject(project.getProject)
-
-  def isScalaProject(project: IProject): Boolean =
-    try {
-      project != null && project.isOpen && project.hasNature(natureId)
-    } catch {
-      case _: CoreException => false
-    }
-
   override def resourceChanged(event: IResourceChangeEvent) {
     (event.getResource, event.getType) match {
       case (project: IProject, IResourceChangeEvent.PRE_CLOSE) =>
         disposeProject(project)
       case _ =>
-    }
-  }
-
-  private def disposeProject(project: IProject): Unit = {
-    projects.synchronized {
-      projects.get(project) foreach { (scalaProject) =>
-          projects.remove(project)
-          scalaProject.dispose()
-      }
     }
   }
 
@@ -329,7 +250,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
 
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
-        case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(scalaFileExtn) =>
+        case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(ScalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
           if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed
@@ -378,18 +299,4 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
   }
 
-  /** Is the file buildable by the Scala plugin? In other words, is it a
-   *  Java or Scala source file?
-   *
-   *  @note If you don't have an IFile yet, prefer the String overload, as
-   *        creating an IFile is usually expensive
-   */
-  def isBuildable(file: IFile): Boolean =
-    isBuildable(file.getName())
-
-  /** Is the file buildable by the Scala plugin? In other words, is it a
-   *  Java or Scala source file?
-   */
-  def isBuildable(fileName: String): Boolean =
-    (fileName.endsWith(scalaFileExtn) || fileName.endsWith(javaFileExtn))
 }

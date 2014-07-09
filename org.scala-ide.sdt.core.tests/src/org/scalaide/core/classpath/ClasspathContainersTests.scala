@@ -9,7 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.api
 import org.scalaide.util.internal.CompilerUtils
@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.IPath
 import java.io.File
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
+import org.scalaide.core.SdtConstants
 
 object ClasspathContainersTests {
   private val simulator = new EclipseUserSimulator
@@ -25,7 +26,7 @@ object ClasspathContainersTests {
 
   @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
       projects foreach (_.underlying.delete(/* force */ true, new NullProgressMonitor))
     }
   }
@@ -34,7 +35,7 @@ object ClasspathContainersTests {
 class ClasspathContainersTests {
   import ClasspathContainersTests.projects
 
-  val libraryId = ScalaPlugin.plugin.scalaLibId
+  val libraryId = SdtConstants.ScalaLibContId
   def getLibraryContainer(project: api.ScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
 
   def createProject(): ScalaProject = {
@@ -44,14 +45,14 @@ class ClasspathContainersTests {
     project
   }
 
-  val currentScalaVer = ScalaPlugin.plugin.scalaVer match {
+  val currentScalaVer = IScalaPlugin().scalaVersion match {
       case CompilerUtils.ShortScalaVersion(major, minor) => {
         f"$major%d.$minor%d"
       }
       case _ => "none"
   }
 
-  val previousScalaVer = ScalaPlugin.plugin.scalaVer match {
+  val previousScalaVer = IScalaPlugin().scalaVersion match {
       case CompilerUtils.ShortScalaVersion(major, minor) => {
         // This is technically incorrect for an epoch change, but the Xsource flag won't be enough to cover for that anyway
         val lesserMinor = minor - 1
@@ -74,10 +75,10 @@ class ClasspathContainersTests {
 
   @After
   def deleteProjects() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
-        (new File(ScalaPlugin.plugin.getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()
+        (new File(IScalaPlugin().getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()
       }
     }
     projects = List()
@@ -149,7 +150,7 @@ class ClasspathContainersTests {
     project1.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call : classpath container kept after close")
     val container_before = getLibraryContainer(project1)
     import ClasspathContainersTests.simulator
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       project1.underlying.close(null)
       project1.underlying.open(null)
     }
@@ -161,12 +162,13 @@ class ClasspathContainersTests {
   def source_level_reversal_reverses_container_to_older() {
     val project = createProject()
     // making this independent of whatever the default is
-    project.setDesiredSourceLevel(ScalaPlugin.plugin.scalaVer, "explicit initialization of source_level_reversal_to_older")
+    project.setDesiredSourceLevel(IScalaPlugin().scalaVersion, "explicit initialization of source_level_reversal_to_older")
     val reversalReason = "explicit call : source level reversal to older"
     val container_before = getLibraryContainer(project)
 
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)
-    project.setDesiredSourceLevel(ScalaPlugin.plugin.scalaVer, reversalReason)
+    project.setDesiredSourceLevel(IScalaPlugin().scalaVersion, reversalReason)
+    val new_classpath = project.javaProject.getRawClasspath()
     val container_after = getLibraryContainer(project)
 
     assertTrue("Going to an older source level and back again should set the original container", extensionallyEqual(container_before, container_after))
@@ -174,11 +176,11 @@ class ClasspathContainersTests {
 
   @Test
   def source_level_reversal_reverses_container_to_newer() {
-    if (ScalaPlugin.plugin.scalaVer >= ScalaVersion("2.11.0")) {val project = createProject()
+    if (IScalaPlugin().scalaVersion >= ScalaVersion("2.11.0")) {val project = createProject()
     val reversalReason = "explicit call : source level reversal to newer"
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)
     val container_before = getLibraryContainer(project)
-    project.setDesiredSourceLevel(ScalaPlugin.plugin.scalaVer, reversalReason)
+    project.setDesiredSourceLevel(IScalaPlugin().scalaVersion, reversalReason)
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)
     val container_after = getLibraryContainer(project)
       assertTrue("Going to an older source level and back again should set the original container", extensionallyEqual(container_before, container_after))

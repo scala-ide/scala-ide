@@ -5,7 +5,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
@@ -18,7 +18,7 @@ class ImplicitsPreferencePage extends FieldEditorPreferencePage with IWorkbenchP
   import ImplicitsPreferencePage._
   import org.scalaide.util.internal.eclipse.SWTUtils._
 
-  setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
+  setPreferenceStore(IScalaPlugin().getPreferenceStore)
   setDescription("""
 Set the highlighting for implicit conversions and implicit parameters.
   """)
@@ -60,7 +60,7 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
   import ImplicitsPreferencePage._
 
   override def initializeDefaultPreferences() {
-    val store = ScalaPlugin.plugin.getPreferenceStore
+    val store = IScalaPlugin().getPreferenceStore
     store.setDefault(P_ACTIVE, true)
     store.setDefault(P_BOLD, false)
     store.setDefault(P_ITALIC, false)

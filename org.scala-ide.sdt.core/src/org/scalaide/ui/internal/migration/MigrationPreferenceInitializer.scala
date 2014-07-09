@@ -9,9 +9,10 @@ import org.eclipse.jface.bindings.keys.KeyBinding
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils.RichWorkbench
+import org.scalaide.core.SdtConstants
 
 /**
  * The purpose of this class is to keep user defined preferences when they are
@@ -23,9 +24,9 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
 
   override def initializeDefaultPreferences(): Unit = {
     // do not run in an UI less environment
-    if (!ScalaPlugin.plugin.headlessMode) {
+    if (!IScalaPlugin().headlessMode) {
       copyKeyBindings()
-      activateNewWizardShortcut(ScalaPlugin.plugin.scalaPerspectiveId, ScalaPlugin.plugin.scalaFileCreator)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ScalaFileCreatorWidId)
     }
   }
 
@@ -45,7 +46,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
    * ticket is: https://bugs.eclipse.org/bugs/show_bug.cgi?id=191256
    */
   private def activateNewWizardShortcut(perspId: String, wizardId: String) = {
-    val prefStore = ScalaPlugin.prefStore
+    val prefStore = IScalaPlugin().getPreferenceStore()
     val prefId = s"org.scalaide.ui.wizardActivated_$wizardId"
 
     if (!prefStore.getBoolean(prefId)) {

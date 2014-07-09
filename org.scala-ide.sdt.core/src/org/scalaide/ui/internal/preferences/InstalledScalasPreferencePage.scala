@@ -31,7 +31,7 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
 import org.scalaide.util.internal.eclipse.FileUtils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ModifiedScalaInstallations
 import scala.util.Try
 import scala.util.Failure
@@ -40,6 +40,7 @@ import scala.collection.mutable.Publisher
 import org.scalaide.core.internal.project.CustomScalaInstallationLabel
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 import scala.PartialFunction.cond
+import org.scalaide.core.SdtConstants
 
 class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders with Publisher[ModifiedScalaInstallations] {
 
@@ -84,7 +85,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
       dirDialog.setText("Select your scala directory")
       val selectedDir = dirDialog.open()
       if (selectedDir != null) {
-        def genericExceptionStatus(e: IllegalArgumentException) = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, GS.STATUS_CODE_EXCEPTION, "", e)
+        def genericExceptionStatus(e: IllegalArgumentException) = new Status(IStatus.ERROR, SdtConstants.PluginId, GS.STATUS_CODE_EXCEPTION, "", e)
         def manageStatus(status: IStatus) = {
           val handler = DebugPlugin.getDefault().getStatusHandler(status)
           handler.handleStatus(status, this)

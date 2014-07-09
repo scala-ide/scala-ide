@@ -28,7 +28,7 @@ import org.eclipse.ui._
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.editors.text.TextEditor
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
@@ -37,6 +37,7 @@ import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.ProjectScope
+import org.scalaide.core.SdtConstants
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -217,8 +218,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   }
 
   private def initUnderlyingPreferenceStore() {
-    val pluginId = ScalaPlugin.plugin.pluginId
-    val scalaPrefStore = ScalaPlugin.prefStore
+    val pluginId = SdtConstants.PluginId
+    val scalaPrefStore = IScalaPlugin().getPreferenceStore()
     setPreferenceStore(getElement match {
       case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
       case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
@@ -313,7 +314,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
-    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
+    InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).flush()
     true
   }
 
@@ -331,7 +332,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     val dialog = new FileDialog(getShell, SWT.SAVE)
     dialog.setText(title)
     dialog.setFileName(initialFileName)
-    val dialogSettings = ScalaPlugin.plugin.getDialogSettings
+    val dialogSettings = IScalaPlugin().getDialogSettings
     Option(dialogSettings get IMPORT_EXPORT_DIALOG_PATH) foreach dialog.setFilterPath
     val fileName = dialog.open()
     if (fileName == null)

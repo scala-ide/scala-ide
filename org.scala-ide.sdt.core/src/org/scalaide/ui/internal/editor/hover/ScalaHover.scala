@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor.hover
 
 import scala.tools.nsc.symtab.Flags
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.compiler.IProblem
@@ -13,7 +12,7 @@ import org.eclipse.jface.text.ITextHoverExtension
 import org.eclipse.jface.text.ITextHoverExtension2
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.swt.widgets.Display
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
@@ -22,6 +21,7 @@ import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.OSGiUtils
 import org.scalaide.util.internal.eclipse.RegionUtils
 import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.core.SdtConstants
 
 object ScalaHover extends HasLogger {
   /** could return null, but prefer to return empty (see API of ITextHover). */
@@ -71,11 +71,11 @@ object ScalaHover extends HasLogger {
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
   def ScalaHoverStyleSheet: String =
-    ScalaPlugin.prefStore.getString(ScalaHoverStyleSheetId)
+    IScalaPlugin().getPreferenceStore().getString(ScalaHoverStyleSheetId)
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
   def DefaultScalaHoverStyleSheet: String = {
-    OSGiUtils.fileContentFromBundle(ScalaPlugin.plugin.pluginId, ScalaHoverStyleSheetPath) match {
+    OSGiUtils.fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
       case util.Success(css) =>
         css
       case util.Failure(f) =>
@@ -175,7 +175,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
             "this method needs to be called on the UI thread")
 
         EditorUtils.resourceOfActiveEditor.map { res =>
-          val markerType = ScalaPlugin.plugin.problemMarkerId
+          val markerType = SdtConstants.ProblemMarkerId
           val markers = res.findMarkers(markerType, /* includeSubtypes */ false, IResource.DEPTH_ZERO)
           val markersInRange = markers filter { m =>
             val r = RegionUtils.regionOf(

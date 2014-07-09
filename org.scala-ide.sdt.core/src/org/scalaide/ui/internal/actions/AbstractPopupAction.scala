@@ -8,7 +8,6 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.util.internal.eclipse.EclipseUtils._
 
 trait AbstractPopupAction extends IObjectActionDelegate {

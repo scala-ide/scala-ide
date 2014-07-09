@@ -4,7 +4,7 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.core.api.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.availableBundledInstallations
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathContainer
@@ -21,6 +21,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.Path
 import java.io.File
 import org.eclipse.core.runtime.Status
+import org.scalaide.core.SdtConstants
 
 trait ScalaClasspathContainerHandler extends HasLogger {
 
@@ -34,9 +35,9 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 
   def getAndUpdateScalaClasspathContainerEntry(containerPath: IPath, desc: String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): IClasspathEntry = {
     val classpathEntriesOfScalaInstallation : Array[IClasspathEntry]=
-      if (containerPath.toPortableString() startsWith(ScalaPlugin.plugin.scalaLibId))
+      if (containerPath.toPortableString() startsWith(SdtConstants.ScalaLibContId))
         (si.library +: si.extraJars).map(_.libraryEntries()).toArray
-      else if (containerPath.toPortableString() startsWith(ScalaPlugin.plugin.scalaCompilerId))
+      else if (containerPath.toPortableString() startsWith(SdtConstants.ScalaCompilerContId))
         Array((si.compiler).libraryEntries())
       else Array()
 
@@ -55,8 +56,8 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClasspathContainerHandler {
 
   def descOfScalaPath(path: IPath) =
-    if (path.toPortableString() == ScalaPlugin.plugin.scalaLibId) "Scala Library container"
-    else if (path.toPortableString() == ScalaPlugin.plugin.scalaCompilerId) "Scala Compiler container"
+    if (path.toPortableString() == SdtConstants.ScalaLibContId) "Scala Library container"
+    else if (path.toPortableString() == SdtConstants.ScalaCompilerContId) "Scala Compiler container"
     else "Scala Container"
 
   def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {

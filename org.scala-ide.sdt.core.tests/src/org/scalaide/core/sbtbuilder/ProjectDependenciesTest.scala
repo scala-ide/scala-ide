@@ -13,6 +13,7 @@ import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.eclipse.jdt.core.IPackageFragment
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.scalaide.core.IScalaPlugin
 
 class ProjectDependenciesTest {
 
@@ -67,7 +68,7 @@ class ProjectDependenciesTest {
 
       // set stopOnBuild to true
       val stopBuildOnErrors = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
-      ScalaPlugin.plugin.getPreferenceStore.setValue(stopBuildOnErrors, true)
+      IScalaPlugin().getPreferenceStore.setValue(stopBuildOnErrors, true)
 
       // no errors
       SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)

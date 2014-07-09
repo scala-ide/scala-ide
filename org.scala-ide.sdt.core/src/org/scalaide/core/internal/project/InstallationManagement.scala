@@ -7,7 +7,7 @@ import scala.util.Try
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
 import scala.util.Failure
@@ -16,8 +16,10 @@ import scala.util.Success
 import org.scalaide.core.resources.MarkerFactory
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.Settings
-import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.api.ScalaInstallationChange
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 trait InstallationManagement { this: ScalaProject =>
 
@@ -57,14 +59,14 @@ trait InstallationManagement { this: ScalaProject =>
           case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
           }
           val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Please configure a Scala Installation for this specific project."
-          object svMarkerFactory extends MarkerFactory(ScalaPlugin.plugin.scalaVersionProblemMarkerId)
+          object svMarkerFactory extends MarkerFactory(SdtConstants.ScalaVersionProblemMarkerId)
           svMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, msg)
           validatedLabeledScalaInstallation({ (choice: ScalaInstallationChoice) => if (choice equals key) Some(default) else resolve(choice) }) }
    )
 
   /** Which Scala source level is this project configured to work with ? */
   def desiredSourceLevel(): String = {
-    implicit val sourceLevelDefault = ScalaPlugin.plugin.shortScalaVer
+    implicit val sourceLevelDefault = IScalaPlugin().shortScalaVersion
     val sourceLevelPrefName = SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL
     if (!usesProjectSettings) {
       eclipseLog.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel.")
@@ -89,7 +91,7 @@ trait InstallationManagement { this: ScalaProject =>
 
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
   def effectiveScalaInstallation(): LabeledScalaInstallation = {
-    implicit val desiredInstallationDefault: LabeledScalaInstallation = ScalaInstallation.resolve(ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer)).get
+    implicit val desiredInstallationDefault: LabeledScalaInstallation = ScalaInstallation.resolve(ScalaInstallationChoice(IScalaPlugin().scalaVersion)).get
     (ScalaInstallation.resolve _).get(desiredinstallationChoice())
   }
 
@@ -122,8 +124,8 @@ trait InstallationManagement { this: ScalaProject =>
 
     def bundleUpdater(si: ScalaInstallation): () => Unit = {() =>
       val updater = new ClasspathContainerSetter(javaProject)
-      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaLibId), si)
-      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaCompilerId), si)
+      updater.updateBundleFromScalaInstallation(new Path(SdtConstants.ScalaLibContId), si)
+      updater.updateBundleFromScalaInstallation(new Path(SdtConstants.ScalaCompilerContId), si)
     }
 
     // This is a precaution against scala installation loss and does not set anything by itself, see `SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL`
@@ -139,11 +141,11 @@ trait InstallationManagement { this: ScalaProject =>
     turnOnProjectSpecificSettings(slReason)
     // is the required sourceLevel the bundled scala version ?
     if (isUsingCompatibilityMode()) {
-      if (CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)) {
+      if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)) {
         unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
       }
     } else {
-      if (CompilerUtils.isBinaryPrevious(ScalaPlugin.plugin.scalaVer, scalaVersion)) {
+      if (CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, scalaVersion)) {
         toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
       }
     }
@@ -151,8 +153,8 @@ trait InstallationManagement { this: ScalaProject =>
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     val updater = customBundleUpdater.getOrElse({() =>
       val setter = new ClasspathContainerSetter(javaProject)
-      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
-      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
+      setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaLibContId), scalaVersion)
+      setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaCompilerContId), scalaVersion)
       }
     )
     updater()
@@ -166,14 +168,14 @@ trait InstallationManagement { this: ScalaProject =>
     // initial space here is important
     val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
     eclipseLog.debug(s"Adding $optionString to compiler arguments of ${this.underlying.getName()} because of: $reason")
-    val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+    val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }
 
   private def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
     if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
-      val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+      val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
 
       val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
       val superfluousString = superfluousArgs.mkString(" ")
@@ -181,13 +183,13 @@ trait InstallationManagement { this: ScalaProject =>
       storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
 
       // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
-      val projectSettingsSameAsWorkSpace = shownSettings(ScalaPlugin.defaultScalaSettings(), _ => true) forall {
-        case (setting, value) => ScalaPlugin.prefStore.getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
+      val projectSettingsSameAsWorkSpace = shownSettings(ScalaPresentationCompiler.defaultScalaSettings(), _ => true) forall {
+        case (setting, value) => IScalaPlugin().getPreferenceStore().getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
       }
       val scalaInstallationIsSameAsDefault = {
         val desiredInstallChoice = desiredinstallationChoice()
         desiredInstallChoice.marker match {
-          case Left(scalaVersion) => CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)
+          case Left(scalaVersion) => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)
           case Right(_) => false
         }
       }
@@ -213,12 +215,12 @@ trait InstallationManagement { this: ScalaProject =>
 
     if (l >= 2)
       eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
-    if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
+    if (specdVersion exists (ScalaVersion(_) > IScalaPlugin().scalaVersion))
       eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
-    if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
+    if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, ScalaVersion(x)))))
       false
     else
-      specdVersion exists (x => CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
+      specdVersion exists (x => CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, ScalaVersion(x)))
   }
 
   /** TODO: letting this be a workspace-wide setting.

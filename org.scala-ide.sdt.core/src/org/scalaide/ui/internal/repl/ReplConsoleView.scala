@@ -1,7 +1,7 @@
 package org.scalaide.ui.internal.repl
 
 import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.tools.nsc.Settings
@@ -46,6 +46,7 @@ import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
 import org.scalaide.core.api.BuildSuccess
 import org.scalaide.core.api.ScalaProjectEvent
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -171,7 +172,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   }
 
   private def setStarted() {
-    val settings = ScalaPlugin.defaultScalaSettings()
+    val settings = ScalaPresentationCompiler.defaultScalaSettings()
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
@@ -329,7 +330,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setPartName("Scala Interpreter (" + projectName + ")")
 
     // Register the interpreter for the project
-    scalaProject= ScalaPlugin.plugin.getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
+    scalaProject= IScalaPlugin().getScalaProject(ResourcesPlugin.getWorkspace().getRoot().getProject(projectName))
     stopReplAction.run()
     setStarted
   }
@@ -355,7 +356,7 @@ object ReplConsoleView
   private def show(mode: Int, project: IProject, page: IWorkbenchPage): ReplConsoleView = {
     if (! project.isOpen)
       throw new org.eclipse.ui.PartInitException("project is not open ("+project.getName+")");
-    ScalaPlugin.plugin.getScalaProject(project) // creates if given project isn't already
+    IScalaPlugin().getScalaProject(project) // creates if given project isn't already
     val viewPart = page.showView("org.scala-ide.sdt.core.consoleView", project.getName, mode)
     viewPart.asInstanceOf[ReplConsoleView]
   }

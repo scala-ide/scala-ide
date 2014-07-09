@@ -14,7 +14,8 @@ import org.eclipse.pde.internal.ui.editor.plugin.ManifestEditor
 import org.eclipse.pde.internal.ui.IPDEUIConstants
 import org.eclipse.pde.internal.core.WorkspacePluginModelManager
 import org.eclipse.pde.internal.ui.editor.plugin.DependenciesPage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.SdtConstants
 
 /**
  * Adds or removes 'org.scala-ide.scala.library' as a required plug-in for an Eclipse plug-in project.
@@ -23,7 +24,7 @@ object ScalaLibraryPluginDependencyUtils {
 
   def addScalaLibraryRequirement(project: IProject) = editPlugin(project, pluginModelBase => if (getExistingScalaLibraryImport(pluginModelBase).isEmpty) {
     val scalaLibraryImport = pluginModelBase.getPluginFactory.createImport
-    scalaLibraryImport.setId(ScalaPlugin.plugin.libraryPluginId)
+    scalaLibraryImport.setId(SdtConstants.LibraryPluginId)
     pluginModelBase.getPluginBase.add(scalaLibraryImport)
   })
 
@@ -31,7 +32,7 @@ object ScalaLibraryPluginDependencyUtils {
     getExistingScalaLibraryImport(pluginModelBase) foreach pluginModelBase.getPluginBase.remove)
 
   private def getExistingScalaLibraryImport(pluginModelBase: IPluginModelBase): Array[IPluginImport] =
-    pluginModelBase.getPluginBase.getImports filter { ScalaPlugin.plugin.libraryPluginId == _.getId }
+    pluginModelBase.getPluginBase.getImports filter { SdtConstants.LibraryPluginId == _.getId }
 
   private def editPlugin(project: IProject, editStrategy: IPluginModelBase => Unit) {
     val (manifestEditor, alreadyOpen) = findOrOpenManifestEditor(project)

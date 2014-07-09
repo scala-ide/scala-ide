@@ -23,6 +23,8 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.IScalaPlugin
 
 class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
@@ -34,7 +36,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
   override def clean(monitor : IProgressMonitor) {
     super.clean(monitor)
-    val project = plugin.getScalaProject(this.project)
+    val project = IScalaPlugin().getScalaProject(this.project)
     project.clean(monitor)
 
     ensureProject()
@@ -47,7 +49,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     import IncrementalProjectBuilder._
     import zinc.EclipseSbtBuildManager
 
-    val project = plugin.getScalaProject(this.project)
+    val project = IScalaPlugin().getScalaProject(this.project)
     val stopBuildOnErrors =
       project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.stopBuildOnErrors.name))
 
@@ -73,7 +75,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             override def visit(delta : IResourceDelta) = {
               delta.getResource match {
-                case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
+                case file : IFile if FileUtils.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
                     case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
@@ -117,7 +119,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     val subMonitor = SubMonitor.convert(new BuildMonitor(monitor, this), 100).newChild(100, SubMonitor.SUPPRESS_NONE)
     subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
 
-    val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasErrors)
+    val projectsInError = project.transitiveDependencies.filter(p => IScalaPlugin().getScalaProject(p).buildManager.hasErrors)
     if (stopBuildOnErrors && projectsInError.nonEmpty) {
       logger.info("Skipped dependent project %s build because of upstream compilation errors in %s".format(project.underlying.getName, projectsInError))
     } else {
@@ -133,7 +135,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
      *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {
-      (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(plugin.javaFileExtn)))
+      (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(SdtConstants.JavaFileExtn)))
     }
 
     // SBT build manager already calls java builder internally

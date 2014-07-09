@@ -38,7 +38,7 @@ import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
 import org.scalaide.util.internal.ScalaWordFinder
@@ -63,7 +63,7 @@ trait ScalaCompilationUnit extends Openable
   with InteractiveCompilationUnit
   with HasLogger {
 
-  override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  override def scalaProject = IScalaPlugin().getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
 

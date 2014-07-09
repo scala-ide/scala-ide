@@ -33,6 +33,7 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.api
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.ScalaPlugin
 
 /** Utility functions for setting up test projects.
  *
@@ -77,7 +78,7 @@ object SDTTestUtils extends HasLogger {
       project.open(null)
       JavaCore.create(project)
     }
-    ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(name))
+    ScalaPlugin().getScalaProject(workspace.getRoot.getProject(name))
   }
 
   /** Return all positions (offsets) of the given str in the given source file.
@@ -237,7 +238,7 @@ object SDTTestUtils extends HasLogger {
     names map (n => simulator.createProjectInWorkspace(n, true))
 
   def deleteProjects(projects: api.ScalaProject*) {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }
   }
@@ -281,7 +282,7 @@ object SDTTestUtils extends HasLogger {
       }
       projectSetup.project.presentationCompiler { c => f(c) }
     }
-    finally EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    finally EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projectSetup.project.underlying.delete(true, null)
     }
   }

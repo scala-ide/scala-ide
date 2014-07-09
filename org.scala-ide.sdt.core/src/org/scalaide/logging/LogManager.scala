@@ -1,7 +1,7 @@
 package org.scalaide.logging
 
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.logging.log4j.Log4JFacade
 import org.scalaide.logging.ui.preferences.LoggingPreferenceConstants._
 import org.scalaide.util.internal.eclipse.SWTUtils
@@ -33,7 +33,7 @@ object LogManager extends Log4JFacade with HasLogger {
       // we need to restart the presentation compilers so that
       // the std out/err streams are refreshed by Console.in/out
       if (enable != event.getOldValue.asInstanceOf[Boolean])
-        ScalaPlugin.plugin.resetAllPresentationCompilers()
+        ScalaPlugin().resetAllPresentationCompilers()
     }
   }
 
@@ -44,14 +44,14 @@ object LogManager extends Log4JFacade with HasLogger {
 
     super.configure(logOutputLocation, preferredLogLevel)
 
-    val prefStore = ScalaPlugin.plugin.getPreferenceStore
+    val prefStore = ScalaPlugin().getPreferenceStore
     prefStore.addPropertyChangeListener(updateLogLevel _)
     prefStore.addPropertyChangeListener(updateConsoleAppenderStatus _)
     prefStore.addPropertyChangeListener(updateStdRedirectStatus _)
 
     if (prefStore.getBoolean(RedirectStdErrOut)) {
       redirectStdOutAndStdErr()
-      ScalaPlugin.plugin.resetAllPresentationCompilers()
+      ScalaPlugin().resetAllPresentationCompilers()
     }
   }
 
@@ -61,7 +61,7 @@ object LogManager extends Log4JFacade with HasLogger {
   }
 
   override def currentLogLevel: Level.Value = {
-    val levelName = ScalaPlugin.plugin.getPreferenceStore.getString(LogLevel)
+    val levelName = ScalaPlugin().getPreferenceStore.getString(LogLevel)
     if (levelName.isEmpty) defaultLogLevel
     else Level.withName(levelName)
   }
@@ -69,7 +69,7 @@ object LogManager extends Log4JFacade with HasLogger {
   private[logging] def defaultLogLevel: Level.Value = Level.WARN
 
   override def isConsoleAppenderEnabled: Boolean =
-    ScalaPlugin.plugin.getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
+    ScalaPlugin().getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
 
   private def withoutConsoleRedirects(f: => Unit) {
     try {

@@ -14,14 +14,14 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.util.internal.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val prefStore = ScalaPlugin.prefStore
+  private val prefStore = IScalaPlugin().getPreferenceStore()
   private var cssArea: Text = _
 
   override def createContents(parent: Composite): Control = {
@@ -62,7 +62,7 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 class HoverPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
-    val p = ScalaPlugin.prefStore
+    val p = IScalaPlugin().getPreferenceStore()
     val oldCss = p.getString(ScalaHover.DefaultScalaHoverStyleSheetId)
     val newCss = ScalaHover.DefaultScalaHoverStyleSheet
     val usedCss = p.getString(ScalaHover.ScalaHoverStyleSheetId)

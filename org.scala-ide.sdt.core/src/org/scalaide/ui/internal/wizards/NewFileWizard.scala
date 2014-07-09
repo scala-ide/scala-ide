@@ -28,7 +28,7 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
@@ -370,5 +370,5 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   private def findTemplateById(id: String): Option[Template] =
-    Option(ScalaPlugin.plugin.templateManager.templateStore.findTemplateById(id))
+    Option(ScalaPlugin().templateManager.templateStore.findTemplateById(id))
 }

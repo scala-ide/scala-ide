@@ -8,14 +8,14 @@ import org.eclipse.swt.custom.VerifyKeyListener
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.util.PropertyChangeEvent
 
 class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyListener with IPropertyChangeListener {
   @volatile
   private var activeChars = getConfiguredActiveChars
 
-  ScalaPlugin.prefStore.addPropertyChangeListener(this)
+  IScalaPlugin().getPreferenceStore().addPropertyChangeListener(this)
 
   private lazy val optionToMapping = Map(
     P_ENABLE_SMART_PARENS -> (('(', ')')),
@@ -55,7 +55,7 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
    *        active, it will surround it with c1,c2 instead of replacing the selection.
    */
   private def getConfiguredActiveChars: Map[Char, Char] = {
-    val store = ScalaPlugin.prefStore
+    val store = IScalaPlugin().getPreferenceStore()
     for ((option, mapping) <- optionToMapping if store.getBoolean(option)) yield mapping
   }
 

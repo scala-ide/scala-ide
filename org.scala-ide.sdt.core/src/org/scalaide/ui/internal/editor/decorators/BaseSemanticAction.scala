@@ -20,7 +20,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
@@ -69,7 +69,7 @@ abstract class BaseSemanticAction(
     def isTemporary(annotation: Annotation) = true
   }
 
-  protected def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  protected def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
 
   protected def isFontStyleBold = propertiesOpt match {
     case Some(properties) if pluginStore.getBoolean(properties.bold) => SWT.BOLD

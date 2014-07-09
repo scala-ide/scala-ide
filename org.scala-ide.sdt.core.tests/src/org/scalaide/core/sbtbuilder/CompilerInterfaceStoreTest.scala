@@ -1,8 +1,8 @@
 package org.scalaide.core.sbtbuilder
 
 import org.junit.Test
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.internal.ScalaPlugin
 import org.junit.Assert
 import org.eclipse.core.runtime.Platform
 
@@ -10,7 +10,7 @@ class CompilerInterfaceStoreTest {
 
   @Test
   def platformCompilerInterfaceWorks() {
-    val store = ScalaPlugin.plugin.compilerInterfaceStore
+    val store = ScalaPlugin().compilerInterfaceStore
     store.purgeCache()
 
     Assert.assertTrue("successful compiler interface compilation", store.compilerInterfaceFor(platformInstallation)(null).isRight)
@@ -19,7 +19,7 @@ class CompilerInterfaceStoreTest {
 
   @Test
   def platformCompilerInterfaceCachesCompilers() {
-    val store = ScalaPlugin.plugin.compilerInterfaceStore
+    val store = ScalaPlugin().compilerInterfaceStore
     store.purgeCache()
 
     Assert.assertTrue("successful compiler interface compilation", store.compilerInterfaceFor(platformInstallation)(null).isRight)

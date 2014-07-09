@@ -7,7 +7,7 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.api
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.JavaCore
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.availableInstallations
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
@@ -21,6 +21,7 @@ import sbt.ScalaInstance
 import org.scalaide.core.api.ScalaModule
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.LabeledScalaInstallation
+import org.scalaide.core.SdtConstants
 
 class MultiScalaVersionTest {
   // this was deprecated in 2.10, and invalid in 2.11
@@ -50,7 +51,7 @@ class MultiScalaVersionTest {
 
   private def findPreviousScalaInstallation(): Option[LabeledScalaInstallation] = {
     availableInstallations find { installation =>
-      (installation.version, ScalaPlugin.plugin.scalaVer) match {
+      (installation.version, IScalaPlugin().scalaVersion) match {
         case (ShortScalaVersion(_, minor), ShortScalaVersion(_, pluginMinor)) => minor < pluginMinor
         case _ => false
       }
@@ -58,7 +59,7 @@ class MultiScalaVersionTest {
   }
 
   private def setScalaLibrary(p: api.ScalaProject, lib: IPath): Unit = {
-    val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != ScalaPlugin.plugin.scalaLibId)
+    val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != SdtConstants.ScalaLibContId)
     p.javaProject.setRawClasspath(baseClasspath :+ JavaCore.newLibraryEntry(lib, null, null), null)
   }
 }

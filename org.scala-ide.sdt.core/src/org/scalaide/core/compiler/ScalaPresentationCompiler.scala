@@ -39,7 +39,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 import org.scalaide.core.api.ScalaProject
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 
@@ -209,7 +209,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
     val response = askForResponse(op)
 
-    val res = if (ScalaPlugin.plugin.noTimeoutMode) Some(response.get) else response.get(timeout)
+    val res = if (IScalaPlugin().noTimeoutMode) Some(response.get) else response.get(timeout)
 
     res match {
       case None =>
@@ -438,6 +438,8 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
 object ScalaPresentationCompiler {
   case class InvalidThread(msg: String) extends RuntimeException(msg)
+
+  def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
   class PresentationReporter extends InteractiveReporter {
     var compiler: ScalaPresentationCompiler = null

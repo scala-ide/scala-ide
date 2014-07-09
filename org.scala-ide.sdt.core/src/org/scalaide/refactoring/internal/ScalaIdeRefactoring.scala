@@ -6,7 +6,6 @@ import scala.tools.refactoring.ParameterlessRefactoring
 import scala.tools.refactoring.common.Change
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
-
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
@@ -15,11 +14,12 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.core.SdtConstants
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -134,7 +134,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
           EditorUtils.createTextFileChange(file, fileChanges)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path
-          throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, 0, msg, null))
+          throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, 0, msg, null))
         }
     }
   }
@@ -179,7 +179,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   def fail(msg: String = "Could not get the source file."): Nothing = {
-    throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, msg))
+    throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, msg))
   }
 }
 
