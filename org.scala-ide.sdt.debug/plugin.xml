@@ -86,7 +86,7 @@
             category="org.scala-ide.sdt.core.viewCategory"
             class="org.scalaide.debug.internal.views.AsyncDebugView"
             id="org.scala-ide.sdt.debug.asyncView"
-            name="Async Debugger"
+            name="Async Stack"
             restorable="true">
       </view>
    </extension>
