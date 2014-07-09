@@ -102,7 +102,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     this.synchronized {
       currentStackFrame = stackFrame
       val selection = new StructuredSelection(stackFrame)
-      ScalaDebugger.updateCurrentThread(selection)
+      ScalaDebugger.updateCurrentThreadAndStackFrame(selection)
       state = SUSPENDED
       logger.info("SUSPENDED at: %s:%d".format(stackFrame.getMethodFullName, stackFrame.getLineNumber))
       this.notify

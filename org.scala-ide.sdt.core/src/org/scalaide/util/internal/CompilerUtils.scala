@@ -22,7 +22,7 @@ object CompilerUtils {
   }
 
   def shortString(s: ScalaVersion) = s match {
-    case ShortScalaVersion(major, minor) => f"$major%d.$minor%2d"
+    case ShortScalaVersion(major, minor) => f"$major%d.$minor%d"
     case _ => "none"
   }
 }

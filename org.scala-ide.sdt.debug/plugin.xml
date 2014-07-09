@@ -80,4 +80,10 @@
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>
+   <extension
+         point="org.scala-ide.sdt.core.scalaHoverDebugOverride">
+      <overrider
+            hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
+      </overrider>
+   </extension>
 </plugin>

@@ -1,6 +1,7 @@
 package org.scalaide.util.internal
 
 import org.scalaide.logging.HasLogger
+import scala.reflect.ClassTag
 
 object Utils extends HasLogger {
 
@@ -25,7 +26,7 @@ object Utils extends HasLogger {
     val res = op
     val end = System.currentTimeMillis
 
-    logger.debug(f"$name: \t ${end-start}%,3d ms")
+    logger.debug(f"$name: \t ${end - start}%,3d ms")
     res
   }
 
@@ -45,19 +46,21 @@ object Utils extends HasLogger {
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
     import scala.reflect.runtime.universe._
 
-    /** Type-safe cast
+    /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
      *
-     * @return None if the cast fails or the object is null, Some[B] otherwise
+     *  xs: List[Int]
+     *
+     *  xs.asInstanceOfOpt[List[Int]] == xs.asInstanceOfOpt[List[Double]] == xs.asInstanceOfOpt[Seq[Int]] == Some(xs)
+     *
+     *  and
+     *
+     *  xs.asInstanceOfOpt[String] == xs.asInstanceOfOpt[Set[Int]] == None
+     *
+     *  @return None if the cast fails or the object is null, Some[B] otherwise
      */
-    def asInstanceOfOpt[B: TypeTag]: Option[B] =
-      if (obj eq null)
-        None
-      else try {
-        val m = runtimeMirror(getClass.getClassLoader)
-        val typeOfObj = m.reflect(obj).symbol.toType
-        if (typeOfObj <:< typeOf[B]) Some(obj.asInstanceOf[B]) else None
-      } catch {
-        case _: Exception => None
-      }
+    def asInstanceOfOpt[B: ClassTag]: Option[B] = obj match {
+      case b: B => Some(b)
+      case _    => None
+    }
   }
 }

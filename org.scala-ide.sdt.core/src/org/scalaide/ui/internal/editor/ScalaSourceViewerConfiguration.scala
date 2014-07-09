@@ -38,6 +38,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
+import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -139,7 +140,7 @@ class ScalaSourceViewerConfiguration(
 
   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int): ITextHover =
     getCodeAssist match {
-      case Some(scu: ScalaCompilationUnit) => new ScalaHover(scu)
+      case Some(scu: ScalaCompilationUnit) => ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
       case _                               => new DefaultTextHover(sv)
     }
 
