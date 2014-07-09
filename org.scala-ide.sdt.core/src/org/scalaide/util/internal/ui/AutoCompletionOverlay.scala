@@ -1,5 +1,6 @@
 package org.scalaide.util.internal.ui
 
+import org.eclipse.jface.bindings.keys.KeyStroke
 import org.eclipse.jface.fieldassist.ContentProposal
 import org.eclipse.jface.fieldassist.ContentProposalAdapter
 import org.eclipse.jface.fieldassist.IContentProposal
@@ -33,8 +34,11 @@ final class AutoCompletionOverlay(c: Control) {
     }
   }
 
-  private val pa = new ContentProposalAdapter(c, new TextContentAdapter, pp, null, null)
+  private val pa = new ContentProposalAdapter(
+      c, new TextContentAdapter, pp,
+      KeyStroke.getInstance("Ctrl+Space"), "./".toArray)
   pa.setPropagateKeys(true)
+  pa.setFilterStyle(ContentProposalAdapter.FILTER_NONE)
   pa.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE)
   pa.addContentProposalListener(new IContentProposalListener2 {
     override def proposalPopupOpened(a: ContentProposalAdapter) =
