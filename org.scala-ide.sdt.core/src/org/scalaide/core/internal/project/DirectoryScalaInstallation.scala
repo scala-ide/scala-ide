@@ -117,7 +117,7 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
   /* initialization checks*/
   if (!dirAsValidFile.isDefined) throw new IllegalArgumentException("The provided path does not point to a valid directory.")
   if (!extantJars.isDefined) throw new IllegalArgumentException("No jar files found. Please place Scala library, compiler jar at the root of the directory.")
-  if (!libraryCandidate.isDefined) throw new IllegalArgumentException("Can not recogize a valid Scala library jar in this directory.")
+  if (!libraryCandidate.isDefined) throw new IllegalArgumentException("Can not recognize a valid Scala library jar in this directory.")
   if (!compilerCandidate.isDefined) throw new IllegalArgumentException("Can not recognize a valid Scala compiler jar in this directory.")
   if (!versionCandidate.isDefined) throw new IllegalArgumentException("The Scala library jar in this directory has incorrect or missing version information, aborting.")
   // TODO : this hard-coded hook will need changing

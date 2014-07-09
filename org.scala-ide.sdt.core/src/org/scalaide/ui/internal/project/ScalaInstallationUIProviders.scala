@@ -9,18 +9,18 @@ import org.scalaide.core.internal.project.LabeledScalaInstallation
 
 trait ScalaInstallationUIProviders {
 
-  val labels = Array("bundled", "multi bundles", "unknown")
+  val labels = Array("built-in", "built-in", "unknown")
 
   def getDecoration(si: ScalaInstallation): String = {
     si match {
         case s: BundledScalaInstallation =>
-          s"$itemTitle: ${labels(0)} ${s.version.unparse}"
+          s"$itemTitle: ${s.version.unparse} (${labels(0)})"
         case s: MultiBundleScalaInstallation =>
-          s"$itemTitle: ${labels(1)} ${s.version.unparse}"
+          s"$itemTitle: ${s.version.unparse} (${labels(1)})"
         case s: LabeledScalaInstallation =>
-          s"$itemTitle: ${s.getName().getOrElse("")} ${s.version.unparse}"
+          s"${s.getName().getOrElse("")}: ${s.version.unparse}"
         case s: ScalaInstallation =>
-          s"$itemTitle: ${labels(2)} ${s.version.unparse}"
+          s"$itemTitle: ${s.version.unparse} (${labels(2)})"
       }
   }
 

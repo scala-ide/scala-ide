@@ -64,9 +64,11 @@ class BadScalaInstallationPromptStatusHandler extends RichStatusHandler with Has
         val installationChoiceList = ScalaInstallationChoiceListDialog(shell, project)
         val rCode = installationChoiceList.open()
         val res = installationChoiceList.getInstallationChoice()
+        // We need to pass around a continuation, because the SettingConverterUtil.SCALA_DESIRED property has a Listener that, given the wrong astral alignement
+        // triggers a check too early (in turn triggering the current dialog), even though the property change is supposed to fix the issue in the first place.
         if (res.isDefined) continuation.get trySuccess { () => Utils.tryExecute(project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, res.get.toString())) }
         else continuation.get trySuccess { () => }
-      } else continuation.get trySuccess { () => Utils.tryExecute(project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer).toString())) }
+      } else continuation.get trySuccess { () => }
     } else continuation map { _ failure (new IllegalArgumentException) }
   }
 

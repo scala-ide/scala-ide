@@ -534,18 +534,18 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val choice = getDesiredInstallationChoice()
     if (ScalaInstallation.resolve(choice).isEmpty) {
       val displayChoice: String = choice.marker match {
-        case Left(version) => s"Dynamic Scala Version ${CompilerUtils.shortString(version)}"
+        case Left(version) => s"Latest ${CompilerUtils.shortString(version)} bundle (dynamic)"
         case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
       }
-      val msg = s"The specified installation choice for this project ($displayChoice) could not be resolved. Configure a Scala Installation for this specific project ?"
+      val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Configure a Scala Installation for this specific project ?"
       val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg, null)
-            try {
-              val handler = DebugPlugin.getDefault().getStatusHandler(status)
-                if (!unResolvedInstallContinuation.isCompleted) handler.handleStatus(status, (this, unResolvedInstallContinuation))
-                unResolvedInstallContinuation.future onSuccess {
-                case f => f()
-                }
-             }  finally { unResolvedInstallContinuation = Promise[() => Unit]() }
+      try {
+        val handler = DebugPlugin.getDefault().getStatusHandler(status)
+        if (!unResolvedInstallContinuation.isCompleted) handler.handleStatus(status, (this, unResolvedInstallContinuation))
+        unResolvedInstallContinuation.future onSuccess {
+          case f => f()
+        }
+      } finally { unResolvedInstallContinuation = Promise[() => Unit]() }
     }
     ScalaInstallation.resolve(getDesiredInstallationChoice()).get
   }

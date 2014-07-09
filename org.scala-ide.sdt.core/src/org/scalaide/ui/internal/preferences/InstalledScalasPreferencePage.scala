@@ -43,9 +43,10 @@ import scala.PartialFunction.cond
 
 class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPreferencePage with ScalaInstallationUIProviders with Publisher[ModifiedScalaInstallations] {
 
-  def itemTitle = "Scala Installation"
+  def itemTitle = "Scala"
   var customInstallations = ScalaInstallation.customInstallations
   subscribe(ScalaInstallation.installationsTracker)
+  noDefaultAndApplyButton()
 
   override def performOk(): Boolean = {
     ScalaInstallation.customInstallations &~ customInstallations foreach {ScalaInstallation.customInstallations.remove(_)}

@@ -123,6 +123,7 @@ trait LabeledScalaInstallation extends ScalaInstallation {
       }
 
       override def hashCode() = getHashString().hashCode()
+      override def equals(o: Any) = PartialFunction.cond(o){ case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
@@ -300,7 +301,7 @@ object ScalaInstallation {
   def customize(install: LabeledScalaInstallation) = install.label match {
     case CustomScalaInstallationLabel(tag) => install
     case BundledScalaInstallationLabel() | MultiBundleScalaInstallationLabel() => new LabeledScalaInstallation() {
-      override def label = new CustomScalaInstallationLabel(s"legacy bundle ${ScalaInstallationChoice(install).toString()}")
+      override def label = new CustomScalaInstallationLabel(s"Scala (legacy with hash ${ScalaInstallationChoice(install).toString()})")
       override def compiler = install.compiler
       override def library = install.library
       override def extraJars = install.extraJars
