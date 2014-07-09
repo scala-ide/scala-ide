@@ -47,6 +47,9 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.util.internal.CompilerUtils
+import org.eclipse.jdt.core.IClasspathContainer
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -97,6 +100,8 @@ object ScalaProject {
 
 class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
   import ScalaPlugin.plugin
+  import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
+  import org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -504,8 +509,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
       }
     }
+    // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     projectSpecificStorage.save()
+    val updater = new ClasspathContainerSetter(javaProject)
+    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
+    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }

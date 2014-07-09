@@ -8,6 +8,7 @@ import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
+import scala.util.Try
 
 import model.ScalaStackFrame
 import model.ScalaThread
@@ -23,31 +24,36 @@ object ScalaDebugger {
   }
 
   @volatile private var _currentThread: ScalaThread = null
+  @volatile private var _currentStackFrame: ScalaStackFrame = null
 
   /**
-   * Currently selected thread in the debugger UI view.
+   * Currently selected thread & stack frame in the debugger UI view.
    *
    * WARNING:
-   * Mind that this code is by design subject to race-condition, clients accessing this member need to handle the case where the
-   * value of `currentThread` is not the expected one. Practically, this means that accesses to `currentThread` should always happen
-   * within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
+   * Mind that this code is by design subject to race-condition, clients accessing these members need to handle the case where the
+   * values of `currentThread` & `currentStackFrame` are not the expected ones. Practically, this means that accesses to these members
+   * should always happen within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
    */
   def currentThread = _currentThread
+  def currentStackFrame = _currentStackFrame
 
-  private[debug] def updateCurrentThread(selection: ISelection) {
-    _currentThread = selection match {
+  def updateCurrentThreadAndStackFrame(selection: ISelection) {
+    val (newThread, newStackFrame) = selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
           case scalaThread: ScalaThread =>
-            scalaThread
+            (scalaThread, Try(scalaThread.getTopStackFrame.asInstanceOf[ScalaStackFrame]) getOrElse null)
           case scalaStackFrame: ScalaStackFrame =>
-            scalaStackFrame.thread
+            (scalaStackFrame.thread, scalaStackFrame)
           case _ =>
-            null
+            (null, null)
         }
       case _ =>
-        null
+        (null, null)
     }
+
+    _currentThread = newThread
+    _currentStackFrame = newStackFrame
   }
 
   def init() {
@@ -67,7 +73,7 @@ object ScalaDebugger {
     }
 
     override def debugContextChanged(event: DebugContextEvent) {
-      ScalaDebugger.updateCurrentThread(event.getContext())
+      ScalaDebugger.updateCurrentThreadAndStackFrame(event.getContext())
     }
   }
 }

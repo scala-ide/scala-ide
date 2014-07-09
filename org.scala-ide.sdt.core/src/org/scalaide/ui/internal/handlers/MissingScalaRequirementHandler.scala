@@ -22,7 +22,7 @@ object MissingScalaRequirementHandler {
    * Status code indicating there is a missing compiler requirement on classpath.
    *  Linked to MissingScalaRequirementHandler via our statusHandlers extension (see plugin.xml)
    */
-  final val STATUS_CODE_SCALA_MISSING = 1002;
+  final val STATUS_CODE_SCALA_MISSING = 1002
 
 }
 

@@ -10,6 +10,7 @@ import org.scalaide.debug.internal.model.DebugTargetTerminationTest
 import org.scalaide.debug.internal.model.MethodClassifierUnitTest
 import org.scalaide.debug.internal.model.ScalaDebugCacheTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
+import org.scalaide.debug.internal.editor.StackFrameVariableOfTreeFinderTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -31,6 +32,7 @@ import org.scalaide.debug.internal.launching.RemoteConnectorTest
     classOf[DebugTargetTerminationTest],
     classOf[RemoteConnectorTest],
     classOf[ScalaDebugBreakpointTest],
-    classOf[ScalaDebugCacheTest]))
+    classOf[ScalaDebugCacheTest],
+    classOf[StackFrameVariableOfTreeFinderTest]))
 class ScalaDebugTestSuite {
 }

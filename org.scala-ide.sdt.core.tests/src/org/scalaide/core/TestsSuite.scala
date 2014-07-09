@@ -10,6 +10,7 @@ import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.lexical.LexicalTestsSuite
 import org.scalaide.core.wizards.QualifiedNameSupportTest
 import org.scalaide.core.classpath.ClasspathTests
+import org.scalaide.core.classpath.ClasspathContainersTests
 import org.scalaide.core.structurebuilder.ScalaJavaMapperTest
 import org.scalaide.core.completion.CompletionTests
 import org.scalaide.core.launching.MainClassVerifierTest
@@ -47,6 +48,7 @@ import org.scalaide.core.ui.completion.CompletionTestSuite
   Array(
     classOf[ProjectsCleanJobTest],
     classOf[ClasspathTests],
+    classOf[ClasspathContainersTests],
     classOf[CompilerSettingsTest],
     classOf[CompletionTests],
     classOf[RunAsTest],

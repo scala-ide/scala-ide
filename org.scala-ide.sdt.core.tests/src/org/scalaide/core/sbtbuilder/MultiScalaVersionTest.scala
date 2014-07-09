@@ -1,6 +1,7 @@
 package org.scalaide.core.sbtbuilder
 
-import org.junit.{ Test, Assert }
+import org.junit.Test
+import org.junit.Assert
 import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.runtime.IPath
@@ -16,6 +17,7 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import sbt.ScalaInstance
+import org.scalaide.core.internal.project.ScalaModule
 
 class MultiScalaVersionTest {
   // this was deprecated in 2.10, and invalid in 2.11
@@ -30,7 +32,7 @@ class MultiScalaVersionTest {
     val sourceFile = addFileToProject(p.underlying, "/src/InvalidCaseClass.scala", sourceCode)
 
     for (installation <- findPreviousScalaInstallation()) {
-      setScalaLibrary(p, installation.libraryJar)
+      setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
       p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
 
@@ -41,10 +43,12 @@ class MultiScalaVersionTest {
   }
 
   case class DummyInstallation(override val version: ScalaVersion) extends ScalaInstallation {
-    def allJars: Seq[IPath] = ???
-    def compilerJar: IPath = ???
-    def libraryJar: IPath = ???
-    def scalaInstance: ScalaInstance = ???
+
+    override def library: ScalaModule = ???
+    override def compiler: ScalaModule = ???
+    override def extraJars: Seq[ScalaModule] = ???
+    override def allJars: Seq[ScalaModule] = ???
+    override def scalaInstance: ScalaInstance = ???
   }
 
   /** shorcut for creating dummy installations. */

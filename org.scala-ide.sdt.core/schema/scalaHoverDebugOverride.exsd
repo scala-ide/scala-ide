@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.scala-ide.sdt.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.scala-ide.sdt.core" id="scalaHoverDebugOverride" name="Scala Hover Debug Override"/>
+      </appInfo>
+      <documentation>
+         Allows a plugin to supply an alternative logic for creating text hovers for the scala editor. 
+
+Note that the extension point expects to be extended only once, and in case multiple extensions are available, only one will be chosen non-deterministically. This extension point should probably only be used by a debugger plugin, to show variable values (i.e. when the debugger is suspended) upon hover.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <choice>
+            <element ref="overrider"/>
+         </choice>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute translatable="true"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="overrider">
+      <complexType>
+         <attribute name="hoverFactoryClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  A factory that creates text hovers to be used in place of the default one.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.scalaide.ui.editor.extensionpoints.TextHoverFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         The scala-ide.sdt.debug plugin uses this extension point to show variable values in hovers when the debugger is suspended.
+      </documentation>
+   </annotation>
+
+
+
+
+</schema>
