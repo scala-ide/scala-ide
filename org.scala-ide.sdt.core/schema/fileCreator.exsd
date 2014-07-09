@@ -93,7 +93,7 @@
          <attribute name="description" type="string" use="required">
             <annotation>
                <documentation>
-                  
+                  A short description of this file creator that may be shown in the UI aside the name and the icon.
                </documentation>
             </annotation>
          </attribute>
