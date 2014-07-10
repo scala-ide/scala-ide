@@ -101,7 +101,8 @@ class RegistryExtender extends AnyRef with HasLogger {
 
       Option(elems.findCategory(ScalaWizardCategory)) foreach { category =>
         val configElems = EclipseUtils.configElementsForExtension(FileCreatorMapping.FileCreatorId)
-        configElems foreach (category add new ScalaWizardElement(_))
+        val configElem = configElems.find(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator")
+        configElem foreach (category add new ScalaWizardElement(_))
       }
 
       ra.setWizardElements[Unit](elems)
