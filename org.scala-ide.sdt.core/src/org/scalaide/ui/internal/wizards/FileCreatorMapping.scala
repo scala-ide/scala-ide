@@ -17,7 +17,7 @@ object FileCreatorMapping extends HasLogger {
     val elems = EclipseUtils.configElementsForExtension(FileCreatorId)
 
     try
-      elems.map(e => FileCreatorMapping(
+      elems.filterNot(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator").map(e => FileCreatorMapping(
         e.getAttribute("id"),
         e.getAttribute("name"),
         e.getAttribute("templateId"),
