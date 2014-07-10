@@ -327,10 +327,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     val scalaVersion = plugin.scalaVer.unparse
-    val expectedVersion = if (this.isUsingCompatibilityMode) plugin.scalaVer match {
-      case ShortScalaVersion(major, minor) => {val newMinor = (minor -1); f"$major%d.$newMinor%d"}
-      case _ => "none"
-    } else scalaVersion
+    val expectedVersion =
+      if (this.isUsingCompatibilityMode)
+        previousShortString(plugin.scalaVer)
+      else
+        scalaVersion
 
     fragmentRoots.length match {
       case 0 => // unable to find any trace of scala library

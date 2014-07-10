@@ -83,7 +83,7 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
+  import CompilerUtils.{isBinaryPrevious, isBinarySame }
 
   def pluginId = "org.scala-ide.sdt.core"
   def libraryPluginId = "org.scala-lang.scala-library"

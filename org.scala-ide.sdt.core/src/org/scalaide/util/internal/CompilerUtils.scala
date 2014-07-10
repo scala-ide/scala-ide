@@ -25,4 +25,15 @@ object CompilerUtils {
     case ShortScalaVersion(major, minor) => f"$major%d.$minor%d"
     case _ => "none"
   }
+
+  /**
+   * short string for the previous version of the given version.
+   */
+  def previousShortString(s: ScalaVersion) = s match {
+    case ShortScalaVersion(major, minor) =>
+      val lesserMinor = minor - 1
+      f"$major%d.$lesserMinor%d"
+    case _ =>
+      "none"
+  }
 }
