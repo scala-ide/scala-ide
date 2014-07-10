@@ -70,7 +70,8 @@ object ScalaDebugModelPresentation {
   /** Return the value produced by calling toString() on the object.
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
-    try {
+    if (ScalaDebugger.currentThread == null) ""
+    else try {
       objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
         case s: ScalaStringReference =>
           s.underlying.value
