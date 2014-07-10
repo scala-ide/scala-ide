@@ -61,6 +61,7 @@ import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.ui.internal.migration.RegistryExtender
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -90,16 +91,6 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def sbtPluginId = "org.scala-ide.sbt.full.library"
   lazy val sbtCompilerInterfaceId = "org.scala-ide.sbt.compiler.interface"
 
-  def wizardPath = pluginId + ".wizards"
-  def wizardId(name: String) = wizardPath + ".new" + name
-  def classWizId = wizardId("Class")
-  def traitWizId = wizardId("Trait")
-  def objectWizId = wizardId("Object")
-  def packageObjectWizId = wizardId("PackageObject")
-  def applicationWizId = wizardId("Application")
-  def projectWizId = wizardId("Project")
-  def netProjectWizId = wizardId("NetProject")
-
   def editorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"
@@ -121,7 +112,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-   /** Check if the given version is compatible with the current plug-in version.
+  /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
    *
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
@@ -159,6 +150,8 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     if (!headlessMode) {
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", editorId)
       diagnostic.StartupDiagnostics.run
+
+      new RegistryExtender().perform()
     }
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
