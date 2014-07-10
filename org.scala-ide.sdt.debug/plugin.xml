@@ -122,7 +122,7 @@
                   icon="icons/bang.png"
                   label="Step Message Out"
                   style="push"
-                  tooltip="Step until a message is sent and receives">
+                  tooltip="Step until a message is received">
                <visibleWhen
                      checkEnabled="true">
                </visibleWhen>
@@ -157,5 +157,14 @@
       <overrider
             hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
       </overrider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.scala-ide.sdt.debug.stepMessageOut"
+            contextId="org.eclipse.debug.ui.debugging"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+F5">
+      </key>
    </extension>
 </plugin>
