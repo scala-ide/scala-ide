@@ -1,8 +1,8 @@
 package org.scalaide.ui.internal.wizards
 
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
@@ -57,7 +57,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private var disposables = Seq[{def dispose(): Unit}](Red)
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
   private var filePath: IPath = _
-  private var selectedProject: IJavaProject = _
+  private var selectedProject: IProject = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
   private var completionOverlay: AutoCompletionOverlay = _
@@ -167,13 +167,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private def initComponents() = {
     for {
       r <- ProjectUtils.resourceOfSelection()
-      p <- ProjectUtils.projectAsJavaProject(r.getProject())
       creator <- fileCreatorMappings.find(_.id == fileCreatorId)
       path <- creator.withInstance(_.initialPath(r))
     } {
-      selectedProject = p
+      selectedProject = r.getProject()
 
-      btProject.setText(p.getProject().getName())
+      btProject.setText(selectedProject.getName())
 
       val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
       tName.setText(str)
@@ -252,14 +251,14 @@ trait NewFileWizard extends AnyRef with HasLogger {
       val ctx = new ScalaTemplateContext(ctxType, doc, 0, 0)
 
       ctx.getContextType().addResolver(PackageVariableResolver)
-      m.withInstance(_.templateVariables(selectedProject.getProject(), tName.getText())) foreach { vars =>
+      m.withInstance(_.templateVariables(selectedProject, tName.getText())) foreach { vars =>
         for ((name, value) <- vars)
           ctx.setVariable(name, value)
       }
       ctx
     }
 
-    val path = m.withInstance(_.createFileFromName(selectedProject.getProject(), tName.getText()))
+    val path = m.withInstance(_.createFileFromName(selectedProject, tName.getText()))
     path foreach { p =>
       filePath = p
       openEditor(p) { doc =>
@@ -297,7 +296,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     def validatedFileName =
       selectedFileCreatorMapping.withInstance {
-        _.validateName(selectedProject.getProject(), tName.getText())
+        _.validateName(selectedProject, tName.getText())
       }
 
     if (selectedProject == null)
@@ -307,7 +306,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
         case Valid =>
           handleError("")
           val completions = selectedFileCreatorMapping.withInstance(
-              _.completionEntries(selectedProject.getProject(), tName.getText()))
+              _.completionEntries(selectedProject, tName.getText()))
 
           completions foreach completionOverlay.setProposals
         case Invalid(errorMsg) =>
@@ -346,8 +345,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
     }
 
     val srcDir = path.segment(1)
-    val p = selectedProject.getProject()
-    val isInSrcDir = ProjectUtils.sourceDirs(p).exists(_.lastSegment() == srcDir)
+    val isInSrcDir = ProjectUtils.sourceDirs(selectedProject).exists(_.lastSegment() == srcDir)
 
     try {
       if (isInSrcDir)
