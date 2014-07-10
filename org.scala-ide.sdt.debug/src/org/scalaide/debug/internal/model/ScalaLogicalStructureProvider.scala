@@ -106,7 +106,7 @@ object AkkaActorLogicalStructure extends ILogicalStructureType with HasLogger {
       val actorContext = actor.invokeMethod("context", ScalaDebugger.currentThread).asInstanceOf[ScalaObjectReference]
       val sender = actor.invokeMethod("sender", ScalaDebugger.currentThread)
       val parent = actorContext.invokeMethod("parent", "()Lakka/actor/ActorRef;", ScalaDebugger.currentThread)
-      val supervisingStrategy = actor.invokeMethod("supervisorStrategy", ScalaDebugger.currentThread)
+      val supervisingStrategy = actor.invokeMethod("supervisorStrategy", "()Lakka/actor/SupervisorStrategy;", ScalaDebugger.currentThread)
 
       VirtualValue("Actor", actor.invokeMethod("self", ScalaDebugger.currentThread).getValueString())
         .withFields(
