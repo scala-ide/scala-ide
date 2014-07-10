@@ -47,7 +47,7 @@ trait FileCreator {
    * `project` is the project where the file should be created. If no project is
    * selected yet, this method will not be called. Note that if this method
    * returns not `Valid` other methods of this interface, especially
-   * [[templateVariables]] and [[nameToPath]] will not be calld. Therefore it is
+   * [[templateVariables]] and [[createFilePath]] will not be calld. Therefore it is
    * not safe to call these methods as long as the file name is invalid because
    * their implementations don't have to validate them and therefore can crash
    * in unexpected ways.
@@ -55,14 +55,19 @@ trait FileCreator {
   def validateName(project: IProject, name: String): Validation
 
   /**
-   * Creates a file with the information that is provided to the wizard. This
-   * information is the project where the file should be created in and the
-   * actual name of the file, which is its full relative path starting from the
-   * path of the project.
+   * Creates the path that points to the location where the wizard should create
+   * a file.
    *
-   * After the file is created the `IPath` to the file is returned.
+   * `project` is the project where the file should be created.
+   *
+   * `name` is the name of the file.
+   *
+   * This method is guaranteed to be called not before [[validateName]] returns
+   * a valid state.
+   *
+   * '''Note:''' The returned path needs to be absolute to the root of the filesystem.
    */
-  def createFileFromName(project: IProject, name: String): IPath
+  def createFilePath(project: IProject, name: String): IPath
 
   /**
    * Creates a path that is shown when a new file wizard is created. This should

@@ -4,7 +4,6 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.Commons
 import org.scalaide.util.internal.eclipse.ProjectUtils
@@ -53,20 +52,10 @@ trait ScalaFileCreator extends FileCreator {
     }
   }
 
-  override def createFileFromName(project: IProject, name: String): IPath = {
-    val isFolderNotation = name.count(_ == '/') != 1
-
-    if (isFolderNotation)
-      createFile(project, name)
-    else {
-      val srcDirs = sourceDirs(project).map(_.lastSegment())
-      val folder = Commons.split(name, '/').head
-
-      if (srcDirs.contains(folder))
-        createCompilationUnit(projectAsJavaProject(project).get, name)
-      else
-        createFile(project, name)
-    }
+  override def createFilePath(project: IProject, name: String): IPath = {
+    val filePath = name.replace('.', '/')+".scala"
+    val root = ResourcesPlugin.getWorkspace().getRoot()
+    root.getRawLocation().append(project.getFullPath()).append(filePath)
   }
 
   override def completionEntries(project: IProject, name: String): Seq[String] = {
@@ -214,29 +203,5 @@ trait ScalaFileCreator extends FileCreator {
           VariablePackageName -> pkg.substring(0, splitPos),
           VariableTypeName -> pkg.substring(splitPos+1))
     }
-  }
-
-  private[wizards] def createCompilationUnit(project: IJavaProject, path: String): IPath = {
-    val Seq(srcFolder, typePath) = Commons.split(path, '/')
-    val splitPos = typePath.lastIndexOf('.')
-    val packagePath = typePath.take(splitPos)
-    val fileName = typePath.drop(splitPos+1)
-    val folder = project.getProject().getFolder(s"/$srcFolder")
-    val root = project.getPackageFragmentRoot(folder)
-    val pkg = root.createPackageFragment(packagePath, false, null)
-    val cu = pkg.createCompilationUnit(s"$fileName.scala", "", false, null)
-
-    cu.getPath()
-  }
-
-  private[wizards] def createFile(project: IProject, name: String): IPath = {
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    val fullPath = root.getRawLocation().append(project.getFullPath()).append(name)
-    val f = fullPath.toFile()
-
-    f.getParentFile().mkdirs()
-    f.createNewFile()
-    project.refreshLocal(IResource.DEPTH_INFINITE, null)
-    fullPath
   }
 }

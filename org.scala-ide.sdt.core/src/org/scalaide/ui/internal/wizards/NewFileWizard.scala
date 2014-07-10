@@ -37,6 +37,7 @@ import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.ui.AutoCompletionOverlay
@@ -91,6 +92,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
   /**
    * Returns the path to the file created by the wizard. Returns `None` as long
    * as the wizard did not yet create a new file.
+   *
+   * '''Note:''' The returned path is absolute to the root of the filesystem
    */
   def pathOfCreatedFile: Option[IPath] =
     Option(filePath)
@@ -258,18 +261,23 @@ trait NewFileWizard extends AnyRef with HasLogger {
       ctx
     }
 
-    val path = m.withInstance(_.createFileFromName(selectedProject, tName.getText()))
+    val path = m.withInstance(_.createFilePath(selectedProject, tName.getText()))
     path foreach { p =>
-      filePath = p
-      openEditor(p) { doc =>
-        findTemplateById(m.templateId) match {
-          case Some(template) =>
-            val ctx = createTemplateContext(doc)
-            applyTemplate(template, ctx)
-          case _ =>
-            eclipseLog.error(s"Template '${m.templateId}' not found. Creating an empty document.")
-            0
-        }
+      FileUtils.createFileFromPath(p) match {
+        case util.Success(_) =>
+          filePath = p
+          openEditor(p) { doc =>
+            findTemplateById(m.templateId) match {
+              case Some(template) =>
+                val ctx = createTemplateContext(doc)
+                applyTemplate(template, ctx)
+              case _ =>
+                eclipseLog.error(s"Template '${m.templateId}' not found. Creating an empty document.")
+                0
+            }
+          }
+        case util.Failure(f) =>
+          eclipseLog.error("An error occurred while trying to create a file.", f)
       }
     }
   }
@@ -323,10 +331,11 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * the file is opened with the default text editor.
    */
   private def openEditor(path: IPath)(f: IDocument => Int): Unit = {
+    val workspacePath = FileUtils.workspacePath(path)
     val page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
 
     def openFileInSrcDir(): Unit = {
-      val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(path)
+      val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(workspacePath.get)
       val doc = new Document()
       val cursorPos = f(doc)
       file.setContents(
@@ -344,8 +353,11 @@ trait NewFileWizard extends AnyRef with HasLogger {
           EditorsUI.DEFAULT_TEXT_EDITOR_ID, /* activate */ true)
     }
 
-    val srcDir = path.segment(1)
-    val isInSrcDir = ProjectUtils.sourceDirs(selectedProject).exists(_.lastSegment() == srcDir)
+    def srcDirExists(srcDir: String) =
+      ProjectUtils.sourceDirs(selectedProject).exists(_.lastSegment() == srcDir)
+
+    val srcDir = workspacePath.map(_.segment(1))
+    val isInSrcDir = srcDir.map(srcDirExists).getOrElse(false)
 
     try {
       if (isInSrcDir)

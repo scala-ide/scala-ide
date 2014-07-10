@@ -1,7 +1,8 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.util.internal.Commons
 
 class ClassCreator extends ScalaFileCreator
@@ -36,14 +37,10 @@ class PackageObjectCreator extends ScalaFileCreator {
     }
   }
 
-  private[wizards] override def createCompilationUnit(project: IJavaProject, path: String): IPath = {
-    val Seq(srcFolder, packagePath) = Commons.split(path, '/')
-    val folder = project.getProject().getFolder(s"/$srcFolder")
-    val root = project.getPackageFragmentRoot(folder)
-    val pkg = root.createPackageFragment(packagePath, false, null)
-    val cu = pkg.createCompilationUnit(s"package.scala", "", false, null)
-
-    cu.getPath()
+  override def createFilePath(project: IProject, name: String): IPath = {
+    val filePath = name.replace('.', '/')
+    val root = ResourcesPlugin.getWorkspace().getRoot()
+    root.getRawLocation().append(project.getFullPath()).append(filePath).append("package.scala")
   }
 }
 
