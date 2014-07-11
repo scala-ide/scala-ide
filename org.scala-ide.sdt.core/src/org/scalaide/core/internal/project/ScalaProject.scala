@@ -625,7 +625,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
     val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
-    eclipseLog.debug(s"Adding $optionString to compiler arguments because of: $reason")
+    eclipseLog.debug(s"Adding $optionString to compiler arguments of ${this.underlying.getName()} because of: $reason")
     val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
@@ -637,7 +637,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
       val superfluousString = superfluousArgs.mkString(" ")
-      eclipseLog.debug(s"Removing $superfluousString from compiler arguments because of: $reason")
+      eclipseLog.debug(s"Removing $superfluousString from compiler arguments of ${this.underlying.getName()} because of: $reason")
       storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
 
       // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
