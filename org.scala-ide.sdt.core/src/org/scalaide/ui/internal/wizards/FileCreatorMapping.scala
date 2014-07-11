@@ -21,7 +21,8 @@ object FileCreatorMapping extends HasLogger {
         e.getAttribute("id"),
         e.getAttribute("name"),
         e.getAttribute("templateId"),
-        e.getAttribute("icon")
+        Option(e.getAttribute("icon")).getOrElse(""),
+        e.getContributor().getName()
       )(e.createExecutableExtension("class").asInstanceOf[FileCreator]))
     catch {
       case e: CoreException =>
@@ -37,7 +38,7 @@ object FileCreatorMapping extends HasLogger {
  * creator extension point.
  */
 case class FileCreatorMapping
-  (id: String, name: String, templateId: String, iconPath: String)
+  (id: String, name: String, templateId: String, iconPath: String, bundleId: String)
   (unsafeInstanceAccess: FileCreator) {
 
   /**
