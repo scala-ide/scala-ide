@@ -444,26 +444,35 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     val entries = scalaClasspath.userCp
     val errors = mutable.ListBuffer[(Int, String)]()
+    val badEntries = mutable.ListBuffer[(IPath, ScalaVersion)]()
+    val msgSuffix = "In case this report is mistaken, this check can be disabled in the compiler preference page. "
+
 
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
         case VersionInFile(version) =>
           if (!plugin.isCompatibleVersion(version, this)) {
-            val msg = s"${entry.lastSegment()} is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
-            val handlerSuffix = "Configure a Scala Installation for this specific project ?"
-            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
-            try{
-            val handler = DebugPlugin.getDefault().getStatusHandler(status)
-              if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
-              classpathContinuation.future onSuccess {
-                case f => f()
-              }
-            } finally { classpathContinuation = Promise[() => Unit]}
-            errors += ((IMarker.SEVERITY_ERROR, msg))
+            badEntries += ((entry,version))
+            val msg = s"${entry.lastSegment()} of ${this.underlying.getName()} build path is cross-compiled with an incompatible version of Scala (${version.unparse}). "
+            errors += ((IMarker.SEVERITY_ERROR, msg + msgSuffix))
           }
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
+    }
+    if (!errors.isEmpty) {
+      val badEntriesString = badEntries.toSeq.map(_._1.lastSegment()).mkString(",")
+      val versionsString = badEntries.toSeq.map(_._2).distinct.map{_.unparse}.mkString(",")
+      val msg = s"Some entries ($badEntriesString) for ${this.underlying.getName()} are cross-compiled with incompatible versions of Scala ($versionsString). "
+      val handlerSuffix = "Configure a Scala Installation for this specific project ?"
+      val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + msgSuffix + handlerSuffix, null)
+      try{
+        val handler = DebugPlugin.getDefault().getStatusHandler(status)
+        if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
+          classpathContinuation.future onSuccess {
+            case f => f()
+          }
+      } finally { classpathContinuation = Promise[() => Unit]}
     }
     errors.toSeq
   }
