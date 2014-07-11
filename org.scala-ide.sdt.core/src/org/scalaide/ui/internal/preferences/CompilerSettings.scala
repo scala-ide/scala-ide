@@ -60,6 +60,7 @@ import scala.collection.mutable.Publisher
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.preference.FieldEditor
+import org.scalaide.util.internal.ui.DisplayThread
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -302,7 +303,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       )
       val dialog: MessageDialog = new MessageDialog(getShell(), title, null, message, MessageDialog.QUESTION, buttonLabels, 0);
       val res = dialog.open();
-      if (res == 0) { //save
+      if (res == 0) {
+        save()
         performOk() && super.okToLeave()
       } else {
         super.okToLeave()
@@ -397,8 +399,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     getConcernedProject() flatMap (ScalaPlugin.plugin.asScalaProject(_)) foreach {_.subscribe(this)}
 
     override def notify(pub: Publisher[ScalaInstallationChange], event: ScalaInstallationChange): Unit = {
-      doLoad()
-      handleToggle()
+      DisplayThread.asyncExec(doLoad())
+      DisplayThread.asyncExec(handleToggle())
     }
 
     override def dispose() = {
@@ -447,13 +449,20 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     // This is just here to implement a status/dirtiness check, not to get values
     // however, owing to the policy of the FieldEditor subclasses not to change values outside of the store,
     // it has to be done through value tracking
-    private val initialValue = preferenceStore0.getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
+    // initialValue is only modified through backend changes (through the subscriber mechanism)
+    // currentValue is only modified in this dialog, through selections
+    private var initialValue = getPreferenceStore().getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
     private var currentValue = initialValue
 
     def isChanged() = !(currentValue equals initialValue)
 
     override def notify(pub: Publisher[ScalaInstallationChange], event: ScalaInstallationChange): Unit = {
-      doLoad()
+      // the semantics of the initial value have changed through this backend update
+      // it's very important to do this before the Load (platform checks on file IO)
+      initialValue = getPreferenceStore().getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
+      fireValueChanged(FieldEditor.VALUE, "", initialValue)
+      DisplayThread.asyncExec(doLoad())
+      DisplayThread.asyncExec(updateApply())
     }
 
     override def fireValueChanged(property: String, oldValue: Object, newValue: Object) {
@@ -485,7 +494,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     getConcernedProject() flatMap (ScalaPlugin.plugin.asScalaProject(_)) foreach {_.subscribe(this)}
 
     override def notify(pub: Publisher[ScalaInstallationChange], event: ScalaInstallationChange): Unit = {
-      doLoad()
+      DisplayThread.asyncExec(doLoad())
+      DisplayThread.asyncExec(updateApply())
     }
 
     override def dispose() = {
