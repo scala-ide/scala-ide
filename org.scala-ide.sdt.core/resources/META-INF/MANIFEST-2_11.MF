@@ -132,6 +132,7 @@ Export-Package:
  org.scalaide.ui.internal.templates,
  org.scalaide.ui.internal.wizards,
  org.scalaide.ui.syntax,
+ org.scalaide.ui.wizards,
  org.scalaide.util.internal,
  org.scalaide.util.internal.eclipse,
  org.scalaide.util.internal.scalariform,
