@@ -39,6 +39,9 @@ object ScalaImages {
   private[ui] def fromCoreBundle(path: String): ImageDescriptor =
     imageDescriptor(ScalaPlugin.plugin.pluginId, path) getOrElse MISSING_ICON
 
+  private[ui] def fromBundle(bundleId: String, path: String): ImageDescriptor =
+    imageDescriptor(bundleId, path) getOrElse MISSING_ICON
+
   /**
    * Creates an `Option` holding an `ImageDescriptor` of an image located in an
    * arbitrary bundle. The bundle has at least to be resolved and it may not be

@@ -200,7 +200,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
       case (m, i) =>
         val ti = new TableItem(cmTemplate.getTable(), SWT.NONE)
         ti.setText(m.name)
-        val img = ScalaImages.fromCoreBundle(m.iconPath).createImage()
+        val img = ScalaImages.fromBundle(m.bundleId, m.iconPath).createImage()
         disposables +:= img
         ti.setImage(0, img)
 
