@@ -49,13 +49,11 @@ import org.scalaide.util.internal.ui.Dialogs
  */
 trait NewFileWizard extends AnyRef with HasLogger {
 
-  private val Red = new Color(shell.getDisplay(), 255, 0, 0)
-
   private var btProject: Button = _
   private var cmTemplate: TableCombo = _
   private var tName: Text = _
 
-  private var disposables = Seq[{def dispose(): Unit}](Red)
+  private var disposables = Seq[{def dispose(): Unit}]()
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
   private var filePath: IPath = _
   private var selectedProject: IProject = _
