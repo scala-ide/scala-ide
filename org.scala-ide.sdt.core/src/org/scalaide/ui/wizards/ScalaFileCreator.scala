@@ -78,26 +78,18 @@ trait ScalaFileCreator extends FileCreator {
    * directory.
    */
   private[wizards] def generateInitialPath(path: Seq[String], srcDirs: Seq[String], isDirectory: Boolean): String = {
-    def srcDirAsDefaultPath = srcDirs.headOption.getOrElse("")+"/"
     if (path.size < 3)
-      srcDirAsDefaultPath
+      ""
     else {
       val Seq(_, topFolder, rawSubPath @ _*) = path
       val subPath = if (isDirectory) rawSubPath else rawSubPath.init
 
-      def generatePath(delimiter: String) = {
-        val p = subPath.mkString(delimiter)
-
-        if (p.isEmpty())
-          s"$topFolder/"
-        else
-          s"$topFolder/$p$delimiter"
+      if (!srcDirs.contains(topFolder))
+        ""
+      else {
+        val p = subPath.mkString(".")
+        if (p.isEmpty()) "" else s"$p."
       }
-
-      if (srcDirs contains topFolder)
-        generatePath(".")
-      else
-        srcDirAsDefaultPath
     }
   }
 
