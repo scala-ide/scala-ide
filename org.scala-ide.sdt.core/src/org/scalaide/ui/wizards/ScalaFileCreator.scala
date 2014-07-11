@@ -68,7 +68,7 @@ trait ScalaFileCreator extends FileCreator {
       pkgs.filter(_.matches(ignoreCaseMatcher))
     }
 
-    ret.fold(Seq[String]())(_.map(e => s"$srcFolder/$e"))
+    ret.fold(Seq[String]())(identity)
   }
 
   /**
