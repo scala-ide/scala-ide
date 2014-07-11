@@ -59,6 +59,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
   private var filePath: IPath = _
   private var selectedProject: IProject = _
+  private var selectedSourceFolder: String = ""
   private val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
   private var completionOverlay: AutoCompletionOverlay = _
@@ -115,13 +116,15 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     lbName.setText("Name:")
 
-    lbProject.setText("Project:")
+    lbProject.setText("Source Folder:")
 
     btProject.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
     btProject.addSelectionListener { e: SelectionEvent =>
-      Dialogs.chooseProjectWithDialog(shell) foreach { p =>
-        selectedProject = p
-        btProject.setText(p.getProject().getName())
+      Dialogs.chooseSourceFolderWithDialog(shell) foreach { src =>
+        selectedProject = src.getJavaProject().getProject()
+        selectedSourceFolder = src.getPath().segment(1)
+        btProject.setText(src.getPath().makeRelative().toString())
+
         validateInput()
       }
       tName.forceFocus()
@@ -173,9 +176,22 @@ trait NewFileWizard extends AnyRef with HasLogger {
       creator <- fileCreatorMappings.find(_.id == fileCreatorId)
       path <- creator.withInstance(_.initialPath(r))
     } {
-      selectedProject = r.getProject()
 
-      btProject.setText(selectedProject.getName())
+      val srcDirs = ProjectUtils.sourceDirs(r.getProject()).map(_.lastSegment())
+
+      if (srcDirs.nonEmpty) {
+        selectedProject = r.getProject()
+        val fullPath = r.getFullPath()
+
+        if (fullPath.segmentCount() > 1) {
+          val dir = fullPath.segment(1)
+          selectedSourceFolder = if (srcDirs.contains(dir)) dir else srcDirs.head
+        }
+        else
+          selectedSourceFolder = srcDirs.head
+
+        btProject.setText(s"${selectedProject.getName()}/$selectedSourceFolder")
+      }
 
       val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
       tName.setText(str)
@@ -254,14 +270,14 @@ trait NewFileWizard extends AnyRef with HasLogger {
       val ctx = new ScalaTemplateContext(ctxType, doc, 0, 0)
 
       ctx.getContextType().addResolver(PackageVariableResolver)
-      m.withInstance(_.templateVariables(selectedProject, tName.getText())) foreach { vars =>
+      m.withInstance(_.templateVariables(selectedProject, chosenName)) foreach { vars =>
         for ((name, value) <- vars)
           ctx.setVariable(name, value)
       }
       ctx
     }
 
-    val path = m.withInstance(_.createFilePath(selectedProject, tName.getText()))
+    val path = m.withInstance(_.createFilePath(selectedProject, chosenName))
     path foreach { p =>
       FileUtils.createFileFromPath(p) match {
         case util.Success(_) =>
@@ -281,6 +297,16 @@ trait NewFileWizard extends AnyRef with HasLogger {
       }
     }
   }
+
+  /**
+   * File creators need the full path an user has inserted. This means that the
+   * name of file appended to the source folder needs to be returned.
+   */
+  private def chosenName =
+    if (selectedSourceFolder.isEmpty())
+      tName.getText()
+    else
+      s"$selectedSourceFolder/${tName.getText()}"
 
   /**
    * Returns the currently selected file creator mapping of the combo box. It
@@ -304,7 +330,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     def validatedFileName =
       selectedFileCreatorMapping.withInstance {
-        _.validateName(selectedProject, tName.getText())
+        _.validateName(selectedProject, chosenName)
       }
 
     if (selectedProject == null)
@@ -314,7 +340,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
         case Valid =>
           handleError("")
           val completions = selectedFileCreatorMapping.withInstance(
-              _.completionEntries(selectedProject, tName.getText()))
+              _.completionEntries(selectedProject, chosenName))
 
           completions foreach completionOverlay.setProposals
         case Invalid(errorMsg) =>

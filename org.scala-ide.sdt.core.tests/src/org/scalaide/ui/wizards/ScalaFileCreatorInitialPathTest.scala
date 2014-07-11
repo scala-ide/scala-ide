@@ -15,28 +15,28 @@ class ScalaFileCreatorInitialPathTest extends ScalaFileCreator {
   }
 
   @Test
-  def source_folder_when_no_file_is_selected() =
-    "P" === "src/"
+  def empty_string_when_no_file_is_selected() =
+    "P" === ""
 
   @Test
-  def only_source_folder_name_when_file_is_in_default_package() =
-    "P/src/file.scala" === "src/"
+  def empty_string_when_file_is_in_default_package() =
+    "P/src/file.scala" === ""
 
   @Test
-  def source_folder_and_package_when_file_is_in_package() = {
-    "P/src/a/file.scala" === "src/a."
-    "P/src/a/b/file.scala" === "src/a.b."
-    "P/src/a/b/c/file.scala" === "src/a.b.c."
+  def package_path_with_dot_when_file_is_in_package() = {
+    "P/src/a/file.scala" === "a."
+    "P/src/a/b/file.scala" === "a.b."
+    "P/src/a/b/c/file.scala" === "a.b.c."
   }
 
   @Test
-  def initial_path_to_most_inner_package_when_no_file_is_selected_inside_of_source_folder() = {
-    "P/src/a" === "src/a."
-    "P/src/a/b" === "src/a.b."
-    "P/src/a/b/c" === "src/a.b.c."
+  def package_path_with_dot_when_package_is_selected() = {
+    "P/src/a" === "a."
+    "P/src/a/b" === "a.b."
+    "P/src/a/b/c" === "a.b.c."
   }
 
   @Test
-  def source_folder_when_selected_file_is_in_no_source_folder() =
-    "P/folder/file.scala" === "src/"
+  def empty_string_when_file_is_not_is_source_folder() =
+    "P/folder/file.scala" === ""
 }
