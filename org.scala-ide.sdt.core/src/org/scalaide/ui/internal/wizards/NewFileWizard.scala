@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.wizards
 
-import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.Document
@@ -14,7 +15,6 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events.KeyAdapter
 import org.eclipse.swt.events.KeyEvent
 import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
@@ -56,8 +56,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private var disposables = Seq[{def dispose(): Unit}]()
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
   private var filePath: IPath = _
-  private var selectedProject: IProject = _
-  private var selectedSourceFolder: String = ""
+  private var selectedFolder: IFolder = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
   private var completionOverlay: AutoCompletionOverlay = _
@@ -118,11 +117,10 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     btProject.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
     btProject.addSelectionListener { e: SelectionEvent =>
-      Dialogs.chooseSourceFolderWithDialog(shell) foreach { src =>
-        selectedProject = src.getJavaProject().getProject()
-        selectedSourceFolder = src.getPath().segment(1)
-        btProject.setText(src.getPath().makeRelative().toString())
-
+      Dialogs.chooseSourceFolderWithDialog(shell) foreach { srcPkg =>
+        val project = srcPkg.getJavaProject().getProject()
+        val srcDir = srcPkg.getPath().removeFirstSegments(1)
+        setFolderName(project.getFolder(srcDir))
         validateInput()
       }
       tName.forceFocus()
@@ -175,20 +173,19 @@ trait NewFileWizard extends AnyRef with HasLogger {
       path <- creator.withInstance(_.initialPath(r))
     } {
 
-      val srcDirs = ProjectUtils.sourceDirs(r.getProject()).map(_.lastSegment())
+      val srcDirs = ProjectUtils.sourceDirs(r.getProject())
 
       if (srcDirs.nonEmpty) {
-        selectedProject = r.getProject()
         val fullPath = r.getFullPath()
+        val root = ResourcesPlugin.getWorkspace().getRoot()
 
-        if (fullPath.segmentCount() > 1) {
-          val dir = fullPath.segment(1)
-          selectedSourceFolder = if (srcDirs.contains(dir)) dir else srcDirs.head
-        }
-        else
-          selectedSourceFolder = srcDirs.head
+        val srcDir =
+          if (fullPath.segmentCount() > 1)
+            srcDirs.find(_.isPrefixOf(fullPath)).getOrElse(srcDirs.head)
+          else
+            srcDirs.head
 
-        btProject.setText(s"${selectedProject.getName()}/$selectedSourceFolder")
+        setFolderName(root.getFolder(srcDir))
       }
 
       val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
@@ -268,14 +265,14 @@ trait NewFileWizard extends AnyRef with HasLogger {
       val ctx = new ScalaTemplateContext(ctxType, doc, 0, 0)
 
       ctx.getContextType().addResolver(PackageVariableResolver)
-      m.withInstance(_.templateVariables(selectedProject, chosenName)) foreach { vars =>
+      m.withInstance(_.templateVariables(selectedFolder, chosenName)) foreach { vars =>
         for ((name, value) <- vars)
           ctx.setVariable(name, value)
       }
       ctx
     }
 
-    val path = m.withInstance(_.createFilePath(selectedProject, chosenName))
+    val path = m.withInstance(_.createFilePath(selectedFolder, chosenName))
     path foreach { p =>
       FileUtils.createFileFromPath(p) match {
         case util.Success(_) =>
@@ -296,22 +293,22 @@ trait NewFileWizard extends AnyRef with HasLogger {
     }
   }
 
-  /**
-   * File creators need the full path an user has inserted. This means that the
-   * name of file appended to the source folder needs to be returned.
-   */
-  private def chosenName =
-    if (selectedSourceFolder.isEmpty())
-      tName.getText()
-    else
-      s"$selectedSourceFolder/${tName.getText()}"
+  /** Stores `folder` and shows it in the wizard. */
+  private def setFolderName(folder: IFolder): Unit = {
+    selectedFolder = folder
+    btProject.setText(selectedFolder.getFullPath().makeRelative().toString())
+  }
+
+  /** The file name the user has inserted. */
+  private def chosenName: String =
+    tName.getText()
 
   /**
    * Returns the currently selected file creator mapping of the combo box. It
    * can safely be accessed because the combo box ensures that there is always a
    * selection.
    */
-  private def selectedFileCreatorMapping = {
+  private def selectedFileCreatorMapping: FileCreatorMapping = {
     val text = cmTemplate.getItem(cmTemplate.getSelectionIndex())
     fileCreatorMappings.find(_.name == text).get
   }
@@ -320,7 +317,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * Validates the user inserted input and when the validation was invalid an
    * error message is shown and the ok-button is disbled.
    */
-  private def validateInput() = {
+  private def validateInput(): Unit = {
     def handleError(msg: String) = {
       enableOkButton(msg.isEmpty())
       showErrorMessage(msg)
@@ -328,17 +325,17 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
     def validatedFileName =
       selectedFileCreatorMapping.withInstance {
-        _.validateName(selectedProject, chosenName)
+        _.validateName(selectedFolder, chosenName)
       }
 
-    if (selectedProject == null)
-      handleError("No project selected")
+    if (selectedFolder == null)
+      handleError("No folder selected")
     else
       validatedFileName foreach {
         case Valid =>
           handleError("")
           val completions = selectedFileCreatorMapping.withInstance(
-              _.completionEntries(selectedProject, chosenName))
+              _.completionEntries(selectedFolder, chosenName))
 
           completions foreach completionOverlay.setProposals
         case Invalid(errorMsg) =>
@@ -377,11 +374,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
           EditorsUI.DEFAULT_TEXT_EDITOR_ID, /* activate */ true)
     }
 
-    def srcDirExists(srcDir: String) =
-      ProjectUtils.sourceDirs(selectedProject).exists(_.lastSegment() == srcDir)
+    def srcDirExists(srcDir: IPath) =
+      Option(selectedFolder.getProject())
+        .map(ProjectUtils.sourceDirs)
+        .exists(_.exists(_.isPrefixOf(srcDir)))
 
-    val srcDir = workspacePath.map(_.segment(1))
-    val isInSrcDir = srcDir.map(srcDirExists).getOrElse(false)
+    val isInSrcDir = workspacePath.map(srcDirExists).getOrElse(false)
 
     try {
       if (isInSrcDir)

@@ -1,9 +1,7 @@
 package org.scalaide.ui.wizards
 
-import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
 
 /**
  * File creator that can only create empty files. It is based on
@@ -12,18 +10,18 @@ import org.eclipse.core.runtime.IPath
  */
 class EmptyFileCreator extends ScalaFileCreator {
 
-  override def validateName(project: IProject, name: String): Validation =
-    checkFileExists(project, name)
+  override def validateName(folder: IFolder, name: String): Validation =
+    checkFileExists(folder, name)
 
   override def initialPath(res: IResource): String =
     generateInitialPath(
         path = res.getFullPath().segments(),
         isDirectory = res.getType() == IResource.FOLDER)
 
-  override def completionEntries(project: IProject, name: String): Seq[String] =
+  override def completionEntries(folder: IFolder, name: String): Seq[String] =
     Seq()
 
-  override def templateVariables(project: IProject, name: String): Map[String, String] =
+  override def templateVariables(folder: IFolder, name: String): Map[String, String] =
     Map()
 
   private[wizards] def generateInitialPath(path: Seq[String], isDirectory: Boolean): String = {

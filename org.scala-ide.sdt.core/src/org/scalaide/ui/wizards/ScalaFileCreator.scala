@@ -1,6 +1,6 @@
 package org.scalaide.ui.wizards
 
-import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
@@ -25,45 +25,40 @@ trait ScalaFileCreator extends FileCreator {
   import ScalaFileCreator._
   import ProjectUtils._
 
-  private[wizards] type FileExistenceCheck = IProject => Validation
+  private[wizards] type FileExistenceCheck = IFolder => Validation
 
-  override def templateVariables(project: IProject, name: String): Map[String, String] = {
-    val srcDirs = sourceDirs(project.getProject()).map(_.lastSegment())
-    generateTemplateVariables(srcDirs, name)
-  }
+  override def templateVariables(folder: IFolder, name: String): Map[String, String] =
+    generateTemplateVariables(name)
 
   override def initialPath(res: IResource): String = {
-    val srcDirs = sourceDirs(res.getProject()).map(_.lastSegment())
+    val srcDirs = sourceDirs(res.getProject())
     generateInitialPath(
-        path = res.getFullPath().segments(),
+        path = res.getFullPath(),
         srcDirs = srcDirs,
         isDirectory = res.getType() == IResource.FOLDER)
   }
 
-  override def validateName(project: IProject, name: String): Validation = {
-    if (!ScalaPlugin.plugin.isScalaProject(project))
+  override def validateName(folder: IFolder, name: String): Validation = {
+    if (!ScalaPlugin.plugin.isScalaProject(folder.getProject()))
       Invalid("Not a Scala project")
-    else {
-      val srcDirs = sourceDirs(project)
-      doValidation(srcDirs.map(_.lastSegment()), name) match {
+    else
+      doValidation(name) match {
         case Left(v) => v
-        case Right(f) => f(project)
+        case Right(f) => f(folder)
       }
-    }
   }
 
-  override def createFilePath(project: IProject, name: String): IPath = {
+  override def createFilePath(folder: IFolder, name: String): IPath = {
     val filePath = name.replace('.', '/')+".scala"
     val root = ResourcesPlugin.getWorkspace().getRoot()
-    root.getRawLocation().append(project.getFullPath()).append(filePath)
+    root.getRawLocation().append(folder.getFullPath()).append(filePath)
   }
 
-  override def completionEntries(project: IProject, name: String): Seq[String] = {
-    val Seq(srcFolder, typePath) = Commons.split(name, '/')
-    val ret = projectAsJavaProject(project) map { jp =>
-      val root = jp.findPackageFragmentRoot(project.getFullPath().append(srcFolder))
+  override def completionEntries(folder: IFolder, name: String): Seq[String] = {
+    val ret = projectAsJavaProject(folder.getProject()) map { jp =>
+      val root = jp.findPackageFragmentRoot(folder.getFullPath())
       val pkgs = root.getChildren().map(_.getElementName())
-      val ignoreCaseMatcher = s"(?i)\\Q$typePath\\E.*"
+      val ignoreCaseMatcher = s"(?i)\\Q$name\\E.*"
 
       pkgs.filter(_.matches(ignoreCaseMatcher))
     }
@@ -72,51 +67,28 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   /**
-   * `path` contains the path starting from the project to a given element.
-   * `srcFolders` contains the names of all source folders of a given project.
-   * `isDirectory` describes if the last element of `fullPath` references a
-   * directory.
+   * `path` is the path of the element which is selected when the wizard is
+   * created. `srcDirs` contains all source folders of the project where `path`
+   * is part of. `isDirectory` describes if the last element of `path` references
+   * a directory.
    */
-  private[wizards] def generateInitialPath(path: Seq[String], srcDirs: Seq[String], isDirectory: Boolean): String = {
-    if (path.size < 3)
-      ""
-    else {
-      val Seq(_, topFolder, rawSubPath @ _*) = path
-      val subPath = if (isDirectory) rawSubPath else rawSubPath.init
-
-      if (!srcDirs.contains(topFolder))
-        ""
-      else {
-        val p = subPath.mkString(".")
-        if (p.isEmpty()) "" else s"$p."
-      }
-    }
+  private[wizards] def generateInitialPath(path: IPath, srcDirs: Seq[IPath], isDirectory: Boolean): String = {
+    srcDirs.find(_.isPrefixOf(path))
+      .map(srcDir => path.removeFirstSegments(srcDir.segmentCount()))
+      .map(pkgOrFilePath => if (isDirectory) pkgOrFilePath else pkgOrFilePath.removeLastSegments(1))
+      .map(_.segments().mkString("."))
+      .map(pkg => if (pkg.isEmpty()) "" else s"$pkg.")
+      .getOrElse("")
   }
 
-  private[wizards] def doValidation(srcDirs: Seq[String], name: String): Either[Invalid, FileExistenceCheck] = {
-    val rawPath = Commons.split(name, '/')
-    val noFolder = rawPath.size == 1
-    val noPackageNotation = rawPath.size > 2
-
+  private[wizards] def doValidation(name: String): Either[Invalid, FileExistenceCheck] = {
     if (name.isEmpty())
       Left(Invalid("No file path specified"))
-    else if (noFolder)
-      if (srcDirs.contains(rawPath.head))
-        Left(Invalid("No type name specified"))
-      else
-        Left(Invalid("No source folder specified"))
-    else if (!srcDirs.contains(rawPath.head))
-      if (name.endsWith("/"))
-        Left(Invalid("No type name specified"))
-      else
-        Left(Invalid(s"Source folder '${rawPath.head}' does not exist"))
-    else if (noPackageNotation)
-      Left(Invalid(s"Incorrect syntax for file path. Has to be <src dir>/<package>.<type name>"))
     else
-      validateFullyQualifiedType(rawPath(1), name)
+      validateFullyQualifiedType(name)
   }
 
-  private[wizards] def validateFullyQualifiedType(fullyQualifiedType: String, name: String): Either[Invalid, FileExistenceCheck] = {
+  private[wizards] def validateFullyQualifiedType(fullyQualifiedType: String): Either[Invalid, FileExistenceCheck] = {
     def isValidScalaTypeIdent(str: String) = {
       val conformsToIdentToken = ScalaLexer.tokenise(str, forgiveErrors = true).size == 2
 
@@ -136,7 +108,7 @@ trait ScalaFileCreator extends FileCreator {
 
       packageIdentCheck orElse typeIdentCheck match {
         case Some(e) => Left(Invalid(e))
-        case _       => Right(checkTypeExists(_, fullyQualifiedType, name.replace('.', '/')))
+        case _       => Right(checkTypeExists(_, fullyQualifiedType))
       }
     }
   }
@@ -150,9 +122,9 @@ trait ScalaFileCreator extends FileCreator {
     validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
   }
 
-  private[wizards] def checkFileExists(project: IProject, path: String): Validation = {
+  private[wizards] def checkFileExists(folder: IFolder, path: String): Validation = {
     val root = ResourcesPlugin.getWorkspace().getRoot()
-    val fullPath = root.getRawLocation().append(project.getFullPath()).append(path)
+    val fullPath = root.getRawLocation().append(folder.getFullPath()).append(path)
     val fileExists = fullPath.toFile().exists()
     if (fileExists)
       Invalid("File already exists")
@@ -160,12 +132,13 @@ trait ScalaFileCreator extends FileCreator {
       Valid
   }
 
-  private[wizards] def checkTypeExists(project: IProject, fullyQualifiedType: String, path: String): Validation = {
-    val v = checkFileExists(project, path + ".scala")
+  private[wizards] def checkTypeExists(folder: IFolder, fullyQualifiedType: String): Validation = {
+    val path = fullyQualifiedType.replace('.', '/')
+    val v = checkFileExists(folder, path + ".scala")
     if (v.isInvalid)
       v
     else {
-      val scalaProject = ScalaPlugin.plugin.asScalaProject(project)
+      val scalaProject = ScalaPlugin.plugin.asScalaProject(folder.getProject())
       val typeExists = scalaProject flatMap { scalaProject =>
         scalaProject.presentationCompiler { compiler =>
           compiler.askOption { () =>
@@ -181,19 +154,13 @@ trait ScalaFileCreator extends FileCreator {
     }
   }
 
-  private[wizards] def generateTemplateVariables(srcDirs: Seq[String], name: String): Map[String, String] = {
-    val Seq(folder, pkg) = Commons.split(name, '/')
-
-    if (!srcDirs.contains(folder))
-      Map()
-    else {
-      val splitPos = pkg.lastIndexOf('.')
-      if (splitPos < 0)
-        Map(VariableTypeName -> pkg)
-      else
-        Map(
-          VariablePackageName -> pkg.substring(0, splitPos),
-          VariableTypeName -> pkg.substring(splitPos+1))
-    }
+  private[wizards] def generateTemplateVariables(pkg: String): Map[String, String] = {
+    val splitPos = pkg.lastIndexOf('.')
+    if (splitPos < 0)
+      Map(VariableTypeName -> pkg)
+    else
+      Map(
+        VariablePackageName -> pkg.substring(0, splitPos),
+        VariableTypeName -> pkg.substring(splitPos+1))
   }
 }

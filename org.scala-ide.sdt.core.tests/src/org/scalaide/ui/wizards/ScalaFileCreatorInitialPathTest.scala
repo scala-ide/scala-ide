@@ -1,5 +1,6 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.runtime.Path
 import org.junit.ComparisonFailure
 import org.junit.Test
 
@@ -8,7 +9,8 @@ class ScalaFileCreatorInitialPathTest extends ScalaFileCreator {
   implicit class Implicit_===(path: String) {
     def ===(expected: String): Unit = {
       val isDirectory = !path.endsWith(".scala")
-      val actual = generateInitialPath(path.split("/"), Seq("src", "src2"), isDirectory)
+      val srcDirs = Seq("P/src", "P/src2") map (new Path(_))
+      val actual = generateInitialPath(new Path(path), srcDirs, isDirectory)
       if (actual != expected)
         throw new ComparisonFailure("", expected, actual)
     }

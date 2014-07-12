@@ -1,8 +1,8 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
-import org.eclipse.core.resources.IProject
 
 /**
  * Used by `FileCreator` to either model that an operation was invalid, which
@@ -31,10 +31,10 @@ trait FileCreator {
    * with their actual values.
    *
    * This method is called when a new file needs to be created and therefore the
-   * template needs to be filled with the variables. Hence, `project` is the
-   * selected project and `name` the file name that are filled in the wizard.
+   * template needs to be filled with the variables. Hence, `folder` is the
+   * selected folder and `name` the file name that are filled in the wizard.
    */
-  def templateVariables(project: IProject, name: String): Map[String, String]
+  def templateVariables(folder: IFolder, name: String): Map[String, String]
 
   /**
    * Finds out if the file name that is inserted into the wizard is valid and
@@ -44,21 +44,21 @@ trait FileCreator {
    * error message why it is invalid. The error message is used to be shown to
    * users therefore it should be self-explanatory.
    *
-   * `project` is the project where the file should be created. If no project is
+   * `folder` is the folder where the file should be created. If no folder is
    * selected yet, this method will not be called. Note that if this method
    * returns not `Valid` other methods of this interface, especially
-   * [[templateVariables]] and [[createFilePath]] will not be calld. Therefore it is
-   * not safe to call these methods as long as the file name is invalid because
-   * their implementations don't have to validate them and therefore can crash
-   * in unexpected ways.
+   * [[templateVariables]] and [[createFilePath]] will not be called. Therefore
+   * it is not safe to call these methods as long as the file name is invalid
+   * because their implementations don't have to validate them and therefore can
+   * crash in unexpected ways.
    */
-  def validateName(project: IProject, name: String): Validation
+  def validateName(folder: IFolder, name: String): Validation
 
   /**
    * Creates the path that points to the location where the wizard should create
    * a file.
    *
-   * `project` is the project where the file should be created.
+   * `folder` is the folder where the file should be created.
    *
    * `name` is the name of the file.
    *
@@ -67,7 +67,7 @@ trait FileCreator {
    *
    * '''Note:''' The returned path needs to be absolute to the root of the filesystem.
    */
-  def createFilePath(project: IProject, name: String): IPath
+  def createFilePath(folder: IFolder, name: String): IPath
 
   /**
    * Creates a path that is shown when a new file wizard is created. This should
@@ -78,13 +78,13 @@ trait FileCreator {
   def initialPath(res: IResource): String
 
   /**
-   * This method is called whenever [[validateName]] returns valid `Validation`.
+   * This method is called whenever [[validateName]] returns a valid `Validation`.
    * It should return all the entries that are shown to the user in a code
    * completion component. The selected entry will replace everything the user
    * typed, therefore it needs to contain all the information an user expects to
    * see.
    */
-  def completionEntries(project: IProject, name: String): Seq[String]
+  def completionEntries(folder: IFolder, name: String): Seq[String]
 
   /**
    * When the new file wizard is created this controls if in case of an invalid
