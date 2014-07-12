@@ -1,6 +1,6 @@
 package org.scalaide.ui.wizards
 
-import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.scalaide.util.internal.Commons
@@ -20,12 +20,12 @@ class PackageObjectCreator extends ScalaFileCreator {
   override def showErrorMessageAtStartup: Boolean =
     true
 
-  private[wizards] override def generateInitialPath(path: Seq[String], srcDirs: Seq[String], isDirectory: Boolean): String = {
+  private[wizards] override def generateInitialPath(path: IPath, srcDirs: Seq[IPath], isDirectory: Boolean): String = {
     val p = super.generateInitialPath(path, srcDirs, isDirectory)
     if (p.isEmpty()) "" else p.init
   }
 
-  private[wizards] override def validateFullyQualifiedType(fullyQualifiedType: String, name: String): Either[Invalid, FileExistenceCheck] = {
+  private[wizards] override def validateFullyQualifiedType(fullyQualifiedType: String): Either[Invalid, FileExistenceCheck] = {
     val parts = Commons.split(fullyQualifiedType, '.')
 
     def packageIdentCheck =
@@ -33,14 +33,14 @@ class PackageObjectCreator extends ScalaFileCreator {
 
     packageIdentCheck match {
       case Some(e) => Left(Invalid(e))
-      case _       => Right(checkFileExists(_, name.replace('.', '/') + "/package.scala"))
+      case _       => Right(checkFileExists(_, fullyQualifiedType.replace('.', '/') + "/package.scala"))
     }
   }
 
-  override def createFilePath(project: IProject, name: String): IPath = {
+  override def createFilePath(folder: IFolder, name: String): IPath = {
     val filePath = name.replace('.', '/')
     val root = ResourcesPlugin.getWorkspace().getRoot()
-    root.getRawLocation().append(project.getFullPath()).append(filePath).append("package.scala")
+    root.getRawLocation().append(folder.getFullPath()).append(filePath).append("package.scala")
   }
 }
 

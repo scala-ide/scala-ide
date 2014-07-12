@@ -9,7 +9,7 @@ class ScalaFileCreatorTemplateVariablesTest extends ScalaFileCreator {
 
   implicit class Implicit_===(path: String) {
     def ===(expected: Map[String, String]): Unit = {
-      val actual = generateTemplateVariables(Seq("src", "src2"), path)
+      val actual = generateTemplateVariables(path)
       if (actual != expected)
         throw new ComparisonFailure("", expected.toString(), actual.toString())
     }
@@ -17,9 +17,9 @@ class ScalaFileCreatorTemplateVariablesTest extends ScalaFileCreator {
 
   @Test
   def only_file_variable() =
-    "src/File" === Map(VariableTypeName -> "File")
+    "File" === Map(VariableTypeName -> "File")
 
   @Test
   def package_and_file_variables() =
-    "src/a.b.c.File" === Map(VariablePackageName -> "a.b.c", VariableTypeName -> "File")
+    "a.b.c.File" === Map(VariablePackageName -> "a.b.c", VariableTypeName -> "File")
 }
