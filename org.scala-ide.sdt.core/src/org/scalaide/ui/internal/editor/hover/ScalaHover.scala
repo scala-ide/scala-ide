@@ -14,6 +14,7 @@ import org.eclipse.jface.text.ITextViewer
 import org.eclipse.swt.widgets.Display
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ScalaWordFinder
@@ -108,7 +109,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
       import RegionUtils._
       import HTMLPrinter._
 
-      def typeInfo(t: Tree): Option[String] = askOption { () =>
+      def typeInfo(t: Tree): Option[String] = asyncExec {
         def compose(ss: List[String]): String = ss.filter(_.nonEmpty).mkString(" ")
         def defString(sym: Symbol, tpe: Type): String = {
           // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
@@ -119,7 +120,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
 
         for (sym <- Option(t.symbol); tpe <- Option(t.tpe))
           yield if (sym.isClass || sym.isModule) sym.fullName else defString(sym, tpe)
-      } getOrElse None
+      }.getOrElse(None)()
 
       def typecheckingErrorMessage(problems: Seq[IProblem]) = {
         createHtmlOutput { sb =>
@@ -188,7 +189,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         }.getOrElse(Seq())
       }
 
-      val problems = problemsOf(src.file)
+      val problems = problemsOf(icu)
       val problemsInRange = problems filter (p => region.intersects(p.toRegion))
 
       /* Delegate work to UI thread and block until result arrives */

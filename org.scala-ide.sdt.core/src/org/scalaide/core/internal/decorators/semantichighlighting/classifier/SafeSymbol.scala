@@ -3,9 +3,10 @@ package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
-
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /**
  * Return the Symbols corresponding to this `Tree`, if any.
@@ -31,7 +32,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
  */
 private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
 
-  val global: ScalaPresentationCompiler
+  override val global: IScalaPresentationCompiler
 
   protected def sourceFile: SourceFile
 
@@ -82,7 +83,7 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
       // symbol, which may trigger type checking of the underlying tree, so we
       // wrap it in 'ask'
       if (originalSym.isEmpty && hasSourceCodeRepresentation(tpeTree)) {
-        val tpeSym = global.askOption(() => Option(t.symbol)).flatten.toList
+        val tpeSym = global.asyncExec(Option(t.symbol)).getOption().flatten.toList
         tpeSym.zip(List(tpeTree.namePosition))
       } else originalSym
 
@@ -93,11 +94,11 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
         // with real positions, instead of just an Int
         val pos = rangePos(sourceFile, namePos, namePos, namePos + name.length)
 
-        val sym1 = if (expr.tpe ne null) global.askOption { () =>
+        val sym1 = if (expr.tpe ne null) global.asyncExec {
           val typeSym = expr.tpe.member(name.toTypeName)
           if (typeSym.exists) typeSym
           else expr.tpe.member(name.toTermName)
-        }.getOrElse(NoSymbol)
+        }.getOrElse(NoSymbol)()
         else NoSymbol
 
         if (sym1 eq NoSymbol) List()
@@ -110,7 +111,7 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
       else (tpe :: args).flatMap(safeSymbol)
 
     case tpe @ SelectFromTypeTree(qualifier, _) =>
-      global.askOption(() => tpe.symbol -> tpe.namePosition).toList ::: safeSymbol(qualifier)
+      global.asyncExec(tpe.symbol -> tpe.namePosition).getOption().toList ::: safeSymbol(qualifier)
 
     case CompoundTypeTree(Template(parents, _, body)) =>
       (if (isStructuralType(parents)) body else parents).flatMap(safeSymbol)
@@ -123,7 +124,7 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
         case AppliedTypeTree(_, args) if isViewBound(args) =>
           safeSymbol(args(1))
         case AppliedTypeTree(tpe, args) if isContextBound(args) =>
-          global.askOption(() => tpe.symbol -> tpe.namePosition).toList
+          global.asyncExec(tpe.symbol -> tpe.namePosition).getOption().toList
         case tpt =>
           safeSymbol(tpt)
       }
@@ -135,7 +136,7 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
       Nil
 
     case tpe @ Select(qualifier, _) =>
-      val tpeSym = if (hasSourceCodeRepresentation(tpe)) global.askOption(() => tpe.symbol -> tpe.namePosition).toList else Nil
+      val tpeSym = if (hasSourceCodeRepresentation(tpe)) global.asyncExec(tpe.symbol -> tpe.namePosition).getOption().toList else Nil
       val qualiSym = if(hasSourceCodeRepresentation(qualifier)) safeSymbol(qualifier) else Nil
       tpeSym ::: qualiSym
 

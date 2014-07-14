@@ -16,6 +16,7 @@ import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
 import org.eclipse.jface.window.Window
 import org.eclipse.ui.dialogs.ElementListSelectionDialog
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as
  * the JDTs method search works correctly for Scala.
@@ -186,14 +187,14 @@ object ScalaLaunchShortcut {
           import comp._
           import definitions._
 
-          def isTopLevelModule(cdef: Tree) = comp.askOption ( () =>
+          def isTopLevelModule(cdef: Tree) = comp.asyncExec {
              cdef.isInstanceOf[ModuleDef] &&
              cdef.symbol.isModule         &&
              cdef.symbol.owner.isPackageClass
-          ).getOrElse(false)
+          }.getOrElse(false)()
 
           def hasMainMethod(cdef: Tree): Boolean =
-            comp.askOption { () => hasJavaMainMethod(cdef.symbol) } getOrElse false
+            comp.asyncExec(hasJavaMainMethod(cdef.symbol)).getOrElse(false)()
 
           val response = new Response[Tree]
           comp.askParsedEntered(source, keepLoaded = false, response)

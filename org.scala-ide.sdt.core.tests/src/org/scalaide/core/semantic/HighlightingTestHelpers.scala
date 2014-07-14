@@ -7,12 +7,12 @@ package org.scalaide.core.semantic
 
 import org.junit.Assert
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
 
-  def withCompilationUnitAndCompiler(path: String)(test: (ScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
+  def withCompilationUnitAndCompiler(path: String)(test: (IScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
 
     val unit = projectSetup.scalaCompilationUnit(path)
 

@@ -17,6 +17,7 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jface.text.Position
 import scalariform.parser.AstNode
 import org.scalaide.core.internal.quickfix.ScalaQuickFixProcessor
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class MissingMemberInfo(
     compilationUnit: ICompilationUnit,
@@ -39,14 +40,14 @@ class MissingMemberInfo(
       val cpos = compiler.rangePos(srcFile, start, start, start)
       compiler.askScopeCompletion(cpos, membersInScope)
 
-      for (members <- membersInScope.get.left.toOption) yield {
-        compiler.askOption { () =>
+      for (members <- membersInScope.getOption()) yield {
+        compiler.asyncExec {
           val elements = members.collect {
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && sym.decodedName.equalsIgnoreCase( className) =>
               compiler.getJavaElement(tpe.typeSymbol, scu.getJavaProject).map(_.getParent)
           }
-          elements.flatten.toSet
-        }
+          elements.flatten.toSet[IJavaElement]
+        } getOption()
       }
     }.flatten
 
@@ -102,10 +103,9 @@ object MissingMemberInfo {
         val pos = compiler.rangePos(srcFile, offset, offset, offset + length)
         val typed = new compiler.Response[compiler.Tree]
         compiler.askTypeAt(pos, typed)
-        val typedRes = typed.get
-        compiler.askOption(() => {
+        compiler.asyncExec {
           for {
-            t <- typedRes.left.toOption
+            t <- typed.getOption()
             tpe <- Option(t.tpe)
             parameter <- getParameter(tpe.paramss)
             paramType = parameter.tpe
@@ -131,7 +131,7 @@ object MissingMemberInfo {
               }
             (parameters, returnType)
           }
-        })
+        }.getOption()
       }.flatten
       optopt.flatten.orElse(Some(Nil, None))
     }

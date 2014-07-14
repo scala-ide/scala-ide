@@ -2,32 +2,38 @@ package org.scalaide.core.internal.jdt.model
 
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import scala.tools.nsc.symtab.Flags
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InternalServices
 
-trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
+/** Implementation of a internal compiler services dealing with mapping Scala types and symbols
+ *  to internal JDT counterparts.
+ */
+trait ScalaJavaMapper extends InternalServices with ScalaAnnotationHelper with HasLogger {
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list
    *
    *  If the symbol exists in several projects, it returns one of them.
    */
-  def getJavaElement(sym: Symbol, projects: IJavaProject*): Option[IJavaElement] = {
+  def getJavaElement(sym: Symbol, _projects: IJavaProject*): Option[IJavaElement] = {
     assert(sym ne null)
     if (sym == NoSymbol) return None
 
+    val projects: Seq[IJavaProject] = if (_projects.isEmpty) JavaModelManager.getJavaModelManager.getJavaModel.getJavaProjects.toSeq else _projects
+
     // this can be computed only once, to minimize the number of askOption calls
-    val (symName, symParamsTpe) = askOption { () =>
+    val (symName, symParamsTpe) = asyncExec {
       val symName = if (sym.isConstructor)
         sym.owner.simpleName.toString + (if (sym.owner.isModuleClass) "$" else "")
       else sym.name.toString
 
       val symParamsTpe = sym.paramss.flatten.map(param => mapParamTypeSignature(param.tpe))
       (symName, symParamsTpe)
-    } getOrElse (("", Nil))
+    }.getOrElse(("", Nil))()
 
     def matchesMethod(meth: IMethod): Boolean = {
       import Signature._
@@ -43,7 +49,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       val results = projects.map(p => Option(p.findElement(new Path(fullName.replace('.', '/')))))
       results.flatten.headOption
     } else if (sym.isClass || sym.isModule) {
-      val fullClassName = mapType(sym)
+      val fullClassName = javaTypeName(sym)
       val results = projects.map(p => Option(p.findType(fullClassName)))
       results.find(_.isDefined).flatten.headOption
     } else getJavaElement(sym.owner, projects: _*) match {
@@ -53,7 +59,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
           if (sym.isMethod && !isConcreteGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
           else {
             val fieldName =
-              if(self.nme.isLocalName(sym.name)) sym.name.dropLocal
+              if(nme.isLocalName(sym.name)) sym.name.dropLocal
               else sym.name
 
             ownerClass.getFields.find(_.getElementName == fieldName.toString)
@@ -62,53 +68,43 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     }
   }
 
-  /** Return the Java Element corresponding to the given Scala Symbol, looking in the
-   *  all existing Java projects.
-   *
-   *  If the symbol exists in several projects, it returns one of them.
-   */
-  def getJavaElement(sym: Symbol): Option[IJavaElement] = {
-    val javaModel = JavaModelManager.getJavaModelManager.getJavaModel
-    getJavaElement(sym, javaModel.getJavaProjects(): _*)
-  }
-
-  def mapModifiers(owner: Symbol) : Int = {
+  override def mapModifiers(sym: Symbol): Int = {
     var jdtMods = 0
-    if(owner.hasFlag(Flags.PRIVATE))
+    if(sym.hasFlag(Flags.PRIVATE))
       jdtMods = jdtMods | ClassFileConstants.AccPrivate
     else
       // protected entities need to be exposed as public to match scala compiler's behavior.
       jdtMods = jdtMods | ClassFileConstants.AccPublic
 
-    if(owner.hasFlag(Flags.ABSTRACT) || owner.hasFlag(Flags.DEFERRED))
+    if(sym.hasFlag(Flags.ABSTRACT) || sym.hasFlag(Flags.DEFERRED))
       jdtMods = jdtMods | ClassFileConstants.AccAbstract
 
-    if(owner.isFinal || owner.hasFlag(Flags.MODULE))
+    if(sym.isFinal || sym.hasFlag(Flags.MODULE))
       jdtMods = jdtMods | ClassFileConstants.AccFinal
 
-    if(owner.isTrait)
+    if(sym.isTrait)
       jdtMods = jdtMods | ClassFileConstants.AccInterface
 
     /** Handle Scala's annotations that have to be mapped into Java modifiers */
     def mapScalaAnnotationsIntoJavaModifiers(): Int = {
       var mod = 0
-      if(hasTransientAnn(owner)) {
+      if(hasTransientAnn(sym)) {
         mod = mod | ClassFileConstants.AccTransient
       }
 
-      if(hasVolatileAnn(owner)) {
+      if(hasVolatileAnn(sym)) {
         mod = mod | ClassFileConstants.AccVolatile
       }
 
-      if(hasNativeAnn(owner)) {
+      if(hasNativeAnn(sym)) {
         mod = mod | ClassFileConstants.AccNative
       }
 
-      if(hasStrictFPAnn(owner)) {
+      if(hasStrictFPAnn(sym)) {
         mod = mod | ClassFileConstants.AccStrictfp
       }
 
-      if(hasDeprecatedAnn(owner)) {
+      if(hasDeprecatedAnn(sym)) {
         mod = mod | ClassFileConstants.AccDeprecated
       }
 
@@ -142,10 +138,25 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
   }
 
   /** Returns the fully-qualified name for the passed symbol (it expects the symbol to be a type).*/
-  def mapType(s: Symbol): String = mapType(s, _.javaClassName)
+  def javaTypeName(s: Symbol): String = mapType(s, _.javaClassName)
 
   /** Returns the simple name for the passed symbol (it expects the symbol to be a type).*/
-  def mapSimpleType(s: Symbol): String = mapType(s, _.javaSimpleName.toString)
+  def javaSimpleTypeName(s: Symbol): String = mapType(s, _.javaSimpleName.toString)
+
+  override def javaTypeNameMono(tpe: Type): String = {
+    val base = javaTypeName(tpe.typeSymbol)
+    tpe.typeSymbol match {
+      // only the Array class has type parameters. the Array object is non-parametric
+      case definitions.ArrayClass =>
+        val paramTypes = tpe.normalize.typeArgs.map(javaTypeNameMono) // normalize is needed when you have `type BitSet = Array[Int]`
+        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
+        paramTypes.head + "[]"
+      case _ =>
+        if (tpe.typeParams.nonEmpty)
+          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+        base
+    }
+  }
 
   private def mapType(symbolType: Symbol, symbolType2StringName: Symbol => String): String = {
     val normalizedSymbol =
@@ -167,35 +178,14 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     }
   }
 
-  /** Map a Scala `Type` that '''does not take type parameters''' into its
-   *  Java representation.
-   *  A special case exists for Scala `Array` since in Java arrays do not take
-   *  type parameters.
-   */
-  def mapType(tpe: Type): String = {
-    val base = mapType(tpe.typeSymbol)
-    tpe.typeSymbol match {
-      // only the Array class has type parameters. the Array object is non-parametric
-      case definitions.ArrayClass =>
-        val paramTypes = tpe.normalize.typeArgs.map(mapType(_)) // normalize is needed when you have `type BitSet = Array[Int]`
-        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
-        paramTypes.head + "[]"
-      case _ =>
-        if (tpe.typeParams.nonEmpty)
-          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
-        base
-    }
-  }
-
-
-  def mapParamTypePackageName(t : Type) : String = {
-    if (t.typeSymbolDirect.isTypeParameter)
+  override def mapParamTypePackageName(tpe: Type): String = {
+    if (tpe.typeSymbolDirect.isTypeParameter)
       ""
     else {
-      if (definitions.isPrimitiveValueType(t))
+      if (definitions.isPrimitiveValueType(tpe))
         ""
       else
-        t.typeSymbol.enclosingPackage.fullName
+        tpe.typeSymbol.enclosingPackage.fullName
     }
   }
 
@@ -207,14 +197,14 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     }
   }
 
-  def mapParamTypeSignature(t : Type) : String = {
+  override def mapParamTypeSignature(tpe: Type): String = {
     val objectSig = "Ljava.lang.Object;"
-    if (t.typeSymbolDirect.isTypeParameter)
-      "T"+t.typeSymbolDirect.name.toString+";"
-    else if (isScalaSpecialType(t) || t.isErroneous)
+    if (tpe.typeSymbolDirect.isTypeParameter)
+      "T"+tpe.typeSymbolDirect.name.toString+";"
+    else if (isScalaSpecialType(tpe) || tpe.isErroneous)
       objectSig
     else
-      javaDescriptor(t).replace('/', '.')
+      javaDescriptor(tpe).replace('/', '.')
   }
 
   import icodes._
@@ -242,15 +232,15 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
     }
   }
 
-  def javaDescriptor(t: Type): String =
-    if (t.isErroneous) "Ljava/lang/Object;"
-    else javaDescriptor(toTypeKind(t))
+  override def javaDescriptor(tpe: Type): String =
+    if (tpe.isErroneous) "Ljava/lang/Object;"
+    else javaDescriptor(toTypeKind(tpe.erasure)) // `toTypeKind` only handles erased types
 
-  def mapTypeName(s : Symbol) : String =
+  override def enclosingTypeName(s : Symbol): String =
     if (s == NoSymbol || s.hasFlag(Flags.PACKAGE)) ""
     else {
       val owner = s.owner
-      val prefix = if (owner != NoSymbol && !owner.hasFlag(Flags.PACKAGE)) mapTypeName(s.owner)+"." else ""
+      val prefix = if (owner != NoSymbol && !owner.hasFlag(Flags.PACKAGE)) enclosingTypeName(s.owner)+"." else ""
       val suffix = if (s.hasFlag(Flags.MODULE) && !s.hasFlag(Flags.JAVA)) "$" else ""
       prefix+s.nameString+suffix
     }
@@ -272,7 +262,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
   /** Return the enclosing package. Correctly handle the empty package, by returning
    *  the empty string, instead of <empty>.
    */
-  def enclosingPackage(sym: Symbol): String = {
+  override def javaEnclosingPackage(sym: Symbol): String = {
     val enclPackage = sym.enclosingPackage
     if (enclPackage == rootMirror.EmptyPackage || enclPackage == rootMirror.RootPackage)
       ""

@@ -8,8 +8,9 @@ import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import org.scalaide.util.internal.Utils
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.ref.WeakReference
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class Occurrences(name: String, locations: List[IRegion])
 
@@ -29,7 +30,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
    */
   private var indexCache: Option[TimestampedIndex] = None
 
-  private def getCachedIndex(lastModified: Long, currentCompiler: ScalaPresentationCompiler): Option[MarkOccurrencesIndex] = indexCache match {
+  private def getCachedIndex(lastModified: Long, currentCompiler: IScalaPresentationCompiler): Option[MarkOccurrencesIndex] = indexCache match {
     case Some(TimestampedIndex(`lastModified`, WeakReference(index))) if index.global eq currentCompiler => Some(index)
     case _ =>
       logger.info("No valid MarkOccurrences index.")
@@ -58,9 +59,10 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
         val occurrencesIndex = getCachedIndex(lastModified, compiler) getOrElse {
           val occurrencesIndex = new MarkOccurrencesIndex {
             val global = compiler
+            import global.{withResponse, askLoadedTyped, Tree}
             override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
-              global.loadedType(sourceFile) match {
-                case Left(tree) => compiler.askOption { () => GlobalIndex(tree) } getOrElse EmptyIndex
+              withResponse[Tree](r => askLoadedTyped(sourceFile, keepLoaded = false, r)).get match {
+                case Left(tree) => compiler.asyncExec(GlobalIndex(tree)).getOrElse(EmptyIndex)()
                 case Right(ex)  => EmptyIndex
               }
             }
@@ -68,7 +70,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
           cacheIndex(lastModified, occurrencesIndex)
           occurrencesIndex
         }
-        compiler.askOption { () =>
+        compiler.asyncExec {
           val (from, to) = (region.getOffset, region.getOffset + region.getLength)
           val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)
 
@@ -79,7 +81,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
             Occurrences(sym.nameString, locations)
           }
         }
-      } getOrElse None
+      }.getOrElse(None)()
     }.flatten
   }
 }

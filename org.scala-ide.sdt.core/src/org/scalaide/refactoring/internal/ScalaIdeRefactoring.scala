@@ -171,7 +171,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T): T = {
-    file.withSourceFile((_, c) => f(c)) getOrElse fail()
+    file.scalaProject.presentationCompiler.internal(f) getOrElse fail()
   }
 
   private [refactoring] def withSourceFile[T](f: SourceFile => T): T = {

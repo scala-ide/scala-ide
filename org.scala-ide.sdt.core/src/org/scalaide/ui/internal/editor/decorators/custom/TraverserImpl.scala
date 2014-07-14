@@ -9,8 +9,9 @@ import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
-import org.scalaide.core.compiler.{ ScalaPresentationCompiler => SPC }
+import org.scalaide.core.compiler.{ IScalaPresentationCompiler => SPC }
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /**
  * Base trait for traverser implementations.
@@ -47,7 +48,7 @@ object TraverserImpl extends HasLogger {
         } regions :+= annotation
         super.traverse(tree)
       }
-    }.traverse(compiler.loadedType(sourceFile).fold(identity, _ => compiler.EmptyTree))
+    }.traverse(compiler.withResponse[compiler.Tree](r => compiler.askLoadedTyped(sourceFile, keepLoaded = false, r)).get.fold(identity, _ => compiler.EmptyTree))
     regions
   }
 
@@ -74,14 +75,14 @@ final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, c
 
   /** Checks if AST node matches type definition */
   private def checkType(obj: compiler.Tree): Boolean = {
-    val result = compiler.askOption { () =>
+    val result = compiler.asyncExec {
       val requiredClass = compiler.rootMirror.getRequiredClass(traverserDef.typeDefinition.fullName)
       Option(obj.tpe).fold(false) { tpe =>
         val hasType = tpe.erasure
         val needsType = requiredClass.toType.erasure
         hasType <:< needsType
       }
-    }
+    }.getOption()
     result.getOrElse(false)
   }
 
@@ -106,12 +107,12 @@ final case class MethodTraverserImpl(traverserDef: MethodTraverserDef, compiler:
 
     def checkMethod(methodName: String): Boolean = name.toString() == methodName
 
-    val result = compiler.askOption { () =>
+    val result = compiler.asyncExec {
       val requiredClass = compiler.rootMirror.getRequiredClass(traverserDef.methodDefinition.fullName)
       val hasType = obj.tpe
       val needsType = requiredClass.toType
       checkMethod(traverserDef.methodDefinition.method) && hasType.erasure <:< needsType.erasure
-    }
+    }.getOption()
 
     result.getOrElse(false)
   }
@@ -138,14 +139,14 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
     val symbolAnnots = select.symbol.annotations
     // for vals and vars
     val accessedAnnots: List[SPC#AnnotationInfo] =
-      if (select.symbol.isAccessor) compiler.askOption { () =>
+      if (select.symbol.isAccessor) compiler.asyncExec {
         select.symbol.accessed.annotations
-      }.getOrElse(Nil)
+      }.getOrElse(Nil)()
       else Nil
-    compiler.askOption { () =>
+    compiler.asyncExec {
       val requiredAnnotation = compiler.rootMirror.getRequiredClass(traverserDef.annotation.fullName)
       (accessedAnnots ++ symbolAnnots).exists(_.symbol == requiredAnnotation)
-    } getOrElse (false)
+    }.getOrElse(false)()
   }
 
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {

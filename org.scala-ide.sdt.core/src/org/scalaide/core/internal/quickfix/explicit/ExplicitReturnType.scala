@@ -4,6 +4,8 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import scala.collection.immutable
 import scala.reflect.internal.Chars
 import org.scalaide.core.compiler.Token
+import org.scalaide.core.compiler.IScalaPresentationCompiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.nsc.ast.parser.Tokens
 
@@ -37,7 +39,7 @@ object ExplicitReturnType {
       }
 
       def expandProposal(vd: ValOrDefDef): Option[IJavaCompletionProposal] =
-        compiler.askOption { () => vd.tpt.toString } flatMap { tpe =>
+        compiler.asyncExec(vd.tpt.toString).getOption() flatMap { tpe =>
           val insertion = findInsertionPoint(vd)
           // safety check: don't modify anything outside the original tree range
           if (vd.pos.start <= insertion && insertion <= vd.pos.end) {
@@ -51,15 +53,15 @@ object ExplicitReturnType {
           } else None
         }
 
-      def expandableType(tpt: TypeTree) = compiler.askOption { () =>
+      def expandableType(tpt: TypeTree): Boolean = compiler.asyncExec {
         (tpt.original eq null) && !tpt.tpe.isErroneous
-      }.getOrElse(false)
+      }.getOrElse(false)()
 
       val enclosing = compiler.enclosingValOrDef(sourceFile, offset)
       if (enclosing != EmptyTree) {
         compiler.withResponse[Tree] { response =>
           compiler.askTypeAt(enclosing.pos, response)
-        }.get.left.toOption flatMap {
+        }.getOption() flatMap {
           case vd @ ValDef(_, _, tpt: TypeTree, _) if expandableType(tpt) =>
             expandProposal(vd)
           case dd @ DefDef(_, _, _, _, tpt: TypeTree, _) if expandableType(tpt) =>

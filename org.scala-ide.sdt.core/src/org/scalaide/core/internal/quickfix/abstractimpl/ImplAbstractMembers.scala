@@ -6,6 +6,8 @@ import scala.tools.refactoring.implementations.AddToClosest
 import scala.reflect.internal.util.SourceFile
 import scala.collection.immutable
 
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+
 object ImplAbstractMembers {
   def suggestsFor(ssf: ScalaSourceFile, offset: Int): immutable.Seq[IJavaCompletionProposal] =
     implAbstractMember(ssf, offset)
@@ -15,7 +17,7 @@ object ImplAbstractMembers {
       import compiler._
 
       def implAbstractProposals(tree: ImplDef): List[IJavaCompletionProposal] =
-        compiler.askOption { () =>
+        compiler.asyncExec {
           val tp = tree.symbol.tpe
           (tp.members filter { m =>
             // TODO: find the way to get abstract methods simplier
@@ -24,7 +26,7 @@ object ImplAbstractMembers {
             sym =>
               AbstractMemberProposal(compiler)(sym.asMethod, tree)(Option(ssf), AddToClosest(offset))
           }).toList.sortBy(_.defName)
-        } getOrElse Nil
+        }.getOrElse(Nil)()
 
       def createPosition(sf: SourceFile, offset: Int) =
         compiler.rangePos(srcFile, offset, offset, offset)

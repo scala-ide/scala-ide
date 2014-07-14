@@ -120,7 +120,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
-    }
+  }
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
@@ -292,7 +292,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p))
-              p presentationCompiler (_.filesDeleted(srcs))
+              p.presentationCompiler.internal (_.filesDeleted(srcs))
           }
       }
     }

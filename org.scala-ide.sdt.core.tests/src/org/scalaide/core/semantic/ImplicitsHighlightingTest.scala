@@ -14,6 +14,7 @@ import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlighting")
 
@@ -64,7 +65,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
     }
   }
 
-  def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
+  def implicits(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
     val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.sourceFile())
     implicits.toList map {
       case (ann, p) =>

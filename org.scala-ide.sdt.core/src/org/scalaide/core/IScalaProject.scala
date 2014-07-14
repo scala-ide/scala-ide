@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import scala.collection.mutable.Publisher
 import java.io.File
 import org.eclipse.core.runtime.IPath
+import org.scalaide.core.compiler.IPresentationCompilerProxy
 
 /**
  * A message class to signal various project-related statuses, such as a Scala Installation change, or a successful Build.
@@ -69,7 +70,7 @@ trait IScalaProject extends Publisher[IScalaProjectEvent] {
   /**
    * The instance of the presentation compiler that runs on this project's source elements.
    */
-  val presentationCompiler: ScalaPresentationCompilerProxy
+  val presentationCompiler: IPresentationCompilerProxy
 
   /**
    *  Does this project have the platform's level of a Scala-corresponding Nature ?

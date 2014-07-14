@@ -13,6 +13,7 @@ import org.mockito.Mockito._
 import hyperlink.HyperlinkTester
 import testsetup.CustomAssertion
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 
@@ -31,17 +32,16 @@ class PresentationCompilerTest {
     val mockLogger = mock(classOf[Logger])
 
     // then
-    unit.withSourceFile { (sourceFile, compiler) =>
-      compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-        compiler.askOption { () =>
-          val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
-            override val eclipseLog = mockLogger
-          }
-          // if the unit is not kept loaded (i.e., `keepLoaded = false`), then a message
-          // "Error creating override indicators" is reported. That is why this test checks
-          // that no error is reported to the mocked logger.
-          overrideIndicatorBuilder.traverse(tree)
+    unit.scalaProject.presentationCompiler.internal { compiler =>
+      val tree = compiler.askStructure(unit.sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+      compiler.asyncExec {
+        val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
+          override val eclipseLog = mockLogger
         }
+        // if the unit is not kept loaded (i.e., `keepLoaded = false`), then a message
+        // "Error creating override indicators" is reported. That is why this test checks
+        // that no error is reported to the mocked logger.
+        overrideIndicatorBuilder.traverse(tree)
       }
     }
 

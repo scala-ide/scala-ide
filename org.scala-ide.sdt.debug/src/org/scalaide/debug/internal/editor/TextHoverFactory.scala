@@ -7,7 +7,6 @@ import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFac
 import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextHoverExtension2
@@ -20,6 +19,8 @@ import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
 import org.eclipse.debug.core.model.IVariable
 import org.scalaide.util.internal.eclipse.RegionUtils._
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class TextHoverFactory extends TextHoverFactoryInterface {
   def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
@@ -56,7 +57,7 @@ class TextHoverFactory extends TextHoverFactoryInterface {
 
 
 object StackFrameVariableOfTreeFinder {
-  def find(src: SourceFile, compiler: ScalaPresentationCompiler, stackFrame: ScalaStackFrame)(t: compiler.Tree): Option[IVariable] = {
+  def find(src: SourceFile, compiler: IScalaPresentationCompiler, stackFrame: ScalaStackFrame)(t: compiler.Tree): Option[IVariable] = {
     import compiler.{Try => _, _}
 
     // ---------------- HELPERS ---------------------------------
@@ -66,9 +67,7 @@ object StackFrameVariableOfTreeFinder {
       Option(symbolProducer) filterNot(_ == NoSymbol)
 
     def treeAt(pos: Position) = {
-      val resp = new Response[Tree]
-      askTypeAt(pos, resp)
-      resp.get.left.toOption
+      askTypeAt(pos).getOption()
     }
 
     // StackFrame line numbering is 1-based, while SourceFile line numbering is 0-based. Hence the "- 1".

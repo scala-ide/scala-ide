@@ -57,7 +57,7 @@ trait InteractiveCompilationUnit {
   def getContents(): Array[Char]
 
   /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
-  def doWithSourceFile(op: (SourceFile, ScalaPresentationCompiler) => Unit) {
+  def doWithSourceFile(op: (SourceFile, IScalaPresentationCompiler) => Unit) {
     scalaProject.presentationCompiler { op(sourceFile, _) }
   }
 
@@ -65,7 +65,7 @@ trait InteractiveCompilationUnit {
    *
    *  @param op The operation to be performed
    */
-  def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T): Option[T] = {
+  def withSourceFile[T](op: (SourceFile, IScalaPresentationCompiler) => T): Option[T] = {
     scalaProject.presentationCompiler(op(sourceFile, _))
   }
 

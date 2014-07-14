@@ -5,7 +5,7 @@
  */
 package org.scalaide.ui.internal.editor.decorators.custom
 
-import org.scalaide.core.compiler.{ScalaPresentationCompiler => SPC}
+import org.scalaide.core.compiler.{IScalaPresentationCompiler => SPC}
 
 case class TraverserId(is: String) extends AnyVal
 

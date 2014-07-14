@@ -88,7 +88,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def checkQualifier(s: Select, className: Array[Char], pat: SearchPattern) =  {
       (className eq null) || {
         s.qualifier.tpe.baseClasses exists { bc =>
-          pat.matchesName(className, mapType(bc).toCharArray)
+          pat.matchesName(className, javaTypeName(bc).toCharArray)
         }
       }
     }
@@ -201,7 +201,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
             val tpeBaseClasses = currentParamTypes(i).tpe.baseClasses
             val noMatch = !tpeBaseClasses.exists { bc =>
               val tpe1 = searchedParamTypes(i)
-              val tpe2 = mapType(bc).toCharArray
+              val tpe2 = javaTypeName(bc).toCharArray
               pat.matchesName(tpe1, tpe2)
             }
             if (noMatch)
@@ -337,7 +337,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
     def reportObjectReference(pat: TypeReferencePattern, symbol: Symbol, pos: Position) {
         val searchedName = simpleName(pat)
-        val symName = mapSimpleType(symbol).toCharArray
+        val symName = javaSimpleTypeName(symbol).toCharArray
         // TODO: better char array handling
         if (pat.matchesName(searchedName, symName)) {
           val enclosingElement = scu match {
@@ -364,7 +364,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     def reportTypeReference(tpe: Type, refPos: Position) {
       if (tpe eq null) return
       val patternFullyQualifiedName = fullyQualifiedName(qualification(pattern), simpleName(pattern))
-      if(pattern.matchesName(patternFullyQualifiedName, mapType(tpe.typeSymbol).toCharArray)) {
+      if(pattern.matchesName(patternFullyQualifiedName, javaTypeName(tpe.typeSymbol).toCharArray)) {
         getJavaElement(enclosingDeclaration, scu.scalaProject.javaProject).foreach { enclosingElement =>
           val accuracy = SearchMatch.A_ACCURATE
           val offset = refPos.start

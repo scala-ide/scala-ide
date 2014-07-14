@@ -1,5 +1,7 @@
 package org.scalaide.core.compiler
 
+import IScalaPresentationCompiler.Implicits._
+
 trait JavaSig { pc: ScalaPresentationCompiler =>
 
   /** Returns the symbol's `JavaSignature`*/
@@ -50,7 +52,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
 
     private lazy val sig: Option[String] = {
       // make sure to execute this call in the presentation compiler's thread
-      pc.askOption { () =>
+      pc.asyncExec {
         def needsJavaSig: Boolean = {
           // there is no need to generate the generic type information for local symbols
           !symbol.isLocalToBlock && erasure.needsJavaSig(symbol.info)
@@ -61,7 +63,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
           for (signature <- erasure.javaSig(symbol, pc.enteringPhase(pc.currentRun.erasurePhase)(symbol.info)))
             yield signature.replace("/", ".")
         } else None
-      }.getOrElse(None)
+      }.getOrElse(None)()
     }
 
     def isDefined: Boolean = sig.isDefined

@@ -20,6 +20,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
@@ -73,8 +74,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptTypeWithFlags(t: compiler.Symbol, jdtFlags: Int) = {
-        val packageName = enclosingPackage(t).toArray
-        val typeName = mapTypeName(t).toArray
+        val packageName = javaEnclosingPackage(t).toArray
+        val typeName = enclosingTypeName(t).toArray
         Cont(requestor.acceptType(
           packageName,
           typeName,
@@ -86,8 +87,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptField(f: compiler.Symbol) = {
-        val packageName = enclosingPackage(f).toArray
-        val typeName = mapTypeName(f.owner).toArray
+        val packageName = javaEnclosingPackage(f).toArray
+        val typeName = enclosingTypeName(f.owner).toArray
         val name = (if (f.isSetter) f.name.getterName else f.name).toString.toArray
         Cont(requestor.acceptField(
           packageName,
@@ -106,10 +107,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val name = if (isConstructor) owner.name else m0.name
         val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
 
-        val packageName = enclosingPackage(m0).toArray
-        val typeName = mapTypeName(owner).toArray
+        val packageName = javaEnclosingPackage(m0).toArray
+        val typeName = enclosingTypeName(owner).toArray
         val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
-        val parameterTypeNames = paramTypes.map(mapType(_).toArray).toArray
+        val parameterTypeNames = paramTypes.map(javaTypeNameMono(_).toArray).toArray
         val parameterSignatures = paramTypes.map(mapParamTypeSignature(_)).toArray
         Cont(requestor.acceptMethod(
           packageName,
@@ -154,7 +155,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       val typed = new compiler.Response[compiler.Tree]
       compiler.askTypeAt(pos, typed)
       val typedRes = typed.get
-      val cont: Cont = compiler.askOption { () =>
+      val cont: Cont = compiler.asyncExec {
         typedRes.left.toOption match {
           case Some(tree) => {
             tree match {
@@ -243,7 +244,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
             logger.info("No tree")
             Cont.Noop
         }
-      } getOrElse Cont.Noop
+      }.getOrElse(Cont.Noop)()
 
       cont()
 

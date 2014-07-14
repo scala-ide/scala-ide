@@ -54,6 +54,9 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal
+import org.scalaide.core.internal.ScalaPlugin
 
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit
@@ -63,7 +66,8 @@ trait ScalaCompilationUnit extends Openable
   with InteractiveCompilationUnit
   with HasLogger {
 
-  override def scalaProject = IScalaPlugin().getScalaProject(getJavaProject.getProject)
+  override def scalaProject: internal.project.ScalaProject =
+    ScalaPlugin().getScalaProject(getJavaProject.getProject)
 
   val file : AbstractFile
 
@@ -110,7 +114,7 @@ trait ScalaCompilationUnit extends Openable
   override def buildStructure(info: OpenableElementInfo, pm: IProgressMonitor, newElements: JMap[_, _], underlyingResource: IResource): Boolean = {
     ensureBufferOpen(info, pm)
 
-    withSourceFile({ (sourceFile, compiler) =>
+    scalaProject.presentationCompiler.internal { compiler =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val tmpMap = new java.util.HashMap[AnyRef, AnyRef]
       val sourceLength = sourceFile.length
@@ -118,11 +122,11 @@ trait ScalaCompilationUnit extends Openable
       try {
         logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
 
-        compiler.withStructure(sourceFile) { tree =>
-          compiler.askOption { () =>
-            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
-          }
-        }
+        val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
+        compiler.asyncExec {
+          new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+        }.getOption() // block until the traverser finished
+
         info match {
           case cuei: CompilationUnitElementInfo =>
             cuei.setSourceLength(sourceLength)
@@ -141,7 +145,7 @@ trait ScalaCompilationUnit extends Openable
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
-    }) getOrElse false
+    } getOrElse false
   }
 
 
@@ -165,8 +169,8 @@ trait ScalaCompilationUnit extends Openable
    */
   def addToIndexer(indexer : ScalaSourceIndexer) {
     if (scalaProject.hasScalaNature) {
-      try doWithSourceFile { (source, compiler) =>
-        compiler.withParseTree(source) { tree =>
+      try scalaProject.presentationCompiler.internal { compiler =>
+        compiler.withParseTree(sourceFile) { tree =>
           new compiler.IndexBuilderTraverser(indexer).traverse(tree)
         }
       } catch {
@@ -229,7 +233,7 @@ trait ScalaCompilationUnit extends Openable
        t <- typedRes.left.toOption
        if t.hasSymbolField
        sym = if (t.symbol.isSetter) t.symbol.getterIn(t.symbol.owner) else t.symbol
-       element <- compiler.getJavaElement(sym)
+       element <- compiler.getJavaElement(sym, scalaProject.javaProject)
       } yield Array(element: IJavaElement)
 
       val res = element.getOrElse(Array.empty[IJavaElement])
@@ -243,12 +247,12 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    doWithSourceFile { (sourceFile, compiler) =>
-      compiler.loadedType(sourceFile, true) match {
+    scalaProject.presentationCompiler.internal { compiler =>
+      compiler.withResponse[compiler.Tree](r => compiler.askLoadedTyped(sourceFile(), false, r)).get match {
         case Left(tree) =>
-          compiler.askOption { () =>
+          compiler.asyncExec {
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
-          }
+          }.getOption() // wait until the traverser finished
         case _ => () // no op
       }
 
@@ -257,13 +261,13 @@ trait ScalaCompilationUnit extends Openable
 
   override def createOverrideIndicators(annotationMap : JMap[_, _]) {
     if (scalaProject.hasScalaNature)
-      doWithSourceFile { (sourceFile, compiler) =>
+      scalaProject.presentationCompiler.internal { compiler =>
         try {
-          compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-            compiler.askOption { () =>
-              new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
-            }
-          }
+          val tree = compiler.askStructure(sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+
+          compiler.asyncExec {
+            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+          }.getOption()  // block until traverser finished
         } catch {
           case ex: Exception =>
            logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)

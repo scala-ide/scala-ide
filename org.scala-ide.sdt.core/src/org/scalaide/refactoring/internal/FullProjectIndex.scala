@@ -14,6 +14,7 @@ import org.eclipse.search.core.text.TextSearchEngine
 import org.eclipse.search.core.text.TextSearchMatchAccess
 import org.eclipse.search.core.text.TextSearchRequestor
 import org.eclipse.search.ui.text.FileTextSearchScope
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /**
  * A trait that can be mixed into refactorings that need an index of the whole
@@ -170,9 +171,9 @@ trait FullProjectIndex extends HasLogger {
 
       trees flatMap { tree =>
         project.presentationCompiler { compiler =>
-          compiler.askOption { () =>
+          compiler.asyncExec {
             refactoring.CompilationUnitIndex(tree)
-          }
+          } getOption()
         }.flatten.toList
       }
     } else Nil

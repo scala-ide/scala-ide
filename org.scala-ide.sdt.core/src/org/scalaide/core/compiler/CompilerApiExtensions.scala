@@ -4,10 +4,11 @@ import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.ast.parser.Tokens
 import scala.reflect.internal.util.SourceFile
 import scala.collection.immutable
+import scala.tools.nsc.interactive.Global
 
 /** Additional compiler APIs. It should eventually migrate in the presentation compiler.
  */
-trait CompilerApiExtensions { this: ScalaPresentationCompiler =>
+trait CompilerApiExtensions extends Global {
 
   /** Locate the smallest tree that encloses position.
    *

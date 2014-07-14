@@ -23,10 +23,11 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.extensions.SourceFileProviderRegistry
+import org.eclipse.jdt.core.IJavaProject
 
 trait LocateSymbol { self : ScalaPresentationCompiler =>
 
-  def locate(sym : Symbol, scu : InteractiveCompilationUnit): Option[(InteractiveCompilationUnit, Int)] = {
+  def locate(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)] = {
     def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
       for(e <- arr) {
         f(e) match {
@@ -39,7 +40,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     def findClassFile(): Option[ScalaClassFile] = {
       logger.debug("Looking for a classfile for " + sym.fullName)
       val packName = sym.enclosingPackage.fullName
-      val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
+      val project = javaProject.asInstanceOf[JavaProject]
       val pfs = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup.findPackageFragments(packName, false)
       if (pfs eq null) None else find(pfs) { pf =>
         val top = sym.enclosingTopLevelClass
@@ -57,7 +58,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
 
     def findCompilationUnit(): Option[IPath] = {
       logger.info("Looking for a compilation unit for " + sym.fullName)
-      val project = scu.scalaProject.javaProject.asInstanceOf[JavaProject]
+      val project = javaProject.asInstanceOf[JavaProject]
       val nameLookup = new SearchableEnvironment(project, null: WorkingCopyOwner).nameLookup
 
       val name = if (sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName

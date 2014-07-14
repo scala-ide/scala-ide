@@ -43,7 +43,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
 
       val typeNames = for(AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) <- throwsAnnotations)
-        yield mapType(typeName).toCharArray
+        yield javaTypeNameMono(typeName).toCharArray
 
       if(typeNames.isEmpty) None
       else Some(typeNames.toArray)
@@ -202,7 +202,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           defElemInfo.setArgumentNames(paramNames)
           setExceptionTypeNames(d, defElemInfo)
 
-          val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
+          val tn = javaSig.returnType.getOrElse(javaTypeNameMono(d.info.finalResultType)).toArray
           defElemInfo.setReturnType(tn)
 
           defElemInfo.setFlags0(ClassFileConstants.AccPublic|ClassFileConstants.AccFinal|ClassFileConstants.AccStatic)
@@ -401,7 +401,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val name = c.name.toString
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
-        val superName = mapType(superClass)
+        val superName = javaTypeName(superClass)
 
         val classElem =
           if(sym hasFlag Flags.TRAIT)
@@ -448,7 +448,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
         classElemInfo.setSuperclassName(superName.toCharArray)
-        val interfaceNames = sym.mixinClasses.map(mapType(_).toCharArray)
+        val interfaceNames = sym.mixinClasses.map(javaTypeName(_).toCharArray)
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
         val (start, end) = if (!isAnon) {
@@ -582,16 +582,16 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(sym.info).toArray
+        val tn = javaTypeNameMono(sym.info).toArray
         valElemInfo.setTypeName(tn)
 
         // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
         // When done, remove.
         if (sym ne NoSymbol) {
           sym.initialize
-          val getter = sym.getterIn(sym.owner)
+          val getter = sym.getter(sym.owner)
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
-          val setter = sym.setterIn(sym.owner)
+          val setter = sym.setter(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
           addBeanAccessors(sym)
         }
@@ -600,7 +600,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
 
       def addBeanAccessors(sym: Symbol) {
-        val beanName = sym.name.dropLocal.toString.capitalize
+        val beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -637,7 +637,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           typeElemInfo.setTypeName(tn)
         } else {
           //logger.info("Type has type: "+t.rhs.symbol.fullName)
-          val tn = mapType(t.rhs.symbol).toArray
+          val tn = javaTypeName(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }
 
@@ -707,7 +707,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         defElemInfo.setArgumentNames(paramNames)
         setExceptionTypeNames(sym, defElemInfo)
 
-        val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType)).toArray
+        val tn = javaSig.returnType.getOrElse(javaTypeNameMono(sym.info.finalResultType)).toArray
         defElemInfo.setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)

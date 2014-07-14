@@ -11,6 +11,8 @@ import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils
 import org.scalaide.core.internal.quickfix.AddMethodProposal
 import org.scalaide.core.internal.quickfix.AddValOrDefProposal
+import org.scalaide.core.compiler.IScalaPresentationCompiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], defName: String,
   target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends AddMethodProposal with AddValOrDefProposal {
@@ -22,8 +24,8 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], def
   private val methodNameOffset = pos.offset + pos.length - defName.length
 
   private def typeAtRange(start: Int, end: Int): String = {
-    compilationUnit.asInstanceOf[ScalaCompilationUnit].withSourceFile((srcFile, compiler) => {
-      compiler.askOption(() => {
+    compilationUnit.asInstanceOf[ScalaCompilationUnit].withSourceFile { (srcFile, compiler) =>
+      compiler.asyncExec {
         val length = end - start
         val context = compiler.doLocateContext(new RangePosition(srcFile, start, start, start + length-1))
         val tree = compiler.locateTree(new RangePosition(srcFile, start, start, start + length-1))
@@ -33,8 +35,8 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], def
         if (tpe.isError) None
         else if (tpe.toString == "Null") Some("AnyRef") //there must be a better condition
         else Some(tpe.toString) //do we want tpe.isError? tpe.isErroneous?
-      }).flatten.getOrElse("Any")
-    }) getOrElse ("Any")
+      }.getOption().flatten.getOrElse("Any")
+    } getOrElse ("Any")
   }
 
   protected val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {

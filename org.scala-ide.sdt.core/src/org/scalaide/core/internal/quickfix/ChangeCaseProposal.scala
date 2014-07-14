@@ -7,6 +7,11 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
+import scala.concurrent.Await
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import scala.util.Try
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits._
 
 /*
  * Find another member with the same spelling but different capitalization.
@@ -25,12 +30,14 @@ case class ChangeCaseProposal(originalName: String, newName: String, pos: Positi
 }
 
 object ChangeCaseProposal {
+  import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+
   def createProposals(cu: ICompilationUnit, pos: Position, wrongName: String): List[ChangeCaseProposal] = {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     def membersAtRange(start: Int, end: Int): List[String] = {
-      val memberNames = scu.withSourceFile((srcFile, compiler) => {
-        compiler.askOption(() => {
+      val memberNames = scu.withSourceFile { (srcFile, compiler) =>
+        compiler asyncExec {
           val length = end - start
 
           /*
@@ -46,9 +53,10 @@ object ChangeCaseProposal {
           val typedTree = typer.typed(tree)
           val tpe = typedTree.tpe.resultType.underlying
           if (tpe.isError) Nil else tpe.members.map(_.nameString).toList.distinct
-        })
-      }).flatten
-      memberNames.getOrElse(Nil)
+        } getOption()
+      }
+
+      memberNames.flatten.getOrElse(Nil)
     }
 
     val memberNames = membersAtRange(pos.offset, pos.offset + pos.length - wrongName.length - 1)
@@ -59,14 +67,14 @@ object ChangeCaseProposal {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     def membersAtPosition(offset: Int): List[String] = {
-      val memberNames = scu.withSourceFile((srcFile, compiler) => {
-        compiler.askOption(() => {
+      val memberNames = scu.withSourceFile { (srcFile, compiler) =>
+        compiler.asyncExec {
           val completed = new compiler.Response[List[compiler.Member]]
           compiler.askScopeCompletion(new RangePosition(srcFile, offset, offset, offset), completed)
           completed.get.left.getOrElse(Nil).map(_.sym.nameString).distinct
-        })
-      }).flatten
-      memberNames.getOrElse(Nil)
+        } getOption()
+      }
+      memberNames.flatten.getOrElse(Nil)
     }
 
     val memberNames = membersAtPosition(pos.offset)

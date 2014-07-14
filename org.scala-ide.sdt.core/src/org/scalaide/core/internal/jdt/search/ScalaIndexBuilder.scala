@@ -1,11 +1,12 @@
 package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.core.resources.IFile
-
 import scala.tools.nsc.symtab.Flags
 
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.logging.HasLogger
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This
  *  means a tree without symbols or types. However, a tree that was typed may still get here
@@ -21,7 +22,7 @@ import org.scalaide.core.compiler.ScalaPresentationCompiler
  *  'Test' in 'org.junit', and then pass those documents to the structure builder for
  *  precise parsing, where names are actually resolved.
  */
-trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
+trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
 
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
@@ -48,7 +49,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case Ident(id)                           => id.toChars
         case Select(_, name)                     => name.toChars
         case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-        case tpt @ TypeTree()                    => mapType(tpt.symbol).toCharArray // maybe the tree was typed
+        case tpt @ TypeTree()                    => javaTypeName(tpt.symbol).toCharArray // maybe the tree was typed
         case parent =>
           logger.info(s"superclass not understood: $parent")
           "$$NoRef".toCharArray
@@ -71,12 +72,16 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     private def addAnnotations(sym: Symbol) =
       for {
         ann <- sym.annotations
-        annotationType <- self.askOption(() => ann.atp.toString.toCharArray)
-      } indexer.addAnnotationTypeReference(annotationType)
+        annotationType <- asyncExec(ann.atp.toString.toCharArray).getOption()
+      } {
+        logger.debug(s"Added annotation ref (from sym): ${annotationType.toString}")
+        indexer.addAnnotationTypeReference(annotationType)
+      }
 
     private def addAnnotationRef(tree: Tree) {
       for (t <- tree) t match {
         case New(tpt) =>
+          logger.debug(s"Added annotation ref (from tree): ${tpt.toString}")
           indexer.addAnnotationTypeReference(tpt.toString.toCharArray)
         case _ => ()
       }
@@ -116,7 +121,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       indexer.addMethodDeclaration(
         v.name.getterName.toChars,
         Array.empty,
-        mapType(v.tpt.symbol).toArray,
+        javaTypeName(v.tpt.symbol).toArray,
         Array.empty
       )
 
@@ -124,7 +129,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         indexer.addMethodDeclaration(
           v.name.setterName.toChars,
           Array.empty,
-          mapType(v.tpt.symbol).toArray,
+          javaTypeName(v.tpt.symbol).toArray,
           Array.empty
         )
       addAnnotations(v)
@@ -135,11 +140,11 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
 
-      val paramTypes = fps.map(v => mapType(v.tpt.symbol))
+      val paramTypes = fps.map(v => javaTypeName(v.tpt.symbol))
       indexer.addMethodDeclaration(
         name,
         paramTypes.map(_.toCharArray).toArray,
-        mapType(d.tpt.symbol).toArray,
+        javaTypeName(d.tpt.symbol).toArray,
         Array.empty
       )
       addAnnotations(d)

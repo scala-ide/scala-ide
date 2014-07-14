@@ -17,8 +17,9 @@ import org.eclipse.ui.texteditor.ITextEditor
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class SpyView extends ViewPart with HasLogger {
   private var textArea: Text = _
@@ -57,14 +58,14 @@ class SpyView extends ViewPart with HasLogger {
               buf.append("\n\n============\n\nTree: \t\t" + tree.productPrefix)
               buf.append("\ntree.pos: \t%s".format(tree.pos))
 
-              compiler.askOption { () =>
+              compiler.asyncExec {
                 buf.append("\ntree.tpe: \t%s".format(tree.tpe))
                 buf.append("\n\nsymbol: \t\t%s".format(tree.symbol))
                 for (sym <- Option(tree.symbol) if sym ne NoSymbol)
                   buf.append("\nsymbol.info: \t%s".format(tree.symbol.info))
 
                 buf.append("\n\nUnits: %s".format(compiler.compilationUnits.map(_.workspaceFile).mkString("", "\n", "")))
-              }
+              }.getOption()
 
               textArea.append(buf.toString)
             case Right(ex) => logger.debug(ex)
@@ -86,7 +87,7 @@ class SpyView extends ViewPart with HasLogger {
     }
   }
 
-  private def typedTreeAtSelection(compiler: ScalaPresentationCompiler)(source: SourceFile, selection: ISelection): Either[compiler.Tree, Throwable] = {
+  private def typedTreeAtSelection(compiler: IScalaPresentationCompiler)(source: SourceFile, selection: ISelection): Either[compiler.Tree, Throwable] = {
     import compiler._
     selection match {
       case textSel: ITextSelection =>
