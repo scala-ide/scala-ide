@@ -61,6 +61,7 @@ import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.preference.FieldEditor
 import org.scalaide.util.internal.ui.DisplayThread
+import java.util.concurrent.atomic.AtomicBoolean
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -172,16 +173,19 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     val project = getConcernedProject()
     val scalaProject = project flatMap (ScalaPlugin.plugin.asScalaProject(_))
     scalaProject foreach (p => preferenceStore0.removePropertyChangeListener(p.compilerSettingsListener))
-    var wasClasspathChanged = new AtomicIntegerArray(3)
-    val countingListener: IPropertyChangeListener = {(event: PropertyChangeEvent) =>
+    val wasProjectSettingsChanged = new AtomicBoolean(false)
+    val wasDesiredInstallationChanged = new AtomicBoolean(false)
+    val wereAdditionalParamsChanged = new AtomicBoolean(false)
+
+    val classpathChangesListener: IPropertyChangeListener = {(event: PropertyChangeEvent) =>
         event.getProperty() match {
-          case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasClasspathChanged.lazySet(0, 1)
-          case CompilerSettings.ADDITIONAL_PARAMS => wasClasspathChanged.lazySet(1, 1)
-          case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasClasspathChanged.lazySet(2, 1)
+          case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasProjectSettingsChanged.set(true)
+          case CompilerSettings.ADDITIONAL_PARAMS => wereAdditionalParamsChanged.set(true)
+          case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasDesiredInstallationChanged.set(true)
           case _ =>
         }
     }
-    preferenceStore0.addPropertyChangeListener(countingListener)
+    preferenceStore0.addPropertyChangeListener(classpathChangesListener)
 
     val additionalSourceLevelParameter = ScalaPlugin.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) filter {s => s.startsWith("-Xsource")} headOption
     val sourceLevelString = additionalSourceLevelParameter flatMap ("""-Xsource:(\d\.\d+(?:\.\d)*)""".r unapplySeq(_)) flatMap (_.headOption)
@@ -194,20 +198,20 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     //the final save.
     save(userBoxes, preferenceStore0)
 
-    if (wasClasspathChanged.get(2) > 0) scalaProject foreach (_.setDesiredInstallation()) // this triggers a classpath check on its own
+    if (wasDesiredInstallationChanged.getAndSet(false)) scalaProject foreach (_.setDesiredInstallation()) // this triggers a classpath check on its own
     else {
       // this occurs if the user has manually added the -Xsource:2.xx to the compiler parameters but NOT
       // OR set a scala Installation
       // => we deduce the correct sourceLevel Value and execute it
       if (sourceLevelString.isDefined)
       scalaProject foreach (_.setDesiredSourceLevel(ScalaVersion(sourceLevelString.get))) //this triggers a classpath check on its own
-      else if (wasClasspathChanged.get(0) > 0 || wasClasspathChanged.get(1) > 0) scalaProject foreach (_.classpathHasChanged())
+      else if (wasProjectSettingsChanged.getAndSet(false) || wereAdditionalParamsChanged.getAndSet(false)) scalaProject foreach (_.classpathHasChanged())
     }
 
     //Don't let user click "apply" again until a change
     updateApplyButton
 
-    preferenceStore0.removePropertyChangeListener(countingListener)
+    preferenceStore0.removePropertyChangeListener(classpathChangesListener)
     scalaProject map (p => preferenceStore0.addPropertyChangeListener(p.compilerSettingsListener))
   }
 
