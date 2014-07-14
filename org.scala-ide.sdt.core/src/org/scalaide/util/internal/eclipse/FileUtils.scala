@@ -109,6 +109,16 @@ object FileUtils {
   }
 
   /**
+   * Checks if `path` points to a file that exists. `path` needs to be relative
+   * to the workspace location, for example `/Project/src/file.scala`.
+   */
+  def existsWorkspaceFile(path: IPath): Boolean = {
+    val root = ResourcesPlugin.getWorkspace().getRoot()
+    val fullPath = root.getRawLocation().append(path)
+    fullPath.toFile().exists()
+  }
+
+  /**
    * Returns the path relative to the workspace if `path` points to a location
    * inside of the workspace. Returns `None` otherwise.
    */

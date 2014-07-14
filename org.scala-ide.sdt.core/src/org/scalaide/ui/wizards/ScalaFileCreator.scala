@@ -6,6 +6,7 @@ import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.Commons
+import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 
 import scalariform.lexer._
@@ -122,21 +123,10 @@ trait ScalaFileCreator extends FileCreator {
     validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
   }
 
-  private[wizards] def checkFileExists(folder: IFolder, path: String): Validation = {
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    val fullPath = root.getRawLocation().append(folder.getFullPath()).append(path)
-    val fileExists = fullPath.toFile().exists()
-    if (fileExists)
-      Invalid("File already exists")
-    else
-      Valid
-  }
-
   private[wizards] def checkTypeExists(folder: IFolder, fullyQualifiedType: String): Validation = {
     val path = fullyQualifiedType.replace('.', '/')
-    val v = checkFileExists(folder, path + ".scala")
-    if (v.isInvalid)
-      v
+    if (FileUtils.existsWorkspaceFile(folder.getFullPath().append(path + ".scala")))
+      Invalid("File already exists")
     else {
       val scalaProject = ScalaPlugin.plugin.asScalaProject(folder.getProject())
       val typeExists = scalaProject flatMap { scalaProject =>
