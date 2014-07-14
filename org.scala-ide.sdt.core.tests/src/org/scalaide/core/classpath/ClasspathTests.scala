@@ -462,7 +462,7 @@ class ClasspathTests {
 
   def projectErrors(markerId: String*): List[String] = {
 
-    val markers = markerId.flatMap(id => project.underlying.findMarkers(id, false, IResource.DEPTH_INFINITE))
+    val markers = markerId.flatMap(id => project.underlying.findMarkers(id, true, IResource.DEPTH_INFINITE))
 
     for (m <- markers.toList) yield m.getAttribute(IMarker.MESSAGE).toString
   }
@@ -563,7 +563,7 @@ class ClasspathTests {
    */
   private def setRawClasspathAndCheckMarkers(newRawClasspath: Array[IClasspathEntry], expectedWarnings: Int, expectedErrors: Int, scalaProject: ScalaProject = project) {
     scalaProject.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
-    checkMarkers(expectedWarnings, expectedErrors, scalaProject)
+    checkMarkers(expectedNbOfWarningMarker = expectedWarnings, expectedNbOfErrorMarker = expectedErrors, scalaProject)
   }
 
   /** Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
@@ -573,7 +573,7 @@ class ClasspathTests {
     // check the classpathValid state
     assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
-    var actualMarkers = (0, 0)
+    @volatile var actualMarkers = (0, 0)
     SDTTestUtils.waitUntil(TIMEOUT) {
       actualMarkers = collectMarkers(scalaProject)
       actualMarkers == ((expectedNbOfErrorMarker, expectedNbOfWarningMarker))
@@ -597,7 +597,7 @@ class ClasspathTests {
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0
 
-      for (marker <- scalaProject.underlying.findMarkers(classpathMarkerId, false, IResource.DEPTH_ZERO))
+      for (marker <- scalaProject.underlying.findMarkers(classpathMarkerId, true, IResource.DEPTH_ZERO))
         marker.getAttribute(IMarker.SEVERITY, 0) match {
           case IMarker.SEVERITY_ERROR   => nbOfErrorMarker += 1
           case IMarker.SEVERITY_WARNING => nbOfWarningMarker += 1

@@ -38,7 +38,7 @@ import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.StatusHandler
 import org.eclipse.debug.core.DebugPlugin
-import scala.concurrent.Promise
+import scala.collection.immutable.HashMap
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -314,12 +314,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     classpathHasBeenChecked = true
   }
 
-  private var classpathContinuation = Promise[() => Unit]
   private var messageWasShown = new java.util.concurrent.atomic.AtomicBoolean(false)
-  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String)] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
+  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String, String)] = {
     import org.scalaide.util.internal.CompilerUtils._
-    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
       case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), this)
@@ -335,7 +332,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     fragmentRoots.length match {
       case 0 => // unable to find any trace of scala library
-        (IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.") :: Nil
+        (IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.", plugin.classpathProblemMarkerId) :: Nil
       case 1 => // one and only one, now check if the version number is contained in library.properties
         if (fragmentRoots(0).isProject) {
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
@@ -346,37 +343,25 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             Nil
           case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
             // compatible version (major, minor are the same). Still, add warning message
-            (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.") :: Nil
+            (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", plugin.classpathProblemMarkerId) :: Nil
           case Some(v) if (isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
-            val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). "
-            val handlerSuffix = "Configure a Scala Installation for this specific project ?"
-            val markerSuffix = "Please set a Scala Installation in this project's compiler Options"
-            val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + handlerSuffix, null)
-            try {
-             if (!messageWasShown.getAndSet(true)) {
-              val handler = DebugPlugin.getDefault().getStatusHandler(status)
-                if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
-                classpathContinuation.future onSuccess {
-                case f => f()
-                }
-             }
+            val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). Please set a Scala Installation in this project's compiler Options."
              // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-             (IMarker.SEVERITY_ERROR, msg + markerSuffix) :: Nil
-            } finally { classpathContinuation = Promise[() => Unit]; messageWasShown.set(false) }
+             (IMarker.SEVERITY_ERROR, msg, plugin.scalaVersionProblemMarkerId) :: Nil
           }
           case Some(v) => {
             // incompatible version
-            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.") :: Nil
+            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.", plugin.classpathProblemMarkerId) :: Nil
           }
           case None =>
             // no version found
-            (IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar") :: Nil
+            (IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar", plugin.classpathProblemMarkerId) :: Nil
         }
       case _ => // 2 or more of them, not great, but warn only if the library is not a project
         if (fragmentRoots.exists(incompatibleScalaLibrary))
-          (IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false)) :: Nil
+          (IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false), plugin.classpathProblemMarkerId) :: Nil
         else
-          (IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true)) :: Nil
+          (IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true), plugin.classpathProblemMarkerId) :: Nil
     }
   }
 
@@ -411,17 +396,17 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   /** Manage the possible classpath error/warning reported on the project.
    */
-  private def updateClasspathMarkers(errors: Seq[(Int, String)]) {
+  private def updateClasspathMarkers(errors: Seq[(Int, String, String)]) {
     // set the state
     classpathValid = errors.forall(_._1 != IMarker.SEVERITY_ERROR)
 
-    // the marker manipulation need to be done in a Job, because it requires
+    // the marker manipulation needs to be done in a Job, because it requires
     // a change on the IProject, which is locked for modification during
     // the classpath change notification
     EclipseUtils.scheduleJob("Update classpath error markers", underlying) { monitor =>
       if (underlying.isOpen()) { // cannot change markers on closed project
         // clean the classpath markers
-        underlying.deleteMarkers(plugin.classpathProblemMarkerId, false, IResource.DEPTH_ZERO)
+        underlying.deleteMarkers(plugin.classpathProblemMarkerId, true, IResource.DEPTH_ZERO)
 
         if (!classpathValid) {
           // delete all other Scala and Java error markers
@@ -431,51 +416,32 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
         // create the classpath problem markers
         errors foreach {
-          case (severity, message) => cpMarkerFactory.create(underlying, severity, message)
+          case (severity, message, markerId) => (new cpMarkerFactory(markerId)).create(underlying, severity, message)
         }
       }
       Status.OK_STATUS
     }
   }
 
-  private def validateBinaryVersionsOnClasspath(): Seq[(Int, String)] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
-
+  private def validateBinaryVersionsOnClasspath(): Seq[(Int, String, String)] = {
     val entries = scalaClasspath.userCp
-    val errors = mutable.ListBuffer[(Int, String)]()
+    val errors = mutable.ListBuffer[(Int, String, String)]()
     val badEntries = mutable.ListBuffer[(IPath, ScalaVersion)]()
-    val msgSuffix = "In case this report is mistaken, this check can be disabled in the compiler preference page. "
-
 
     for (entry <- entries if entry ne null) {
       entry.lastSegment() match {
         case VersionInFile(version) =>
           if (!plugin.isCompatibleVersion(version, this)) {
             badEntries += ((entry,version))
-            val msg = s"${entry.lastSegment()} of ${this.underlying.getName()} build path is cross-compiled with an incompatible version of Scala (${version.unparse}). "
-            errors += ((IMarker.SEVERITY_ERROR, msg + msgSuffix))
+            val msg = s"${entry.lastSegment()} of ${this.underlying.getName()} build path is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
+            errors += ((IMarker.SEVERITY_ERROR, msg, plugin.scalaVersionProblemMarkerId))
           }
         case _ =>
           // ignore libraries that aren't cross compiled/are compatible
       }
     }
-    if (!errors.isEmpty) {
-      val badEntriesString = badEntries.toSeq.map(_._1.lastSegment()).mkString(",")
-      val versionsString = badEntries.toSeq.map(_._2).distinct.map{_.unparse}.mkString(",")
-      val msg = s"Some entries ($badEntriesString) for ${this.underlying.getName()} are cross-compiled with incompatible versions of Scala ($versionsString). "
-      val handlerSuffix = "Configure a Scala Installation for this specific project ?"
-      val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg + msgSuffix + handlerSuffix, null)
-      try{
-        val handler = DebugPlugin.getDefault().getStatusHandler(status)
-        if (!classpathContinuation.isCompleted) handler.handleStatus(status, (this, classpathContinuation))
-          classpathContinuation.future onSuccess {
-            case f => f()
-          }
-      } finally { classpathContinuation = Promise[() => Unit]}
-    }
     errors.toSeq
   }
 
-  private object cpMarkerFactory extends MarkerFactory(plugin.classpathProblemMarkerId)
+  private class cpMarkerFactory(key:String) extends MarkerFactory(key)
 }

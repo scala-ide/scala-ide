@@ -55,8 +55,8 @@ import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.DebugPlugin
-import scala.concurrent.Promise
 import org.eclipse.core.runtime.Status
+import org.scalaide.core.resources.MarkerFactory
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -526,11 +526,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  private var unResolvedInstallContinuation = Promise[() => Unit]()
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
   def getDesiredInstallation(): LabeledScalaInstallation = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    import org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler
     val choice = getDesiredInstallationChoice()
     if (ScalaInstallation.resolve(choice).isEmpty) {
       val displayChoice: String = choice.marker match {
@@ -538,14 +535,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
       }
       val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Configure a Scala Installation for this specific project ?"
-      val status = new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, BadScalaInstallationPromptStatusHandler.STATUS_CODE_PREV_CLASSPATH, msg, null)
-      try {
-        val handler = DebugPlugin.getDefault().getStatusHandler(status)
-        if (!unResolvedInstallContinuation.isCompleted) handler.handleStatus(status, (this, unResolvedInstallContinuation))
-        unResolvedInstallContinuation.future onSuccess {
-          case f => f()
-        }
-      } finally { unResolvedInstallContinuation = Promise[() => Unit]() }
+      object svMarkerFactory extends MarkerFactory(ScalaPlugin.plugin.scalaVersionProblemMarkerId)
+      svMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, msg)
     }
     ScalaInstallation.resolve(getDesiredInstallationChoice()).get
   }

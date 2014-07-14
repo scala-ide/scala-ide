@@ -31,7 +31,6 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
-import org.scalaide.ui.internal.project.ScalaInstallationChoiceListDialog
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 

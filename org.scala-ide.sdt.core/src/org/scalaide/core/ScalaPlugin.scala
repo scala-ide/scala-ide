@@ -111,6 +111,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def launchTypeId = "scala.application"
   def problemMarkerId = pluginId + ".problem"
   def classpathProblemMarkerId = pluginId + ".classpathProblem"
+  def scalaVersionProblemMarkerId = pluginId + ".scalaVersionProblem"
   def settingProblemMarkerId = pluginId + ".settingProblem"
   def taskMarkerId = pluginId + ".task"
 

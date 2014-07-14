@@ -385,6 +385,16 @@
    </extension>
 
    <extension
+         id="scalaVersionProblem"
+         name="Scala Version Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.jdt.core.problem"/>
+      <super type="org.scala-ide.sdt.core.classpathProblem"/>
+      <persistent value="true"/>
+   </extension>
+
+   <extension
          id="settingProblem"
          name="Scala Setting Problem"
          point="org.eclipse.core.resources.markers">
@@ -503,18 +513,16 @@
          class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerPage">
       </classpathContainerPage>
    </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+   <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickfix.BadScalaVersionMarkerResolver">
+   </markerResolutionGenerator>
+   </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
       <statusHandler
        id="GenericHandler"
        class="org.scalaide.ui.internal.handlers.GenericExceptionStatusHandler"
        plugin="org.scala-ide.sdt.core"
        code="1010">
-     </statusHandler>
-      <statusHandler
-       id="Xsource"
-       class="org.scalaide.ui.internal.handlers.BadScalaInstallationPromptStatusHandler"
-       plugin="org.scala-ide.sdt.core"
-       code="1001">
      </statusHandler>
      <statusHandler
        id="MissingScalaRequirement"
