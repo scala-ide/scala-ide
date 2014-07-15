@@ -1612,4 +1612,112 @@
        </description>
     </decorator>
  </extension>
+   <extension
+        id="scala.tools.eclipse.macroMarkerId"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+  </extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="scala.tools.eclipse.macroMarkerId"
+	         name="scala.tools.eclipse.macroMarkerId">
+	   </type>
+	</extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="scala.tools.eclipse.macroMarkerId"
+         colorPreferenceKey="scala.tools.eclipse.macroMarkerId.color"
+         colorPreferenceValue="192,255,192"
+         contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
+         highlightPreferenceKey="scala.tools.eclipse.macroMarkerId.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="scala.tools.eclipse.macroMarkerId.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 textPreferenceKey="scala.tools.eclipse.macroMarkerId.text"
+ 		 textPreferenceValue="true"
+ 		 textStylePreferenceValue="BOX"
+ 		 verticalRulerPreferenceKey="scala.tools.eclipse.macroMarkerId.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+</extension>
+
+<extension
+        id="scala.tools.eclipse.macro2expand"
+        name="Macro expansion"
+        point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.core.resources.textmarker"> </super>
+  </extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+	   <type
+	         markerType="scala.tools.eclipse.macro2expand"
+	         name="scala.tools.eclipse.macro2expand">
+	   </type>
+	</extension>
+  
+  <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+   <specification
+         annotationType="scala.tools.eclipse.macro2expand"
+         colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
+         colorPreferenceValue="153,153,153"
+         contributesToHeader="false"
+         icon="icons/full/elcl16/macro_icon_disabled.png"
+         highlightPreferenceKey="scala.tools.eclipse.macro2expand.highlight"
+         highlightPreferenceValue="true"
+         includeOnPreferencePage="true"
+         label="Macro expansion marker"
+ 		 overviewRulerPreferenceKey="scala.tools.eclipse.macro2expand.overview"
+    	 overviewRulerPreferenceValue="true"
+ 		 presentationLayer="0"
+ 		 verticalRulerPreferenceKey="scala.tools.eclipse.macro2expand.ruler"
+ 		 verticalRulerPreferenceValue="true">        
+   </specification>
+  </extension>
+
+  <extension
+       point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+          annotationType="scala.tools.eclipse.semantichighlighting.implicits.MacroExpansionAnnotation"
+          colorPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.color"
+          colorPreferenceValue="153,153,153"
+          contributesToHeader="false"
+          icon="icons/full/elcl16/macro_icon.png"
+          includeOnPreferencePage="true"
+          label="Scala Macro Expansion"
+          overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.implicit.textStylePreference"
+          textStylePreferenceValue="UNDERLINE"
+          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
+          verticalRulerPreferenceValue="true">
+     </specification>
+ + </extension>
+  <extension
+        point="org.eclipse.ui.editorActions">
+     <editorContribution
+           targetID="scala.tools.eclipse.ScalaSourceFileEditor"
+           id="scala.tools.eclipse.macroAnnotationActionId">
+           <action
+           	 label="ScalaExpandMacros"
+           	 class="org.scalaide.ui.internal.editor.MacroAnnotationActionDelegate"
+           	 actionID="RulerClick"
+           	 id="scala.tools.eclipse.macroAnnotationActionId">
+           </action>
+     </editorContribution>
+  </extension>
 </plugin>

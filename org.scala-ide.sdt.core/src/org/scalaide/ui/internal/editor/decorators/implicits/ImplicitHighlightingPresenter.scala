@@ -7,7 +7,6 @@ package org.scalaide.ui.internal.editor.decorators.implicits
 
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.ui.internal.editor.decorators.BaseSemanticAction
-
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.Region
@@ -89,7 +88,20 @@ object ImplicitHighlightingPresenter {
       (annotation, pos)
     }
 
+    def mkMacroExpansionAnnotation(t: Tree) = {
+      val Some(macroExpansionAttachment) = t.attachments.get[compiler.analyzer.MacroExpansionAttachment]
+      val originalMacroPos = macroExpansionAttachment.expandee.pos
+      if (macroExpansionAttachment.expandee.symbol.fullName == "scala.reflect.materializeClassTag") None
+      else{
+        val annotation = new MacroExpansionAnnotation(compiler.showCode(macroExpansionAttachment.expanded.asInstanceOf[Tree]))
+        val pos = new Position(originalMacroPos.start,originalMacroPos.end - originalMacroPos.start)
+        Some(annotation, pos)
+      }
+    }
+
+
     var implicits = Map[Annotation, Position]()
+    var macroExpansions = Map[Annotation, Position]()
 
     new Traverser {
       override def traverse(t: Tree): Unit = {
@@ -100,12 +112,17 @@ object ImplicitHighlightingPresenter {
           case v: ApplyToImplicitArgs if !pluginStore.getBoolean(ImplicitsPreferencePage.P_CONVERSIONS_ONLY) =>
             val (annotation, pos) = mkImplicitArgumentAnnotation(v)
             implicits += (annotation -> pos)
+          case v if v.attachments.get[compiler.analyzer.MacroExpansionAttachment].isDefined =>
+            mkMacroExpansionAnnotation(v).map(macroExpansionAnnotation => {
+              val (annotation, pos) = macroExpansionAnnotation
+              macroExpansions += (annotation -> pos)
+            })
           case _ =>
         }
         super.traverse(t)
       }
     }.traverse(compiler.loadedType(sourceFile).fold(identity, _ => compiler.EmptyTree))
 
-    implicits
+    implicits ++ macroExpansions
   }
 }
