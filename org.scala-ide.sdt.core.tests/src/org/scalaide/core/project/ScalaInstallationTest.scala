@@ -22,7 +22,7 @@ class ScalaInstallationTest {
    * check the installations of Scala based on a bundle of jars
    */
   @Test
-  def bundledInstallationsTest {
+  def bundledInstallationsTest() {
     val bundledInstallations = ScalaInstallation.bundledInstallations
 
     ScalaPlugin.plugin.scalaVer match {
@@ -69,7 +69,7 @@ class ScalaInstallationTest {
   }
 
   @Test
-  def multiBundleInstallationsTest {
+  def multiBundleInstallationsTest() {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
 
     ScalaPlugin.plugin.scalaVer match {

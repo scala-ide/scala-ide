@@ -20,6 +20,7 @@ import org.eclipse.jface.text.TextUtilities
 import java.util.HashMap
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.ui.internal.editor.ScalaSourceViewerConfiguration
+import org.scalaide.util.internal.ui.DisplayThread
 
 object ScalaPreviewerFactory {
 
@@ -44,7 +45,7 @@ object ScalaPreviewerFactory {
       def propertyChange(event: PropertyChangeEvent) {
         if (configuration.affectsTextPresentation(event))
           configuration.handlePropertyChangeEvent(event)
-        previewViewer.invalidateTextPresentation()
+        DisplayThread.asyncExec(previewViewer.invalidateTextPresentation())
       }
     })
     previewViewer
