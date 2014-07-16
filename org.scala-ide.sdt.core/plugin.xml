@@ -1875,14 +1875,6 @@
           name="Empty File"
           templateId="org.scalaide.core.templates.wizards.empty">
     </fileCreator>
-    <fileCreator
-          class="org.scalaide.ui.wizards.ClassCreator"
-          description="Create a Scala File"
-          icon="icons/full/etool16/newclass_wiz.gif"
-          id="org.scalaide.ui.wizards.scalaCreator"
-          name="New Scala File"
-          templateId="org.scalaide.core.templates.wizards.class">
-    </fileCreator>
  </extension>
  <extension
        point="org.eclipse.ui.themes">

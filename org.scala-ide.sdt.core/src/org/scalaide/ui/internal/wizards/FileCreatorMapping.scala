@@ -15,7 +15,7 @@ object FileCreatorMapping extends HasLogger {
   def mappings: Seq[FileCreatorMapping] = {
     val elems = EclipseUtils.configElementsForExtension(FileCreatorId)
 
-    elems.filterNot(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator") flatMap { e =>
+    elems flatMap { e =>
       EclipseUtils.withSafeRunner(s"Error while trying to retrieve information from extension '$FileCreatorId'") {
         FileCreatorMapping(
           e.getAttribute("id"),
