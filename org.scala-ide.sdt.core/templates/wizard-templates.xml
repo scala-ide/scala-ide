@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+<template
+  name="wizard_class"
+  description="New class template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.class"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+class ${type_name} {
+  ${cursor}
+}</template>
+
+<template
+  name="wizard_trait"
+  description="New trait template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.trait"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+trait ${type_name} {
+  ${cursor}
+}</template>
+
+<template
+  name="wizard_object"
+  description="New object template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.object"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+object ${type_name} {
+  ${cursor}
+}</template>
+
+<template
+  name="wizard_package_object"
+  description="New package object template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.packageObject"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+package object ${type_name} {
+  ${cursor}
+}</template>
+
+<template
+  name="wizard_app"
+  description="New App template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.app"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+>${package_name}
+
+/**
+ * @author ${user}
+ */
+object ${type_name} extends App {
+  ${cursor}
+}</template>
+
+<template
+  name="wizard_empty"
+  description="New empty file template for the new file wizard"
+  id="org.scalaide.core.templates.wizards.empty"
+  context="org.scala-ide.sdt.core.templates"
+  enabled="true"
+></template>
+</templates>

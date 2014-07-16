@@ -81,6 +81,12 @@
       <layout>p2</layout>
       <url>file:../org.scala-ide.scala${scala.short.version}.build/org.scala-ide.scala${scala.short.version}.update-site/target/site</url>
     </repository>
+    <repository>
+      <id>eclipse.nebula</id>
+      <name>Eclipse Nebula repository</name>
+      <layout>p2</layout>
+      <url>${repo.nebula}</url>
+    </repository>
   </repositories>
 
   <profiles>

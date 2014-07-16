@@ -1,4 +1,4 @@
-package org.scalaide.core
+package org.scalaide
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
@@ -40,11 +40,8 @@ import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
+import org.scalaide.ui.wizards.WizardTests
 
-/**
- * To run this class DO NOT FORGET to set the config.ini in the  "configuration" tab.
- * @author ratiu
- */
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
@@ -87,6 +84,7 @@ import org.scalaide.core.classpath.DesiredScalaInstallationTests
     classOf[ScalaInstallationTest],
     classOf[MultiScalaVersionTest],
     classOf[DirectoryScalaInstallationTest],
-    classOf[CompletionTestSuite]
+    classOf[CompletionTestSuite],
+    classOf[WizardTests]
 ))
 class TestsSuite
