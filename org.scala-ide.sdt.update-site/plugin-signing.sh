@@ -35,7 +35,12 @@ signJars()
 
   do
 
-  jarsigner -keystore $PATH_KEYSTORE -storepass $STORE_PWD -verbose -keypass $KEY_PWD $i $ALIAS
+    case $(basename $i) in
+      # sign only the jars we generate, not the one imported through dependency
+      *scala* )
+        jarsigner -keystore $PATH_KEYSTORE -storepass $STORE_PWD -verbose -keypass $KEY_PWD $i $ALIAS
+      ;;
+    esac
 
   done
 }
