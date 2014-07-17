@@ -42,6 +42,10 @@ object SWTUtils {
       override def widgetSelected(e: SelectionEvent) { p(e) }
     }
 
+  implicit def fnToSelectionChangedEvent(p:SelectionChangedEvent => Unit): ISelectionChangedListener = new ISelectionChangedListener() {
+    override def selectionChanged(e: SelectionChangedEvent) { p(e) }
+  }
+
   implicit def noArgFnToSelectionAdapter(p: () => Any): SelectionAdapter =
     new SelectionAdapter() {
       override def widgetSelected(e: SelectionEvent) { p() }

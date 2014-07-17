@@ -211,25 +211,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
   }
 
-  def findInstallation(project: ScalaProject): ScalaInstallation = {
-    val version = project.scalaClasspath.scalaVersion.map(ScalaVersion.apply)
-    version match {
-      case Some(desiredVersion @ SpecificScalaVersion(major, minor, micro, _)) =>
-        ScalaInstallation.availableInstallations.find(_.version == desiredVersion) match {
-          case Some(installation) =>
-            logger.info(s"Found precise match for Scala installation $installation")
-            installation
-          case None =>
-            val installation = ScalaInstallation.findBestMatch(desiredVersion)
-            logger.info(s"Found best match: $installation")
-            installation
-        }
-
-      case _ =>
-        // if we can't determine the Scala version, we default to the platform installation
-        ScalaInstallation.platformInstallation
-    }
-  }
+  def findInstallation(project: ScalaProject): ScalaInstallation = project.getDesiredInstallation()
 
   /** Inspired by IC.compile
    *

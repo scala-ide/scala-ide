@@ -15,10 +15,19 @@ import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.AfterClass
 
 object ClasspathContainersTests {
   private val simulator = new EclipseUserSimulator
   private var projects: List[ScalaProject] = List()
+
+  @AfterClass
+  final def deleteProject(): Unit = {
+    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
+      projects foreach (_.underlying.delete(/* force */ true, new NullProgressMonitor))
+    }
+  }
 }
 
 class ClasspathContainersTests {

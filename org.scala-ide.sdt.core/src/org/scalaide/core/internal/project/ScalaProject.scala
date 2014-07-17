@@ -3,15 +3,14 @@ package org.scalaide.core.internal.project
 import java.io.File.pathSeparator
 import scala.collection.immutable
 import scala.collection.mutable
+import scala.collection.mutable.Publisher
+import scala.collection.mutable.Subscriber
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.scalaide.ui.internal.preferences.IDESettings
-import org.scalaide.ui.internal.preferences.PropertyStore
-import org.scalaide.ui.internal.actions.PartAdapter
-import org.scalaide.core.resources.EclipseResource
 import scala.tools.nsc.Settings
+import scala.tools.nsc.settings.ScalaVersion
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -19,6 +18,7 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceProxy
 import org.eclipse.core.resources.IResourceProxyVisitor
+import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
@@ -30,30 +30,39 @@ import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.builder.EclipseBuildManager
-import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.internal.builder
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.eclipse.core.resources.ProjectScope
-import scala.tools.nsc.settings.ScalaVersion
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
-import org.scalaide.util.internal.CompilerUtils
-import org.eclipse.jdt.core.IClasspathContainer
-import org.eclipse.core.runtime.NullProgressMonitor
+import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import org.scalaide.core.resources.EclipseResource
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.ui.internal.preferences.IDESettings
+import org.scalaide.ui.internal.preferences.PropertyStore
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.SettingConverterUtil
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.core.runtime.Status
+import org.scalaide.core.resources.MarkerFactory
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
 }
+
+case class ScalaInstallationChange()
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -98,10 +107,8 @@ object ScalaProject {
   }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with HasLogger {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with Publisher[ScalaInstallationChange] with HasLogger {
   import ScalaPlugin.plugin
-  import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
-  import org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerInitializer
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -469,13 +476,69 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   private def buildManagerInitialize: String =
     storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.buildManager.name))
 
-  /** Which Scala source level is this project configured to work with ? */
-  def getDesiredSourceLevel() = {
-    if (!usesProjectSettings) ScalaPlugin.plugin.shortScalaVer
-    else {
-      if (!projectSpecificStorage.contains(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)) projectSpecificStorage.setDefault(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, ScalaPlugin.plugin.shortScalaVer)
-      projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)
+  case class WithValidation[A, B](isValid: A => Boolean, unsafeGetter: A => B, registerDefault: (A, B) => WithValidation[A,B]) {
+    def get(key: A)(implicit default: B): B = {
+      if (!isValid(key)) registerDefault(key, default).unsafeGetter(key)
+      else unsafeGetter(key)
     }
+  }
+
+  implicit private def validatedProjectPrefStore(p:IPreferenceStore): WithValidation[String, String] =
+    WithValidation(
+        p.contains,
+        p.getString,
+        { (key:String, default:String) => eclipseLog.warn(s"Preference ${key} was uninitialized, setting default to ${default}.")
+          p.setDefault(key, default); validatedProjectPrefStore(p) }
+    )
+
+  // this is technically generic and could apply to any A => Option[B]
+  implicit private def validatedScalaInstallationChoice(parse: String => Option[ScalaInstallationChoice]): WithValidation[String, ScalaInstallationChoice] =
+    WithValidation(
+        ((str: String) => parse(str).isDefined),
+        ((str: String) => parse(str).get),
+        { (key: String, default: ScalaInstallationChoice) =>
+          eclipseLog.warn(s"Found an unparseable preference set for ${key}, resetting to ${default.toString}.")
+          validatedScalaInstallationChoice({ (str: String) => if (str equals key) Some(default) else parse(str) }) }
+    )
+
+  /** Which Scala source level is this project configured to work with ? */
+  def getDesiredSourceLevel(): String = {
+    implicit val sourceLevelDefault = ScalaPlugin.plugin.shortScalaVer
+    val sourceLevelPrefName = SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL
+    if (!usesProjectSettings) {
+      eclipseLog.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel.")
+      sourceLevelDefault
+    }
+    else projectSpecificStorage.get(sourceLevelPrefName)
+  }
+
+  /** Which Scala installation is this project wished to work with ? - always returns a valid choice, but it may or not resolve */
+  def getDesiredInstallationChoice(): ScalaInstallationChoice = {
+    implicit val desiredInstallationChoiceDefault: ScalaInstallationChoice = ScalaInstallationChoice(ScalaVersion(getDesiredSourceLevel()))
+    implicit val desiredInstallationChoicePrefDefault: String = desiredInstallationChoiceDefault.toString()
+    val desiredInstallationChoicePrefName = SettingConverterUtil.SCALA_DESIRED_INSTALLATION
+    if (!usesProjectSettings) {
+      eclipseLog.warn(s"Project ${this.underlying.getName()} runs on platform default installation.")
+      desiredInstallationChoiceDefault
+    }
+    else {
+      (parseScalaInstallationChoice _ ).get(projectSpecificStorage.get(desiredInstallationChoicePrefName))
+    }
+  }
+
+  /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
+  def getDesiredInstallation(): LabeledScalaInstallation = {
+    val choice = getDesiredInstallationChoice()
+    if (ScalaInstallation.resolve(choice).isEmpty) {
+      val displayChoice: String = choice.marker match {
+        case Left(version) => s"Latest ${CompilerUtils.shortString(version)} bundle (dynamic)"
+        case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
+      }
+      val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Configure a Scala Installation for this specific project ?"
+      object svMarkerFactory extends MarkerFactory(ScalaPlugin.plugin.scalaVersionProblemMarkerId)
+      svMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, msg)
+    }
+    ScalaInstallation.resolve(getDesiredInstallationChoice()).get
   }
 
   def turnOnProjectSpecificSettings(reason: String){
@@ -483,7 +546,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val pName = this.toString
       eclipseLog.warn(s"Turning on project-specific settings for $pName because of $reason")
       projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-      projectSpecificStorage.save()
     }
   }
 
@@ -492,11 +554,38 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val pName = this.toString
       eclipseLog.warn(s"Turning off project-specific settings for $pName because of $reason")
       projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, false)
-      projectSpecificStorage.save()
     }
   }
 
-  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(projectSpecificStorage.getString(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL)), slReason: String = "requested Source Level change"): Unit = {
+  def parseScalaInstallationChoice(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
+    case Success(int) => Some(ScalaInstallationChoice(Right(int)))
+    case Failure(t) => t match {
+      case ex: NumberFormatException => Try(ScalaVersion(str)) match {
+        case Success(version) => Some(ScalaInstallationChoice(version))
+        case Failure(thrown) => throw(thrown)
+      }
+    }
+  }
+
+  def setDesiredInstallation(choice: ScalaInstallationChoice = getDesiredInstallationChoice()) : Unit = {
+    val optsi = ScalaInstallation.resolve(choice) // This shouldn't do anything if the choice doesn't resolve
+    val sourceLevel = optsi map {si => CompilerUtils.shortString(si.version)}
+
+    def bundleUpdater(si: ScalaInstallation): () => Unit = {() =>
+      val updater = new ClasspathContainerSetter(javaProject)
+      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaLibId), si)
+      updater.updateBundleFromScalaInstallation(new Path(ScalaPlugin.plugin.scalaCompilerId), si)
+    }
+
+    // This is a precaution against scala installation loss and does not set anything by itself, see `SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL`
+    sourceLevel foreach {sl => projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, sl)}
+    optsi foreach {si => setDesiredSourceLevel(si.version, "requested Scala Installation change", Some(bundleUpdater(si)))}
+    publish(ScalaInstallationChange())
+  }
+
+  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(getDesiredSourceLevel()),
+      slReason: String = "requested Source Level change",
+      customBundleUpdater: Option[() => Unit] = None): Unit = {
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
     // is the required sourceLevel the bundled scala version ?
@@ -511,10 +600,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
-    projectSpecificStorage.save()
-    val updater = new ClasspathContainerSetter(javaProject)
-    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
-    updater.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
+    val updater = customBundleUpdater.getOrElse({() =>
+      val setter = new ClasspathContainerSetter(javaProject)
+      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaLibId), scalaVersion)
+      setter.updateBundleFromSourceLevel(new Path(ScalaPlugin.plugin.scalaCompilerId), scalaVersion)
+      }
+    )
+    updater()
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
@@ -524,7 +616,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
     val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
-    eclipseLog.debug(s"Adding $optionString to compiler arguments because of: $reason")
+    eclipseLog.debug(s"Adding $optionString to compiler arguments of ${this.underlying.getName()} because of: $reason")
     val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
@@ -536,14 +628,21 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
       val superfluousString = superfluousArgs.mkString(" ")
-      eclipseLog.debug(s"Removing $superfluousString from compiler arguments because of: $reason")
+      eclipseLog.debug(s"Removing $superfluousString from compiler arguments of ${this.underlying.getName()} because of: $reason")
       storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
 
       // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
       val projectSettingsSameAsWorkSpace = shownSettings(ScalaPlugin.defaultScalaSettings(), _ => true) forall {
         case (setting, value) => ScalaPlugin.prefStore.getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
       }
-      if (projectSettingsSameAsWorkSpace) {
+      val scalaInstallationIsSameAsDefault = {
+        val desiredInstallChoice = getDesiredInstallationChoice()
+        desiredInstallChoice.marker match {
+          case Left(scalaVersion) => CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)
+          case Right(_) => false
+        }
+      }
+      if (projectSettingsSameAsWorkSpace && scalaInstallationIsSameAsDefault) {
         turnOffProjectSpecificSettings("Settings are all identical to workspace after Xsource removal.")
       }
     }
@@ -553,17 +652,22 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def usesProjectSettings: Boolean =
     projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
-
-  val compilerSettingsListener = new IPropertyChangeListener {
-      def propertyChange(event: PropertyChangeEvent) = {
-        if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL) {
-          setDesiredSourceLevel()
-        }
-        if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE){
-          if (isUnderlyingValid) classpathHasChanged()
-        }
+  import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
+  val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
+    {
+      import org.scalaide.util.internal.Utils._
+      if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
+        val installString = (event.getNewValue()).asInstanceOfOpt[String]
+        val installChoice = installString flatMap (parseScalaInstallationChoice(_))
+        // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
+        // will not turn on the project settings and depends on them being set right beforehand
+        installChoice foreach (setDesiredInstallation(_))
+      }
+      if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
+        if (isUnderlyingValid) classpathHasChanged()
       }
     }
+  }
 
   /** Return a the project-specific preference store. This does not take into account the
    *  user-preference whether to use project-specific compiler settings or not.

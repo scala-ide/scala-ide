@@ -10,7 +10,6 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.core.internal.launching.ScalaLaunchDelegate
 import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.util.internal.ui.DisplayThread
 

@@ -31,6 +31,7 @@
     <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
+    <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
 
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
@@ -63,9 +64,15 @@
     <!-- Scala 2.11.x -->
     <scala211.version>2.11.2-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
-    <scala211.scala-xml.version>1.0.1</scala211.scala-xml.version>
+    <scala211.scala-xml.version>1.0.2</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.1</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
+    <!-- Scala 2.12.x -->
+    <scala212.version>2.12.0-SNAPSHOT</scala212.version>
+    <scala212.binary.version>2.11</scala212.binary.version>
+    <scala212.scala-xml.version>1.0.2</scala212.scala-xml.version>
+    <scala212.scala-parser-combinators.version>1.0.1</scala212.scala-parser-combinators.version>
+    <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>Select a profile</eclipse.codename>
@@ -113,6 +120,19 @@
         <scala.short.version>211</scala.short.version>
         <scala.minor.version>2.11</scala.minor.version>
         <version.suffix>2_11</version.suffix>
+
+      </properties>
+    </profile>
+
+    <profile>
+      <id>scala-2.12.x</id>
+      <properties>
+        <scala.version>${scala212.version}</scala.version>
+        <scala.short.version>212</scala.short.version>
+        <scala.minor.version>2.12</scala.minor.version>
+        <version.suffix>2_12</version.suffix>
+        <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
+        <sbt.version>0.13.6-SNAPSHOT</sbt.version>
 
       </properties>
     </profile>
@@ -246,6 +266,8 @@
         <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
         <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>
         <scala211.source.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.source.feature</scala211.source.feature.dir>
+        <scala212.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.feature</scala212.feature.dir>
+        <scala212.source.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.source.feature</scala212.source.feature.dir>
         <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
@@ -334,7 +356,7 @@
                   <outputDirectory>${scala211.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${scala211.feature.dir}/resources</directory>
+                      <directory>${scala211.feature.dir}/resources/${scala.short.version}</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -352,6 +374,40 @@
                   <resources>
                     <resource>
                       <directory>${scala211.source.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala212-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala212.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala212.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala212-source-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala212.source.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala212.source.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>

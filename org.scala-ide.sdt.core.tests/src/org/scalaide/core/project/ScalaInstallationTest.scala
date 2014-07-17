@@ -22,7 +22,7 @@ class ScalaInstallationTest {
    * check the installations of Scala based on a bundle of jars
    */
   @Test
-  def bundledInstallationsTest {
+  def bundledInstallationsTest() {
     val bundledInstallations = ScalaInstallation.bundledInstallations
 
     ScalaPlugin.plugin.scalaVer match {
@@ -61,13 +61,15 @@ class ScalaInstallationTest {
 
         assertEquals("Wrong all source jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
 
+      case SpecificScalaVersion(2, 12, _, _) =>
+        assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case v =>
         fail(s"Unsupported Scala version: $v")
     }
   }
 
   @Test
-  def multiBundleInstallationsTest {
+  def multiBundleInstallationsTest() {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
 
     ScalaPlugin.plugin.scalaVer match {
@@ -77,6 +79,9 @@ class ScalaInstallationTest {
       case SpecificScalaVersion(2, 11, _, _) =>
         assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
         checkMultiBundleInstallation(2, 11, multiBundleInstallations.head)
+      case SpecificScalaVersion(2, 12, _, _) =>
+        assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
+        checkMultiBundleInstallation(2, 12, multiBundleInstallations.head)
       case v =>
         fail(s"Unsupported Scala version: $v")
     }
