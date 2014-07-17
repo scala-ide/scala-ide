@@ -136,7 +136,7 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
     val store = ScalaPlugin.plugin.classLoaderStore
     val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
 
-    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
+    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile), None)
   }
 
 }

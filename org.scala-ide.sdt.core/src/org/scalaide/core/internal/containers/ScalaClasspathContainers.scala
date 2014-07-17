@@ -37,7 +37,6 @@ import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.ScalaModule
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.CompilerUtils.shortString
@@ -51,7 +50,6 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
 
-    val storage = new PropertyStore(new ProjectScope(iProject), ScalaPlugin.plugin.pluginId)
     val setter = new ClasspathContainerSetter(project)
     val proj =     ScalaPlugin.plugin.asScalaProject(iProject)
     val install = proj map (_.getDesiredInstallation())

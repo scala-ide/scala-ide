@@ -78,7 +78,7 @@ class ScalaAutoIndentStrategy(
   private def fIsSmartTab = preferencesProvider.getBoolean(PreferenceConstants.EDITOR_SMART_TAB)
 
   // TODO This could be in a singleton as in the original, but that sucks.
-  private var fgScanner = ToolFactory.createScanner(false, false, false, false)
+  private val fgScanner = ToolFactory.createScanner(false, false, false, false)
 
   /**
    * Determine the count of brackets within a given area of the document
@@ -1038,7 +1038,7 @@ class ScalaAutoIndentStrategy(
         Symbols.TokenLBRACKET -> Symbols.TokenRBRACKET,
         Symbols.TokenLBRACE -> Symbols.TokenRBRACE
     )
-    var closeToken = tokenMap(token)
+    val closeToken = tokenMap(token)
 
     var depth= 1
     var p = start

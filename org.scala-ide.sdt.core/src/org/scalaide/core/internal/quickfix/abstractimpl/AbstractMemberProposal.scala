@@ -5,7 +5,6 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.implementations.AddToClosest
 import org.scalaide.core.internal.quickfix.createmethod.{ ParameterList, ReturnType, TypeParameterList }
 import scala.tools.refactoring.implementations.AddMethodTarget
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.util.internal.eclipse.EditorUtils
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.quickfix.{AddMethodProposal, AddValOrDefProposal}
@@ -16,7 +15,6 @@ import scala.tools.nsc.interactive.Global
 object AbstractMemberProposal {
   def apply(global: Global)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
     tsf: Option[ScalaSourceFile], addMethodTarget: AddMethodTarget) = {
-    import global._
 
     new {
       override val compiler: global.type = global

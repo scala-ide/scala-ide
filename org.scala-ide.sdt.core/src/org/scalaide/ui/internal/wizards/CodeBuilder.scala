@@ -240,8 +240,6 @@ object CodeBuilder {
      */
     override def unimplemetedConstructors(newType: IType)(implicit lineDelimiter: String) = {
 
-      val astc: ListBuffer[IMethod] = ListBuffer()
-
       compilerProxy { comp =>
         val sym = comp.rootMirror.getClassIfDefined(superTypes.head)
         val ctors = sym.info.members.filter(_.isConstructor).toSeq
@@ -252,7 +250,7 @@ object CodeBuilder {
           pn = ctor.info.params map (pn => Name(pn.nameString))
           pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
           nt = pn zip pt map (nt => Arg(nt._1, nt._2))
-          ag = new Args(nt.toList)
+          ag = new Args(nt)
         } addConstructorArgs(ag)
 
         for {
@@ -261,7 +259,7 @@ object CodeBuilder {
           pt = ctor.info.params map (param => Type(Name(param.info.toString))) //Type(Name(convertAndAdd(pt))))
           nt = pn zip pt map (nt => Arg(nt._1, nt._2))
           if (nt.nonEmpty)
-          ag = new Args(nt.init.toList)
+          ag = new Args(nt.init)
           pl = new ParamNames(pn.dropRight(1) :+ Name("null"))
         } {
           println(AuxCons(ag, ConsBody(pl)))

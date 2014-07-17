@@ -162,12 +162,10 @@ class ClasspathContainersTests {
     // making this independent of whatever the default is
     project.setDesiredSourceLevel(ScalaPlugin.plugin.scalaVer, "explicit initialization of source_level_reversal_to_older")
     val reversalReason = "explicit call : source level reversal to older"
-    val old_classpath = project.javaProject.getRawClasspath()
     val container_before = getLibraryContainer(project)
 
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)
     project.setDesiredSourceLevel(ScalaPlugin.plugin.scalaVer, reversalReason)
-    val new_classpath = project.javaProject.getRawClasspath()
     val container_after = getLibraryContainer(project)
 
     assertTrue("Going to an older source level and back again should set the original container", extensionallyEqual(container_before, container_after))

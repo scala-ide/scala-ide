@@ -40,7 +40,6 @@ trait QuickAssistTestHelper {
 
     try {
       val Seq(pos) = SDTTestUtils.positionsOf(contents.toCharArray(), "^")
-      val proposals = new ArrayList[IJavaCompletionProposal]
       // get all corrections for the problem
       f(quickAssist.suggestsFor(unit, pos).headOption)
     } finally

@@ -31,7 +31,6 @@ class MultiScalaVersionTest {
   def previousVersionBuildSucceeds() {
     val Seq(p) = createProjects("prev-version-build")
     p.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-    val sourceFile = addFileToProject(p.underlying, "/src/InvalidCaseClass.scala", sourceCode)
 
     for (installation <- findPreviousScalaInstallation()) {
       val choice = ScalaInstallationChoice(installation)

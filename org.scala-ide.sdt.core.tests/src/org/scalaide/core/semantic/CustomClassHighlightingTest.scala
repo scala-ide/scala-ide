@@ -8,7 +8,6 @@ package org.scalaide.core.semantic
 import org.junit.Test
 import org.scalaide.ui.internal.editor.decorators.custom.AllMethodsTraverserDef
 import org.scalaide.ui.internal.editor.decorators.custom.TraverserDef.TypeDefinition
-import org.scalaide.ui.internal.editor.decorators.custom.TraverserId
 
 class CustomClassHighlightingTest
   extends HighlightingTestHelpers(CustomHighlightingTest)

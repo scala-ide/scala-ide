@@ -42,7 +42,6 @@ object ImplicitHighlightingPresenter {
     import compiler.Tree
     import compiler.Traverser
     import compiler.Apply
-    import compiler.MethodSymbol
     import compiler.Select
     import compiler.ApplyImplicitView
     import compiler.ApplyToImplicitArgs

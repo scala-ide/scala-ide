@@ -1,7 +1,6 @@
 package org.scalaide.core.ui.completion
 
 import org.junit.Test
-import org.scalaide.core.ui.CompilerSupport
 import org.junit.AfterClass
 
 object StandardCompletionTests extends CompletionTests

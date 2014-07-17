@@ -144,11 +144,11 @@ class DirectoryScalaInstallationTest {
 
     assertEquals("wrong version", SpecificScalaVersion(2, 10, 4, Development("mixedCompatibleVersionsWithName")), si.version)
 
-    assertEquals("bad scala-library jar", basePath.append(s"scala-library_2.10.4-mixedCompatibleVersionsWithName.jar"), si.library.classJar)
-    assertEquals("bad scala-library source jar", Some(basePath.append(s"scala-library-src_2.10.4-mixedCompatibleVersionsWithName.jar")), si.library.sourceJar)
+    assertEquals("bad scala-library jar", basePath.append("scala-library_2.10.4-mixedCompatibleVersionsWithName.jar"), si.library.classJar)
+    assertEquals("bad scala-library source jar", Some(basePath.append("scala-library-src_2.10.4-mixedCompatibleVersionsWithName.jar")), si.library.sourceJar)
 
-    assertEquals("bad scala-compiler jar", basePath.append(s"scala-compiler_2.10.3-mixedCompatibleVersionsWithName.jar"), si.compiler.classJar)
-    assertEquals("bad scala-compiler source jar", Some(basePath.append(s"scala-compiler-src_2.10.3-mixedCompatibleVersionsWithName.jar")), si.compiler.sourceJar)
+    assertEquals("bad scala-compiler jar", basePath.append("scala-compiler_2.10.3-mixedCompatibleVersionsWithName.jar"), si.compiler.classJar)
+    assertEquals("bad scala-compiler source jar", Some(basePath.append("scala-compiler-src_2.10.3-mixedCompatibleVersionsWithName.jar")), si.compiler.sourceJar)
 
     def checkExtraJar(id: String, versionSuffix: String, jars: List[ScalaModule]) = {
       val path= basePath.append(s"scala-${id}${versionSuffix}.jar")

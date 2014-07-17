@@ -31,7 +31,6 @@ import scala.collection.Map
 import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.NoPosition
-import scala.tools.nsc.util.Position
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils
