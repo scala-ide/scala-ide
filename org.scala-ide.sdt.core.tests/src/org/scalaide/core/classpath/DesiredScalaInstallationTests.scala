@@ -61,7 +61,7 @@ class DesiredScalaInstallationTests {
     compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
-  def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.filter { si => si != dsi }.headOption
+  def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.find { si => si != dsi }
 
   def createProject(): ScalaProject = {
     import ClasspathContainersTests.simulator

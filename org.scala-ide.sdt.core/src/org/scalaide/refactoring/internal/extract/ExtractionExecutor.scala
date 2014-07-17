@@ -40,7 +40,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
           EditorUtils.doWithCurrentEditor { editor =>
             val viewer = editor.getViewer()
             val pos = e.extractionSource.pos
-            viewer.setSelectedRange(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
+            viewer.setSelectedRange(pos.start, pos.end - pos.start)
           }
         }
       }
@@ -115,7 +115,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
         { es =>
           val proposals = es.extractions.map { e =>
             val pos = e.extractionTarget.enclosing.pos
-            new ExtractionProposal(e.displayName, pos.startOrPoint, pos.endOrPoint) {
+            new ExtractionProposal(e.displayName, pos.start, pos.end) {
               def apply(doc: IDocument) = {
                 block(Some(e))
               }

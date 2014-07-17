@@ -257,9 +257,6 @@ object MultiBundleScalaInstallation {
     Option(Platform.getBundles(bundleId, null)).getOrElse(Array()).to[List].find(_.getVersion() == version)
   }
 
-  private def findBundlePath(bundleId: String, version: Version): Option[IPath] =
-    findBundle(bundleId, version).map(bundlePath)
-
   private def findLibraryForBundle(bundleId: String, version: Version): Option[ScalaModule] = {
     val classPath = findBundle(bundleId, version).map(bundlePath)
     classPath.map(cp => ScalaModule(cp, EclipseUtils.computeSourcePath(bundleId, cp)))

@@ -165,7 +165,7 @@ class DirectoryScalaInstallationTest {
 
     val extraJarsFinal = extraJars3
 
-    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.size == 0)
+    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }
 
   def checkScalaInstallation(
@@ -203,7 +203,7 @@ class DirectoryScalaInstallationTest {
 
     val extraJarsFinal = extraJars3
 
-    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.size == 0)
+    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }
 
 }

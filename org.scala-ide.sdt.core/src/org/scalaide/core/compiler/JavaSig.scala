@@ -53,7 +53,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
       pc.askOption { () =>
         def needsJavaSig: Boolean = {
           // there is no need to generate the generic type information for local symbols
-          !symbol.isLocal && erasure.needsJavaSig(symbol.info)
+          !symbol.isLocalToBlock && erasure.needsJavaSig(symbol.info)
         }
 
         if (needsJavaSig) {

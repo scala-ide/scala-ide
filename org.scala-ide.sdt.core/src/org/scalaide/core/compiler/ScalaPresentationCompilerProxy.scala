@@ -150,7 +150,6 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
         project.initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(project, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
-        pc.askOption(() => pc.initializeRequiredSymbols())
         pc
       } catch {
         case ex @ MissingRequirementError(required) =>

@@ -58,7 +58,7 @@ class MainMethodFinderTest {
       """.stripMargin
     }
 
-    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).toList.map(_.getElementName)
+    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).map(_.getElementName)
     Assert.assertEquals("main classes found.", Set("OuterWithGoodMain$", "ObjectExtendsApp$"), mainClasses.toSet)
   }
 }

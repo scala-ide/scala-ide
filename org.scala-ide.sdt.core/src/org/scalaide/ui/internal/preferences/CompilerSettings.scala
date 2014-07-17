@@ -187,7 +187,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
     preferenceStore0.addPropertyChangeListener(classpathChangesListener)
 
-    val additionalSourceLevelParameter = ScalaPlugin.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) filter {s => s.startsWith("-Xsource")} headOption
+    val additionalSourceLevelParameter = ScalaPlugin.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) find {s => s.startsWith("-Xsource")}
     val sourceLevelString = additionalSourceLevelParameter flatMap ("""-Xsource:(\d\.\d+(?:\.\d)*)""".r unapplySeq(_)) flatMap (_.headOption)
 
     useProjectSettingsWidget.foreach(_.store())

@@ -1115,7 +1115,7 @@ class ScalaAutoIndentStrategy(
           val indent = getIndentOfLine(d, refLine)
 
           if (indent != null) {
-            c.text = indent.toString() + "else"
+            c.text = indent + "else"
             c.length += c.offset - lineOffset
             c.offset = lineOffset
           }
@@ -1158,7 +1158,7 @@ class ScalaAutoIndentStrategy(
               indenter.computeIndentation(p).toString()
 
           if (indent != null) {
-            c.text = indent.toString() + "case"
+            c.text = indent + "case"
             c.length += c.offset - lineOffset
             c.offset = lineOffset
           }

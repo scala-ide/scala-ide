@@ -54,7 +54,7 @@ trait AbstractMemberProposal extends AddMethodProposal with AddFieldProposal wit
     val retType: ReturnType = Option(processType(abstractMethod.returnType.asSeenFrom(implDef.symbol.tpe, abstractMethod.owner)))
     val isDef = abstractMethod.isMethod && !abstractMethod.isAccessor
 
-    val absractMethodSetter = abstractMethod.setter(abstractMethod.owner)
+    val absractMethodSetter = abstractMethod.setterIn(abstractMethod.owner)
     val isVar = absractMethodSetter != NoSymbol
     (typeParams, paramss, retType, isDef, isVar)
   }

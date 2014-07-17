@@ -23,7 +23,7 @@ object ExplicitReturnType {
        */
       def findInsertionPoint(vdef: ValOrDefDef): Int = {
         val lexical = new compiler.LexicalStructure(sourceFile)
-        val tokens = lexical.tokensBetween(vdef.pos.startOrPoint, vdef.rhs.pos.startOrPoint)
+        val tokens = lexical.tokensBetween(vdef.pos.start, vdef.rhs.pos.start)
 
         tokens.reverse.find(_.tokenId == Tokens.EQUALS) match {
           case Some(Token(_, start, _)) =>
@@ -40,7 +40,7 @@ object ExplicitReturnType {
         compiler.askOption { () => vd.tpt.toString } flatMap { tpe =>
           val insertion = findInsertionPoint(vd)
           // safety check: don't modify anything outside the original tree range
-          if (vd.pos.startOrPoint <= insertion && insertion <= vd.pos.endOrPoint) {
+          if (vd.pos.start <= insertion && insertion <= vd.pos.end) {
 
             // if the last character is an operator char, we need to leave a space
             val colonSpace =

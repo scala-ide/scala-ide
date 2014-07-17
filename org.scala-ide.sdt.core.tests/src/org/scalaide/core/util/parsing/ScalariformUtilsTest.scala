@@ -19,7 +19,7 @@ class A {
 """
     val firstClassName = ScalariformUtils.toListDepthFirst(parse(source))
       .collectFirst { case TmplDef(List(Token(Tokens.CLASS, _, _, _)), name, _, _, _, _, _, _) => name }
-    assertEquals(Some("D"), firstClassName.map(_.getText))
+    assertEquals(Some("D"), firstClassName.map(_.text))
   }
 
   private def offsetFinder(haystack: String)(needle: String) = {

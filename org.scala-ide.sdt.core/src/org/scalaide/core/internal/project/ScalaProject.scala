@@ -397,8 +397,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     for {
       box <- IDESettings.shownSettings(settings)
       setting <- box.userSettings if filter(setting)
-      val value = currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      if !value.isEmpty
+      value = currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name))
+      if (value.nonEmpty)
     } yield (setting, value)
   }
 

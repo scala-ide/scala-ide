@@ -114,7 +114,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
     def addVal(v : ValDef) {
       indexer.addMethodDeclaration(
-        nme.getterName(v.name).toChars,
+        v.name.getterName.toChars,
         Array.empty,
         mapType(v.tpt.symbol).toArray,
         Array.empty
@@ -122,7 +122,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
 
       if(v.mods.hasFlag(Flags.MUTABLE))
         indexer.addMethodDeclaration(
-          nme.getterToSetter(nme.getterName(v.name)).toChars,
+          v.name.setterName.toChars,
           Array.empty,
           mapType(v.tpt.symbol).toArray,
           Array.empty
@@ -217,7 +217,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
           indexer.addMethodReference(name, 0)
-          if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name.toTermName).toChars)
+          if(nme.isSetterName(rt.name)) indexer.addFieldReference(rt.getterName.toChars)
           else indexer.addFieldReference(name)
           super.traverse(tree)
 
