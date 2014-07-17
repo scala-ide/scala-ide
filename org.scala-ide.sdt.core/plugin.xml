@@ -4,6 +4,7 @@
    <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension-point id="sourcefileprovider" name="Source file Providers" schema="schema/sourceFileProviders.exsd"/>
    <extension-point id="scalaHoverDebugOverride" name="Scala Hover Debug Override" schema="schema/scalaHoverDebugOverride.exsd"/>
+   <extension-point id="fileCreator" name="File Creator" schema="schema/fileCreator.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -119,7 +120,7 @@
             category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.InstalledScalasPreferencePage"
             id="org.scalaide.ui.preferences.scalas"
-            name="Installed Scalas">
+            name="Installations">
       </page>
    </extension>
 
@@ -385,6 +386,16 @@
    </extension>
 
    <extension
+         id="scalaVersionProblem"
+         name="Scala Version Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.jdt.core.problem"/>
+      <super type="org.scala-ide.sdt.core.classpathProblem"/>
+      <persistent value="true"/>
+   </extension>
+
+   <extension
          id="settingProblem"
          name="Scala Setting Problem"
          point="org.eclipse.core.resources.markers">
@@ -452,7 +463,7 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
-     <specification 
+     <specification
           annotationType="org.scalaide.refactoring.extractionScope"
           colorPreferenceKey="extractionScope.color"
           colorPreferenceValue="192,255,192"
@@ -503,12 +514,16 @@
          class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerPage">
       </classpathContainerPage>
    </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+   <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickfix.BadScalaVersionMarkerResolver">
+   </markerResolutionGenerator>
+   </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
-        <statusHandler
-       id="Xsource"
-       class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+      <statusHandler
+       id="GenericHandler"
+       class="org.scalaide.ui.internal.handlers.GenericExceptionStatusHandler"
        plugin="org.scala-ide.sdt.core"
-       code="1001">
+       code="1010">
      </statusHandler>
      <statusHandler
        id="MissingScalaRequirement"
@@ -1205,6 +1220,9 @@
     <include
         file="templates/default-templates.xml">
     </include>
+    <include
+          file="templates/wizard-templates.xml">
+    </include>
   </extension>
 
  <extension
@@ -1597,5 +1615,64 @@
           Shows Scala specific icons
        </description>
     </decorator>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.fileCreator">
+    <fileCreator
+          class="org.scalaide.ui.wizards.ClassCreator"
+          description="Create a Scala Class"
+          icon="icons/full/etool16/newclass_wiz.gif"
+          id="org.scalaide.ui.wizards.classCreator"
+          name="Scala Class"
+          templateId="org.scalaide.core.templates.wizards.class">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.TraitCreator"
+          description="Create a Scala Trait"
+          icon="icons/full/etool16/newtrait_wiz.gif"
+          id="org.scalaide.ui.wizards.traitCreator"
+          name="Scala Trait"
+          templateId="org.scalaide.core.templates.wizards.trait">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.ObjectCreator"
+          description="Create a Scala Object"
+          icon="icons/full/etool16/newobject_wiz.gif"
+          id="org.scalaide.ui.wizards.objectCreator"
+          name="Scala Object"
+          templateId="org.scalaide.core.templates.wizards.object">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.PackageObjectCreator"
+          description="Create a Scala Package Object"
+          icon="icons/full/etool16/newpackage_object_wiz.png"
+          id="org.scalaide.ui.wizards.packageObjectCreator"
+          name="Scala Package Object"
+          templateId="org.scalaide.core.templates.wizards.packageObject">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.AppCreator"
+          description="Create a Scala App"
+          icon="icons/full/etool16/scala_app.gif"
+          id="org.scalaide.ui.wizards.appCreator"
+          name="Scala App"
+          templateId="org.scalaide.core.templates.wizards.app">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.EmptyFileCreator"
+          description="Creates an empty file"
+          icon="icons/full/etool16/newfile_wiz.gif"
+          id="org.scalaide.ui.wizards.empty"
+          name="Empty File"
+          templateId="org.scalaide.core.templates.wizards.empty">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.ClassCreator"
+          description="Create a Scala File"
+          icon="icons/full/etool16/newclass_wiz.gif"
+          id="org.scalaide.ui.wizards.scalaCreator"
+          name="New Scala File"
+          templateId="org.scalaide.core.templates.wizards.class">
+    </fileCreator>
  </extension>
 </plugin>

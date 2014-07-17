@@ -17,9 +17,55 @@ import org.scalaide.util.internal.eclipse.OSGiUtils
 import xsbti.compile.ScalaInstance
 import java.net.URLClassLoader
 import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.collection.mutable.Set
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.core.runtime.IStatus
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.IOException
+import org.eclipse.core.runtime.CoreException
+import java.io.File
+import org.eclipse.core.runtime.Status
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
+import org.scalaide.util.internal.CompilerUtils.isBinarySame
+import org.scalaide.util.internal.CompilerUtils.shortString
+
+sealed trait ScalaInstallationLabel extends Serializable
+case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
+case class MultiBundleScalaInstallationLabel() extends ScalaInstallationLabel
+case class CustomScalaInstallationLabel(label: String) extends ScalaInstallationLabel
+
+/**
+ *  A type that marks the choice of a Labeled Scala Installation : either a Scala Version,
+ *  which will dereference to the latest available bundle with the same binary version, or
+ *  a scala installation hashcode, which will dereference to the Labeled installation which
+ *  hashes to it, if available.
+ *
+ *  @see ScalaInstallation.resolve
+ */
+case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Serializable{
+  override def toString() = marker match {
+    case Left(version) => shortString(version)
+    case Right(hash) => hash.toString
+  }
+
+  override def equals(o: Any) = PartialFunction.cond(o) {
+    case that: ScalaInstallationChoice => (marker, that.marker) match {
+      case (Right(h1), Right(h2)) => h1 == h2
+      case (Left(v1), Left(v2)) => isBinarySame(v1, v2)
+      case _ => false
+    }
+  }
+}
+
+object ScalaInstallationChoice {
+  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice(Right(si.getHashString().hashCode()))
+  def apply(sv: ScalaVersion): ScalaInstallationChoice = ScalaInstallationChoice(Left(sv))
+}
 
 /** This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
@@ -54,13 +100,46 @@ trait ScalaInstallation {
 
   override def toString() =
     s"Scala $version: \n\t${allJars.mkString("\n\t")})"
+
+  def isValid(): Boolean = {
+    allJars forall (_.isValid())
+  }
+}
+
+/**
+ *  A tag for serializable tagging of Scala Installations
+ */
+trait LabeledScalaInstallation extends ScalaInstallation {
+      def label: ScalaInstallationLabel
+      // to recover bundle-less Bundle values from de-serialized Scala Installations
+      // this should be relaxed for bundles : our bundles are safe, having one with just the same version should be enough
+      def similar(that: LabeledScalaInstallation): Boolean =
+        this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
+
+      def getName():Option[String] = PartialFunction.condOpt(label) {case CustomScalaInstallationLabel(tag) => tag}
+      def getHashString(): String = {
+        val jarSeq = allJars map (_.getHashString())
+        getName().fold(jarSeq)(str => str +: jarSeq).mkString
+      }
+
+      override def hashCode() = getHashString().hashCode()
+      override def equals(o: Any) = PartialFunction.cond(o){ case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) {
 
+  def isValid(): Boolean = {
+    sourceJar.fold(List(classJar))(List(_, classJar)) forall {path => path.toFile().isFile()}
+  }
+
   def libraryEntries(): IClasspathEntry = {
     JavaCore.newLibraryEntry(classJar, sourceJar.orNull, null)
   }
+
+  private def relativizedString(path: IPath) = {
+    path.makeRelativeTo(ScalaPlugin.plugin.getStateLocation()).toPortableString()
+  }
+  def getHashString(): String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
 }
 
 object ScalaModule {
@@ -75,10 +154,11 @@ case class BundledScalaInstallation(
   override val version: ScalaVersion,
   bundle: Bundle,
   override val library: ScalaModule,
-  override val compiler: ScalaModule) extends ScalaInstallation {
+  override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import BundledScalaInstallation._
 
+  override val label =  BundledScalaInstallationLabel()
   def osgiVersion = bundle.getVersion()
 
   override lazy val extraJars =
@@ -147,10 +227,11 @@ case class MultiBundleScalaInstallation(
   override val version: ScalaVersion,
   libraryBundleVersion: Version,
   override val library: ScalaModule,
-  override val compiler: ScalaModule) extends ScalaInstallation {
+  override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import MultiBundleScalaInstallation._
 
+  override val label =  MultiBundleScalaInstallationLabel()
   def osgiVersion = libraryBundleVersion
 
   override lazy val extraJars = Seq(
@@ -208,23 +289,59 @@ object MultiBundleScalaInstallation {
 
 object ScalaInstallation {
 
+  val installationsTracker = new ScalaInstallationSaver()
+  def savedScalaInstallations() = Try(installationsTracker.getSavedInstallations())
+  lazy val initialScalaInstallations = savedScalaInstallations() match {
+    case Success(sis) => sis filter (_.isValid()) filter {deserial => !(bundledInstallations ++ multiBundleInstallations exists (_.similar(deserial)))}
+    // we need to silently fail, as this happens early in initialization
+    case Failure(throwable) => Nil
+  }
+
+  // This lets you see installs retrieved from serialized bundles as newly-defined custom installations
+  def customize(install: LabeledScalaInstallation) = install.label match {
+    case CustomScalaInstallationLabel(tag) => install
+    case BundledScalaInstallationLabel() | MultiBundleScalaInstallationLabel() => new LabeledScalaInstallation() {
+      override def label = new CustomScalaInstallationLabel(s"Scala (legacy with hash ${ScalaInstallationChoice(install).toString()})")
+      override def compiler = install.compiler
+      override def library = install.library
+      override def extraJars = install.extraJars
+      override def scalaInstance = install.scalaInstance
+      override def version = install.version
+    }
+  }
+
+  lazy val customInstallations: Set[LabeledScalaInstallation] = initialScalaInstallations.map(customize(_))(collection.breakOut)
+
   /** Return the Scala installation currently running in Eclipse. */
-  lazy val platformInstallation: ScalaInstallation =
+  lazy val platformInstallation: LabeledScalaInstallation =
     multiBundleInstallations.find(_.version == ScalaVersion.current).get
 
-  lazy val bundledInstallations: List[ScalaInstallation] =
+  lazy val bundledInstallations: List[LabeledScalaInstallation] =
     BundledScalaInstallation.detectBundledInstallations()
 
-  lazy val multiBundleInstallations: List[ScalaInstallation] =
+  lazy val multiBundleInstallations: List[LabeledScalaInstallation] =
     MultiBundleScalaInstallation.detectInstallations()
 
-  lazy val availableInstallations: List[ScalaInstallation] = {
+  def availableBundledInstallations : List[LabeledScalaInstallation] = {
     multiBundleInstallations ++ bundledInstallations
+  }
+
+  def availableInstallations: List[LabeledScalaInstallation] = {
+    multiBundleInstallations ++ bundledInstallations ++ customInstallations
   }
 
   val LibraryPropertiesPath = "library.properties"
 
+  def labelInFile(scalaPath: IPath) : Option[String] = {
+    val scalaJarRegex = """scala-(\w+)(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?.jar""".r
+    scalaPath.toFile().getName() match {
+      case scalaJarRegex(qualifier) => Some(qualifier + ".properties")
+      case _ => None
+    }
+  }
+
   def extractVersion(scalaLibrary: IPath): Option[ScalaVersion] = {
+    val propertiesPath = labelInFile(scalaLibrary).getOrElse(LibraryPropertiesPath)
     val zipFile = new ZipFile(scalaLibrary.toFile())
     try {
       def getVersion(propertiesEntry: ZipEntry) = {
@@ -234,7 +351,7 @@ object ScalaInstallation {
       }
 
       for {
-        propertiesEntry <- Option(zipFile.getEntry(LibraryPropertiesPath))
+        propertiesEntry <- Option(zipFile.getEntry(propertiesPath))
         version <- getVersion(propertiesEntry)
       } yield ScalaVersion(version)
     } finally {
@@ -243,22 +360,9 @@ object ScalaInstallation {
 
   }
 
-  /** Return the closest installation to the given Scala version.
-   *
-   *  @return An existing ScalaInstallation.
-   */
-  def findBestMatch(desiredVersion: SpecificScalaVersion, available: Seq[ScalaInstallation] = ScalaInstallation.availableInstallations): ScalaInstallation = {
-    def versionDistance(v: ScalaVersion) = v match {
-      case SpecificScalaVersion(major, minor, micro, build) =>
-        import Math._
-        abs(major - desiredVersion.major) * 1000000 +
-          abs(minor - desiredVersion.minor) * 10000 +
-          abs(micro - desiredVersion.rev) * 100 +
-          abs(build.compare(desiredVersion.build))
-
-      case _ =>
-        0
-    }
-    available.minBy(i => versionDistance(i.version))
+  def resolve(choice: ScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match{
+    case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
+    case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
   }
+
 }

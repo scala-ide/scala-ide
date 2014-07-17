@@ -5,10 +5,26 @@ import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.jface.viewers.Viewer
+import org.scalaide.core.internal.project.LabeledScalaInstallation
 
 trait ScalaInstallationUIProviders {
 
-  def title() : String
+  val labels = Array("built-in", "built-in", "unknown")
+
+  def getDecoration(si: ScalaInstallation): String = {
+    si match {
+        case s: BundledScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(0)})"
+        case s: MultiBundleScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(1)})"
+        case s: LabeledScalaInstallation =>
+          s"${s.getName().getOrElse("")}: ${s.version.unparse}"
+        case s: ScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(2)})"
+      }
+  }
+
+  def itemTitle(): String
 
   class ContentProvider extends IStructuredContentProvider {
     override def dispose(): Unit = {}
@@ -25,16 +41,7 @@ trait ScalaInstallationUIProviders {
 
    class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
 
-    override def getText(element: Any): String = {
-      element match {
-        case s: BundledScalaInstallation =>
-          s"$title: bundled ${s.version.unparse}"
-        case s: MultiBundleScalaInstallation =>
-          s"$title: multi bundles ${s.version.unparse}"
-        case s: ScalaInstallation =>
-          s"unknown ${s.version.unparse}"
-      }
-    }
+   override def getText(element: Any): String = PartialFunction.condOpt(element){case si: ScalaInstallation => getDecoration(si)}.getOrElse("")
   }
 
 }

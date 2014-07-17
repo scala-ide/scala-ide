@@ -9,6 +9,8 @@ import org.junit.AfterClass
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Test
 import org.scalaide.core.internal.project.ScalaLibrary
+import org.scalaide.core.ScalaPlugin
+import scala.tools.nsc.settings.SpecificScalaVersion
 
 object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   final val BP_TYPENAME = "breakpoints.Breakpoints"
@@ -241,11 +243,11 @@ class ScalaDebugBreakpointTest {
     try {
       session.runToLine(DI_TYPENAME, 5)
 
-      project.scalaLibraries match {
-        case Seq(ScalaLibrary(location, Some(ver), isProject), _*) if ver.startsWith("2.11") =>
-          session.checkStackFrame(DI_TYPENAME + "$", "delayedEndpoint$breakpoints$DelayedInit$1()V", 4)
-        case _ =>
+      ScalaPlugin.plugin.scalaVer match {
+        case SpecificScalaVersion(2, 10, _, _) =>
           session.checkStackFrame(DI_TYPENAME + "$delayedInit$body", "apply()Ljava/lang/Object;", 4)
+        case _ =>
+          session.checkStackFrame(DI_TYPENAME + "$", "delayedEndpoint$breakpoints$DelayedInit$1()V", 4)
       }
     } finally {
       bp4.delete

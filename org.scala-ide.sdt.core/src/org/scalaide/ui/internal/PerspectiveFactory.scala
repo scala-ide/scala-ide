@@ -18,6 +18,7 @@ class PerspectiveFactory extends IPerspectiveFactory {
   private def addShortcuts(layout : IPageLayout) = {
     layout.addNewWizardShortcut(ScalaPlugin.plugin.projectWizId)
     layout.addNewWizardShortcut(ScalaPlugin.plugin.netProjectWizId)
+    layout.addNewWizardShortcut("org.scalaide.ui.wizards.scalaCreator")
     layout.addNewWizardShortcut("org.eclipse.jdt.ui.wizards.NewPackageCreationWizard")
     layout.addNewWizardShortcut(ScalaPlugin.plugin.classWizId)
     layout.addNewWizardShortcut(ScalaPlugin.plugin.traitWizId)

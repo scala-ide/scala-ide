@@ -18,6 +18,8 @@ import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import sbt.ScalaInstance
 import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.internal.project.ScalaInstallationChoice
+import org.scalaide.core.internal.project.LabeledScalaInstallation
 
 class MultiScalaVersionTest {
   // this was deprecated in 2.10, and invalid in 2.11
@@ -32,6 +34,9 @@ class MultiScalaVersionTest {
     val sourceFile = addFileToProject(p.underlying, "/src/InvalidCaseClass.scala", sourceCode)
 
     for (installation <- findPreviousScalaInstallation()) {
+      val choice = ScalaInstallationChoice(installation)
+      p.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
+      Assert.assertEquals(s"Expected to see the desired choice, found ${p.getDesiredInstallationChoice()}", choice, p.getDesiredInstallationChoice())
       setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
       p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
@@ -42,40 +47,7 @@ class MultiScalaVersionTest {
     }
   }
 
-  case class DummyInstallation(override val version: ScalaVersion) extends ScalaInstallation {
-
-    override def library: ScalaModule = ???
-    override def compiler: ScalaModule = ???
-    override def extraJars: Seq[ScalaModule] = ???
-    override def allJars: Seq[ScalaModule] = ???
-    override def scalaInstance: ScalaInstance = ???
-  }
-
-  /** shorcut for creating dummy installations. */
-  def di(v: String) = DummyInstallation(ScalaVersion("2.10.0"))
-
-  @Test
-  def bestMatchSimple() {
-    val installations = Seq(di("2.10.0"), di("2.11.0"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.10.10").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.10.0").version)
-  }
-
-  @Test
-  def bestMatchOffByOne() {
-    val installations = Seq(di("2.10.0"), di("2.11.0"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.11.1").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.11.1").version)
-  }
-
-  @Test
-  def bestMatchLargeMicros() {
-    val installations = Seq(di("2.9.0"), di("2.10.11"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.10.0").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.10.0").version)
-  }
-
-  private def findPreviousScalaInstallation(): Option[ScalaInstallation] = {
+  private def findPreviousScalaInstallation(): Option[LabeledScalaInstallation] = {
     ScalaInstallation.availableInstallations find { installation =>
       (installation.version, ScalaPlugin.plugin.scalaVer) match {
         case (ShortScalaVersion(_, minor), ShortScalaVersion(_, pluginMinor)) => minor < pluginMinor
