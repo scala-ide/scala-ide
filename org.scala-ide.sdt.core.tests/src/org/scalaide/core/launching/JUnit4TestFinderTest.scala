@@ -481,7 +481,7 @@ class JUnit4TestFinderTest {
 
   private def runnableJUnitTestClassesIn(source: ScalaSourceFile) = new {
     def matches(expectedClassNames: Set[String]): Unit = {
-      val jUnitClasses = ScalaLaunchShortcut.getJunitTestClasses(source).toList.map(_.getElementName)
+      val jUnitClasses = ScalaLaunchShortcut.getJunitTestClasses(source).map(_.getElementName)
       Assert.assertEquals("test classes found.", expectedClassNames, jUnitClasses.toSet)
     }
   }

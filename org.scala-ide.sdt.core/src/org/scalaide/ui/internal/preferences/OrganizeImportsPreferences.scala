@@ -216,7 +216,6 @@ object OrganizeImportsPreferences extends Enumeration {
   val omitScalaPackage = PREFIX +".scalapackage"
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
-    val workspaceStore = ScalaPlugin.prefStore
     val projectStore = new PropertyStore(new ProjectScope(project), ScalaPlugin.plugin.pluginId)
     val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
     val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.prefStore

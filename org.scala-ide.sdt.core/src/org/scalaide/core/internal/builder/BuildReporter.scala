@@ -81,8 +81,8 @@ abstract class BuildReporter(private[builder] val project0: ScalaProject, settin
       val tasks = taskScanner.extractTasks(msg, pos)
       for (TaskScanner.Task(tag, msg, priority, pos) <- tasks if pos.isDefined) {
         val source = pos.source
-        val start = pos.startOrPoint
-        val length = pos.endOrPoint - start
+        val start = pos.start
+        val length = pos.end - start
         source.file match {
           case EclipseResource(i: IFile) =>
             FileUtils.task(i, tag, msg, priority, start, length, pos.line, null)

@@ -61,7 +61,7 @@ class MissingMemberInfo(
 
     logger.debug(s"Trying to search for $className to find the fully qualified class $fullyQualifiedName")
     val matchesClassName = searchForTypes(compilationUnit.getJavaProject, className)
-    logger.debug(s"Result for className got results: ${matchesClassName.toList}, ${matchesClassName.map(_.getFullyQualifiedName)}")
+    logger.debug(s"Result for className got results: ${matchesClassName}, ${matchesClassName.map(_.getFullyQualifiedName)}")
 
     val bestMatch = matchesClassName match {
       case oneResult :: Nil => Some(oneResult)

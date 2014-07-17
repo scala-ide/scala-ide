@@ -1,10 +1,10 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
+import scala.Right
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.collection.mutable.Publisher
-import scala.collection.mutable.Subscriber
 import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.Settings
 import scala.tools.nsc.settings.ScalaVersion
@@ -24,11 +24,9 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -37,6 +35,8 @@ import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.ScalaPlugin.defaultScalaSettings
+import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
@@ -45,6 +45,7 @@ import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.resources.EclipseResource
+import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
 import org.scalaide.ui.internal.preferences.CompilerSettings
@@ -53,10 +54,10 @@ import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.core.runtime.Status
-import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -396,8 +397,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     for {
       box <- IDESettings.shownSettings(settings)
       setting <- box.userSettings if filter(setting)
-      val value = currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name))
-      if !value.isEmpty
+      value = currentStorage.getString(SettingConverterUtil.convertNameToProperty(setting.name))
+      if (value.nonEmpty)
     } yield (setting, value)
   }
 
@@ -701,7 +702,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   @deprecated("removed this cache to avoid sync issues with desired Source level", "4.0.1")
-  private var compatibilityModeCache = null
+  private val compatibilityModeCache = null
 
 /** This compares the bundled version and the Xsource version found
   * in arguments, and returns false if they are binary-compatible,

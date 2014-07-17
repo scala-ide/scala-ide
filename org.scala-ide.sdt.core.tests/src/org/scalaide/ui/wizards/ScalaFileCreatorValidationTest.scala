@@ -1,8 +1,6 @@
 package org.scalaide.ui.wizards
 
 import org.junit.Test
-import org.junit.Assert
-import org.junit.ComparisonFailure
 
 class ScalaFileCreatorValidationTest extends ScalaFileCreator {
 

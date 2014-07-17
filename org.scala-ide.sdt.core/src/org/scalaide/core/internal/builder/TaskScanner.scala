@@ -76,7 +76,7 @@ class TaskScanner(project : ScalaProject) {
       i += 1
     }
 
-    lines.flatMap({ case (offset, line) => extractTasksFromLine(line, pos.startOrPoint+offset)}).toList
+    lines.flatMap({ case (offset, line) => extractTasksFromLine(line, pos.start+offset)}).toList
   }
 }
 

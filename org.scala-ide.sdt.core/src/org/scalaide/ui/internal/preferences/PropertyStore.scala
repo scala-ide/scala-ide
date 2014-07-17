@@ -1,8 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences._
-import org.eclipse.core.runtime._
-import org.eclipse.jface.preference._
 import org.eclipse.core.resources._
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 

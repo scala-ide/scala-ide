@@ -7,7 +7,6 @@ package org.scalaide.core.semantic
 
 import org.junit.Test
 import org.scalaide.ui.internal.editor.decorators.custom.AnnotationTraverserDef
-import org.scalaide.ui.internal.editor.decorators.custom.TraverserId
 import org.scalaide.ui.internal.editor.decorators.custom.TraverserDef.AnnotationDefinition
 
 class CustomAnnotationHighlightingTest

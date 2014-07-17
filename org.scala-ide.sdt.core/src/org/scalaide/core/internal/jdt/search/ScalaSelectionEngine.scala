@@ -88,7 +88,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       def acceptField(f: compiler.Symbol) = {
         val packageName = enclosingPackage(f).toArray
         val typeName = mapTypeName(f.owner).toArray
-        val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name.toTermName) else f.name).toString.toArray
+        val name = (if (f.isSetter) f.name.getterName else f.name).toString.toArray
         Cont(requestor.acceptField(
           packageName,
           typeName,
@@ -129,7 +129,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptLocalDefinition(defn: compiler.Symbol): Cont = {
-        val parent = ssr.findLocalElement(defn.pos.startOrPoint)
+        val parent = ssr.findLocalElement(defn.pos.start)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
           val jtype = compiler.javaDescriptor(defn.tpe)
@@ -139,8 +139,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
           val localVar = new ScalaLocalVariableElement(
             parent.asInstanceOf[JavaElement],
             name,
-            defn.pos.startOrPoint,
-            defn.pos.endOrPoint - 1,
+            defn.pos.start,
+            defn.pos.end - 1,
             defn.pos.point,
             defn.pos.point + name.length - 1,
             jtype,
@@ -163,7 +163,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                   case c: compiler.ClassSymbol  => acceptType(c)
                   case m: compiler.ModuleSymbol => acceptType(m)
                   case t: compiler.TermSymbol if t.pos.isDefined =>
-                    if (t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                    if (t.isMethod) acceptMethod(t) else if (t.isLocalToBlock) acceptLocalDefinition(t) else acceptField(t)
                   case sym =>
                     logger.info("Unhandled: " + sym.getClass.getName)
                     Cont.Noop
@@ -173,7 +173,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                 r.symbol match {
                   case m: compiler.ModuleSymbol => acceptType(m)
                   case t: compiler.TermSymbol if !t.isMethod && t.pos.isDefined =>
-                    if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                    if (t.isLocalToBlock) acceptLocalDefinition(t) else acceptField(t)
                   case _ => Cont.Noop
                 }
 
@@ -187,7 +187,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                   else
                     acceptField(sym)
                 } else if (sym.owner.isAnonymousClass && sym.pos.isDefined) {
-                  ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint))
+                  ssr.addElement(ssr.findLocalElement(sym.pos.start))
                   Cont.Noop
                 } else if (sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) {
                   acceptField(sym)
@@ -228,10 +228,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                 if (sym ne NoSymbol) acceptSymbol(sym) else Cont.Noop
               case l@(_: ValDef | _: Bind | _: ClassDef | _: ModuleDef | _: TypeDef | _: DefDef) =>
                 val sym = l.symbol
-                if (sym.isLocal)
+                if (sym.isLocalToBlock)
                   acceptLocalDefinition(l.symbol)
                 else
-                  ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
+                  ssr.addElement(ssr.findLocalElement(pos.start))
                   Cont.Noop
 
               case _ =>

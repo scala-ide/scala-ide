@@ -112,7 +112,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
 
       case _ =>
         monitor.worked(2)
-        Left(s"Could not find compiler-interface/sbt bundle")
+        Left("Could not find compiler-interface/sbt bundle")
     }
   }
 

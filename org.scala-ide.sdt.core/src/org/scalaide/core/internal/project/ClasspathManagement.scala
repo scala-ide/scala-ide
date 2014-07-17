@@ -47,10 +47,10 @@ import scala.collection.immutable.HashMap
  *  @note All paths are file-system absolute paths. Any path variables or
  *        linked resources are resolved.
  */
-case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
+case class ScalaClasspath(private[project] val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
-  val scalaVersion: Option[String]) {
+  private[project] val scalaVersion: Option[String]) {
   override def toString =
     """
     jdkPaths: %s
@@ -84,7 +84,7 @@ case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boo
 
 /** Extractor which returns the Scala version of a jar,
  */
-object VersionInFile {
+private object VersionInFile {
 
   /**
    * Regex accepting filename of the format: name_2.xx.xx-version.jar.
@@ -228,7 +228,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
   }
 
-  def resetClasspathCheck() {
+  protected def resetClasspathCheck() {
     // mark the classpath as not checked
     classpathCheckLock.synchronized {
       classpathHasBeenChecked = false
@@ -314,7 +314,6 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     classpathHasBeenChecked = true
   }
 
-  private var messageWasShown = new java.util.concurrent.atomic.AtomicBoolean(false)
   private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String, String)] = {
     import org.scalaide.util.internal.CompilerUtils._
 

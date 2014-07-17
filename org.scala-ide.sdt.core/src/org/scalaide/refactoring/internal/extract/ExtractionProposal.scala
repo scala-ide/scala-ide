@@ -58,7 +58,7 @@ object ExtractionProposal {
       refactoring.extractions.foreach { extraction =>
         val pos = extraction.extractionTarget.enclosing.pos
 
-        proposals += new ExtractionProposal(extraction.displayName, pos.startOrPoint, pos.endOrPoint, relevance) {
+        proposals += new ExtractionProposal(extraction.displayName, pos.start, pos.end, relevance) {
           def apply(doc: IDocument) = {
             refactoring.perform(extraction) match {
               case Right((change: TextChange) :: Nil) =>

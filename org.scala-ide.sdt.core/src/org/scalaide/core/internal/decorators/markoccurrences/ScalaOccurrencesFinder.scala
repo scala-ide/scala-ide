@@ -74,7 +74,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
 
           Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
             val locations = occurrences map { pos =>
-              new Region(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
+              new Region(pos.start, pos.end - pos.start)
             }
             Occurrences(sym.nameString, locations)
           }

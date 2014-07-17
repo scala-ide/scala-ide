@@ -189,7 +189,7 @@ object ScalaPartitionTokeniserTest {
   class PimpedString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
       val actualPartitions = ScalaPartitionTokeniser.tokenise(source)
-      val expected = expectedPartitions.map(ScalaPartitionRegion.tupled).toList
+      val expected = expectedPartitions.map(ScalaPartitionRegion.tupled)
       if (actualPartitions != expected)
         throw new AssertionError("""Expected != Actual
           |Expected: %s

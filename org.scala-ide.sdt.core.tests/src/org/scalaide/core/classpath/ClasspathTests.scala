@@ -264,7 +264,7 @@ class ClasspathTests {
    */
   @Test
   def binaryCompatibleLibraryEclipseNaming() {
-    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("org.scala-ide.sdt.aspects_2.1.0.nightly-2_10-201301251404-6e75290.jar".format(testShortScalaVersion)), 0, 0)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("org.scala-ide.sdt.aspects_2.1.0.nightly-2_10-201301251404-6e75290.jar"), 0, 0)
   }
   /** Multiple binary-compatible libraries on the classpath
    */

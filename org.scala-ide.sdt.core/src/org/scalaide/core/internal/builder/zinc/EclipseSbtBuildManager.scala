@@ -144,7 +144,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def runCompiler(sources: Seq[File]) {
     val scalaInstall = findInstallation(project)
     logger.info(s"Running compiler using $scalaInstall")
-    val inputs = new SbtInputs(scalaInstall, sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
+    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))

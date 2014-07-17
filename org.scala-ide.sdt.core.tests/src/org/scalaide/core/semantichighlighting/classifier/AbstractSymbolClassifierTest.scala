@@ -45,7 +45,7 @@ class AbstractSymbolClassifierTest {
     if (expectedRegionsAndSymbols != actualRegionsAndSymbols) {
       val sb = new StringBuffer
       def displayRegions(regionToSymbolInfoMap: List[(IRegion, SymbolInfo)]) = {
-        regionToSymbolInfoMap.toList.sortBy(regionOffset) map {
+        regionToSymbolInfoMap.sortBy(regionOffset) map {
           case (region, symbolInfo) =>
             "  " + region + " '" + region.of(source) + "' " + symbolInfo
         } mkString "\n"

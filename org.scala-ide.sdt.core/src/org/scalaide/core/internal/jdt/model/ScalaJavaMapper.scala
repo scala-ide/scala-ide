@@ -10,23 +10,6 @@ import org.eclipse.core.runtime.Path
 
 trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : ScalaPresentationCompiler =>
 
-  @deprecated("Remove this when dropping Scala 2.10 support. See SI-8030", "4.0")
-  private[core] def initializeRequiredSymbols() {
-    import definitions._
-    val symbols = Vector(UnitClass,
-      BooleanClass,
-      ByteClass,
-      ShortClass,
-      IntClass,
-      LongClass,
-      FloatClass,
-      DoubleClass,
-      NilModule,
-      ListClass) ++ TupleClass.seq
-
-    symbols.foreach(_.initialize)
-  }
-
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list
    *
@@ -55,7 +38,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
       }
     }
 
-    if (sym.isPackage) {
+    if (sym.hasPackageFlag) {
       val fullName = sym.fullName
       val results = projects.map(p => Option(p.findElement(new Path(fullName.replace('.', '/')))))
       results.flatten.headOption
@@ -70,7 +53,7 @@ trait ScalaJavaMapper extends ScalaAnnotationHelper with HasLogger { self : Scal
           if (sym.isMethod && !isConcreteGetterOrSetter) ownerClass.getMethods.find(matchesMethod)
           else {
             val fieldName =
-              if(self.nme.isLocalName(sym.name)) self.nme.localToGetter(sym.name.toTermName)
+              if(self.nme.isLocalName(sym.name)) sym.name.dropLocal
               else sym.name
 
             ownerClass.getFields.find(_.getElementName == fieldName.toString)

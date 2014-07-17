@@ -57,7 +57,7 @@ object ScalariformUtils {
 
         //named parameter, eg a.method(aaa = 3, bbb = ccc)
         case List(EqualsExpr(List(CallExpr(_, name, _, _, _)), Token(EQUALS, _, _, _), Expr(List(contents)))) =>
-          (name.getText, getType(List(contents)))
+          (name.text, getType(List(contents)))
 
         case _ =>
           ("arg", getType(exprContents))
@@ -118,7 +118,7 @@ object ScalariformUtils {
 
   def enclosingClassForMethodInvocation(sourceAst: AstNode, methodNameOffset: Int): Option[String] = {
     toListDepthFirst(sourceAst).collectFirst {
-      case TmplDef(_, id, _, _, _, _, _, Some(body)) if containsMethod(body, methodNameOffset) => id.getText
+      case TmplDef(_, id, _, _, _, _, _, Some(body)) if containsMethod(body, methodNameOffset) => id.text
     }
   }
 
@@ -152,11 +152,11 @@ object ScalariformUtils {
 
             //calling with named parameter on self, eg hof(f = unknownMethod)
             case Argument(Expr(List(EqualsExpr(List(CallExpr(_, paramName, _, _, _)), _, Expr(List(CallExpr(None, methodName, _, _, _))))))) if methodName.offset == callerOffset =>
-              return Some(ArgPosition(argumentListIndex, argumentIndex, Some(paramName.getText)))
+              return Some(ArgPosition(argumentListIndex, argumentIndex, Some(paramName.text)))
 
             //calling with named parameter on other, eg hof(f = other.unknownMethod)
             case Argument(Expr(List(EqualsExpr(List(CallExpr(_, paramName, _, _, _)), _, Expr(List(CallExpr(Some(exprDotOpt), _, _, _, _))))))) =>
-              for (argPosition <- getInfoFromExprDotOpt(exprDotOpt, Some(paramName.getText))) return Some(argPosition)
+              for (argPosition <- getInfoFromExprDotOpt(exprDotOpt, Some(paramName.text))) return Some(argPosition)
 
             case _ =>
           }

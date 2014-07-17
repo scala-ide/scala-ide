@@ -105,7 +105,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
   def flushScheduledReloads(): Response[Unit] = {
     val res = new Response[Unit]
     scheduledUnits.synchronized {
-      val reloadees = scheduledUnits filter {(scu) => compilationUnits.contains(scu._1)} toList
+      val reloadees = scheduledUnits.filter{(scu:(InteractiveCompilationUnit, Array[Char])) => compilationUnits.contains(scu._1)}.toList
 
       if (reloadees.isEmpty) res.set(())
       else {
@@ -305,13 +305,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
       askReloadManagedUnits()
   }
 
-  override def newTermName(str: String) = {
-    nameLock synchronized { super.newTermName(str) }
-  }
-
-  override def newTypeName(str: String) = {
-    nameLock synchronized { super.newTypeName(str) }
-  }
+  override def synchronizeNames = true
 
   def withResponse[A](op: Response[A] => Any): Response[A] = {
     val response = new Response[A]
@@ -366,7 +360,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
     import org.scalaide.core.completion.MemberKind._
 
     val kind = if (sym.isSourceMethod && !sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) Def
-    else if (sym.isPackage) Package
+    else if (sym.hasPackageFlag) Package
     else if (sym.isClass) Class
     else if (sym.isTrait) Trait
     else if (sym.isPackageObject) PackageObject
@@ -391,10 +385,10 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
 
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
     var relevance = 100
-    if (!sym.isLocal) relevance -= 10 // non-local symbols are less relevant than local ones
+    if (!sym.isLocalToBlock) relevance -= 10 // non-local symbols are less relevant than local ones
     if (inherited) relevance -= 10
     if (viaView != NoSymbol) relevance -= 20
-    if (sym.isPackage) relevance -= 30
+    if (sym.hasPackageFlag) relevance -= 30
     // theoretically we'd need an 'ask' around this code, but given that
     // Any and AnyRef are definitely loaded, we call directly to definitions.
     if (sym.owner == definitions.AnyClass

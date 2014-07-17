@@ -61,7 +61,7 @@ class DesiredScalaInstallationTests {
     compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
-  def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.filter { si => si != dsi }.headOption
+  def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.find { si => si != dsi }
 
   def createProject(): ScalaProject = {
     import ClasspathContainersTests.simulator
@@ -143,7 +143,6 @@ class DesiredScalaInstallationTests {
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
-    val newChoice = project.getDesiredInstallationChoice()
     assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallationChoice() == expectedChoice.get)
   }
 
