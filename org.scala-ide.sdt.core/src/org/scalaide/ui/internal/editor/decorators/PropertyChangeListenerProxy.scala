@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/license.html
+ */
 package org.scalaide.ui.internal.editor.decorators
 
 import org.eclipse.jface.preference.IPreferenceStore

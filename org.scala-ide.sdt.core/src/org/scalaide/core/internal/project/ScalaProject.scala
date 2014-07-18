@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/license.html
+ */
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
@@ -68,6 +73,9 @@ import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.ui.IFileEditorInput
+import org.eclipse.ui.IEditorReference
+import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
 
@@ -115,7 +123,7 @@ object ScalaProject {
   }
 
   /**
-   * Return true if the given Java project is also a Scala project, false othrerwise.
+   * Return true if the given Java project is also a Scala project, false otherwise.
    */
   def isScalaProject(project: IJavaProject): Boolean =
     (project ne null) && isScalaProject(project.getProject)
@@ -592,6 +600,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     if (!IScalaPlugin().headlessMode)
       SWTUtils.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
+    projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     shutDownCompilers()
   }
 
@@ -608,4 +617,30 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   override def hashCode(): Int = underlying.hashCode()
+
+  import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+
+  def hasOpenEditors(): Boolean = {
+
+    def hasOpenEditorForThisProject(page: IWorkbenchPage) = {
+      val editorRefs = page.getEditorReferences
+      editorRefs exists hasEqualProject
+    }
+
+    def hasEqualProject(editorRef: IEditorReference) = {
+      val isEqual = for {
+        editor <- Option(editorRef.getEditor(false /*restore*/ ))
+        input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput]
+      } yield {
+        val file = input.getFile
+        underlying equals file.getProject
+      }
+      isEqual.getOrElse(false)
+    }
+
+    ScalaPlugin.getWorkbenchWindow.map { workbenchWindow =>
+      val pages = workbenchWindow.getPages()
+      pages exists hasOpenEditorForThisProject
+    }.getOrElse(false)
+  }
 }

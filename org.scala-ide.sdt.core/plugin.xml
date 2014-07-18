@@ -816,6 +816,9 @@
   <extension
         point="org.eclipse.core.runtime.preferences">
      <initializer
+           class="org.scalaide.ui.internal.preferences.ScalaPreferencesInitializer">
+     </initializer>
+     <initializer
            class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
      </initializer>
      <initializer
