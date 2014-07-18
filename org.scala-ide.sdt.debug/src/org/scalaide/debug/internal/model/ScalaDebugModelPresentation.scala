@@ -71,7 +71,7 @@ object ScalaDebugModelPresentation {
       }
     } catch {
       case e: Exception =>
-        "exception while invoking toString(): %s\n%s".format(e.getMessage(), e.getStackTraceString)
+        "exception while invoking toString(): %s\n%s".format(e.getMessage(), e.getStackTrace)
     }
   }
 

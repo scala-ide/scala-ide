@@ -147,15 +147,15 @@ object StackFrameVariableOfTreeFinder {
     def findVariableFromFieldsOf(variable: IVariable, sym: Symbol, varMatcher: IVariable => Boolean = null) = {
       def stackFrameCompatibleNameOf(sym: Symbol): Name = {  // Based on trial & error. May need more work.
         var name = sym.name.toTermName
-        if(sym.hasLocalFlag) {
+        if(sym.isLocalToThis) {
           // name = name.dropLocal
           // TODO: The commented line above can be used instead of the one below, when scala 2.10 support is dropped.
-          name = nme dropLocalSuffix name
+          name = name.dropLocal
         }
         name.decodedName
       }
 
-      def cleanBinaryName(name: String) = nme originalName newTermName(name)
+      def cleanBinaryName(name: String) = nme unexpandedName newTermName(name)
 
       val variableMatcher = if(varMatcher != null)
         varMatcher
@@ -223,7 +223,7 @@ object StackFrameVariableOfTreeFinder {
           }).flatten
         case Select(_, _) => None
         case _ =>
-          if(sym.isLocal) {
+          if(sym.isLocalToBlock) {
             findVariableFromLocalVars(sym) orElse
             //
             // In closures, local vars of enclosing methods are stored as fields with mangled names.
