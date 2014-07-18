@@ -47,10 +47,10 @@ import scala.collection.immutable.HashMap
  *  @note All paths are file-system absolute paths. Any path variables or
  *        linked resources are resolved.
  */
-case class ScalaClasspath(private[project] val jdkPaths: Seq[IPath], // JDK classpath
+case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
-  private[project] val scalaVersion: Option[String]) {
+  val scalaVersion: Option[String]) {
   override def toString =
     """
     jdkPaths: %s
@@ -196,7 +196,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   @volatile
   private var classpathValid = false;
 
-  def isCheckingClassPath(): Boolean = java.lang.Thread.holdsLock(classpathCheckLock)
+  private def isCheckingClasspath(): Boolean = java.lang.Thread.holdsLock(classpathCheckLock)
 
   /** Return <code>true</code> if the classpath is deemed valid.
    *  Check the classpath if it has not been checked yet.
@@ -212,18 +212,21 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   /** Check if the classpath is valid for scala.
    *  It is said valid if it contains one and only scala library jar, with a version compatible
    *  with the one from the scala-ide plug-in
+   *  @param queue Do not trust an ongoing check to deal with the classPath
    */
-  def classpathHasChanged() = {
-    classpathCheckLock.synchronized {
-      // mark as in progress
-      classpathHasBeenChecked = false
-      checkClasspath()
-      if (classpathValid) {
-        // no point in resetting compilers on an invalid classpath,
-        // it would not work anyway. But we need to reset them if the classpath
-        // was (and still is) valid, because the contents might have changed.
-        logger.info("Resetting compilers due to classpath change.")
-        resetCompilers()
+  def classpathHasChanged(queue: Boolean = true) = {
+    if (queue || !isCheckingClasspath()){
+      classpathCheckLock.synchronized {
+        // mark as in progress
+        classpathHasBeenChecked = false
+            checkClasspath()
+        if (classpathValid) {
+          // no point in resetting compilers on an invalid classpath,
+          // it would not work anyway. But we need to reset them if the classpath
+          // was (and still is) valid, because the contents might have changed.
+          logger.info("Resetting compilers due to classpath change.")
+          resetCompilers()
+        }
       }
     }
   }
@@ -248,7 +251,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  @return the absolute file-system path to package fragments that define `scala.Predef`.
    *          If it contains path variables or is a linked resources, the path is resolved.
    */
-  def scalaLibraries: Seq[ScalaLibrary] = {
+  private def scalaLibraries: Seq[ScalaLibrary] = {
     val pathToPredef = new Path("scala/Predef.class")
 
     def isZipFileScalaLib(p: IPath): Boolean = {

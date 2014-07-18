@@ -258,7 +258,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
           innerDelta.getElement() match {
             // classpath change should only impact projects
             case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => if (!p.isCheckingClassPath()) p.classpathHasChanged() }
+              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
             }
             case _ =>
           }
