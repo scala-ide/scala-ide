@@ -493,6 +493,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     )
 
   // this is technically generic and could apply to any A => Option[B]
+  // except for its logged message
   implicit private def validatedScalaInstallationChoice(parse: String => Option[ScalaInstallationChoice]): WithValidation[String, ScalaInstallationChoice] =
     WithValidation(
         ((str: String) => parse(str).isDefined),
@@ -542,7 +543,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     ScalaInstallation.resolve(getDesiredInstallationChoice()).get
   }
 
-  def turnOnProjectSpecificSettings(reason: String){
+  private def turnOnProjectSpecificSettings(reason: String){
     if (!usesProjectSettings) {
       val pName = this.toString
       eclipseLog.warn(s"Turning on project-specific settings for $pName because of $reason")
@@ -550,7 +551,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def turnOffProjectSpecificSettings(reason: String){
+  private def turnOffProjectSpecificSettings(reason: String){
     if (usesProjectSettings){
       val pName = this.toString
       eclipseLog.warn(s"Turning off project-specific settings for $pName because of $reason")
@@ -558,7 +559,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def parseScalaInstallationChoice(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
+  private def parseScalaInstallationChoice(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
     case Success(int) => Some(ScalaInstallationChoice(Right(int)))
     case Failure(t) => t match {
       case ex: NumberFormatException => Try(ScalaVersion(str)) match {
@@ -612,7 +613,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
 
-  def toggleProjectSpecificSettingsAndSetXsource(scalaVersion: ScalaVersion, reason: String) = {
+  private def toggleProjectSpecificSettingsAndSetXsource(scalaVersion: ScalaVersion, reason: String) = {
     turnOnProjectSpecificSettings("requested Xsource change")
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
@@ -623,7 +624,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }
 
-  def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
+  private def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
     if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
       val extraArgs = ScalaPlugin.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
 
