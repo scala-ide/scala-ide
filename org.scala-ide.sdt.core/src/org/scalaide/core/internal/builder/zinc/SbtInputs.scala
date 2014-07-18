@@ -52,7 +52,7 @@ class SbtInputs(installation: ScalaInstallation,
     else
       allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
         case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
-        case None                                     => Maybe.just(Analysis.Empty)
+        case _                                     => Maybe.just(Analysis.Empty)
       }
 
   def progress = Maybe.just(scalaProgress)
