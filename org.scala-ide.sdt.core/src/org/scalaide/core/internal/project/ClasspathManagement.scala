@@ -39,6 +39,9 @@ import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.jface.util.StatusHandler
 import org.eclipse.debug.core.DebugPlugin
 import scala.collection.immutable.HashMap
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -50,7 +53,7 @@ import scala.collection.immutable.HashMap
 case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
-  val scalaVersion: Option[String]) {
+  val scalaVersionString: Option[String]) {
   override def toString =
     """
     jdkPaths: %s
@@ -58,7 +61,7 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     usercp: %s
     scalaVersion: %s
 
-    """.format(jdkPaths, scalaLib, userCp, scalaVersion)
+    """.format(jdkPaths, scalaLib, userCp, scalaVersionString)
 
   def scalaLibraryFile: Option[File] =
     scalaLib.map(_.toFile.getAbsoluteFile)
@@ -80,7 +83,7 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  *  @param isProject Whether the library is provided by a project inside the workspace
  *
  */
-case class ScalaLibrary(location: IPath, version: Option[String], isProject: Boolean)
+private case class ScalaLibrary(location: IPath, version: Option[ScalaVersion], isProject: Boolean)
 
 /** Extractor which returns the Scala version of a jar,
  */
@@ -115,7 +118,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     scalaLibraries match {
       case Seq(ScalaLibrary(pf, version, _), _*) =>
-        new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version)
+        new ScalaClasspath(jdkEntries, Some(pf), cp.filterNot(_ == pf), version.map(_.unparse))
       case _ =>
         new ScalaClasspath(jdkEntries, None, cp, None)
     }
@@ -321,7 +324,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     import org.scalaide.util.internal.CompilerUtils._
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
-      case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(ScalaVersion(version), this)
+      case ScalaLibrary(_, Some(version), false) => !plugin.isCompatibleVersion(version, this)
       case _                               => false
     }
 
@@ -340,13 +343,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
           Nil
         } else fragmentRoots(0).version match {
-          case Some(v) if (!this.isUsingCompatibilityMode() && ScalaVersion(v) == plugin.scalaVer) =>
+          case Some(v) if (!this.isUsingCompatibilityMode() && v == plugin.scalaVer) =>
             // exactly the same version, should be from the container. Perfect
             Nil
-          case Some(v) if plugin.isCompatibleVersion(ScalaVersion(v), this) =>
+          case Some(v) if plugin.isCompatibleVersion(v, this) =>
             // compatible version (major, minor are the same). Still, add warning message
             (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", plugin.classpathProblemMarkerId) :: Nil
-          case Some(v) if (isBinaryPrevious(plugin.scalaVer, ScalaVersion(v))) => {
+          case Some(v) if (isBinaryPrevious(plugin.scalaVer, v)) => {
             val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). Please set a Scala Installation in this project's compiler Options."
              // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
              (IMarker.SEVERITY_ERROR, msg, plugin.scalaVersionProblemMarkerId) :: Nil
@@ -375,11 +378,14 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   /** Return the version number contained in library.properties if it exists.
    */
-  private def getVersionNumber(fragmentRoot: IPackageFragmentRoot): Option[String] = {
-    def getVersion(resource: IStorage): Option[String] = try {
+  private def getVersionNumber(fragmentRoot: IPackageFragmentRoot): Option[ScalaVersion] = {
+    def getVersion(resource: IStorage): Option[ScalaVersion] = try {
       val properties = new Properties()
       properties.load(resource.getContents())
-      Option(properties.getProperty("version.number"))
+      Try(ScalaVersion(properties.getProperty("version.number"))) match {
+        case Success(version) => Some(version)
+        case Failure(thrown) => None
+      }
     } catch {
       case _: IOException => None // be very lenient, not all libraries have a properties file
     }
