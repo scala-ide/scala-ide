@@ -503,6 +503,21 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
           validatedScalaInstallationChoice({ (str: String) => if (str equals key) Some(default) else parse(str) }) }
     )
 
+  implicit private def validatedLabeledScalaInstallation(resolve: ScalaInstallationChoice => Option[LabeledScalaInstallation]): WithValidation[ScalaInstallationChoice, LabeledScalaInstallation] =
+    WithValidation(
+        ((choice:ScalaInstallationChoice) => resolve(choice).isDefined),
+        ((choice:ScalaInstallationChoice) => resolve(choice).get),
+        { (key: ScalaInstallationChoice, default: LabeledScalaInstallation) =>
+          val displayChoice: String = key.marker match {
+          case Left(version) => s"Latest ${CompilerUtils.shortString(version)} bundle (dynamic)"
+          case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
+          }
+          val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Please configure a Scala Installation for this specific project."
+          object svMarkerFactory extends MarkerFactory(ScalaPlugin.plugin.scalaVersionProblemMarkerId)
+          svMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, msg)
+          validatedLabeledScalaInstallation({ (choice: ScalaInstallationChoice) => if (choice equals key) Some(default) else resolve(choice) }) }
+   )
+
   /** Which Scala source level is this project configured to work with ? */
   def getDesiredSourceLevel(): String = {
     implicit val sourceLevelDefault = ScalaPlugin.plugin.shortScalaVer
@@ -530,17 +545,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
   def getDesiredInstallation(): LabeledScalaInstallation = {
-    val choice = getDesiredInstallationChoice()
-    if (ScalaInstallation.resolve(choice).isEmpty) {
-      val displayChoice: String = choice.marker match {
-        case Left(version) => s"Latest ${CompilerUtils.shortString(version)} bundle (dynamic)"
-        case Right(hash) => s"Fixed Scala Installation with hash ${hash}"
-      }
-      val msg = s"The specified installation choice for this project ($displayChoice) could not be found. Configure a Scala Installation for this specific project ?"
-      object svMarkerFactory extends MarkerFactory(ScalaPlugin.plugin.scalaVersionProblemMarkerId)
-      svMarkerFactory.create(underlying, IMarker.SEVERITY_ERROR, msg)
-    }
-    ScalaInstallation.resolve(getDesiredInstallationChoice()).get
+    implicit val desiredInstallationDefault: LabeledScalaInstallation = ScalaInstallation.resolve(ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer)).get
+    (ScalaInstallation.resolve _).get(getDesiredInstallationChoice())
   }
 
   private def turnOnProjectSpecificSettings(reason: String){

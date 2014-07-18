@@ -287,7 +287,7 @@ object MultiBundleScalaInstallation {
 object ScalaInstallation {
 
   val installationsTracker = new ScalaInstallationSaver()
-  def savedScalaInstallations() = Try(installationsTracker.getSavedInstallations())
+  private def savedScalaInstallations() = Try(installationsTracker.getSavedInstallations())
   lazy val initialScalaInstallations = savedScalaInstallations() match {
     case Success(sis) => sis filter (_.isValid()) filter {deserial => !(bundledInstallations ++ multiBundleInstallations exists (_.similar(deserial)))}
     // we need to silently fail, as this happens early in initialization
