@@ -36,7 +36,7 @@ abstract class EditorPainter(viewer: ISourceViewer, enablePreference: String) ex
   }
 
   final override def paintControl(e: PaintEvent): Unit = {
-    if (isActive && isEnabled) {
+    if (isPainterEnabled) {
       paintByEvent(e)
     }
   }
@@ -58,6 +58,9 @@ abstract class EditorPainter(viewer: ISourceViewer, enablePreference: String) ex
   }
 
   override def setPositionManager(manager: IPaintPositionManager): Unit = {}
+
+  protected final def isPainterEnabled: Boolean =
+    isEnabled
 
   /**
    * This method has to be implemented by subclasses to ensure that all preference
