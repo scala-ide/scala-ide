@@ -31,7 +31,7 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
 
   private val typingDelayHelper: TypingDelayHelper = new TypingDelayHelper
 
-  private var inferredSemis: List[Token] = findInferredSemis
+  private var inferredSemis: List[Token] = if (isPainterEnabled) findInferredSemis else Nil
 
   textViewer.getDocument().addDocumentListener(this)
 
