@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.repl
 
-import org.scalaide.core.internal.project.BuildSuccessListener
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
@@ -43,6 +42,10 @@ import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.core.internal.project.ScalaInstallation
+import scala.collection.mutable.Subscriber
+import scala.collection.mutable.Publisher
+import org.scalaide.core.internal.project.BuildSuccess
+import org.scalaide.core.internal.project.ScalaProjectMessage
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -144,22 +147,24 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
   }
 
-  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with BuildSuccessListener {
+  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[ScalaProjectMessage, Publisher[ScalaProjectMessage]] {
     setToolTipText("Replay History on Project Rebuild")
 
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
     setHoverImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
 
     override def run() {
-      if (isChecked) scalaProject addBuildSuccessListener this
-      else scalaProject removeBuildSuccessListener this
+      if (isChecked) scalaProject.subscribe(this)
+      else scalaProject.removeSubscription(this)
     }
 
-    def buildSuccessful() {
-      DisplayThread.asyncExec {
-        if (!isStopped) {
-          displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
-          setStarted
+    def notify(pub:Publisher[ScalaProjectMessage], event:ScalaProjectMessage) {
+      event match { case e: BuildSuccess =>
+        DisplayThread.asyncExec {
+          if (!isStopped) {
+            displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
+            setStarted
+          }
         }
       }
     }
@@ -340,7 +345,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     } else {
       repl.quit()
 
-      scalaProject removeBuildSuccessListener refreshOnRebuildAction
+      scalaProject.removeSubscription(refreshOnRebuildAction)
     }
   }
 }

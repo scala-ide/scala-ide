@@ -86,12 +86,14 @@ trait ScalaInstallation {
 
   def extraJars: Seq[ScalaModule]
 
-  /** All jars provided by Scala (including the compiler) */
+  /** All jars provided by Scala (including the compiler)
+   *  @see The note in [[MultiBundleScalaInstallation]] below
+   */
   def allJars: Seq[ScalaModule] =
     library +: compiler +: extraJars
 
   /** Create an Sbt-compatible ScalaInstance */
-  def scalaInstance: ScalaInstance = {
+  private[internal] def scalaInstance: ScalaInstance = {
     val store = ScalaPlugin.plugin.classLoaderStore
     val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
 

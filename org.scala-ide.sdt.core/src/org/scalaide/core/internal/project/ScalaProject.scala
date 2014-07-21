@@ -59,11 +59,9 @@ import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 
-trait BuildSuccessListener {
-  def buildSuccessful(): Unit
-}
-
-case class ScalaInstallationChange()
+trait ScalaProjectMessage
+case class BuildSuccess() extends ScalaProjectMessage
+case class ScalaInstallationChange() extends ScalaProjectMessage
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -108,13 +106,11 @@ object ScalaProject {
   }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaInstallationChange] with HasLogger {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectMessage] with HasLogger {
   import ScalaPlugin.plugin
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
-
-  private val buildListeners = new mutable.HashSet[BuildSuccessListener]
 
   private val worbenchPartListener: IPartListener = new ScalaProject.ProjectPartListener(this)
 
@@ -618,7 +614,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // is built, but only when it has changes! this call makes sure that a rebuild,
       // even when there are no changes, propagates the classpath to dependent projects
       resetDependentProjects()
-      buildListeners foreach { _.buildSuccessful }
+      publish(new BuildSuccess())
     }
   }
 
@@ -635,14 +631,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       logger.debug("[%s] Reset PC of referring project %s".format(this, dependentScalaProject))
       dependentScalaProject.presentationCompiler.askRestart()
     }
-  }
-
-  def addBuildSuccessListener(listener: BuildSuccessListener) {
-    buildListeners add listener
-  }
-
-  def removeBuildSuccessListener(listener: BuildSuccessListener) {
-    buildListeners remove listener
   }
 
   def clean(implicit monitor: IProgressMonitor) = {
