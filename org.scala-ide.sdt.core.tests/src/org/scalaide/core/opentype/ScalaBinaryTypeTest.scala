@@ -6,7 +6,7 @@ import org.junit._
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.jdt.core.IClassFile
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 
 object ScalaBinaryTypeTest {
   var prj: ScalaProject = _

@@ -5,7 +5,7 @@ import scala.tools.nsc.Settings
 import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.Utils
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.ScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError

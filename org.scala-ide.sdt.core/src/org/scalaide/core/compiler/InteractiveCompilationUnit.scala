@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 
 /** A Scala compilation unit. It can be backed up by a `ScalaCompilationUnit` in usual
  *  Scala projects, or any other implementation (such as a specialized Scala DSL, a

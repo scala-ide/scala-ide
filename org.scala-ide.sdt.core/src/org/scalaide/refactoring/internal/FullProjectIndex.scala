@@ -2,7 +2,7 @@ package org.scalaide.refactoring.internal
 
 import java.util.regex.Pattern
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
 import scala.tools.refactoring.MultiStageRefactoring

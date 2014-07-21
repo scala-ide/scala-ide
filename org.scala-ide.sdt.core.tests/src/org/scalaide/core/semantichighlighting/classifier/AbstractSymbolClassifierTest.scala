@@ -4,7 +4,7 @@ package semantichighlighting.classifier
 import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import testsetup.TestProjectSetup
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.core.ScalaPlugin
 import org.junit.After

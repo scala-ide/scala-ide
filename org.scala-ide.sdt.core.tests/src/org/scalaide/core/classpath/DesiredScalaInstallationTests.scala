@@ -10,13 +10,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -26,10 +26,11 @@ import org.eclipse.jdt.core.JavaCore
 import org.junit.After
 import org.eclipse.core.runtime.Path
 import org.junit.Test
-import org.scalaide.core.internal.project.ScalaInstallation._
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
 import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.extractVersion
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.project.LabeledScalaInstallation
@@ -50,13 +51,13 @@ class DesiredScalaInstallationTests {
   import DesiredScalaInstallationTests._
 
   val libraryId = ScalaPlugin.plugin.scalaLibId
-  def getLibraryJar(project: ScalaProject) = {
+  def getLibraryJar(project: api.ScalaProject) = {
     val libraryContainer = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
     libraryContainer.getClasspathEntries() find {e => (""".*scala-library(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
   val compilerId = ScalaPlugin.plugin.scalaCompilerId
-  def getCompilerJar(project: ScalaProject) = {
+  def getCompilerJar(project: api.ScalaProject) = {
     val compilerContainer = JavaCore.getClasspathContainer(new Path(compilerId), project.javaProject)
     compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }

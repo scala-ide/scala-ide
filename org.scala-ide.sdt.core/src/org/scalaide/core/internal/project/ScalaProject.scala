@@ -34,6 +34,10 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
+import org.scalaide.core.api
+import org.scalaide.core.api.ScalaProjectMessage
+import org.scalaide.core.api.ScalaInstallationChange
+import org.scalaide.core.api.BuildSuccess
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.ScalaPlugin.defaultScalaSettings
 import org.scalaide.core.ScalaPlugin.plugin
@@ -43,7 +47,6 @@ import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.internal.builder
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
@@ -59,9 +62,6 @@ import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 
-trait ScalaProjectMessage
-case class BuildSuccess() extends ScalaProjectMessage
-case class ScalaInstallationChange() extends ScalaProjectMessage
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -106,7 +106,7 @@ object ScalaProject {
   }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectMessage] with HasLogger {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectMessage] with HasLogger with api.ScalaProject {
   import ScalaPlugin.plugin
 
   private var buildManager0: EclipseBuildManager = null
@@ -156,25 +156,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
-  /** The direct dependencies of this project. It only returns opened projects. */
   def directDependencies: Seq[IProject] =
     underlying.getReferencedProjects.filter(_.isOpen)
 
-  /** All direct and indirect dependencies of this project.
-   *
-   *  Indirect dependencies are considered only if that dependency is exported by the dependent project.
-   *  Consider the following dependency graph:
-   *     A -> B -> C
-   *
-   *  transitiveDependencies(C) = {A, B} iff B *exports* the A project in its classpath
-   */
   def transitiveDependencies: Seq[IProject] =
     directDependencies ++ (directDependencies flatMap (p => plugin.getScalaProject(p).exportedDependencies))
 
-  /** Return the exported dependencies of this project. An exported dependency is
-   *  another project this project depends on, and which is exported to downstream
-   *  dependencies.
-   */
   def exportedDependencies: Seq[IProject] = {
     for {
       entry <- resolvedClasspath
@@ -191,27 +178,16 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     } yield resource.getLocation
   }
 
-  /** Return the output folders of this project. Paths are relative to the workspace root,
-   *  and they are handles only (may not exist).
-   */
   def outputFolders: Seq[IPath] =
-    sourceOutputFolders map (_._2.getFullPath)
+    sourceOutputFolders.values.map(_.getFullPath()).toSeq
 
-  /** The output folder file-system absolute paths. */
   def outputFolderLocations: Seq[IPath] =
-    sourceOutputFolders map (_._2.getLocation)
+    sourceOutputFolders.values.map(_.getLocation()).toSeq
 
-  /** Return the source folders and their corresponding output locations
-   *  without relying on NameEnvironment. Does not create folders if they
-   *  don't exist already.
-   *
-   *  @return A sequence of pairs of source folders and their corresponding
-   *          output folder.
-   */
-  def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
+  def sourceOutputFolders: Map[IContainer, IContainer] = {
     val cpes = resolvedClasspath
 
-    for {
+    val sourceOutputList = for {
       cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       source <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if source.exists
     } yield {
@@ -223,6 +199,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       (source.asInstanceOf[IContainer], binPath)
     }
+    Map(sourceOutputList: _*)
   }
 
   protected def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
@@ -242,17 +219,10 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       case e: JavaModelException => logger.error(e); Nil
     }
 
-  /** Return all source files in the source path. It only returns buildable files (meaning
-   *  Java or Scala sources).
-   */
   def allSourceFiles(): Set[IFile] = {
     allFilesInSourceDirs() filter (f => plugin.isBuildable(f.getName))
   }
 
-  /** Return all the files in the current project. It walks all source entries in the classpath
-   *  and respects inclusion and exclusion filters. It returns both buildable files (java or scala)
-   *  and all other files in the source path.
-   */
   def allFilesInSourceDirs(): Set[IFile] = {
     /** Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
@@ -507,34 +477,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   @deprecated("removed this cache to avoid sync issues with desired Source level", "4.0.1")
   private val compatibilityModeCache = null
 
-/** This compares the bundled version and the Xsource version found
-  * in arguments, and returns false if they are binary-compatible,
-  * and true otherwise.  Since this is the final, observable
-  * setting on the running presentation Compiler (independently of
-  * Eclipse's settings), it's considered to be the reference on
-  * whether the PC is in compatibility mode or not.  It's a bad
-  * idea to cache this one (desired sourcelevel & al. need to sync
-  * on it).
-  */
-  private def getCompatibilityMode(): Boolean = {
-    val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
-    val l = versionInArguments.length
-    val specdVersion = versionInArguments.headOption
-
-    if (l >= 2)
-      eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
-    if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
-      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
-    if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
-      false
-    else
-      specdVersion exists (x => CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
-  }
-
-  /** TODO: letting this be a workspace-wide setting.
-   */
-  def isUsingCompatibilityMode(): Boolean = getCompatibilityMode()
-
   /** Performs `op` on the presentation compiler, if the compiler could be initialized.
    *  Otherwise, do nothing (no exception thrown).
    */
@@ -618,10 +560,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  /** Reset the presentation compiler of projects that depend on this one.
-   *  This should be done after a successful build, since the output directory
-   *  now contains an up-to-date version of this project.
-   */
   def resetDependentProjects() {
     for {
       prj <- underlying.getReferencingProjects()
@@ -671,7 +609,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   override def toString: String = underlying.getName
 
   override def equals(other: Any): Boolean = other match {
-    case otherSP: ScalaProject => underlying == otherSP.underlying
+    case otherSP: api.ScalaProject => underlying == otherSP.underlying
     case _ => false
   }
 

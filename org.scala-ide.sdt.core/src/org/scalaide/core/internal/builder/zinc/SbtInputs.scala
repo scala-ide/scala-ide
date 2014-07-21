@@ -5,7 +5,7 @@ import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.ScalaPlugin.plugin
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
@@ -23,11 +23,13 @@ import xsbti.Logger
 import xsbti.Maybe
 import xsbti.Reporter
 import xsbti.compile._
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.api.ScalaInstallation
 import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
+import java.net.URLClassLoader
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -50,7 +52,7 @@ class SbtInputs(installation: ScalaInstallation,
     if (f.isFile)
       Maybe.just(Analysis.Empty)
     else
-      allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
+      allProjects.find(_.sourceOutputFolders.values.map(_.getLocation().toFile()).toSeq contains f) map (_.buildManager) match {
         case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
         case _                                     => Maybe.just(Analysis.Empty)
       }
@@ -108,7 +110,7 @@ class SbtInputs(installation: ScalaInstallation,
   /** @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
-    val scalaInstance = installation.scalaInstance
+    val scalaInstance = scalaInstanceForInstallation(installation)
     val store = ScalaPlugin.plugin.compilerInterfaceStore
 
     store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {

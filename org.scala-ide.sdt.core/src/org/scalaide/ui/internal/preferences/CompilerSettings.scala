@@ -42,8 +42,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.builder.ProjectsCleanJob
 import org.eclipse.core.resources.ProjectScope
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.internal.project.ScalaInstallationChange
+import org.scalaide.core.api.ScalaInstallationChange
 import org.eclipse.jface.preference.ComboFieldEditor
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -62,7 +61,7 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.preference.FieldEditor
 import org.scalaide.util.internal.ui.DisplayThread
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.core.internal.project.ScalaProjectMessage
+import org.scalaide.core.api.ScalaProjectMessage
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>

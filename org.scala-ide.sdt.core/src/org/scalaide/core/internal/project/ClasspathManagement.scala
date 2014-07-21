@@ -42,18 +42,12 @@ import scala.collection.immutable.HashMap
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import org.scalaide.core.api
 
-/** The Scala classpath broken down in the JDK, Scala library and user library.
- *
- *  The Scala compiler needs these entries to be separated for proper setup.
- *
- *  @note All paths are file-system absolute paths. Any path variables or
- *        linked resources are resolved.
- */
 case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLib: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
-  val scalaVersionString: Option[String]) {
+  val scalaVersionString: Option[String]) extends api.ScalaClasspath {
   override def toString =
     """
     jdkPaths: %s
@@ -63,7 +57,7 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
 
     """.format(jdkPaths, scalaLib, userCp, scalaVersionString)
 
-  def scalaLibraryFile: Option[File] =
+  lazy val scalaLibraryFile: Option[File] =
     scalaLib.map(_.toFile.getAbsoluteFile)
 
   private def toPath(ps: Seq[IPath]): Seq[File] = ps map (_.toFile.getAbsoluteFile)
@@ -72,7 +66,7 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
    *
    *  It puts the JDK and the Scala library in front of the user classpath.
    */
-  def fullClasspath: Seq[File] =
+  lazy val fullClasspath: Seq[File] =
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 

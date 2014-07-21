@@ -9,7 +9,7 @@ import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
 import org.eclipse.jdt.launching.ExecutionArguments
 import org.eclipse.jdt.launching.VMRunnerConfiguration
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 
 /**
  * This launch delegate extends the normal JavaLaunchDelegate with functionality to work for the interpreter.
@@ -126,7 +126,6 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
 
   /** Retrieves the extra classpath needed for the interpreter*/
   def toolClassPath = {
-    import ScalaInstallation.platformInstallation._
-    allJars.map(_.classJar.toOSString())
+    platformInstallation.allJars().map(_.classJar.toOSString())
   }
 }

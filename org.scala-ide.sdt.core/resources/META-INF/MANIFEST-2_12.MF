@@ -71,6 +71,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
  org.scalaide.core,
+ org.scalaide.core.api,
  org.scalaide.core.compiler,
  org.scalaide.core.completion,
  org.scalaide.core.extensions,

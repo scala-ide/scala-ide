@@ -1,7 +1,7 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
 import org.junit.After

@@ -9,7 +9,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import scala.language.reflectiveCalls
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.launching.ScalaLaunchShortcut
 
 /** This class checks the functionality behind Run As > JUnit Test, triggered when a user right clicks on a source

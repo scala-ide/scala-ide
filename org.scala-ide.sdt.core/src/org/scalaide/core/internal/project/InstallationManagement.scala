@@ -16,6 +16,8 @@ import scala.util.Success
 import org.scalaide.core.resources.MarkerFactory
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.Settings
+import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.core.api.ScalaInstallationChange
 
 trait InstallationManagement { this: ScalaProject =>
 
@@ -197,6 +199,34 @@ trait InstallationManagement { this: ScalaProject =>
       }
     }
   }
+
+  /** This compares the bundled version and the Xsource version found
+  * in arguments, and returns false if they are binary-compatible,
+  * and true otherwise.  Since this is the final, observable
+  * setting on the running presentation Compiler (independently of
+  * Eclipse's settings), it's considered to be the reference on
+  * whether the PC is in compatibility mode or not.  It's a bad
+  * idea to cache this one (desired sourcelevel & al. need to sync
+  * on it).
+  */
+  private def getCompatibilityMode(): Boolean = {
+    val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
+    val l = versionInArguments.length
+    val specdVersion = versionInArguments.headOption
+
+    if (l >= 2)
+      eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
+    if (specdVersion exists (ScalaVersion(_) > plugin.scalaVer))
+      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
+    if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(plugin.scalaVer, ScalaVersion(x)))))
+      false
+    else
+      specdVersion exists (x => CompilerUtils.isBinaryPrevious(plugin.scalaVer, ScalaVersion(x)))
+  }
+
+  /** TODO: letting this be a workspace-wide setting.
+   */
+  def isUsingCompatibilityMode(): Boolean = getCompatibilityMode()
 
   /** Does this project use project-specific compiler settings? */
   def usesProjectSettings: Boolean =

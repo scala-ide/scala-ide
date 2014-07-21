@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
 
