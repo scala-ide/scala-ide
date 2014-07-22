@@ -48,7 +48,7 @@
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
     <!-- Weaving plugin version -->
-    <weaving.hook.plugin.version>Select a profile</weaving.hook.plugin.version>
+    <weaving.hook.plugin.version>Select an Eclipse profile</weaving.hook.plugin.version>
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
@@ -73,15 +73,15 @@
     <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
-    <eclipse.codename>Select a profile</eclipse.codename>
-    <repo.eclipse>Select a profile</repo.eclipse>
-    <repo.ajdt>Select a profile</repo.ajdt>
+    <eclipse.codename>Select an Eclipse profile</eclipse.codename>
+    <repo.eclipse>Select an Eclipse profile</repo.eclipse>
+    <repo.ajdt>Select an Eclipse profile</repo.ajdt>
 
     <!-- default values, can be overwritten by profiles -->
-    <scala.version>select a profile</scala.version>
-    <scala.short.version>select a profile</scala.short.version>
-    <scala.minor.version>select a profile</scala.minor.version>
-    <version.suffix>select a profile</version.suffix>
+    <scala.version>Select a Scala profile</scala.version>
+    <scala.short.version>Select a Scala profile</scala.short.version>
+    <scala.minor.version>Select a Scala profile</scala.minor.version>
+    <version.suffix>Select a Scala profile</version.suffix>
     <version.tag>local</version.tag>
     <sbt.version>0.13.2</sbt.version>
 
