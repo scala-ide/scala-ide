@@ -31,9 +31,12 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
 
   private val typingDelayHelper: TypingDelayHelper = new TypingDelayHelper
 
-  private var inferredSemis: List[Token] = findInferredSemis
+  private var inferredSemis: List[Token] = if (isPainterEnabled) findInferredSemis else Nil
+
+  textViewer.getDocument().addDocumentListener(this)
 
   override def dispose(): Unit = {
+    Option(textViewer.getDocument()) foreach (_.removeDocumentListener(this))
     typingDelayHelper.stop()
   }
 
@@ -48,17 +51,19 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
       val charCount = widget.getCharCount
       val redrawLength = min(lineRegion.getLength, charCount - widgetOffset)
       if (widgetOffset >= 0 && redrawLength > 0)
-        widget.redrawRange(widgetOffset, redrawLength, true);
+        widget.redrawRange(widgetOffset, redrawLength, true)
     }
   }
 
   def documentAboutToBeChanged(event: DocumentEvent) {}
 
   def documentChanged(event: DocumentEvent) {
-    inferredSemis = updateInferredSemis(event)
-    typingDelayHelper.scheduleCallback {
-      inferredSemis = findInferredSemis
-      widget.redraw()
+    if (isPainterEnabled) {
+      inferredSemis = updateInferredSemis(event)
+      typingDelayHelper.scheduleCallback {
+        inferredSemis = findInferredSemis
+        widget.redraw()
+      }
     }
   }
 
