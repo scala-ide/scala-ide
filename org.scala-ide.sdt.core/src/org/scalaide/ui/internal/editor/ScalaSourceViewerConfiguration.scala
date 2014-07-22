@@ -10,7 +10,6 @@ import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
 import org.scalaide.ui.internal.editor.autoedits._
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
@@ -39,6 +38,7 @@ import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
+import org.eclipse.jdt.core.ITypeRoot
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -139,7 +139,7 @@ class ScalaSourceViewerConfiguration(
   }
 
   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int): ITextHover =
-    getCodeAssist match {
+    getTypeRoot match {
       case Some(scu: ScalaCompilationUnit) => ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
       case _                               => new DefaultTextHover(sv)
     }
@@ -151,7 +151,7 @@ class ScalaSourceViewerConfiguration(
     Array(detector, new URLHyperlinkDetector())
   }
 
-  def getCodeAssist: Option[ICodeAssist] = Option(editor) map { editor =>
+  private def getTypeRoot: Option[ITypeRoot] = Option(editor) map { editor =>
     val input = editor.getEditorInput
     val provider = editor.getDocumentProvider
 
@@ -163,7 +163,7 @@ class ScalaSourceViewerConfiguration(
   }
 
   def getProject: IJavaProject =
-    getCodeAssist.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
+    getTypeRoot.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
 
   /**
    * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns
