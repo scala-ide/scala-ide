@@ -3,7 +3,7 @@ package org.scalaide.debug.internal.editor
 import scala.util.Try
 import scala.reflect.internal.util.{Position, RangePosition, OffsetPosition, SourceFile}
 import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedRegion
-import org.scalaide.ui.internal.editor.ScalaHover
+import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
 import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}

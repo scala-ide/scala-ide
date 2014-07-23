@@ -39,6 +39,7 @@ import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 import org.eclipse.jdt.core.ITypeRoot
+import org.scalaide.ui.internal.editor.hover.ScalaHover
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,

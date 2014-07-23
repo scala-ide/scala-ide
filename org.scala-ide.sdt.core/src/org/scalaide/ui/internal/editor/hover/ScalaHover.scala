@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.internal.editor.hover
 
 import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.ITextViewer
