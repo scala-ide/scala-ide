@@ -47,21 +47,11 @@ class TextHoverFactory extends TextHoverFactoryInterface {
 
     override def getHoverControlCreator: IInformationControlCreator =
       if(stringWasReturnedAtGetHoverInfo2)
-        new IInformationControlCreator {
-          def createInformationControl(parent: Shell) =
-            new StringHandlingInformationControlExtension2(parent)
-        }
+        super.getHoverControlCreator()
       else  /* An IVariable was returned. */
         new ExpressionInformationControlCreator
   }
 
-  class StringHandlingInformationControlExtension2(parent: Shell)
-  extends DefaultInformationControl(parent)
-  with IInformationControlExtension2 {
-    override def setInput(input: AnyRef) {
-      setInformation(input.asInstanceOf[String])
-    }
-  }
 }
 
 
