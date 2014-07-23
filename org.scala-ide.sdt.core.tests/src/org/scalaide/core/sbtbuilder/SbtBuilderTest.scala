@@ -196,10 +196,10 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
       val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
-      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLibrary.get)
     } finally {
       deleteProjects(prjClient, prjLib)
     }
@@ -240,7 +240,7 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
       val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
       val args = prjClient.scalacArguments

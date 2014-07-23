@@ -35,7 +35,7 @@ import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
 import org.scalaide.core.api
-import org.scalaide.core.api.ScalaProjectMessage
+import org.scalaide.core.api.ScalaProjectEvent
 import org.scalaide.core.api.ScalaInstallationChange
 import org.scalaide.core.api.BuildSuccess
 import org.scalaide.core.ScalaPlugin
@@ -106,7 +106,7 @@ object ScalaProject {
   }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectMessage] with HasLogger with api.ScalaProject {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectEvent] with HasLogger with api.ScalaProject {
   import ScalaPlugin.plugin
 
   private var buildManager0: EclipseBuildManager = null
@@ -179,15 +179,14 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   def outputFolders: Seq[IPath] =
-    sourceOutputFolders.values.map(_.getFullPath()).toSeq
+    sourceOutputFolders.map(_._2.getFullPath()).toSeq
 
   def outputFolderLocations: Seq[IPath] =
-    sourceOutputFolders.values.map(_.getLocation()).toSeq
+    sourceOutputFolders.map(_._2.getLocation()).toSeq
 
-  def sourceOutputFolders: Map[IContainer, IContainer] = {
+  def sourceOutputFolders: Seq[(IContainer, IContainer)] = {
     val cpes = resolvedClasspath
-
-    val sourceOutputList = for {
+    for {
       cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       source <- Option(plugin.workspaceRoot.findMember(cpe.getPath)) if source.exists
     } yield {
@@ -199,7 +198,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       (source.asInstanceOf[IContainer], binPath)
     }
-    Map(sourceOutputList: _*)
   }
 
   protected def isUnderlyingValid = (underlying.exists() && underlying.isOpen)
@@ -431,8 +429,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     // a mix of classes from the running JVM and configured JDK
     // (we use a space because an empty string is considered as 'value not set by user')
     settings.javaextdirs.value = " "
-    settings.classpath.value = (scalaCp.userCp ++ scalaCp.scalaLib.toSeq).map(_.toOSString).mkString(pathSeparator)
-    scalaCp.scalaLib.foreach(scalaLib => settings.bootclasspath.value = scalaLib.toOSString)
+    settings.classpath.value = (scalaCp.userCp ++ scalaCp.scalaLibrary.toSeq).map(_.toOSString).mkString(pathSeparator)
+    scalaCp.scalaLibrary.foreach(scalaLib => settings.bootclasspath.value = scalaLib.toOSString)
 
     logger.debug("javabootclasspath: " + settings.javabootclasspath.value)
     logger.debug("javaextdirs: " + settings.javaextdirs.value)
@@ -556,7 +554,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // is built, but only when it has changes! this call makes sure that a rebuild,
       // even when there are no changes, propagates the classpath to dependent projects
       resetDependentProjects()
-      publish(new BuildSuccess())
+      publish(BuildSuccess())
     }
   }
 

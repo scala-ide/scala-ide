@@ -3,7 +3,6 @@ package org.scalaide.core.api
 import org.eclipse.core.resources.IProject
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import scala.tools.nsc.Settings
@@ -13,17 +12,15 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.runtime.IProgressMonitor
 import scala.collection.mutable.Publisher
 import java.io.File
-import org.scalaide.core.internal.project.LabeledScalaInstallation
-import scala.tools.nsc.settings.ScalaVersion
-import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.core.runtime.IPath
 
 /**
  * A message class to signal various project-related statuses, such as a Scala Installation change, or a successful Build.
  * Immutable.
  */
-trait ScalaProjectMessage
-case class BuildSuccess() extends ScalaProjectMessage
-case class ScalaInstallationChange() extends ScalaProjectMessage
+trait ScalaProjectEvent
+case class BuildSuccess() extends ScalaProjectEvent
+case class ScalaInstallationChange() extends ScalaProjectEvent
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -41,20 +38,16 @@ trait ScalaClasspath {
   /**
    * The scala standard library.
    */
-  val scalaLib: Option[IPath]
+  val scalaLibrary: Option[IPath]
   /**
    * User libraries that should figure on classpath.
    */
   val userCp: Seq[IPath]
   /**
    * An optional Scala version string for diagnostics.
-   * If present, should match the content of the library.properties in the sacla Library.
+   * If present, should match the content of the library.properties in the scala Library.
    */
   val scalaVersionString: Option[String]
-  /**
-   *  The File reference for the aforementioned scalaLib.
-   */
-  val scalaLibraryFile: Option[File]
   /**
    * The concatenation of the full classpath.
    */
@@ -62,80 +55,11 @@ trait ScalaClasspath {
 }
 
 /**
- * This trait represents a handle on a Scala compiler module, and its component jars.
- * e.g. scala-compiler, scala-library, scala-reflect, scala-xml ...
- * Immutable.
- */
-trait ScalaModule {
-  val classJar: IPath
-  val sourceJar: Option[IPath]
-  /**
-   * Are the files pointed to by this module available on the file system ?
-   */
-  def isValid(): Boolean
-  /**
-   * Creates a classpath entry for the library.
-   */
-  def libraryEntries(): IClasspathEntry
-  /**
-   * Returns a hash string uniquely identifying the module.
-   * Depends on the path of cointained archives relative to the Scala plugin's location.
-   */
-  def getHashString(): String
-}
-
-/**
- * This trait represents a handle on a complete Scala installation, containing at least compiler and library modules.
- * Immutable.
- */
-trait ScalaInstallation {
-  /**
-   * A precise Scala version.
-   */
-  def version: ScalaVersion
-  /**
-   *  The compiler module itself.
-   */
-  def compiler: ScalaModule
-  /**
-   * The library module for this installation.
-   */
-  def library: ScalaModule
-  /**
-   * Extra modules, e.g. reflect, swing, actors, xml.
-   */
-  def extraJars: Seq[ScalaModule]
-  /**
-   * Returns the whole set of all jars included in this installation.
-   */
-  def allJars(): Seq[ScalaModule]
-  /**
-   * Are the registered components of this installation available on the file system ?
-   */
-  def isValid(): Boolean
-}
-
-
-/**
- * This trait symbolises a Scala Installation Choice.
- * Commonly implemented as a case class with several utility methods.
- * The marker consitutes the choice, it can be :
- * - either a Scala version, in which case the Scala Installation to be used will be
- *   the latest available bundle with the same binary-compatible version (same major, minor) as the one specified
- * - either an Int representing a hash, which points to the hash of an available Scala Installation.
- *
- * Immutable.
- */
-trait ScalaInstallationChoice{
-  val marker: Either[ScalaVersion, Int]
-}
-
-/**
  * This class represents a Scala Project and associated tools necessary to build it.
  *
  * This class is not thread-safe.
  */
-trait ScalaProject extends Publisher[ScalaProjectMessage] {
+trait ScalaProject extends Publisher[ScalaProjectEvent] {
 
   /**
    * An IProject which is the project object at the Eclipse platform's level.
@@ -150,10 +74,10 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
   /**
    *  Does this project have the platform's level of a Scala-corresponding Nature ?
    */
-  def hasScalaNature(): Boolean
+  def hasScalaNature: Boolean
 
   /** The direct dependencies of this project. It only returns opened projects. */
-  def directDependencies(): Seq[IProject]
+  def directDependencies: Seq[IProject]
 
   /** All direct and indirect dependencies of this project.
    *
@@ -163,7 +87,7 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
    *
    *  transitiveDependencies(C) = {A, B} iff B *exports* the A project in its classpath
    */
-  def transitiveDependencies(): Seq[IProject]
+  def transitiveDependencies: Seq[IProject]
 
   /** Return the exported dependencies of this project. An exported dependency is
    *  another project this project depends on, and which is exported to downstream
@@ -175,24 +99,24 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
   val javaProject: IJavaProject
 
   /** The Sequence of source folders used by this project */
-  def sourceFolders(): Seq[IPath]
+  def sourceFolders: Seq[IPath]
 
   /** Return the output folders of this project. Paths are relative to the workspace root,
    *  and they are handles only (may not exist).
    */
-  def outputFolders(): Seq[IPath]
+  def outputFolders: Seq[IPath]
 
   /** The output folder file-system absolute paths. */
-  def outputFolderLocations(): Seq[IPath]
+  def outputFolderLocations: Seq[IPath]
 
   /** Return the source folders and their corresponding output locations
    *  without relying on NameEnvironment. Does not create folders if they
    *  don't exist already.
    *
-   *  @return A map of source folders to their corresponding
+   *  @return A sequence of pairs of source folders with their corresponding
    *          output folder.
    */
-  def sourceOutputFolders(): Map[IContainer, IContainer]
+  def sourceOutputFolders(): Seq[(IContainer, IContainer)]
 
   /** Return all source files in the source path. It only returns buildable files (meaning
    *  Java or Scala sources).
@@ -206,7 +130,7 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
   def allFilesInSourceDirs(): Set[IFile]
 
   /** All arguments passed to scalac, including classpath as well as custom settings. */
-  def scalacArguments(): Seq[String]
+  def scalacArguments: Seq[String]
 
   /**
    * Initializes compiler settings from an instance of the compiler's scala.tools.nsc.Settings
@@ -218,7 +142,7 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
    *  @return A project-specific store if the project is set to use project-specific settings,
    *  a scoped preference store otherwise.
    */
-  def storage(): IPreferenceStore
+  def storage: IPreferenceStore
 
   /**
    * Initialization for the build manager associated to this project
@@ -250,15 +174,16 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
   /* Classpath Management */
 
   /** The ScalaClasspath Instance valid for tihs project */
-  def scalaClasspath(): ScalaClasspath
-
-  /** Return the classpath entries coming from the JDK.  */
-  def jdkPaths(): Seq[IPath]
+  def scalaClasspath: ScalaClasspath
 
   /** The result of validation checks performed on classpath */
   def isClasspathValid(): Boolean
 
-  /** Inform this project the classpath was just changed. Triggers validation */
+  /** Inform this project the classpath was just changed. Triggers validation
+   *
+   *  @param queue If true, a classpath validation run will be triggered eventually.
+   *    If false, the validation will yield to any ongoing validation of the classpath.
+   */
   def classpathHasChanged(queue: Boolean = true): Unit
 
   /* Installation Management */
@@ -273,13 +198,13 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
    * Get the source level configured for this project.
    * @returns a scala version in the form <major>.<minor>
    */
-  def getDesiredSourceLevel(): String
+  def desiredSourceLevel(): String
 
   /**
    * Get the ScalaInstallation Choice configured for this project.
    * @returns a ScalaInstallationChoice
    */
-  def getDesiredInstallationChoice(): ScalaInstallationChoice
+  def desiredinstallationChoice(): ScalaInstallationChoice
 
   /**
    * Get the ScalaInstallation used for building this project.
@@ -287,7 +212,7 @@ trait ScalaProject extends Publisher[ScalaProjectMessage] {
    * e.g. if the ScalaInstallation Choice points to a version that is no longer on disk.
    * @returns a usable Scala Installation.
    */
-  def getDesiredInstallation(): ScalaInstallation
+  def effectiveScalaInstallation(): ScalaInstallation
 
 }
 

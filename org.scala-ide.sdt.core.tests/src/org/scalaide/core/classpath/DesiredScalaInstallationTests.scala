@@ -94,8 +94,8 @@ class DesiredScalaInstallationTests {
   @Test
   def configured_install_for_default_container_is_platform() {
     val project = createProject()
-    val dsi = project.getDesiredInstallation()
-    assertTrue(s"The default scala installation should be the platform. Found ${project.getDesiredInstallationChoice()}", dsi == ScalaInstallation.platformInstallation)
+    val dsi = project.effectiveScalaInstallation()
+    assertTrue(s"The default scala installation should be the platform. Found ${project.desiredinstallationChoice()}", dsi == ScalaInstallation.platformInstallation)
   }
 
   @Test
@@ -111,7 +111,7 @@ class DesiredScalaInstallationTests {
   @Test
   def legacy_is_not_current() {
     val project = createProject()
-    val current_dsi  = project.getDesiredInstallation()
+    val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     assertTrue("There should be a bundled Scala installation that is not the platform installation", otherInstallation.isDefined)
   }
@@ -119,58 +119,58 @@ class DesiredScalaInstallationTests {
   @Test
   def legacy_is_not_binary_compatible(){
     val project = createProject()
-    val current_dsi  = project.getDesiredInstallation()
-    val current_choice_before = project.getDesiredInstallationChoice()
+    val current_dsi  = project.effectiveScalaInstallation()
+    val current_choice_before = project.desiredinstallationChoice()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)} // the .version ensures a dynamic choice
     expectedChoice foreach {si => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, si.toString())}
-    assertTrue(s"Switching to a former bundle should show a change in desired installation choices, Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallationChoice() != current_choice_before)
+    assertTrue(s"Switching to a former bundle should show a change in desired installation choices, Found ${project.desiredinstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.desiredinstallationChoice() != current_choice_before)
   }
 
   @Test
   def change_to_legacy_registers_choice_constant(){
     val project = createProject()
-    val current_dsi  = project.getDesiredInstallation()
+    val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si)}
     expectedChoice foreach {si => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, si.toString())}
-    assertTrue(s"Switching to a former bundle should reflect in configuration, Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallationChoice() == expectedChoice.get)
+    assertTrue(s"Switching to a former bundle should reflect in configuration, Found ${project.desiredinstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.desiredinstallationChoice() == expectedChoice.get)
   }
 
    @Test
   def change_to_legacy_registers_choice_dynamic(){
     val project = createProject()
-    val current_dsi = project.getDesiredInstallation()
+    val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
-    assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallationChoice() == expectedChoice.get)
+    assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.desiredinstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.desiredinstallationChoice() == expectedChoice.get)
   }
 
   @Test
   def change_to_legacy_registers_constant(){
     val project = createProject()
-    val current_dsi  = project.getDesiredInstallation()
+    val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si)}
     expectedChoice foreach {si => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, si.toString())}
-    assertTrue(s"Switching to a former bundle should reflect in configuration, Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallation() == otherInstallation.get)
+    assertTrue(s"Switching to a former bundle should reflect in configuration, Found ${project.desiredinstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.effectiveScalaInstallation() == otherInstallation.get)
   }
 
   @Test
   def change_to_legacy_registers_dynamic(){
     val project = createProject()
-    val current_dsi = project.getDesiredInstallation()
+    val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
-    assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.getDesiredInstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.getDesiredInstallation() == otherInstallation.get)
+    assertTrue(s"Switching to a former bundle should reflect in configuration. Found ${project.desiredinstallationChoice()}, expected ${expectedChoice.getOrElse("")}", project.effectiveScalaInstallation() == otherInstallation.get)
   }
 
   @Test
   def change_to_legacy_registers_on_classpath(){
     val project = createProject()
-    val current_dsi = project.getDesiredInstallation()
+    val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}
@@ -183,7 +183,7 @@ class DesiredScalaInstallationTests {
   @Test
   def change_to_legacy_registers_on_compiler_classpath(){
     val project = createProject()
-    val current_dsi = project.getDesiredInstallation()
+    val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
     val expectedChoice = otherInstallation map {si => ScalaInstallationChoice(si.version)}
     expectedChoice foreach {c => project.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, c.toString())}

@@ -37,7 +37,7 @@ class MultiScalaVersionTest {
     for (installation <- findPreviousScalaInstallation()) {
       val choice = ScalaInstallationChoice(installation)
       p.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
-      Assert.assertEquals(s"Expected to see the desired choice, found ${p.getDesiredInstallationChoice()}", choice, p.getDesiredInstallationChoice())
+      Assert.assertEquals(s"Expected to see the desired choice, found ${p.desiredinstallationChoice()}", choice, p.desiredinstallationChoice())
       setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
       p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")

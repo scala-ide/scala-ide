@@ -63,7 +63,7 @@ trait InstallationManagement { this: ScalaProject =>
    )
 
   /** Which Scala source level is this project configured to work with ? */
-  def getDesiredSourceLevel(): String = {
+  def desiredSourceLevel(): String = {
     implicit val sourceLevelDefault = ScalaPlugin.plugin.shortScalaVer
     val sourceLevelPrefName = SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL
     if (!usesProjectSettings) {
@@ -74,23 +74,23 @@ trait InstallationManagement { this: ScalaProject =>
   }
 
   /** Which Scala installation is this project wished to work with ? - always returns a valid choice, but it may or not resolve */
-  def getDesiredInstallationChoice(): ScalaInstallationChoice = {
-    implicit val desiredInstallationChoiceDefault: ScalaInstallationChoice = ScalaInstallationChoice(ScalaVersion(getDesiredSourceLevel()))
-    implicit val desiredInstallationChoicePrefDefault: String = desiredInstallationChoiceDefault.toString()
-    val desiredInstallationChoicePrefName = SettingConverterUtil.SCALA_DESIRED_INSTALLATION
+  def desiredinstallationChoice(): ScalaInstallationChoice = {
+    implicit val desiredinstallationChoiceDefault: ScalaInstallationChoice = ScalaInstallationChoice(ScalaVersion(desiredSourceLevel()))
+    implicit val desiredinstallationChoicePrefDefault: String = desiredinstallationChoiceDefault.toString()
+    val desiredinstallationChoicePrefName = SettingConverterUtil.SCALA_DESIRED_INSTALLATION
     if (!usesProjectSettings) {
       eclipseLog.warn(s"Project ${this.underlying.getName()} runs on platform default installation.")
-      desiredInstallationChoiceDefault
+      desiredinstallationChoiceDefault
     }
     else {
-      (parseScalaInstallationChoice _ ).get(projectSpecificStorage.get(desiredInstallationChoicePrefName))
+      (parseScalaInstallationChoice _ ).get(projectSpecificStorage.get(desiredinstallationChoicePrefName))
     }
   }
 
   /** Which Scala installation is this project configured to work with ? - always returns a valid installation that resolves */
-  def getDesiredInstallation(): LabeledScalaInstallation = {
+  def effectiveScalaInstallation(): LabeledScalaInstallation = {
     implicit val desiredInstallationDefault: LabeledScalaInstallation = ScalaInstallation.resolve(ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer)).get
-    (ScalaInstallation.resolve _).get(getDesiredInstallationChoice())
+    (ScalaInstallation.resolve _).get(desiredinstallationChoice())
   }
 
   private def turnOnProjectSpecificSettings(reason: String){
@@ -112,14 +112,11 @@ trait InstallationManagement { this: ScalaProject =>
   private def parseScalaInstallationChoice(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
     case Success(int) => Some(ScalaInstallationChoice(Right(int)))
     case Failure(t) => t match {
-      case ex: NumberFormatException => Try(ScalaVersion(str)) match {
-        case Success(version) => Some(ScalaInstallationChoice(version))
-        case Failure(thrown) => throw(thrown)
-      }
+      case ex: NumberFormatException => Try(ScalaVersion(str)).toOption map (ScalaInstallationChoice(_))
     }
   }
 
-  def setDesiredInstallation(choice: ScalaInstallationChoice = getDesiredInstallationChoice()) : Unit = {
+  def setDesiredInstallation(choice: ScalaInstallationChoice = desiredinstallationChoice()) : Unit = {
     val optsi = ScalaInstallation.resolve(choice) // This shouldn't do anything if the choice doesn't resolve
     val sourceLevel = optsi map {si => CompilerUtils.shortString(si.version)}
 
@@ -135,13 +132,13 @@ trait InstallationManagement { this: ScalaProject =>
     publish(ScalaInstallationChange())
   }
 
-  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(getDesiredSourceLevel()),
+  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(desiredSourceLevel()),
       slReason: String = "requested Source Level change",
       customBundleUpdater: Option[() => Unit] = None): Unit = {
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
     // is the required sourceLevel the bundled scala version ?
-    if (isUsingCompatibilityMode) {
+    if (isUsingCompatibilityMode()) {
       if (CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)) {
         unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
       }
@@ -188,7 +185,7 @@ trait InstallationManagement { this: ScalaProject =>
         case (setting, value) => ScalaPlugin.prefStore.getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
       }
       val scalaInstallationIsSameAsDefault = {
-        val desiredInstallChoice = getDesiredInstallationChoice()
+        val desiredInstallChoice = desiredinstallationChoice()
         desiredInstallChoice.marker match {
           case Left(scalaVersion) => CompilerUtils.isBinarySame(ScalaPlugin.plugin.scalaVer, scalaVersion)
           case Right(_) => false

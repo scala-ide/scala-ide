@@ -52,7 +52,7 @@ class SbtInputs(installation: ScalaInstallation,
     if (f.isFile)
       Maybe.just(Analysis.Empty)
     else
-      allProjects.find(_.sourceOutputFolders.values.map(_.getLocation().toFile()).toSeq contains f) map (_.buildManager) match {
+      allProjects.find(_.sourceOutputFolders.map(_._2.getLocation().toFile()).toSeq contains f) map (_.buildManager) match {
         case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
         case _                                     => Maybe.just(Analysis.Empty)
       }

@@ -211,7 +211,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
   }
 
-  def findInstallation(project: ScalaProject): ScalaInstallation = project.getDesiredInstallation()
+  def findInstallation(project: ScalaProject): ScalaInstallation = project.effectiveScalaInstallation()
 
   /** Inspired by IC.compile
    *

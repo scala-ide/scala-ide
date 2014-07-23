@@ -148,8 +148,6 @@ object StackFrameVariableOfTreeFinder {
       def stackFrameCompatibleNameOf(sym: Symbol): Name = {  // Based on trial & error. May need more work.
         var name = sym.name.toTermName
         if(sym.isLocalToThis) {
-          // name = name.dropLocal
-          // TODO: The commented line above can be used instead of the one below, when scala 2.10 support is dropped.
           name = name.dropLocal
         }
         name.decodedName

@@ -45,7 +45,7 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
 import org.scalaide.core.api.BuildSuccess
-import org.scalaide.core.api.ScalaProjectMessage
+import org.scalaide.core.api.ScalaProjectEvent
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -147,7 +147,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
   }
 
-  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[ScalaProjectMessage, Publisher[ScalaProjectMessage]] {
+  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]] {
     setToolTipText("Replay History on Project Rebuild")
 
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
@@ -158,7 +158,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       else scalaProject.removeSubscription(this)
     }
 
-    def notify(pub:Publisher[ScalaProjectMessage], event:ScalaProjectMessage) {
+    def notify(pub:Publisher[ScalaProjectEvent], event:ScalaProjectEvent) {
       event match { case e: BuildSuccess =>
         DisplayThread.asyncExec {
           if (!isStopped) {

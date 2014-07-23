@@ -45,7 +45,7 @@ import scala.util.Success
 import org.scalaide.core.api
 
 case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
-  val scalaLib: Option[IPath], // scala library
+  val scalaLibrary: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
   val scalaVersionString: Option[String]) extends api.ScalaClasspath {
   override def toString =
@@ -55,10 +55,10 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     usercp: %s
     scalaVersion: %s
 
-    """.format(jdkPaths, scalaLib, userCp, scalaVersionString)
+    """.format(jdkPaths, scalaLibrary, userCp, scalaVersionString)
 
   lazy val scalaLibraryFile: Option[File] =
-    scalaLib.map(_.toFile.getAbsoluteFile)
+    scalaLibrary.map(_.toFile.getAbsoluteFile)
 
   private def toPath(ps: Seq[IPath]): Seq[File] = ps map (_.toFile.getAbsoluteFile)
 
@@ -324,7 +324,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     val scalaVersion = plugin.scalaVer.unparse
     val expectedVersion =
-      if (this.isUsingCompatibilityMode)
+      if (this.isUsingCompatibilityMode())
         previousShortString(plugin.scalaVer)
       else
         scalaVersion
@@ -376,10 +376,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     def getVersion(resource: IStorage): Option[ScalaVersion] = try {
       val properties = new Properties()
       properties.load(resource.getContents())
-      Try(ScalaVersion(properties.getProperty("version.number"))) match {
-        case Success(version) => Some(version)
-        case Failure(thrown) => None
-      }
+      Try(ScalaVersion(properties.getProperty("version.number"))).toOption
     } catch {
       case _: IOException => None // be very lenient, not all libraries have a properties file
     }

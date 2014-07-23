@@ -52,7 +52,7 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 
     val setter = new ClasspathContainerSetter(project)
     val proj =     ScalaPlugin.plugin.asScalaProject(iProject)
-    val install = proj map (_.getDesiredInstallation())
+    val install = proj map (_.effectiveScalaInstallation())
 
     if (proj.isDefined) setter.updateBundleFromScalaInstallation(containerPath, install.get)
     else {
@@ -134,7 +134,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
         val previousVersionChoice = PartialFunction.condOpt(platformInstallation.version) { case ShortScalaVersion(major, minor) => ScalaInstallationChoice(ScalaVersion(f"$major%d.${minor - 1}%d")) }
         def previousVersionPrepender(l: List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
         list.setInput(ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer) :: previousVersionPrepender(availableInstallations.map(si => ScalaInstallationChoice(si))))
-        val initialSelection = scalaProject map (_.getDesiredInstallationChoice())
+        val initialSelection = scalaProject map (_.desiredinstallationChoice())
         initialSelection foreach { choice => list.setSelection(new StructuredSelection(choice)) }
 
         list.addSelectionChangedListener({ (event: SelectionChangedEvent) =>

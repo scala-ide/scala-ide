@@ -65,7 +65,7 @@ case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Se
 }
 
 object ScalaInstallationChoice {
-  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice( Right(si.getHashString().hashCode()) )
+  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice( Right(si.hashString.hashCode()) )
   def apply(sv: ScalaVersion): ScalaInstallationChoice = ScalaInstallationChoice( Left(sv) )
 }
 
@@ -114,12 +114,12 @@ trait LabeledScalaInstallation extends ScalaInstallation {
         this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
 
       def getName():Option[String] = PartialFunction.condOpt(label) {case CustomScalaInstallationLabel(tag) => tag}
-      def getHashString(): String = {
-        val jarSeq = allJars map (_.getHashString())
+      def hashString: String = {
+        val jarSeq = allJars map (_.hashString)
         getName().fold(jarSeq)(str => str +: jarSeq).mkString
       }
 
-      override def hashCode() = getHashString().hashCode()
+      override def hashCode() = hashString.hashCode()
       override def equals(o: Any) = PartialFunction.cond(o){ case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
 }
 
@@ -136,7 +136,7 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends api.Sc
   private def relativizedString(path: IPath) = {
     path.makeRelativeTo(ScalaPlugin.plugin.getStateLocation()).toPortableString()
   }
-  def getHashString(): String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
+  def hashString: String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
 }
 
 object ScalaModule {
