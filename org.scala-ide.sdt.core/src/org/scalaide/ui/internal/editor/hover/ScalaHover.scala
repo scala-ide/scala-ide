@@ -1,15 +1,40 @@
 package org.scalaide.ui.internal.editor.hover
 
-import org.eclipse.jdt.core.ICodeAssist
-import org.eclipse.jface.text.ITextViewer
+import scala.tools.nsc.symtab.Flags
+
+import org.eclipse.jface.internal.text.html.HTMLPrinter
+import org.eclipse.jface.resource.JFaceResources
+import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
-import scala.tools.nsc.symtab.Flags
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.eclipse.jface.text.ITextHoverExtension
+import org.eclipse.jface.text.ITextViewer
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedRegion
 
-class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
+object ScalaHover extends HasLogger {
+  final val HoverFontId = "org.scalaide.ui.font.hover"
+
+  final val ScalaHoverStyleSheetPath = "/resources/scala-hover.css"
+
+  /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
+  val ScalaHoverStyeSheet: String = {
+    EclipseUtils.fileContentFromBundle(ScalaPlugin.plugin.pluginId, ScalaHoverStyleSheetPath) match {
+      case util.Success(css) =>
+        css
+      case util.Failure(f) =>
+        logger.warn(s"CSS file '$ScalaHoverStyleSheetPath' could not be accessed.", f)
+        ""
+    }
+  }
+}
+
+class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension {
+  import ScalaHover._
 
   private val NoHoverInfo = "" // could return null, but prefer to return empty (see API of ITextHover).
 
@@ -32,14 +57,31 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover {
 
       val resp = new Response[Tree]
       askTypeAt(region.toRangePos(src), resp)
-      (for (
-        t <- resp.get.left.toOption;
-        hover <- hoverInfo(t)
-      ) yield hover) getOrElse NoHoverInfo
+
+      val content = resp.get.left.toOption.flatMap(hoverInfo).getOrElse("")
+      if (content.isEmpty()) ""
+      else createHtmlOutput(content)
     }) getOrElse (NoHoverInfo)
+  }
+
+  def createHtmlOutput(content: String): String = {
+    val b = new StringBuffer()
+
+    val fd = JFaceResources.getFontRegistry().getFontData(HoverFontId)(0)
+    val css = HTMLPrinter.convertTopLevelFont(ScalaHoverStyeSheet, fd)
+    HTMLPrinter.insertPageProlog(b, 0, css)
+
+    b.append(HTMLPrinter.convertToHTMLContent(content))
+
+    HTMLPrinter.addPageEpilog(b)
+    b.toString()
   }
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
     ScalaWordFinder.findWord(viewer.getDocument, offset)
   }
+
+  override def getHoverControlCreator(): IInformationControlCreator =
+    new HoverControlCreator(new FocusedControlCreator(HoverFontId), HoverFontId)
+
 }
