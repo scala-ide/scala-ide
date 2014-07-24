@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
+import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.ScalaImages
@@ -359,6 +360,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
       val window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
       val e = IDE.openEditor(window.getActivePage(), file, /* activate */ true)
+      BasicNewResourceWizard.selectAndReveal(file, window)
       EditorUtils.textEditor(e) foreach { _.selectAndReveal(cursorPos, 0) }
     }
 
