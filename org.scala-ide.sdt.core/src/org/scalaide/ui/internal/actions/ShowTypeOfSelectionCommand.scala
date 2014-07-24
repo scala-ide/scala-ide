@@ -12,6 +12,7 @@ import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
 import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.eclipse.jface.internal.text.html.HTMLPrinter
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 
@@ -44,7 +45,7 @@ object TypeOfExpressionProvider extends IInformationProvider {
           import compiler._
 
           def typeInfo(tpe: Type): String =
-            Option(tpe).map(_.toString).getOrElse(null)
+            Option(tpe).map(tpe => HTMLPrinter.convertToHTMLContent(tpe.toString)).orNull
 
           val response = new Response[Tree]
           askTypeAt(region.toRangePos(src), response)
