@@ -9,6 +9,7 @@ import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
@@ -18,6 +19,7 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
+import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.resources.EclipseResource
 
@@ -32,7 +34,7 @@ object FileUtils {
   }
 
   def toIFile(path: IPath): Option[IFile] = {
-    val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
+    val file = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path)
 
     if (file == null || !file.exists) None
     else Some(file)
@@ -109,49 +111,17 @@ object FileUtils {
   }
 
   /**
-   * Checks if `path` points to a file that exists. `path` needs to be relative
-   * to the workspace location, for example `/Project/src/file.scala`.
-   */
-  def existsWorkspaceFile(path: IPath): Boolean = {
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    val fullPath = root.getRawLocation().append(path)
-    fullPath.toFile().exists()
-  }
-
-  /**
-   * Returns the path relative to the workspace if `path` points to a location
-   * inside of the workspace. Returns `None` otherwise.
-   */
-  def workspacePath(path: IPath): Option[IPath] = {
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    val rootLocation = root.getRawLocation()
-
-    if (rootLocation.isPrefixOf(path))
-      Some(path.removeFirstSegments(rootLocation.segmentCount()))
-    else
-      None
-  }
-
-  /**
-   * Creates a file of a given path. The path is expected to be absolute to the
-   * root of the filesystem. If `path` points to a location inside of the
-   * workspace the project that contains it is automatically refreshed.
+   * Creates a file of a given `IFile`. The project that contains the file is
+   * automatically refreshed.
    *
    * Returns `Unit` if the file creation was successful, otherwise the thrown
    * exception.
    */
-  def createFileFromPath(path: IPath): Try[Unit] = {
-    require(path.isAbsolute(), "A path absolute to the root of the filesystem is required")
-    Try {
-      val f = path.toFile()
-      f.getParentFile().mkdirs()
-      f.createNewFile()
+  def createFile(file: IFile): Try[Unit] = Try {
+    val f = file.getLocation().toFile()
+    f.getParentFile().mkdirs()
+    f.createNewFile()
 
-      workspacePath(path) foreach { p =>
-        val root = ResourcesPlugin.getWorkspace().getRoot()
-        val project = root.getProject(p.segment(0))
-        project.refreshLocal(IResource.DEPTH_INFINITE, null)
-      }
-    }
+    file.getProject().refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 }
