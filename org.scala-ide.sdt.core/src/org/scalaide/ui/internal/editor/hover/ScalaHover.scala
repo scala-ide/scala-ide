@@ -3,7 +3,6 @@ package org.scalaide.ui.internal.editor.hover
 import scala.tools.nsc.symtab.Flags
 
 import org.eclipse.jface.internal.text.html.HTMLPrinter
-import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
@@ -33,7 +32,7 @@ object ScalaHover extends HasLogger {
   }
 }
 
-class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension {
+class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension with HtmlHover {
   import ScalaHover._
 
   private val NoHoverInfo = "" // could return null, but prefer to return empty (see API of ITextHover).
@@ -60,21 +59,10 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
 
       val content = resp.get.left.toOption.flatMap(hoverInfo).getOrElse("")
       if (content.isEmpty()) ""
-      else createHtmlOutput(content)
+      else createHtmlOutput { sb =>
+        sb.append(HTMLPrinter.convertToHTMLContent(content))
+      }
     }) getOrElse (NoHoverInfo)
-  }
-
-  def createHtmlOutput(content: String): String = {
-    val b = new StringBuffer()
-
-    val fd = JFaceResources.getFontRegistry().getFontData(HoverFontId)(0)
-    val css = HTMLPrinter.convertTopLevelFont(ScalaHoverStyeSheet, fd)
-    HTMLPrinter.insertPageProlog(b, 0, css)
-
-    b.append(HTMLPrinter.convertToHTMLContent(content))
-
-    HTMLPrinter.addPageEpilog(b)
-    b.toString()
   }
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
