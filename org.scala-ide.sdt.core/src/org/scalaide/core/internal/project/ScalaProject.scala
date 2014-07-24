@@ -629,7 +629,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     def hasEqualProject(editorRef: IEditorReference) = {
       val isEqual = for {
-        editor <- Option(editorRef.getEditor(false /*restore*/ ))
+        editor <- Option(editorRef.getEditor( /*restore =*/ false))
         input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput]
       } yield {
         val file = input.getFile

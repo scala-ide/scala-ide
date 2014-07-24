@@ -65,21 +65,21 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 
     override def run(): Unit =
       try {
-        if (!isTimeToBeKilled(killAfterMillis)) {
+        if (!isTimeToBeKilled) {
           val delay = remainingDelayToNextCheck(killAfterMillis)
-          scheduleNextCheck(killAfterMillis, delay)
+          scheduleNextCheck(delay)
         } else if (!ignoreOpenEditors && projectHasOpenEditors()) {
-          scheduleNextCheck(killAfterMillis, killAfterMillis)
+          scheduleNextCheck(delay = killAfterMillis)
         } else {
           shutdownPresentationCompiler()
         }
       } catch {
-        case e: Throwable => logger.error("Unexpected error occurred during running presentation compiler killer task")
+        case e: Throwable => logger.error(s"Unexpected error occurred during running presentation compiler killer task for project $projectName", e)
       }
 
-    private def isTimeToBeKilled(killAfterMillis: Long) = pcLastActivityTime + killAfterMillis <= System.currentTimeMillis()
+    private def isTimeToBeKilled = pcLastActivityTime + killAfterMillis <= System.currentTimeMillis()
 
-    private def scheduleNextCheck(killAfterMillis: Long, delay: Long): Unit = timer.schedule(new PresentationCompilerKillerTask(killAfterMillis), delay)
+    private def scheduleNextCheck(delay: Long): Unit = timer.schedule(new PresentationCompilerKillerTask(killAfterMillis), delay)
   }
 
   def start(): Unit = taskLock.synchronized {
@@ -87,7 +87,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
       logger.debug(s"Starting PresentationCompilerActivityListener for project $projectName")
       noteActivity()
       ignoreOpenEditors = readIgnoreOpenEditors
-      timer = new Timer(true /*isDaemon*/ )
+      timer = new Timer( /*isDaemon =*/ true)
       updateKillerTask()
       prefStore.addPropertyChangeListener(propertyChangeListener)
     }
@@ -143,7 +143,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 object PresentationCompilerActivityListener {
   private val prefStore = ScalaPlugin.prefStore
 
-  private def currentMaxIdlenessLengthMillis: Long = prefStore.getInt(ScalaPreferences.PRES_COMP_MAX_IDLENESS_LENGTH) * 60000
+  private def currentMaxIdlenessLengthMillis: Long = prefStore.getInt(ScalaPreferences.PRES_COMP_MAX_IDLENESS_LENGTH) * 60000L
 
   private def shouldCloseRegardlessOfOpenEditors: Boolean = prefStore.getBoolean(ScalaPreferences.PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS)
 }

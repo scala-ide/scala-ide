@@ -10,7 +10,7 @@ import org.junit.Assert._
 
 class PresentationCompilerActivityListenerTest {
 
-  class MockFun[T](realFunctionName: String, x: T) extends Function0[T] {
+  class MockFun[T](realFunctionName: String, x: => T) extends Function0[T] {
     var numberOfInvocations = 0
 
     override def apply(): T = {
@@ -30,7 +30,7 @@ class PresentationCompilerActivityListenerTest {
 
   implicit def anyVal2Fun[T <: AnyVal](x: T) = () => x
 
-  def createListener(shutdownFun: () => Unit = (), ignoreOpenEditors: () => Boolean, maxIdlenessLengthMillis: () => Long, hasOpenEditors: () => Boolean = true) =
+  def createListener(shutdownFun: () => Unit = (), ignoreOpenEditors: () => Boolean, maxIdlenessLengthMillis: () => Long, hasOpenEditors: () => Boolean = false) =
     new PresentationCompilerActivityListener(projectName = "notImportantHere", hasOpenEditors, shutdownFun) {
       override protected def readIgnoreOpenEditors = ignoreOpenEditors()
       override protected def readMaxIdlenessLengthMillis = maxIdlenessLengthMillis()
@@ -92,6 +92,25 @@ class PresentationCompilerActivityListenerTest {
     Thread.sleep(300)
 
     hasOpenEditorsMock mustHaveNumberOfInvocationsEqual 1
+    shutdownMock mustHaveNumberOfInvocationsEqual 1
+    listener.stop()
+  }
+
+  @Test
+  def takeActivityIntoAccount(): Unit = {
+    val shutdownMock = new MockShutdownFun
+    val listener = createListener(shutdownMock, ignoreOpenEditors = true, maxIdlenessLengthMillis = 300)
+
+    listener.start()
+    Thread.sleep(200)
+
+    listener.noteActivity()
+    Thread.sleep(200)
+
+    shutdownMock mustHaveNumberOfInvocationsEqual 0
+
+    Thread.sleep(200)
+
     shutdownMock mustHaveNumberOfInvocationsEqual 1
     listener.stop()
   }
