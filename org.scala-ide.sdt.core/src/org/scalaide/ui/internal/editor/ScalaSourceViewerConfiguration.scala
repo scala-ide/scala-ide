@@ -1,27 +1,25 @@
 package org.scalaide.ui.internal.editor
 
-import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
-import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.lexical._
-import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
-import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
-import org.scalaide.ui.internal.editor.autoedits._
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
+import org.eclipse.jdt.internal.ui.text.HTMLAnnotationHover
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jface.internal.text.html.BrowserInformationControl
+import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.AbstractReusableInformationControlCreator
+import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.text.DefaultTextHover
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IInformationControl
 import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.formatter.IContentFormatter
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
@@ -30,16 +28,28 @@ import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
+import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
-import scalariform.ScalaVersions
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.formatter.FormatterPreferences._
-import scalariform.formatter.preferences._
+import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.formatter.FormatterPreferences._
+import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.lexical._
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
-import org.eclipse.jdt.core.ITypeRoot
+import org.scalaide.ui.internal.editor.autoedits._
+import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
+import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
+
+import scalariform.ScalaVersions
+import scalariform.formatter.preferences._
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -115,6 +125,42 @@ class ScalaSourceViewerConfiguration(
     else
       (spacePrefix +: prefixes :+ "").toArray
   }
+
+  private val annotationHover = new HTMLAnnotationHover(/* showLineNumber */ false) with HtmlHover {
+    override def isIncluded(a: Annotation) = {
+      isShowInVerticalRuler(a)
+    }
+
+    override def formatSingleMessage(msg: String) = {
+      createHtmlOutput { sb =>
+        sb.append(HTMLPrinter.convertToHTMLContent(msg))
+      }
+    }
+
+    override def formatMultipleMessages(msgs: java.util.List[_]) = {
+      createHtmlOutput { sb =>
+        import HTMLPrinter._
+        import collection.JavaConverters._
+        addParagraph(sb, "Multiple markers at this line:")
+        startBulletList(sb)
+        msgs.asScala foreach (msg => addBullet(sb, convertToHTMLContent(msg.asInstanceOf[String])))
+        endBulletList(sb)
+      }
+    }
+  }
+
+  override def getInformationControlCreator(sourceViewer: ISourceViewer) = new AbstractReusableInformationControlCreator {
+    override def doCreateInformationControl(parent: Shell): IInformationControl = {
+      if (BrowserInformationControl.isAvailable(parent))
+        new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false)
+      else
+        new DefaultInformationControl(parent, /* resizable */ false)
+    }
+  }
+
+  override def getOverviewRulerAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
+
+  override def getAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
 
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
     if (editor ne null) {

@@ -1,1 +1,19 @@
+/* the html tag needs to be on a sinle line because it is analyzed by regex */
 html { font-family: sans-serif; font-size: 10pt; font-style: normal; font-weight: normal; }
+
+body {
+  overflow: auto;
+  margin: 0.3em;
+}
+
+ul {
+  list-style: square;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 1em;
+}
+
+li {
+  margin-top: 0.3em;
+  margin-bottom: 0;
+}
