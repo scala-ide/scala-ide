@@ -17,8 +17,12 @@ import org.scalaide.ui.internal.preferences.ScalaPreferences
 /**
  * Tracks activity of ScalaPresentationCompiler and shuts it down if it's unused sufficiently long
  * and there are no open files in editor which are related to it
+ * @param projectName name shown in logs
+ * @param projectHasOpenEditors function checking whether there are currently open editors for this project
+ * @param shutdownPresentationCompiler function which should be invoked, when SPC should be closed
  */
-class PresentationCompilerActivityListener(proxy: ScalaPresentationCompilerProxy) extends HasLogger {
+class PresentationCompilerActivityListener(projectName: String, projectHasOpenEditors: () => Boolean, shutdownPresentationCompiler: () => Unit)
+  extends HasLogger {
 
   import PresentationCompilerActivityListener.prefStore
 
@@ -67,7 +71,7 @@ class PresentationCompilerActivityListener(proxy: ScalaPresentationCompilerProxy
         } else if (!ignoreOpenEditors && projectHasOpenEditors()) {
           scheduleNextCheck(killAfterMillis, killAfterMillis)
         } else {
-          proxy.shutdown()
+          shutdownPresentationCompiler()
         }
       } catch {
         case e: Throwable => logger.error("Unexpected error occurred during running presentation compiler killer task")
@@ -80,7 +84,7 @@ class PresentationCompilerActivityListener(proxy: ScalaPresentationCompilerProxy
 
   def start(): Unit = taskLock.synchronized {
     if (timer == null) {
-      logger.debug(s"Starting PresentationCompilerActivityListener for project ${proxy.project}")
+      logger.debug(s"Starting PresentationCompilerActivityListener for project $projectName")
       noteActivity()
       ignoreOpenEditors = readIgnoreOpenEditors
       timer = new Timer(true /*isDaemon*/ )
@@ -91,7 +95,7 @@ class PresentationCompilerActivityListener(proxy: ScalaPresentationCompilerProxy
 
   def stop(): Unit = taskLock.synchronized {
     if (timer != null) {
-      logger.debug(s"Stopping PresentationCompilerActivityListener for project ${proxy.project}")
+      logger.debug(s"Stopping PresentationCompilerActivityListener for project $projectName")
       // we don't need it, as preferences anyway will be updated during another start
       prefStore.removePropertyChangeListener(propertyChangeListener)
 
@@ -107,7 +111,6 @@ class PresentationCompilerActivityListener(proxy: ScalaPresentationCompilerProxy
   // to make this class testable
   protected def readIgnoreOpenEditors = PresentationCompilerActivityListener.shouldCloseRegardlessOfOpenEditors
   protected def readMaxIdlenessLengthMillis = PresentationCompilerActivityListener.currentMaxIdlenessLengthMillis
-  protected def projectHasOpenEditors() = proxy.project.hasOpenEditors()
 
   private def updateKillerTask(): Unit =
     if (timer != null) {

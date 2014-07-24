@@ -250,6 +250,7 @@ class CompletionTests {
         testNumber match {
           case 0 => `assert completes without backticks`("A normal class name", "NormalClassName")
           case 1 => `assert completes with    backticks`("A non-standard class name", "weird class name")
+          // TODO this check is failing for a long time when running build-all.sh on Windows
           case 2 => `assert completes without backticks`("A weird but valid class name", "abcαβγ_!^©®")
           case 3 => `assert completes with    backticks`("A non-standard trait name", "misnamed/trait")
           case 4 => `assert completes with    backticks`("A non-standard object name", "YOLO Obj")

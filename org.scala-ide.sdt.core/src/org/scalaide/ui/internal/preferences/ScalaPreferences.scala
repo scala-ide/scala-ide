@@ -30,7 +30,7 @@ class ScalaPreferences extends FieldEditorPreferencePage(FieldEditorPreferencePa
     group.setLayout(new GridLayout(1, true))
     group.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false))
 
-    val presCompMaxIdlenessLength = new IntegerFieldEditor(PRES_COMP_MAX_IDLENESS_LENGTH, "Close unused ScalaPresentationCompiler after given amount of minutes. Set 0 to disable.", group)
+    val presCompMaxIdlenessLength = new IntegerFieldEditor(PRES_COMP_MAX_IDLENESS_LENGTH, "Close unused ScalaPresentationCompiler after given number of minutes. Set 0 to disable.", group)
     presCompMaxIdlenessLength.setValidRange(0, Integer.MAX_VALUE)
     addField(presCompMaxIdlenessLength)
     addField(new BooleanFieldEditor(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, "Try to close unused ScalaPresentationCompiler regardless of open editors.", group))

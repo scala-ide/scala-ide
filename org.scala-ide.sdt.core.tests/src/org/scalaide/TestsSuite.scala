@@ -1,3 +1,9 @@
+/*
+* Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Scala License which accompanies this distribution, and
+* is available at http://www.scala-lang.org/license.html
+*/
+
 package org.scalaide
 
 import org.junit.runner.RunWith
@@ -38,6 +44,7 @@ import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
+import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
@@ -62,6 +69,7 @@ import org.scalaide.ui.wizards.WizardTests
     classOf[LexicalTestsSuite],
     classOf[PresentationCompilerRefreshTest],
     classOf[PresentationCompilerTest],
+    classOf[PresentationCompilerActivityListenerTest],
     classOf[MultipleErrorsTest],
     classOf[NestedProjectsTest],
     classOf[OccurrencesFinderTest],
