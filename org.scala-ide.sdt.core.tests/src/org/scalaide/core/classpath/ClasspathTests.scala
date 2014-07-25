@@ -16,7 +16,7 @@ import org.scalaide.core.ScalaPlugin
 import org.junit.After
 import org.junit.Ignore
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils

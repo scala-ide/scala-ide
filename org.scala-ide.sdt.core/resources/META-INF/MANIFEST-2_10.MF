@@ -72,6 +72,7 @@ Import-Package:
  scala.xml.parsing
 Export-Package: 
  org.scalaide.core,
+ org.scalaide.core.api,
  org.scalaide.core.compiler,
  org.scalaide.core.completion,
  org.scalaide.core.extensions,

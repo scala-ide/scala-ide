@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import testsetup.SDTTestUtils
 import org.scalaide.core.ScalaPlugin
 import org.junit.Before
@@ -37,7 +37,7 @@ class OutputFoldersTest {
     project.javaProject.setOutputLocation(new Path("/%s/other-bin".format(projectName)), null)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/other-bin".format(projectName))), project.outputFolders)
 
-    val Seq((srcPath, _)) = project.sourceOutputFolders
+    val Seq((srcPath, _)) = project.sourceOutputFolders.toSeq
     Assert.assertEquals("Source path", new Path("/%s/src".format(projectName)), srcPath.getFullPath())
   }
 

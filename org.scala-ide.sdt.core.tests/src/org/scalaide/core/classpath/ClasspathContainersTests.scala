@@ -11,6 +11,7 @@ import org.junit.Test
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
@@ -34,7 +35,7 @@ class ClasspathContainersTests {
   import ClasspathContainersTests.projects
 
   val libraryId = ScalaPlugin.plugin.scalaLibId
-  def getLibraryContainer(project: ScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
+  def getLibraryContainer(project: api.ScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
 
   def createProject(): ScalaProject = {
     import ClasspathContainersTests.simulator
@@ -59,7 +60,7 @@ class ClasspathContainersTests {
       case _ => "none"
   }
 
-  def onlyOneContainer(project: ScalaProject, path: IPath) = (project.javaProject.getRawClasspath() filter (_.getPath() == path)).size == 1
+  def onlyOneContainer(project: api.ScalaProject, path: IPath) = (project.javaProject.getRawClasspath() filter (_.getPath() == path)).size == 1
 
   def extensionallyEqual(c1: IClasspathContainer, c2: IClasspathContainer) = {
     val sameEntries = c1.getClasspathEntries().toSet == c2.getClasspathEntries().toSet

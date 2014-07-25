@@ -20,7 +20,7 @@ import scala.util.matching.Regex
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import scala.tools.nsc.Settings
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 
@@ -196,10 +196,10 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
       val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
-      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLibrary.get)
     } finally {
       deleteProjects(prjClient, prjLib)
     }
@@ -240,7 +240,7 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
       val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
       val args = prjClient.scalacArguments
@@ -272,7 +272,7 @@ class SbtBuilderTest {
     closedProject.closeProject()
     Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
     Assert.assertEquals("sourceFolders", Nil, closedProject.project.sourceFolders)
-    Assert.assertEquals("sourceOutputFolders", Nil, closedProject.project.sourceOutputFolders)
+    Assert.assertTrue("sourceOutputFolders", closedProject.project.sourceFolders.isEmpty)
   }
 
   /** Returns true if the expected regular expression matches the given error message. */

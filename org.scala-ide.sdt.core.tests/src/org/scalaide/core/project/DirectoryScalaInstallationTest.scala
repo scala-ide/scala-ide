@@ -4,12 +4,11 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.core.internal.project.DirectoryScalaInstallation
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.core.internal.project.ScalaInstallation
 import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.Development
 import org.eclipse.core.runtime.Path
-import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.api.ScalaModule
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.ScalaPlugin
 import org.junit.AfterClass

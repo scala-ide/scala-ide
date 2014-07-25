@@ -1,9 +1,8 @@
 package org.scalaide.ui.internal.repl
 
-import org.scalaide.core.internal.project.BuildSuccessListener
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.tools.nsc.Settings
 import org.eclipse.core.resources.IProject
@@ -42,7 +41,11 @@ import org.scalaide.core.internal.repl.EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
 import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import scala.collection.mutable.Subscriber
+import scala.collection.mutable.Publisher
+import org.scalaide.core.api.BuildSuccess
+import org.scalaide.core.api.ScalaProjectEvent
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
@@ -144,22 +147,24 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
   }
 
-  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with BuildSuccessListener {
+  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]] {
     setToolTipText("Replay History on Project Rebuild")
 
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
     setHoverImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
 
     override def run() {
-      if (isChecked) scalaProject addBuildSuccessListener this
-      else scalaProject removeBuildSuccessListener this
+      if (isChecked) scalaProject.subscribe(this)
+      else scalaProject.removeSubscription(this)
     }
 
-    def buildSuccessful() {
-      DisplayThread.asyncExec {
-        if (!isStopped) {
-          displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
-          setStarted
+    def notify(pub:Publisher[ScalaProjectEvent], event:ScalaProjectEvent) {
+      event match { case e: BuildSuccess =>
+        DisplayThread.asyncExec {
+          if (!isStopped) {
+            displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
+            setStarted
+          }
         }
       }
     }
@@ -171,7 +176,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
     var cp = settings.classpath.value
     for {
-      s <- (ScalaInstallation.platformInstallation.extraJars.map(_.classJar) :+ ScalaInstallation.platformInstallation.library.classJar).map(_.toOSString())
+      s <- (platformInstallation.extraJars.map(_.classJar) :+ platformInstallation.library.classJar).map(_.toOSString())
     }
       if(!cp.contains(s))
         cp = s + java.io.File.pathSeparator + cp
@@ -340,7 +345,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     } else {
       repl.quit()
 
-      scalaProject removeBuildSuccessListener refreshOnRebuildAction
+      scalaProject.removeSubscription(refreshOnRebuildAction)
     }
   }
 }

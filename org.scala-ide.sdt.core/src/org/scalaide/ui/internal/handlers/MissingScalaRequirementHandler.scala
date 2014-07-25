@@ -12,7 +12,7 @@ import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.internal.project.Nature
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.ui.DisplayThread
 

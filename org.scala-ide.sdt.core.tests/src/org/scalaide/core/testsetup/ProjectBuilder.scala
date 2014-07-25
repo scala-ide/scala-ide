@@ -1,6 +1,6 @@
 package org.scalaide.core.testsetup
 
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ICompilationUnit

@@ -14,7 +14,7 @@ import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
 import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 
 object ScalaJavaDepTest extends testsetup.TestProjectSetup("scalajavadep")
 

@@ -55,13 +55,15 @@ import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.PluginLogConfigurator
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.FixedSizeCache
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.api.ScalaInstallation
 import org.scalaide.ui.internal.migration.RegistryExtender
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -129,7 +131,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
    *  2.8.1 and 2.9.0 aren't.
    */
-  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
+  def isCompatibleVersion(version: ScalaVersion, project: api.ScalaProject): Boolean = {
     if (project.isUsingCompatibilityMode())
       isBinaryPrevious(ScalaVersion.current, version)
     else
@@ -166,7 +168,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
     }
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
-    logger.info("Scala compiler bundle: " + ScalaInstallation.platformInstallation.compiler.classJar.toOSString() )
+    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
     }
 
   override def stop(context: BundleContext) = {
@@ -258,7 +260,7 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
           innerDelta.getElement() match {
             // classpath change should only impact projects
             case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => if (!p.isCheckingClassPath()) p.classpathHasChanged() }
+              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
             }
             case _ =>
           }

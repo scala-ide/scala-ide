@@ -3,7 +3,7 @@ package sbtbuilder
 
 import testsetup.TestProjectSetup
 import testsetup.SDTTestUtils
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.util.internal.eclipse.EclipseUtils

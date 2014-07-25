@@ -2,10 +2,10 @@ package org.scalaide.core.project
 
 import org.junit.Test
 import org.junit.Assert._
+import org.scalaide.core.api
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.eclipse.OSGiUtils
 import scala.tools.nsc.settings.SpecificScalaVersion
@@ -90,7 +90,7 @@ class ScalaInstallationTest {
   val m2RepoLocationPattern = "(.*/)([^/]+)/([^/]+)/[^/]+\\.jar".r
   val pluginsLocationPattern = "(.*/)([^/]+)_([^/]+)\\.jar".r
 
-  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: ScalaInstallation) = {
+  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: api.ScalaInstallation) = {
 
     def isLibraryBundle(bundle: Bundle) = {
       val version = bundle.getVersion()

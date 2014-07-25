@@ -132,13 +132,6 @@ class DirectoryScalaInstallation(val directory: IPath) extends ScalaInstallation
   override lazy val library = libraryCandidate.get
   override lazy val version = versionCandidate.get
 
-  override def scalaInstance: ScalaInstance = {
-    val store = ScalaPlugin.plugin.classLoaderStore
-    val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
-
-    new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile), None)
-  }
-
 }
 
 object DirectoryScalaInstallation {

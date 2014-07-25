@@ -1,7 +1,7 @@
 package org.scalaide.ui.internal.project
 
 import org.eclipse.jface.viewers.IStructuredContentProvider
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.api.ScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.jface.viewers.Viewer
