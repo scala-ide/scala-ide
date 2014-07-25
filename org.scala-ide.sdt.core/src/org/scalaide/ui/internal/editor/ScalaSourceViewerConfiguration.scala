@@ -7,7 +7,6 @@ import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
-import org.eclipse.jdt.internal.ui.text.HTMLAnnotationHover
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
@@ -29,6 +28,7 @@ import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source.DefaultAnnotationHover
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Shell
@@ -126,14 +126,42 @@ class ScalaSourceViewerConfiguration(
       (spacePrefix +: prefixes :+ "").toArray
   }
 
-  private val annotationHover = new HTMLAnnotationHover(/* showLineNumber */ false) with HtmlHover {
-    override def isIncluded(a: Annotation) = {
+  /**
+   * This annotation hover needs to trim error messages to a single line due to
+   * some stylistic limitations in the logic that computes the size of the
+   * hover. The method that computes the size is:
+   *
+   * [[org.eclipse.jface.internal.text.html.BrowserInformationControl.computeSizeHint()]]
+   *
+   * It basically converts HTML to text whose size is then considered. This
+   * works only for a very basic form of HTML - CSS specifications like margins
+   * can not be considered. Therefore, we need to remove as much text as
+   * possible and show only single lines to keep the error rate of line
+   * measurements low.
+   *
+   * This is also what the JDT is doing - but they don't even use HTML but only
+   * the converted text form. This way they don't have any stylistic problems
+   * but they also can't apply there Java hover specific configurations
+   * anymore.
+   */
+  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false) with HtmlHover {
+    import HTMLPrinter._
+
+    override def isIncluded(a: Annotation) =
       isShowInVerticalRuler(a)
+
+    val UnimplementedMembers = """(class .* needs to be abstract, since:\W*it has \d+ unimplemented members\.)[\S\s]*""".r
+
+    val msgFormatter: String => String = {
+      case UnimplementedMembers(errorMsg) =>
+        convertToHTMLContent(errorMsg)
+      case str =>
+        convertToHTMLContent(str)
     }
 
     override def formatSingleMessage(msg: String) = {
       createHtmlOutput { sb =>
-        sb.append(HTMLPrinter.convertToHTMLContent(msg))
+        sb.append(msgFormatter(msg))
       }
     }
 
@@ -143,7 +171,7 @@ class ScalaSourceViewerConfiguration(
         import collection.JavaConverters._
         addParagraph(sb, "Multiple markers at this line:")
         startBulletList(sb)
-        msgs.asScala foreach (msg => addBullet(sb, convertToHTMLContent(msg.asInstanceOf[String])))
+        msgs.asScala foreach (msg => addBullet(sb, msgFormatter(msg.asInstanceOf[String])))
         endBulletList(sb)
       }
     }
