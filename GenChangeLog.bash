@@ -108,11 +108,11 @@ do
 
     if [[ $PRETTY && ! -z $fixes ]]
     then
-        fixesList=$(printf "%s\n" ${fixes[@]} | paste -sd ',' -)
+        fixesList=$(printf "%s\n" ${fixes[@]} | paste -sd ' ' -)
         fixesString=$(echo -n "\n  * FIXES: $fixesList")
     else
         if [[ ! -z $fixes ]] ; then
-        fixURLs=$(printf "%s\n" ${fixes[@]}| sed 's/#\(100[0-9][0-9][0-9][0-9]\)/:ticket:`\1`/g'|paste -sd ',' -)
+        fixURLs=$(printf "%s\n" ${fixes[@]}| sed 's/#\(100[0-9][0-9][0-9][0-9]\)/:ticket:`\1`/g'|paste -sd ' ' -)
         fixesString="($fixURLs)"
         fi
     fi
@@ -120,11 +120,3 @@ do
     echo -en "$changeLogMsg"
     echo -en " $fixesString"
 done
-
-
-
-
-
-
-
-
