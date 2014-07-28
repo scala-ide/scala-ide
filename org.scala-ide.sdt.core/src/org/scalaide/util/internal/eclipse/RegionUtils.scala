@@ -28,4 +28,7 @@ object RegionUtils {
       new RangePosition(sourceFile, offset, offset, offset + region.getLength())
     }
   }
+
+  def regionOf(start: Int, end: Int): IRegion =
+    new Region(start, end - start)
 }

@@ -17,3 +17,7 @@ li {
   margin-top: 0.3em;
   margin-bottom: 0;
 }
+
+pre {
+  font-family: monospace;
+}
