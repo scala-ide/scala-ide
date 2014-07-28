@@ -25,11 +25,6 @@ import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.swt.graphics.RGB
 import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.ui.PlatformUI
-import org.eclipse.jface.text.IRegion
-import scala.reflect.internal.util.Position
-import scala.reflect.internal.util.SourceFile
-import scala.tools.nsc.interactive.RangePositions
-import scala.reflect.internal.util.RangePosition
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.logging.HasLogger
@@ -55,13 +50,6 @@ object EclipseUtils extends HasLogger {
 
     def apply(offset: Int): Char = document.getChar(offset)
 
-  }
-
-  implicit class PimpedRegion(region: IRegion) {
-    def toRangePos(src: SourceFile): Position = {
-      val offset = region.getOffset
-      new RangePosition(src, offset, offset, offset + region.getLength)
-    }
   }
 
   def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =

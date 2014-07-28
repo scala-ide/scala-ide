@@ -12,9 +12,10 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.util.internal.eclipse.RegionUtils
 
 class AbstractSymbolClassifierTest {
-  import AbstractSymbolClassifierTest._
+  import RegionUtils._
 
   protected val simulator = new EclipseUserSimulator
 
@@ -79,13 +80,4 @@ class AbstractSymbolClassifierTest {
 
   private def regionOffset(regionAndSymbolInfo: (IRegion, _)) = regionAndSymbolInfo._1.getOffset
 
-}
-
-object AbstractSymbolClassifierTest {
-  private implicit class RegionOps(region: IRegion) {
-    def intersects(other: IRegion): Boolean =
-      !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
-
-    def of(s: String): String = s.slice(region.getOffset, region.getOffset + region.getLength)
-  }
 }

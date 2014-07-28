@@ -11,7 +11,7 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import org.scalaide.util.internal.eclipse.RegionOps._
+import org.scalaide.util.internal.eclipse.RegionUtils._
 
 private object SymbolClassification {
 
