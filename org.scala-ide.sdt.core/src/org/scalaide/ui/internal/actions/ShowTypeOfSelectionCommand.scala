@@ -11,8 +11,8 @@ import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import org.scalaide.util.internal.eclipse.EclipseUtils._
 import org.eclipse.jface.internal.text.html.HTMLPrinter
+import org.scalaide.util.internal.eclipse.RegionUtils._
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 
