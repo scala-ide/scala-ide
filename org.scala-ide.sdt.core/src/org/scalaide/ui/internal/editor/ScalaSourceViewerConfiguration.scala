@@ -43,6 +43,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical._
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 import org.scalaide.ui.internal.editor.autoedits._
+import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
 import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
@@ -180,7 +181,7 @@ class ScalaSourceViewerConfiguration(
   override def getInformationControlCreator(sourceViewer: ISourceViewer) = new AbstractReusableInformationControlCreator {
     override def doCreateInformationControl(parent: Shell): IInformationControl = {
       if (BrowserInformationControl.isAvailable(parent))
-        new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false)
+        new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
       else
         new DefaultInformationControl(parent, /* resizable */ false)
     }
