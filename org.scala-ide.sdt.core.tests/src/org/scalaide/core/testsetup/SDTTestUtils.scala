@@ -53,6 +53,8 @@ object SDTTestUtils extends HasLogger {
   }
 
   enableAutoBuild(false)
+  // Be nice to Mac users and use a default encoding other than MacRoman
+  ResourcesPlugin.getPlugin().getPluginPreferences().setValue(ResourcesPlugin.PREF_ENCODING, "UTF-8")
 
   /** Return the Java problem markers corresponding to the given compilation unit. */
   def findProblemMarkers(unit: ICompilationUnit) =
