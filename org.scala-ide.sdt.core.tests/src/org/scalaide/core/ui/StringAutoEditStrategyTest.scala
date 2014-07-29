@@ -1,14 +1,14 @@
 package org.scalaide.core.ui
 
-import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.Before
 import org.junit.Test
+import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.ui.internal.editor.autoedits.StringAutoEditStrategy
 import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
 class StringAutoEditStrategyTest extends AutoEditStrategyTests {
 
-  val strategy = new StringAutoEditStrategy(IDocumentExtension3.DEFAULT_PARTITIONING, prefStore)
+  val strategy = new StringAutoEditStrategy(ScalaPartitions.SCALA_PARTITIONING, prefStore)
 
   @Before
   def startUp() {

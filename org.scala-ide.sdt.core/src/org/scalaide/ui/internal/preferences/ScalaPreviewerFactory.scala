@@ -8,7 +8,6 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Document
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.IDocumentPartitioner
 import org.eclipse.swt.SWT
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -21,6 +20,7 @@ import java.util.HashMap
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.ui.internal.editor.ScalaSourceViewerConfiguration
 import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.core.internal.lexical.ScalaPartitions._
 
 object ScalaPreviewerFactory {
 
@@ -37,7 +37,7 @@ object ScalaPreviewerFactory {
     val document = new Document
     document.set(initialText)
     val partitioners = new HashMap[String, IDocumentPartitioner]
-    partitioners.put(IJavaPartitions.JAVA_PARTITIONING, new ScalaDocumentPartitioner(conservative = true))
+    partitioners.put(SCALA_PARTITIONING, new ScalaDocumentPartitioner(conservative = true))
     TextUtilities.addDocumentPartitioners(document, partitioners)
     previewViewer.setDocument(document)
 

@@ -6,7 +6,7 @@ import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
 
-class MultiLineStringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) extends IAutoEditStrategy {
+class MultiLineStringAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
   def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
 

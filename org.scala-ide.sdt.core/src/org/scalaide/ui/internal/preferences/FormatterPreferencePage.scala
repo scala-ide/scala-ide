@@ -16,7 +16,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.text._

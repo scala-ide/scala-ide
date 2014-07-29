@@ -22,7 +22,6 @@ import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
 import org.eclipse.jface.text.AbstractReusableInformationControlCreator
 import org.eclipse.jface.text.DefaultInformationControl
-import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextSelection
@@ -45,6 +44,8 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.scalaide.logging.HasLogger
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.RefactoringMenu
@@ -82,7 +83,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   private lazy val tpePresenter = {
     val infoPresenter = new InformationPresenter(controlCreator)
     infoPresenter.install(getSourceViewer)
-    infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
+    infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, ScalaPartitions.SCALA_DEFAULT_CONTENT)
     infoPresenter
   }
 
