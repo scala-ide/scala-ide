@@ -6,7 +6,6 @@ import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
 import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical._
-import org.scalaide.core.internal.lexical.ScalaPartitions._
 import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
 import org.scalaide.ui.internal.editor.autoedits._
@@ -35,11 +34,11 @@ import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.util.PropertyChangeEvent
 import scalariform.ScalaVersions
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter.preferences._
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
-
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -49,45 +48,45 @@ class ScalaSourceViewerConfiguration(
       JavaPlugin.getDefault.getJavaTextTools.getColorManager,
       javaPreferenceStore,
       editor,
-      SCALA_PARTITIONING) {
+      IJavaPartitions.JAVA_PARTITIONING) {
 
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
 
   private val codeHighlightingScanners = {
-    val scalaCodeScanner = new ScalaCodeScanner(combinedPrefStore, ScalaVersions.DEFAULT)
-    val singleLineCommentScanner = new ScalaCommentScanner(combinedPrefStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
-    val multiLineCommentScanner = new ScalaCommentScanner(combinedPrefStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
-    val scaladocScanner = new ScaladocTokenScanner(combinedPrefStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
-    val scaladocCodeBlockScanner = new SingleTokenScanner(combinedPrefStore, SSC.SCALADOC_CODE_BLOCK)
-    val stringScanner = new StringTokenScanner(combinedPrefStore, SSC.ESCAPE_SEQUENCE, SSC.STRING)
-    val characterScanner = new StringTokenScanner(combinedPrefStore, SSC.ESCAPE_SEQUENCE, SSC.CHARACTER)
-    val multiLineStringScanner = new SingleTokenScanner(combinedPrefStore, SSC.MULTI_LINE_STRING)
-    val xmlTagScanner = new XmlTagScanner(combinedPrefStore)
-    val xmlCommentScanner = new XmlCommentScanner(combinedPrefStore)
-    val xmlCDATAScanner = new XmlCDATAScanner(combinedPrefStore)
-    val xmlPCDATAScanner = new SingleTokenScanner(combinedPrefStore, SSC.DEFAULT)
-    val xmlPIScanner = new XmlPIScanner(combinedPrefStore)
+    val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
+    val singleLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
+    val multiLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
+    val scaladocScanner = new ScaladocTokenScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
+    val scaladocCodeBlockScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.SCALADOC_CODE_BLOCK)
+    val stringScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.STRING)
+    val characterScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.CHARACTER)
+    val multiLineStringScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.MULTI_LINE_STRING)
+    val xmlTagScanner = new XmlTagScanner(scalaPreferenceStore)
+    val xmlCommentScanner = new XmlCommentScanner(scalaPreferenceStore)
+    val xmlCDATAScanner = new XmlCDATAScanner(scalaPreferenceStore)
+    val xmlPCDATAScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.DEFAULT)
+    val xmlPIScanner = new XmlPIScanner(scalaPreferenceStore)
 
     Map(
-      SCALA_DEFAULT_CONTENT -> scalaCodeScanner,
-      SCALADOC -> scaladocScanner,
-      SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
-      SCALA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
-      SCALA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
-      SCALA_STRING -> stringScanner,
-      SCALA_CHARACTER -> characterScanner,
-      SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
-      XML_TAG -> xmlTagScanner,
-      XML_COMMENT -> xmlCommentScanner,
-      XML_CDATA -> xmlCDATAScanner,
-      XML_PCDATA -> xmlPCDATAScanner,
-      XML_PI -> xmlPIScanner
+      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
+      IJavaPartitions.JAVA_DOC -> scaladocScanner,
+      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
+      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
+      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
+      IJavaPartitions.JAVA_STRING -> stringScanner,
+      IJavaPartitions.JAVA_CHARACTER -> characterScanner,
+      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
+      ScalaPartitions.XML_TAG -> xmlTagScanner,
+      ScalaPartitions.XML_COMMENT -> xmlCommentScanner,
+      ScalaPartitions.XML_CDATA -> xmlCDATAScanner,
+      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner,
+      ScalaPartitions.XML_PI -> xmlPIScanner
     )
   }
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
-    combinedPrefStore.getInt(IndentSpaces.eclipseKey)
+    scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
 
   /**
    * Indent prefixes are all possible variations of strings of a given
@@ -104,8 +103,8 @@ class ScalaSourceViewerConfiguration(
    * fill a full indent depth.
    */
   override def getIndentPrefixes(sourceViewer: ISourceViewer, contentType: String): Array[String] = {
-    val spaceWidth = combinedPrefStore.getInt(IndentSpaces.eclipseKey)
-    val useTabs = combinedPrefStore.getBoolean(IndentWithTabs.eclipseKey)
+    val spaceWidth = scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+    val useTabs = scalaPreferenceStore.getBoolean(IndentWithTabs.eclipseKey)
 
     val spacePrefix = " " * spaceWidth
     val prefixes = 0 until spaceWidth map (i => " " * i + "\t")
@@ -177,37 +176,37 @@ class ScalaSourceViewerConfiguration(
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
 
     contentType match {
-      case SCALA_MULTI_LINE_COMMENT | SCALADOC | SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(partitioning, combinedPrefStore))
+      case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
+        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
 
-      case SCALA_MULTI_LINE_STRING =>
+      case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new MultiLineStringAutoIndentStrategy(partitioning, combinedPrefStore),
-          new MultiLineStringAutoEditStrategy(combinedPrefStore))
+          new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
+          new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
-      case SCALA_STRING =>
+      case IJavaPartitions.JAVA_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new StringAutoEditStrategy(partitioning, combinedPrefStore))
+          new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
 
-      case SCALA_CHARACTER | SCALA_DEFAULT_CONTENT =>
+      case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(combinedPrefStore),
-          new BracketAutoEditStrategy(combinedPrefStore),
-          new LiteralAutoEditStrategy(combinedPrefStore))
+          new AutoIndentStrategy(ScalaPlugin.prefStore),
+          new BracketAutoEditStrategy(ScalaPlugin.prefStore),
+          new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
 
       case _ =>
         Array(
-          new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(combinedPrefStore))
+            new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+            new AutoIndentStrategy(ScalaPlugin.prefStore))
     }
   }
 
   override def getContentFormatter(sourceViewer: ISourceViewer): IContentFormatter = {
-    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), SCALA_DEFAULT_CONTENT)
+    val formatter = new MultiPassContentFormatter(getConfiguredDocumentPartitioning(sourceViewer), IDocument.DEFAULT_CONTENT_TYPE)
     formatter.setMasterStrategy(new ScalaFormattingStrategy(editor))
     formatter
   }
@@ -217,11 +216,13 @@ class ScalaSourceViewerConfiguration(
     codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
   }
 
+  /**
+   * Adds Scala related partition types to the list of configured content types,
+   * in order that they are available for several features of the IDE.
+   */
   override def getConfiguredContentTypes(sourceViewer: ISourceViewer): Array[String] =
-    Array(
-      SCALA_DEFAULT_CONTENT,
-      SCALA_MULTI_LINE_COMMENT, SCALADOC, SCALADOC_CODE_BLOCK,
-      SCALA_MULTI_LINE_STRING, SCALA_STRING, SCALA_CHARACTER)
+    super.getConfiguredContentTypes(sourceViewer) ++
+      Seq(ScalaPartitions.SCALA_MULTI_LINE_STRING, ScalaPartitions.SCALADOC_CODE_BLOCK)
 
   override def affectsTextPresentation(event: PropertyChangeEvent) = true
 
