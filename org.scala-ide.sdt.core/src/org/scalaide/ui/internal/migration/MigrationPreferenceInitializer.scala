@@ -44,27 +44,39 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
    * passed `wizardId`, which is the ID of the wizard entry and `perspId`, which
    * is the ID of the perspective that contains the wizard entry.
    *
+   * The `wizardId` is only enabled the very first time this method is called.
+   * This is necessary because it is possible for users to disable wizard
+   * entries manually and in such cases we don't want to enable the entry again
+   * when this method is called.
+   *
    * Activating a wizard entry is necessary whenever a new wizard is added to
    * the Scala IDE. Actually new wizard entries should be enabled automatically
    * by Eclipse but this doesn't work anymore in Kepler and Luna, the relevant
    * ticket is: https://bugs.eclipse.org/bugs/show_bug.cgi?id=191256
    */
   private def activateNewWizardShortcut(perspId: String, wizardId: String) = {
-    import collection.JavaConverters._
+    val prefStore = ScalaPlugin.prefStore
+    val prefId = s"org.scalaide.ui.wizardActivated_$wizardId"
 
-    val model = window.serviceOf[EModelService]
-    val app = window.serviceOf[MApplication]
-    val perspectives = model.findElements(app, perspId, classOf[MPerspective], null)
+    if (!prefStore.getBoolean(prefId)) {
+      import collection.JavaConverters._
 
-    perspectives.asScala.headOption foreach { persp =>
-      val tags = persp.getTags().asScala
-      val tag = ModeledPageLayout.NEW_WIZARD_TAG+wizardId
-      val alreadyActivated = tags.contains(tag)
+      val model = window.serviceOf[EModelService]
+      val app = window.serviceOf[MApplication]
+      val perspectives = model.findElements(app, perspId, classOf[MPerspective], null)
 
-      if (!alreadyActivated) {
-        val activated = persp.getTags().add(tag)
-        if (activated)
-          logger.info(s"Activation of wizard element '$wizardId' was successful.")
+      perspectives.asScala.headOption foreach { persp =>
+        val tags = persp.getTags().asScala
+        val tag = ModeledPageLayout.NEW_WIZARD_TAG+wizardId
+        val alreadyActivated = tags.contains(tag)
+
+        if (!alreadyActivated) {
+          val activated = persp.getTags().add(tag)
+          if (activated) {
+            logger.info(s"Activation of wizard element '$wizardId' was successful.")
+            prefStore.setValue(prefId, true)
+          }
+        }
       }
     }
   }
