@@ -66,7 +66,7 @@ object ImplicitHighlightingPresenter {
       val region = new Region(pos.offset, pos.getLength)
       val annotation = new ImplicitConversionAnnotation(
           () => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
-          s"Implicit conversion found: `$txt`$DisplayStringSeparator`${t.fun.symbol.name}($txt)`")
+          s"Implicit conversion found: `$txt`$DisplayStringSeparator`${t.fun.symbol.name}($txt): ${t.tpe}`")
 
       (annotation, pos)
     }
