@@ -1,6 +1,8 @@
 package org.scalaide.core.internal.lexical
 
+import org.eclipse.jdt.ui.text.IJavaPartitions._
 import org.eclipse.jface.text._
+import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.annotation.switch
 import scala.annotation.tailrec
 import scala.collection.mutable.Stack
@@ -36,8 +38,6 @@ case class ScalaPartitionRegion(contentType: String, start: Int, end: Int) exten
 
 object ScalaPartitionTokeniser {
 
-  final val EOF = '\u001A'
-
   def tokenise(text: String): List[ScalaPartitionRegion] = {
     val tokens = new ListBuffer[ScalaPartitionRegion]
     val tokeniser = new ScalaPartitionTokeniser(text)
@@ -52,7 +52,7 @@ object ScalaPartitionTokeniser {
 }
 
 class ScalaPartitionTokeniser(text: String) extends TokenTests {
-  import ScalaPartitionTokeniser._
+  import ScalaDocumentPartitioner.EOF
 
   private val length = text.length
 
@@ -97,7 +97,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         getCodeBlockComment(nesting)
       case ScaladocState(nesting) =>
         modeStack.pop()
-        setContentType(SCALADOC)
+        setContentType(JAVA_DOC)
         getMultiLineComment(nesting)
     }
 
@@ -118,7 +118,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
           getXmlToken()
         case _ =>
           accept()
-          setContentType(SCALA_DEFAULT_CONTENT)
+          setContentType(DEFAULT_CONTENT_TYPE)
           getOrdinaryScala()
       }
       case '"' =>
@@ -131,7 +131,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
           accept(3)
           getMultiLineStringLit(quotesRequired = 3, isInterpolation)
         } else {
-          setContentType(SCALA_STRING)
+          setContentType(JAVA_STRING)
           accept()
           getStringLit(isInterpolation)
         }
@@ -139,36 +139,36 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         (ch(1): @switch) match {
           case '/' =>
             accept(2)
-            setContentType(SCALA_SINGLE_LINE_COMMENT)
+            setContentType(JAVA_SINGLE_LINE_COMMENT)
             getSingleLineComment()
           case '*' =>
             accept(2)
             if (ch == '*' && ch(1) != '/') {
               accept()
-              setContentType(SCALADOC)
+              setContentType(JAVA_DOC)
             } else
-              setContentType(SCALA_MULTI_LINE_COMMENT)
+              setContentType(JAVA_MULTI_LINE_COMMENT)
             getMultiLineComment(nesting = 1)
           case _ =>
             accept()
-            setContentType(SCALA_DEFAULT_CONTENT)
+            setContentType(DEFAULT_CONTENT_TYPE)
             getOrdinaryScala()
         }
       case '\'' => scanForCharLit() match {
         case Some(offset) =>
           accept(offset + 1)
-          setContentType(SCALA_CHARACTER)
+          setContentType(JAVA_CHARACTER)
         case None =>
           accept()
-          setContentType(SCALA_DEFAULT_CONTENT)
+          setContentType(DEFAULT_CONTENT_TYPE)
           getOrdinaryScala()
       }
       case '`' =>
         accept()
-        setContentType(SCALA_DEFAULT_CONTENT)
+        setContentType(DEFAULT_CONTENT_TYPE)
         getBackQuotedIdent()
       case _ =>
-        setContentType(SCALA_DEFAULT_CONTENT)
+        setContentType(DEFAULT_CONTENT_TYPE)
         getOrdinaryScala()
     }
   }
@@ -315,7 +315,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       case '/' if (ch(1) == '*') =>
         accept(2)
         getMultiLineComment(nesting + 1)
-      case '{' if ch(1) == '{' && ch(2) == '{' && contentTypeOpt.exists(_ == SCALADOC) =>
+      case '{' if ch(1) == '{' && ch(2) == '{' && contentTypeOpt.exists(_ == JAVA_DOC) =>
         nestIntoScaladocCodeBlockMode(nesting)
       case EOF =>
       case _ =>
@@ -332,7 +332,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         if (nesting > 1)
           getCodeBlockComment(nesting - 1)
         else
-          setContentType(SCALADOC)
+          setContentType(JAVA_DOC)
       case '/' if ch(1) == '*' =>
         accept(2)
         getCodeBlockComment(nesting + 1)
@@ -360,7 +360,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
   private def getStringInterpolationToken(multiline: Boolean, embeddedIdentifierNext: Boolean) {
     if (embeddedIdentifierNext) {
-      setContentType(SCALA_DEFAULT_CONTENT)
+      setContentType(DEFAULT_CONTENT_TYPE)
       stringInterpolationState.embeddedIdentifierNext = false
       do
         accept()
@@ -370,7 +370,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         setContentType(SCALA_MULTI_LINE_STRING)
         getMultiLineStringLit(quotesRequired = 3, isInterpolation = true)
       } else {
-        setContentType(SCALA_STRING)
+        setContentType(JAVA_STRING)
         getStringLit(isInterpolation = true)
       }
     }

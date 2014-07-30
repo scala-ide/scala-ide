@@ -2,7 +2,9 @@ package org.scalaide.core.ui
 
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.AfterClass
 import org.junit.ComparisonFailure
 import org.scalaide.core.EclipseUserSimulator
@@ -11,9 +13,9 @@ import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.scalaide.core.api.ScalaProject
-import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.junit.AfterClass
 
 /**
  * This class provides basic test behavior for all text changing operations that
@@ -113,7 +115,8 @@ trait EclipseDocumentSupport {
     doc = new Document(source)
     val partitioner = new ScalaDocumentPartitioner
 
-    doc.setDocumentPartitioner(ScalaPartitions.SCALA_PARTITIONING, partitioner)
+    doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
+    doc.setDocumentPartitioner(IDocumentExtension3.DEFAULT_PARTITIONING, partitioner)
     partitioner.connect(doc)
     operation.execute()
   }
