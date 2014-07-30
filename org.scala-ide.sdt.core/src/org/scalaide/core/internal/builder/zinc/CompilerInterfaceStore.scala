@@ -88,7 +88,9 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
    *          a String with the error message.
    */
   private def buildInterface(installation: ScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
-    val monitor = SubMonitor.convert(pm, s"Compiling compiler-interface for ${installation.version.unparse}", 2)
+    val name = s"Compiling compiler-interface for ${installation.version.unparse}"
+    val monitor = SubMonitor.convert(pm, name, 2)
+    monitor.subTask(name)
 
     (compilerInterfaceSrc, sbtFullJar) match {
       case (Some(compilerInterface), Some(sbtInterface)) =>

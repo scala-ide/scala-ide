@@ -21,26 +21,22 @@ abstract class BuildReporter(private[builder] val project0: ScalaProject, settin
 
   val taskScanner = new TaskScanner(project0)
 
-  override def info0(pos : Position, msg : String, severity : Severity, force : Boolean) = {
-    severity.count += 1
-    if (severity.id > 1)
+  override def info0(pos : Position, msg : String, scalaSeverity : Severity, force : Boolean): Unit = {
+    scalaSeverity.count += 1
+    if (scalaSeverity.id > 1)
       buildManager.hasErrors = true
 
     // Filter out duplicates coming from the Scala compiler
-    if (!prob.exists(p => p.pos == pos && p.msg == msg && p.severity == severity)) {
-      val eclipseSeverity = severity.id match {
-        case 2 => IMarker.SEVERITY_ERROR
-        case 1 => IMarker.SEVERITY_WARNING
-        case 0 => IMarker.SEVERITY_INFO
-      }
+    if (!prob.exists(p => p.pos == pos && p.msg == msg && p.severity == scalaSeverity)) {
+      val severity = eclipseSeverity(scalaSeverity)
 
       try {
         if(pos.isDefined) {
           pos.source.file match {
             case resource @ EclipseResource(i : IFile) =>
               if (!resource.hasExtension("java")) {
-                BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
-                prob += new BuildProblem(severity, msg, pos)
+                BuildProblemMarker.create(i, severity, msg, pos)
+                prob += new BuildProblem(scalaSeverity, msg, pos)
               } else
                 logger.info("suppressed error in Java file: %s".format(msg))
             case f =>
@@ -50,30 +46,45 @@ abstract class BuildReporter(private[builder] val project0: ScalaProject, settin
                   // this may happen if a file was compileLate by the build compiler
                   // for instance, when a source file (on the sourcepath) is newer than the classfile
                   // the compiler will create PlainFile instances in that case
-                  prob += new BuildProblem(severity, msg, pos)
-                  BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
+                  prob += new BuildProblem(scalaSeverity, msg, pos)
+                  BuildProblemMarker.create(i, severity, msg, pos)
                 case _ =>
                   logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
-                  prob += new BuildProblem(severity, msg, NoPosition)
-                  BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+                  prob += new BuildProblem(scalaSeverity, msg, NoPosition)
+                  BuildProblemMarker.create(project0.underlying, severity, msg)
               }
           }
         }
         else
-          eclipseSeverity match {
+          severity match {
             case IMarker.SEVERITY_INFO =>
               // print only to console, better debugging
-                          logger.info("[info] " + msg)
+              logger.info("[info] " + msg)
             case _ =>
-              prob += new BuildProblem(severity, msg, NoPosition)
-              BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+              prob += new BuildProblem(scalaSeverity, msg, NoPosition)
+              BuildProblemMarker.create(project0.underlying, severity, msg)
           }
       } catch {
         case ex : UnsupportedOperationException =>
-          prob += new BuildProblem(severity, msg, NoPosition)
-          BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
+          prob += new BuildProblem(scalaSeverity, msg, NoPosition)
+          BuildProblemMarker.create(project0.underlying, severity, msg)
       }
     }
+  }
+
+  def eclipseSeverity(severity: Severity) = {
+    val eclipseSeverity = severity.id match {
+      case 2 => IMarker.SEVERITY_ERROR
+      case 1 => IMarker.SEVERITY_WARNING
+      case 0 => IMarker.SEVERITY_INFO
+    }
+    eclipseSeverity
+  }
+
+  def eclipseSeverity(severity: xsbti.Severity): Int = severity match {
+    case xsbti.Severity.Info  => IMarker.SEVERITY_INFO
+    case xsbti.Severity.Error => IMarker.SEVERITY_ERROR
+    case xsbti.Severity.Warn  => IMarker.SEVERITY_WARNING
   }
 
   override def comment(pos : Position, msg : String) {

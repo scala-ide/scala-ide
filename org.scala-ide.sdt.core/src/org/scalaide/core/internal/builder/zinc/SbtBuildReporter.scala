@@ -19,13 +19,11 @@ private[zinc] class SbtBuildReporter(underlying: BuildReporter) extends xsbti.Re
     underlying.reset
     probs.clear()
   }
-  override def hasErrors() = underlying.hasErrors
-  override def hasWarnings() = underlying.hasWarnings
-  override def printSummary() {} //TODO
+  override def hasErrors(): Boolean = underlying.hasErrors
+  override def hasWarnings(): Boolean = underlying.hasWarnings
+  override def printSummary(): Unit = {} //TODO
   override def problems: Array[xsbti.Problem] = probs.toArray
-  override def comment(pos: xsbti.Position, msg: String) {
-    underlying.comment(toScalaPosition(pos), msg)
-  }
+  override def comment(pos: xsbti.Position, msg: String): Unit = {}
 
   private def toScalaPosition(pos0: xsbti.Position): Position =
     (m2o(pos0.sourcePath), m2o(pos0.offset)) match {

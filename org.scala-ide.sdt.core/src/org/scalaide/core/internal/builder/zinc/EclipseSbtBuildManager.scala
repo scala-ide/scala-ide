@@ -47,6 +47,10 @@ import org.scalaide.core.api.ScalaInstallation
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.hashing.Hashing
+import sbt.inc.SourceInfo
+import org.eclipse.core.resources.ResourcesPlugin
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.util.internal.SbtUtils
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -152,6 +156,46 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
         case _: CompileFailed | CompilerInterfaceFailed => None
       }
     analysis foreach setCached
+    createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)))
+  }
+
+  /**
+   * Create markers for problems (errors or warnings) in the given analysis object that were *not* reported.
+   *
+   * The incremental compiler may not recompile files with warnings (like deprecation warnings), meaning
+   * we won't get any warnings through the reporter. However, at the beginning of the build we removed all
+   * markers in the current project, so now we need to recreate markers only for files that were *not* recompiled
+   * in the last run.
+   *
+   * @note We assume a file that has at least one problem marker is up-to-date. Since we remove all markers at the
+   *       beginning of the build, having a marker means that file was compiled, and eventual problems were reported
+   *       through the build reporter.
+   *
+   *       See discussion under https://github.com/sbt/sbt/issues/1372
+   */
+  private def createAdditionalMarkers(analysis: Analysis): Unit = {
+    for {
+      (file, info) <- analysis.infos.allInfos
+      resource <- ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(file.toURI())
+      // this file might have been deleted in the meantime
+      if resource.exists() && FileUtils.findBuildErrors(resource).isEmpty
+    } createMarkers(resource, info)
+  }
+
+  /**
+   * Create problem markers for the given source info. In case there are markers already for the given
+   * file we assume
+   */
+  private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
+    import SbtUtils.m2o
+    for {
+      problem <- sourceInfo.reportedProblems
+      offset <- m2o(problem.position.offset)
+      line <- m2o(problem.position.line)
+    } {
+      val markerPos = MarkerFactory.RegionPosition(offset, 0, line)
+      BuildProblemMarker.create(file, buildReporter.eclipseSeverity(problem.severity), problem.message, markerPos)
+    }
   }
 
   private val cached = new AtomicReference[SoftReference[Analysis]]
