@@ -1,4 +1,4 @@
-/* the html tag needs to be on a sinle line because it is analyzed by regex */
+/* the html tag needs to be on a single line because it is analyzed by regex */
 html { font-family: sans-serif; font-size: 10pt; font-style: normal; font-weight: normal; }
 
 body {

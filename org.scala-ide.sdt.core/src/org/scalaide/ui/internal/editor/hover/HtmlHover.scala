@@ -14,7 +14,7 @@ trait HtmlHover {
     val b = new StringBuffer()
 
     val fd = JFaceResources.getFontRegistry().getFontData(HoverFontId)(0)
-    val css = convertTopLevelFont(ScalaHoverStyeSheet, fd)
+    val css = convertTopLevelFont(ScalaHoverStyleSheet, fd)
     insertPageProlog(b, 0, css)
 
     f(b)

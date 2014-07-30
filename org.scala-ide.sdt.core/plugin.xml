@@ -122,6 +122,12 @@
             id="org.scalaide.ui.preferences.scalas"
             name="Installations">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.HoverPreferencePage"
+            id="org.scalaide.ui.preferences.editor.hover"
+            name="Hover">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
@@ -835,6 +841,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.migration.MigrationPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.HoverPreferenceInitializer">
      </initializer>
   </extension>
 

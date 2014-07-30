@@ -43,12 +43,27 @@ object ScalaHover extends HasLogger {
     }
   }
 
+  /**
+   * The Id that is used as a key for the preference store to retrieve the
+   * configured font style to be used by the hover.
+   */
   final val HoverFontId = "org.scalaide.ui.font.hover"
 
+  /**
+   * The Id that is used as a key for the preference store to retrieve the
+   * stored CSS file.
+   */
+  final val ScalaHoverStyleSheetId = "org.scalaide.ui.config.scalaHoverCss"
+
+  /** The path to the default CSS file */
   final val ScalaHoverStyleSheetPath = "/resources/scala-hover.css"
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
-  val ScalaHoverStyeSheet: String = {
+  def ScalaHoverStyleSheet: String =
+    ScalaPlugin.prefStore.getString(ScalaHoverStyleSheetId)
+
+  /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
+  def DefaultScalaHoverStyleSheet: String = {
     EclipseUtils.fileContentFromBundle(ScalaPlugin.plugin.pluginId, ScalaHoverStyleSheetPath) match {
       case util.Success(css) =>
         css
