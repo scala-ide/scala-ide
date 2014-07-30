@@ -23,26 +23,27 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.resources.EclipseResource
+import org.eclipse.core.filesystem.URIUtil
 
 object FileUtils {
 
   def toIFile(file: AbstractFile): Option[IFile] = file match {
-    case null => None
+    case null                         => None
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
       val path = Path.fromOSString(abstractFile.path)
       toIFile(path)
   }
 
+  @deprecated("Use resourceForPath instead", "4.0.0")
   def toIFile(path: IPath): Option[IFile] = {
-    val file = ResourcesPlugin.getWorkspace().getRoot().getFileForLocation(path)
+    val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
 
     if (file == null || !file.exists) None
     else Some(file)
   }
 
-
-  def length(file : IFile) = {
+  def length(file: IFile) = {
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
       fs.fetchInfo.getLength.toInt
@@ -50,24 +51,24 @@ object FileUtils {
       -1
   }
 
-  def clearBuildErrors(file : IFile, monitor : IProgressMonitor) =
+  def clearBuildErrors(file: IFile, monitor: IProgressMonitor) =
     try {
       file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
-      case _ : ResourceException =>
+      case _: ResourceException =>
     }
 
-  def clearTasks(file : IFile, monitor : IProgressMonitor) =
+  def clearTasks(file: IFile, monitor: IProgressMonitor) =
     try {
       file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
-      case _ : ResourceException =>
+      case _: ResourceException =>
     }
 
-  def findBuildErrors(file : IResource) : Seq[IMarker] =
+  def findBuildErrors(file: IResource): Seq[IMarker] =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
 
-  def hasBuildErrors(file : IResource) : Boolean =
+  def hasBuildErrors(file: IResource): Boolean =
     file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
 
   def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
@@ -129,4 +130,15 @@ object FileUtils {
     createParentFolders(file.getParent())
     file.create(new ByteArrayInputStream(Array()), /* force */ true, null)
   }
+
+  /**
+   * Find a File that matches the given absolute location on the file systme. Since a given
+   * file might "mounted" under multiple locations in the Eclipse file system, the `prefix`
+   * path is used disambiguate.
+   */
+  def resourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
+    val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
+    resources.find(prefix isPrefixOf _.getFullPath)
+  }
+
 }
