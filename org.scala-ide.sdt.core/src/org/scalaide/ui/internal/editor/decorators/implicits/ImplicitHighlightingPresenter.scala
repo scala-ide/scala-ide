@@ -64,8 +64,9 @@ object ImplicitHighlightingPresenter {
       val txt = new String(sourceFile.content, t.pos.start, math.max(0, t.pos.end - t.pos.start)).trim()
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
-      val annotation = new ImplicitConversionAnnotation(() => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
-        "Implicit conversions found: " + txt + DisplayStringSeparator + t.fun.symbol.name + "(" + txt + ")")
+      val annotation = new ImplicitConversionAnnotation(
+          () => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
+          s"Implicit conversions found: `$txt`$DisplayStringSeparator`${t.fun.symbol.name}($txt)`")
 
       (annotation, pos)
     }
@@ -83,7 +84,7 @@ object ImplicitHighlightingPresenter {
             "<error>"
         }.mkString("( ", ", ", " )")
       }
-      val annotation = new ImplicitArgAnnotation("Implicit arguments found: " + txt + DisplayStringSeparator + txt + argsStr)
+      val annotation = new ImplicitArgAnnotation(s"Implicit arguments found: `$txt`$DisplayStringSeparator`$txt$argsStr`")
       val pos = mkPosition(t.pos, txt)
       (annotation, pos)
     }

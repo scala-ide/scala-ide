@@ -30,16 +30,16 @@ object ScalaHover extends HasLogger {
    * Formats different error messages in a way that they look best in the editor
    * hover.
    */
-  private object msgFormatter extends (String => String) {
+  private object msgFormatter extends (String => String) with HtmlHover {
     import HTMLPrinter._
 
     val UnimplementedMembers = """(class .* needs to be abstract, since:\W*it has \d+ unimplemented members\.)([\S\s]*)""".r
 
     override def apply(msg: String): String = msg match {
       case UnimplementedMembers(errorMsg, code) =>
-        s"${convertToHTMLContent(errorMsg)}<pre>${convertToHTMLContent(code)}</pre>"
+        s"${convertContentToHtml(errorMsg)}<pre><code>${convertContentToHtml(code)}</code></pre>"
       case str =>
-        convertToHTMLContent(str)
+        convertContentToHtml(str)
     }
   }
 

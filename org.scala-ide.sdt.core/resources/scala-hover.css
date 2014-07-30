@@ -18,6 +18,11 @@ li {
   margin-bottom: 0;
 }
 
-pre {
+code {
   font-family: monospace;
+  background-color: #eee;
+}
+
+pre {
+  background-color: #eee;
 }

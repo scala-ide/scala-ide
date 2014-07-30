@@ -155,9 +155,9 @@ class ScalaSourceViewerConfiguration(
 
     val msgFormatter: String => String = {
       case UnimplementedMembers(errorMsg) =>
-        convertToHTMLContent(errorMsg)
+        convertContentToHtml(errorMsg)
       case str =>
-        convertToHTMLContent(str)
+        convertContentToHtml(str)
     }
 
     override def formatSingleMessage(msg: String) = {
