@@ -24,5 +24,6 @@ code {
 }
 
 pre {
+  overflow: auto;
   background-color: #eee;
 }
