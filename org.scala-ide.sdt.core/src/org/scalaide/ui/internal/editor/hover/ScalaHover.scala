@@ -12,13 +12,13 @@ import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.ITextHoverExtension
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.swt.widgets.Display
-import org.eclipse.ui.PlatformUI
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.RegionUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
@@ -159,9 +159,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         require(Display.getCurrent() != null && Thread.currentThread() == Display.getCurrent().getThread(),
             "this method needs to be called on the UI thread")
 
-        val w = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
-        val input = w.getActivePage().getActiveEditor().getEditorInput()
-        val res = input.getAdapter(classOf[IResource]).asInstanceOf[IResource]
+        // We know that this exists because we are in the UI thread and an editor is selected
+        val res = EditorUtils.resourceOfActiveEditor.get
         val markerType = ScalaPlugin.plugin.problemMarkerId
         val markers = res.findMarkers(markerType, /* includeSubtypes */ false, IResource.DEPTH_ZERO)
         val intersections = markers filter { m =>

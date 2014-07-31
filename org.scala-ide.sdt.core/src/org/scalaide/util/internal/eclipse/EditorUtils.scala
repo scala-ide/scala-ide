@@ -4,6 +4,7 @@ import scala.tools.nsc.io.AbstractFile
 import scala.tools.refactoring.common.TextChange
 
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.ui.JavaUI
@@ -36,7 +37,6 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.editor.ISourceViewerEditor
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 
 /**
  * Provides helper methods for the text editor of Eclipse, which is a GUI aware
@@ -101,6 +101,18 @@ object EditorUtils {
 
   def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
     if (p.isEditorAreaVisible) Some(p.getActiveEditor) else None
+
+  /**
+   * Returns the resource of the active editor if there is an active editor. If
+   * this code is not executed on the UI thread or the editor is not selected
+   * an active editor does not exist/can't be accessed and `None` is returned.
+   */
+  def resourceOfActiveEditor: Option[IResource] = for {
+    w <- activeWorkbenchWindow
+    p <- activePage(w)
+    e <- activeEditor(p)
+  } yield e.getEditorInput().getAdapter(classOf[IResource]).asInstanceOf[IResource]
+
 
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
     PartialFunction.condOpt(e) {
