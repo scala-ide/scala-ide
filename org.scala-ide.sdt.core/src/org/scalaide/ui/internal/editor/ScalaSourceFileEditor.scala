@@ -20,8 +20,6 @@ import org.eclipse.jface.action.Action
 import org.eclipse.jface.action.IContributionItem
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
-import org.eclipse.jface.text.AbstractReusableInformationControlCreator
-import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.ITextOperationTarget
@@ -33,15 +31,12 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
-import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchCommandConstants
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
-import org.eclipse.ui.texteditor.IUpdate
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -54,11 +49,13 @@ import org.scalaide.ui.internal.actions
 import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
+import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.internal.Utils
+import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.internal.ui.DisplayThread
 
 
@@ -80,7 +77,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
   }
   private lazy val tpePresenter = {
-    val infoPresenter = new InformationPresenter(controlCreator)
+    val infoPresenter = new InformationPresenter(new FocusedControlCreator(ScalaHover.HoverFontId))
     infoPresenter.install(getSourceViewer)
     infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
     infoPresenter
@@ -364,11 +361,6 @@ object ScalaSourceFileEditor {
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 
   private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
-
-  private object controlCreator extends AbstractReusableInformationControlCreator {
-    override def doCreateInformationControl(shell: Shell) =
-      new DefaultInformationControl(shell, true)
-  }
 
   /** A thread-safe object for keeping track of Java reconciling listeners.*/
   private class ReconcilingListeners extends IJavaReconcilingListener {

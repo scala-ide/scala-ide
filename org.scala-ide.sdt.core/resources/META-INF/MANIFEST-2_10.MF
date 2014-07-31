@@ -132,6 +132,7 @@ Export-Package:
  org.scalaide.ui.internal.editor.decorators.markoccurrences,
  org.scalaide.ui.internal.editor.decorators.semantichighlighting,
  org.scalaide.ui.internal.editor.decorators.semicolon,
+ org.scalaide.ui.internal.editor.hover,
  org.scalaide.ui.internal.explorer,
  org.scalaide.ui.internal.jdt.model,
  org.scalaide.ui.internal.preferences,

@@ -2,8 +2,7 @@ package org.scalaide.debug.internal.editor
 
 import scala.util.Try
 import scala.reflect.internal.util.{Position, RangePosition, OffsetPosition, SourceFile}
-import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedRegion
-import org.scalaide.ui.internal.editor.ScalaHover
+import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
 import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}
@@ -20,6 +19,7 @@ import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
 import org.eclipse.debug.core.model.IVariable
+import org.scalaide.util.internal.eclipse.RegionUtils._
 
 class TextHoverFactory extends TextHoverFactoryInterface {
   def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
@@ -47,21 +47,11 @@ class TextHoverFactory extends TextHoverFactoryInterface {
 
     override def getHoverControlCreator: IInformationControlCreator =
       if(stringWasReturnedAtGetHoverInfo2)
-        new IInformationControlCreator {
-          def createInformationControl(parent: Shell) =
-            new StringHandlingInformationControlExtension2(parent)
-        }
+        super.getHoverControlCreator()
       else  /* An IVariable was returned. */
         new ExpressionInformationControlCreator
   }
 
-  class StringHandlingInformationControlExtension2(parent: Shell)
-  extends DefaultInformationControl(parent)
-  with IInformationControlExtension2 {
-    override def setInput(input: AnyRef) {
-      setInformation(input.asInstanceOf[String])
-    }
-  }
 }
 
 

@@ -1675,4 +1675,22 @@
           templateId="org.scalaide.core.templates.wizards.class">
     </fileCreator>
  </extension>
+ <extension
+       point="org.eclipse.ui.themes">
+    <themeElementCategory
+          id="org.scalaide.ui.theme"
+          label="Scala">
+       <description>
+          Scala IDE related fonts and colors.
+       </description>
+    </themeElementCategory>
+    <fontDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.font.hover"
+          label="Hover Font">
+       <description>
+          The font used for all Scala hovers.
+       </description>
+    </fontDefinition>
+ </extension>
 </plugin>
