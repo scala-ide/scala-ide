@@ -170,7 +170,7 @@ object EclipseUtils extends HasLogger {
   def fileContentFromBundle(bundleId: String, filePath: String): util.Try[String] = util.Try {
     val e = Option(Platform.getBundle(bundleId)).flatMap(b => Option(b.getEntry(filePath)))
     e.fold(throw new FileNotFoundException(s"$bundleId$filePath")) { e =>
-      val s = io.Source.fromInputStream(e.openStream())
+      val s = io.Source.fromInputStream(e.openStream(), "UTF-8")
       val res = s.mkString
       s.close()
       res
