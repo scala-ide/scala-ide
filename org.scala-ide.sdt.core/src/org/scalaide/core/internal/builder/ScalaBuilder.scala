@@ -129,7 +129,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     /** The Java builder has to be run for copying resources (non-source files) to the output directory.
      *
-     *  We need to run it when using the refined builder, or the SBT builder and no Java sources have been modified
+     *  We need to run it when no Java sources have been modified
      *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {

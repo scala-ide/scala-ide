@@ -242,7 +242,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
       if (phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(FileUtils.clearTasks(_, null))
 
-      // What follows is a direct copy of the mechanism in the refined build managers
+      // It turned out that updating `subTaks` too often slowed down the build... and the UI was blocked
+      // going through all the updates, long after compilation finished. So we report only 1:10 updates.
       throttledMessages += 1
       if (throttledMessages == 10) {
         throttledMessages = 0
