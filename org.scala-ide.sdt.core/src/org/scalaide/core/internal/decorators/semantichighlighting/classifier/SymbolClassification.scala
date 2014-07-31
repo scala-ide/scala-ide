@@ -88,7 +88,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
         override def traverse(t: Tree): Unit = {
           def symExists = global.askOption(() => t.symbol != NoSymbol).getOrElse(false)
 
-          if (!progressMonitor.isCanceled() && isSourceTree(t) && (t.hasSymbol || t.isType || symExists)) {
+          if (!progressMonitor.isCanceled() && isSourceTree(t) && (t.hasSymbolField || t.isType || symExists)) {
             val ds = findDynamicInfo(t)
             val xs = if (ds.isEmpty) findSymbolInfo(t) else ds.toList
             symbolInfos ++= xs

@@ -64,7 +64,7 @@ trait HyperlinkTester extends TestProjectSetup {
     val links = maybeLinks.get
     assertEquals("expected %d link, found %d".format(oracle.text.size, links.size), oracle.text.size, links.size)
     val linkResults = links map (_.getTypeLabel)
-    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+    assertEquals("text", oracle.text.toList.toString, linkResults.toString)
   }
 
   def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
@@ -77,6 +77,6 @@ trait HyperlinkTester extends TestProjectSetup {
       e <- elements
       tpe = e.getAncestor(IJavaElement.TYPE).asInstanceOf[IType]
     } yield tpe.getFullyQualifiedName() + "." + e.getElementName()
-    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+    assertEquals("text", oracle.text.toString, linkResults.toString)
   }
 }

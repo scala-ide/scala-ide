@@ -9,8 +9,7 @@ object BufferSupport {
     def getContents(): String
   }
 
-  // TODO make `__sb` private once 2.10 support is dropped
-  private[wizards] implicit class BuilderAdapter(val __sb: StringBuilder) extends AnyVal {
+  private[wizards] implicit class BuilderAdapter(private val __sb: StringBuilder) extends AnyVal {
     def append(s: String): Unit = __sb.append(s)
     def getLength(): Int = __sb.length
     def replace(offset: Int, length: Int, text: String): Unit =

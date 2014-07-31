@@ -55,7 +55,7 @@ object TraverserImpl extends HasLogger {
   private def createAnnotation(pos: SPC#Position, message: String, annotationId: String): Option[(Annotation, Position)] = {
     val annotation = new CustomAnnotation(annotationId, message)
     val position =
-      if (pos.isDefined) new Position(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
+      if (pos.isDefined) new Position(pos.start, pos.end - pos.start)
       else new Position(0, 0)
     if (position.getLength != 0) Some(annotation -> position)
     else {

@@ -40,7 +40,7 @@ class ScalaCompletions extends HasLogger {
 
     def addCompletions(completions: List[compiler.Member], matchName: Array[Char], start: Int, prefixMatch: Boolean, contextType: ContextType) {
       def nameMatches(sym: compiler.Symbol) = {
-        val name = sym.decodedName.toString.toArray
+        val name = sym.decodedName.toArray
         if (prefixMatch) {
           prefixMatches(name, matchName)
         } else {
@@ -103,10 +103,10 @@ class ScalaCompletions extends HasLogger {
 
       // first try and determine if there is a package name prefixing the word being completed
       val packageName = for {
-        e <- t1 if (e.pos.isDefined && pos > e.pos.startOrPoint)
-        length = pos - e.pos.startOrPoint
+        e <- t1 if (e.pos.isDefined && pos > e.pos.start)
+        length = pos - e.pos.start
         // get text of tree element, removing all whitespace
-        content = sourceFile.content.slice(e.pos.startOrPoint, position).filterNot {c => c.isWhitespace}
+        content = sourceFile.content.slice(e.pos.start, position).filterNot {c => c.isWhitespace}
         // see if it looks like qualified type reference
         if (length > matchName.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
       } yield content.slice(0, content.length - matchName.length - 1)
@@ -169,26 +169,26 @@ class ScalaCompletions extends HasLogger {
 
     t1 match {
       case Some(compiler.New(name)) =>
-        fillTypeCompletions(name.pos.endOrPoint, CompletionContext.NewContext,
+        fillTypeCompletions(name.pos.end, CompletionContext.NewContext,
           Array(), name.pos.start, false)
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
         fillTypeCompletions(qualifier.pos.end)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
-        fillTypeCompletions(expr.pos.endOrPoint, CompletionContext.ImportContext)
+        fillTypeCompletions(expr.pos.end, CompletionContext.ImportContext)
       case Some(compiler.Apply(fun, _)) =>
         fun match {
           case compiler.Select(qualifier: compiler.New, name) =>
-            fillTypeCompletions(qualifier.pos.endOrPoint, CompletionContext.NewContext,
+            fillTypeCompletions(qualifier.pos.end, CompletionContext.NewContext,
               Array(), qualifier.pos.start, false)
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>
-            fillTypeCompletions(qualifier.pos.endOrPoint, CompletionContext.ApplyContext,
+            fillTypeCompletions(qualifier.pos.end, CompletionContext.ApplyContext,
               name.decoded.toArray, qualifier.pos.end + 1, false)
           case _ =>
-            val funName = scu.getContents.slice(fun.pos.startOrPoint, fun.pos.endOrPoint)
-            fillScopeCompletions(fun.pos.endOrPoint, CompletionContext.ApplyContext, funName,
-              fun.pos.startOrPoint, false)
+            val funName = scu.getContents.slice(fun.pos.start, fun.pos.end)
+            fillScopeCompletions(fun.pos.end, CompletionContext.ApplyContext, funName,
+              fun.pos.start, false)
         }
       case _ =>
         fillScopeCompletions(position)

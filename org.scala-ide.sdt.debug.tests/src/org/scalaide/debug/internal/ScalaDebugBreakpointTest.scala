@@ -8,7 +8,6 @@ import org.junit.Before
 import org.junit.AfterClass
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.Test
-import org.scalaide.core.internal.project.ScalaLibrary
 import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.SpecificScalaVersion
 

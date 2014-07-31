@@ -44,7 +44,6 @@ object Utils extends HasLogger {
   }
 
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
-    import scala.reflect.runtime.universe._
 
     /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
      *

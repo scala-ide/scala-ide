@@ -30,6 +30,7 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 
@@ -52,6 +53,8 @@ object SDTTestUtils extends HasLogger {
   }
 
   enableAutoBuild(false)
+  // Be nice to Mac users and use a default encoding other than MacRoman
+  ResourcesPlugin.getPlugin().getPluginPreferences().setValue(ResourcesPlugin.PREF_ENCODING, "UTF-8")
 
   /** Return the Java problem markers corresponding to the given compilation unit. */
   def findProblemMarkers(unit: ICompilationUnit) =
@@ -221,7 +224,7 @@ object SDTTestUtils extends HasLogger {
   val simulator = new EclipseUserSimulator
 
 
-  def createSourcePackage(name: String)(project: ScalaProject): IPackageFragment =
+  def createSourcePackage(name: String)(project: api.ScalaProject): IPackageFragment =
     project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
 
   def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*) {
@@ -233,7 +236,7 @@ object SDTTestUtils extends HasLogger {
   def createProjects(names: String*): Seq[ScalaProject] =
     names map (n => simulator.createProjectInWorkspace(n, true))
 
-  def deleteProjects(projects: ScalaProject*) {
+  def deleteProjects(projects: api.ScalaProject*) {
     EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }

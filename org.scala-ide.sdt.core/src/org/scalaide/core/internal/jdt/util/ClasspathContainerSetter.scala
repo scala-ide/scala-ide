@@ -1,7 +1,8 @@
 package org.scalaide.core.internal.jdt.util
 
 import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.availableBundledInstallations
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.ScalaPlugin
 import org.eclipse.core.runtime.IPath
@@ -10,7 +11,7 @@ import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IStatus
 import java.io.FileInputStream
-import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.api.ScalaModule
 import org.scalaide.logging.HasLogger
 import java.io.FileOutputStream
 import org.eclipse.core.resources.IProject
@@ -60,7 +61,7 @@ class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClass
 
   def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {
     import org.scalaide.util.internal.CompilerUtils.isBinarySame
-    val available = ScalaInstallation.availableBundledInstallations
+    val available = availableBundledInstallations
     available.filter { si => isBinarySame(scalaVersion, si.version) }.sortBy(_.version).lastOption
   }
 

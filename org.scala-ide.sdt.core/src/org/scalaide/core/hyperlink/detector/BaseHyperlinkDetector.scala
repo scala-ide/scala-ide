@@ -8,7 +8,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.util.internal.eclipse.EditorUtils
 import scala.concurrent.ExecutionContext.Implicits._
-import scala.concurrent.future
+import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.concurrent.TimeoutException
@@ -34,7 +34,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasL
     else {
       EditorUtils.getEditorCompilationUnit(textEditor) match {
         case Some(scu) =>
-          val hyperlinks = future { runDetectionStrategy(scu, textEditor, currentSelection) }
+          val hyperlinks = Future { runDetectionStrategy(scu, textEditor, currentSelection) }
 
           try {
             Await.result(hyperlinks, TIMEOUT) match {

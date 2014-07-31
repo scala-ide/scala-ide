@@ -14,7 +14,7 @@ import scala.collection.mutable.Subscriber
 
 case class ModifiedScalaInstallations()
 
-trait LabeledScalaInstallationSerializer extends HasLogger{
+private trait LabeledScalaInstallationSerializer extends HasLogger{
   import org.scalaide.core.internal.jdt.util.LabeledScalaInstallationsSaveHelper._
 
   private def getInstallationsStateFile() = {
@@ -72,7 +72,7 @@ trait LabeledScalaInstallationSerializer extends HasLogger{
 
 }
 
-class ScalaInstallationSaver extends LabeledScalaInstallationSerializer with Subscriber[ModifiedScalaInstallations, Publisher[ModifiedScalaInstallations]] {
+private [project] class ScalaInstallationSaver extends LabeledScalaInstallationSerializer with Subscriber[ModifiedScalaInstallations, Publisher[ModifiedScalaInstallations]] {
 
   override def notify(pub: Publisher[ModifiedScalaInstallations], event: ModifiedScalaInstallations): Unit = {
     saveInstallationsState(ScalaInstallation.availableInstallations)

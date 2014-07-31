@@ -6,7 +6,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Utils

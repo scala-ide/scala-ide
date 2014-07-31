@@ -31,7 +31,6 @@ import scala.collection.Map
 import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.NoPosition
-import scala.tools.nsc.util.Position
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils
@@ -182,7 +181,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           val nm = d.name
 
           val fps = d.paramss.flatten
-          val paramNames = Array(fps.map(n => nme.getterName(n.name.toTermName).toChars) : _*)
+          val paramNames = Array(fps.map(n => n.getterName.toChars) : _*)
 
           val javaSig = javaSigOf(d)
 
@@ -213,7 +212,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               case NoPosition =>
                 (module.pos.point, module.pos.point, module.pos.point)
               case pos =>
-                (d.pos.startOrPoint, d.pos.point, d.pos.endOrPoint)
+                (d.pos.start, d.pos.point, d.pos.end)
             }
 
           val nameEnd = point+defElem.labelName.length-1
@@ -275,8 +274,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
           val tpPos = tpSymbol.pos
           if(tpPos.isDefined) {
-            val start = tpPos.startOrPoint
-            val end = tpPos.endOrPoint
+            val start = tpPos.start
+            val end = tpPos.end
           tpElementInfo.setSourceRangeStart0(start)
           tpElementInfo.nameStart = start
           tpElementInfo.nameEnd = end
@@ -372,8 +371,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           resolveDuplicates(importElem)
 
           val importElemInfo = new ImportDeclarationElementInfo
-          setSourceRangeStart(importElemInfo, pos.startOrPoint)
-          setSourceRangeEnd(importElemInfo, pos.endOrPoint-1)
+          setSourceRangeStart(importElemInfo, pos.start)
+          setSourceRangeEnd(importElemInfo, pos.end-1)
 
           val children = getChildren(importContainerInfo)
           if (children.isEmpty)
@@ -557,7 +556,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        val elemName = nme.getterName(v.name)
+        val elemName = v.getterName
         val sym = v.symbol
         val display = elemName.toString+" : "+sym.info.resultType.toString
 
@@ -590,9 +589,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         // When done, remove.
         if (sym ne NoSymbol) {
           sym.initialize
-          val getter = sym.getter(sym.owner)
+          val getter = sym.getterIn(sym.owner)
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
-          val setter = sym.setter(sym.owner)
+          val setter = sym.setterIn(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
           addBeanAccessors(sym)
         }
@@ -601,7 +600,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
 
       def addBeanAccessors(sym: Symbol) {
-        val beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
+        val beanName = sym.name.dropLocal.toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -672,7 +671,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
          *  parameter types have the same length. A mismatch here will crash the JDT later.
          */
         def paramNames: (Array[Array[Char]]) = {
-          val originalParamNames = fps.map(n => nme.getterName(n.name.toTermName).toChars)
+          val originalParamNames = fps.map(n => n.getterName.toChars)
           val res = ((paramsTypeSigs.length - originalParamNames.length ) match {
             case 0 =>
               originalParamNames
@@ -851,8 +850,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         }
 
         val info = new JDTAnnotationInfo
-        info.nameStart = ann.pos.startOrPoint
-        info.nameEnd = ann.pos.endOrPoint-1
+        info.nameStart = ann.pos.start
+        info.nameEnd = ann.pos.end-1
         info.members = if(ann.assocs.isEmpty) JDTAnnotation.NO_MEMBER_VALUE_PAIRS else getMemberValuePairs(handle, ann.assocs)
         info
      }
@@ -872,17 +871,17 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
           val start0 = if (sym == NoSymbol)
-            pos0.startOrPoint
+            pos0.start
           else
             try {
               docCommentPos(sym) match {
-                case NoPosition => pos0.startOrPoint
-                case cpos => cpos.startOrPoint
+                case NoPosition => pos0.start
+                case cpos => cpos.start
               }
             } catch {
-              case _: Exception => pos0.startOrPoint
+              case _: Exception => pos0.start
             }
-          (start0, pos0.endOrPoint-1)
+          (start0, pos0.end-1)
         }
         else
           (-1, -1)

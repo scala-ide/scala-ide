@@ -45,6 +45,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
 
   def itemTitle = "Scala"
   var customInstallations = ScalaInstallation.customInstallations
+  // to save installations whenever they are edited
   subscribe(ScalaInstallation.installationsTracker)
   noDefaultAndApplyButton()
 

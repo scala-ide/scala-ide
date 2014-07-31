@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import org.scalaide.logging.LogManager
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
@@ -48,7 +48,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
             |Scala compiler version:
             |        ${ScalaPlugin.plugin.scalaVer.unparse}
             |Scala library version:
-            |        ${ScalaInstallation.platformInstallation.version.unparse}
+            |        ${platformInstallation.version.unparse}
             |Eclipse version:
             |        ${Platform.getBundle("org.eclipse.platform").getVersion}
             |""".stripMargin)
