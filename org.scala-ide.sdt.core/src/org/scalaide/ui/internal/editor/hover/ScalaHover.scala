@@ -55,6 +55,16 @@ object ScalaHover extends HasLogger {
    */
   final val ScalaHoverStyleSheetId = "org.scalaide.ui.config.scalaHoverCss"
 
+  /**
+   * This Id is used as a key for the preference store to retrieve the content
+   * of the default CSS file. This file is already stored in the IDE bundle
+   * and can be found with [[ScalaHoverStyleSheetPath]] but it is nonetheless
+   * necessary to store this file because it may change in a newer version of
+   * the IDE. To detect such a change we need to be able to compare the content
+   * of the CSS file.
+   */
+  final val DefaultScalaHoverStyleSheetId = "org.scalaide.ui.config.defaultScalaHoverCss"
+
   /** The path to the default CSS file */
   final val ScalaHoverStyleSheetPath = "/resources/scala-hover.css"
 

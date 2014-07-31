@@ -52,6 +52,34 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 class HoverPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
-    ScalaPlugin.prefStore.setDefault(ScalaHover.ScalaHoverStyleSheetId, ScalaHover.DefaultScalaHoverStyleSheet)
+    val p = ScalaPlugin.prefStore
+    val oldCss = p.getString(ScalaHover.DefaultScalaHoverStyleSheetId)
+    val newCss = ScalaHover.DefaultScalaHoverStyleSheet
+    val usedCss = p.getString(ScalaHover.ScalaHoverStyleSheetId)
+
+    // This can only happen the very first time a workspace is created
+    if (oldCss.isEmpty()) {
+      p.setValue(ScalaHover.DefaultScalaHoverStyleSheetId, newCss)
+      p.setValue(ScalaHover.ScalaHoverStyleSheetId, newCss)
+    }
+    // This happens every time the CSS file of the bundle is updated
+    else if (oldCss != newCss) {
+      p.setValue(ScalaHover.DefaultScalaHoverStyleSheetId, newCss)
+      p.setValue(ScalaHover.ScalaHoverStyleSheetId, if (oldCss == usedCss) newCss else s"""|/*
+          |==================================================================
+          |ATTENTION:
+          |
+          |    This CSS file has been updated to a newer version.
+          |    Your changed CSS file has been commented out in order to keep your changes.
+          |    The new file can be found after this comment.
+          |    Please merge your changes manually.
+          |
+          |==================================================================
+          |$usedCss
+          |*/
+          |
+          |$newCss
+          |""".stripMargin)
+    }
   }
 }
