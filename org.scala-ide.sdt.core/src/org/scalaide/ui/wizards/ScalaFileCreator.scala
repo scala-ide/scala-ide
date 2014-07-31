@@ -49,7 +49,7 @@ trait ScalaFileCreator extends FileCreator {
       }
   }
 
-  override def createFilePath(folder: IFolder, name: String): IFile = {
+  override def create(folder: IFolder, name: String): IFile = {
     val filePath = name.replace('.', '/')
     folder.getFile(s"$filePath.scala")
   }

@@ -44,7 +44,7 @@ class PackageObjectCreator extends ScalaFileCreator {
     }
   }
 
-  override def createFilePath(folder: IFolder, name: String): IFile = {
+  override def create(folder: IFolder, name: String): IFile = {
     val filePath = name.replace('.', '/')
     folder.getFile(s"$filePath/package.scala")
   }

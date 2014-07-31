@@ -1,5 +1,6 @@
 package org.scalaide.util.internal.eclipse
 
+import java.io.ByteArrayInputStream
 import java.io.File
 
 import scala.tools.nsc.io.AbstractFile
@@ -7,9 +8,10 @@ import scala.util.Try
 
 import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IMarker
-import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
@@ -19,7 +21,6 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
-import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.resources.EclipseResource
 
@@ -111,17 +112,21 @@ object FileUtils {
   }
 
   /**
-   * Creates a file of a given `IFile`. The project that contains the file is
-   * automatically refreshed.
+   * Creates a file of a given `IFile` and all of its parent folders if needed.
+   * Resource listeners are also notified about the changes.
    *
    * Returns `Unit` if the file creation was successful, otherwise the thrown
    * exception.
    */
   def createFile(file: IFile): Try[Unit] = Try {
-    val f = file.getLocation().toFile()
-    f.getParentFile().mkdirs()
-    f.createNewFile()
+    def createParentFolders(c: IContainer): Unit = c match {
+      case f: IFolder if !f.exists() =>
+        createParentFolders(f.getParent())
+        f.create(/* force */ true, /* local */ true, null)
+      case _ =>
+    }
 
-    file.getProject().refreshLocal(IResource.DEPTH_INFINITE, null)
+    createParentFolders(file.getParent())
+    file.create(new ByteArrayInputStream(Array()), /* force */ true, null)
   }
 }

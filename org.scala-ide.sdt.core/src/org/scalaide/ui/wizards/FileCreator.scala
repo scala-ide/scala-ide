@@ -65,7 +65,7 @@ trait FileCreator {
    * This method is guaranteed to be called not before [[validateName]] returns
    * a valid state.
    */
-  def createFilePath(folder: IFolder, name: String): IFile
+  def create(folder: IFolder, name: String): IFile
 
   /**
    * Creates a path that is shown when a new file wizard is created. This should

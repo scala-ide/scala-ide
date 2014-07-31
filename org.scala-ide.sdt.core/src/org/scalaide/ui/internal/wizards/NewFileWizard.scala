@@ -89,10 +89,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
   /**
    * Returns the path to the file created by the wizard. Returns `None` as long
    * as the wizard did not yet create a new file.
-   *
-   * '''Note:''' The returned path is absolute to the root of the filesystem
    */
-  def pathOfCreatedFile: Option[IFile] =
+  def createdFile: Option[IFile] =
     Option(file)
 
   def createContents(parent: Composite): Control = {
@@ -271,7 +269,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
       ctx
     }
 
-    val file = m.withInstance(_.createFilePath(selectedFolder, chosenName))
+    val file = m.withInstance(_.create(selectedFolder, chosenName))
     file foreach { f =>
       FileUtils.createFile(f) match {
         case util.Success(_) =>

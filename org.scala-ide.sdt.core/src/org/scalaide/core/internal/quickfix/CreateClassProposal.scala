@@ -29,7 +29,7 @@ case class CreateClassProposal(className: String, compilationUnit: ICompilationU
     val dialog = new WizardDialog(JavaPlugin.getActiveWorkbenchShell(), wizard)
     dialog.create()
 
-    def file = wizard.page.pathOfCreatedFile
+    def file = wizard.page.createdFile
 
     def existsInDifferentPackage: Boolean = {
       file map { file =>

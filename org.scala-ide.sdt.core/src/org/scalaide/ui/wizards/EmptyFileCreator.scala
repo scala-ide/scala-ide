@@ -9,7 +9,7 @@ import org.eclipse.core.resources.IResource
  */
 class EmptyFileCreator extends FileCreator {
 
-  override def createFilePath(folder: IFolder, name: String): IFile =
+  override def create(folder: IFolder, name: String): IFile =
     folder.getFile(name)
 
   override def validateName(folder: IFolder, name: String): Validation =
