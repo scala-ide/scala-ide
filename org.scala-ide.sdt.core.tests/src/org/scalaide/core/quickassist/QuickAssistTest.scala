@@ -5,7 +5,7 @@ import org.eclipse.jdt.internal.core.util.SimpleDocument
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.junit.Assert
 import java.util.ArrayList
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import testsetup.SDTTestUtils
 import scala.util.control.Exception
@@ -40,7 +40,6 @@ trait QuickAssistTestHelper {
 
     try {
       val Seq(pos) = SDTTestUtils.positionsOf(contents.toCharArray(), "^")
-      val proposals = new ArrayList[IJavaCompletionProposal]
       // get all corrections for the problem
       f(quickAssist.suggestsFor(unit, pos).headOption)
     } finally

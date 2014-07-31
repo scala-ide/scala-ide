@@ -158,7 +158,7 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
     val refTypeSignature = getReferenceType.signature
     if (BOXED_PRIMITIVE_TYPES.contains(refTypeSignature)) {
       "%s %s (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), getBoxedPrimitiveValue(), underlying.uniqueID)
-    } else if (BOXED_CHAR_TYPE == refTypeSignature) {
+    } else if (refTypeSignature == BOXED_CHAR_TYPE) {
       "%s '%s' (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), getBoxedPrimitiveValue(), underlying.uniqueID)
     } else {
       "%s (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), underlying.uniqueID)

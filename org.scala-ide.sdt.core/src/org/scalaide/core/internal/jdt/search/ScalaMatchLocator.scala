@@ -93,7 +93,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
     }
 
-    def posToLong(pos: Position): Long = pos.startOrPoint << 32 | pos.endOrPoint
+    def posToLong(pos: Position): Long = pos.start << 32 | pos.end
 
     /** Returns the class/method/field symbol enclosing the tree node that is currently traversed.*/
     protected def enclosingDeclaration(): Symbol = {
@@ -233,8 +233,8 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
           getJavaElement(enclosingDeclaration, scu.scalaProject.javaProject).foreach { element =>
             val accuracy = SearchMatch.A_ACCURATE
             val (offset, length) =
-              if (tree.isDef) (tree.pos.startOrPoint + 4, tree.symbol.name.length)
-              else (tree.pos.startOrPoint, tree.pos.endOrPoint - tree.pos.startOrPoint)
+              if (tree.isDef) (tree.pos.start + 4, tree.symbol.name.length)
+              else (tree.pos.start, tree.pos.end - tree.pos.start)
 
             val insideDocComment = false
             val participant = possibleMatch.document.getParticipant

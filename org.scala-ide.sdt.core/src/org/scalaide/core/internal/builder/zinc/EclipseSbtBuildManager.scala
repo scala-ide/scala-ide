@@ -33,7 +33,7 @@ import sbt.compiler.CompileFailed
 import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import xsbti.compile.Inputs
 import sbt.compiler.AnalyzingCompiler
@@ -43,7 +43,7 @@ import xsbti.Maybe
 import org.scalaide.util.internal.SbtUtils.m2o
 import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.api.ScalaInstallation
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.hashing.Hashing
@@ -144,7 +144,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
   private def runCompiler(sources: Seq[File]) {
     val scalaInstall = findInstallation(project)
     logger.info(s"Running compiler using $scalaInstall")
-    val inputs = new SbtInputs(scalaInstall, sources.toSeq, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
+    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
@@ -211,7 +211,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings)
     }
   }
 
-  def findInstallation(project: ScalaProject): ScalaInstallation = project.getDesiredInstallation()
+  def findInstallation(project: ScalaProject): ScalaInstallation = project.effectiveScalaInstallation()
 
   /** Inspired by IC.compile
    *

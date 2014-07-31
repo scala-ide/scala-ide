@@ -148,12 +148,12 @@ class FreshFile {
 
     Seq(cu, cu1).foreach(_.scheduleReconcile().get)
 
-    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits().toSet)
+    Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits())
 
     project.presentationCompiler.askRestart()
 
     // now the unit should be managed
-    Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), managedUnits().toSet)
+    Assert.assertEquals("Presentation compiler should report one unit on shutdown", Set(cu, cu1), managedUnits())
   }
 
   @Test

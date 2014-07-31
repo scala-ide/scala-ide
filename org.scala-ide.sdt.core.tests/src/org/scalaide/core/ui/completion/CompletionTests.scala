@@ -59,7 +59,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
 
       val missingCompletions = expectedCompletions.filter(c => findCompletion(c).isEmpty)
       if (missingCompletions.nonEmpty)
-        throw new ComparisonFailure(s"There are expected completions that do not exist.", missingCompletions.mkString("\n"), "")
+        throw new ComparisonFailure("There are expected completions that do not exist.", missingCompletions.mkString("\n"), "")
 
       def completionList = completions.sortBy(-_.relevance).map(_.display).mkString("\n")
 

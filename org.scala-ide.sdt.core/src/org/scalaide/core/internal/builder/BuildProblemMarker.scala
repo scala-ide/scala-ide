@@ -6,7 +6,7 @@ import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.core.resources.MarkerFactory.Position
 import org.scalaide.core.resources.MarkerFactory.NoPosition
 import org.scalaide.core.resources.MarkerFactory.RegionPosition
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import scala.reflect.internal.util.{ Position => ScalacPosition }
 import org.scalaide.core.ScalaPlugin
 

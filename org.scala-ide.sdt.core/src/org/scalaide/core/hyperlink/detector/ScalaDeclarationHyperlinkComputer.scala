@@ -60,7 +60,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
             case st if st.symbol ne null                          => List(st.symbol)
             case _                                                => List()
           } flatMap { list =>
-            val filteredSyms = list filterNot { sym => sym.isPackage || sym == NoSymbol }
+            val filteredSyms = list filterNot { sym => sym.hasPackageFlag || sym == NoSymbol }
             if (filteredSyms.isEmpty) None else Some(
               filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
                 if (sym.isJavaDefined) links

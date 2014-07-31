@@ -11,7 +11,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
 
   def posToSym(pos: Position): Option[Symbol] = {
     val t = locateTree(pos)
-    if (t.hasSymbol) safeSymbol(t).headOption.map(_._1) else None
+    if (t.hasSymbolField) safeSymbol(t).headOption.map(_._1) else None
   }
 
   private lazy val forValSymbols: Set[Symbol] = for {
@@ -26,10 +26,10 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       global.askOption(() => sym.companionClass.isCaseClass).getOrElse(false)
 
     import sym._
-    if (isPackage)
+    if (hasPackageFlag)
       Package
     else if (isLazy)
-      if (isLocal) LazyLocalVal else LazyTemplateVal
+      if (isLocalToBlock) LazyLocalVal else LazyTemplateVal
     else if (isSetter)
       TemplateVar
     else if (isGetter)
@@ -46,7 +46,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       else
         Object
     } else if (isValue) {
-      if (isLocal) {
+      if (isLocalToBlock) {
         if (isVariable)
           LocalVar
         else if (isValueParameter && !forValSymbols.contains(sym))
@@ -78,7 +78,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
     */
   private def hasSetter(sym: Symbol): Boolean = {
     assert(sym.isGetter)
-    global.askOption(() => sym.setter(sym.owner) != NoSymbol).getOrElse(false)
+    global.askOption(() => sym.setterIn(sym.owner) != NoSymbol).getOrElse(false)
   }
 
   private def classifyType(sym: Symbol): SymbolType = {

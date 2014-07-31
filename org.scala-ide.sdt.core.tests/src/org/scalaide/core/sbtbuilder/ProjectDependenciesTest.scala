@@ -106,7 +106,7 @@ class ProjectDependenciesTest {
       addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, /* isExported = */ true))
       addToClasspath(prjC, JavaCore.newProjectEntry(prjB.underlying.getFullPath, false))
 
-      val Seq(packA, packB, packC) = Seq(prjA, prjB, prjC).map(createSourcePackage("test"))
+      val Seq(packA, _, packC) = Seq(prjA, prjB, prjC).map(createSourcePackage("test"))
 
       // C depends directly on A, through an exported dependency of B
       val unitA = packA.createCompilationUnit("A.scala", "class A", true, null)
@@ -125,7 +125,7 @@ class ProjectDependenciesTest {
       Assert.assertEquals("One build error in C", Seq("not found: type A"), errors1)
 
       // fix project A, no errors
-      val errors2 = SDTTestUtils.buildWith(unitA.getResource, "class A", unitsToWatch)
+      SDTTestUtils.buildWith(unitA.getResource, "class A", unitsToWatch)
       Assert.assertEquals("No errors in A", Seq(), SDTTestUtils.getErrorMessages(unitA))
       Assert.assertEquals("No errors in C", Seq(), SDTTestUtils.getErrorMessages(unitC))
     } finally {

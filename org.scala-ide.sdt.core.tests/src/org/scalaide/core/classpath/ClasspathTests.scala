@@ -16,7 +16,7 @@ import org.scalaide.core.ScalaPlugin
 import org.junit.After
 import org.junit.Ignore
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -264,7 +264,7 @@ class ClasspathTests {
    */
   @Test
   def binaryCompatibleLibraryEclipseNaming() {
-    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("org.scala-ide.sdt.aspects_2.1.0.nightly-2_10-201301251404-6e75290.jar".format(testShortScalaVersion)), 0, 0)
+    setRawClasspathAndCheckMarkers(baseRawClasspath :+ newLibraryEntry("org.scala-ide.sdt.aspects_2.1.0.nightly-2_10-201301251404-6e75290.jar"), 0, 0)
   }
   /** Multiple binary-compatible libraries on the classpath
    */

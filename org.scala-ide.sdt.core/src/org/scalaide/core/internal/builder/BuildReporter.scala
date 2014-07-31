@@ -11,7 +11,7 @@ import scala.collection.mutable.ListBuffer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 
 case class BuildProblem(severity: Reporter#Severity, msg: String, pos: Position)
 
@@ -52,7 +52,7 @@ abstract class BuildReporter(private[builder] val project0: ScalaProject, settin
                   // the compiler will create PlainFile instances in that case
                   prob += new BuildProblem(severity, msg, pos)
                   BuildProblemMarker.create(i, eclipseSeverity, msg, pos)
-                case None =>
+                case _ =>
                   logger.info("no EclipseResource associated to %s [%s]".format(f.path, f.getClass))
                   prob += new BuildProblem(severity, msg, NoPosition)
                   BuildProblemMarker.create(project0.underlying, eclipseSeverity, msg)
@@ -81,8 +81,8 @@ abstract class BuildReporter(private[builder] val project0: ScalaProject, settin
       val tasks = taskScanner.extractTasks(msg, pos)
       for (TaskScanner.Task(tag, msg, priority, pos) <- tasks if pos.isDefined) {
         val source = pos.source
-        val start = pos.startOrPoint
-        val length = pos.endOrPoint - start
+        val start = pos.start
+        val length = pos.end - start
         source.file match {
           case EclipseResource(i: IFile) =>
             FileUtils.task(i, tag, msg, priority, start, length, pos.line, null)

@@ -1,7 +1,6 @@
 package org.scalaide.ui.editor
 
 import org.scalaide.ui.internal.editor.ISourceViewerEditor
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation

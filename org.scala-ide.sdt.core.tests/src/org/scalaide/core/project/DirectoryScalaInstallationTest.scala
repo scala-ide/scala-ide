@@ -4,12 +4,11 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.core.internal.project.DirectoryScalaInstallation
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.core.internal.project.ScalaInstallation
 import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.Development
 import org.eclipse.core.runtime.Path
-import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.api.ScalaModule
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.ScalaPlugin
 import org.junit.AfterClass
@@ -144,11 +143,11 @@ class DirectoryScalaInstallationTest {
 
     assertEquals("wrong version", SpecificScalaVersion(2, 10, 4, Development("mixedCompatibleVersionsWithName")), si.version)
 
-    assertEquals("bad scala-library jar", basePath.append(s"scala-library_2.10.4-mixedCompatibleVersionsWithName.jar"), si.library.classJar)
-    assertEquals("bad scala-library source jar", Some(basePath.append(s"scala-library-src_2.10.4-mixedCompatibleVersionsWithName.jar")), si.library.sourceJar)
+    assertEquals("bad scala-library jar", basePath.append("scala-library_2.10.4-mixedCompatibleVersionsWithName.jar"), si.library.classJar)
+    assertEquals("bad scala-library source jar", Some(basePath.append("scala-library-src_2.10.4-mixedCompatibleVersionsWithName.jar")), si.library.sourceJar)
 
-    assertEquals("bad scala-compiler jar", basePath.append(s"scala-compiler_2.10.3-mixedCompatibleVersionsWithName.jar"), si.compiler.classJar)
-    assertEquals("bad scala-compiler source jar", Some(basePath.append(s"scala-compiler-src_2.10.3-mixedCompatibleVersionsWithName.jar")), si.compiler.sourceJar)
+    assertEquals("bad scala-compiler jar", basePath.append("scala-compiler_2.10.3-mixedCompatibleVersionsWithName.jar"), si.compiler.classJar)
+    assertEquals("bad scala-compiler source jar", Some(basePath.append("scala-compiler-src_2.10.3-mixedCompatibleVersionsWithName.jar")), si.compiler.sourceJar)
 
     def checkExtraJar(id: String, versionSuffix: String, jars: List[ScalaModule]) = {
       val path= basePath.append(s"scala-${id}${versionSuffix}.jar")
@@ -165,7 +164,7 @@ class DirectoryScalaInstallationTest {
 
     val extraJarsFinal = extraJars3
 
-    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.size == 0)
+    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }
 
   def checkScalaInstallation(
@@ -203,7 +202,7 @@ class DirectoryScalaInstallationTest {
 
     val extraJarsFinal = extraJars3
 
-    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.size == 0)
+    assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }
 
 }

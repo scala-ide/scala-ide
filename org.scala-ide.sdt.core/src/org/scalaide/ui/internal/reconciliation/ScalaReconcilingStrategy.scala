@@ -7,10 +7,8 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.jface.text.reconciler.DirtyRegion
-import org.eclipse.jface.text.source._
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.ui.texteditor._
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 import org.scalaide.util.internal.Utils._
 

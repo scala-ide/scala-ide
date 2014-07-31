@@ -60,7 +60,7 @@ class GlobalRename extends RefactoringExecutorWithWizard {
         val selectedSymbol = preparationResult.right.get.selectedTree.symbol // only reachable if it's a Right value
 
         name = selectedSymbol match {
-          case sym if sym.isSetter => sym.getter(sym.owner).nameString
+          case sym if sym.isSetter => sym.getterIn(sym.owner).nameString
           case sym => sym.nameString
         }
 

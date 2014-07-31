@@ -12,7 +12,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.junit.AfterClass

@@ -1,7 +1,7 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api.ScalaProject
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
 import org.junit.After
@@ -58,7 +58,7 @@ class MainMethodFinderTest {
       """.stripMargin
     }
 
-    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).toList.map(_.getElementName)
+    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).map(_.getElementName)
     Assert.assertEquals("main classes found.", Set("OuterWithGoodMain$", "ObjectExtendsApp$"), mainClasses.toSet)
   }
 }

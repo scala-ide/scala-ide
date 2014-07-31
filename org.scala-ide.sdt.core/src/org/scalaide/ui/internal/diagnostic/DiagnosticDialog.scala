@@ -36,7 +36,6 @@ object Diagnostics {
   def insufficientHeap: Boolean = heapSize < recommendedHeap
 
   def eclipseIni(): Option[URI] = {
-    def appendIfNonExistant(what: String)(str: String) = if (str.endsWith(what)) str else str + what
     val eclipseHome = Option(System.getenv("ECLIPSE_HOME")) map (new File(_))
     val platformInstallLocation = for {
       location <- Option(Platform.getInstallLocation)

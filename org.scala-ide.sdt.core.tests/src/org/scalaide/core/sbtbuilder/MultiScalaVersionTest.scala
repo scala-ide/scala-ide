@@ -4,10 +4,11 @@ import org.junit.Test
 import org.junit.Assert
 import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.api
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.JavaCore
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation.availableInstallations
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.eclipse.core.runtime.Path
@@ -17,7 +18,7 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import sbt.ScalaInstance
-import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.api.ScalaModule
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 
@@ -29,14 +30,14 @@ class MultiScalaVersionTest {
 
   @Test // Build using the previous version of the Scala library
   def previousVersionBuildSucceeds() {
-    val Seq(p) = createProjects("prev-version-build")
+    val Seq(proj) = createProjects("prev-version-build")
+    val p = proj
     p.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-    val sourceFile = addFileToProject(p.underlying, "/src/InvalidCaseClass.scala", sourceCode)
 
     for (installation <- findPreviousScalaInstallation()) {
       val choice = ScalaInstallationChoice(installation)
       p.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
-      Assert.assertEquals(s"Expected to see the desired choice, found ${p.getDesiredInstallationChoice()}", choice, p.getDesiredInstallationChoice())
+      Assert.assertEquals(s"Expected to see the desired choice, found ${p.desiredinstallationChoice()}", choice, p.desiredinstallationChoice())
       setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
       p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
@@ -48,7 +49,7 @@ class MultiScalaVersionTest {
   }
 
   private def findPreviousScalaInstallation(): Option[LabeledScalaInstallation] = {
-    ScalaInstallation.availableInstallations find { installation =>
+    availableInstallations find { installation =>
       (installation.version, ScalaPlugin.plugin.scalaVer) match {
         case (ShortScalaVersion(_, minor), ShortScalaVersion(_, pluginMinor)) => minor < pluginMinor
         case _ => false
@@ -56,7 +57,7 @@ class MultiScalaVersionTest {
     }
   }
 
-  private def setScalaLibrary(p: ScalaProject, lib: IPath): Unit = {
+  private def setScalaLibrary(p: api.ScalaProject, lib: IPath): Unit = {
     val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != ScalaPlugin.plugin.scalaLibId)
     p.javaProject.setRawClasspath(baseClasspath :+ JavaCore.newLibraryEntry(lib, null, null), null)
   }

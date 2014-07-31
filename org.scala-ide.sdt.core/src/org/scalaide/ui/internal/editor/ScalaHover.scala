@@ -4,7 +4,6 @@ import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.symtab.Flags
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EclipseUtils._

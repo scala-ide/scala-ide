@@ -3,7 +3,6 @@ package org.scalaide.ui.syntax
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 import org.scalaide.core.internal.decorators.semantichighlighting.Position
-import ScalaSyntaxClasses._
 
 object SyntaxColouringPreviewText {
 

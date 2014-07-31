@@ -90,12 +90,6 @@ object LabeledScalaInstallationsSaveHelper {
       override def library = libraryMod
       override def extraJars = extraJarsMods
       override def version = ScalaInstallation.extractVersion(library.classJar).getOrElse(NoScalaVersion)
-      override def scalaInstance: ScalaInstance = {
-        val store = ScalaPlugin.plugin.classLoaderStore
-        val scalaLoader = store.getOrUpdate(this)(new URLClassLoader(allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
-
-        new sbt.ScalaInstance(version.unparse, scalaLoader, library.classJar.toFile, compiler.classJar.toFile, extraJars.map(_.classJar.toFile).toList, None)
-      }
     }
   }
 

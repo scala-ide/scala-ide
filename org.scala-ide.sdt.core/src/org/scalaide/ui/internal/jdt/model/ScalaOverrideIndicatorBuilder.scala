@@ -60,7 +60,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
             for(base <- defn.symbol.allOverriddenSymbols) {
               val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
               val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
-              val position = new JFacePosition(defn.pos.startOrPoint, 0)
+              val position = new JFacePosition(defn.pos.start, 0)
 
               if (base.isJavaDefined) {
                 val packageName = base.enclosingPackage.fullName

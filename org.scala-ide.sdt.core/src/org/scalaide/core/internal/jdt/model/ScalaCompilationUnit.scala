@@ -227,8 +227,8 @@ trait ScalaCompilationUnit extends Openable
       val typedRes = typed.get
       val element = for {
        t <- typedRes.left.toOption
-       if t.hasSymbol
-       sym = if (t.symbol.isSetter) t.symbol.getter(t.symbol.owner) else t.symbol
+       if t.hasSymbolField
+       sym = if (t.symbol.isSetter) t.symbol.getterIn(t.symbol.owner) else t.symbol
        element <- compiler.getJavaElement(sym)
       } yield Array(element: IJavaElement)
 

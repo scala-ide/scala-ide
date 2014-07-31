@@ -60,7 +60,6 @@ private object BreakpointSupportActor {
   /** Create event requests to tell the VM to notify us when it reaches the line for the current `breakpoint` */
   private def createBreakpointsRequests(breakpoint: IBreakpoint, typeName: String, debugTarget: ScalaDebugTarget): Seq[EventRequest] = {
     val requests = new ListBuffer[EventRequest]
-    val virtualMachine = debugTarget.virtualMachine
 
     debugTarget.cache.getLoadedNestedTypes(typeName).foreach {
         createBreakpointRequest(breakpoint, debugTarget, _).foreach { requests append _ }
