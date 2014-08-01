@@ -14,7 +14,6 @@ import org.scalaide.util.internal.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 
-  private var progressMonitor : IProgressMonitor = _
   private var document: IDocument = _
 
   /**
@@ -38,7 +37,6 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
   }
 
   override def setProgressMonitor(pMonitor : IProgressMonitor) {
-    progressMonitor = pMonitor
   }
 
   override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion) {
