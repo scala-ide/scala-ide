@@ -64,6 +64,7 @@ import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.api.ScalaInstallation
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.eclipse.core.runtime.content.IContentType
 
 object ScalaPlugin {
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
@@ -127,6 +128,12 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def scalaVersionProblemMarkerId = pluginId + ".scalaVersionProblem"
   def settingProblemMarkerId = pluginId + ".settingProblem"
   def taskMarkerId = pluginId + ".task"
+
+  lazy val scalaSourceFileContentType: IContentType =
+    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaSource")
+
+  lazy val scalaClassFileContentType: IContentType =
+    Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaClass")
 
   /** All Scala error markers. */
   val scalaErrorMarkers = Set(classpathProblemMarkerId, problemMarkerId, settingProblemMarkerId)

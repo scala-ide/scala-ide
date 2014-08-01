@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
+import org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
@@ -37,6 +38,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.text.source.LineRange
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
@@ -52,6 +54,9 @@ import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
 import org.scalaide.ui.internal.editor.hover.HoverInformationProvider
 import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.internal.editor.spelling.ScalaSpellingEngine
+import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
+import org.scalaide.ui.internal.editor.spelling.SpellingService
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
 import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
 
@@ -221,16 +226,28 @@ class ScalaSourceViewerConfiguration(
 
   override def getAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
 
+  /**
+   * Creates a reconciler with a delay of 500ms.
+   */
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
-    if (editor ne null) {
-      val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
-      // FG: I don't know any better that to defer this to the MonoReconciler constructor's default value
-      // reconciler.setDelay(500)
+    // the editor is null for the Syntax coloring previewer pane (so no reconciliation)
+    Option(editor).map { editor =>
+      val s = new CompositeReconcilingStrategy
+      s.setReconcilingStrategies(Array(
+          new ScalaReconcilingStrategy(editor),
+          new SpellingReconcileStrategy(
+              editor,
+              editor.getViewer(),
+              new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
+              ScalaPlugin.plugin.scalaSourceFileContentType,
+              EditorsUI.getPreferenceStore())))
+
+      val reconciler = new MonoReconciler(s, /* isIncremental */ false)
+      reconciler.setDelay(500)
       reconciler.install(sourceViewer)
       reconciler.setProgressMonitor(new NullProgressMonitor())
       reconciler
-    } else
-      null // the editor is null for the Syntax coloring previewer pane, (so no reconciliation)
+    }.orNull
 
   override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
     val reconciler = new ScalaPresentationReconciler()
