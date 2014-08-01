@@ -70,7 +70,6 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.jcompiler;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.launching;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.search;apply-aspects:=false,
- scala.tools.eclipse.contribution.weaving.jdt.spellingengineprovider;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
