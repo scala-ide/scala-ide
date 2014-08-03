@@ -11,6 +11,7 @@ import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCr
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.TextChange
+import org.scalaide.extensions.CompilerSupport
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EditorUtils
 
@@ -37,22 +38,46 @@ trait SaveActionExtensions extends HasLogger {
   }
 
   private def compilationUnitSaved(cu: ICompilationUnit, udoc: IDocument): Unit = {
-    val doc = new TextDocument(udoc)
-    val extensions = Seq(
-      RemoveTrailingWhitespaceCreator.create(doc),
-      AddNewLineAtEndOfFileCreator.create(doc)
-    )
-    val changes = extensions.flatMap(_.perform())
+    val changes = documentSuppportExtensions(udoc) ++ compilerSupportExtensions
 
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
-      val sv = ssf.sourceFile()
+      val sf = ssf.sourceFile()
       val edits = changes map {
         case TextChange(start, end, text) =>
-          new RTextChange(sv, start, end, text)
+          new RTextChange(sf, start, end, text)
       }
       EditorUtils.applyChangesToFileWhileKeepingSelection(udoc, sel, ssf.file, edits.toList)
       None
     }
   }
 
+  private def documentSuppportExtensions(udoc: IDocument) = {
+    val doc = new TextDocument(udoc)
+    val documentSupportExtensions = Seq(
+      RemoveTrailingWhitespaceCreator.create(doc),
+      AddNewLineAtEndOfFileCreator.create(doc)
+    )
+    documentSupportExtensions.flatMap(_.perform())
+  }
+
+  private def compilerSupportExtensions() = {
+    EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
+      ssf.withSourceFile { (sf, compiler) =>
+        import compiler._
+
+        val r = new Response[Tree]
+        askLoadedTyped(sf, r)
+        r.get match {
+          case Left(tree) =>
+            val extensions = Seq[CompilerSupport]()
+            extensions flatMap (_.perform())
+          case Right(e) =>
+            logger.error(
+                s"An error occurred while trying to get tree of file '${sf.file.name}'."+
+                s" Aborting all save actions that extend ${classOf[CompilerSupport].getName()}", e)
+            Seq()
+        }
+      }
+    }.toSeq.flatten
+  }
 }
