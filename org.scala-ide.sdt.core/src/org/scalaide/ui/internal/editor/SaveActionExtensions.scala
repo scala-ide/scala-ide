@@ -7,6 +7,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.TextChange
@@ -37,7 +38,10 @@ trait SaveActionExtensions extends HasLogger {
 
   private def compilationUnitSaved(cu: ICompilationUnit, udoc: IDocument): Unit = {
     val doc = new TextDocument(udoc)
-    val extensions = Seq(RemoveTrailingWhitespaceCreator.create(doc))
+    val extensions = Seq(
+      RemoveTrailingWhitespaceCreator.create(doc),
+      AddNewLineAtEndOfFileCreator.create(doc)
+    )
     val changes = extensions.flatMap(_.perform())
 
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
