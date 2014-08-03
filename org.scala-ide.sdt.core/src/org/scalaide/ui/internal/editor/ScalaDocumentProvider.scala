@@ -16,7 +16,6 @@ import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.CompilationUnitInfo
 import org.eclipse.jdt.internal.ui.javaeditor.ISavePolicy
-import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
 import org.scalaide.logging.HasLogger
@@ -24,7 +23,8 @@ import org.scalaide.util.internal.ReflectAccess
 
 class ScalaDocumentProvider
     extends CompilationUnitDocumentProvider
-    with HasLogger {
+    with HasLogger
+    with SaveActionExtensions {
 
   /** We need to access private values of the super class */
   private val ra = ReflectAccess[CompilationUnitDocumentProvider](this)
@@ -53,9 +53,11 @@ class ScalaDocumentProvider
    */
   private def commitWorkingCopy0(monitor: IProgressMonitor, element: AnyRef, info: CompilationUnitInfo, overwrite: Boolean): Unit = {
     val document = info.fTextFileBuffer.getDocument()
-    val resource = info.fCopy.getResource()
-
-    Assert.isTrue(resource.isInstanceOf[IFile])
+    val resource = {
+      val r = info.fCopy.getResource()
+      Assert.isTrue(r.isInstanceOf[IFile])
+      r.asInstanceOf[IFile]
+    }
 
     val isSynchronized = resource.isSynchronized(IResource.DEPTH_ZERO)
 
@@ -66,7 +68,7 @@ class ScalaDocumentProvider
 
     if (!resource.exists()) {
       // underlying resource has been deleted, just recreate file, ignore the rest
-      createFileFromDocument(monitor, resource.asInstanceOf[IFile], document)
+      createFileFromDocument(monitor, resource, document)
       return
     }
 
@@ -79,7 +81,8 @@ class ScalaDocumentProvider
 
       // the Java editor calls [[CleanUpPostSaveListener]] here and calculates
       // changed regions which we don't need
-      val listeners = Array[IPostSaveListener]()
+      val doc = info.fTextFileBuffer.getDocument()
+      val listeners = Array(createScalaSaveActionListener(doc))
 
       subMonitor = getSubProgressMonitor(monitor, if (listeners.length > 0) 70 else 100)
 
