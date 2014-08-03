@@ -1,0 +1,157 @@
+package org.scalaide.ui.internal.editor
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IResourceStatus
+import org.eclipse.core.runtime.Assert
+import org.eclipse.core.runtime.CoreException
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.SubProgressMonitor
+import org.eclipse.jdt.core.IJavaModelStatusConstants
+import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.CompilationUnitInfo
+import org.eclipse.jdt.internal.ui.javaeditor.ISavePolicy
+import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
+import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.ReflectAccess
+
+class ScalaDocumentProvider
+    extends CompilationUnitDocumentProvider
+    with HasLogger {
+
+  /** We need to access private values of the super class */
+  private val ra = ReflectAccess[CompilationUnitDocumentProvider](this)
+
+  override def commitWorkingCopy(m: IProgressMonitor, element: AnyRef, info: CompilationUnitInfo, overwrite: Boolean): Unit = {
+    val monitor = if (m == null) new NullProgressMonitor() else m
+    monitor.beginTask("", 100)
+
+    try commitWorkingCopy0(monitor, element, info, overwrite)
+    catch {
+      case e: Exception =>
+        logger.error("exception thrown while trying to save document", e)
+    }
+    finally {
+      monitor.done()
+    }
+  }
+
+  /**
+   * The implementation of this method is copied/adapted from the class
+   * [[org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider#commitWorkingCopy]].
+   *
+   * `super.createSaveOperation` is the method that should be overwritten, but
+   * this method does too many useful things. I'm afraid when reimplementing
+   * it I break too many things.
+   */
+  private def commitWorkingCopy0(monitor: IProgressMonitor, element: AnyRef, info: CompilationUnitInfo, overwrite: Boolean): Unit = {
+    val document = info.fTextFileBuffer.getDocument()
+    val resource = info.fCopy.getResource()
+
+    Assert.isTrue(resource.isInstanceOf[IFile])
+
+    val isSynchronized = resource.isSynchronized(IResource.DEPTH_ZERO)
+
+    /* https://bugs.eclipse.org/bugs/show_bug.cgi?id=98327
+     * Make sure file gets save in commit() if the underlying file has been deleted */
+    if (!isSynchronized && isDeleted(element))
+      info.fTextFileBuffer.setDirty(true)
+
+    if (!resource.exists()) {
+      // underlying resource has been deleted, just recreate file, ignore the rest
+      createFileFromDocument(monitor, resource.asInstanceOf[IFile], document)
+      return
+    }
+
+    if (fSavePolicy != null)
+      fSavePolicy.preSave(info.fCopy)
+
+    var subMonitor: IProgressMonitor = null
+    try {
+      fIsAboutToSave = true
+
+      // the Java editor calls [[CleanUpPostSaveListener]] here and calculates
+      // changed regions which we don't need
+      val listeners = Array[IPostSaveListener]()
+
+      subMonitor = getSubProgressMonitor(monitor, if (listeners.length > 0) 70 else 100)
+
+      info.fCopy.commitWorkingCopy(overwrite || isSynchronized, subMonitor)
+      if (listeners.length > 0)
+        notifyPostSaveListeners(info, Array(), listeners, getSubProgressMonitor(monitor, 30))
+
+    } catch {
+      // inform about the failure
+      case x: JavaModelException =>
+        fireElementStateChangeFailed(element)
+        if (IJavaModelStatusConstants.UPDATE_CONFLICT == x.getStatus().getCode())
+          // convert JavaModelException to CoreException
+          throw new CoreException(new Status(
+              IStatus.WARNING, JavaUI.ID_PLUGIN, IResourceStatus.OUT_OF_SYNC_LOCAL,
+              "The file is not synchronized with the local file system.", null))
+        throw x
+      case x: CoreException =>
+        // inform about the failure
+        fireElementStateChangeFailed(element)
+        throw x
+      case x: RuntimeException =>
+        // inform about the failure
+        fireElementStateChangeFailed(element)
+        throw x
+    } finally {
+      fIsAboutToSave = false
+      if (subMonitor != null)
+        subMonitor.done()
+    }
+
+    // If here, the dirty state of the editor will change to "not dirty".
+    // Thus, the state changing flag will be reset.
+    if (info.fModel.isInstanceOf[AbstractMarkerAnnotationModel]) {
+      val model = info.fModel.asInstanceOf[AbstractMarkerAnnotationModel]
+      model.updateMarkers(document)
+    }
+
+    if (fSavePolicy != null) {
+      val unit = fSavePolicy.postSave(info.fCopy)
+      if (unit != null && info.fModel.isInstanceOf[AbstractMarkerAnnotationModel]) {
+        val r = unit.getResource()
+        val markers = r.findMarkers(IMarker.MARKER, true, IResource.DEPTH_ZERO)
+        if (markers != null && markers.length > 0) {
+          val model = info.fModel.asInstanceOf[AbstractMarkerAnnotationModel]
+          for (marker <- markers)
+            model.updateMarker(document, marker, null)
+        }
+      }
+    }
+  }
+
+  private def getSubProgressMonitor(monitor: IProgressMonitor, ticks: Int): IProgressMonitor =
+    if (monitor != null)
+      new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
+    else
+      new NullProgressMonitor()
+
+  private def fSavePolicy: ISavePolicy =
+    withDefaultValue(null: ISavePolicy)(ra.fSavePolicy[ISavePolicy])
+
+  private def fIsAboutToSave: Boolean =
+    withDefaultValue(false)(ra.fIsAboutToSave[Boolean])
+
+  private def fIsAboutToSave_=(b: Boolean): Unit =
+    withDefaultValue(())(ra.fIsAboutToSave = b)
+
+  private def withDefaultValue[A](default: A)(f: => A) =
+    try f catch {
+      case e: Exception =>
+        logger.error("", e)
+        default
+    }
+
+}
