@@ -4,6 +4,8 @@ trait Document {
 
   doc =>
 
+  def apply(i: Int): Char
+
   def length: Int
 
   def text: String
@@ -17,6 +19,22 @@ trait Document {
   def lineCount: Int
 
   def lineInformation(lineNumber: Int): Range
+
+  def head: Char
+
+  def headOpt: Option[Char]
+
+  def tail: String
+
+  def tailOpt: Option[String]
+
+  def init: String
+
+  def initOpt: Option[String]
+
+  def last: Char
+
+  def lastOpt: Option[Char]
 
   case class Range(start: Int, end: Int) {
     def length: Int = end-start

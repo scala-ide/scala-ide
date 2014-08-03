@@ -138,4 +138,80 @@ class DocumentTest {
   @Test
   def trimRight_trims_nothing_when_there_is_no_whitespace() =
     " \t  hello" becomes " \t  hello" after (_.lineInformation(0).trimRight.text)
+
+  @Test
+  def apply_on_non_empty_file_succeeds() =
+    document("some text").apply(3) === 'e'
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def apply_thrown_when_index_lower_than_zero(): Unit =
+    document("some text").apply(-1)
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def apply_thrown_when_index_greater_equal_than_length(): Unit =
+    document("some text").apply(9)
+
+  @Test
+  def head_on_non_empty_file_succeeds() =
+    document("some text").head === 's'
+
+  @Test
+  def headOpt_on_non_empty_file_succeeds() =
+    document("some text").headOpt === Some('s')
+
+  @Test
+  def tail_on_non_empty_file_succeeds() =
+    document("some text").tail === "ome text"
+
+  @Test
+  def tailOpt_on_non_empty_file_succeeds() =
+    document("some text").tailOpt === Some("ome text")
+
+  @Test
+  def init_on_non_empty_file_succeeds() =
+    document("some text").init === "some tex"
+
+  @Test
+  def initOpt_on_non_empty_file_succeeds() =
+    document("some text").initOpt === Some("some tex")
+
+  @Test
+  def last_on_non_empty_file_succeeds() =
+    document("some text").last === 't'
+
+  @Test
+  def lastOpt_on_non_empty_file_succeeds() =
+    document("some text").lastOpt === Some('t')
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def head_on_empty_file_throws(): Unit =
+    document("").head
+
+  @Test
+  def headOpt_on_empty_file_returns_none() =
+    document("").headOpt === None
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def tail_on_empty_file_throws(): Unit =
+    document("").tail
+
+  @Test
+  def tailOpt_on_empty_file_returns_none() =
+    document("").tailOpt === None
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def init_on_empty_file_throws(): Unit =
+    document("").init
+
+  @Test
+  def initOpt_on_empty_file_returns_none() =
+    document("").initOpt === None
+
+  @Test(expected = classOf[IndexOutOfBoundsException])
+  def last_on_empty_file_throws(): Unit =
+    document("").last
+
+  @Test
+  def lastOpt_on_empty_file_returns_none() =
+    document("").lastOpt === None
 }
