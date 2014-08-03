@@ -41,6 +41,7 @@ import org.scalaide.core.ui.completion.CompletionTestSuite
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
+import org.scalaide.core.text.TextTestSuite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -85,6 +86,7 @@ import org.scalaide.ui.wizards.WizardTests
     classOf[MultiScalaVersionTest],
     classOf[DirectoryScalaInstallationTest],
     classOf[CompletionTestSuite],
-    classOf[WizardTests]
+    classOf[WizardTests],
+    classOf[TextTestSuite]
 ))
 class TestsSuite
