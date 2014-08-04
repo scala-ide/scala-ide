@@ -38,10 +38,10 @@ object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-
 
 class DeprecationWarningsTests {
   private type Warnings = Seq[String]
+  import deprecationWarningsProject._
 
   @Before
   def prepareTest() {
-    import deprecationWarningsProject._
     initSettings()
     val unitB = deprecationWarningsProject.compilationUnit("test/B.scala")
     SDTTestUtils.changeContentOfFile(unitB.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalContentB)
@@ -97,6 +97,48 @@ class DeprecationWarningsTests {
     Assert.assertEquals("Second compilation should show only one deprecation warning", expectedDeprecationWarnings, warningsAfterIncrementalBuild)
   }
 
+  /**
+   * This tests the second scenario in https://github.com/sbt/sbt/issues/1372:
+   *
+   * - project succesfully built
+   * - introduce an error
+   * - undo change
+   * - Expected: no errors left behind
+   *
+   * This is problematic because Sbt might not compile *any* file in the last step, since the
+   * bytecode on disk is consistent with the source code after the "undo". We make sure we don't have
+   * stray error markers, but also that the original marker state is restored.
+   */
+  @Test def undoChangeCleansErrorMarkers() {
+    val originalDeprecationWarnings = Seq("method a in class B is deprecated")
+
+    val unitA = deprecationWarningsProject.compilationUnit("test/A.scala")
+    deprecationWarningsProject.cleanProject()
+    val warningsAfterFullClean = doBuild(IncrementalProjectBuilder.FULL_BUILD) andGetProblemsOf unitA
+    Assert.assertEquals("First compilation should show one deprecation warning", originalDeprecationWarnings, warningsAfterFullClean)
+
+    // let's modify the compilation unit B, which is referenced by A
+    // this change will trigger an error in A
+    val unitB = deprecationWarningsProject.compilationUnit("test/B.scala")
+    val unitBFile = unitB.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile]
+    val newContentB = """
+      |package test
+      |
+      |class B {
+      |  @deprecated
+      |  def a1 = 2
+      |}""".stripMargin
+    SDTTestUtils.changeContentOfFile(unitBFile, newContentB)
+
+    val errorsAfterIncrementalBuild = doBuild(IncrementalProjectBuilder.INCREMENTAL_BUILD) andGetProblemsOf unitA
+    val expectedErrorAfterBuild = Seq("value a is not a member of test.B")
+    Assert.assertEquals("Second compilation should show one error", expectedErrorAfterBuild, errorsAfterIncrementalBuild)
+
+    // undoing the change should clear the error
+    SDTTestUtils.changeContentOfFile(unitBFile, originalContentB)
+    val errorsAfterIncrementalBuild2 = doBuild(IncrementalProjectBuilder.INCREMENTAL_BUILD) andGetProblemsOf unitA
+    Assert.assertEquals("Undoing the change should clear errors", originalDeprecationWarnings, errorsAfterIncrementalBuild2)
+  }
 
   private def doBuild(buildFlag: Int) = new {
     def andGetProblemsOf(unit: ICompilationUnit): Warnings = {
