@@ -1,15 +1,15 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.Commons
-import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 
-import scalariform.lexer._
+import scalariform.lexer.ScalaLexer
+
 
 object ScalaFileCreator {
   val VariableTypeName = "type_name"
@@ -49,10 +49,9 @@ trait ScalaFileCreator extends FileCreator {
       }
   }
 
-  override def createFilePath(folder: IFolder, name: String): IPath = {
-    val filePath = name.replace('.', '/')+".scala"
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    root.getRawLocation().append(folder.getFullPath()).append(filePath)
+  override def create(folder: IFolder, name: String): IFile = {
+    val filePath = name.replace('.', '/')
+    folder.getFile(s"$filePath.scala")
   }
 
   override def completionEntries(folder: IFolder, name: String): Seq[String] = {
@@ -125,7 +124,7 @@ trait ScalaFileCreator extends FileCreator {
 
   private[wizards] def checkTypeExists(folder: IFolder, fullyQualifiedType: String): Validation = {
     val path = fullyQualifiedType.replace('.', '/')
-    if (FileUtils.existsWorkspaceFile(folder.getFullPath().append(path + ".scala")))
+    if (folder.getFile(s"$path.scala").exists())
       Invalid("File already exists")
     else {
       val scalaProject = ScalaPlugin.plugin.asScalaProject(folder.getProject())

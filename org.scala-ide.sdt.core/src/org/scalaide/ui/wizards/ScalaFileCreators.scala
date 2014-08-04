@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.scalaide.util.internal.Commons
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.eclipse.core.resources.IFile
 
 class ClassCreator extends ScalaFileCreator
 
@@ -36,7 +36,7 @@ class PackageObjectCreator extends ScalaFileCreator {
       case Some(e) => Left(Invalid(e))
       case _       => Right { f =>
         val fileName = fullyQualifiedType.replace('.', '/') + "/package.scala"
-        if (FileUtils.existsWorkspaceFile(f.getFullPath().append(fileName)))
+        if (f.getFile(fileName).exists())
           Invalid("File already exists")
         else
           Valid
@@ -44,10 +44,9 @@ class PackageObjectCreator extends ScalaFileCreator {
     }
   }
 
-  override def createFilePath(folder: IFolder, name: String): IPath = {
+  override def create(folder: IFolder, name: String): IFile = {
     val filePath = name.replace('.', '/')
-    val root = ResourcesPlugin.getWorkspace().getRoot()
-    root.getRawLocation().append(folder.getFullPath()).append(filePath).append("package.scala")
+    folder.getFile(s"$filePath/package.scala")
   }
 }
 
