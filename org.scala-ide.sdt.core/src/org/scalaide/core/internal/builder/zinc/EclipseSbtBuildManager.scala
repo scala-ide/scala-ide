@@ -251,7 +251,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
         false
       } else {
         if (savedTotal != total) {
-          monitor.setWorkRemaining(total - savedTotal)
+          monitor.setWorkRemaining(total - lastWorked)
           savedTotal = total
         }
 
