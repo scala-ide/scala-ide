@@ -17,11 +17,13 @@ import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
+import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 
 object SaveActionExtensions {
 
   val saveActionSettings: Seq[SaveActionSetting] = Seq(
-    RemoveTrailingWhitespaceSetting
+    RemoveTrailingWhitespaceSetting,
+    AddNewLineAtEndOfFileSetting
   )
 }
 
