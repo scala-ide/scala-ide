@@ -14,7 +14,7 @@ trait SaveAction extends ScalaIdeExtension {
    * disable save actions. If the save action is disabled, [[perform()]] will
    * never be executed.
    */
-  def setting: SaveActionSetting
+  override def setting: SaveActionSetting
 
   /**
    * Performs the save action and returns all changes that should be done on

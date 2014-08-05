@@ -3,7 +3,17 @@ package org.scalaide.extensions
 /**
  * Base interface for all Scala IDE extensions.
  */
-trait ScalaIdeExtension
+trait ScalaIdeExtension {
+
+  /**
+   * The setting information is used to describe the behavior of the IDE
+   * extension.
+   *
+   * Describing the behavior means that users may see information about this
+   * extension in the "Scala" preference page of Eclipse.
+   */
+  def setting: ExtensionSetting
+}
 
 object ExtensionSetting {
   import reflect.runtime.universe._

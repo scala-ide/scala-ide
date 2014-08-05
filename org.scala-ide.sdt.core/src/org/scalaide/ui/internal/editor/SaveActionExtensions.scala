@@ -7,17 +7,18 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
+import org.scalaide.extensions.SaveActionSetting
+import org.scalaide.extensions.ScalaIdeExtension
+import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
+import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.extensions.SaveAction
-import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
-import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 
 object SaveActionExtensions {
 
@@ -28,6 +29,7 @@ object SaveActionExtensions {
 }
 
 trait SaveActionExtensions extends HasLogger {
+  import SaveActionExtensions._
 
   /**
    * This provides a listener of an API that can be understood by JDT. We don't
@@ -63,13 +65,26 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
+  private def findEnabledExtensions[A <: ScalaIdeExtension](exts: Seq[A]): Seq[A] = {
+    def isEnabled(id: String): Boolean =
+      ScalaPlugin.prefStore.getBoolean(id)
+
+    exts filter { ext =>
+      saveActionSettings.find(_ == ext.setting) exists { s =>
+        isEnabled(s.id)
+      }
+    }
+  }
+
   private def documentSuppportExtensions(udoc: IDocument) = {
     val doc = new TextDocument(udoc)
-    val documentSupportExtensions = Seq(
+    val extensions = Seq(
       RemoveTrailingWhitespaceCreator.create(doc),
       AddNewLineAtEndOfFileCreator.create(doc)
     )
-    documentSupportExtensions.flatMap(_.perform())
+    val enabledExtensions = findEnabledExtensions(extensions)
+
+    enabledExtensions.flatMap(_.perform())
   }
 
   private def compilerSupportExtensions() = {
@@ -82,7 +97,9 @@ trait SaveActionExtensions extends HasLogger {
         r.get match {
           case Left(tree) =>
             val extensions = Seq[CompilerSupport]()
-            extensions flatMap (_.perform())
+            val enabledExtensions = findEnabledExtensions(extensions)
+
+            enabledExtensions.flatMap(_.perform())
           case Right(e) =>
             logger.error(
                 s"An error occurred while trying to get tree of file '${sf.file.name}'."+
