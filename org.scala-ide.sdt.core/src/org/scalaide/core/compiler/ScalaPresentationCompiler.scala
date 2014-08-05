@@ -42,6 +42,7 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
+import scala.reflect.internal.util.RangePosition
 
 class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
   /*
@@ -455,8 +456,7 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
-        val start = pos.point
-        val end = start + ScalaWordFinder.findWord(source.content, start).getLength() - 1
+        val reducedPos = toSingleLine(pos)
         val fileName =
           source.file match {
             case EclipseFile(file) =>
@@ -472,11 +472,19 @@ object ScalaPresentationCompiler {
           0,
           new Array[String](0),
           nscSeverityToEclipse(severityLevel),
-          start,
-          end,
-          pos.line,
-          pos.column))
+          reducedPos.start,
+          math.max(reducedPos.start, reducedPos.end - 1),
+          reducedPos.line,
+          reducedPos.column))
       } else None
+    }
+
+    /** Original code from Position.toSingleLine, copied since it was removed from 2.11 */
+    def toSingleLine(pos: Position): Position = pos.source match {
+      case bs: BatchSourceFile if pos.end > 0 && bs.offsetToLine(pos.start) < bs.offsetToLine(pos.end - 1) =>
+        val pointLine = bs.offsetToLine(pos.point)
+        new RangePosition(pos.source, pos.start, pos.point, bs.lineToOffset(pointLine + 1))
+      case _ => pos
     }
 
     def formatMessage(msg: String) = msg.map {
