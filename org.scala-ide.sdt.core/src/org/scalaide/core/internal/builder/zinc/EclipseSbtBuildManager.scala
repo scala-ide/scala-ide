@@ -142,7 +142,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
   private def runCompiler(sources: Seq[File]) {
     val scalaInstall = findInstallation(project)
     logger.info(s"Running compiler using $scalaInstall")
-    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, new SbtProgress, tempDirFile, sbtLogger)
+    val progress = new SbtProgress
+    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, progress, tempDirFile, sbtLogger)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
@@ -150,7 +151,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
         case _: CompileFailed | CompilerInterfaceFailed => None
       }
     analysis foreach setCached
-    createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)))
+    createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)), progress.actualCompiledFiles)
   }
 
   /**
@@ -161,18 +162,14 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
    * markers in the current project, so now we need to recreate markers only for files that were *not* recompiled
    * in the last run.
    *
-   * @note We assume a file that has at least one problem marker is up-to-date. Since we remove all markers at the
-   *       beginning of the build, having a marker means that file was compiled, and eventual problems were reported
-   *       through the build reporter.
-   *
-   *       See discussion under https://github.com/sbt/sbt/issues/1372
+   * @note See discussion under https://github.com/sbt/sbt/issues/1372
    */
-  private def createAdditionalMarkers(analysis: Analysis): Unit = {
+  private def createAdditionalMarkers(analysis: Analysis, compiledFiles: Set[IFile]): Unit = {
     for {
       (file, info) <- analysis.infos.allInfos
       resource <- ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(file.toURI())
       // this file might have been deleted in the meantime
-      if resource.exists() && FileUtils.findBuildErrors(resource).isEmpty
+      if resource.exists() && !compiledFiles(resource)
     } createMarkers(resource, info)
   }
 
@@ -230,11 +227,22 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
     private var savedTotal = 0
     private var throttledMessages = 0
 
+    private var compiledFiles: Set[IFile] = Set()
+
+    /** Return the set of files that were reported as being compiled during this session */
+    def actualCompiledFiles: Set[IFile] = compiledFiles
+
     override def startUnit(phaseName: String, unitPath: String) {
       def unitIPath: IPath = Path.fromOSString(unitPath)
 
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
-      if (phaseName == "parser") FileUtils.toIFile(unitIPath).foreach(FileUtils.clearTasks(_, null))
+      if (phaseName == "parser") {
+        val file = FileUtils.resourceForPath(unitIPath, project.underlying.getFullPath)
+        file.foreach { f =>
+          FileUtils.clearTasks(f, null)
+          compiledFiles += f
+        }
+      }
 
       // It turned out that updating `subTaks` too often slowed down the build... and the UI was blocked
       // going through all the updates, long after compilation finished. So we report only 1:10 updates.
