@@ -14,6 +14,16 @@ import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.extensions.SaveAction
+import org.scalaide.extensions.SaveActionSetting
+import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
+
+object SaveActionExtensions {
+
+  val saveActionSettings: Seq[SaveActionSetting] = Seq(
+    RemoveTrailingWhitespaceSetting
+  )
+}
 
 trait SaveActionExtensions extends HasLogger {
 
