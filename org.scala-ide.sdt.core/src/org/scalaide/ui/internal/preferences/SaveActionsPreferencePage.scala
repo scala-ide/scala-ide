@@ -74,7 +74,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     columnEnabled onLabelUpdate { _.asInstanceOf[SaveActionSetting].name }
     tcl.setColumnData(columnEnabled.getColumn(), new ColumnWeightData(1, true))
 
-    viewer.setInput(settings)
+    viewer.setInput(settings.sortBy(_.name))
     viewer.setAllChecked(false)
     viewer.setCheckedElements(settings.filter(isEnabled).asInstanceOf[Array[AnyRef]])
 
