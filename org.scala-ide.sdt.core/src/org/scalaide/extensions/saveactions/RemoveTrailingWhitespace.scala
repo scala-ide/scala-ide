@@ -7,12 +7,9 @@ object RemoveTrailingWhitespaceSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[RemoveTrailingWhitespace],
   name = "Remove trailing whitespace",
   description = "Removes trailing whitespace of the entire document.",
-  textBefore = """|class Test {  $
-                  |  val value = 0    $
-                  |}""".stripMargin.replaceAll("\\$", ""),
-  textAfter = """|class Test {
-                 |  val value = 0
-                 |}""".stripMargin
+  codeExample = """|class Test {  $
+                   |  val value = 0    $
+                   |}""".stripMargin.replaceAll("\\$", "")
 )
 
 /**

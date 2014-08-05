@@ -46,18 +46,15 @@ trait SaveAction extends ScalaIdeExtension {
  *        A (detailed) description about what the save action is doing. It is
  *        displayed to users and the only way to describe the behavior of the
  *        save action in detail.
- * @param textBefore
+ * @param codeExample
  *        A short code example that depicts on which part of the sources the
- *        save action is working on. In contrast to `textAfter` this shows the
- *        state of the code before the save action is executed.
- * @param textAfter
- *        In contrast to `textBefore` this shows the state of the code after the
- *        save action is executed
+ *        save action is working on. The IDE can execute save actions
+ *        (especially the corresponding save action) on this code in order to
+ *        show users how they change the code.
  */
 case class SaveActionSetting(
   id: String,
   name: String,
   description: String,
-  textBefore: String,
-  textAfter: String
+  codeExample: String
 ) extends ExtensionSetting

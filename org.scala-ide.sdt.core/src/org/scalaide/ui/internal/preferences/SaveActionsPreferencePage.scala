@@ -113,7 +113,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 
   private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
-    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP)
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
     t.setText(initialText)
     t.setLayoutData({
       val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
@@ -141,8 +141,8 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 
   private def selectSaveAction(saveAction: SaveActionSetting) = {
-    textBefore.set(formatPreviewText(saveAction.textBefore))
-    textAfter.set(formatPreviewText(saveAction.textAfter))
+    textBefore.set(saveAction.codeExample)
+    textAfter.set("Previewing the behavior of the save action is not yet implemented.")
     descriptionArea.setText(saveAction.description)
   }
 
@@ -151,9 +151,6 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     f(previewer.getDocument())
     previewer.getControl
   }
-
-  private def formatPreviewText(text: String): String =
-    ScalaFormatter.format(text, FormatterPreferences.getPreferences(prefStore))
 
   private object ContentProvider extends IStructuredContentProvider {
 
