@@ -13,15 +13,17 @@ import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.resources.MarkerFactory
+import scala.reflect.internal.Chars
+import xsbti.Maybe
 
 private case class SbtProblem(severity: Severity, message: String, position: Position, category: String) extends xsbti.Problem {
   override def equals(other: Any): Boolean = other match {
     case otherProblem: xsbti.Problem =>
       ((message == otherProblem.message)
-          && (severity == otherProblem.severity)
-          && m2o(position.offset) ==  m2o(otherProblem.position.offset)
-          && m2o(position.line) ==  m2o(otherProblem.position.line)
-          && m2o(position.sourceFile) ==  m2o(otherProblem.position.sourceFile))
+        && (severity == otherProblem.severity)
+        && m2o(position.offset) == m2o(otherProblem.position.offset)
+        && m2o(position.line) == m2o(otherProblem.position.line)
+        && m2o(position.sourceFile) == m2o(otherProblem.position.sourceFile))
     case _ => false
   }
 
@@ -82,7 +84,7 @@ private[zinc] class SbtBuildReporter(project: ScalaProject) extends xsbti.Report
       offset <- m2o(pos.offset)
       line <- m2o(pos.line)
     } yield if (resource.getFileExtension != "java") {
-      val markerPos = MarkerFactory.RegionPosition(offset, 0, line)
+      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
       logger.info("suppressed error in Java file: %s".format(msg))
@@ -91,5 +93,14 @@ private[zinc] class SbtBuildReporter(project: ScalaProject) extends xsbti.Report
     if (!marker.isDefined) {
       BuildProblemMarker.create(project.underlying, severity, msg)
     }
+  }
+
+  /** Return the identifier starting at `start` inside `content`. */
+  private def identifierLength(content: String, start: Maybe[Integer]): Int = {
+    def isOK(c: Char) = Chars.isIdentifierPart(c) || Chars.isOperatorPart(c)
+    if (start.isDefined)
+      (content drop start.get takeWhile isOK).size
+    else
+      0
   }
 }

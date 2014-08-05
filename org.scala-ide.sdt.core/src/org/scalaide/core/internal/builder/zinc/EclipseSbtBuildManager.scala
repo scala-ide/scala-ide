@@ -181,14 +181,8 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
    */
   private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
     import SbtUtils.m2o
-    for {
-      problem <- sourceInfo.reportedProblems
-      offset <- m2o(problem.position.offset)
-      line <- m2o(problem.position.line)
-    } {
-      val markerPos = MarkerFactory.RegionPosition(offset, 0, line)
-      BuildProblemMarker.create(file, sbtReporter.eclipseSeverity(problem.severity), problem.message, markerPos)
-    }
+    for (problem <- sourceInfo.reportedProblems)
+      sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }
 
   private def setCached(a: Analysis): Analysis = {

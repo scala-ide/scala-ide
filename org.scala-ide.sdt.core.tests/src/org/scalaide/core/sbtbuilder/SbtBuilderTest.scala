@@ -147,6 +147,10 @@ class SbtBuilderTest {
       Assert.assertTrue("Build error messages differ. Expected: %s, Actual: %s".format(expectedMessages, errorMessages), expectedMessages.exists(similarErrorMessage(error)))
     }
 
+    // error markers have non-zero length
+    for (p <- problems)
+      Assert.assertTrue("Error marker length is zero", (p.getAttribute(IMarker.CHAR_END, 0) - p.getAttribute(IMarker.CHAR_START, 0) > 0))
+
     fooClientCU.doWithSourceFile { (sf, comp) =>
       comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
     }
