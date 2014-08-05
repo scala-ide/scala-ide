@@ -851,6 +851,9 @@
      <initializer
            class="org.scalaide.ui.internal.preferences.HoverPreferenceInitializer">
      </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">

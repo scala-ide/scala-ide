@@ -1,5 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.layout.TableColumnLayout
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.text.IDocument
@@ -163,5 +164,14 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     }
 
     override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = ()
+  }
+}
+
+/** This class is referenced through plugin.xml */
+class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
+  def initializeDefaultPreferences(): Unit = {
+    SaveActionExtensions.saveActionSettings foreach { s =>
+      ScalaPlugin.prefStore.setDefault(s.id, false)
+    }
   }
 }
