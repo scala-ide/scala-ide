@@ -9,6 +9,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
+import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.TextChange
@@ -16,6 +17,7 @@ import org.scalaide.extensions.CompilerSupport
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.ScalaIdeExtension
 import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
+import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EditorUtils
@@ -24,7 +26,8 @@ object SaveActionExtensions {
 
   val saveActionSettings: Seq[SaveActionSetting] = Seq(
     RemoveTrailingWhitespaceSetting,
-    AddNewLineAtEndOfFileSetting
+    AddNewLineAtEndOfFileSetting,
+    AutoFormattingSetting
   )
 }
 
@@ -80,7 +83,8 @@ trait SaveActionExtensions extends HasLogger {
     val doc = new TextDocument(udoc)
     val extensions = Seq(
       RemoveTrailingWhitespaceCreator.create(doc),
-      AddNewLineAtEndOfFileCreator.create(doc)
+      AddNewLineAtEndOfFileCreator.create(doc),
+      AutoFormattingCreator.create(doc)
     )
     val enabledExtensions = findEnabledExtensions(extensions)
 
