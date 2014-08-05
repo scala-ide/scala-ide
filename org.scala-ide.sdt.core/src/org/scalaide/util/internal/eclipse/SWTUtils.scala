@@ -1,21 +1,10 @@
 package org.scalaide.util.internal.eclipse
 
-import org.eclipse.swt.widgets.Display
-import org.eclipse.jface.viewers.DoubleClickEvent
-import org.eclipse.jface.viewers.IDoubleClickListener
-import org.eclipse.jface.viewers.SelectionChangedEvent
-import org.eclipse.jface.viewers.ISelectionChangedListener
-import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.events.KeyEvent
-import org.eclipse.swt.events.KeyAdapter
-import org.eclipse.swt.events.FocusAdapter
-import org.eclipse.swt.events.FocusEvent
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.jface.preference._
+import org.eclipse.jface.util._
+import org.eclipse.jface.viewers._
 import org.eclipse.swt.events._
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.jface.preference.BooleanFieldEditor
-import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.swt.widgets._
 import org.scalaide.util.internal.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.swt.widgets.Shell
@@ -80,7 +69,12 @@ object SWTUtils {
       def doubleClick(event: DoubleClickEvent) { p(event) }
     }
 
-  implicit class PimpedControl(control: Control) {
+  implicit def fnToCheckStateListener(p: CheckStateChangedEvent => Unit): ICheckStateListener =
+    new ICheckStateListener {
+      def checkStateChanged(event: CheckStateChangedEvent) = p(event)
+    }
+
+  implicit class PimpedControl(private val control: Control) extends AnyVal {
 
     def onKeyReleased(p: KeyEvent => Any) {
       control.addKeyListener(new KeyAdapter {
@@ -100,6 +94,14 @@ object SWTUtils {
       })
     }
 
+  }
+
+  implicit class RichTableViewerColumn(private val column: TableViewerColumn) extends AnyVal {
+    def onLabelUpdate(f: AnyRef => String) =
+      column.setLabelProvider(new ColumnLabelProvider() {
+        override def getText(elem: AnyRef): String =
+          f(elem)
+      })
   }
 
   /**

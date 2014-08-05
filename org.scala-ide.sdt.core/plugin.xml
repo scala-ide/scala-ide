@@ -128,6 +128,12 @@
             id="org.scalaide.ui.preferences.editor.hover"
             name="Hover">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.SaveActionsPreferencePage"
+            id="org.scalaide.ui.preferences.editor.saveactions"
+            name="Save Actions">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
