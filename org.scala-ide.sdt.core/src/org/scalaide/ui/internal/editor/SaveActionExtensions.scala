@@ -10,6 +10,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
@@ -18,6 +19,7 @@ import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
+import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
 import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
@@ -33,7 +35,8 @@ object SaveActionExtensions {
   val saveActionSettings: Seq[SaveActionSetting] = Seq(
     RemoveTrailingWhitespaceSetting,
     AddNewLineAtEndOfFileSetting,
-    AutoFormattingSetting
+    AutoFormattingSetting,
+    AddMissingOverrideSetting
   )
 }
 
@@ -86,7 +89,8 @@ trait SaveActionExtensions extends HasLogger {
    * Applies all save actions that extends [[CompilerSupport]].
    */
   private def applyCompilerExtensions(udoc: IDocument) = {
-    val exts = Seq[CompilerSupportCreator](
+    val exts = Seq(
+      AddMissingOverrideCreator.create _
     )
 
     for (ext <- exts) {
