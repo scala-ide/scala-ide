@@ -37,6 +37,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   private var textAfter: IDocument = _
   private var descriptionArea: Text = _
   private var timeoutValue: Text = _
+  private var viewer: CheckboxTableViewer = _
 
   private val settings = SaveActionExtensions.saveActionSettings.toArray
 
@@ -82,7 +83,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     val tcl = new TableColumnLayout
     tableComposite.setLayout(tcl)
 
-    val viewer = new CheckboxTableViewer(table)
+    viewer = new CheckboxTableViewer(table)
     viewer.setContentProvider(ContentProvider)
     viewer.addSelectionChangedListener { e: SelectionChangedEvent =>
       selectSaveAction(table.getSelection().head.getData().asInstanceOf[SaveActionSetting])
@@ -132,6 +133,10 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 
   override def performDefaults(): Unit = {
+    timeoutValue.setText(SaveActionsPreferenceInitializer.SaveActionDefaultTimeout.toString())
+    viewer.setAllChecked(false)
+    changes = Set()
+    settings foreach (changes += _)
     super.performDefaults
   }
 
@@ -187,12 +192,19 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 }
 
+object SaveActionsPreferenceInitializer {
+  /** Default timeout value in milliseconds */
+  final val SaveActionDefaultTimeout = 200
+}
+
 /** This class is referenced through plugin.xml */
 class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
+  import SaveActionsPreferenceInitializer._
+
   def initializeDefaultPreferences(): Unit = {
     SaveActionExtensions.saveActionSettings foreach { s =>
       ScalaPlugin.prefStore.setDefault(s.id, false)
     }
-    ScalaPlugin.prefStore.setDefault(SaveActionExtensions.SaveActionTimeoutId, 200)
+    ScalaPlugin.prefStore.setDefault(SaveActionExtensions.SaveActionTimeoutId, SaveActionDefaultTimeout)
   }
 }
