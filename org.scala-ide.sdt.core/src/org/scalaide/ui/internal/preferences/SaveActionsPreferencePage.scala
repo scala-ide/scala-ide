@@ -12,6 +12,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.jface.viewers.TableViewerColumn
 import org.eclipse.jface.viewers.Viewer
 import org.eclipse.swt.SWT
+import org.eclipse.swt.events.ModifyEvent
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
@@ -22,33 +23,54 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.ui.internal.editor.SaveActionExtensions
-import org.scalaide.util.internal.eclipse.SWTUtils
-
-import scalariform.formatter.ScalaFormatter
+import org.scalaide.util.internal.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
   private val prefStore = ScalaPlugin.prefStore
+  private val MinSaveActionTimeout = 100
 
   private var textBefore: IDocument = _
   private var textAfter: IDocument = _
   private var descriptionArea: Text = _
+  private var timeoutValue: Text = _
 
   private val settings = SaveActionExtensions.saveActionSettings.toArray
 
   private var changes = Set[SaveActionSetting]()
 
   override def createContents(parent: Composite): Control = {
-    import SWTUtils._
-
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(2, true))
 
     mkLabel(base, "Save actions are executed for open editors whenever a save event occurs for one of them.", columnSize = 2)
+
+    val timeout = new Composite(base, SWT.NONE)
+    timeout.setLayoutData(new GridData(SWT.NONE, SWT.FILL, true, false, 2, 1))
+    timeout.setLayout(new GridLayout(2, false))
+
+    timeoutValue = new Text(timeout, SWT.BORDER | SWT.SINGLE)
+    timeoutValue.setText(prefStore.getString(SaveActionExtensions.SaveActionTimeoutId))
+    timeoutValue.addModifyListener { e: ModifyEvent =>
+      def error = {
+        setValid(false)
+        setErrorMessage(s"Timeout value needs to be >= $MinSaveActionTimeout ms")
+      }
+      util.Try(timeoutValue.getText().toInt) match {
+        case util.Success(e) =>
+          if (e >= MinSaveActionTimeout) {
+            setValid(true)
+            setErrorMessage(null)
+          }
+          else error
+        case util.Failure(_) =>
+          error
+      }
+    }
+    mkLabel(timeout, "Timout in milliseconds (this is the time the IDE waits for a result of the save action)")
 
     val tableComposite = new Composite(base, SWT.NONE)
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1))
@@ -105,6 +127,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
       val previousValue = prefStore.getBoolean(saveAction.id)
       prefStore.setValue(saveAction.id, !previousValue)
     }
+    prefStore.setValue(SaveActionExtensions.SaveActionTimeoutId, timeoutValue.getText())
     super.performOk()
   }
 
@@ -170,5 +193,6 @@ class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
     SaveActionExtensions.saveActionSettings foreach { s =>
       ScalaPlugin.prefStore.setDefault(s.id, false)
     }
+    ScalaPlugin.prefStore.setDefault(SaveActionExtensions.SaveActionTimeoutId, 200)
   }
 }

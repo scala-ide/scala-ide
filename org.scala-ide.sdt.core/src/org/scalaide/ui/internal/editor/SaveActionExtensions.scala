@@ -44,10 +44,16 @@ object SaveActionExtensions {
   )
 
   /**
+   * The ID which is used as key in the preference store to identify the actual
+   * timeout value for save actions.
+   */
+  final val SaveActionTimeoutId = "org.scalaide.extensions.SaveAction.Timeout"
+
+  /**
    * The time a save action gets until the IDE waits no longer on its result.
    */
   private def saveActionTimeout: FiniteDuration =
-    200.millis
+    ScalaPlugin.prefStore.getInt(SaveActionTimeoutId).millis
 }
 
 trait SaveActionExtensions extends HasLogger {
