@@ -170,16 +170,21 @@ object EclipseUtils extends HasLogger {
     Platform.getExtensionRegistry().getConfigurationElementsFor(id)
 
   /**
-   * Executes a given function in a safe runner that catches potential occuring
-   * exceptions and logs them if this is the case.
+   * Executes a given function `f` in a safe runner that catches potential
+   * occuring exceptions and logs them together with `errorMsg` if this is the
+   * case.
+   *
+   * If no error occurs, the result of `f` is returned, otherwise `None`.
    */
-  def withSafeRunner(f: => Unit): Unit = {
+  def withSafeRunner[A](errorMsg: String)(f: => A): Option[A] = {
+    var res = null.asInstanceOf[A]
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
-        eclipseLog.error("Error occured while executing extension.", e)
+        eclipseLog.error(errorMsg, e)
 
-      override def run() = f
+      override def run() = res = f
     })
+    Option(res)
   }
 
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot

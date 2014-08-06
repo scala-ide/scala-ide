@@ -22,6 +22,7 @@ import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 
 object SaveActionExtensions {
@@ -49,10 +50,8 @@ trait SaveActionExtensions extends HasLogger {
       override def getId = "ScalaSaveActions"
       override def needsChangedRegions(cu: ICompilationUnit) = false
       override def saved(cu: ICompilationUnit, changedRegions: Array[IRegion], monitor: IProgressMonitor): Unit = {
-        try applySaveActions(udoc)
-        catch {
-          case e: Exception =>
-            logger.error("Error while executing Scala save actions", e)
+        EclipseUtils.withSafeRunner("An error occurred while executing Scala save actions") {
+          applySaveActions(udoc)
         }
       }
     }
@@ -102,9 +101,16 @@ trait SaveActionExtensions extends HasLogger {
       ScalaPlugin.prefStore.getBoolean(id)
 
     val enabled = isEnabled(instance.setting.id)
-    logger.info(s"Applying save action '${instance.getClass().getName()}': $enabled")
-    val changes = if (enabled) instance.perform() else Seq()
-    applyChanges(changes, udoc)
+    logger.info(s"Save action '${instance.setting.id}' is enabled: $enabled")
+
+    val changes =
+      if (enabled)
+        EclipseUtils.withSafeRunner(s"An error occurred while executing save action ${instance.setting.id}.") {
+          instance.perform()
+        }
+      else
+        None
+    applyChanges(changes.getOrElse(Seq()), udoc)
   }
 
   private def applyChanges(changes: Seq[Change], udoc: IDocument) = {
