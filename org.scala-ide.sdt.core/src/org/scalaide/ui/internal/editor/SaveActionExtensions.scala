@@ -1,5 +1,6 @@
 package org.scalaide.ui.internal.editor
 
+import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{TextChange => RTextChange}
 
 import org.eclipse.core.runtime.IProgressMonitor
@@ -8,14 +9,15 @@ import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
+import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
-import org.scalaide.extensions.CompilerSupport
+import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.extensions.ScalaIdeExtension
 import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
@@ -24,6 +26,9 @@ import org.scalaide.util.internal.eclipse.EditorUtils
 
 object SaveActionExtensions {
 
+  /**
+   * The settings for all existing save actions.
+   */
   val saveActionSettings: Seq[SaveActionSetting] = Seq(
     RemoveTrailingWhitespaceSetting,
     AddNewLineAtEndOfFileSetting,
@@ -32,7 +37,6 @@ object SaveActionExtensions {
 }
 
 trait SaveActionExtensions extends HasLogger {
-  import SaveActionExtensions._
 
   /**
    * This provides a listener of an API that can be understood by JDT. We don't
@@ -45,7 +49,7 @@ trait SaveActionExtensions extends HasLogger {
       override def getId = "ScalaSaveActions"
       override def needsChangedRegions(cu: ICompilationUnit) = false
       override def saved(cu: ICompilationUnit, changedRegions: Array[IRegion], monitor: IProgressMonitor): Unit = {
-        try compilationUnitSaved(cu, udoc)
+        try applySaveActions(udoc)
         catch {
           case e: Exception =>
             logger.error("Error while executing Scala save actions", e)
@@ -54,9 +58,56 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private def compilationUnitSaved(cu: ICompilationUnit, udoc: IDocument): Unit = {
-    val changes = documentSuppportExtensions(udoc) ++ compilerSupportExtensions
+  /**
+   * Applies all save actions to the contents of the given document.
+   */
+  private def applySaveActions(udoc: IDocument): Unit = {
+    applyDocumentExtensions(udoc)
+    applyCompilerExtensions(udoc)
+  }
 
+  /**
+   * Applies all save actions that extends [[DocumentSupport]].
+   */
+  private def applyDocumentExtensions(udoc: IDocument) = {
+    val exts = Seq(
+      RemoveTrailingWhitespaceCreator.create _,
+      AddNewLineAtEndOfFileCreator.create _,
+      AutoFormattingCreator.create _
+    )
+
+    val doc = new TextDocument(udoc)
+    for (ext <- exts) {
+      val instance = ext(doc)
+      performExtension(instance, udoc)
+    }
+  }
+
+  /**
+   * Applies all save actions that extends [[CompilerSupport]].
+   */
+  private def applyCompilerExtensions(udoc: IDocument) = {
+    val exts = Seq[CompilerSupportCreator](
+    )
+
+    for (ext <- exts) {
+      createExtensionWithCompilerSupport(ext) foreach { instance =>
+        performExtension(instance, udoc)
+      }
+    }
+  }
+
+  private def performExtension(instance: SaveAction, udoc: IDocument) = {
+    def isEnabled(id: String): Boolean =
+      ScalaPlugin.prefStore.getBoolean(id)
+
+    val enabled = isEnabled(instance.setting.id)
+    logger.info(s"Applying save action '${instance.getClass().getName()}': $enabled")
+    val changes = if (enabled) instance.perform() else Seq()
+    applyChanges(changes, udoc)
+  }
+
+  private def applyChanges(changes: Seq[Change], udoc: IDocument) = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
       val sf = ssf.sourceFile()
       val edits = changes map {
@@ -68,30 +119,12 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private def findEnabledExtensions[A <: ScalaIdeExtension](exts: Seq[A]): Seq[A] = {
-    def isEnabled(id: String): Boolean =
-      ScalaPlugin.prefStore.getBoolean(id)
+  private type CompilerSupportCreator = (
+      ScalaPresentationCompiler, ScalaPresentationCompiler#Tree,
+      SourceFile, Int, Int
+    ) => SaveAction
 
-    exts filter { ext =>
-      saveActionSettings.find(_ == ext.setting) exists { s =>
-        isEnabled(s.id)
-      }
-    }
-  }
-
-  private def documentSuppportExtensions(udoc: IDocument) = {
-    val doc = new TextDocument(udoc)
-    val extensions = Seq(
-      RemoveTrailingWhitespaceCreator.create(doc),
-      AddNewLineAtEndOfFileCreator.create(doc),
-      AutoFormattingCreator.create(doc)
-    )
-    val enabledExtensions = findEnabledExtensions(extensions)
-
-    enabledExtensions.flatMap(_.perform())
-  }
-
-  private def compilerSupportExtensions() = {
+  private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction] = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
       ssf.withSourceFile { (sf, compiler) =>
         import compiler._
@@ -100,17 +133,13 @@ trait SaveActionExtensions extends HasLogger {
         askLoadedTyped(sf, r)
         r.get match {
           case Left(tree) =>
-            val extensions = Seq[CompilerSupport]()
-            val enabledExtensions = findEnabledExtensions(extensions)
-
-            enabledExtensions.flatMap(_.perform())
+            Some(creator(compiler, tree, sf, sel.getOffset(), sel.getOffset()+sel.getLength()))
           case Right(e) =>
             logger.error(
-                s"An error occurred while trying to get tree of file '${sf.file.name}'."+
-                s" Aborting all save actions that extend ${classOf[CompilerSupport].getName()}", e)
-            Seq()
+                s"An error occurred while trying to get tree of file '${sf.file.name}'.", e)
+            None
         }
-      }
-    }.toSeq.flatten
+      }.flatten
+    }
   }
 }
