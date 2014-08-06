@@ -1,7 +1,10 @@
 package org.scalaide.ui.internal.editor
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{TextChange => RTextChange}
+import scala.util._
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
@@ -24,6 +27,7 @@ import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 
@@ -38,9 +42,16 @@ object SaveActionExtensions {
     AutoFormattingSetting,
     AddMissingOverrideSetting
   )
+
+  /**
+   * The time a save action gets until the IDE waits no longer on its result.
+   */
+  private def saveActionTimeout: FiniteDuration =
+    200.millis
 }
 
 trait SaveActionExtensions extends HasLogger {
+  import SaveActionExtensions._
 
   /**
    * This provides a listener of an API that can be understood by JDT. We don't
@@ -100,6 +111,13 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
+  /**
+   * Performs an extension, but waits not more than [[saveActionTimeout]] for a
+   * completion of the save actions calculation.
+   *
+   * The save action can't be aborted, therefore this method only returns early
+   * but may leave the `Future` in a never ending state.
+   */
   private def performExtension(instance: SaveAction, udoc: IDocument) = {
     def isEnabled(id: String): Boolean =
       ScalaPlugin.prefStore.getBoolean(id)
@@ -107,14 +125,29 @@ trait SaveActionExtensions extends HasLogger {
     val enabled = isEnabled(instance.setting.id)
     logger.info(s"Save action '${instance.setting.id}' is enabled: $enabled")
 
-    val changes =
-      if (enabled)
+    if (enabled) {
+      val timeout = saveActionTimeout
+
+      val f = TimeoutFuture(timeout) {
         EclipseUtils.withSafeRunner(s"An error occurred while executing save action ${instance.setting.id}.") {
           instance.perform()
-        }
-      else
-        None
-    applyChanges(changes.getOrElse(Seq()), udoc)
+        }.getOrElse(Seq())
+      }
+      Await.ready(f, Duration.Inf).value.get match {
+        case Success(changes) =>
+          applyChanges(changes, udoc)
+
+        case Failure(f) =>
+          eclipseLog.error(s"""|
+             |Save action '${instance.setting.id}' didn't complete, it had $timeout
+             | time to complete. Please consider to disable it in the preferences.
+             | The save action itself can't be aborted, therefore if you know that
+             | it may never complete in future, you may wish to restart your Eclipse
+             | to clean up your VM.
+             |
+             |""".stripMargin.replaceAll("\n", ""))
+      }
+    }
   }
 
   private def applyChanges(changes: Seq[Change], udoc: IDocument) = {
