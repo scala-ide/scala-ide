@@ -6,28 +6,18 @@ import org.eclipse.e4.ui.model.application.ui.advanced.MPerspective
 import org.eclipse.e4.ui.workbench.modeling.EModelService
 import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
-import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
-
-object MigrationPreferenceInitializer {
-
-  implicit class RichWorkbench(w: IWorkbenchWindow) {
-    def serviceOf[A : reflect.ClassTag]: A =
-      w.getService(reflect.classTag[A].runtimeClass).asInstanceOf[A]
-  }
-}
+import org.scalaide.util.internal.eclipse.EclipseUtils.RichWorkbench
 
 /**
  * The purpose of this class is to keep user defined preferences when they are
  * replaced with another preference due to future advancements of the Scala IDE.
  */
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with HasLogger {
-
-  import MigrationPreferenceInitializer._
 
   private lazy val window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
 
@@ -73,7 +63,6 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
         if (!alreadyActivated) {
           val activated = persp.getTags().add(tag)
           if (activated) {
-            logger.info(s"Activation of wizard element '$wizardId' was successful.")
             prefStore.setValue(prefId, true)
           }
         }
@@ -128,7 +117,6 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
 
         oldBindings foreach (_.getParameterizedCommand().getCommand().undefine())
         service.savePreferences(service.getActiveScheme(), allBindings ++ migratedBindings)
-        logger.info(s"Migration of key bindings from '$oldCommandId' to '$newCommandId' was successful.")
       }
     }
 
