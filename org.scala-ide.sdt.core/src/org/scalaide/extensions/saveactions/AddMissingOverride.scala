@@ -33,28 +33,21 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
         d.symbol.isOverridingSymbol && !d.symbol.isOverride
     }
 
-    /**
-     * Alternative (preferred) implementation:
-     * {{{
-     * mods.copy().withPosition(Flag.OVERRIDE, pos)
-     * }}}
-     * The above does not work due to a limitation in scala-refactoring.
-     */
-    def modsWithOverrideKeyword(mods: Modifiers, pos: Position): Modifiers =
-      mods.copy() setPositions Map(Flag.OVERRIDE -> pos) ++ mods.positions
-
     val addOverrideKeyword = transform {
-      case d: DefDef =>
-        val mods = modsWithOverrideKeyword(d.mods, d.pos)
-        d.copy(mods = mods | Flag.OVERRIDE) replaces d
-
-      case d: ValDef =>
-        val mods = modsWithOverrideKeyword(d.mods, d.pos)
-        d.copy(mods = mods | Flag.OVERRIDE) replaces d
-
-      case d: TypeDef =>
-        val mods = modsWithOverrideKeyword(d.mods, d.pos)
-        d.copy(mods = mods | Flag.OVERRIDE) replaces d
+      case d: MemberDef =>
+        /**
+         * Alternative (preferred) implementation:
+         * {{{
+         * mods.copy().withPosition(Flag.OVERRIDE, pos)
+         * }}}
+         * The above does not work due to a limitation in scala-refactoring.
+         */
+        val mods = d.mods.copy() setPositions Map(Flag.OVERRIDE -> d.pos) ++ d.mods.positions
+        d match {
+          case d: DefDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
+          case d: ValDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
+          case d: TypeDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
+        }
     }
 
     val refactoring = topdown {
