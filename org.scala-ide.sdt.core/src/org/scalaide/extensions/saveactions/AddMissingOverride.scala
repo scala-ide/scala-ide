@@ -18,10 +18,6 @@ object AddMissingOverrideSetting extends SaveActionSetting(
                    |""".stripMargin
 )
 
-/**
- * This save action is not yet completed. It does't add the `override` keyword
- * to vals, only to defs and types.
- */
 trait AddMissingOverride extends SaveAction with CompilerSupport {
   import global._
 
@@ -29,6 +25,10 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
 
   def perform() = {
     val symbolWithoutOverride = filter {
+      case d: ValDef =>
+        val getter = d.symbol.getterIn(d.symbol.owner)
+        getter.isOverridingSymbol && !getter.isOverride
+
       case d @ (_: DefDef | _: TypeDef) =>
         d.symbol.isOverridingSymbol && !d.symbol.isOverride
     }
@@ -45,7 +45,10 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
 
     val addOverrideKeyword = transform {
       case d: DefDef =>
-        d.mods.copy() withPosition(Flag.OVERRIDE, d.pos)
+        val mods = modsWithOverrideKeyword(d.mods, d.pos)
+        d.copy(mods = mods | Flag.OVERRIDE) replaces d
+
+      case d: ValDef =>
         val mods = modsWithOverrideKeyword(d.mods, d.pos)
         d.copy(mods = mods | Flag.OVERRIDE) replaces d
 
