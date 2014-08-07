@@ -1,0 +1,156 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Scala License which accompanies this distribution, and
+ * is available at http://www.scala-lang.org/license.html
+ */
+package org.scalaide.ui.internal.preferences
+
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.eclipse.jface.dialogs.IMessageProvider
+import org.eclipse.jface.preference.BooleanFieldEditor
+import org.eclipse.jface.preference.FieldEditorPreferencePage
+import org.eclipse.jface.preference.IntegerFieldEditor
+import org.eclipse.swt.SWT
+import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.GridLayout
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Group
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.IWorkbenchPreferencePage
+import org.scalaide.core.ScalaPlugin
+import scala.util.Try
+
+class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferencePage.GRID) with IWorkbenchPreferencePage {
+  import ResourcesPreferences._
+
+  setPreferenceStore(ScalaPlugin.prefStore)
+
+  // vars due to proper ordering of initialization
+  private var presCompGroup: Group = null
+  private var presCompInnerGroup: Composite = null
+
+  // these ones are disposed by parent class
+  private var closingEnabledEditor: BooleanFieldEditor = null
+  private var maxIdlenessLengthEditor: IntegerFieldEditor = null
+  private var ignoreOpenEditors: BooleanFieldEditor = null
+
+  override def init(wb: IWorkbench): Unit = {}
+
+  override def createFieldEditors(): Unit = {
+    presCompGroup = new Group(getFieldEditorParent, SWT.NONE)
+    presCompGroup.setText("Scala Presentation Compiler")
+
+    presCompGroup.setLayout(new GridLayout(1, true))
+    presCompGroup.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false))
+
+    closingEnabledEditor = new BooleanFieldEditor(PRES_COMP_CLOSE_UNUSED, "Close unused compiler instances", presCompGroup) {
+      override def valueChanged(oldValue: Boolean, newValue: Boolean): Unit = {
+        super.valueChanged(oldValue, newValue)
+        updateClosingPresentationCompilerEditors(newValue)
+      }
+    }
+    addField(closingEnabledEditor)
+
+    // workaround to limit width of text field
+    presCompInnerGroup = new Composite(presCompGroup, SWT.NONE)
+
+    maxIdlenessLengthEditor = new IntegerFieldEditor(PRES_COMP_MAX_IDLENESS_LENGTH, "After following number of seconds of inactivity", presCompInnerGroup) {
+      override def valueChanged(): Unit = {
+        super.valueChanged()
+        Try(getIntValue()).foreach(checkCurrentIdlenessLength)
+      }
+    }
+    maxIdlenessLengthEditor.setValidRange(10, Integer.MAX_VALUE)
+    addField(maxIdlenessLengthEditor)
+    ignoreOpenEditors = new BooleanFieldEditor(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, "Even when editors are open", presCompInnerGroup)
+    addField(ignoreOpenEditors)
+  }
+
+  override def initialize(): Unit = {
+    super.initialize()
+    updateClosingPresentationCompilerEditors(closingEnabledEditor.getBooleanValue())
+    checkCurrentIdlenessLength(maxIdlenessLengthEditor.getIntValue())
+  }
+
+  override def performDefaults(): Unit = {
+    super.performDefaults()
+    updateClosingPresentationCompilerEditors(closingEnabledEditor.getBooleanValue())
+    checkCurrentIdlenessLength(maxIdlenessLengthEditor.getIntValue())
+  }
+
+  override def dispose(): Unit = {
+    if (presCompGroup != null) presCompGroup.dispose()
+    if (presCompInnerGroup != null) presCompInnerGroup.dispose()
+    super.dispose()
+  }
+
+  private def updateClosingPresentationCompilerEditors(enabled: Boolean): Unit = {
+    maxIdlenessLengthEditor.setEnabled(enabled, presCompInnerGroup)
+    ignoreOpenEditors.setEnabled(enabled, presCompInnerGroup)
+  }
+
+  private def checkCurrentIdlenessLength(seconds: Int): Unit =
+    if (seconds < 30)
+      setMessage("It is recommended to close presentation compilers after at least 30 seconds.", IMessageProvider.WARNING)
+    else
+      setMessage(getTitle())
+
+  // hack to send notification when all properties has been already stored
+  override def performOk(): Boolean = {
+    val prefStore = getPreferenceStore()
+    val presCompPrefsChanged = closingEnabledEditor.getBooleanValue() != prefStore.getBoolean(PRES_COMP_CLOSE_UNUSED) ||
+      ignoreOpenEditors.getBooleanValue() != prefStore.getBoolean(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS) ||
+      maxIdlenessLengthEditor.getIntValue() != prefStore.getInt(PRES_COMP_MAX_IDLENESS_LENGTH)
+
+    val result = super.performOk()
+
+    if (presCompPrefsChanged) { // we want to notify listeners - all new values are already stored
+      val newChangeMarkerValue = !prefStore.getBoolean(PRES_COMP_PREFERENCES_CHANGE_MARKER)
+      prefStore.setValue(PRES_COMP_PREFERENCES_CHANGE_MARKER, newChangeMarkerValue)
+    }
+    result
+  }
+
+}
+
+object ResourcesPreferences {
+
+  private val BASE = ScalaPlugin.id + ".resources."
+  private val PRESENTATION_COMPILER_BASE = BASE + "presentationCompiler."
+  val PRES_COMP_CLOSE_UNUSED = PRESENTATION_COMPILER_BASE + "closeUnused"
+  val PRES_COMP_MAX_IDLENESS_LENGTH = PRESENTATION_COMPILER_BASE + "maxIdlenessLength"
+
+  /**
+   * Whether idle presentation compiler should be closed even if there are open editors for related project.
+   *
+   * If it's set to true, unused presentation compiler's thread will be stopped for sure. But if there are still some open editors,
+   * then memory could be not freed because of some still existing references.
+   * Such situation occurs quite often e.g. when ImplicitHighlightingPresenter is used (implicit highlighting is enabled).
+   * Looking at heap dump in profiler we can come to the conclusion that problem is here:
+   * ImplicitConversionAnnotation gets in constructor certain function using HyperlinkFactory (it holds SCP instance) which is used lazily.
+   * In addition in this case also ScalaProject could be not freed due to the same reason when closed.
+   *
+   * When working directly with SPC instances it's important to check, whether made changes don't disturb GC.
+   */
+  val PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS = PRESENTATION_COMPILER_BASE + "closeRegardlessOfOpenEditors"
+
+  /**
+   * Changes in preferences related to closing presentation compilers should be always taken into account together.
+   * Unfortunately preferences are saved separately step by step and notification about the change of one of them is sent before new values
+   * of another ones are stored in preference store. That's why we need some hack - to send one notification when new values of all
+   * related preferences are stored.
+   */
+  val PRES_COMP_PREFERENCES_CHANGE_MARKER = PRESENTATION_COMPILER_BASE + "preferencesChangeMarker"
+}
+
+class ResourcesPreferencePageInitializer extends AbstractPreferenceInitializer {
+  import ResourcesPreferences._
+
+  override def initializeDefaultPreferences(): Unit = {
+    val store = ScalaPlugin.prefStore
+    store.setDefault(PRES_COMP_CLOSE_UNUSED, true)
+    store.setDefault(PRES_COMP_MAX_IDLENESS_LENGTH, 120)
+    store.setDefault(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, false)
+    store.setDefault(PRES_COMP_PREFERENCES_CHANGE_MARKER, true)
+  }
+}
