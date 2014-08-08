@@ -17,8 +17,8 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.OSGiUtils
 import org.scalaide.util.internal.eclipse.RegionUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
@@ -74,7 +74,7 @@ object ScalaHover extends HasLogger {
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
   def DefaultScalaHoverStyleSheet: String = {
-    EclipseUtils.fileContentFromBundle(ScalaPlugin.plugin.pluginId, ScalaHoverStyleSheetPath) match {
+    OSGiUtils.fileContentFromBundle(ScalaPlugin.plugin.pluginId, ScalaHoverStyleSheetPath) match {
       case util.Success(css) =>
         css
       case util.Failure(f) =>
@@ -162,19 +162,19 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         EditorUtils.resourceOfActiveEditor.map { res =>
           val markerType = ScalaPlugin.plugin.problemMarkerId
           val markers = res.findMarkers(markerType, /* includeSubtypes */ false, IResource.DEPTH_ZERO)
-          val intersections = markers filter { m =>
+          val markersInRange = markers filter { m =>
             val r = RegionUtils.regionOf(
               m.getAttribute(IMarker.CHAR_START, 0),
               m.getAttribute(IMarker.CHAR_END, 0))
 
             region.intersects(r)
           }
-          intersections.map(_.getAttribute(ScalaMarkers.FullErrorMessage).asInstanceOf[String]).toSeq
+          markersInRange.map(_.getAttribute(ScalaMarkers.FullErrorMessage, "")).toSeq
         }.getOrElse(Seq())
       }
 
       val problems = problemsOf(src.file)
-      val intersections = problems filter (p => region.intersects(p.toRegion))
+      val problemsInRange = problems filter (p => region.intersects(p.toRegion))
 
       /* Delegate work to UI thread and block until result arrives */
       lazy val markerMessages = {
@@ -185,8 +185,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         res
       }
 
-      if (intersections.nonEmpty)
-        typecheckingErrorMessage(intersections)
+      if (problemsInRange.nonEmpty)
+        typecheckingErrorMessage(problemsInRange)
       else if (markerMessages.nonEmpty)
         buildErrorMessage(markerMessages)
       else
