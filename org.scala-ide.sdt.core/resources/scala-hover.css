@@ -1,5 +1,8 @@
-/* the html tag needs to be on a single line because it is analyzed by regex */
-html { font-family: sans-serif; font-size: 10pt; font-style: normal; font-weight: normal; }
+/* It is also possible to change the font configuration here.
+ * If one is configured, it will be preferred instead of the one
+ * in the "Colors and Fonts" preference page.
+ */
+html {}
 
 body {
   overflow: auto;
