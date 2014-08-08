@@ -159,18 +159,18 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         require(Display.getCurrent() != null && Thread.currentThread() == Display.getCurrent().getThread(),
             "this method needs to be called on the UI thread")
 
-        // We know that this exists because we are in the UI thread and an editor is selected
-        val res = EditorUtils.resourceOfActiveEditor.get
-        val markerType = ScalaPlugin.plugin.problemMarkerId
-        val markers = res.findMarkers(markerType, /* includeSubtypes */ false, IResource.DEPTH_ZERO)
-        val intersections = markers filter { m =>
-          val r = RegionUtils.regionOf(
-            m.getAttribute(IMarker.CHAR_START, 0),
-            m.getAttribute(IMarker.CHAR_END, 0))
+        EditorUtils.resourceOfActiveEditor.map { res =>
+          val markerType = ScalaPlugin.plugin.problemMarkerId
+          val markers = res.findMarkers(markerType, /* includeSubtypes */ false, IResource.DEPTH_ZERO)
+          val intersections = markers filter { m =>
+            val r = RegionUtils.regionOf(
+              m.getAttribute(IMarker.CHAR_START, 0),
+              m.getAttribute(IMarker.CHAR_END, 0))
 
-          region.intersects(r)
-        }
-        intersections.map(_.getAttribute(ScalaMarkers.FullErrorMessage).asInstanceOf[String]).toSeq
+            region.intersects(r)
+          }
+          intersections.map(_.getAttribute(ScalaMarkers.FullErrorMessage).asInstanceOf[String]).toSeq
+        }.getOrElse(Seq())
       }
 
       val problems = problemsOf(src.file)

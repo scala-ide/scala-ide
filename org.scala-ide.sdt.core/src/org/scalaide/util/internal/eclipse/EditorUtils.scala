@@ -103,15 +103,20 @@ object EditorUtils {
     if (p.isEditorAreaVisible) Some(p.getActiveEditor) else None
 
   /**
-   * Returns the resource of the active editor if there is an active editor. If
-   * this code is not executed on the UI thread or the editor is not selected
-   * an active editor does not exist/can't be accessed and `None` is returned.
+   * Returns the resource of the active editor if it exists.
+   *
+   * This method returns `None` in the following cases:
+   * - It is not executed on the UI thread
+   * - The active selection is not an editor
+   * - The active editor doesn't provide a resource (which is the case if an
+   *   [[IClassFile]] is opened)
    */
   def resourceOfActiveEditor: Option[IResource] = for {
     w <- activeWorkbenchWindow
     p <- activePage(w)
     e <- activeEditor(p)
-  } yield e.getEditorInput().getAdapter(classOf[IResource]).asInstanceOf[IResource]
+    r <- Option(e.getEditorInput().getAdapter(classOf[IResource]))
+  } yield r.asInstanceOf[IResource]
 
 
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
