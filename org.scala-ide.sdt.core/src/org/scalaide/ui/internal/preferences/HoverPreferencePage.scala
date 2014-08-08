@@ -1,18 +1,22 @@
 package org.scalaide.ui.internal.preferences
 
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.swt.SWT
+import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
+import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.ui.internal.editor.hover.ScalaHover
-import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.scalaide.util.internal.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
@@ -23,6 +27,12 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
   override def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
+
+    val fontLink = new Link(base, SWT.NONE)
+    fontLink.setText("""The font of the hover can be changed by modifying the 'Scala → Hover' entry in the <a href="org.eclipse.ui.preferencePages.ColorsAndFonts">Colors and Fonts</a> preference page.""")
+    fontLink.addSelectionListener { e: SelectionEvent =>
+      PreferencesUtil.createPreferenceDialogOn(parent.getShell(), e.text, null, null)
+    }
 
     val description = new Label(base, SWT.NONE)
     description.setText("The style of the hovers is specified by the following CSS code, which can be freely edited:")
