@@ -13,6 +13,7 @@ import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.scalaide.util.internal.eclipse.RegionUtils._
+import org.scalaide.ui.internal.editor.hover.HtmlHover
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 
@@ -31,7 +32,7 @@ class ShowTypeOfSelectionCommand extends AbstractHandler {
 
 }
 
-object TypeOfExpressionProvider extends IInformationProvider {
+object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
   def getSubject(textViewer: ITextViewer, offset: Int): IRegion = {
     val r = textViewer.getSelectedRange
     new Region(r.x, r.y)
@@ -45,7 +46,7 @@ object TypeOfExpressionProvider extends IInformationProvider {
           import compiler._
 
           def typeInfo(tpe: Type): String =
-            Option(tpe).map(tpe => HTMLPrinter.convertToHTMLContent(tpe.toString)).orNull
+            Option(tpe).map(tpe => createHtmlOutput { _ append convertContentToHtml(tpe.toString) }).orNull
 
           val response = new Response[Tree]
           askTypeAt(region.toRangePos(src), response)
