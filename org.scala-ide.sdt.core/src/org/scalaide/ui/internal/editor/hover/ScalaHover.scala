@@ -10,6 +10,7 @@ import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.ITextHoverExtension
+import org.eclipse.jface.text.ITextHoverExtension2
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.swt.widgets.Display
 import org.scalaide.core.ScalaPlugin
@@ -84,8 +85,22 @@ object ScalaHover extends HasLogger {
   }
 }
 
-class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension with HtmlHover {
+class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension with ITextHoverExtension2 with HtmlHover {
   import ScalaHover._
+
+  /**
+   * Returns the focused control creator, which is known as the presenter
+   * control creator in the Eclipse API.
+   *
+   * This method is needed because we can directly open a focused hover,
+   * without going through the unfocused variant. This happens for example when
+   * an user invokes the "Show Tooltip Description" action of the editor.
+   */
+  def getInformationPresenterControlCreator(): IInformationControlCreator =
+    new FocusedControlCreator(HoverFontId)
+
+  override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef =
+    getHoverInfo(viewer, region)
 
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = {
     icu.withSourceFile({ (src, compiler) =>
@@ -200,6 +215,6 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
   }
 
   override def getHoverControlCreator(): IInformationControlCreator =
-    new HoverControlCreator(new FocusedControlCreator(HoverFontId), HoverFontId)
+    new HoverControlCreator(getInformationPresenterControlCreator(), HoverFontId)
 
 }

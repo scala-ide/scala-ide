@@ -24,6 +24,7 @@ import org.eclipse.jface.text.formatter.IContentFormatter
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
@@ -44,6 +45,7 @@ import org.scalaide.core.internal.lexical._
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 import org.scalaide.ui.internal.editor.autoedits._
 import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
+import org.scalaide.ui.internal.editor.hover.HoverInformationProvider
 import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
@@ -187,6 +189,15 @@ class ScalaSourceViewerConfiguration(
     }
   }
 
+  override def getInformationPresenter(sourceViewer: ISourceViewer) = {
+    val ip = new HoverInformationProvider(compilationUnit map (new ScalaHover(_)))
+    val p = new InformationPresenter(ip.getInformationPresenterControlCreator())
+
+    p.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
+    getConfiguredContentTypes(sourceViewer) foreach (p.setInformationProvider(ip, _))
+    p
+  }
+
   override def getOverviewRulerAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
 
   override def getAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
@@ -215,10 +226,9 @@ class ScalaSourceViewerConfiguration(
   }
 
   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int): ITextHover =
-    getTypeRoot match {
-      case Some(scu: ScalaCompilationUnit) => ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
-      case _                               => new DefaultTextHover(sv)
-    }
+    compilationUnit.map(scu =>
+      ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
+    ).getOrElse(new DefaultTextHover(sv))
 
   override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
     val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
@@ -238,7 +248,10 @@ class ScalaSourceViewerConfiguration(
     }
   }
 
-  def getProject: IJavaProject =
+  private def compilationUnit: Option[ScalaCompilationUnit] =
+    getTypeRoot collect { case scu: ScalaCompilationUnit => scu }
+
+  private def getProject: IJavaProject =
     getTypeRoot.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
 
   /**
