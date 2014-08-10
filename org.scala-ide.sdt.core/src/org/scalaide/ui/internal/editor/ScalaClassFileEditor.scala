@@ -1,17 +1,28 @@
 package org.scalaide.ui.internal.editor
 
-import org.scalaide.core.internal.jdt.model.ScalaClassFile
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 
 class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
+
+  private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
+
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+    super.createPartControl(parent)
+
+    getInteractiveCompilationUnit() match {
+      case scu: ScalaCompilationUnit => implicitHighlighter(scu)
+      case _ =>
+    }
+  }
 
   override def getElementAt(offset : Int) : IJavaElement = {
     getInputJavaElement match {
