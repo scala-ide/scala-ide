@@ -13,6 +13,9 @@ trait TextChange extends Change {
   def start: Int
   def end: Int
   def text: String
+
+  override def toString(): String =
+    s"""TextChange(start=$start, end=$end, text="$text")"""
 }
 
 case class Add(start: Int, text: String) extends TextChange {
