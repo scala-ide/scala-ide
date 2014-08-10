@@ -141,7 +141,9 @@ trait SaveActionExtensions extends HasLogger {
       }
       Await.ready(f, Duration.Inf).value.get match {
         case Success(changes) =>
-          applyChanges(changes, udoc)
+          EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action ${instance.setting.id}.") {
+            applyChanges(changes, udoc)
+          }
 
         case Failure(f) =>
           eclipseLog.error(s"""|
