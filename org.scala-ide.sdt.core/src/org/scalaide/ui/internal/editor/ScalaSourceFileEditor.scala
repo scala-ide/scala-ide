@@ -47,6 +47,7 @@ import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
 import org.scalaide.ui.internal.actions
 import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
@@ -80,6 +81,18 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     infoPresenter.install(getSourceViewer)
     infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
     infoPresenter
+  }
+
+  private lazy val implicitHighlighter = new IJavaReconcilingListener {
+    val p = new ImplicitHighlightingPresenter(sourceViewer)
+
+    override def aboutToBeReconciled() = ()
+    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
+      self.getInteractiveCompilationUnit() match {
+        case scu: ScalaCompilationUnit => p(scu)
+        case _ =>
+      }
+    }
   }
 
   setPartName("Scala Editor")
@@ -291,6 +304,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     RefactoringMenu.fillQuickMenu(this)
+    reconcilingListeners.addReconcileListener(implicitHighlighter)
 
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
