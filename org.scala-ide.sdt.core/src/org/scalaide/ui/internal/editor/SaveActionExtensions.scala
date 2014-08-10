@@ -128,26 +128,27 @@ trait SaveActionExtensions extends HasLogger {
     def isEnabled(id: String): Boolean =
       ScalaPlugin.prefStore.getBoolean(id)
 
-    val enabled = isEnabled(instance.setting.id)
-    logger.info(s"Save action '${instance.setting.id}' is enabled: $enabled")
+    val id = instance.setting.id
+    val enabled = isEnabled(id)
+    logger.info(s"Save action '$id' is enabled: $enabled")
 
     if (enabled) {
       val timeout = saveActionTimeout
 
       val f = TimeoutFuture(timeout) {
-        EclipseUtils.withSafeRunner(s"An error occurred while executing save action ${instance.setting.id}.") {
+        EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
           instance.perform()
         }.getOrElse(Seq())
       }
       Await.ready(f, Duration.Inf).value.get match {
         case Success(changes) =>
-          EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action ${instance.setting.id}.") {
-            applyChanges(changes, udoc)
+          EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
+            applyChanges(id, changes, udoc)
           }
 
         case Failure(f) =>
           eclipseLog.error(s"""|
-             |Save action '${instance.setting.id}' didn't complete, it had $timeout
+             |Save action '$id' didn't complete, it had $timeout
              | time to complete. Please consider to disable it in the preferences.
              | The save action itself can't be aborted, therefore if you know that
              | it may never complete in future, you may wish to restart your Eclipse
@@ -158,11 +159,14 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private def applyChanges(changes: Seq[Change], udoc: IDocument) = {
+  private def applyChanges(saveActionId: String, changes: Seq[Change], udoc: IDocument) = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
       val sf = ssf.sourceFile()
+      val len = udoc.getLength()
       val edits = changes map {
-        case TextChange(start, end, text) =>
+        case tc @ TextChange(start, end, text) =>
+          if (start < 0 || end >= len || end < start || text == null)
+            throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
           new RTextChange(sf, start, end, text)
       }
       EditorUtils.applyChangesToFileWhileKeepingSelection(udoc, sel, ssf.file, edits.toList)
