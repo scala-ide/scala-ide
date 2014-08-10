@@ -12,17 +12,7 @@ import org.scalaide.core.extensions.ReconciliationParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 
-/**
- * This class is instantiated by the reconciliationParticipants extension point and
- * simply forwards to the SemanticHighlightingReconciliation object.
- *
- * Deprecating this class since only the implicit highlighting component is using it, and I'm quite convinced that implicit highlighting
- * should be enabled via the editor, just like we do for semantic highlighting.
- */
-class ImplicitHighlighter extends SemanticHighlightingReconciliationParticipant(
-    reconciler = new SemanticHighlightingReconciliation(List(viewer => new ImplicitHighlightingPresenter(viewer))))
-
-@deprecated("This is not needed and should be removed the moment implicit highlighting is hooked in the editor", "2.1.0")
+@deprecated("This is not needed and should be removed the moment semantic highlighting extensions are fully hooked into the editor", "2.1.0")
 class SemanticHighlightingReconciliationParticipant(private val reconciler: SemanticHighlightingReconciliation) extends ReconciliationParticipant {
 
   override def beforeReconciliation(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
