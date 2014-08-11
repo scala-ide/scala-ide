@@ -8,6 +8,12 @@ import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.navigator.resources.ProjectExplorer
 import org.scalaide.core.ScalaPlugin
 
+/**
+ * New wizard entries that are added to this factory also need to be registered
+ * for automatic activation, see the following method for more details:
+ *
+ * [[org.scalaide.ui.internal.migration.MigrationPreferenceInitializer.activateNewWizardShortcut]]
+ */
 class PerspectiveFactory extends IPerspectiveFactory {
   def createInitialLayout(layout : IPageLayout) = {
     createFolders(layout)
