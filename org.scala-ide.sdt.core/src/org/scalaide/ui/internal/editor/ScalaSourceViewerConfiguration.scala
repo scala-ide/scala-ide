@@ -19,6 +19,7 @@ import org.eclipse.jface.text.DefaultTextHover
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IInformationControl
+import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.formatter.IContentFormatter
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
@@ -30,7 +31,10 @@ import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.DefaultAnnotationHover
+import org.eclipse.jface.text.source.IAnnotationHoverExtension
+import org.eclipse.jface.text.source.ILineRange
 import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.source.LineRange
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
@@ -147,7 +151,9 @@ class ScalaSourceViewerConfiguration(
    * but they also can't apply there Java hover specific configurations
    * anymore.
    */
-  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false) with HtmlHover {
+  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false)
+      with IAnnotationHoverExtension
+      with HtmlHover {
     import HTMLPrinter._
 
     override def isIncluded(a: Annotation) =
@@ -178,16 +184,29 @@ class ScalaSourceViewerConfiguration(
         endBulletList(sb)
       }
     }
+
+    override def canHandleMouseCursor(): Boolean =
+      false
+
+    override def getHoverControlCreator(): IInformationControlCreator = new AbstractReusableInformationControlCreator {
+      override def doCreateInformationControl(parent: Shell): IInformationControl = {
+        if (BrowserInformationControl.isAvailable(parent))
+          new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
+        else
+          new DefaultInformationControl(parent, /* resizable */ false)
+      }
+    }
+
+    override def getHoverInfo(sourceViewer: ISourceViewer, lineRange: ILineRange, visibleNumberOfLines: Int): Object =
+      getHoverInfo(sourceViewer, lineRange.getStartLine())
+
+    override def getHoverLineRange(sourceViewer: ISourceViewer, lineNumber: Int): ILineRange =
+      new LineRange(lineNumber, /* numberOfLines */ 1)
+
   }
 
-  override def getInformationControlCreator(sourceViewer: ISourceViewer) = new AbstractReusableInformationControlCreator {
-    override def doCreateInformationControl(parent: Shell): IInformationControl = {
-      if (BrowserInformationControl.isAvailable(parent))
-        new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
-      else
-        new DefaultInformationControl(parent, /* resizable */ false)
-    }
-  }
+  override def getInformationControlCreator(sourceViewer: ISourceViewer) =
+    annotationHover.getHoverControlCreator()
 
   override def getInformationPresenter(sourceViewer: ISourceViewer) = {
     val ip = new HoverInformationProvider(compilationUnit map (new ScalaHover(_)))
