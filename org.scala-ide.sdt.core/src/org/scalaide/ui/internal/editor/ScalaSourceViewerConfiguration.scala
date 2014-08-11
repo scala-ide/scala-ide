@@ -209,8 +209,8 @@ class ScalaSourceViewerConfiguration(
     annotationHover.getHoverControlCreator()
 
   override def getInformationPresenter(sourceViewer: ISourceViewer) = {
+    val p = new InformationPresenter(getInformationControlCreator(sourceViewer))
     val ip = new HoverInformationProvider(compilationUnit map (new ScalaHover(_)))
-    val p = new InformationPresenter(ip.getInformationPresenterControlCreator())
 
     p.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
     getConfiguredContentTypes(sourceViewer) foreach (p.setInformationProvider(ip, _))
