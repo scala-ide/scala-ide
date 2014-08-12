@@ -59,12 +59,6 @@ trait CompilerSupport
   val sourceFile: SourceFile
 
   /**
-   * Performs the IDE extension and returns all changes that should be done on
-   * the document.
-   */
-  def perform(): Seq[Change]
-
-  /**
    * Applies a transformation to the tree of the saved document.
    */
   final def transformFile(trans: Transformation[Tree, Tree]): Seq[Change] =

@@ -1,6 +1,5 @@
 package org.scalaide.extensions
 
-import org.scalaide.core.text.Change
 import org.scalaide.core.text.Document
 
 trait DocumentSupport extends ScalaIdeExtension {
@@ -15,10 +14,4 @@ trait DocumentSupport extends ScalaIdeExtension {
    * implemented by the IDE.
    */
   val document: Document
-
-  /**
-   * Performs the IDE extension and returns all changes that should be done the
-   * the document.
-   */
-  def perform(): Seq[Change]
 }
