@@ -76,9 +76,11 @@ final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, c
   private def checkType(obj: compiler.Tree): Boolean = {
     val result = compiler.askOption { () =>
       val requiredClass = compiler.rootMirror.getRequiredClass(traverserDef.typeDefinition.fullName)
-      val hasType = obj.tpe.erasure
-      val needsType = requiredClass.toType.erasure
-      hasType <:< needsType
+      Option(obj.tpe).fold(false) { tpe =>
+        val hasType = tpe.erasure
+        val needsType = requiredClass.toType.erasure
+        hasType <:< needsType
+      }
     }
     result.getOrElse(false)
   }
