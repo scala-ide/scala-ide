@@ -38,6 +38,7 @@ import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
@@ -131,7 +132,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   setPartName("Scala Editor")
-  setDocumentProvider(new ScalaDocumentProvider)
+  setDocumentProvider(ScalaPlugin.plugin.documentProvider)
 
   override protected def createActions() {
     super.createActions()

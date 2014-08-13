@@ -66,6 +66,8 @@ import org.eclipse.core.runtime.content.IContentType
 import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.editor.ScalaDocumentProvider
 
 object ScalaPlugin {
 
@@ -107,6 +109,13 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   lazy val scalaClassFileContentType: IContentType =
     Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaClass")
 
+  /**
+   * The document provider needs to exist only a single time because it caches
+   * compilation units (their working copies). Each `ScalaSourceFileEditor` is
+   * associated with this document provider.
+   */
+  private[scalaide] val documentProvider = new ScalaDocumentProvider
+
   override def start(context: BundleContext) = {
     ScalaPlugin.plugin = this
     super.start(context)
@@ -137,7 +146,17 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
-  def getScalaProject(project: IProject): ScalaProject = projects.synchronized {
+  /**
+   * Finds the `ScalaCompilationUnit` of a given `IEditorInput`. Returns `None`
+   * if no compilation unit is found.
+   */
+  def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
+    Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+  }
+
+  def getJavaProject(project: IProject) = JavaCore.create(project)
+
+  override def getScalaProject(project: IProject): ScalaProject = projects.synchronized {
     projects.get(project) getOrElse {
       val scalaProject = ScalaProject(project)
       projects(project) = scalaProject
@@ -145,7 +164,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     }
   }
 
-  def asScalaProject(project: IProject): Option[ScalaProject] = {
+  override def asScalaProject(project: IProject): Option[ScalaProject] = {
     if (ScalaProject.isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
