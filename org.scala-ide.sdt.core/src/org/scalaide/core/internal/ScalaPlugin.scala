@@ -146,8 +146,13 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
-  override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] =
+  /**
+   * Finds the `ScalaCompilationUnit` of a given `IEditorInput`. Returns `None`
+   * if no compilation unit is found.
+   */
+  def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
     Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+  }
 
   def getJavaProject(project: IProject) = JavaCore.create(project)
 
