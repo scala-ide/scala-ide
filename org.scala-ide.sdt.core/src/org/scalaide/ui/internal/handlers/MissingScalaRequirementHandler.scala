@@ -13,9 +13,9 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.internal.project.Nature
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object MissingScalaRequirementHandler {
 
@@ -29,7 +29,7 @@ object MissingScalaRequirementHandler {
 
 class MissingScalaRequirementHandler extends RichStatusHandler {
 
-  def doHandleStatus(status: IStatus, source: Object) = {
+  override def doHandleStatus(status: IStatus, source: Object) = {
     val scalaPc = source.asInstanceOfOpt[ScalaPresentationCompilerProxy]
     val shell = SWTUtils.getShell
     val title = "Add Scala library to project classpath?"
@@ -52,7 +52,10 @@ class MissingScalaRequirementHandler extends RichStatusHandler {
             1)
           dialog.open()
           val buttonId = dialog.getReturnCode()
-          if (buttonId == IDialogConstants.OK_ID) Utils.tryExecute(Nature.addScalaLibAndSave(project.underlying))
+          if (buttonId == IDialogConstants.OK_ID)
+            EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath.") {
+              Nature.addScalaLibAndSave(project.underlying)
+            }
       }
     }
   }

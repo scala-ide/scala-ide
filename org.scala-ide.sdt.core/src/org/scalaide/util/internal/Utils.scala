@@ -30,19 +30,6 @@ object Utils extends HasLogger {
     res
   }
 
-  /** Try executing the passed `action` and log any exception occurring. */
-  def tryExecute[T](action: => T, msgIfError: => Option[String] = None): Option[T] = {
-    try Some(action)
-    catch {
-      case t: Throwable =>
-        msgIfError match {
-          case Some(errMsg) => eclipseLog.error(errMsg, t)
-          case None         => eclipseLog.error(t)
-        }
-        None
-    }
-  }
-
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
 
     /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:

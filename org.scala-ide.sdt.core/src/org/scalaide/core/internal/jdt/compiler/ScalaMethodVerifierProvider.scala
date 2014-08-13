@@ -9,10 +9,10 @@ import org.eclipse.core.resources.ResourcesPlugin
 import org.scalaide.core.IScalaProject
 import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Utils
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 /**
  * <p>
@@ -44,7 +44,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
   /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
-    Utils.tryExecute {
+    EclipseUtils.withSafeRunner("An error occurred while checking method binding.") {
       logger.debug("Entered `isConcreteTraitMethod`")
       // get the file containing the declaration of the abstract method
       val maybeFile = getFile(abstractMethod)

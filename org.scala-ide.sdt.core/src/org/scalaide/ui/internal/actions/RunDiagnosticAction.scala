@@ -4,12 +4,13 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IWorkbenchWindow
 import org.scalaide.util.internal.Utils
 import org.scalaide.core.internal.logging.LogManager
+import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
@@ -27,7 +28,7 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   override def selectionChanged(action: IAction, selection: ISelection) {  }
 
   override def run(action: IAction) {
-    Utils tryExecute {
+    EclipseUtils.withSafeRunner("Error occurred while trying to create diagnostic dialog.") {
       action.getId match {
         case RUN_DIAGNOSTICS =>
           val shell = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell
