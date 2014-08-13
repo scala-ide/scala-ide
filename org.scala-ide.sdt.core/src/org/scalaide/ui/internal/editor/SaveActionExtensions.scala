@@ -20,6 +20,7 @@ import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespac
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
+import org.scalaide.extensions.CompilerSupport
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
@@ -98,7 +99,9 @@ trait SaveActionExtensions extends HasLogger {
     val doc = new TextDocument(udoc)
     for (ext <- exts) {
       val instance = ext(doc)
-      performExtension(instance, udoc)
+      performExtension(instance, udoc) {
+        instance.perform()
+      }
     }
   }
 
@@ -112,7 +115,11 @@ trait SaveActionExtensions extends HasLogger {
 
     for (ext <- exts) {
       createExtensionWithCompilerSupport(ext) foreach { instance =>
-        performExtension(instance, udoc)
+        performExtension(instance, udoc) {
+          instance.global.asInstanceOf[ScalaPresentationCompiler].askOption { () =>
+            instance.perform()
+          }.getOrElse(Seq())
+        }
       }
     }
   }
@@ -123,8 +130,12 @@ trait SaveActionExtensions extends HasLogger {
    *
    * The save action can't be aborted, therefore this method only returns early
    * but may leave the `Future` in a never ending state.
+   *
+   * `ext` is the actual computation that executes the save action in order to
+   * get a sequence of changes. It is executes in a safe environment that
+   * catches errors.
    */
-  private def performExtension(instance: SaveAction, udoc: IDocument) = {
+  private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]) = {
     def isEnabled(id: String): Boolean =
       ScalaPlugin.prefStore.getBoolean(id)
 
@@ -136,7 +147,7 @@ trait SaveActionExtensions extends HasLogger {
 
       val f = TimeoutFuture(timeout) {
         EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
-          instance.perform()
+          ext
         }.getOrElse(Seq())
       }
       Await.ready(f, Duration.Inf).value.get match {
@@ -176,9 +187,9 @@ trait SaveActionExtensions extends HasLogger {
   private type CompilerSupportCreator = (
       ScalaPresentationCompiler, ScalaPresentationCompiler#Tree,
       SourceFile, Int, Int
-    ) => SaveAction
+    ) => SaveAction with CompilerSupport
 
-  private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction] = {
+  private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction with CompilerSupport] = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
       ssf.withSourceFile { (sf, compiler) =>
         import compiler._
