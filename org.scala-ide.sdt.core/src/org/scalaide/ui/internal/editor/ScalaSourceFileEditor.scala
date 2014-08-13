@@ -87,18 +87,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     infoPresenter
   }
 
-  private lazy val implicitHighlighter = new IJavaReconcilingListener {
-    val p = new ImplicitHighlightingPresenter(sourceViewer)
-
-    override def aboutToBeReconciled() = ()
-    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
-      self.getInteractiveCompilationUnit() match {
-        case scu: ScalaCompilationUnit => p(scu)
-        case _ =>
-      }
-    }
-  }
-
   /**
    * Contains references to all extensions provided by the extension point
    * `org.scala-ide.sdt.core.semanticHighlightingParticipants`.
@@ -340,7 +328,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     RefactoringMenu.fillQuickMenu(this)
-    reconcilingListeners.addReconcileListener(implicitHighlighter)
     reconcilingListeners.addReconcileListener(semanticHighlightingParticipants)
 
     getSourceViewer match {

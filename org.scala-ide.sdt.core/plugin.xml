@@ -1700,4 +1700,10 @@
        </description>
     </fontDefinition>
  </extension>
+ <extension
+       point="org.scala-ide.sdt.core.semanticHighlightingParticipants">
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingParticipant">
+    </participant>
+ </extension>
 </plugin>
