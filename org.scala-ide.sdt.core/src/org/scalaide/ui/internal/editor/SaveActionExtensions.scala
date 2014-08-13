@@ -164,7 +164,7 @@ trait SaveActionExtensions extends HasLogger {
       val len = udoc.getLength()
       val edits = changes map {
         case tc @ TextChange(start, end, text) =>
-          if (start < 0 || end >= len || end < start || text == null)
+          if (start < 0 || end > len || end < start || text == null)
             throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
           new RTextChange(sf, start, end, text)
       }
