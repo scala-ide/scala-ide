@@ -24,7 +24,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import org.scalaide.core.resources.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
-import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
 import org.scalaide.core.extensions.SourceFileProvider
 import org.eclipse.jdt.core.JavaModelException
 import org.scalaide.core.compiler.InteractiveCompilationUnit
@@ -100,10 +99,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
   /* getProblems should be reserved for a Java context, @see getProblems */
   override def reconcile(newContents: String): List[IProblem] ={
-    ReconciliationParticipantsExtensionPoint.runBefore(this, new NullProgressMonitor, workingCopyOwner)
-    val probs = currentProblems
-    ReconciliationParticipantsExtensionPoint.runAfter(this, new NullProgressMonitor, workingCopyOwner)
-    probs
+    currentProblems
   }
 
 
