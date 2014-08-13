@@ -6,7 +6,6 @@
 package org.scalaide.ui.internal.editor.decorators
 
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.IPainter
@@ -155,13 +154,11 @@ abstract class BaseSemanticAction(
   }
 
   private def refresh() = {
-    import org.scalaide.util.internal.Utils._
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
-      compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
-      scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
+      scu <- ScalaPlugin.plugin.scalaCompilationUnit(editorInput)
     } apply(scu)
   }
 
