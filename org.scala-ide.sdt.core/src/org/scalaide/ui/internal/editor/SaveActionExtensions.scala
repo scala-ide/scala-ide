@@ -130,7 +130,6 @@ trait SaveActionExtensions extends HasLogger {
 
     val id = instance.setting.id
     val enabled = isEnabled(id)
-    logger.info(s"Save action '$id' is enabled: $enabled")
 
     if (enabled) {
       val timeout = saveActionTimeout
