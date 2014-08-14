@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.editor
 
-import scala.concurrent.Await
+import scala.concurrent._, ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{TextChange => RTextChange}
@@ -145,7 +145,13 @@ trait SaveActionExtensions extends HasLogger {
     if (enabled) {
       val timeout = saveActionTimeout
 
-      val f = TimeoutFuture(timeout) {
+      val futureToUse: Seq[Change] => Future[Seq[Change]] =
+        if (ScalaPlugin.plugin.noTimeoutMode)
+          Future(_)
+        else
+          TimeoutFuture(timeout)(_)
+
+      val f = futureToUse {
         EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
           ext
         }.getOrElse(Seq())
