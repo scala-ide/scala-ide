@@ -60,7 +60,7 @@
     <!-- Scala 2.10.x -->
     <scala210.version>2.10.5-SNAPSHOT</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.2-SNAPSHOT</scala211.version>
+    <scala211.version>2.11.3-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
     <scala211.scala-xml.version>1.0.2</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.1</scala211.scala-parser-combinators.version>
