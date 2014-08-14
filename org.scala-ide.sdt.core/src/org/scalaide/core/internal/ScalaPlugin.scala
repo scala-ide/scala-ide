@@ -114,7 +114,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
    * compilation units (their working copies). Each `ScalaSourceFileEditor` is
    * associated with this document provider.
    */
-  private[scalaide] val documentProvider = new ScalaDocumentProvider
+  private[scalaide] lazy val documentProvider = new ScalaDocumentProvider
 
   override def start(context: BundleContext) = {
     ScalaPlugin.plugin = this
