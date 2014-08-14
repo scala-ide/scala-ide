@@ -20,7 +20,7 @@ trait RemoveTrailingWhitespace extends SaveAction with DocumentSupport {
 
   override def setting = RemoveTrailingWhitespaceSetting
 
-  def perform() = {
+  override def perform() = {
     document.lines flatMap { line =>
       val trimmed = line.trimRight
 
