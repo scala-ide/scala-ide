@@ -6,6 +6,7 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
   classOf[RemoveTrailingWhitespaceTest],
-  classOf[AddNewLineAtEndOfFileTest]
+  classOf[AddNewLineAtEndOfFileTest],
+  classOf[AddMissingOverrideTest]
 ))
 class SaveActionTestSuite

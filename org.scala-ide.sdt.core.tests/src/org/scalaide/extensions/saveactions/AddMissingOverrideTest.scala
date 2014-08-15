@@ -1,0 +1,112 @@
+package org.scalaide.extensions.saveactions
+
+import org.scalaide.core.compiler.ScalaPresentationCompiler
+import scala.reflect.internal.util.SourceFile
+import org.junit.Test
+
+object AddMissingOverrideTest extends CompilerSaveActionTests {
+  override def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
+    new AddMissingOverride {
+      override val global = spc
+      override val sourceFile = sf
+      override val selection = new FileSelection(
+          sf.file, tree.asInstanceOf[global.Tree], selectionStart, selectionEnd)
+    }
+}
+
+class AddMissingOverrideTest {
+  import AddMissingOverrideTest._
+
+  @Test
+  def no_change_when_nothing_is_overriden() = """^
+    trait T
+    trait TT extends T {
+      def meth = 0
+      val value = 0
+      type Type = Int
+    }
+    """ becomes """^
+    trait T
+    trait TT extends T {
+      def meth = 0
+      val value = 0
+      type Type = Int
+    }
+    """ after SaveEvent
+
+  @Test
+  def no_change_when_everything_is_already_overriden() = """^
+    trait T {
+      def meth: Int
+      val value: Int
+      type Type
+    }
+    trait TT extends T {
+      override def meth = 0
+      override val value = 0
+      override type Type = Int
+    }
+    """ becomes """^
+    trait T {
+      def meth: Int
+      val value: Int
+      type Type
+    }
+    trait TT extends T {
+      override def meth = 0
+      override val value = 0
+      override type Type = Int
+    }
+    """ after SaveEvent
+
+  @Test
+  def add_override_to_method() = """^
+    trait T {
+      def meth: Int
+    }
+    trait TT extends T {
+      def meth = 0
+    }
+    """ becomes """^
+    trait T {
+      def meth: Int
+    }
+    trait TT extends T {
+      override def meth = 0
+    }
+    """ after SaveEvent
+
+  @Test
+  def add_override_to_value() = """^
+    trait T {
+      val value: Int
+    }
+    trait TT extends T {
+      val value = 0
+    }
+    """ becomes """^
+    trait T {
+      val value: Int
+    }
+    trait TT extends T {
+      override val value = 0
+    }
+    """ after SaveEvent
+
+  @Test
+  def add_override_to_type() = """^
+    trait T {
+      type Type
+    }
+    trait TT extends T {
+      type Type = Int
+    }
+    """ becomes """^
+    trait T {
+      type Type
+    }
+    trait TT extends T {
+      override type Type = Int
+    }
+    """ after SaveEvent
+}

@@ -1,8 +1,8 @@
 package org.scalaide.core.internal.extensions.saveactions
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.extensions.CompilerSupport
+
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.extensions.saveactions.AddMissingOverride
 
 object AddMissingOverrideCreator {

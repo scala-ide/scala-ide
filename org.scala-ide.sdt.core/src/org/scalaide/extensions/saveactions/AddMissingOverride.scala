@@ -21,9 +21,9 @@ object AddMissingOverrideSetting extends SaveActionSetting(
 trait AddMissingOverride extends SaveAction with CompilerSupport {
   import global._
 
-  def setting = AddMissingOverrideSetting
+  override def setting = AddMissingOverrideSetting
 
-  def perform() = {
+  override def perform() = {
     val symbolWithoutOverride = filter {
       case d: ValDef =>
         val getter = d.symbol.getterIn(d.symbol.owner)
