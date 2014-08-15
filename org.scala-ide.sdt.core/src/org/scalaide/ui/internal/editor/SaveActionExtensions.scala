@@ -16,6 +16,7 @@ import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
+import org.scalaide.core.internal.extensions.saveactions.RemoveDuplicatedEmptyLinesCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
@@ -26,6 +27,7 @@ import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
 import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
+import org.scalaide.extensions.saveactions.RemoveDuplicatedEmptyLinesSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.FutureUtils.TimeoutFuture
@@ -41,7 +43,8 @@ object SaveActionExtensions {
     RemoveTrailingWhitespaceSetting,
     AddNewLineAtEndOfFileSetting,
     AutoFormattingSetting,
-    AddMissingOverrideSetting
+    AddMissingOverrideSetting,
+    RemoveDuplicatedEmptyLinesSetting
   )
 
   /**
@@ -93,7 +96,8 @@ trait SaveActionExtensions extends HasLogger {
     val exts = Seq(
       RemoveTrailingWhitespaceCreator.create _,
       AddNewLineAtEndOfFileCreator.create _,
-      AutoFormattingCreator.create _
+      AutoFormattingCreator.create _,
+      RemoveDuplicatedEmptyLinesCreator.create _
     )
 
     val doc = new TextDocument(udoc)
