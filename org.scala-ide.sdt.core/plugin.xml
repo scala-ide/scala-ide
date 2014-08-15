@@ -1599,6 +1599,14 @@
     </participant>
  </extension>
  <extension
+       point="org.scala-ide.sdt.core.reconciliationParticipants">
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.MacroHighlighter"
+          id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
+          name="Semantic Highlighting">
+    </participant>
+ </extension>
+ <extension
        point="org.eclipse.ltk.core.refactoring.moveParticipants">
     <moveParticipant
           class="org.scalaide.refactoring.internal.move.ScalaMoveParticipant"

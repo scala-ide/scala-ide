@@ -89,40 +89,9 @@ object ImplicitHighlightingPresenter {
     }
 
     var implicits = Map[Annotation, Position]()
-    var macroExpansions = Map[Annotation, Position]()
 
     new Traverser {
       override def traverse(t: Tree): Unit = {
-        // If there exist an attachment conforming to the ScalaMeta API
-        val macroAttachment = if (t.attachments.get[java.util.HashMap[String, Any]].isDefined) {
-          t.attachments.get[java.util.HashMap[String, Any]].map { att =>
-            // Conforming to ScalaMeta API, there should exist expandee under the "expandeeTree" key, and
-            // a source code listing that is equal to macro expansion under the "expansionString" key.
-            (att.get("expandeeTree").asInstanceOf[Tree], att.get("expansionString").asInstanceOf[String])
-          }
-        } 
-        // Or if there exist an attachment, conforming to internal scalac's API
-        else if (t.attachments.get[compiler.analyzer.MacroExpansionAttachment].isDefined) {
-          t.attachments.get[compiler.analyzer.MacroExpansionAttachment].map { att =>
-            /* see compiler.analyzer.MacroExpansionAttachment */ 
-            (att.expandee, compiler.showCode(att.expanded.asInstanceOf[Tree]))
-          }
-        } else None
-
-        macroAttachment.flatMap {
-          case (expandeeTree: Tree, expansionString: String) =>
-            val originalMacroPos = expandeeTree.pos
-            if (expandeeTree.symbol.fullName == "scala.reflect.materializeClassTag" || originalMacroPos.start == originalMacroPos.end) None
-            else {
-              val annotation = new MacroExpansionAnnotation(expansionString)
-              val pos = new Position(originalMacroPos.start, originalMacroPos.end - originalMacroPos.start)
-              Some(annotation, pos)
-            }
-        }.map {
-          case (annotation: MacroExpansionAnnotation, pos: Position) =>
-            macroExpansions += (annotation -> pos)
-        }
-
         t match {
           case v: ApplyImplicitView =>
             val (annotation, pos) = mkImplicitConversionAnnotation(v)
@@ -136,6 +105,6 @@ object ImplicitHighlightingPresenter {
       }
     }.traverse(compiler.loadedType(sourceFile).fold(identity, _ => compiler.EmptyTree))
 
-    implicits ++ macroExpansions
+    implicits
   }
 }

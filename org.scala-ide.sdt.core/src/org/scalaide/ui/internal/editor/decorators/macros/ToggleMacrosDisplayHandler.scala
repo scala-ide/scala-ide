@@ -4,7 +4,7 @@ import org.scalaide.ui.internal.actions.AbstractToggleHandler
 import org.scalaide.ui.internal.preferences.MacrosPreferencePage
 
 /**
- * Handler to toggle the Implicits Display (shortcut to avoid open Preferences,...)
+ * Handler to toggle the Macro Display (shortcut to avoid open Preferences,...)
  *
  * @see scala.tools.eclipse.ui.AbstractToggleHandler
  */
