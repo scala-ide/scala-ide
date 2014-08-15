@@ -82,9 +82,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     isDirtyState = None
   }
 
-  override def isDirty =
-    if (isDirtyState.isDefined) isDirtyState.get
-    else super.isDirty()
+  override def isDirty = isDirtyState.getOrElse(super.isDirty)
 
   override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
     try{
