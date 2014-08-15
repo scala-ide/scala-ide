@@ -16,15 +16,12 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 
 abstract class SaveActionTests extends TextEditTests {
 
-  def saveAction: SaveAction
-
-  var document: Document = _
+  def saveAction(doc: Document): SaveAction
 
   private var udoc: EDocument = _
 
   override def runTest(source: String, operation: Operation) = {
     udoc = new EDocument(source)
-    document = new TextDocument(udoc)
     operation.execute()
   }
 
@@ -32,7 +29,7 @@ abstract class SaveActionTests extends TextEditTests {
 
   case object SaveEvent extends Operation {
     override def execute() = {
-      val changes = saveAction.perform()
+      val changes = saveAction(new TextDocument(udoc)).perform()
       val sorted = changes.sortBy {
         case TextChange(start, _, _) => -start
       }
@@ -48,13 +45,10 @@ abstract class CompilerSaveActionTests extends TextEditTests with CompilerSuppor
 
   def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int): SaveAction
 
-  var document: Document = _
-
   private var udoc: EDocument = _
 
   override def runTest(source: String, operation: Operation) = {
     udoc = new EDocument(source)
-    document = new TextDocument(udoc)
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       operation.execute()
     }

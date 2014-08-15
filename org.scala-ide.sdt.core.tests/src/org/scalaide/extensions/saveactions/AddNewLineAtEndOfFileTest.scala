@@ -1,11 +1,12 @@
 package org.scalaide.extensions.saveactions
 
 import org.junit.Test
+import org.scalaide.core.text.Document
 
-class AddNewLineAtEndOfFileTest extends SaveActionTests { self =>
+class AddNewLineAtEndOfFileTest extends SaveActionTests {
 
-  override def saveAction = new AddNewLineAtEndOfFile {
-    override val document = self.document
+  override def saveAction(doc: Document) = new AddNewLineAtEndOfFile {
+    override val document = doc
   }
 
   @Test

@@ -1,11 +1,12 @@
 package org.scalaide.extensions.saveactions
 
 import org.junit.Test
+import org.scalaide.core.text.Document
 
-class RemoveTrailingWhitespaceTest extends SaveActionTests { self =>
+class RemoveTrailingWhitespaceTest extends SaveActionTests {
 
-  override def saveAction = new RemoveTrailingWhitespace {
-    override val document = self.document
+  override def saveAction(doc: Document) = new RemoveTrailingWhitespace {
+    override val document = doc
   }
 
   @Test
