@@ -14,7 +14,7 @@ import org.scalaide.core.ui.TextEditTests
 import org.scalaide.extensions.SaveAction
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
-abstract class SaveActionTests extends TextEditTests {
+abstract class DocumentSaveActionTests extends TextEditTests {
 
   def saveAction(doc: Document): SaveAction
 

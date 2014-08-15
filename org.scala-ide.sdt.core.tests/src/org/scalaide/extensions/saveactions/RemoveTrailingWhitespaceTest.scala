@@ -3,7 +3,7 @@ package org.scalaide.extensions.saveactions
 import org.junit.Test
 import org.scalaide.core.text.Document
 
-class RemoveTrailingWhitespaceTest extends SaveActionTests {
+class RemoveTrailingWhitespaceTest extends DocumentSaveActionTests {
 
   override def saveAction(doc: Document) = new RemoveTrailingWhitespace {
     override val document = doc
