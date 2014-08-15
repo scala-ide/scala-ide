@@ -2,7 +2,6 @@ package org.scalaide.extensions
 package saveactions
 
 import scala.reflect.internal.util.SourceFile
-
 import org.eclipse.jface.text.{Document => EDocument}
 import org.scalaide.CompilerSupportTests
 import org.scalaide.core.compiler.ScalaPresentationCompiler
@@ -13,8 +12,22 @@ import org.scalaide.core.text.TextChange
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.extensions.SaveAction
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.text.Change
 
-abstract class DocumentSaveActionTests extends TextEditTests {
+abstract class SaveActionTests extends TextEditTests {
+
+  final def applyChanges(udoc: EDocument, changes: Seq[Change]): Unit = {
+    val sorted = changes.sortBy {
+      case TextChange(start, _, _) => -start
+    }
+    sorted foreach {
+      case TextChange(start, end, text) =>
+        udoc.replace(start, end-start, text)
+    }
+  }
+}
+
+abstract class DocumentSaveActionTests extends SaveActionTests {
 
   def saveAction(doc: Document): SaveAction
 
@@ -30,18 +43,12 @@ abstract class DocumentSaveActionTests extends TextEditTests {
   case object SaveEvent extends Operation {
     override def execute() = {
       val changes = saveAction(new TextDocument(udoc)).perform()
-      val sorted = changes.sortBy {
-        case TextChange(start, _, _) => -start
-      }
-      sorted foreach {
-        case TextChange(start, end, text) =>
-          udoc.replace(start, end-start, text)
-      }
+      applyChanges(udoc, changes)
     }
   }
 }
 
-abstract class CompilerSaveActionTests extends TextEditTests with CompilerSupportTests {
+abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupportTests {
 
   def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int): SaveAction
 
@@ -68,13 +75,7 @@ abstract class CompilerSaveActionTests extends TextEditTests with CompilerSuppor
         case Left(tree) =>
           val sa = saveAction(compiler, tree, sf, 0, 0)
           val changes = compiler.askOption(() => sa.perform()).getOrElse(Seq())
-          val sorted = changes.sortBy {
-            case TextChange(start, _, _) => -start
-          }
-          sorted foreach {
-            case TextChange(start, end, text) =>
-              udoc.replace(start, end-start, text)
-          }
+          applyChanges(udoc, changes)
         case Right(e) =>
           throw e
       }
