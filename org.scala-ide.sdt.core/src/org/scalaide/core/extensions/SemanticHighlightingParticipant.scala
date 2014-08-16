@@ -1,11 +1,11 @@
 package org.scalaide.core.extensions
 
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
+import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.ui.internal.editor.decorators.SemanticAction
 
 /**
- * Marker interface that needs to be subclasses by extensions that need to be
- * hooked into the samantic highlighting process.
+ * Marker interface that needs to be subclassed by extensions that need to be
+ * hooked into the semantic highlighting process.
  *
  * Subclasses of this interface can be instantiated by the IDE an unlimited
  * amount of times, therefore subclasses should not contain any state.
@@ -20,4 +20,4 @@ import org.scalaide.ui.internal.editor.decorators.SemanticAction
  * reconciliation phase of the editor. Note, that the IDE is free to disable a
  * participant if its implementation throws errors.
  */
-abstract class SemanticHighlightingParticipant(val participant: JavaSourceViewer => SemanticAction)
+abstract class SemanticHighlightingParticipant(val participant: ISourceViewer => SemanticAction)
