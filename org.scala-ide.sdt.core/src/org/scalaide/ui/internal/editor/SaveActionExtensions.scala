@@ -15,6 +15,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
+import org.scalaide.core.internal.extensions.saveactions.AddReturnTypeToPublicSymbolsCreator
 import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveDuplicatedEmptyLinesCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
@@ -26,6 +27,7 @@ import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
 import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
+import org.scalaide.extensions.saveactions.AddReturnTypeToPublicSymbolsSetting
 import org.scalaide.extensions.saveactions.AutoFormattingSetting
 import org.scalaide.extensions.saveactions.RemoveDuplicatedEmptyLinesSetting
 import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
@@ -44,7 +46,8 @@ object SaveActionExtensions {
     AddNewLineAtEndOfFileSetting,
     AutoFormattingSetting,
     AddMissingOverrideSetting,
-    RemoveDuplicatedEmptyLinesSetting
+    RemoveDuplicatedEmptyLinesSetting,
+    AddReturnTypeToPublicSymbolsSetting
   )
 
   /**
@@ -114,7 +117,8 @@ trait SaveActionExtensions extends HasLogger {
    */
   private def applyCompilerExtensions(udoc: IDocument) = {
     val exts = Seq(
-      AddMissingOverrideCreator.create _
+      AddMissingOverrideCreator.create _,
+      AddReturnTypeToPublicSymbolsCreator.create _
     )
 
     for (ext <- exts) {
