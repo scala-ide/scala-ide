@@ -44,6 +44,7 @@ import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.core.text.TextTestSuite
 import org.scalaide.extensions.saveactions.SaveActionTestSuite
+import org.scalaide.extensions.autoedits.AutoEditTestSuite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -91,6 +92,7 @@ import org.scalaide.extensions.saveactions.SaveActionTestSuite
     classOf[CompletionTestSuite],
     classOf[WizardTests],
     classOf[TextTestSuite],
-    classOf[SaveActionTestSuite]
+    classOf[SaveActionTestSuite],
+    classOf[AutoEditTestSuite]
 ))
 class TestsSuite
