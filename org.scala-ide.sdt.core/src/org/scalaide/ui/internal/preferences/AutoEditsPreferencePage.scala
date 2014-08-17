@@ -1,5 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.layout.TableColumnLayout
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.viewers.CheckStateChangedEvent
@@ -135,5 +136,15 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     }
 
     override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = ()
+  }
+}
+
+/** This class is referenced through plugin.xml */
+class AutoEditsPreferenceInitializer extends AbstractPreferenceInitializer {
+
+  override def initializeDefaultPreferences(): Unit = {
+    AutoEditExtensions.autoEditSettings foreach { s =>
+      ScalaPlugin.prefStore.setDefault(s.id, false)
+    }
   }
 }
