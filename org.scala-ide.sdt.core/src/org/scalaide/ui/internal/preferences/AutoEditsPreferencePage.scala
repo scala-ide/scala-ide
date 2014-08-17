@@ -95,24 +95,6 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     super.performDefaults
   }
 
-  private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
-    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
-    t.setText(initialText)
-    t.setLayoutData({
-      val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
-      gd.heightHint = lineHeight*t.getLineHeight()
-      gd
-    })
-    t
-  }
-
-  private def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
-    val lb = new Label(parent, SWT.NONE)
-    lb.setText(text)
-    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
-    lb
-  }
-
   private def isEnabled(autoEdit: AutoEditSetting): Boolean =
     prefStore.getBoolean(autoEdit.id)
 

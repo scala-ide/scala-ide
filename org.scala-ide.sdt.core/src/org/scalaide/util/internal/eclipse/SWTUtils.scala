@@ -9,6 +9,8 @@ import org.scalaide.util.internal.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.IWorkbenchWindow
+import org.eclipse.swt.SWT
+import org.eclipse.swt.layout.GridData
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
@@ -33,7 +35,7 @@ object SWTUtils {
   }
 
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
-    def modifyText(e: ModifyEvent) = f(e)
+    override def modifyText(e: ModifyEvent) = f(e)
   }
 
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any): SelectionAdapter =
@@ -56,22 +58,22 @@ object SWTUtils {
 
   implicit def fnToPropertyChangeListener(p: PropertyChangeEvent => Any): IPropertyChangeListener =
     new IPropertyChangeListener() {
-      def propertyChange(e: PropertyChangeEvent) { p(e) }
+      override def propertyChange(e: PropertyChangeEvent) { p(e) }
     }
 
   implicit def noArgFnToSelectionChangedListener(p: () => Any): ISelectionChangedListener =
     new ISelectionChangedListener {
-      def selectionChanged(event: SelectionChangedEvent) { p() }
+      override def selectionChanged(event: SelectionChangedEvent) { p() }
     }
 
   implicit def fnToDoubleClickListener(p: DoubleClickEvent => Any): IDoubleClickListener =
     new IDoubleClickListener {
-      def doubleClick(event: DoubleClickEvent) { p(event) }
+      override def doubleClick(event: DoubleClickEvent) { p(event) }
     }
 
   implicit def fnToCheckStateListener(p: CheckStateChangedEvent => Unit): ICheckStateListener =
     new ICheckStateListener {
-      def checkStateChanged(event: CheckStateChangedEvent) = p(event)
+      override def checkStateChanged(event: CheckStateChangedEvent) = p(event)
     }
 
   implicit class PimpedControl(private val control: Control) extends AnyVal {
@@ -123,4 +125,28 @@ object SWTUtils {
       getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
   }
 
+  /**
+   * Creates a multi line text area, whose layout data interops with the grid
+   * layout.
+   */
+  def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
+    t.setText(initialText)
+    t.setLayoutData({
+      val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
+      gd.heightHint = lineHeight*t.getLineHeight()
+      gd
+    })
+    t
+  }
+
+  /**
+   * Creates a label, whose layout data interops with the grid layout.
+   */
+  def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
+    val lb = new Label(parent, SWT.NONE)
+    lb.setText(text)
+    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
+    lb
+  }
 }
