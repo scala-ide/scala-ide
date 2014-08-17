@@ -22,14 +22,19 @@ trait TextChange extends Change {
   def copy(start: Int = this.start, end: Int = this.end, text: String = this.text): TextChange =
     TextChange(start, end, text)
 
+  def withCursorPos(pos: Int): CursorUpdate =
+    CursorUpdate(this, pos)
+
   override def toString(): String =
     s"""TextChange(start=$start, end=$end, text="$text")"""
 }
 
-case class Add(start: Int, text: String) extends TextChange {
-  val end = start
+case class Add(override val start: Int, override val text: String) extends TextChange {
+  override val end = start
 }
-case class Replace(start: Int, end: Int, text: String) extends TextChange
-case class Remove(start: Int, end: Int) extends TextChange {
-  val text = ""
+case class Replace(override val start: Int, override val end: Int, override val text: String) extends TextChange
+case class Remove(override val start: Int, override val end: Int) extends TextChange {
+  override val text = ""
 }
+
+case class CursorUpdate(textChange: TextChange, cursorPosition: Int) extends Change

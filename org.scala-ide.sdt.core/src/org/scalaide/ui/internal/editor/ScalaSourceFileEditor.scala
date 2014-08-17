@@ -69,7 +69,7 @@ import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with AutoEditExtensions { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
@@ -421,11 +421,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       isOverviewRulerVisible: Boolean, styles: Int, store: IPreferenceStore)
         extends JavaSourceViewer(
             parent, verticalRuler, overviewRuler,
-            isOverviewRulerVisible, styles, store) {
+            isOverviewRulerVisible, styles, store)
+        with AutoEditExtensions {
+
+    override def sourceViewer: ISourceViewer = self.sourceViewer
 
     /** Calls auto edits and if they produce no changes the super implementation. */
-    override def handleVerifyEvent(e: VerifyEvent) = {
-      self.handleVerifyEvent(e, event2ModelRange(e))
+    override def handleVerifyEvent(e: VerifyEvent): Unit = {
+      applyVerifyEvent(e)
 
       if (e.doit)
         super.handleVerifyEvent(e)

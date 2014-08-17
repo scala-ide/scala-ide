@@ -1,12 +1,14 @@
 package org.scalaide.ui.internal.editor
 
-import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.TextViewer
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
+import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
+import org.scalaide.core.text.CursorUpdate
 import org.scalaide.core.text.Document
 import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
@@ -15,7 +17,6 @@ import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.core.ScalaPlugin
 
 object AutoEditExtensions {
 
@@ -24,11 +25,12 @@ object AutoEditExtensions {
   )
 }
 
-trait AutoEditExtensions extends HasLogger {
+trait AutoEditExtensions extends HasLogger { self: TextViewer =>
 
   def sourceViewer: ISourceViewer
 
-  def handleVerifyEvent(event: VerifyEvent, modelRange: IRegion): Unit = {
+  def applyVerifyEvent(event: VerifyEvent): Unit = {
+    val modelRange = event2ModelRange(event)
     val udoc = sourceViewer.getDocument()
     val start = modelRange.getOffset()
     val end = start+modelRange.getLength()
@@ -44,6 +46,13 @@ trait AutoEditExtensions extends HasLogger {
         udoc.replace(start, end-start, text)
         event.doit = false
         event.text = text
+
+      case CursorUpdate(TextChange(start, end, text), cursorPos) =>
+        udoc.replace(start, end-start, text)
+        event.doit = false
+        event.text = text
+        val widgetCaret = modelOffset2WidgetOffset(cursorPos)
+        self.setSelectedRange(widgetCaret, 0)
     }
   }
 
@@ -55,7 +64,7 @@ trait AutoEditExtensions extends HasLogger {
       val instance = ext(doc, change)
       performExtension(instance)
     }
-    val appliedAutoEdit = iter.find(_.exists(_ != change))
+    val appliedAutoEdit = iter find (_.isDefined)
     appliedAutoEdit.flatten
   }
 
@@ -67,8 +76,14 @@ trait AutoEditExtensions extends HasLogger {
 
     if (isEnabled(id))
       EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'.") {
-        instance.perform()
-      }
+        instance.perform() match {
+          case None                                      => None
+          case o @ Some(_: TextChange | _: CursorUpdate) => o
+          case Some(o) =>
+            eclipseLog.warn(s"The returned object '$o' of auto edit '$id' is invalid.")
+            None
+        }
+      }.flatten
     else
       None
   }

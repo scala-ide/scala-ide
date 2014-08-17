@@ -17,15 +17,13 @@ trait ConvertToUnicode extends AutoEdit {
   override def setting = ConvertToUnicodeSetting
 
   override def perform() = {
-    textChange match {
+    rule(textChange) {
       case Add(start, text) if text.size == 1 =>
-        document(start-1)+text match {
+        subrule(document(start-1)+text) {
           case "=>" => Replace(start-1, start, "⇒")
           case "->" => Replace(start-1, start, "→")
           case "<-" => Replace(start-1, start, "←")
-          case _    => textChange
         }
-      case _ => textChange
     }
   }
 }

@@ -13,7 +13,13 @@ trait AutoEdit extends ScalaIdeExtension with DocumentSupport {
 
   override def setting: AutoEditSetting
 
-  def perform(): Change
+  def perform(): Option[Change]
+
+  final def rule[A](a: A)(pf: PartialFunction[A, Option[Change]]): Option[Change] =
+    if (pf.isDefinedAt(a)) pf(a) else None
+
+  final def subrule[A](a: A)(pf: PartialFunction[A, Change]): Option[Change] =
+    if (pf.isDefinedAt(a)) Option(pf(a)) else None
 }
 
 case class AutoEditSetting(
