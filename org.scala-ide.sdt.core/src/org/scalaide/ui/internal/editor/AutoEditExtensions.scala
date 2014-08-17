@@ -14,6 +14,12 @@ import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
+object AutoEditExtensions {
+
+  val autoEditSettings: Seq[AutoEditSetting] = Seq(
+  )
+}
+
 trait AutoEditExtensions extends HasLogger {
 
   def sourceViewer: ISourceViewer
