@@ -3,6 +3,7 @@ package org.scalaide.ui.internal.editor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
+import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
@@ -11,6 +12,7 @@ import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
+import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.core.ScalaPlugin
@@ -18,6 +20,7 @@ import org.scalaide.core.ScalaPlugin
 object AutoEditExtensions {
 
   val autoEditSettings: Seq[AutoEditSetting] = Seq(
+    ConvertToUnicodeSetting
   )
 }
 
@@ -46,6 +49,7 @@ trait AutoEditExtensions extends HasLogger {
 
   private def applyAutoEdit(doc: Document, change: TextChange): Option[Change] = {
     val exts = Seq[(Document, TextChange) => AutoEdit](
+      ConvertToUnicodeCreator.create _
     )
     val iter = exts.iterator map { ext =>
       val instance = ext(doc, change)
