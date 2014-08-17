@@ -24,6 +24,13 @@ trait ConvertToUnicode extends AutoEdit {
           case "->" => Replace(start-1, start, "→")
           case "<-" => Replace(start-1, start, "←")
         }
+
+      case Add(start, text) =>
+        subrule(text) {
+          case "=>" => Add(start, "⇒") withCursorPos start+1
+          case "->" => Add(start, "→") withCursorPos start+1
+          case "<-" => Add(start, "←") withCursorPos start+1
+        }
     }
   }
 }

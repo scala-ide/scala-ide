@@ -31,4 +31,26 @@ class ConvertToUnicodeTest extends AutoEditTests {
     """ becomes """
     a ⇒^ b
     """ after Add(">")
+
+  @Test
+  def convert_on_paste_to_←() = """
+    for (i ^
+    """ becomes """
+    for (i ←^
+    """ after Add("<-")
+
+  @Test
+  def convert_on_paste_to_→() = """
+    a ^ b
+    """ becomes """
+    a →^ b
+    """ after Add("->")
+
+  @Test
+  def convert_on_paste_to_⇒() = """
+    a ^ b
+    """ becomes """
+    a ⇒^ b
+    """ after Add("=>")
+
 }
