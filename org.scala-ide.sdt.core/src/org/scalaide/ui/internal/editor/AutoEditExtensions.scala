@@ -13,6 +13,7 @@ import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.ScalaPlugin
 
 object AutoEditExtensions {
 
@@ -55,9 +56,16 @@ trait AutoEditExtensions extends HasLogger {
   }
 
   private def performExtension(instance: AutoEdit): Option[Change] = {
+    def isEnabled(id: String): Boolean =
+      ScalaPlugin.prefStore.getBoolean(id)
+
     val id = instance.setting.id
-    EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'.") {
-      instance.perform()
-    }
+
+    if (isEnabled(id))
+      EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'.") {
+        instance.perform()
+      }
+    else
+      None
   }
 }
