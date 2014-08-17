@@ -2,10 +2,11 @@ package org.scalaide.ui.internal.editor.decorators.macros
 
 import org.eclipse.jface.text.source.Annotation
 
+/* Constants for macro annotations */
+
 object MacroNames{
   val macroExpansion = "macroExpansion"
   val macroExpandee = "macroExpandee"
-  val enabledPreference = "scala.tools.eclipse.ui.preferences.macro.enabled"
 }
 
 object MacroExpansionAnnotation {

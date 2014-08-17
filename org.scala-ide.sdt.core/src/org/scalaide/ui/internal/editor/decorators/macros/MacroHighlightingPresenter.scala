@@ -10,6 +10,9 @@ import org.scalaide.core.ScalaPlugin
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.Position
 
+/*
+ * Semantic action for highlighting macros.
+ * */
 class MacroHighlightingPresenter(sourceViewer: ISourceViewer)
   extends BaseSemanticAction(
     sourceViewer,

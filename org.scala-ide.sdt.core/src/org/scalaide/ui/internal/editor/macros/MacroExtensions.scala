@@ -17,8 +17,7 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.TextUtilities
 
 trait MacroCreateMarker {
-  def editorInput: IEditorInput
-
+  protected[macros] def editorInput: IEditorInput
   def createMacroMarker(markerId: String, pos: Position, macroExpansion: String, macroExpandee: String) {
     val marker2expand = editorInput.asInstanceOf[FileEditorInput].getFile.createMarker(markerId)
     marker2expand.setAttribute(IMarker.CHAR_START, pos.offset)
@@ -29,23 +28,34 @@ trait MacroCreateMarker {
 }
 
 trait MacroExpansionIndent {
-  def document: IDocument
+  protected[macros] def document: IDocument
+  /*
+   * Gets white characters on the expanded line,
+   * add them to each line of macro expansion
+   * */
   def indentMacroExpansion(line: Int, macroExpansion: String) = {
     val lineRegion = document.getLineInformation(line)
     val prefix = document.get(lineRegion.getOffset, lineRegion.getLength).takeWhile(_.isWhitespace)
     val splittedMacroExpansion = macroExpansion.split(TextUtilities.getDefaultLineDelimiter(document))
     (splittedMacroExpansion.head +:
-      splittedMacroExpansion.tail.map(prefix + _)).mkString("\n")
+      splittedMacroExpansion.tail.map(prefix + _)).mkString(TextUtilities.getDefaultLineDelimiter(document))
   }
 }
 
+/*
+ * Contains replaceWithoutDirtyState function. The intent of this function is:
+ * 1) to preserve the dirty state in the state it was before expanding the macro
+ * 2) not to select the macro, when expanding
+ * */
 trait PreserveDirtyState extends HasLogger {
-  def textEditor: ScalaSourceFileEditor
-  def editorInput: IEditorInput
-  def document: IDocument
+  protected[macros] def textEditor: ScalaSourceFileEditor
+  protected[macros] def editorInput: IEditorInput
+  protected[macros] def document: IDocument
 
   private def selectionProvider = textEditor.getSelectionProvider
 
+
+  //Used to preserve modified state in the state it was before modifying the document.
   private lazy val fTextFileBuffer = try {
     import org.eclipse.ui.editors.text.TextFileDocumentProvider
     import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor
@@ -59,16 +69,12 @@ trait PreserveDirtyState extends HasLogger {
 
     Some(fileInfo.fTextFileBuffer)
   } catch {
-    case e: ClassNotFoundException => //TODO: remove?
-      eclipseLog.error(e.getStackTrace)
+    case e: Throwable => 
+      eclipseLog.error("error: ",e)
       None
-    case e: ClassCastException => //TODO: remove?
-      eclipseLog.error(e.getStackTrace)
-      None
-    case e: Throwable =>
-      throw e
   }
 
+  // Used for not selecting the expanded macro
   private class MacroPreserveSelectionChangeListener(val previousSelection: ISelection) extends ISelectionChangedListener {
     override def selectionChanged(event: SelectionChangedEvent) {
       selectionProvider.removeSelectionChangedListener(this)
@@ -88,7 +94,6 @@ trait PreserveDirtyState extends HasLogger {
       buffer.setDirty(previousDirtyState)
       textEditor.macroReplaceEnd()
     } else {
-      eclipseLog.error("fTextFileBuffer is not defined")
       document.replace(offset, length, text)
     }
   }

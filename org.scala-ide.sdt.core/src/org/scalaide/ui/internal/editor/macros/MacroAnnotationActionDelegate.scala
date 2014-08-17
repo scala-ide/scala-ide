@@ -25,28 +25,37 @@ import org.scalaide.ui.internal.editor.macros.MacroExpansionIndent
 import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 import org.scalaide.ui.internal.editor.decorators.macros.ScalaMacroMarker
 import org.scalaide.ui.internal.editor.decorators.macros.MacroExpansionAnnotation
+import org.eclipse.jface.text.source.IAnnotationModelExtension2
+import org.eclipse.jface.text.source.IAnnotationModel
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
-class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with HasLogger  {
+/*
+ * Creates MacroRulerAction and triggers MacroRulerAction.run() when clicking on gutter 
+ * macro expand/collapse annotations
+ * */
+class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with HasLogger {
   import org.eclipse.jface.action.Action
   import org.eclipse.jface.action.IAction
   import org.eclipse.ui.texteditor.TextEditorAction
 
   var macroRulerAction: Option[MacroRulerAction] = None
 
+  /*
+   * Expands and collapses macros, when clicking on gutter expand/collapse annotations
+   * */
   class MacroRulerAction(val iTextEditor: ITextEditor, val iVerticalRulerInfo: IVerticalRulerInfo) extends Action with MacroCreateMarker with PreserveDirtyState with MacroExpansionIndent {
-    val editorInput = iTextEditor.getEditorInput
+    override val editorInput = iTextEditor.getEditorInput
     // asInstance is for getAnnotationIterator(int offset, int length, ...) method
-    val annotationModel = iTextEditor.getDocumentProvider.getAnnotationModel(editorInput).asInstanceOf[AnnotationModel]
-    val document = iTextEditor.getDocumentProvider.getDocument(editorInput)
+    val annotationModel = iTextEditor.getDocumentProvider.getAnnotationModel(editorInput).asInstanceOf[IAnnotationModelExtension2 with IAnnotationModel]
+    override val document = iTextEditor.getDocumentProvider.getDocument(editorInput)
 
-    def textEditor = iTextEditor.asInstanceOf[ScalaSourceFileEditor]
+    override def textEditor = iTextEditor.asInstanceOf[ScalaSourceFileEditor]
 
     private def findAnnotationsStartOnLine(line: Int, annotationType: String) = {
       val iRegion = document.getLineInformation(line)
-      val annotations = annotationModel.getAnnotationIterator(iRegion.getOffset, iRegion.getLength, /*canStartBefore*/ true, /*canEndAfter*/ true).toList
+      val annotations = annotationModel.getAnnotationIterator(iRegion.getOffset, iRegion.getLength, /*canStartBefore*/ true, /*canEndAfter*/ true).toList.map(_.asInstanceOf[Annotation])
       val annotationIterator = for {
-        annotationNoType <- annotations
-        annotation = annotationNoType.asInstanceOf[Annotation] // safe
+        annotation <- annotations
         if annotation.getType == annotationType
         pos = annotationModel.getPosition(annotation)
         if document.getLineOfOffset(pos.offset) == line
@@ -54,47 +63,52 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with Has
       annotationIterator.toList
     }
 
-    override def run {
-      val line = iVerticalRulerInfo.getLineOfLastMouseButtonActivity
-      val annotations2Expand = findAnnotationsStartOnLine(line, MacroExpansionAnnotation.ID)
+    private def expandMacroAnnotation(annotation: Annotation, line: Int) = {
+      if (!annotation.isMarkedDeleted) {
+          val pos = annotationModel.getPosition(annotation)
 
-      //If one clicked on expand annotation => expand macros on line. Macro expansion is in annotation text.
-      annotations2Expand.foreach(annotation => if (!annotation.isMarkedDeleted) {
-        val pos = annotationModel.getPosition(annotation)
+          val macroExpandee = document.get(pos.offset, pos.length)
+          val macroExpansion = annotation.getText
 
-        val macroExpandee = document.get(pos.offset, pos.length)
-        val macroExpansion = annotation.getText
+          val indentedMacroExpansion = indentMacroExpansion(line, macroExpansion)
 
-        val indentedMacroExpansion = indentMacroExpansion(line, macroExpansion)
-
-        //create new if previously there were no annotations
-        val annotations = annotationModel.getAnnotationIterator(pos.offset, pos.length, /*canStartBefore*/ true, /*canEndAfter*/ true).toList
-        if (!annotations.map(_.asInstanceOf[Annotation]).exists(_.getType == ScalaMacroMarker.ID)) {
-          editorInput match {
-            case fileEditorInput: FileEditorInput =>
-              createMacroMarker(ScalaMacroMarker.ID, pos, indentedMacroExpansion, macroExpandee)
-            case _ =>
-              eclipseLog.error("Wrong type for editorInput")
+          //create new if previously there were no annotations
+          val annotations = annotationModel.getAnnotationIterator(pos.offset, pos.length, /*canStartBefore*/ true, /*canEndAfter*/ true).toList.map(_.asInstanceOf[Annotation])
+          if (!annotations.exists(_.getType == ScalaMacroMarker.ID)) {
+            editorInput match {
+              case fileEditorInput: FileEditorInput =>
+                createMacroMarker(ScalaMacroMarker.ID, pos, indentedMacroExpansion, macroExpandee)
+              case _ =>
+                eclipseLog.error("Wrong type for editorInput")
+            }
           }
+
+          replaceWithoutDirtyState(pos.offset, pos.length, indentedMacroExpansion)
+          annotationModel.removeAnnotation(annotation)
         }
+    }
 
-        replaceWithoutDirtyState(pos.offset, pos.length, indentedMacroExpansion)
-        annotationModel.removeAnnotation(annotation)
-      })
-
-      if (annotations2Expand.isEmpty) {
-        val annotations2Collapse = findAnnotationsStartOnLine(line, ScalaMacroMarker.ID)
-
-        annotations2Collapse.foreach(annotation => {
+    private def collapseMacroAnnotation(annotation: Annotation) {
           val pos = annotationModel.getPosition(annotation)
 
           val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker // ScalaMacroMarker.ID is marker
-          val macroExpandee = marker.getAttribute("macroExpandee").asInstanceOf[String] // macroExpandee is String
+          val macroExpandee = marker.getAttribute("macroExpandee", "")
 
           replaceWithoutDirtyState(pos.offset, pos.length, macroExpandee)
 
           annotationModel.removeAnnotation(annotation)
-        })
+        }
+
+    override def run {
+      val line = iVerticalRulerInfo.getLineOfLastMouseButtonActivity
+      val macroAnnotations2Expand = findAnnotationsStartOnLine(line, MacroExpansionAnnotation.ID)
+
+      macroAnnotations2Expand.foreach(annotation => expandMacroAnnotation(annotation, line))
+
+      if (macroAnnotations2Expand.isEmpty) {
+        val annotations2Collapse = findAnnotationsStartOnLine(line, ScalaMacroMarker.ID)
+
+        annotations2Collapse.foreach(annotation => collapseMacroAnnotation(annotation))
       }
 
       // MacroAnnotations are applyed only to Scala editor with ScalaMacroEditor

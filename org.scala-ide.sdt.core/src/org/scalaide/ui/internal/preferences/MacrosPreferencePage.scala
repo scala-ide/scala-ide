@@ -19,9 +19,6 @@ class MacrosPreferencePage extends FieldEditorPreferencePage with IWorkbenchPref
   import org.scalaide.util.internal.eclipse.SWTUtils._
 
   setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
-  setDescription("""
-Enable/Disable showing macros explicitly.
-  """)
 
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
@@ -35,7 +32,7 @@ Enable/Disable showing macros explicitly.
   }
 
   override def createFieldEditors() {
-    addField(new BooleanFieldEditor(P_ACTIVE, "Enabled", getFieldEditorParent))
+    addField(new BooleanFieldEditor(P_ACTIVE, "Enable macro expand functionality", getFieldEditorParent))
   }
 
   def init(workbench: IWorkbench) {}

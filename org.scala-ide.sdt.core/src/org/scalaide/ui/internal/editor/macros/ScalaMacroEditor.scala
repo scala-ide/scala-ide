@@ -16,28 +16,39 @@ import org.scalaide.ui.internal.editor.decorators.macros.Marker2Expand
 import org.scalaide.ui.internal.editor.decorators.macros.MacroNames
 import org.scalaide.ui.internal.editor.decorators.macros.ScalaMacroMarker
 
-class MacroLineRange(val startLine: Int, val endLine: Int) {}
+class MacroLineRange(val startLine: Int, val endLine: Int)
 
-trait ScalaMacroEditor extends PreserveDirtyState with MacroCreateMarker { self: ScalaSourceFileEditor =>
-  var macroExpansionRegions: List[MacroLineRange] = Nil
+/**
+ *  Contains macro helper functions.
+ *  */
+trait ScalaMacroEditor extends PreserveDirtyState with MacroCreateMarker with ScalaLineNumberMacroEditor { self: ScalaSourceFileEditor =>
+  protected[macros] var macroExpansionRegions: List[MacroLineRange] = Nil
 
-  def editorInput = getEditorInput
-  def document = getDocumentProvider.getDocument(editorInput)
-  def annotationModel = getDocumentProvider.getAnnotationModel(editorInput)
+  protected[macros] def editorInput = getEditorInput
+  protected[macros] def document = getDocumentProvider.getDocument(editorInput)
+  protected[macros] def annotationModel = getDocumentProvider.getAnnotationModel(editorInput)
+  private def annotations = annotationModel.getAnnotationIterator.toList.map(_.asInstanceOf[Annotation])
 
-  val textEditor = this
+  protected[macros] val textEditor = this
+
+  /* When applying macros dirty state should not change */
+  var isDirtyState: Option[Boolean] = None
+  def macroReplaceStart(dirtyState: Boolean) {
+    isDirtyState = Some(dirtyState)
+  }
+  def macroReplaceEnd() {
+    isDirtyState = None
+  }
 
   def expandMacros() {
-    val annotations = annotationModel.getAnnotationIterator.toList
     for {
-      annotationNoType <- annotations
-      annotation = annotationNoType.asInstanceOf[Annotation]
+      annotation <- annotations
       if annotation.getType == Marker2Expand.ID
     } {
-      val marker = annotationNoType.asInstanceOf[MarkerAnnotation].getMarker
+      val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker
       val pos = annotationModel.getPosition(annotation)
-      val macroExpandee = marker.getAttribute(MacroNames.macroExpandee).asInstanceOf[String]
-      val macroExpansion = marker.getAttribute(MacroNames.macroExpansion).asInstanceOf[String]
+      val macroExpandee = marker.getAttribute(MacroNames.macroExpandee, "")
+      val macroExpansion = marker.getAttribute(MacroNames.macroExpansion, "")
 
       createMacroMarker(ScalaMacroMarker.ID, pos, macroExpansion, macroExpandee)
       replaceWithoutDirtyState(pos.offset, pos.length, macroExpansion)
@@ -48,25 +59,24 @@ trait ScalaMacroEditor extends PreserveDirtyState with MacroCreateMarker { self:
   }
 
   def refreshMacroExpansionRegions() {
-    val annotations = annotationModel.getAnnotationIterator.toList
     macroExpansionRegions = for {
-      annotationNoType <- annotations
-      annotation = annotationNoType.asInstanceOf[Annotation]
+      annotation <- annotations
       if annotation.getType == ScalaMacroMarker.ID
-      pos = annotationModel.getPosition(annotation)
-    } yield new MacroLineRange(document.getLineOfOffset(pos.offset), document.getLineOfOffset(pos.offset + pos.length))
+    } yield {
+      val pos = annotationModel.getPosition(annotation)
+      new MacroLineRange(document.getLineOfOffset(pos.offset), document.getLineOfOffset(pos.offset + pos.length))
+    }
     lineNumberCorresponder.refreshLineNumbers()
   }
 
   def collapseMacros() {
-    val annotations = for {
-      annotationsNoType <- annotationModel.getAnnotationIterator.toList
-      annotation = annotationsNoType.asInstanceOf[Annotation]
+    for {
+      annotation <- annotations
       if annotation.getType == ScalaMacroMarker.ID
     } {
       val pos = annotationModel.getPosition(annotation)
       val marker = annotation.asInstanceOf[MarkerAnnotation].getMarker
-      val macroExpandee = marker.getAttribute(MacroNames.macroExpandee).asInstanceOf[String]
+      val macroExpandee = marker.getAttribute(MacroNames.macroExpandee, "")
       val macroExpansion = document.get(pos.getOffset, pos.getLength)
 
       createMacroMarker(Marker2Expand.ID, pos, macroExpansion, macroExpandee)

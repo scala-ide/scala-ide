@@ -7,6 +7,7 @@ package org.scalaide.ui.internal.editor.decorators.implicits
 
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.ui.internal.editor.decorators.BaseSemanticAction
+
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.Region
@@ -18,7 +19,6 @@ import org.scalaide.core.hyperlink.Hyperlink
 import org.scalaide.core.hyperlink.HyperlinkFactory
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
-import org.scalaide.ui.internal.editor.decorators.macros.MacroExpansionAnnotation
 
 /**
  * Semantic action for highlighting implicit conversions and parameters.

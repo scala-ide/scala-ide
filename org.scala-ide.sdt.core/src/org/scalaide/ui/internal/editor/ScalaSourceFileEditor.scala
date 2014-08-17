@@ -62,9 +62,14 @@ import org.eclipse.ui.IEditorInput
 import org.scalaide.ui.internal.editor.macros._
 
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor with ScalaLineNumberMacroEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with ScalaMacroEditor { self =>
   import ScalaSourceFileEditor._
 
+  /* Substitude the default line number ruler column to the line numbering that
+   * supports changing line numbering for multiple line macros(the whole macro
+   * expansion corresponds to a single line)
+   * The logic of method is gotten from super.createLineNumberRulerColumn()
+   * */
   import org.eclipse.jface.text.source.IVerticalRulerColumn
   import org.eclipse.jface.text.source.IChangeRulerColumn
   override protected def createLineNumberRulerColumn(): IVerticalRulerColumn = {
@@ -74,20 +79,17 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     verticalRuler
   }
 
-  var isDirtyState: Option[Boolean] = None
-  def macroReplaceStart(dirtyState: Boolean) {
-    isDirtyState = Some(dirtyState)
-  }
-  def macroReplaceEnd() {
-    isDirtyState = None
-  }
-
+  /* When applying macros dirty state should not change */
   override def isDirty = isDirtyState.getOrElse(super.isDirty)
 
+  /* Erase macro expansions before the actual save, and expand them after the save */
   override def performSave(overwrite: Boolean, progressMonitor: IProgressMonitor) {
     try{
       collapseMacros()
-    } finally{
+    } catch{
+      case e: Throwable => eclipseLog.error("error:", e)
+    }
+    finally{
       super.performSave(overwrite, progressMonitor)
     }
     expandMacros()
