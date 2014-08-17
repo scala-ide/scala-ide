@@ -21,6 +21,7 @@ import org.eclipse.jface.action.Action
 import org.eclipse.jface.action.IContributionItem
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
+import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.ITextOperationTarget
@@ -30,11 +31,17 @@ import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
+import org.eclipse.jface.text.source.IOverviewRuler
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.source.IVerticalRuler
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
+import org.eclipse.swt.events.VerifyEvent
+import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchCommandConstants
 import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
@@ -61,7 +68,8 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
+
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with AutoEditExtensions { self =>
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
@@ -175,6 +183,13 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
    */
   override def isTabsToSpacesConversionEnabled(): Boolean =
     false
+
+  override def createJavaSourceViewer(
+      parent: Composite, verticalRuler: IVerticalRuler, overviewRuler: IOverviewRuler,
+      isOverviewRulerVisible: Boolean, styles: Int, store: IPreferenceStore) =
+    new ScalaSourceViewer(
+        parent, verticalRuler, overviewRuler,
+        isOverviewRulerVisible, styles, store)
 
   override protected def initializeKeyBindingScopes() {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
@@ -392,6 +407,63 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     super.reconciled(ast, forced, progressMonitor)
     reconcilingListeners.reconciled(ast, forced, progressMonitor)
   }
+
+  /**
+   * This class partly overwrites the implementations in
+   * [[org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor.AdaptedSourceViewer]]
+   *
+   * `AdaptedSourceViewer` couldn't be subclassed because it is not public. The
+   * main purpose of this class is to catch a [[org.eclipse.swt.events.VerifyEvent]]
+   * and forward it to the auto edit logic.
+   */
+  class ScalaSourceViewer(
+      parent: Composite, verticalRuler: IVerticalRuler, overviewRuler: IOverviewRuler,
+      isOverviewRulerVisible: Boolean, styles: Int, store: IPreferenceStore)
+        extends JavaSourceViewer(
+            parent, verticalRuler, overviewRuler,
+            isOverviewRulerVisible, styles, store) {
+
+    /** Calls auto edits and if they produce no changes the super implementation. */
+    override def handleVerifyEvent(e: VerifyEvent) = {
+      self.handleVerifyEvent(e, event2ModelRange(e))
+
+      if (e.doit)
+        super.handleVerifyEvent(e)
+    }
+
+    /** Implementation copied from [[AdaptedSourceViewer]]. */
+    override def doOperation(operation: Int): Unit = {
+      if (getTextWidget() != null) {
+        operation match {
+          case ISourceViewer.CONTENTASSIST_PROPOSALS =>
+            val msg = fContentAssistant.showPossibleCompletions()
+            setStatusLineErrorMessage(msg)
+
+          case ISourceViewer.QUICK_ASSIST =>
+            val msg = fQuickAssistAssistant.showPossibleQuickAssists()
+            setStatusLineMessage(msg)
+
+          case _ =>
+            super.doOperation(operation)
+        }
+      }
+    }
+
+    /** Implementation copied from [[AdaptedSourceViewer]]. */
+    override def requestWidgetToken(requester: org.eclipse.jface.text.IWidgetTokenKeeper): Boolean =
+      if (PlatformUI.getWorkbench().getHelpSystem().isContextHelpDisplayed())
+        false
+      else
+        super.requestWidgetToken(requester)
+
+    /** Implementation copied from [[AdaptedSourceViewer]]. */
+    override def requestWidgetToken(requester: org.eclipse.jface.text.IWidgetTokenKeeper, priority: Int): Boolean =
+      if (PlatformUI.getWorkbench().getHelpSystem().isContextHelpDisplayed())
+        false
+      else
+        super.requestWidgetToken(requester, priority)
+  }
+
 }
 
 object ScalaSourceFileEditor {
