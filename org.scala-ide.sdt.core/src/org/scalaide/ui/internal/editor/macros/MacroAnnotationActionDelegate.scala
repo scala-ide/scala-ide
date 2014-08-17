@@ -30,7 +30,7 @@ import org.eclipse.jface.text.source.IAnnotationModel
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
 /*
- * Creates MacroRulerAction and triggers MacroRulerAction.run() when clicking on gutter 
+ * Creates MacroRulerAction and triggers MacroRulerAction.run() when clicking on gutter
  * macro expand/collapse annotations
  * */
 class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with HasLogger {

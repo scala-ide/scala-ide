@@ -69,7 +69,7 @@ trait PreserveDirtyState extends HasLogger {
 
     Some(fileInfo.fTextFileBuffer)
   } catch {
-    case e: Throwable => 
+    case e: Throwable =>
       eclipseLog.error("error: ",e)
       None
   }

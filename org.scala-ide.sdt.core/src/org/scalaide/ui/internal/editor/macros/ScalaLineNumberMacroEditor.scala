@@ -6,8 +6,8 @@ import scala.collection.mutable.ArrayBuffer
 
 /*
  * When macro expands to several lines, all this lines should
- * have the same line number in text editor. ScalaLineNumberMacroEditor 
- * trait contains handling that classes. 
+ * have the same line number in text editor. ScalaLineNumberMacroEditor
+ * trait contains handling that classes.
  * */
 trait ScalaLineNumberMacroEditor {
   protected[macros] def macroExpansionRegions: List[MacroLineRange]
@@ -40,7 +40,7 @@ trait ScalaLineNumberMacroEditor {
   }
 
   /* Substitude LineNumberChangeRulerColumn in ScalaSourceFileEditor.
-   * Changes line numbers in the editor so, that multiple line macro 
+   * Changes line numbers in the editor so, that multiple line macro
    * expansion corresponds to a single line */
   class LineNumberChangeRulerColumnWithMacro(sharedColors: ISharedTextColors)
     extends LineNumberChangeRulerColumn(sharedColors) {
