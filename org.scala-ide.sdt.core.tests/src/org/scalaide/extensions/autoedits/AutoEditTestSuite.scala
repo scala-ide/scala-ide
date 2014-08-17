@@ -5,5 +5,6 @@ import org.junit.runners.Suite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
+  classOf[ConvertToUnicodeTest]
 ))
 class AutoEditTestSuite
