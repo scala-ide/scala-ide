@@ -1,13 +1,12 @@
-package org.scalaide.core.ui
+package org.scalaide.ui.internal.editor.macros
 
 import org.junit.runner.RunWith
 import org.junit.Test
 import org.junit.Assert
-import org.junit.Before
 import org.junit.runner.RunWith
-import org.junit.internal.runners.JUnit4ClassRunner
 import org.scalaide.ui.internal.editor.macros.ScalaLineNumberMacroEditor
 import org.scalaide.ui.internal.editor.macros.MacroLineRange
+import org.junit.internal.runners.JUnit4ClassRunner
 
 @RunWith(classOf[JUnit4ClassRunner])
 class ScalaLineNumberMacroEditorTests{
