@@ -78,8 +78,8 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with Has
             editorInput match {
               case fileEditorInput: FileEditorInput =>
                 createMacroMarker(ScalaMacroMarker.ID, pos, indentedMacroExpansion, macroExpandee)
-              case _ =>
-                eclipseLog.error("Wrong type for editorInput")
+              case e: Throwable =>
+                eclipseLog.error("error:", e)
             }
           }
 
