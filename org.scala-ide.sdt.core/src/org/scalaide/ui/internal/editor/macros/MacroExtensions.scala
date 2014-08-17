@@ -57,7 +57,7 @@ trait PreserveDirtyState extends HasLogger {
   private def selectionProvider = textEditor.getSelectionProvider
 
   //Used to preserve modified state in the state it was before modifying the document.
-  private def fTextFileBuffer = {
+  private lazy val fTextFileBuffer = {
     import org.eclipse.ui.editors.text.TextFileDocumentProvider
     import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor
     val fileInfoMap = Try {
