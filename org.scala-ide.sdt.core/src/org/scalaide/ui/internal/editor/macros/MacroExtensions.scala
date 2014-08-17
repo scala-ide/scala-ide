@@ -15,6 +15,8 @@ import org.eclipse.jface.text.Position
 import org.scalaide.ui.internal.editor.decorators.macros.ScalaMacroMarker
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.TextUtilities
+import org.scalaide.util.internal.ReflectAccess
+import scala.util.Try
 
 trait MacroCreateMarker {
   protected[macros] def editorInput: IEditorInput
@@ -54,24 +56,19 @@ trait PreserveDirtyState extends HasLogger {
 
   private def selectionProvider = textEditor.getSelectionProvider
 
-
   //Used to preserve modified state in the state it was before modifying the document.
-  private lazy val fTextFileBuffer = try {
+  private def fTextFileBuffer = {
     import org.eclipse.ui.editors.text.TextFileDocumentProvider
     import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor
-    val documentProvier = textEditor.getDocumentProvider().asInstanceOf[TextFileDocumentProvider]
-    val documentProviderClass = Class.forName("org.eclipse.ui.editors.text.TextFileDocumentProvider")
-    val fFileInfoMapField = documentProviderClass.getDeclaredField("fFileInfoMap")
-    fFileInfoMapField.setAccessible(true)
-    val fileInfoMap = fFileInfoMapField.get(documentProvier).asInstanceOf[java.util.Map[Any, Any]]
+    val fileInfoMap = Try {
+      textEditor.getDocumentProvider().asInstanceOf[TextFileDocumentProvider]
+    }.flatMap { documentProvider =>
+      ReflectAccess[TextFileDocumentProvider](documentProvider) apply { dp =>
+        dp.fFileInfoMap.asInstanceOf[java.util.Map[Any, Any]]
+      }
+    }
 
-    val fileInfo = fileInfoMap.get(editorInput).asInstanceOf[TextFileDocumentProvider.FileInfo]
-
-    Some(fileInfo.fTextFileBuffer)
-  } catch {
-    case e: Throwable =>
-      eclipseLog.error("error: ",e)
-      None
+    fileInfoMap.map(_.get(editorInput).asInstanceOf[TextFileDocumentProvider.FileInfo].fTextFileBuffer)
   }
 
   // Used for not selecting the expanded macro
@@ -83,18 +80,22 @@ trait PreserveDirtyState extends HasLogger {
   }
 
   def replaceWithoutDirtyState(offset: Int, length: Int, text: String) {
-    if (fTextFileBuffer.isDefined) {
-      val buffer = fTextFileBuffer.get
-
-      val previousDirtyState = buffer.isDirty
-      val previousSelection = selectionProvider.getSelection
-      selectionProvider.addSelectionChangedListener(new MacroPreserveSelectionChangeListener(previousSelection))
-      textEditor.macroReplaceStart(previousDirtyState)
-      document.replace(offset, length, text)
-      buffer.setDirty(previousDirtyState)
-      textEditor.macroReplaceEnd()
-    } else {
-      document.replace(offset, length, text)
+    import scala.util.Success
+    import scala.util.Failure
+    fTextFileBuffer match {
+      case Success(buffer) => {
+        val previousDirtyState = buffer.isDirty
+        val previousSelection = selectionProvider.getSelection
+        selectionProvider.addSelectionChangedListener(new MacroPreserveSelectionChangeListener(previousSelection))
+        textEditor.macroReplaceStart(previousDirtyState)
+        document.replace(offset, length, text)
+        buffer.setDirty(previousDirtyState)
+        textEditor.macroReplaceEnd()
+      }
+      case Failure(e) => {
+        eclipseLog.error("error:", e)
+        document.replace(offset, length, text)
+      }
     }
   }
 }

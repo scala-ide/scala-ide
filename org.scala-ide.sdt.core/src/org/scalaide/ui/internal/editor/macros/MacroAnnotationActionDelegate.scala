@@ -121,8 +121,15 @@ class MacroAnnotationActionDelegate extends AbstractRulerActionDelegate with Has
     macroRulerAction.map(_.run())
   }
   def createAction(editor: ITextEditor, rulerInfo: IVerticalRulerInfo): IAction = {
-    val t = new MacroRulerAction(editor, rulerInfo)
-    macroRulerAction = Some(t)
-    t
+    try{
+      val t = new MacroRulerAction(editor, rulerInfo)
+      macroRulerAction = Some(t)
+      t
+    }
+    catch{
+      case e: Throwable =>
+        eclipseLog.error("error:",e)
+        null
+    }
   }
 }
