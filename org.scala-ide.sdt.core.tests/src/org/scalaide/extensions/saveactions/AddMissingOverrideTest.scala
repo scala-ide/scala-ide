@@ -109,4 +109,21 @@ class AddMissingOverrideTest {
       override type Type = Int
     }
     """ after SaveEvent
+
+  @Test
+  def no_change_for_override_abstract() = """^
+    trait T {
+      def f = 0
+    }
+    trait TT extends T {
+      abstract override def f = super.f+0
+    }
+    """ becomes """^
+    trait T {
+      def f = 0
+    }
+    trait TT extends T {
+      abstract override def f = super.f+0
+    }
+    """ after SaveEvent
 }

@@ -24,13 +24,15 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
   override def setting = AddMissingOverrideSetting
 
   override def perform() = {
+    def canOverride(sym: Symbol) = sym.isOverridingSymbol && !sym.isOverride && !sym.isAbstractOverride
+
     val symbolWithoutOverride = filter {
       case d: ValDef =>
         val getter = d.symbol.getterIn(d.symbol.owner)
-        getter.isOverridingSymbol && !getter.isOverride
+        canOverride(getter)
 
       case d @ (_: DefDef | _: TypeDef) =>
-        d.symbol.isOverridingSymbol && !d.symbol.isOverride
+        canOverride(d.symbol)
     }
 
     val addOverrideKeyword = transform {
