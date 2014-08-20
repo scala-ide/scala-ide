@@ -26,16 +26,20 @@ abstract class AutoEditTests extends TextEditTests {
       val change = TextChange(caretOffset, caretOffset, text)
       val appliedChange = autoEdit(new TextDocument(udoc), change).perform()
 
-      appliedChange foreach {
-        case TextChange(start, end, text) =>
+      appliedChange match {
+        case Some(TextChange(start, end, text)) =>
           udoc.replace(start, end-start, text)
 
-        case CursorUpdate(TextChange(start, end, text), cursorPos) =>
+        case Some(CursorUpdate(TextChange(start, end, text), cursorPos)) =>
           udoc.replace(start, end-start, text)
           caretOffset = cursorPos
 
-        case o =>
+        case Some(o) =>
           throw new AssertionError(s"Invalid change object '$o'.")
+
+        case None =>
+          udoc.replace(change.start, change.end-change.start, change.text)
+          caretOffset += 1
       }
     }
   }
