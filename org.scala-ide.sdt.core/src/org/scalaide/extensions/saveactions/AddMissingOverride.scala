@@ -37,18 +37,11 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
 
     val addOverrideKeyword = transform {
       case d: MemberDef =>
-        /**
-         * Alternative (preferred) implementation:
-         * {{{
-         * mods.copy().withPosition(Flag.OVERRIDE, pos)
-         * }}}
-         * The above does not work due to a limitation in scala-refactoring.
-         */
-        val mods = d.mods.copy() setPositions Map(Flag.OVERRIDE -> d.pos) ++ d.mods.positions
+        val mods = d.mods.withFlag(Flag.OVERRIDE)
         d match {
-          case d: DefDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
-          case d: ValDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
-          case d: TypeDef => d.copy(mods = mods | Flag.OVERRIDE) replaces d
+          case d: DefDef => d.copy(mods = mods) replaces d
+          case d: ValDef => d.copy(mods = mods) replaces d
+          case d: TypeDef => d.copy(mods = mods) replaces d
         }
     }
 
