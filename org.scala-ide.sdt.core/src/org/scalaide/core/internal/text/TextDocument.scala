@@ -36,10 +36,21 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
   override def lineCount: Int =
     doc.getNumberOfLines()
 
-  override def lineInformation(lineNumber: Int): Range = {
-    val l = doc.getLineInformation(lineNumber)
-    Range(l.getOffset(), l.getOffset()+l.getLength())
-  }
+  override def lineInformation(lineNumber: Int): Range =
+    if (lineNumber < 0 || lineNumber >= lineCount)
+      throw new IndexOutOfBoundsException
+    else {
+      val l = doc.getLineInformation(lineNumber)
+      Range(l.getOffset(), l.getOffset()+l.getLength())
+    }
+
+  override def lineInformationOfOffset(offset: Int): Range =
+    if (offset < 0 || offset > length)
+      throw new IndexOutOfBoundsException
+    else {
+      val l = doc.getLineInformationOfOffset(offset)
+      Range(l.getOffset(), l.getOffset()+l.getLength())
+    }
 
   override def replace(start: Int, end: Int, text: String): Unit =
     doc.replace(start, end-start, text)

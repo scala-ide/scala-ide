@@ -20,6 +20,8 @@ trait Document {
 
   def lineInformation(lineNumber: Int): Range
 
+  def lineInformationOfOffset(offset: Int): Range
+
   def head: Char
 
   def headOpt: Option[Char]
