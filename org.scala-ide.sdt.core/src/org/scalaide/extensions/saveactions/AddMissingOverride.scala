@@ -1,6 +1,8 @@
 package org.scalaide.extensions
 package saveactions
 
+import scala.tools.nsc.ast.parser.Tokens
+
 object AddMissingOverrideSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[AddMissingOverride],
   name = "Add missing override keyword",
@@ -29,7 +31,7 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
     val symbolWithoutOverride = filter {
       case d: ValDef =>
         val getter = d.symbol.getterIn(d.symbol.owner)
-        canOverride(getter)
+        canOverride(if (getter != NoSymbol) getter else d.symbol)
 
       case d @ (_: DefDef | _: TypeDef) =>
         canOverride(d.symbol)
@@ -39,9 +41,15 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
       case d: MemberDef =>
         val mods = d.mods.withFlag(Flag.OVERRIDE)
         d match {
-          case d: DefDef => d.copy(mods = mods) replaces d
-          case d: ValDef => d.copy(mods = mods) replaces d
-          case d: TypeDef => d.copy(mods = mods) replaces d
+          case d: DefDef =>
+            d.copy(mods = mods) replaces d
+
+          case d: ValDef =>
+            val valMods = if (mods.positions.contains(Tokens.VAL)) mods else mods.withFlag(Tokens.VAL)
+            d.copy(mods = valMods) replaces d
+
+          case d: TypeDef =>
+            d.copy(mods = mods) replaces d
         }
     }
 

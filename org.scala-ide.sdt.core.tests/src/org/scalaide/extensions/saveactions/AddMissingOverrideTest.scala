@@ -126,4 +126,51 @@ class AddMissingOverrideTest {
       abstract override def f = super.f+0
     }
     """ after SaveEvent
+
+  @Test
+  def add_override_modifier_to_constructor_param() = """^
+    trait T {
+      def meth: Int
+    }
+    case class C(val meth: Int) extends T
+    class D(val meth: Int) extends T
+    """ becomes """^
+    trait T {
+      def meth: Int
+    }
+    case class C(override val meth: Int) extends T
+    class D(override val meth: Int) extends T
+    """ after SaveEvent
+
+  @Test
+  def add_val_keyword_when_override_modifier_is_added_to_constructor_param() = """^
+    trait T {
+      def meth: Int
+    }
+    case class C(meth: Int) extends T
+    class D(meth: Int) extends T
+    """ becomes """^
+    trait T {
+      def meth: Int
+    }
+    case class C(override val meth: Int) extends T
+    class D(override val meth: Int) extends T
+    """ after SaveEvent
+
+  @Test
+  def no_change_to_constructor_param_when_nothing_is_overriden() = """^
+    trait T {
+      def meth: Int
+    }
+    case class B(meth: Int)
+    class C(meth: Int)
+    class D(meth: Int, func: Int) extends T
+    """ becomes """^
+    trait T {
+      def meth: Int
+    }
+    case class B(meth: Int)
+    class C(meth: Int)
+    class D(override val meth: Int, func: Int) extends T
+    """ after SaveEvent
 }
