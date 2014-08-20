@@ -35,7 +35,7 @@ trait AddReturnTypeToPublicSymbols extends SaveAction with CompilerSupport {
             false
 
         val o = d.symbol.owner
-        if (isHidden(o))
+        if (tpt.symbol.isRefinementClass || isHidden(o))
           false
         else
           d match {

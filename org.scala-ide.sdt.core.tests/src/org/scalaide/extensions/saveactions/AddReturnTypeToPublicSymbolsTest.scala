@@ -234,4 +234,31 @@ class AddReturnTypeToPublicSymbolsTest {
       }
     }
     """ after SaveEvent
+
+  @Test
+  def add_no_return_type_to_refinement_types() = """^
+    class X {
+      val t = new T {
+        def meth = 0
+      }
+      def d = new T {
+        def meth = 0
+      }
+    }
+    trait T {
+      def meth: Int
+    }
+    """ becomes """^
+    class X {
+      val t = new T {
+        def meth = 0
+      }
+      def d = new T {
+        def meth = 0
+      }
+    }
+    trait T {
+      def meth: Int
+    }
+    """ after SaveEvent
 }
