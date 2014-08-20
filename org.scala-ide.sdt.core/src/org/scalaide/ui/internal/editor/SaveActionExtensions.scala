@@ -97,14 +97,17 @@ trait SaveActionExtensions extends HasLogger {
    */
   private def applyDocumentExtensions(udoc: IDocument) = {
     val exts = Seq(
-      RemoveTrailingWhitespaceCreator.create _,
-      AddNewLineAtEndOfFileCreator.create _,
-      AutoFormattingCreator.create _,
-      RemoveDuplicatedEmptyLinesCreator.create _
+      RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
+      AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
+      AutoFormattingSetting -> AutoFormattingCreator.create _,
+      RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _
     )
 
+    def isEnabled(id: String): Boolean =
+      ScalaPlugin.prefStore.getBoolean(id)
+
     val doc = new TextDocument(udoc)
-    for (ext <- exts) {
+    for ((setting, ext) <- exts if isEnabled(setting.id)) {
       val instance = ext(doc)
       performExtension(instance, udoc) {
         instance.perform()
@@ -117,11 +120,14 @@ trait SaveActionExtensions extends HasLogger {
    */
   private def applyCompilerExtensions(udoc: IDocument) = {
     val exts = Seq(
-      AddMissingOverrideCreator.create _,
-      AddReturnTypeToPublicSymbolsCreator.create _
+      AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
+      AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
     )
 
-    for (ext <- exts) {
+    def isEnabled(id: String): Boolean =
+      ScalaPlugin.prefStore.getBoolean(id)
+
+    for ((setting, ext) <- exts if isEnabled(setting.id)) {
       createExtensionWithCompilerSupport(ext) foreach { instance =>
         performExtension(instance, udoc) {
           instance.global.asInstanceOf[ScalaPresentationCompiler].askOption { () =>
@@ -144,42 +150,35 @@ trait SaveActionExtensions extends HasLogger {
    * catches errors.
    */
   private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]) = {
-    def isEnabled(id: String): Boolean =
-      ScalaPlugin.prefStore.getBoolean(id)
-
     val id = instance.setting.id
-    val enabled = isEnabled(id)
+    val timeout = saveActionTimeout
 
-    if (enabled) {
-      val timeout = saveActionTimeout
+    val futureToUse: Seq[Change] => Future[Seq[Change]] =
+      if (ScalaPlugin.plugin.noTimeoutMode)
+        Future(_)
+      else
+        TimeoutFuture(timeout)(_)
 
-      val futureToUse: Seq[Change] => Future[Seq[Change]] =
-        if (ScalaPlugin.plugin.noTimeoutMode)
-          Future(_)
-        else
-          TimeoutFuture(timeout)(_)
+    val f = futureToUse {
+      EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
+        ext
+      }.getOrElse(Seq())
+    }
+    Await.ready(f, Duration.Inf).value.get match {
+      case Success(changes) =>
+        EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
+          applyChanges(id, changes, udoc)
+        }
 
-      val f = futureToUse {
-        EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
-          ext
-        }.getOrElse(Seq())
-      }
-      Await.ready(f, Duration.Inf).value.get match {
-        case Success(changes) =>
-          EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
-            applyChanges(id, changes, udoc)
-          }
-
-        case Failure(f) =>
-          eclipseLog.error(s"""|
-             |Save action '$id' didn't complete, it had $timeout
-             | time to complete. Please consider to disable it in the preferences.
-             | The save action itself can't be aborted, therefore if you know that
-             | it may never complete in future, you may wish to restart your Eclipse
-             | to clean up your VM.
-             |
-             |""".stripMargin.replaceAll("\n", ""))
-      }
+      case Failure(f) =>
+        eclipseLog.error(s"""|
+           |Save action '$id' didn't complete, it had $timeout
+           | time to complete. Please consider to disable it in the preferences.
+           | The save action itself can't be aborted, therefore if you know that
+           | it may never complete in future, you may wish to restart your Eclipse
+           | to clean up your VM.
+           |
+           |""".stripMargin.replaceAll("\n", ""))
     }
   }
 
