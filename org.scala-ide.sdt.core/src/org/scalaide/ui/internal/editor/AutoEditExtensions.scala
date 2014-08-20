@@ -1,6 +1,9 @@
 package org.scalaide.ui.internal.editor
 
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IDocumentExtension3
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
 import org.scalaide.core.ScalaPlugin
@@ -9,7 +12,6 @@ import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
-import org.scalaide.core.text.Document
 import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
@@ -44,8 +46,7 @@ trait AutoEditExtensions extends HasLogger {
     val change =
       if (text.isEmpty()) Remove(start, end)
       else Add(start, text)
-    val doc = new TextDocument(udoc)
-    val res = applyAutoEdit(doc, change)
+    val res = applyAutoEdit(udoc, change)
 
     res foreach {
       case TextChange(start, end, text) =>
@@ -61,11 +62,21 @@ trait AutoEditExtensions extends HasLogger {
     }
   }
 
-  private def applyAutoEdit(doc: Document, change: TextChange): Option[Change] = {
-    val iter = for ((setting, ext) <- autoEdits.iterator if isEnabled(setting.id)) yield {
+  private def applyAutoEdit(udoc: IDocument, change: TextChange): Option[Change] = {
+    val partition = TextUtilities.getPartition(
+        udoc, IDocumentExtension3.DEFAULT_PARTITIONING,
+        change.start, /* preferOpenPartitions */ true)
+
+    def configuredForPartition(partitions: Seq[String]) =
+      partitions.isEmpty || partitions.contains(partition)
+
+    val iter = for ((setting, ext) <- autoEdits.iterator
+        if isEnabled(setting.id) && configuredForPartition(setting.partitions)) yield {
+      val doc = new TextDocument(udoc)
       val instance = ext(doc, change)
       performExtension(instance)
     }
+
     val appliedAutoEdit = iter find (_.isDefined)
     appliedAutoEdit.flatten
   }

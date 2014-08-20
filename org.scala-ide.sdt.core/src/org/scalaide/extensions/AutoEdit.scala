@@ -25,5 +25,6 @@ trait AutoEdit extends ScalaIdeExtension with DocumentSupport {
 case class AutoEditSetting(
   id: String,
   name: String,
-  description: String
+  description: String,
+  partitions: Seq[String] = Seq()
 ) extends ExtensionSetting
