@@ -1,8 +1,10 @@
 package org.scalaide.extensions.saveactions
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
+
+import org.junit.Ignore
 import org.junit.Test
+import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 object AddMissingOverrideTest extends CompilerSaveActionTests {
   override def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
@@ -172,5 +174,24 @@ class AddMissingOverrideTest {
     case class B(meth: Int)
     class C(meth: Int)
     class D(override val meth: Int, func: Int) extends T
+    """ after SaveEvent
+
+  @Test @Ignore("Unimplemented. See ticket #1002222")
+  def add_override_to_symbols_from_self_references() = """^
+    trait T {
+      def meth: Int
+    }
+    trait TT {
+      this: T =>
+      def meth = 0
+    }
+    """ becomes """^
+    trait T {
+      def meth: Int
+    }
+    trait TT {
+      this: T =>
+      override def meth = 0
+    }
     """ after SaveEvent
 }
