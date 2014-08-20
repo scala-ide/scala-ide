@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.editor
 
-import org.eclipse.jface.text.TextViewer
+import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
 import org.scalaide.core.ScalaPlugin
@@ -29,13 +29,14 @@ object AutoEditExtensions {
   )
 }
 
-trait AutoEditExtensions extends HasLogger { self: TextViewer =>
+trait AutoEditExtensions extends HasLogger {
   import AutoEditExtensions._
 
   def sourceViewer: ISourceViewer
 
-  def applyVerifyEvent(event: VerifyEvent): Unit = {
-    val modelRange = event2ModelRange(event)
+  def updateTextViewer(cursorPos: Int): Unit
+
+  def applyVerifyEvent(event: VerifyEvent, modelRange: IRegion): Unit = {
     val udoc = sourceViewer.getDocument()
     val start = modelRange.getOffset()
     val end = start+modelRange.getLength()
@@ -56,8 +57,7 @@ trait AutoEditExtensions extends HasLogger { self: TextViewer =>
         udoc.replace(start, end-start, text)
         event.doit = false
         event.text = text
-        val widgetCaret = modelOffset2WidgetOffset(cursorPos)
-        self.setSelectedRange(widgetCaret, 0)
+        updateTextViewer(cursorPos)
     }
   }
 

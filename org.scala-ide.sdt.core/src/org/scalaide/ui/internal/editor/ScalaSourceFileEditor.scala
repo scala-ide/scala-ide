@@ -68,7 +68,6 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
-
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
 
@@ -426,9 +425,14 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
     override def sourceViewer: ISourceViewer = self.sourceViewer
 
+    override def updateTextViewer(cursorPos: Int): Unit = {
+      val widgetCaret = modelOffset2WidgetOffset(cursorPos)
+      setSelectedRange(widgetCaret, 0)
+    }
+
     /** Calls auto edits and if they produce no changes the super implementation. */
     override def handleVerifyEvent(e: VerifyEvent): Unit = {
-      applyVerifyEvent(e)
+      applyVerifyEvent(e, event2ModelRange(e))
 
       if (e.doit)
         super.handleVerifyEvent(e)
