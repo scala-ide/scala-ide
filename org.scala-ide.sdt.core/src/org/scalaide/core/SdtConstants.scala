@@ -18,38 +18,35 @@ object SdtConstants {
   final val LaunchTypeId = "scala.application"
 
   // containers
-  private final val LaunchId = "org.scala-ide.sdt.launching"
-  final val ScalaLibContId = LaunchId + "." + "SCALA_CONTAINER"
-  final val ScalaCompilerContId = LaunchId + "." + "SCALA_COMPILER_CONTAINER"
+  final val ScalaLibContId = "org.scala-ide.sdt.launching.SCALA_CONTAINER"
+  final val ScalaCompilerContId = "org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER"
 
   // project nature
-  final val NatureId = PluginId + ".scalanature"
+  final val NatureId = "org.scala-ide.sdt.core.scalanature"
 
   // marker ids
-  final val ProblemMarkerId = PluginId + ".problem"
-  final val ClasspathProblemMarkerId = PluginId + ".classpathProblem"
-  final val ScalaVersionProblemMarkerId = PluginId + ".scalaVersionProblem"
-  final val SettingProblemMarkerId = PluginId + ".settingProblem"
-  final val TaskMarkerId = PluginId + ".task"
+  final val ProblemMarkerId = "org.scala-ide.sdt.core.problem"
+  final val ClasspathProblemMarkerId = "org.scala-ide.sdt.core.classpathProblem"
+  final val ScalaVersionProblemMarkerId = "org.scala-ide.sdt.core.scalaVersionProblem"
+  final val SettingProblemMarkerId = "org.scala-ide.sdt.core.settingProblem"
+  final val TaskMarkerId = "org.scala-ide.sdt.core.task"
   /** All Scala error markers. */
   final val ScalaErrorMarkerIds = Set(ClasspathProblemMarkerId, ProblemMarkerId, SettingProblemMarkerId)
 
   // builder
-  final val BuilderId = PluginId + ".scalabuilder"
+  final val BuilderId = "org.scala-ide.sdt.core.scalabuilder"
 
   // wizards
-  private final val WizardPath = PluginId + ".wizards"
-  private def wizardId(name: String) = WizardPath + ".new" + name
-  final val ClassWizId = wizardId("Class")
-  final val TraitWizId = wizardId("Trait")
-  final val ObjectWizId = wizardId("Object")
-  final val PackageObjectWizId = wizardId("PackageObject")
-  final val ApplicationWizId = wizardId("Application")
-  final val ProjectWizId = wizardId("Project")
-  final val NetProjectWizId = wizardId("NetProject")
+  final val ClassWizId = "org.scala-ide.sdt.core.wizards.newClass"
+  final val TraitWizId = "org.scala-ide.sdt.core.wizards.newTrait"
+  final val ObjectWizId = "org.scala-ide.sdt.core.wizards.newObject"
+  final val PackageObjectWizId = "org.scala-ide.sdt.core.wizards.newPackageObject"
+  final val ApplicationWizId = "org.scala-ide.sdt.core.wizards.newApplication"
+  final val ProjectWizId = "org.scala-ide.sdt.core.wizards.newProject"
+  final val NetProjectWizId = "org.scala-ide.sdt.core.wizards.newNetProject"
   final val ScalaFileCreatorWidId = "org.scalaide.ui.wizards.scalaCreator"
 
-
+  // file extensions
   final val ScalaFileExtn = ".scala"
   final val JavaFileExtn = ".java"
 
