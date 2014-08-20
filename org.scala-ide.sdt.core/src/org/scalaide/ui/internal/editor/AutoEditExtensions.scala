@@ -23,9 +23,14 @@ object AutoEditExtensions {
   val autoEditSettings: Seq[AutoEditSetting] = Seq(
     ConvertToUnicodeSetting
   )
+
+  private val autoEdits = Seq(
+    ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _
+  )
 }
 
 trait AutoEditExtensions extends HasLogger { self: TextViewer =>
+  import AutoEditExtensions._
 
   def sourceViewer: ISourceViewer
 
@@ -57,10 +62,7 @@ trait AutoEditExtensions extends HasLogger { self: TextViewer =>
   }
 
   private def applyAutoEdit(doc: Document, change: TextChange): Option[Change] = {
-    val exts = Seq[(Document, TextChange) => AutoEdit](
-      ConvertToUnicodeCreator.create _
-    )
-    val iter = exts.iterator map { ext =>
+    val iter = for ((setting, ext) <- autoEdits.iterator if isEnabled(setting.id)) yield {
       val instance = ext(doc, change)
       performExtension(instance)
     }
@@ -69,9 +71,6 @@ trait AutoEditExtensions extends HasLogger { self: TextViewer =>
   }
 
   private def performExtension(instance: AutoEdit): Option[Change] = {
-    def isEnabled(id: String): Boolean =
-      ScalaPlugin.prefStore.getBoolean(id)
-
     val id = instance.setting.id
 
     if (isEnabled(id))
@@ -87,4 +86,8 @@ trait AutoEditExtensions extends HasLogger { self: TextViewer =>
     else
       None
   }
+
+  /** Checks if an auto edit given by its `id` is enabled. */
+  private def isEnabled(id: String): Boolean =
+    ScalaPlugin.prefStore.getBoolean(id)
 }
