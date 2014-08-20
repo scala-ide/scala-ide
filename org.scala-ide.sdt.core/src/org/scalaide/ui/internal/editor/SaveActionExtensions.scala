@@ -61,6 +61,18 @@ object SaveActionExtensions {
    */
   private def saveActionTimeout: FiniteDuration =
     ScalaPlugin.prefStore.getInt(SaveActionTimeoutId).millis
+
+  private val documentSaveActions = Seq(
+    RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
+    AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
+    AutoFormattingSetting -> AutoFormattingCreator.create _,
+    RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _
+  )
+
+  private val compilerSaveActions = Seq(
+    AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
+    AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
+  )
 }
 
 trait SaveActionExtensions extends HasLogger {
@@ -96,18 +108,8 @@ trait SaveActionExtensions extends HasLogger {
    * Applies all save actions that extends [[DocumentSupport]].
    */
   private def applyDocumentExtensions(udoc: IDocument) = {
-    val exts = Seq(
-      RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
-      AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
-      AutoFormattingSetting -> AutoFormattingCreator.create _,
-      RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _
-    )
-
-    def isEnabled(id: String): Boolean =
-      ScalaPlugin.prefStore.getBoolean(id)
-
-    val doc = new TextDocument(udoc)
-    for ((setting, ext) <- exts if isEnabled(setting.id)) {
+    for ((setting, ext) <- documentSaveActions if isEnabled(setting.id)) {
+      val doc = new TextDocument(udoc)
       val instance = ext(doc)
       performExtension(instance, udoc) {
         instance.perform()
@@ -119,15 +121,7 @@ trait SaveActionExtensions extends HasLogger {
    * Applies all save actions that extends [[CompilerSupport]].
    */
   private def applyCompilerExtensions(udoc: IDocument) = {
-    val exts = Seq(
-      AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
-      AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
-    )
-
-    def isEnabled(id: String): Boolean =
-      ScalaPlugin.prefStore.getBoolean(id)
-
-    for ((setting, ext) <- exts if isEnabled(setting.id)) {
+    for ((setting, ext) <- compilerSaveActions if isEnabled(setting.id)) {
       createExtensionWithCompilerSupport(ext) foreach { instance =>
         performExtension(instance, udoc) {
           instance.global.asInstanceOf[ScalaPresentationCompiler].askOption { () =>
@@ -220,4 +214,8 @@ trait SaveActionExtensions extends HasLogger {
       }.flatten
     }
   }
+
+  /** Checks if a save action given by its `id` is enabled. */
+  private def isEnabled(id: String): Boolean =
+    ScalaPlugin.prefStore.getBoolean(id)
 }
