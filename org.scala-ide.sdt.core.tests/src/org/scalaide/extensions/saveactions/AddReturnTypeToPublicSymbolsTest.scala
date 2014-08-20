@@ -172,4 +172,66 @@ class AddReturnTypeToPublicSymbolsTest {
       val variable: java.io.File = new java.io.File("")
     }
     """ after SaveEvent
+
+  @Test
+  def add_return_type_if_def_belongs_to_inner_class() = """^
+    class X {
+      class Y {
+        trait Z1 {
+          def meth = new java.io.File("")
+        }
+        trait Z2 {
+          val value = new java.io.File("")
+        }
+        trait Z3 {
+          var variable = new java.io.File("")
+        }
+      }
+    }
+    """ becomes """^
+    class X {
+      class Y {
+        trait Z1 {
+          def meth: java.io.File = new java.io.File("")
+        }
+        trait Z2 {
+          val value: java.io.File = new java.io.File("")
+        }
+        trait Z3 {
+          var variable: java.io.File = new java.io.File("")
+        }
+      }
+    }
+    """ after SaveEvent
+
+  @Test
+  def add_no_return_type_if_def_belongs_to_private_inner_class() = """^
+    class X {
+      private class Y {
+        trait Z1 {
+          def meth = new java.io.File("")
+        }
+        trait Z2 {
+          val value = new java.io.File("")
+        }
+        trait Z3 {
+          var variable = new java.io.File("")
+        }
+      }
+    }
+    """ becomes """^
+    class X {
+      private class Y {
+        trait Z1 {
+          def meth = new java.io.File("")
+        }
+        trait Z2 {
+          val value = new java.io.File("")
+        }
+        trait Z3 {
+          var variable = new java.io.File("")
+        }
+      }
+    }
+    """ after SaveEvent
 }

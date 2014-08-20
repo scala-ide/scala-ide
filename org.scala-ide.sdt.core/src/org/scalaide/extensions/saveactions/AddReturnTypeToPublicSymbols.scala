@@ -23,8 +23,19 @@ trait AddReturnTypeToPublicSymbols extends SaveAction with CompilerSupport {
   override def perform() = {
     val symbolWithoutReturnType = filter {
       case d @ ValOrDefDef(_, _, tpt: TypeTree, _) =>
+        def isHidden(s: Symbol): Boolean =
+          if (s.isMethod || s.isValue)
+            true
+          else if (s.isClass)
+            if (s.isPublic)
+              isHidden(s.owner)
+            else
+              true
+          else
+            false
+
         val o = d.symbol.owner
-        if (o.isMethod || o.isValue)
+        if (isHidden(o))
           false
         else
           d match {
