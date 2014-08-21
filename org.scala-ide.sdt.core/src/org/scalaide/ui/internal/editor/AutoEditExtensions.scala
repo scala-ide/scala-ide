@@ -7,10 +7,15 @@ import org.eclipse.jface.text.IDocumentExtension3
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.link.LinkedModeModel
+import org.eclipse.jface.text.link.LinkedModeUI
+import org.eclipse.jface.text.link.LinkedPosition
+import org.eclipse.jface.text.link.LinkedPositionGroup
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits.CloseCurlyBraceCreator
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
@@ -21,6 +26,7 @@ import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
+import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
@@ -69,22 +75,66 @@ trait AutoEditExtensions extends HasLogger {
     val change =
       if (text.isEmpty()) Remove(start, end)
       else Add(start, text)
-    val res = applyAutoEdit(udoc, change)
 
-    res foreach {
+    val appliedChange = applyAutoEdit(udoc, change)
+
+    val handleTextChange: PartialFunction[Change, Unit] = {
       case TextChange(start, end, text) =>
         udoc.replace(start, end-start, text)
         event.doit = false
         event.text = text
+    }
 
-      case CursorUpdate(autoEdit @ TextChange(start, end, text), cursorPos, smartBackspaceEnabled) =>
-        udoc.replace(start, end-start, text)
-        event.doit = false
-        event.text = text
+    val handleCursorUpdate: PartialFunction[Change, Unit] = {
+      case CursorUpdate(autoEdit, cursorPos, smartBackspaceEnabled) =>
+        handleTextChange(autoEdit)
         if (smartBackspaceEnabled)
           registerSmartBackspace(cursorPos, change.start, autoEdit)
         updateTextViewer(cursorPos)
     }
+
+    val handleLinkedModel: PartialFunction[Change, Unit] = {
+      case LinkedModel(autoEdit, exitPosition, positionGroups) =>
+        handleTextChange(autoEdit)
+        enterLinkedMode(udoc, exitPosition, positionGroups)
+    }
+
+    val handlers = Seq(handleTextChange, handleCursorUpdate, handleLinkedModel)
+
+    appliedChange foreach { ac =>
+      handlers find (_ isDefinedAt ac) foreach (_(ac))
+    }
+  }
+
+  /** Installs a linked mode model to the editor. */
+  private def enterLinkedMode(doc: IDocument, exitPosition: Int, positionGroups: Seq[Seq[(Int, Int)]]) = {
+    val ui = mkEditorLinkedMode(mkLinkedModeModel(doc, positionGroups), exitPosition)
+    ui.enter()
+  }
+
+  /** Creates a linked model with given `positionGroups`. */
+  private def mkLinkedModeModel(doc: IDocument, positionGroups: Seq[Seq[(Int, Int)]]): LinkedModeModel = {
+    val model = new LinkedModeModel {
+      positionGroups foreach { ps =>
+        this addGroup new LinkedPositionGroup {
+          ps foreach { case (off, len) =>
+            this addPosition new LinkedPosition(doc, off, len, 0)
+          }
+        }
+      }
+    }
+
+    model.forceInstall()
+    model
+  }
+
+  /** Creates a linked mode with a given `exitPosition`. */
+  private def mkEditorLinkedMode(model: LinkedModeModel, exitPosition: Int): EditorLinkedModeUI = {
+    val ui = new EditorLinkedModeUI(model, sourceViewer)
+
+    ui.setCyclingMode(LinkedModeUI.CYCLE_ALWAYS)
+    ui.setExitPosition(sourceViewer, exitPosition, 0, Integer.MAX_VALUE)
+    ui
   }
 
   /**
@@ -138,8 +188,8 @@ trait AutoEditExtensions extends HasLogger {
     if (isEnabled(id))
       EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'.") {
         instance.perform() match {
-          case None                                      => None
-          case o @ Some(_: TextChange | _: CursorUpdate) => o
+          case None                                                       => None
+          case o @ Some(_: TextChange | _: CursorUpdate | _: LinkedModel) => o
           case Some(o) =>
             eclipseLog.warn(s"The returned object '$o' of auto edit '$id' is invalid.")
             None

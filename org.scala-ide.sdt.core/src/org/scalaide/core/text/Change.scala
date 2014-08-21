@@ -25,6 +25,9 @@ trait TextChange extends Change {
   def withCursorPos(pos: Int): CursorUpdate =
     CursorUpdate(this, pos)
 
+  def withLinkedModel(exitPosition: Int, positionsGroups: Seq[Seq[(Int, Int)]] = Seq()): LinkedModel =
+    LinkedModel(this, exitPosition, positionsGroups)
+
   override def toString(): String =
     s"""TextChange(start=$start, end=$end, text="$text")"""
 }
@@ -38,3 +41,5 @@ case class Remove(override val start: Int, override val end: Int) extends TextCh
 }
 
 case class CursorUpdate(textChange: TextChange, cursorPosition: Int, smartBackspaceEnabled: Boolean = false) extends Change
+
+case class LinkedModel(textChange: TextChange, exitPosition: Int, positionGroups: Seq[Seq[(Int, Int)]] = Seq()) extends Change

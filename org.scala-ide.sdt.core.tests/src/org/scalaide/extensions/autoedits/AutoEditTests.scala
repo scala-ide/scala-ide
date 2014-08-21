@@ -6,6 +6,7 @@ import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.{text => impl}
 import org.scalaide.core.text.CursorUpdate
 import org.scalaide.core.text.Document
+import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.TextChange
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.extensions.AutoEdit
@@ -34,6 +35,11 @@ abstract class AutoEditTests extends TextEditTests {
         case Some(CursorUpdate(TextChange(start, end, text), cursorPos, _)) =>
           udoc.replace(start, end-start, text)
           caretOffset = cursorPos
+
+        case Some(LinkedModel(TextChange(start, end, text), exitPosition, positionGroups)) =>
+          udoc.replace(start, end-start, text)
+          val groups = positionGroups.flatten
+          caretOffset = applyLinkedModel(udoc, exitPosition, groups)
 
         case Some(o) =>
           throw new AssertionError(s"Invalid change object '$o'.")

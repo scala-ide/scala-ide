@@ -42,7 +42,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       expectedNumberOfCompletions: Int = -1)
         extends Operation {
 
-    def execute() = withCompiler { compiler =>
+    override def execute() = withCompiler { compiler =>
       val unit = mkScalaCompilationUnit(doc.get())
       val src = unit.sourceFile()
       val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
@@ -76,19 +76,11 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
               s"The completion '$completionToApply' does not exist.", completionToApply, completionList)) {
         completion => completion.applyCompletionToDocument(doc, unit, caretOffset, enableOverwrite) foreach {
           case (cursorPos, applyLinkedMode) =>
-            if (!applyLinkedMode)
-              caretOffset = cursorPos
-            else {
-              val groups = completion.linkedModeGroups.sortBy(-_._1)
-              val cursorOffset = groups.takeWhile(_._1 < cursorPos).size*4
-
-              groups foreach {
-                case (offset, length) =>
-                  doc.replace(offset+length, 0, "]]")
-                  doc.replace(offset, 0, "[[")
-              }
-              caretOffset = cursorPos + cursorOffset
-            }
+            caretOffset =
+              if (!applyLinkedMode)
+                cursorPos
+              else
+                applyLinkedModel(doc, cursorPos, completion.linkedModeGroups)
         }
       }
     }
