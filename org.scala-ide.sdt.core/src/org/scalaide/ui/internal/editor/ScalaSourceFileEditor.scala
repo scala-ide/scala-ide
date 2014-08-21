@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
+import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.action.Action
@@ -429,6 +430,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       val widgetCaret = modelOffset2WidgetOffset(cursorPos)
       setSelectedRange(widgetCaret, 0)
     }
+
+    override def smartBackspaceManager: SmartBackspaceManager =
+      self.getAdapter(classOf[SmartBackspaceManager]).asInstanceOf[SmartBackspaceManager]
 
     /** Calls auto edits and if they produce no changes the super implementation. */
     override def handleVerifyEvent(e: VerifyEvent): Unit = {

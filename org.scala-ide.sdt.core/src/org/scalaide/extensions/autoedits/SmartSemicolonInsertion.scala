@@ -51,7 +51,8 @@ trait SmartSemicolonInsertion extends AutoEdit {
     def alreadyPresent(off: Int) = document(off) == c
 
     f(l) filter (p => !alreadyPresent(p-1)) map { insertPos =>
-      Add(insertPos, ";") withCursorPos insertPos+1
+      val add = Add(insertPos, ";") withCursorPos insertPos+1
+      add.copy(smartBackspaceEnabled = true)
     }
   }
 }

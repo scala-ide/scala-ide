@@ -37,4 +37,4 @@ case class Remove(override val start: Int, override val end: Int) extends TextCh
   override val text = ""
 }
 
-case class CursorUpdate(textChange: TextChange, cursorPosition: Int) extends Change
+case class CursorUpdate(textChange: TextChange, cursorPosition: Int, smartBackspaceEnabled: Boolean = false) extends Change

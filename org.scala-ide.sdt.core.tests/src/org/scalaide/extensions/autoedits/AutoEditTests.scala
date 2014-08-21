@@ -30,7 +30,7 @@ abstract class AutoEditTests extends TextEditTests {
         case Some(TextChange(start, end, text)) =>
           udoc.replace(start, end-start, text)
 
-        case Some(CursorUpdate(TextChange(start, end, text), cursorPos)) =>
+        case Some(CursorUpdate(TextChange(start, end, text), cursorPos, _)) =>
           udoc.replace(start, end-start, text)
           caretOffset = cursorPos
 

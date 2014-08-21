@@ -1,11 +1,16 @@
 package org.scalaide.ui.internal.editor
 
+import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
+import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager.UndoSpec
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension3
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
+import org.eclipse.text.edits.DeleteEdit
+import org.eclipse.text.edits.ReplaceEdit
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
 import org.scalaide.core.internal.extensions.autoedits.SmartSemicolonInsertionCreator
@@ -42,6 +47,8 @@ trait AutoEditExtensions extends HasLogger {
 
   def updateTextViewer(cursorPos: Int): Unit
 
+  def smartBackspaceManager: SmartBackspaceManager
+
   def applyVerifyEvent(event: VerifyEvent, modelRange: IRegion): Unit = {
     val udoc = sourceViewer.getDocument()
     val start = modelRange.getOffset()
@@ -58,11 +65,39 @@ trait AutoEditExtensions extends HasLogger {
         event.doit = false
         event.text = text
 
-      case CursorUpdate(TextChange(start, end, text), cursorPos) =>
+      case CursorUpdate(autoEdit @ TextChange(start, end, text), cursorPos, smartBackspaceEnabled) =>
         udoc.replace(start, end-start, text)
         event.doit = false
         event.text = text
+        if (smartBackspaceEnabled)
+          registerSmartBackspace(cursorPos, change.start, autoEdit)
         updateTextViewer(cursorPos)
+    }
+  }
+
+  /**
+   * A smart backspace is a feature that allows to undo an auto edit by pressing
+   * the backspace key. This method registers such a smart backspace in the
+   * editor when the `originalPos` and the offset of the `autoEdit` are
+   * different.
+   *
+   * @param triggerOffset
+   *        the position of the cursor where this feature is activated in the
+   *        case the backspace key is pressed.
+   * @param originalPos
+   *        the position where the text change should happen once the backspace
+   *        is pressed.
+   * @param autoEdit
+   *        the text change that should be undone
+   */
+  private def registerSmartBackspace(triggerOffset: Int, originalPos: Int, autoEdit: TextChange): Unit = {
+    if (originalPos != autoEdit.start) {
+      val textLen = autoEdit.text.length()
+      val deleteAtTrigger = new DeleteEdit(triggerOffset-textLen, textLen)
+      val insertAtOldPos = new ReplaceEdit(originalPos, 0, autoEdit.text)
+      val selectionAfterUndo = new Region(originalPos+textLen, 0)
+      val undo = new UndoSpec(triggerOffset, selectionAfterUndo, Array(deleteAtTrigger, insertAtOldPos), 0, null)
+      smartBackspaceManager.register(undo)
     }
   }
 
