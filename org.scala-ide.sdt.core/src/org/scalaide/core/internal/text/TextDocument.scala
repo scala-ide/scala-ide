@@ -103,6 +103,9 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
     else
       None
 
+  override def toString(): String =
+    text
+
   private def isEmpty: Boolean =
     length == 0
 
