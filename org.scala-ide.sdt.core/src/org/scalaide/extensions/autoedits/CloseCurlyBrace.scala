@@ -24,11 +24,14 @@ trait CloseCurlyBrace extends AutoEdit {
     rule(textChange) {
       case Add(start, "{") =>
         if (autoClosingRequired(start))
-          Some(Add(start, "{}") withCursorPos start+1)
+          Some(Add(start, "{}") withLinkedModel (start+2, singleLinkedPos(start+1)))
         else
           None
     }
   }
+
+  def singleLinkedPos(pos: Int): Seq[Seq[(Int, Int)]] =
+    Seq(Seq((pos, 0)))
 
   /**
    * Checks if it is necessary to insert a closing brace. Normally this is

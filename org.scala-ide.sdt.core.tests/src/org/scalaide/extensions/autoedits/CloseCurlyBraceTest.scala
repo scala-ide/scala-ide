@@ -16,15 +16,15 @@ class CloseCurlyBraceTest extends AutoEditTests {
 
   @Test
   def auto_closing_opening_brace() =
-    "^" becomes "{^}" after curlyBrace
+    "^" becomes "{[[]]}^" after curlyBrace
 
   @Test
   def auto_closing_nested_opening_brace() =
-    "{^}" becomes "{{^}}" after curlyBrace
+    "{^}" becomes "{{[[]]}^}" after curlyBrace
 
   @Test
   def auto_closing_brace_after_pending_closing_brace() =
-    "} map {^}" becomes "} map {{^}}" after curlyBrace
+    "} map {^}" becomes "} map {{[[]]}^}" after curlyBrace
 
   @Test
   def prevent_auto_closing_brace_when_caret_before_non_white_space() =
@@ -32,11 +32,11 @@ class CloseCurlyBraceTest extends AutoEditTests {
 
   @Test
   def auto_closing_brace_when_caret_before_white_space() =
-    "List(1) map^ (_+1)" becomes "List(1) map{^} (_+1)" after curlyBrace
+    "List(1) map^ (_+1)" becomes "List(1) map{[[]]}^ (_+1)" after curlyBrace
 
   @Test
   def auto_closing_brace_before_white_space() =
-    "^   " becomes "{^}   " after curlyBrace
+    "^   " becomes "{[[]]}^   " after curlyBrace
 
   @Test
   def no_auto_closing_brace_on_missing_opening_bracket() =
@@ -44,5 +44,5 @@ class CloseCurlyBraceTest extends AutoEditTests {
 
   @Test
   def auto_closing_brace_before_matching_braces() =
-    "List(1) map {^{}}" becomes "List(1) map {{^}{}}" after curlyBrace
+    "List(1) map {^{}}" becomes "List(1) map {{[[]]}^{}}" after curlyBrace
 }
