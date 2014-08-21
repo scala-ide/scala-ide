@@ -23,19 +23,19 @@ trait CloseMatchingPair extends AutoEdit {
 
     if (lineAfterCaret.isEmpty) true
     else {
-      val lineComplete = lineInfo.text.toSeq
-      val lineBeforeCaret = lineComplete.take(lineComplete.length - lineAfterCaret.length)
+      val line = lineInfo.text.toSeq
+      val lineBeforeCaret = document.textRange(lineInfo.start, offset).toSeq
 
-      val bracesTotal = lineComplete.count(_ == closing) - lineComplete.count(_ == opening)
-      val bracesStart = lineComplete.takeWhile(_ != opening).count(_ == closing)
-      val bracesEnd = lineComplete.reverse.takeWhile(_ != closing).count(_ == opening)
-      val blacesRelevant = bracesTotal - bracesStart - bracesEnd
+      val total = line.count(_ == closing) - line.count(_ == opening)
+      val closingBeforeFirstOpening = line.takeWhile(_ != opening).count(_ == closing)
+      val openingAfterLastClosing = line.reverse.takeWhile(_ != closing).count(_ == opening)
+      val relevant = total - closingBeforeFirstOpening - openingAfterLastClosing
 
-      val hasClosingBracket = lineAfterCaret.contains(closing) && !lineAfterCaret.takeWhile(_ == closing).contains(opening)
-      val hasOpeningBracket = lineBeforeCaret.contains(opening) && !lineBeforeCaret.reverse.takeWhile(_ == opening).contains(closing)
+      val hasClosing = lineAfterCaret.contains(closing) && !lineAfterCaret.takeWhile(_ == closing).contains(opening)
+      val hasOpening = lineBeforeCaret.contains(opening) && !lineBeforeCaret.reverse.takeWhile(_ == opening).contains(closing)
 
-      if (hasOpeningBracket && hasClosingBracket)
-        blacesRelevant <= 0
+      if (hasOpening && hasClosing)
+        relevant <= 0
       else
         Character.isWhitespace(lineAfterCaret(0))
     }
