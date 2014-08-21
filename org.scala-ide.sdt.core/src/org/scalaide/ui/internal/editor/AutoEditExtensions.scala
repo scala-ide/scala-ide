@@ -12,6 +12,7 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.extensions.autoedits.CloseCurlyBraceCreator
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
 import org.scalaide.core.internal.extensions.autoedits.SmartSemicolonInsertionCreator
 import org.scalaide.core.internal.text.TextDocument
@@ -22,6 +23,7 @@ import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
+import org.scalaide.extensions.autoedits.CloseCurlyBraceSetting
 import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
 import org.scalaide.extensions.autoedits.SmartSemicolonInsertionSetting
 import org.scalaide.logging.HasLogger
@@ -31,12 +33,14 @@ object AutoEditExtensions {
 
   val autoEditSettings: Seq[AutoEditSetting] = Seq(
     ConvertToUnicodeSetting,
-    SmartSemicolonInsertionSetting
+    SmartSemicolonInsertionSetting,
+    CloseCurlyBraceSetting
   )
 
   private val autoEdits = Seq(
     ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _,
-    SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _
+    SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _,
+    CloseCurlyBraceSetting -> CloseCurlyBraceCreator.create _
   )
 }
 

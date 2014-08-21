@@ -6,6 +6,7 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
   classOf[ConvertToUnicodeTest],
-  classOf[SmartSemicolonInsertionTest]
+  classOf[SmartSemicolonInsertionTest],
+  classOf[CloseCurlyBraceTest]
 ))
 class AutoEditTestSuite
