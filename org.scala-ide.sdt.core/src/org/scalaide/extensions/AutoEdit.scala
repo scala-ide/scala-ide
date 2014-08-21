@@ -15,11 +15,21 @@ trait AutoEdit extends ScalaIdeExtension with DocumentSupport {
 
   def perform(): Option[Change]
 
-  final def rule[A](a: A)(pf: PartialFunction[A, Option[Change]]): Option[Change] =
+  final def rule[A, B](a: A)(pf: PartialFunction[A, Option[B]]): Option[B] =
     if (pf.isDefinedAt(a)) pf(a) else None
 
-  final def subrule[A](a: A)(pf: PartialFunction[A, Change]): Option[Change] =
+  final def subrule[A, B](a: A)(pf: PartialFunction[A, B]): Option[B] =
     if (pf.isDefinedAt(a)) Option(pf(a)) else None
+
+  final def lookupChar[A](relPos: Int)(pf: PartialFunction[Char, A]): Option[A] = {
+    val offset = textChange.start+relPos
+    if (offset < 0 || offset >= document.length)
+      None
+    else {
+      val c = document(offset)
+      if (pf.isDefinedAt(c)) Option(pf(c)) else None
+    }
+  }
 }
 
 case class AutoEditSetting(
