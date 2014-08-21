@@ -8,6 +8,7 @@ import org.junit.runners.Suite
   classOf[ConvertToUnicodeTest],
   classOf[SmartSemicolonInsertionTest],
   classOf[CloseCurlyBraceTest],
-  classOf[JumpOverClosingCurlyBraceTest]
+  classOf[JumpOverClosingCurlyBraceTest],
+  classOf[RemoveCurlyBracePairTest]
 ))
 class AutoEditTestSuite

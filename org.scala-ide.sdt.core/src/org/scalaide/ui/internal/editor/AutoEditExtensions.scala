@@ -15,6 +15,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits.CloseCurlyBraceCreator
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
 import org.scalaide.core.internal.extensions.autoedits.JumpOverClosingCurlyBraceCreator
+import org.scalaide.core.internal.extensions.autoedits.RemoveCurlyBracePairCreator
 import org.scalaide.core.internal.extensions.autoedits.SmartSemicolonInsertionCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
@@ -27,6 +28,7 @@ import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.extensions.autoedits.CloseCurlyBraceSetting
 import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
 import org.scalaide.extensions.autoedits.JumpOverClosingCurlyBraceSetting
+import org.scalaide.extensions.autoedits.RemoveCurlyBracePairSetting
 import org.scalaide.extensions.autoedits.SmartSemicolonInsertionSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -37,14 +39,16 @@ object AutoEditExtensions {
     ConvertToUnicodeSetting,
     SmartSemicolonInsertionSetting,
     CloseCurlyBraceSetting,
-    JumpOverClosingCurlyBraceSetting
+    JumpOverClosingCurlyBraceSetting,
+    RemoveCurlyBracePairSetting
   )
 
   private val autoEdits = Seq(
     ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _,
     SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _,
     CloseCurlyBraceSetting -> CloseCurlyBraceCreator.create _,
-    JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _
+    JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _,
+    RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _
   )
 }
 
