@@ -322,7 +322,6 @@ class ScalaSourceViewerConfiguration(
         Array(
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
           new AutoIndentStrategy(prefStore),
-          new BracketAutoEditStrategy(prefStore),
           new LiteralAutoEditStrategy(prefStore),
           tabsToSpacesConverter)
 
