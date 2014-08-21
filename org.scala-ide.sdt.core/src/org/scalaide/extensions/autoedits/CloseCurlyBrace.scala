@@ -16,7 +16,10 @@ object CloseCurlyBraceSetting extends AutoEditSetting(
     " the curly brace is never closed."
 )
 
-trait CloseCurlyBrace extends AutoEdit {
+trait CloseCurlyBrace extends CloseMatchingPair {
+
+  override def opening = '{'
+  override def closing = '}'
 
   override def setting = CloseCurlyBraceSetting
 
@@ -27,40 +30,6 @@ trait CloseCurlyBrace extends AutoEdit {
           Some(Add(start, "{}") withLinkedModel (start+2, singleLinkedPos(start+1)))
         else
           None
-    }
-  }
-
-  def singleLinkedPos(pos: Int): Seq[Seq[(Int, Int)]] =
-    Seq(Seq((pos, 0)))
-
-  /**
-   * Checks if it is necessary to insert a closing brace. Normally this is
-   * always the case with two exceptions:
-   *
-   * 1. The caret is positioned directly before non white space
-   * 2. There are unmatched closing braces after the caret position.
-   */
-  def autoClosingRequired(offset: Int): Boolean = {
-    val lineInfo = document.lineInformationOfOffset(offset)
-    val lineAfterCaret = document.textRange(offset, lineInfo.end).toSeq
-
-    if (lineAfterCaret.isEmpty) true
-    else {
-      val lineComplete = lineInfo.text.toSeq
-      val lineBeforeCaret = lineComplete.take(lineComplete.length - lineAfterCaret.length)
-
-      val bracesTotal = lineComplete.count(_ == '}') - lineComplete.count(_ == '{')
-      val bracesStart = lineComplete.takeWhile(_ != '{').count(_ == '}')
-      val bracesEnd = lineComplete.reverse.takeWhile(_ != '}').count(_ == '{')
-      val blacesRelevant = bracesTotal - bracesStart - bracesEnd
-
-      val hasClosingBracket = lineAfterCaret.contains('}') && !lineAfterCaret.takeWhile(_ == '}').contains('{')
-      val hasOpeningBracket = lineBeforeCaret.contains('{') && !lineBeforeCaret.reverse.takeWhile(_ == '{').contains('}')
-
-      if (hasOpeningBracket && hasClosingBracket)
-        blacesRelevant <= 0
-      else
-        Character.isWhitespace(lineAfterCaret(0))
     }
   }
 }
