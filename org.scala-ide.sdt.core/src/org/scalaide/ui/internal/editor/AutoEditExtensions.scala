@@ -8,6 +8,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.swt.events.VerifyEvent
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
+import org.scalaide.core.internal.extensions.autoedits.SmartSemicolonInsertionCreator
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
@@ -17,17 +18,20 @@ import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
+import org.scalaide.extensions.autoedits.SmartSemicolonInsertionSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object AutoEditExtensions {
 
   val autoEditSettings: Seq[AutoEditSetting] = Seq(
-    ConvertToUnicodeSetting
+    ConvertToUnicodeSetting,
+    SmartSemicolonInsertionSetting
   )
 
   private val autoEdits = Seq(
-    ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _
+    ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _,
+    SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _
   )
 }
 
