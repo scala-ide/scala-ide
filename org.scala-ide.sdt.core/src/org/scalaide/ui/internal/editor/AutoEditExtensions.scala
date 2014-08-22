@@ -40,7 +40,8 @@ object AutoEditExtensions {
     JumpOverClosingCurlyBraceSetting,
     RemoveCurlyBracePairSetting,
     CloseParenthesisSetting,
-    CloseBracketSetting
+    CloseBracketSetting,
+    CloseAngleBracketSetting
   )
 
   private val autoEdits = Seq(
@@ -50,7 +51,8 @@ object AutoEditExtensions {
     JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _,
     RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _,
     CloseParenthesisSetting -> CloseParenthesisCreator.create _,
-    CloseBracketSetting -> CloseBracketCreator.create _
+    CloseBracketSetting -> CloseBracketCreator.create _,
+    CloseAngleBracketSetting -> CloseAngleBracketCreator.create _
   )
 }
 
