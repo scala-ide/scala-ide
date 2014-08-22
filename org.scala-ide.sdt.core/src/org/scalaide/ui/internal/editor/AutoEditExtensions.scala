@@ -17,11 +17,7 @@ import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.extensions.autoedits.CloseCurlyBraceCreator
-import org.scalaide.core.internal.extensions.autoedits.ConvertToUnicodeCreator
-import org.scalaide.core.internal.extensions.autoedits.JumpOverClosingCurlyBraceCreator
-import org.scalaide.core.internal.extensions.autoedits.RemoveCurlyBracePairCreator
-import org.scalaide.core.internal.extensions.autoedits.SmartSemicolonInsertionCreator
+import org.scalaide.core.internal.extensions.autoedits._
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
@@ -31,15 +27,9 @@ import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
-import org.scalaide.extensions.autoedits.CloseCurlyBraceSetting
-import org.scalaide.extensions.autoedits.ConvertToUnicodeSetting
-import org.scalaide.extensions.autoedits.JumpOverClosingCurlyBraceSetting
-import org.scalaide.extensions.autoedits.RemoveCurlyBracePairSetting
-import org.scalaide.extensions.autoedits.SmartSemicolonInsertionSetting
+import org.scalaide.extensions.autoedits._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.extensions.autoedits.CloseParenthesisSetting
-import org.scalaide.core.internal.extensions.autoedits.CloseParenthesisCreator
 
 object AutoEditExtensions {
 
@@ -49,7 +39,8 @@ object AutoEditExtensions {
     CloseCurlyBraceSetting,
     JumpOverClosingCurlyBraceSetting,
     RemoveCurlyBracePairSetting,
-    CloseParenthesisSetting
+    CloseParenthesisSetting,
+    CloseBracketSetting
   )
 
   private val autoEdits = Seq(
@@ -58,7 +49,8 @@ object AutoEditExtensions {
     CloseCurlyBraceSetting -> CloseCurlyBraceCreator.create _,
     JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _,
     RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _,
-    CloseParenthesisSetting -> CloseParenthesisCreator.create _
+    CloseParenthesisSetting -> CloseParenthesisCreator.create _,
+    CloseBracketSetting -> CloseBracketCreator.create _
   )
 }
 
