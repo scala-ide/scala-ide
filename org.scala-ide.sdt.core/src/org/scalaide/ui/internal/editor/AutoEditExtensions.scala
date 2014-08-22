@@ -38,6 +38,8 @@ import org.scalaide.extensions.autoedits.RemoveCurlyBracePairSetting
 import org.scalaide.extensions.autoedits.SmartSemicolonInsertionSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.extensions.autoedits.CloseParenthesisSetting
+import org.scalaide.core.internal.extensions.autoedits.CloseParenthesisCreator
 
 object AutoEditExtensions {
 
@@ -46,7 +48,8 @@ object AutoEditExtensions {
     SmartSemicolonInsertionSetting,
     CloseCurlyBraceSetting,
     JumpOverClosingCurlyBraceSetting,
-    RemoveCurlyBracePairSetting
+    RemoveCurlyBracePairSetting,
+    CloseParenthesisSetting
   )
 
   private val autoEdits = Seq(
@@ -54,7 +57,8 @@ object AutoEditExtensions {
     SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _,
     CloseCurlyBraceSetting -> CloseCurlyBraceCreator.create _,
     JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _,
-    RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _
+    RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _,
+    CloseParenthesisSetting -> CloseParenthesisCreator.create _
   )
 }
 
