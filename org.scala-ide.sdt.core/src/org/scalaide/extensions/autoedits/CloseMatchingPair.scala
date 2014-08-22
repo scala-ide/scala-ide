@@ -31,8 +31,8 @@ trait CloseMatchingPair extends AutoEdit {
       val openingAfterLastClosing = line.reverse.takeWhile(_ != closing).count(_ == opening)
       val relevant = total - closingBeforeFirstOpening - openingAfterLastClosing
 
-      val hasClosing = lineAfterCaret.contains(closing) && !lineAfterCaret.takeWhile(_ == closing).contains(opening)
-      val hasOpening = lineBeforeCaret.contains(opening) && !lineBeforeCaret.reverse.takeWhile(_ == opening).contains(closing)
+      val hasClosing = lineAfterCaret.contains(closing) && !lineAfterCaret.takeWhile(_ != closing).contains(opening)
+      val hasOpening = lineBeforeCaret.contains(opening) && !lineBeforeCaret.reverse.takeWhile(_ != opening).contains(closing)
 
       if (hasOpening && hasClosing)
         relevant <= 0

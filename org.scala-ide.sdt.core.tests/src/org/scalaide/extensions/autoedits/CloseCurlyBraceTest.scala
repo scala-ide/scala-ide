@@ -41,8 +41,4 @@ class CloseCurlyBraceTest extends AutoEditTests {
   @Test
   def no_auto_closing_brace_on_missing_opening_bracket() =
     "List(1) map {^}}" becomes "List(1) map {{^}}" after curlyBrace
-
-  @Test
-  def auto_closing_brace_before_matching_braces() =
-    "List(1) map {^{}}" becomes "List(1) map {{[[]]}^{}}" after curlyBrace
 }
