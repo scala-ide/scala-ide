@@ -13,7 +13,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
 import org.eclipse.ui.texteditor.spelling.SpellingProblem
 import org.eclipse.ui.texteditor.spelling.{SpellingReconcileStrategy => ESpellingReconcileStrategy}
-import org.eclipse.ui.texteditor.spelling.SpellingService
+import org.eclipse.ui.texteditor.spelling.{SpellingService => ESpellingService}
 
 /**
  * Reconcile strategy for spell checking. It checks whether spell checking is
@@ -56,7 +56,7 @@ final class SpellingReconcileStrategy(
   }
 
   override def reconcile(region: IRegion): Unit = {
-    val isSpellingEnabled = store.getBoolean(SpellingService.PREFERENCE_SPELLING_ENABLED)
+    val isSpellingEnabled = store.getBoolean(ESpellingService.PREFERENCE_SPELLING_ENABLED)
     if (requestor.isDefined && isSpellingEnabled)
       super.reconcile(region)
   }
@@ -81,7 +81,7 @@ final class SpellingReconcileStrategy(
  */
 final class SpellingProblemCollector(requestor: IProblemRequestor, document: IDocument, editor: ITextEditor) extends ISpellingProblemCollector {
 
-  def accept(problem: SpellingProblem): Unit = {
+  override def accept(problem: SpellingProblem): Unit = {
     Option(editor.getEditorInput()) foreach { input =>
       val line = document.getLineOfOffset(problem.getOffset())+1
       val word = document.get(problem.getOffset(), problem.getLength())
@@ -100,9 +100,9 @@ final class SpellingProblemCollector(requestor: IProblemRequestor, document: IDo
     }
   }
 
-  def beginCollecting(): Unit =
+  override def beginCollecting(): Unit =
     requestor.beginReporting()
 
-  def endCollecting(): Unit =
+  override def endCollecting(): Unit =
     requestor.endReporting()
 }
