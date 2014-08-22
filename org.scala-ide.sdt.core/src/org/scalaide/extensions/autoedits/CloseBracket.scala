@@ -5,7 +5,7 @@ import org.scalaide.core.text.Add
 
 object CloseBracketSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseBracket],
-  name = "Automatically close square bracket",
+  name = "Close [square] brackets",
   description =
     "Closes a typed opening square bracket if necessary. For a more detailed" +
     " explanation when the bracket is not closed, see the description of the" +

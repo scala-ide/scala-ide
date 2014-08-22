@@ -5,7 +5,7 @@ import org.scalaide.core.text.Remove
 
 object RemoveCurlyBracePairSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[RemoveCurlyBracePair],
-  name = "Automatically remove a pair of curly braces",
+  name = "Remove pairs of curly braces",
   description =
     "In case the opening curly brace is removed, this auto edit also" +
     " removes the closing brace if it follows the opening curly brace."

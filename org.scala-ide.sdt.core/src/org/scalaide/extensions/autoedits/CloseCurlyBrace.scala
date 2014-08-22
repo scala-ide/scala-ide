@@ -6,7 +6,7 @@ import org.scalaide.core.text.Remove
 
 object CloseCurlyBraceSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseCurlyBrace],
-  name = "Automatically close curly brace",
+  name = "Close {curly} braces",
   description =
     "Closes a typed opening brace if necessary. Most of the time the closing" +
     " brace is added when an opening brace is typed but for some cases the IDE" +

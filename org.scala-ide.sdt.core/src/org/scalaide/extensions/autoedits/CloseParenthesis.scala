@@ -5,7 +5,7 @@ import org.scalaide.core.text.Add
 
 object CloseParenthesisSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseParenthesis],
-  name = "Automatically close parenthesis",
+  name = "Close (parentheses)",
   description =
     "Closes a typed opening parenthesis if necessary. For a more detailed" +
     " explanation when the parenthesis is not closed, see the description of the" +
