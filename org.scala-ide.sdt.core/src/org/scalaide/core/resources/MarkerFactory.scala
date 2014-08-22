@@ -65,7 +65,10 @@ abstract class MarkerFactory(markerType: String) {
       case c => c
     }
 
+    // the truncated error message is shown by the problems view and the annotation hover
     marker.setAttribute(IMarker.MESSAGE, attrValue)
+    // the full error message is shown by the editor hover
+    marker.setAttribute(ScalaMarkers.FullErrorMessage, trimmedMsg)
     marker
   }
 

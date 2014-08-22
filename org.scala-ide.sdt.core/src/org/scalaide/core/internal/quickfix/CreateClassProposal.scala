@@ -9,7 +9,6 @@ import org.eclipse.jface.wizard.WizardDialog
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.ui.internal.wizards.NewFileWizardAdapter
-import org.scalaide.util.internal.eclipse.FileUtils
 
 /**
  * Opens a `NewFileWizard`, which has the class creator selected on startup. If
@@ -30,10 +29,11 @@ case class CreateClassProposal(className: String, compilationUnit: ICompilationU
     val dialog = new WizardDialog(JavaPlugin.getActiveWorkbenchShell(), wizard)
     dialog.create()
 
-    def path = wizard.page.pathOfCreatedFile.flatMap(FileUtils.workspacePath)
+    def file = wizard.page.createdFile
 
     def existsInDifferentPackage: Boolean = {
-      path map { newClass =>
+      file map { file =>
+        val newClass = file.getFullPath()
         val existingClass = compilationUnit.getPath()
         val pkgPathDiffer = existingClass.segments().toSeq.init != newClass.segments().toSeq.init
         val isNotDefaultPackage = newClass.segmentCount() > 2
@@ -42,7 +42,7 @@ case class CreateClassProposal(className: String, compilationUnit: ICompilationU
     }
 
     def importNewlyCreatedClass() = {
-      val fullyQualifiedName = path.get.removeFileExtension().segments().drop(2).mkString(".")
+      val fullyQualifiedName = file.get.getFullPath().removeFileExtension().segments().drop(2).mkString(".")
       ImportCompletionProposal(fullyQualifiedName).apply(document)
     }
 

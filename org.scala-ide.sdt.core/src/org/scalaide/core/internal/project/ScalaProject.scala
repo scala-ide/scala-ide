@@ -438,9 +438,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     logger.debug("user classpath: " + settings.classpath.value)
   }
 
-  private def buildManagerInitialize: String =
-    storage.getString(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.buildManager.name))
-
   /** Return a the project-specific preference store. This does not take into account the
    *  user-preference whether to use project-specific compiler settings or not.
    *
@@ -518,19 +515,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // when using the build manager.
       settings.sourcepath.value = ""
 
-      // Which build manager?
-      // We assume that build manager setting has only single box
-      val choice = buildManagerInitialize
-      choice match {
-        case "sbt" =>
-          logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
-          buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
-        case _ =>
-          logger.info("Invalid build manager choice '" + choice + "'. Setting to (default) sbt build manager")
-          buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
-      }
-
-      //buildManager0 = new EclipseBuildManager(this, settings)
+      logger.info("BM: SBT enhanced Build Manager for " + plugin.scalaVer + " Scala library")
+      buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
     }
     buildManager0
   }

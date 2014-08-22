@@ -29,8 +29,8 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
     withCompilationUnitAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
 
       val expected = List(
-        "Implicit conversions found: List(1,2) => listToString(List(1,2)) [180, 9]",
-        "Implicit conversions found: List(1,2,3) => listToString(List(1,2,3)) [151, 11]"
+        "Implicit conversion found: `List(1,2)` => `listToString(List(1,2)): String` [180, 9]",
+        "Implicit conversion found: `List(1,2,3)` => `listToString(List(1,2,3)): String` [151, 11]"
       )
       val actual = implicits(src, compiler)
 
@@ -43,7 +43,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
 
       val expected = List(
-        "Implicit conversions found: 4 => int2Integer(4) [74, 1]"
+        "Implicit conversion found: `4` => `int2Integer(4): Integer` [74, 1]"
       )
       val actual = implicits(src, compiler)
 
@@ -56,7 +56,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
     withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
 
       val expected = List (
-        "Implicit arguments found: takesImplArg => takesImplArg( implicits.ImplicitArguments.s ) [118, 12]"
+        "Implicit arguments found: `takesImplArg` => `takesImplArg( implicits.ImplicitArguments.s )` [118, 12]"
       )
       val actual = implicits(src, compiler)
 

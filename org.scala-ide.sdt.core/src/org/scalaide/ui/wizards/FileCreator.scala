@@ -1,8 +1,8 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.IPath
 
 /**
  * Used by `FileCreator` to either model that an operation was invalid, which
@@ -64,10 +64,8 @@ trait FileCreator {
    *
    * This method is guaranteed to be called not before [[validateName]] returns
    * a valid state.
-   *
-   * '''Note:''' The returned path needs to be absolute to the root of the filesystem.
    */
-  def createFilePath(folder: IFolder, name: String): IPath
+  def create(folder: IFolder, name: String): IFile
 
   /**
    * Creates a path that is shown when a new file wizard is created. This should

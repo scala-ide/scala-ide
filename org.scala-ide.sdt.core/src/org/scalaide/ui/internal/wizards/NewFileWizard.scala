@@ -1,8 +1,8 @@
 package org.scalaide.ui.internal.wizards
 
+import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
@@ -24,11 +24,10 @@ import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
-import org.eclipse.ui.PartInitException
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
+import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.ScalaImages
@@ -55,7 +54,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
   private var disposables = Seq[{def dispose(): Unit}]()
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
-  private var filePath: IPath = _
+  private var file: IFile = _
   private var selectedFolder: IFolder = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
@@ -90,11 +89,9 @@ trait NewFileWizard extends AnyRef with HasLogger {
   /**
    * Returns the path to the file created by the wizard. Returns `None` as long
    * as the wizard did not yet create a new file.
-   *
-   * '''Note:''' The returned path is absolute to the root of the filesystem
    */
-  def pathOfCreatedFile: Option[IPath] =
-    Option(filePath)
+  def createdFile: Option[IFile] =
+    Option(file)
 
   def createContents(parent: Composite): Control = {
     import SWTUtils._
@@ -272,12 +269,12 @@ trait NewFileWizard extends AnyRef with HasLogger {
       ctx
     }
 
-    val path = m.withInstance(_.createFilePath(selectedFolder, chosenName))
-    path foreach { p =>
-      FileUtils.createFileFromPath(p) match {
+    val file = m.withInstance(_.create(selectedFolder, chosenName))
+    file foreach { f =>
+      FileUtils.createFile(f) match {
         case util.Success(_) =>
-          filePath = p
-          openEditor(p) { doc =>
+          this.file = f
+          openEditor(f) { doc =>
             findTemplateById(m.templateId) match {
               case Some(template) =>
                 val ctx = createTemplateContext(doc)
@@ -345,18 +342,13 @@ trait NewFileWizard extends AnyRef with HasLogger {
 
   /**
    * Applies `f` to the document whose content is mapped to the newly created
-   * file whose location is described by `path` and opens the file afterwards.
+   * file whose location is described by `file` and opens the file afterwards.
    * `f` needs to return the position where the cursor should point to after the
    * file is opened.
-   * If `path` doesn't point to a file in a source folder `f` is not applied and
-   * the file is opened with the default text editor.
    */
-  private def openEditor(path: IPath)(f: IDocument => Int): Unit = {
-    val workspacePath = FileUtils.workspacePath(path)
-    val page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+  private def openEditor(file: IFile)(f: IDocument => Int): Unit = {
 
     def openFileInSrcDir(): Unit = {
-      val file = IDEWorkbenchPlugin.getPluginWorkspace().getRoot().getFile(workspacePath.get)
       val doc = new Document()
       val cursorPos = f(doc)
       file.setContents(
@@ -364,32 +356,16 @@ trait NewFileWizard extends AnyRef with HasLogger {
           /* force */ true, /* keepHistory */ false,
           new NullProgressMonitor)
 
-      val e = IDE.openEditor(page, file, /* activate */ true)
+      val window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+      val e = IDE.openEditor(window.getActivePage(), file, /* activate */ true)
+      BasicNewResourceWizard.selectAndReveal(file, window)
       EditorUtils.textEditor(e) foreach { _.selectAndReveal(cursorPos, 0) }
     }
 
-    def openFileOutsideOfSrcDir(): Unit = {
-      IDE.openEditor(
-          page, path.toFile().toURI(),
-          EditorsUI.DEFAULT_TEXT_EDITOR_ID, /* activate */ true)
-    }
-
-    def srcDirExists(srcDir: IPath) =
-      Option(selectedFolder.getProject())
-        .map(ProjectUtils.sourceDirs)
-        .exists(_.exists(_.isPrefixOf(srcDir)))
-
-    val isInSrcDir = workspacePath.map(srcDirExists).getOrElse(false)
-
-    try {
-      if (isInSrcDir)
-        openFileInSrcDir()
-      else
-        openFileOutsideOfSrcDir()
-    }
+    try openFileInSrcDir()
     catch {
-      case e: PartInitException =>
-        eclipseLog.error(s"Failed to initialize editor for file '${path.toOSString()}'", e)
+      case e: Exception =>
+        eclipseLog.error(s"Failed to initialize editor for file '$file'", e)
     }
   }
 

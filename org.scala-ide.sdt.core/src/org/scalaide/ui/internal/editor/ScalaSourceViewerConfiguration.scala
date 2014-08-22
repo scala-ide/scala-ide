@@ -1,44 +1,62 @@
 package org.scalaide.ui.internal.editor
 
-import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
-import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.lexical._
-import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
-import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
-import org.scalaide.ui.internal.editor.autoedits._
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICodeAssist
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
+import org.eclipse.jface.internal.text.html.BrowserInformationControl
+import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.AbstractReusableInformationControlCreator
+import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jface.text.DefaultTextHover
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IInformationControl
+import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.formatter.IContentFormatter
 import org.eclipse.jface.text.formatter.MultiPassContentFormatter
 import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
+import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.reconciler.IReconciler
 import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.text.source.DefaultAnnotationHover
+import org.eclipse.jface.text.source.IAnnotationHoverExtension
+import org.eclipse.jface.text.source.ILineRange
 import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.text.source.LineRange
 import org.eclipse.jface.util.PropertyChangeEvent
-import scalariform.ScalaVersions
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.formatter.FormatterPreferences._
-import scalariform.formatter.preferences._
+import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
+import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.formatter.FormatterPreferences._
+import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.lexical._
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
+import org.scalaide.ui.internal.editor.autoedits._
+import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
+import org.scalaide.ui.internal.editor.hover.HoverInformationProvider
+import org.scalaide.ui.internal.editor.hover.HtmlHover
+import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
+import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
+
+import scalariform.ScalaVersions
+import scalariform.formatter.preferences._
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -115,6 +133,94 @@ class ScalaSourceViewerConfiguration(
       (spacePrefix +: prefixes :+ "").toArray
   }
 
+  /**
+   * This annotation hover needs to trim error messages to a single line due to
+   * some stylistic limitations in the logic that computes the size of the
+   * hover. The method that computes the size is:
+   *
+   * [[org.eclipse.jface.internal.text.html.BrowserInformationControl.computeSizeHint()]]
+   *
+   * It basically converts HTML to text whose size is then considered. This
+   * works only for a very basic form of HTML - CSS specifications like margins
+   * can not be considered. Therefore, we need to remove as much text as
+   * possible and show only single lines to keep the error rate of line
+   * measurements low.
+   *
+   * This is also what the JDT is doing - but they don't even use HTML but only
+   * the converted text form. This way they don't have any stylistic problems
+   * but they also can't apply there Java hover specific configurations
+   * anymore.
+   */
+  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false)
+      with IAnnotationHoverExtension
+      with HtmlHover {
+    import HTMLPrinter._
+
+    override def isIncluded(a: Annotation) =
+      isShowInVerticalRuler(a)
+
+    val UnimplementedMembers = """(class .* needs to be abstract, since:\W*it has \d+ unimplemented members\.)[\S\s]*""".r
+
+    val msgFormatter: String => String = {
+      case UnimplementedMembers(errorMsg) =>
+        convertContentToHtml(errorMsg)
+      case str =>
+        convertContentToHtml(str)
+    }
+
+    override def formatSingleMessage(msg: String) = {
+      createHtmlOutput { sb =>
+        sb.append(msgFormatter(msg))
+      }
+    }
+
+    override def formatMultipleMessages(msgs: java.util.List[_]) = {
+      createHtmlOutput { sb =>
+        import HTMLPrinter._
+        import collection.JavaConverters._
+        addParagraph(sb, "Multiple markers at this line:")
+        startBulletList(sb)
+        msgs.asScala foreach (msg => addBullet(sb, msgFormatter(msg.asInstanceOf[String])))
+        endBulletList(sb)
+      }
+    }
+
+    override def canHandleMouseCursor(): Boolean =
+      false
+
+    override def getHoverControlCreator(): IInformationControlCreator = new AbstractReusableInformationControlCreator {
+      override def doCreateInformationControl(parent: Shell): IInformationControl = {
+        if (BrowserInformationControl.isAvailable(parent))
+          new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
+        else
+          new DefaultInformationControl(parent, /* resizable */ false)
+      }
+    }
+
+    override def getHoverInfo(sourceViewer: ISourceViewer, lineRange: ILineRange, visibleNumberOfLines: Int): Object =
+      getHoverInfo(sourceViewer, lineRange.getStartLine())
+
+    override def getHoverLineRange(sourceViewer: ISourceViewer, lineNumber: Int): ILineRange =
+      new LineRange(lineNumber, /* numberOfLines */ 1)
+
+  }
+
+  override def getInformationControlCreator(sourceViewer: ISourceViewer) =
+    annotationHover.getHoverControlCreator()
+
+  override def getInformationPresenter(sourceViewer: ISourceViewer) = {
+    val p = new InformationPresenter(getInformationControlCreator(sourceViewer))
+    val ip = new HoverInformationProvider(compilationUnit map (new ScalaHover(_)))
+
+    p.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
+    getConfiguredContentTypes(sourceViewer) foreach (p.setInformationProvider(ip, _))
+    p
+  }
+
+  override def getOverviewRulerAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
+
+  override def getAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
+
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
     if (editor ne null) {
       val reconciler = new MonoReconciler(new ScalaReconcilingStrategy(editor), /*isIncremental = */ false)
@@ -139,10 +245,9 @@ class ScalaSourceViewerConfiguration(
   }
 
   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int): ITextHover =
-    getCodeAssist match {
-      case Some(scu: ScalaCompilationUnit) => ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
-      case _                               => new DefaultTextHover(sv)
-    }
+    compilationUnit.map(scu =>
+      ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(new ScalaHover(scu))
+    ).getOrElse(new DefaultTextHover(sv))
 
   override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
     val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
@@ -151,7 +256,7 @@ class ScalaSourceViewerConfiguration(
     Array(detector, new URLHyperlinkDetector())
   }
 
-  def getCodeAssist: Option[ICodeAssist] = Option(editor) map { editor =>
+  private def getTypeRoot: Option[ITypeRoot] = Option(editor) map { editor =>
     val input = editor.getEditorInput
     val provider = editor.getDocumentProvider
 
@@ -162,8 +267,11 @@ class ScalaSourceViewerConfiguration(
     }
   }
 
-  def getProject: IJavaProject =
-    getCodeAssist.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
+  private def compilationUnit: Option[ScalaCompilationUnit] =
+    getTypeRoot collect { case scu: ScalaCompilationUnit => scu }
+
+  private def getProject: IJavaProject =
+    getTypeRoot.map(_.asInstanceOf[IJavaElement].getJavaProject).orNull
 
   /**
    * Replica of JavaSourceViewerConfiguration#getAutoEditStrategies that returns

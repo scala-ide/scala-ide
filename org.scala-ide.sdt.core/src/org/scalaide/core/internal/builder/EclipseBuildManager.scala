@@ -6,7 +6,6 @@ import org.eclipse.core.runtime.SubMonitor
 
 trait EclipseBuildManager {
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit
-  var depFile: IFile
 
   /** Has build errors? Only valid if the project has been built before. */
   @volatile var hasErrors: Boolean = false

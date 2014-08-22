@@ -122,6 +122,12 @@
             id="org.scalaide.ui.preferences.scalas"
             name="Installations">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.HoverPreferencePage"
+            id="org.scalaide.ui.preferences.editor.hover"
+            name="Hover">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
@@ -835,6 +841,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.migration.MigrationPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.HoverPreferenceInitializer">
      </initializer>
   </extension>
 
@@ -1674,5 +1683,23 @@
           name="New Scala File"
           templateId="org.scalaide.core.templates.wizards.class">
     </fileCreator>
+ </extension>
+ <extension
+       point="org.eclipse.ui.themes">
+    <themeElementCategory
+          id="org.scalaide.ui.theme"
+          label="Scala">
+       <description>
+          Scala IDE related fonts and colors.
+       </description>
+    </themeElementCategory>
+    <fontDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.font.hover"
+          label="Hover Font">
+       <description>
+          The font used for all Scala hovers.
+       </description>
+    </fontDefinition>
  </extension>
 </plugin>

@@ -71,7 +71,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
           val removed0 = new HashSet[IFile]
 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-            def visit(delta : IResourceDelta) = {
+            override def visit(delta : IResourceDelta) = {
               delta.getResource match {
                 case file : IFile if plugin.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
@@ -114,7 +114,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
       }
     }
 
-    val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
+    val subMonitor = SubMonitor.convert(new BuildMonitor(monitor, this), 100).newChild(100, SubMonitor.SUPPRESS_NONE)
     subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
 
     val projectsInError = project.transitiveDependencies.filter(p => plugin.getScalaProject(p).buildManager.hasErrors)
@@ -129,7 +129,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     /** The Java builder has to be run for copying resources (non-source files) to the output directory.
      *
-     *  We need to run it when using the refined builder, or the SBT builder and no Java sources have been modified
+     *  We need to run it when no Java sources have been modified
      *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {

@@ -103,6 +103,16 @@ class ScalaPlugin extends AbstractUIPlugin with PluginLogConfigurator with IReso
   def projectWizId = wizardId("Project")
   def netProjectWizId = wizardId("NetProject")
 
+  def scalaPerspectiveId = "org.scala-ide.sdt.core.perspective"
+
+  def classCreator = "org.scalaide.ui.wizards.classCreator"
+  def traitCreator = "org.scalaide.ui.wizards.traitCreator"
+  def objectCreator = "org.scalaide.ui.wizards.objectCreator"
+  def packageObjectCreator = "org.scalaide.ui.wizards.packageObjectCreator"
+  def appCreator = "org.scalaide.ui.wizards.appCreator"
+  def emptyFileCreator = "org.scalaide.ui.wizards.empty"
+  def scalaFileCreator = "org.scalaide.ui.wizards.scalaCreator"
+
   def editorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   def builderId = pluginId + ".scalabuilder"
   def natureId = pluginId + ".scalanature"
