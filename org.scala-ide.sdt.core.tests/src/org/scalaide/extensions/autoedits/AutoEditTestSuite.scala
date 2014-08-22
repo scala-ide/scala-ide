@@ -12,6 +12,7 @@ import org.junit.runners.Suite
   classOf[RemoveCurlyBracePairTest],
   classOf[CloseParenthesisTest],
   classOf[CloseBracketTest],
-  classOf[CloseAngleBracketTest]
+  classOf[CloseAngleBracketTest],
+  classOf[RemoveParenthesisPairTest]
 ))
 class AutoEditTestSuite
