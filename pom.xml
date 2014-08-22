@@ -24,9 +24,11 @@
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
+    <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
+    <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
     <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
     <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
@@ -82,6 +84,7 @@
     <scala.short.version>Select a Scala profile</scala.short.version>
     <scala.minor.version>Select a Scala profile</scala.minor.version>
     <version.suffix>Select a Scala profile</version.suffix>
+    <jdt.core.min.version>Select an Eclipse profile</jdt.core.min.version>
     <version.tag>local</version.tag>
     <sbt.version>0.13.2</sbt.version>
 
@@ -142,6 +145,7 @@
         <eclipse.codename>juno</eclipse.codename>
         <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
+        <jdt.core.min.version>3.8.0</jdt.core.min.version>
         <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
       </properties>
     </profile>
@@ -156,7 +160,20 @@
         <eclipse.codename>kepler</eclipse.codename>
         <repo.eclipse>${repo.eclipse.kepler}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
+        <jdt.core.min.version>3.9.0</jdt.core.min.version>
         <weaving.hook.plugin.version>1.0.200.v20130327-1442</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Eclipse Luna -->
+      <id>eclipse-luna</id>
+      <properties>
+        <eclipse.codename>luna</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
+        <jdt.core.min.version>3.10.0</jdt.core.min.version>
+        <weaving.hook.plugin.version>1.1.0.v20140529-1734</weaving.hook.plugin.version>
       </properties>
     </profile>
 
@@ -414,10 +431,18 @@
                   <target>
                     <copy file="${sdt.core.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
-                        overwrite="true" />
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_MIN" value="${jdt.core.min.version}"/>
+                        </filterset>
+                    </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.debug.dir}/META-INF/MANIFEST.MF"
-                        overwrite="true" />
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_MIN" value="${jdt.core.min.version}"/>
+                        </filterset>
+                    </copy>
                     <copy file="${sdt.update-site.dir}/resources/site-${version.suffix}.xml"
                         tofile="${sdt.update-site.dir}/site.xml"
                         overwrite="true" />

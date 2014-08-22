@@ -39,7 +39,6 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.equinox.frameworkadmin.BundleInfo;
 import org.eclipse.equinox.internal.simpleconfigurator.manipulator.SimpleConfiguratorManipulatorImpl;
 import org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.DisabledInfo;
 import org.eclipse.osgi.service.resolver.State;
@@ -390,7 +389,7 @@ public class WeavingStateConfigurer {
     }
 
     private String getConfigArea() {
-        String configArea = FrameworkProperties.getProperty("osgi.configuration.area") + "config.ini";
+        String configArea = System.getProperty("osgi.configuration.area") + "config.ini";
         configArea = configArea.replaceAll(" ", "%20");
         return configArea;
     }
