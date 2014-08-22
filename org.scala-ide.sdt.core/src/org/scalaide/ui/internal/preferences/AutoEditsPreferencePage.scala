@@ -73,7 +73,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
 
     mkLabel(base, "Description:", columnSize = 2)
 
-    descriptionArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
+    descriptionArea = mkTextArea(base, lineHeight = 6, columnSize = 2)
 
     base
   }
