@@ -97,8 +97,8 @@ trait AutoEditExtensions extends HasLogger {
 
     val handleLinkedModel: Handler = {
       case LinkedModel(autoEdit, exitPosition, positionGroups) =>
-        val ui = mkEditorLinkedMode(mkLinkedModeModel(udoc, positionGroups), exitPosition)
         handleTextChange(autoEdit)
+        val ui = mkEditorLinkedMode(mkLinkedModeModel(udoc, positionGroups), exitPosition)
         ui.enter()
     }
 
