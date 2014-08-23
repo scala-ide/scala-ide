@@ -18,7 +18,7 @@ trait ConvertToUnicode extends AutoEdit {
 
   override def perform() = {
     rule(textChange) {
-      case Add(start, text) if text.size == 1 =>
+      case Add(start, text) if text.size == 1 && start > 0 =>
         subrule(document(start-1)+text) {
           case "=>" => Replace(start-1, start, "⇒")
           case "->" => Replace(start-1, start, "→")

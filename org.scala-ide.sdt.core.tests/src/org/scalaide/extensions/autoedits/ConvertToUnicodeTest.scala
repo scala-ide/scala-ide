@@ -53,4 +53,7 @@ class ConvertToUnicodeTest extends AutoEditTests {
     a ⇒^ b
     """ after Add("=>")
 
+  @Test
+  def handle_empty_file() =
+    "^" becomes "-^" after Add("-")
 }
