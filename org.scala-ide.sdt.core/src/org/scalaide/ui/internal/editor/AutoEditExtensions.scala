@@ -62,17 +62,41 @@ object AutoEditExtensions {
   )
 }
 
+/**
+ * Maintains the logic that is needed to handle auto edits correctly.
+ */
 trait AutoEditExtensions extends HasLogger {
   import AutoEditExtensions._
 
   private type Handler = PartialFunction[Change, Unit]
 
+  /**
+   * The source viewer of the editor, to which the auto edits should be applied
+   * to.
+   */
   def sourceViewer: ISourceViewer
 
+  /**
+   * Needs to update the text viewer of the editor to which the auto edits are
+   * applied to. This method is called by [[applyVerifyEvent]] after an auto
+   * edit is applied to the underlying document.
+   *
+   * `cursorPos` is the new position of the cursor that should be shown to
+   * users after.
+   */
   def updateTextViewer(cursorPos: Int): Unit
 
+  /**
+   * Provides a smart backspace manager that is wired to the editor, to which
+   * the auto edits should be applied to.
+   */
   def smartBackspaceManager: SmartBackspaceManager
 
+  /**
+   * Handles `event` by giving its information to the auto edits. `event.doit`
+   * is set to `false` if a auto edit could be found that can be applied and if
+   * no errors occurred.
+   */
   def applyVerifyEvent(event: VerifyEvent, modelRange: IRegion): Unit = {
     val udoc = sourceViewer.getDocument()
     val start = modelRange.getOffset()
@@ -205,6 +229,10 @@ trait AutoEditExtensions extends HasLogger {
     }
   }
 
+  /**
+   * Performs an auto edit and returns it produced `Change` object. In case the
+   * result is invalid or no result is produced `None` is returned.
+   */
   private def performExtension(instance: AutoEdit): Option[Change] = {
     val id = instance.setting.id
 
