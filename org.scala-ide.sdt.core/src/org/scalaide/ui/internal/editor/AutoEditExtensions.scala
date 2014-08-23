@@ -181,17 +181,22 @@ trait AutoEditExtensions extends HasLogger {
         val doc = new TextDocument(udoc)
         val instance = ext(doc, change)
         val appliedChange = performExtension(instance)
-        appliedChange foreach { c => applyChange(c, instance, handlers) }
-        appliedChange
+        appliedChange map { c => applyChange(c, instance, handlers) }
       }
 
     iter find (_.isDefined)
   }
 
-  private def applyChange(change: Change, autoEdit: AutoEdit, handlers: Seq[Handler]): Unit = {
+  /**
+   * Applies `change` to `handlers`. `autoEdit` is the auto edit that produced
+   * the object passed to `change`.
+   *
+   * Returns `None` if `change` could not be applied.
+   */
+  private def applyChange(change: Change, autoEdit: AutoEdit, handlers: Seq[Handler]): Option[Unit] = {
     val id = autoEdit.setting.id
 
-    handlers find (_ isDefinedAt change) foreach { handler =>
+    handlers find (_ isDefinedAt change) flatMap { handler =>
       EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'.") {
         handler(change)
       }
