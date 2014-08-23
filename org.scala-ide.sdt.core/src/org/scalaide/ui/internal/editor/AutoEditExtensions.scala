@@ -63,6 +63,8 @@ object AutoEditExtensions {
 trait AutoEditExtensions extends HasLogger {
   import AutoEditExtensions._
 
+  private type Handler = PartialFunction[Change, Unit]
+
   def sourceViewer: ISourceViewer
 
   def updateTextViewer(cursorPos: Int): Unit
@@ -78,16 +80,14 @@ trait AutoEditExtensions extends HasLogger {
       if (text.isEmpty()) Remove(start, end)
       else Add(start, text)
 
-    val appliedChange = applyAutoEdit(udoc, change)
-
-    val handleTextChange: PartialFunction[Change, Unit] = {
+    val handleTextChange: Handler = {
       case TextChange(start, end, text) =>
         udoc.replace(start, end-start, text)
         event.doit = false
         event.text = text
     }
 
-    val handleCursorUpdate: PartialFunction[Change, Unit] = {
+    val handleCursorUpdate: Handler = {
       case CursorUpdate(autoEdit, cursorPos, smartBackspaceEnabled) =>
         handleTextChange(autoEdit)
         if (smartBackspaceEnabled)
@@ -95,23 +95,16 @@ trait AutoEditExtensions extends HasLogger {
         updateTextViewer(cursorPos)
     }
 
-    val handleLinkedModel: PartialFunction[Change, Unit] = {
+    val handleLinkedModel: Handler = {
       case LinkedModel(autoEdit, exitPosition, positionGroups) =>
+        val ui = mkEditorLinkedMode(mkLinkedModeModel(udoc, positionGroups), exitPosition)
         handleTextChange(autoEdit)
-        enterLinkedMode(udoc, exitPosition, positionGroups)
+        ui.enter()
     }
 
     val handlers = Seq(handleTextChange, handleCursorUpdate, handleLinkedModel)
 
-    appliedChange foreach { ac =>
-      handlers find (_ isDefinedAt ac) foreach (_(ac))
-    }
-  }
-
-  /** Installs a linked mode model to the editor. */
-  private def enterLinkedMode(doc: IDocument, exitPosition: Int, positionGroups: Seq[Seq[(Int, Int)]]) = {
-    val ui = mkEditorLinkedMode(mkLinkedModeModel(doc, positionGroups), exitPosition)
-    ui.enter()
+    performAutoEdits(udoc, change, handlers)
   }
 
   /** Creates a linked model with given `positionGroups`. */
@@ -165,7 +158,14 @@ trait AutoEditExtensions extends HasLogger {
     }
   }
 
-  private def applyAutoEdit(udoc: IDocument, change: TextChange): Option[Change] = {
+  /**
+   * Tries to find an auto edit that produces a `Change` object, which is
+   * applied afterwards.
+   *
+   * `udoc` and `change` are used to create the auto edits, `handlers` takes
+   * the produced `Change` object.
+   */
+  private def performAutoEdits(udoc: IDocument, change: TextChange, handlers: Seq[Handler]): Unit = {
     val partition = TextUtilities.getPartition(
         udoc, IDocumentExtension3.DEFAULT_PARTITIONING,
         change.start, /* preferOpenPartitions */ true)
@@ -173,15 +173,29 @@ trait AutoEditExtensions extends HasLogger {
     def configuredForPartition(partitions: Seq[String]) =
       partitions.isEmpty || partitions.contains(partition)
 
-    val iter = for ((setting, ext) <- autoEdits.iterator
-        if isEnabled(setting.id) && configuredForPartition(setting.partitions)) yield {
-      val doc = new TextDocument(udoc)
-      val instance = ext(doc, change)
-      performExtension(instance)
-    }
+    val iter =
+      for {
+        (setting, ext) <- autoEdits.iterator
+        if isEnabled(setting.id) && configuredForPartition(setting.partitions)
+      } yield {
+        val doc = new TextDocument(udoc)
+        val instance = ext(doc, change)
+        val appliedChange = performExtension(instance)
+        appliedChange foreach { c => applyChange(c, instance, handlers) }
+        appliedChange
+      }
 
-    val appliedAutoEdit = iter find (_.isDefined)
-    appliedAutoEdit.flatten
+    iter find (_.isDefined)
+  }
+
+  private def applyChange(change: Change, autoEdit: AutoEdit, handlers: Seq[Handler]): Unit = {
+    val id = autoEdit.setting.id
+
+    handlers find (_ isDefinedAt change) foreach { handler =>
+      EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'.") {
+        handler(change)
+      }
+    }
   }
 
   private def performExtension(instance: AutoEdit): Option[Change] = {
