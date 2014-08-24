@@ -25,10 +25,6 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
 
   /** Automatically surround the current selection with the corresponding
    *  character, if it is defined in the `activeChars` map.
-   *
-   *  Since it gets a chance to see all characters, it also suppresses the
-   *  automatically generated closing angle bracket that the Java editor
-   *  always appends, leading to <> in the code.
    */
   override def verifyKey(event: VerifyEvent) {
     val selection = sourceViewer.getSelectedRange
@@ -38,13 +34,6 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
     if (selection.y > 0 && activeChars.isDefinedAt(chr)) {
       val text = doc.get(selection.x, selection.y)
       doc.replace(selection.x, selection.y, chr + text + activeChars(chr))
-      // stop the Java editor from adding a closing bracket as well
-      event.doit = false
-    } else if (chr == '<') {
-      // the Java editor usually inserts a closing angle bracket (Java Generics)
-      // we suppress it here.
-      doc.replace(selection.x, 0, "<")
-      sourceViewer.setSelectedRange(selection.x + 1, 0)
       event.doit = false
     }
   }
@@ -59,7 +48,7 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
     for ((option, mapping) <- optionToMapping if store.getBoolean(option)) yield mapping
   }
 
-  def propertyChange(event: PropertyChangeEvent) {
+  override def propertyChange(event: PropertyChangeEvent) {
     activeChars = getConfiguredActiveChars
   }
 }
