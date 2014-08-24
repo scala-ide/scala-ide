@@ -36,5 +36,5 @@ case class AutoEditSetting(
   id: String,
   name: String,
   description: String,
-  partitions: Seq[String] = Seq()
+  partitions: Set[String] = Set()
 ) extends ExtensionSetting

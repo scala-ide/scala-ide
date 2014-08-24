@@ -192,10 +192,10 @@ trait AutoEditExtensions extends HasLogger {
   private def performAutoEdits(udoc: IDocument, change: TextChange, handlers: Seq[Handler]): Unit = {
     val partition = TextUtilities.getPartition(
         udoc, IDocumentExtension3.DEFAULT_PARTITIONING,
-        change.start, /* preferOpenPartitions */ true)
+        change.start, /* preferOpenPartitions */ true).getType()
 
-    def configuredForPartition(partitions: Seq[String]) =
-      partitions.isEmpty || partitions.contains(partition)
+    def configuredForPartition(partitions: Set[String]) =
+      partitions.isEmpty || partitions(partition)
 
     val iter =
       for {
