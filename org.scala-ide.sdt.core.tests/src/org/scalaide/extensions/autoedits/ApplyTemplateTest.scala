@@ -31,14 +31,14 @@ class ApplyTemplateTest extends AutoEditTests {
   }
 
   @Test
-  def do_nothing_if_no_template_found() =
-    "f^" becomes "fu^" after Add("u")
+  def add_tab_to_document_if_no_template_found() =
+    "f^" becomes "f\t^" after Add("\t")
 
   @Test
   def apply_match_template() = """
     class X {
       def f(i: Int) = {
-        matc^
+        match^
       }
     }
     """ becomes """
@@ -49,13 +49,13 @@ class ApplyTemplateTest extends AutoEditTests {
         }
       }
     }
-    """ after Add("h")
+    """ after Add("\t")
 
   @Test
   def apply_tcatch_template() = """
     class X {
       def f(i: Int) = {
-        tcatc^
+        tcatch^
       }
     }
     """ becomes """
@@ -68,5 +68,5 @@ class ApplyTemplateTest extends AutoEditTests {
         }
       }
     }
-    """ after Add("h")
+    """ after Add("\t")
 }

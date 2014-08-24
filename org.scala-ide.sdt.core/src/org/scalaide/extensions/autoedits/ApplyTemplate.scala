@@ -22,7 +22,8 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |used by selecting them in the code completion dialog after typing their \
        |name. However, this approach is slow and requires user interaction. This \
        |auto edit aims at making templates as easy to use as possible. When enabled, \
-       |it applies a template immediatelly after its name is typed.
+       |it applies a template immediatelly after its name is typed and the tab key \
+       |is pressed.
        |
        |For example, if there exists the template
        |
@@ -30,10 +31,13 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |      case ${caseValue} => ${cursor}
        |    }
        |
-       |which is named `match`, one can immediately insert the content of this \
-       |template into the open editor by simpley typing `match`. The editor creates \
-       |a linked model, which allows to jump between the sections marked with ${}. \
-       |If enter is pressed, the cursor jumps immediately to the section marked \
+       |whose name is `match`, one can immediately insert the content of this \
+       |template into the open editor by simpley typing `match` and then pressing \
+       |the tab key.
+       |
+       |The editor creates even creates a liked model, which allows to jump between \
+       |the sections marked with ${}. If enter is pressed while the linked model \
+       |is still active, the cursor jumps immediately to the section marked \
        |by ${cursor}.
        |""".stripMargin.replaceAll("\\\\\n", "")
 )
@@ -44,13 +48,12 @@ trait ApplyTemplate extends AutoEdit {
 
   override def perform() = {
     rule(textChange) {
-      case Add(start, text) if text.size == 1 =>
+      case Add(start, "\t") =>
         val r = ScalaWordFinder.findWord(document.text, start)
-        val part = document.textRange(r.getOffset(), r.getOffset()+r.getLength())
-        val word = part+text
+        val word = document.textRange(r.getOffset(), r.getOffset()+r.getLength())
 
         findTemplateByName(word) map { template =>
-          applyTemplate(template, start-part.length(), start)
+          applyTemplate(template, start-word.length(), start)
         }
     }
   }
