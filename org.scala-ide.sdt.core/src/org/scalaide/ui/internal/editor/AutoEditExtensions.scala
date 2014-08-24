@@ -45,7 +45,8 @@ object AutoEditExtensions {
     RemoveParenthesisPairSetting,
     CreateMultiplePackageDeclarationsSetting,
     ApplyTemplateSetting,
-    RemoveBracketPairSetting
+    RemoveBracketPairSetting,
+    RemoveAngleBracketPairSetting
   )
 
   private val autoEdits = Seq(
@@ -60,7 +61,8 @@ object AutoEditExtensions {
     RemoveParenthesisPairSetting -> RemoveParenthesisPairCreator.create _,
     CreateMultiplePackageDeclarationsSetting -> CreateMultiplePackageDeclarationsCreator.create _,
     ApplyTemplateSetting -> ApplyTemplateCreator.create _,
-    RemoveBracketPairSetting -> RemoveBracketPairCreator.create _
+    RemoveBracketPairSetting -> RemoveBracketPairCreator.create _,
+    RemoveAngleBracketPairSetting -> RemoveAngleBracketPairCreator.create _
   )
 }
 
