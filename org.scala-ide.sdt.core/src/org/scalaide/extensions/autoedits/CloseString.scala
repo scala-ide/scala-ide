@@ -1,13 +1,22 @@
 package org.scalaide.extensions
 package autoedits
 
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.text.IDocument
+import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.core.text.Add
 
 object CloseStringSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseString],
   name = "Close strings",
-  description =
-    "Closes a typed opening string literal if necessary."
+  description = "Closes a typed opening string literal if necessary.",
+  partitions = Set(
+    IDocument.DEFAULT_CONTENT_TYPE,
+    ScalaPartitions.SCALA_MULTI_LINE_STRING,
+    ScalaPartitions.SCALADOC_CODE_BLOCK,
+    IJavaPartitions.JAVA_DOC,
+    IJavaPartitions.JAVA_MULTI_LINE_COMMENT
+  )
 )
 
 trait CloseString extends AutoEdit {
