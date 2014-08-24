@@ -33,22 +33,6 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 
 object AutoEditExtensions {
 
-  val autoEditSettings: Seq[AutoEditSetting] = Seq(
-    ConvertToUnicodeSetting,
-    SmartSemicolonInsertionSetting,
-    CloseCurlyBraceSetting,
-    JumpOverClosingCurlyBraceSetting,
-    RemoveCurlyBracePairSetting,
-    CloseParenthesisSetting,
-    CloseBracketSetting,
-    CloseAngleBracketSetting,
-    RemoveParenthesisPairSetting,
-    CreateMultiplePackageDeclarationsSetting,
-    ApplyTemplateSetting,
-    RemoveBracketPairSetting,
-    RemoveAngleBracketPairSetting
-  )
-
   private val autoEdits = Seq(
     ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _,
     SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _,
@@ -64,6 +48,12 @@ object AutoEditExtensions {
     RemoveBracketPairSetting -> RemoveBracketPairCreator.create _,
     RemoveAngleBracketPairSetting -> RemoveAngleBracketPairCreator.create _
   )
+
+  /**
+   * The settings for all existing auto edits.
+   */
+  val autoEditSettings: Seq[AutoEditSetting] =
+    autoEdits.map(_._1)
 }
 
 /**

@@ -30,19 +30,6 @@ import org.scalaide.util.internal.eclipse.EditorUtils
 object SaveActionExtensions {
 
   /**
-   * The settings for all existing save actions.
-   */
-  val saveActionSettings: Seq[SaveActionSetting] = Seq(
-    RemoveTrailingWhitespaceSetting,
-    AddNewLineAtEndOfFileSetting,
-    AutoFormattingSetting,
-    AddMissingOverrideSetting,
-    RemoveDuplicatedEmptyLinesSetting,
-    AddReturnTypeToPublicSymbolsSetting,
-    TabToSpaceConverterSetting
-  )
-
-  /**
    * The ID which is used as key in the preference store to identify the actual
    * timeout value for save actions.
    */
@@ -66,6 +53,12 @@ object SaveActionExtensions {
     AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
     AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
   )
+
+  /**
+   * The settings for all existing save actions.
+   */
+  val saveActionSettings: Seq[SaveActionSetting] =
+    documentSaveActions.map(_._1) ++ compilerSaveActions.map(_._1)
 }
 
 trait SaveActionExtensions extends HasLogger {
