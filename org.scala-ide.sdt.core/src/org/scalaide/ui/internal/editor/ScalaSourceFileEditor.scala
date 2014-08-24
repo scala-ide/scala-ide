@@ -15,6 +15,7 @@ import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
+import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
@@ -29,6 +30,8 @@ import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.ITextViewerExtension
 import org.eclipse.jface.text.Position
+import org.eclipse.jface.text.contentassist.ContentAssistant
+import org.eclipse.jface.text.contentassist.IContentAssistant
 import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
@@ -375,12 +378,39 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
         updateIndentPrefixes()
 
       case _ =>
-        if (affectsTextPresentation(event)) {
-          // those events will trigger an UI change
-          DisplayThread.asyncExec(super.handlePreferenceStoreChanged(event))
-        } else {
-          super.handlePreferenceStoreChanged(event)
+
+        def executeSuperImplementation() =
+          try super.handlePreferenceStoreChanged(event) catch {
+            case _: ClassCastException =>
+              // I don't know any better than to ignore this exception. It happens
+              // because the CompilationUnitEditor assumes that the source viewer
+              // is of a different type. And we can't directly call the implementation
+              // of the JavaEditor here.
         }
+
+        // This code is also called in the implementation of CompilationUnitEditor,
+        // but because this implementation doesn't work anymore (see executeSuperImplementation)
+        // we have to do it here.
+        sourceViewer match {
+          case ssv: ScalaSourceViewer =>
+            ssv.contentAssistant match {
+              case ca: ContentAssistant =>
+                ContentAssistPreference.changeConfiguration(ca, getPreferenceStore(), event)
+              case _ =>
+            }
+          case _ =>
+        }
+
+        // those events will trigger an UI change
+        if (affectsTextPresentation(event))
+          DisplayThread.asyncExec(executeSuperImplementation())
+        else
+          executeSuperImplementation()
+
+        // whatever event occurs that leads to the creation of the converter,
+        // we don't want it. We use auto edits to describe the behavior of
+        // tab-space conversions.
+        sourceViewer.setTabsToSpacesConverter(null)
     }
   }
 
@@ -423,6 +453,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
             parent, verticalRuler, overviewRuler,
             isOverviewRulerVisible, styles, store)
         with AutoEditExtensions {
+
+    def contentAssistant: IContentAssistant = fContentAssistant
 
     override def sourceViewer: ISourceViewer = self.sourceViewer
 
