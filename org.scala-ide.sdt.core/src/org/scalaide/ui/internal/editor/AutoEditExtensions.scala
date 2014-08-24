@@ -46,7 +46,8 @@ object AutoEditExtensions {
     CreateMultiplePackageDeclarationsSetting -> CreateMultiplePackageDeclarationsCreator.create _,
     ApplyTemplateSetting -> ApplyTemplateCreator.create _,
     RemoveBracketPairSetting -> RemoveBracketPairCreator.create _,
-    RemoveAngleBracketPairSetting -> RemoveAngleBracketPairCreator.create _
+    RemoveAngleBracketPairSetting -> RemoveAngleBracketPairCreator.create _,
+    JumpOverClosingParenthesisSetting -> JumpOverClosingParenthesisCreator.create _
   )
 
   /**
