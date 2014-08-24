@@ -14,9 +14,9 @@ import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
-import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.internal.ui.text.ContentAssistPreference
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
+import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.action.Action
@@ -40,6 +40,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.jface.text.source.IVerticalRuler
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.ISelection
+import org.eclipse.swt.custom.VerifyKeyListener
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.ISelectionListener
@@ -54,6 +55,7 @@ import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.logging.HasLogger
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.RefactoringMenu
@@ -72,7 +74,7 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
+class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor with HasLogger { self =>
   import ScalaSourceFileEditor._
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
@@ -347,6 +349,23 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     RefactoringMenu.fillQuickMenu(this)
     reconcilingListeners.addReconcileListener(semanticHighlightingParticipants)
 
+    /*
+     * Removes the Java component that provides the "automatically close ..."
+     * behavior. The component is accessed with reflection, because
+     * [[super.createPartControl]], which defines it, needs to be called.
+     */
+    def removeBracketInserter() = {
+      try {
+        val fBracketInserter = classOf[CompilationUnitEditor].getDeclaredField("fBracketInserter")
+        fBracketInserter.setAccessible(true)
+        sourceViewer.removeVerifyKeyListener(fBracketInserter.get(this).asInstanceOf[VerifyKeyListener])
+      } catch {
+        case e: NoSuchFieldException =>
+          logger.error("The name of field 'fBracketInserter' has changed", e)
+      }
+    }
+
+    removeBracketInserter()
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
         sourceViewer.prependVerifyKeyListener(new SurroundSelectionStrategy(getSourceViewer))
