@@ -9,6 +9,7 @@ import org.junit.runners.Suite
   classOf[AddNewLineAtEndOfFileTest],
   classOf[AddMissingOverrideTest],
   classOf[RemoveDuplicatedEmptyLinesTest],
-  classOf[AddReturnTypeToPublicSymbolsTest]
+  classOf[AddReturnTypeToPublicSymbolsTest],
+  classOf[TabToSpaceConverterTest]
 ))
 class SaveActionTestSuite

@@ -14,24 +14,14 @@ import org.eclipse.jface.text.IRegion
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
-import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
-import org.scalaide.core.internal.extensions.saveactions.AddReturnTypeToPublicSymbolsCreator
-import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
-import org.scalaide.core.internal.extensions.saveactions.RemoveDuplicatedEmptyLinesCreator
-import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
+import org.scalaide.core.internal.extensions.saveactions._
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
-import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
-import org.scalaide.extensions.saveactions.AddReturnTypeToPublicSymbolsSetting
-import org.scalaide.extensions.saveactions.AutoFormattingSetting
-import org.scalaide.extensions.saveactions.RemoveDuplicatedEmptyLinesSetting
-import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
+import org.scalaide.extensions.saveactions._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -48,7 +38,8 @@ object SaveActionExtensions {
     AutoFormattingSetting,
     AddMissingOverrideSetting,
     RemoveDuplicatedEmptyLinesSetting,
-    AddReturnTypeToPublicSymbolsSetting
+    AddReturnTypeToPublicSymbolsSetting,
+    TabToSpaceConverterSetting
   )
 
   /**
@@ -67,7 +58,8 @@ object SaveActionExtensions {
     RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
     AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
     AutoFormattingSetting -> AutoFormattingCreator.create _,
-    RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _
+    RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _,
+    TabToSpaceConverterSetting -> TabToSpaceConverterCreator.create _
   )
 
   private val compilerSaveActions = Seq(
