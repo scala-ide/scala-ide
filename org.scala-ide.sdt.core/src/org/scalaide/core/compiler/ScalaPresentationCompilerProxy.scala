@@ -77,7 +77,7 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
         else if (shouldRestart) {
           // Before restarting, keep track of the compilation units managed by the current presentation compiler
           unitsToReload = Option(pc).map(_.compilationUnits).getOrElse(Nil)
-          logger.debug("Restarting presentation compiler. The following units will be reloaded: " + unitsToReload)
+          logger.debug("Restarting presentation compiler. The following units will be reloaded: " + unitsToReload.map(_.file.name))
           restart()
         }
       }
