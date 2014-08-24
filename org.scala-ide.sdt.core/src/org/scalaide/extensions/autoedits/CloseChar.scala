@@ -1,0 +1,50 @@
+package org.scalaide.extensions
+package autoedits
+
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.text.IDocument
+import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.scalaide.core.text.Add
+
+object CloseCharSetting extends AutoEditSetting(
+  id = ExtensionSetting.fullyQualifiedName[CloseChar],
+  name = "Close char literals",
+  description = "Closes a typed opening char literal if necessary.",
+  partitions = Set(
+    IDocument.DEFAULT_CONTENT_TYPE,
+    ScalaPartitions.SCALA_MULTI_LINE_STRING,
+    ScalaPartitions.SCALADOC_CODE_BLOCK,
+    IJavaPartitions.JAVA_DOC,
+    IJavaPartitions.JAVA_MULTI_LINE_COMMENT
+  )
+)
+
+trait CloseChar extends AutoEdit {
+
+  override def setting() = CloseCharSetting
+
+  override def perform() = {
+    rule(textChange) {
+      case Add(start, "'") =>
+        if (autoClosingRequired(start))
+          Some(Add(start, "''") withLinkedModel (start+2, singleLinkedPos(start+1)))
+        else
+          None
+    }
+  }
+
+  def ch(i: Int, c: Char) = {
+    val o = textChange.start + i
+    o >= 0 && o < document.length && document(o) == c
+  }
+
+  def singleLinkedPos(pos: Int): Seq[Seq[(Int, Int)]] =
+    Seq(Seq((pos, 0)))
+
+  def autoClosingRequired(offset: Int): Boolean =
+    if (offset < document.length)
+      !ch(-1, ''') && Character.isWhitespace(document(offset))
+    else
+      !ch(-1, ''')
+
+}

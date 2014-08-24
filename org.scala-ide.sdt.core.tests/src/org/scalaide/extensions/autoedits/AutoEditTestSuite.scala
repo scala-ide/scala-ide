@@ -21,6 +21,7 @@ import org.junit.runners.Suite
   classOf[JumpOverClosingParenthesisTest],
   classOf[JumpOverClosingBracketTest],
   classOf[JumpOverClosingAngleBracketTest],
-  classOf[CloseStringTest]
+  classOf[CloseStringTest],
+  classOf[CloseCharTest]
 ))
 class AutoEditTestSuite
