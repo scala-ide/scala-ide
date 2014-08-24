@@ -475,7 +475,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
     def contentAssistant: IContentAssistant = fContentAssistant
 
-    override def sourceViewer: ISourceViewer = self.sourceViewer
+    override def sourceViewer: ISourceViewer = this
+
+    override def documentPartitioning: String = getDocumentPartitioning()
 
     override def updateTextViewer(cursorPos: Int): Unit = {
       val widgetCaret = modelOffset2WidgetOffset(cursorPos)

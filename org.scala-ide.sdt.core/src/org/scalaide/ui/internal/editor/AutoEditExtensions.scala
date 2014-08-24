@@ -75,6 +75,12 @@ trait AutoEditExtensions extends HasLogger {
   def sourceViewer: ISourceViewer
 
   /**
+   * The document partitioning of the editor, to which the auto edits should be
+   * applied to.
+   */
+  def documentPartitioning: String
+
+  /**
    * Needs to update the text viewer of the editor to which the auto edits are
    * applied to. This method is called by [[applyVerifyEvent]] after an auto
    * edit is applied to the underlying document.
@@ -191,7 +197,7 @@ trait AutoEditExtensions extends HasLogger {
    */
   private def performAutoEdits(udoc: IDocument, change: TextChange, handlers: Seq[Handler]): Unit = {
     val partition = TextUtilities.getPartition(
-        udoc, IDocumentExtension3.DEFAULT_PARTITIONING,
+        udoc, documentPartitioning,
         change.start, /* preferOpenPartitions */ true).getType()
 
     def configuredForPartition(partitions: Set[String]) =
