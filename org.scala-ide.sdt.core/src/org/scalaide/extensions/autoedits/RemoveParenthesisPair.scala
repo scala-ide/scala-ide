@@ -5,7 +5,7 @@ import org.scalaide.core.text.Remove
 
 object RemoveParenthesisPairSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[RemoveParenthesisPair],
-  name = "Remove pairs of parentheses",
+  name = "Remove pairs of (parentheses)",
   description =
     "In case the opening parenthesis is removed, this auto edit also" +
     " removes the closing parenthesis if it follows the opening parenthesis."
