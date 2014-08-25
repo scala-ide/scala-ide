@@ -50,10 +50,15 @@ trait ApplyTemplate extends AutoEdit {
     rule(textChange) {
       case Add(start, "\t") =>
         val r = ScalaWordFinder.findWord(document.text, start)
-        val word = document.textRange(r.getOffset(), r.getOffset()+r.getLength())
 
-        findTemplateByName(word) map { template =>
-          applyTemplate(template, start-word.length(), start)
+        if (r.getOffset()+r.getLength != start)
+          None
+        else {
+          val word = document.textRange(r.getOffset(), r.getOffset()+r.getLength())
+
+          findTemplateByName(word) map { template =>
+            applyTemplate(template, start-word.length(), start)
+          }
         }
     }
   }

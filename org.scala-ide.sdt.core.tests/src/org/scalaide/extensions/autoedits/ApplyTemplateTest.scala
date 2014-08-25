@@ -69,4 +69,19 @@ class ApplyTemplateTest extends AutoEditTests {
       }
     }
     """ after Add("\t")
+
+  @Test
+  def do_not_expand_template_when_cursor_is_located_before_text() = """
+    class X {
+      def f(i: Int) = {
+        ^match
+      }
+    }
+    """ becomes """
+    class X {
+      def f(i: Int) = {
+        \t^match
+      }
+    }
+    """.replaceAll("\\\\t", "\t") after Add("\t")
 }
