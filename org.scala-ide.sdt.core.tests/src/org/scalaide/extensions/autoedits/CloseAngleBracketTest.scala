@@ -18,8 +18,16 @@ class CloseAngleBracketTest extends AutoEditTests {
     "^" becomes "<[[]]>^" after bracket
 
   @Test
-  def auto_close_nested_opening() =
-    "<^>" becomes "<<[[]]>^>" after bracket
+  def auto_close_nested_opening() = {
+    "{[(<\"" zip "}])>\"" foreach {
+      case (o, c) ⇒
+        s"$o^$c" becomes s"$o<[[]]>^$c" after bracket
+    }
+  }
+
+  @Test
+  def no_auto_close_in_char_literal() =
+    "'^'" becomes "'<^'" after bracket
 
   @Test
   def auto_close_after_pending_closing() =

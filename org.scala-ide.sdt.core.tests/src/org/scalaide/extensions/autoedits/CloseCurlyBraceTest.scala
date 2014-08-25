@@ -19,8 +19,16 @@ class CloseCurlyBraceTest extends AutoEditTests {
     "^" becomes "{[[]]}^" after curlyBrace
 
   @Test
-  def auto_closing_nested_opening_brace() =
-    "{^}" becomes "{{[[]]}^}" after curlyBrace
+  def auto_close_nested_opening() = {
+    "{[(<\"" zip "}])>\"" foreach {
+      case (o, c) ⇒
+        s"$o^$c" becomes s"$o{[[]]}^$c" after curlyBrace
+    }
+  }
+
+  @Test
+  def no_auto_close_in_char_literal() =
+    "'^'" becomes "'{^'" after curlyBrace
 
   @Test
   def auto_closing_brace_after_pending_closing_brace() =

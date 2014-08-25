@@ -19,8 +19,16 @@ class CloseParenthesisTest extends AutoEditTests {
     "^" becomes "([[]])^" after paren
 
   @Test
-  def auto_close_nested_opening() =
-    "(^)" becomes "(([[]])^)" after paren
+  def auto_close_nested_opening() = {
+    "{[(<\"" zip "}])>\"" foreach {
+      case (o, c) ⇒
+        s"$o^$c" becomes s"$o([[]])^$c" after paren
+    }
+  }
+
+  @Test
+  def no_auto_close_in_char_literal() =
+    "'^'" becomes "'(^'" after paren
 
   @Test
   def auto_close_after_pending_closing() =

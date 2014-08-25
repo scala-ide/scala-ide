@@ -19,6 +19,18 @@ class CloseStringTest extends AutoEditTests {
     "^" becomes "\"[[]]\"^" after stringLit
 
   @Test
+  def auto_close_nested_opening() = {
+    "{[(<" zip "}])>" foreach {
+      case (o, c) ⇒
+        s"$o^$c" becomes s"""$o"[[]]"^$c""" after stringLit
+    }
+  }
+
+  @Test
+  def no_auto_close_in_char_literal() =
+    "'^'" becomes "'\"^'" after stringLit
+
+  @Test
   def no_auto_close_on_existing_string_literal_before_caret() =
     "\"^" becomes "\"\"^" after stringLit
 

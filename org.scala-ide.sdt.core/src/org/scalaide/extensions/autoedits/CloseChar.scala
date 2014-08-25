@@ -41,9 +41,12 @@ trait CloseChar extends AutoEdit {
   def singleLinkedPos(pos: Int): Seq[Seq[(Int, Int)]] =
     Seq(Seq((pos, 0)))
 
+  def isNested(offset: Int) =
+    document.textRangeOpt(offset-1, offset+1) exists (Set("{}", "[]", "()", "<>", "\"\"")(_))
+
   def autoClosingRequired(offset: Int): Boolean =
     if (offset < document.length)
-      !ch(-1, ''') && Character.isWhitespace(document(offset))
+      !ch(-1, ''') && (Character.isWhitespace(document(offset)) || isNested(offset))
     else
       !ch(-1, ''')
 

@@ -11,11 +11,12 @@ trait CloseMatchingPair extends AutoEdit {
     Seq(Seq((pos, 0)))
 
   /**
-   * Checks if it is necessary to insert a closing brace. Normally this is
-   * always the case with two exceptions:
+   * Checks if it is necessary to insert a closing element. Normally this is
+   * always the case with these exceptions:
    *
    * 1. The caret is positioned directly before non white space
-   * 2. There are unmatched closing braces after the caret position.
+   * 2. There are unmatched closing elements after the caret position
+   * 3. The caret is located in a pair of matching elements
    */
   def autoClosingRequired(offset: Int): Boolean = {
     val lineInfo = document.lineInformationOfOffset(offset)
@@ -34,10 +35,13 @@ trait CloseMatchingPair extends AutoEdit {
       val hasClosing = lineAfterCaret.contains(closing) && !lineAfterCaret.takeWhile(_ != closing).contains(opening)
       val hasOpening = lineBeforeCaret.contains(opening) && !lineBeforeCaret.reverse.takeWhile(_ != opening).contains(closing)
 
+      def isNested =
+        document.textRangeOpt(offset-1, offset+1) exists (Set("{}", "[]", "()", "<>", "\"\"")(_))
+
       if (hasOpening && hasClosing)
         relevant <= 0
       else
-        Character.isWhitespace(lineAfterCaret(0))
+        Character.isWhitespace(lineAfterCaret(0)) || isNested
     }
   }
 }
