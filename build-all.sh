@@ -9,8 +9,8 @@ ROOT_DIR=${PWD}
 
 if [ -z "$*" ]
 then
-  MVN_ARGS="-Pscala-2.11.x -Peclipse-kepler clean install"
-  MVN_P2_ARGS="-Dtycho.localArtifacts=ignore -Pscala-2.11.x -Peclipse-kepler clean verify"
+  MVN_ARGS="-Pscala-2.11.x -Peclipse-luna clean install"
+  MVN_P2_ARGS="-Dtycho.localArtifacts=ignore -Pscala-2.11.x -Peclipse-luna clean verify"
 else
   MVN_ARGS="$*"
   MVN_P2_ARGS="-Dtycho.localArtifacts=ignore $*"

@@ -15,7 +15,7 @@ Require-Bundle:
  org.eclipse.debug.core,
  org.eclipse.debug.ui,
  org.eclipse.help,
- org.eclipse.jdt.core;bundle-version="[@JDTCORE_MIN@,4.0.0)",
+ org.eclipse.jdt.core;bundle-version="@JDTCORE_RANGE@",
  org.eclipse.jdt.core.manipulation,
  org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
