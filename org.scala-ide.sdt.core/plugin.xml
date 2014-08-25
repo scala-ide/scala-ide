@@ -988,9 +988,6 @@
     <provider class="org.scalaide.core.internal.jdt.search.ScalaSourceIndexerFactory" />
   </extension>
 
-  <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
-    <provider class="org.scalaide.ui.internal.editor.ScalaSpellingEngineProvider" />
-  </extension>
 
   <extension point="org.scala-ide.sdt.aspects.openactionprovider">
     <provider class="org.scalaide.ui.internal.actions.hyperlinks.OpenActionProvider" />
