@@ -129,8 +129,8 @@ object SWTUtils {
    * Creates a multi line text area, whose layout data interops with the grid
    * layout.
    */
-  def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
-    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
+  def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1, style: Int = 0): Text = {
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | style)
     t.setText(initialText)
     t.setLayoutData({
       val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)

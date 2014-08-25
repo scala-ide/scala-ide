@@ -33,7 +33,7 @@ trait AutoEdit extends ScalaIdeExtension with DocumentSupport {
 }
 
 case class AutoEditSetting(
-  id: String,
+  override val id: String,
   name: String,
   description: String,
   partitions: Set[String] = Set()

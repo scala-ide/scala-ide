@@ -8,14 +8,15 @@ import org.eclipse.jface.viewers.CheckboxTableViewer
 import org.eclipse.jface.viewers.ColumnWeightData
 import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.SelectionChangedEvent
+import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.jface.viewers.TableViewerColumn
 import org.eclipse.jface.viewers.Viewer
 import org.eclipse.swt.SWT
+import org.eclipse.swt.events.ModifyEvent
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
@@ -23,6 +24,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.ScalaPlugin
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.ui.internal.editor.AutoEditExtensions
+import org.scalaide.util.internal.Commons
 import org.scalaide.util.internal.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
@@ -31,11 +33,13 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
   private val prefStore = ScalaPlugin.prefStore
 
   private var descriptionArea: Text = _
+  private var configurationArea: Text = _
   private var viewer: CheckboxTableViewer = _
 
   private val settings = AutoEditExtensions.autoEditSettings.toArray
 
   private var changes = Set[AutoEditSetting]()
+  private var configurations = Set[(AutoEditSetting, String)]()
 
   override def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
@@ -71,9 +75,51 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     viewer.setAllChecked(false)
     viewer.setCheckedElements(settings.filter(isEnabled).asInstanceOf[Array[AnyRef]])
 
-    mkLabel(base, "Description:", columnSize = 2)
+    mkLabel(base, "Configuration:", columnSize = 2)
+    configurationArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
+    configurationArea.addModifyListener { e: ModifyEvent ⇒
 
-    descriptionArea = mkTextArea(base, lineHeight = 6, columnSize = 2)
+      /**
+       * Checks if the following properties are hold:
+       * - each line contains one key-value pair
+       * - a key-value pair is separated by a '=' sign
+       * - no value needs to be specified, in this case the value is treated as
+       *   the value 'true'
+       */
+      def isValid(str: String): Boolean = {
+        str.isEmpty() || Commons.split(str, '\n').forall { line ⇒
+          Commons.split(line, '=') match {
+            case Seq(k, v) if k.nonEmpty ⇒ true
+            case Seq(k) if k.nonEmpty ⇒ true
+            case _ ⇒ false
+          }
+        }
+      }
+
+      val text = configurationArea.getText()
+      if (!isValid(text)) {
+        setValid(false)
+        setErrorMessage("Invalid configuration")
+      }
+      else {
+        setValid(true)
+        setErrorMessage(null)
+
+        viewer.getSelection() match {
+          case s: StructuredSelection ⇒
+            Option(s.getFirstElement()).map(_.asInstanceOf[AutoEditSetting]) foreach { aes ⇒
+              val existingConfig = autoEditConfig(aes)
+
+              configurations = configurations.filter(_._1 != aes)
+              if (existingConfig != text)
+                configurations += (aes → text)
+            }
+        }
+      }
+    }
+
+    mkLabel(base, "Description:", columnSize = 2)
+    descriptionArea = mkTextArea(base, lineHeight = 6, columnSize = 2, style = SWT.READ_ONLY)
 
     base
   }
@@ -81,9 +127,12 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
   override def init(workbench: IWorkbench): Unit = ()
 
   override def performOk(): Boolean = {
-    changes foreach { saveAction =>
-      val previousValue = prefStore.getBoolean(saveAction.id)
-      prefStore.setValue(saveAction.id, !previousValue)
+    changes foreach { autoEdit =>
+      val previousValue = prefStore.getBoolean(autoEdit.id)
+      prefStore.setValue(autoEdit.id, !previousValue)
+    }
+    configurations foreach { case (aes, config) =>
+      prefStore.setValue(s"${aes.id}.config", config)
     }
     super.performOk()
   }
@@ -92,8 +141,13 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     viewer.setAllChecked(false)
     changes = Set()
     settings foreach (changes += _)
+    configurations = Set()
+    settings foreach (configurations += _ → "")
     super.performDefaults
   }
+
+  private def autoEditConfig(autoEdit: AutoEditSetting): String =
+    prefStore.getString(s"${autoEdit.id}.config")
 
   private def isEnabled(autoEdit: AutoEditSetting): Boolean =
     prefStore.getBoolean(autoEdit.id)
@@ -107,6 +161,8 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
 
   private def selectAutoEdit(autoEdit: AutoEditSetting) = {
     descriptionArea.setText(autoEdit.description)
+    val changedConfig = configurations.find(_._1 == autoEdit).fold(autoEditConfig(autoEdit))(_._2)
+    configurationArea.setText(changedConfig)
   }
 
   private object ContentProvider extends IStructuredContentProvider {

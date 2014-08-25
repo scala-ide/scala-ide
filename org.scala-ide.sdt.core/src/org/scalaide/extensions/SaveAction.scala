@@ -53,7 +53,7 @@ trait SaveAction extends ScalaIdeExtension {
  *        show users how they change the code.
  */
 case class SaveActionSetting(
-  id: String,
+  override val id: String,
   name: String,
   description: String,
   codeExample: String
