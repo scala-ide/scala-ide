@@ -39,7 +39,8 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |the sections marked with ${}. If enter is pressed while the linked model \
        |is still active, the cursor jumps immediately to the section marked \
        |by ${cursor}.
-       |""".stripMargin.replaceAll("\\\\\n", "")
+       |""".stripMargin.replaceAll("\\\\\n", ""),
+  partitions = Set(IDocument.DEFAULT_CONTENT_TYPE)
 )
 
 trait ApplyTemplate extends AutoEdit {
