@@ -19,6 +19,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.internal.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.IWorkbenchWindow
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
@@ -37,7 +38,7 @@ object SWTUtils {
 
   def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
 
-  def getWorkbenchWindow = {
+  def getWorkbenchWindow: Option[IWorkbenchWindow] = {
     val workbench = PlatformUI.getWorkbench
     Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
   }
