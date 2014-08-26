@@ -43,7 +43,7 @@ import org.scalaide.core.ScalaPlugin
 import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 
-class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(project: ScalaProject, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -53,7 +53,7 @@ class ScalaPresentationCompiler(project: ScalaProject, settings: Settings) exten
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -454,26 +454,29 @@ object ScalaPresentationCompiler {
       if (pos.isDefined) {
         val source = pos.source
         val start = pos.point
-        val end = start + ScalaWordFinder.findWord(source.content, start).getLength() - 1
-        val fileName =
-          source.file match {
-            case EclipseFile(file) =>
-              Some(file.getFullPath().toString.toCharArray)
-            case vf: VirtualFile =>
-              Some(vf.path.toCharArray)
-            case _ =>
-              None
-          }
-        fileName.map(new DefaultProblem(
-          _,
-          formatMessage(msg),
-          0,
-          new Array[String](0),
-          nscSeverityToEclipse(severityLevel),
-          start,
-          end,
-          pos.line,
-          pos.column))
+
+        ScalaWordFinder.findWord(source.content, start) flatMap { region ⇒
+          val end = start + region.getLength() - 1
+          val fileName =
+            source.file match {
+              case EclipseFile(file) =>
+                Some(file.getFullPath().toString.toCharArray)
+              case vf: VirtualFile =>
+                Some(vf.path.toCharArray)
+              case _ =>
+                None
+            }
+          fileName.map(new DefaultProblem(
+            _,
+            formatMessage(msg),
+            0,
+            new Array[String](0),
+            nscSeverityToEclipse(severityLevel),
+            start,
+            end,
+            pos.line,
+            pos.column))
+        }
       } else None
     }
 
