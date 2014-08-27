@@ -9,7 +9,6 @@ import org.junit.Assert._
 import org.junit.Test
 import org.junit.BeforeClass
 import org.junit.AfterClass
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
@@ -22,24 +21,21 @@ import org.eclipse.core.runtime.Platform
 import org.osgi.service.prefs.Preferences
 import scala.tools.nsc.Settings
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.testsetup.SDTTestUtils
 
 object CompilerSettingsTest {
-  private val simulator = new EclipseUserSimulator
   private var project: IScalaProject = _
 
   @BeforeClass
   def createProject() {
-    project = simulator.createProjectInWorkspace("compiler-settings", true)
+    project = SDTTestUtils.createProjectInWorkspace("compiler-settings", true)
   }
 
   @AfterClass
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 }
-
 
 /** Note that project.scalacArguments feeds itself from ScalaProject.storage,
  *  which returns a project-scoped store or the instance-scoped workspace store,
@@ -99,7 +95,6 @@ class CompilerSettingsTest {
     val instanceStore = new ScopedPreferenceStore(InstanceScope.INSTANCE, SdtConstants.PluginId)
     assertFalse("Settings should not contain deprecation setting: " + project.scalacArguments, instanceStore.getString("deprecation") == "true")
   }
-
 
   @Test
   def instance_settings_need_no_flag() {

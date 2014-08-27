@@ -17,7 +17,6 @@ import org.scalaide.core.IScalaPlugin
 
 class ProjectDependenciesTest {
 
-  val simulator = new EclipseUserSimulator
   import SDTTestUtils._
 
   @Test def transitive_dependencies_no_export() {

@@ -7,7 +7,6 @@ import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.AfterClass
 import org.junit.ComparisonFailure
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -132,8 +131,7 @@ trait CompilerSupport extends EclipseDocumentSupport {
   val projectName: String = getClass().getSimpleName()
 
   private val project: IScalaProject = {
-    val simulator = new EclipseUserSimulator
-    simulator.createProjectInWorkspace(projectName)
+    SDTTestUtils.createProjectInWorkspace(projectName)
   }
 
   override def runTest(source: String, operation: Operation): Unit = {
@@ -157,7 +155,7 @@ trait CompilerSupport extends EclipseDocumentSupport {
    */
   final def mkCompilationUnit(source: String): ICompilationUnit = {
     val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
-    new EclipseUserSimulator().createCompilationUnit(p, "testfile.scala", source)
+    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source)
   }
 
   final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =

@@ -34,8 +34,6 @@ import scala.language.reflectiveCalls
 class FindReferencesTests extends FindReferencesTester with HasLogger {
   private final val TestProjectName = "find-references"
 
-  private val simulator = new EclipseUserSimulator
-
   private var projectSetup: TestProjectSetup = _
 
   def project: IScalaProject = projectSetup.project
@@ -49,7 +47,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   @Before
   def createProject() {
-    val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
+    val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
     }

@@ -30,6 +30,7 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Presenter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.core.internal.decorators.semantichighlighting._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
+import org.scalaide.core.testsetup.SDTTestUtils
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._
@@ -37,7 +38,6 @@ class SemanticHighlightingPositionsTest {
   private val MarkerRegex: Regex = """/\*\^\*/""".r
   private val Marker = "/*^*/"
 
-  protected val simulator = new EclipseUserSimulator
   private var project: IScalaProject = _
 
   private var sourceView: ISourceViewer = _
@@ -59,14 +59,12 @@ class SemanticHighlightingPositionsTest {
 
   @Before
   def createProject() {
-    project = simulator.createProjectInWorkspace("semantic-highlighting-positions-update", true)
+    project = SDTTestUtils.createProjectInWorkspace("semantic-highlighting-positions-update", true)
   }
 
   @After
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 
   @Before
@@ -85,8 +83,8 @@ class SemanticHighlightingPositionsTest {
 
   private def setTestCode(code: String): Unit = {
     testCode = code.stripMargin
-    val emptyPkg = simulator.createPackage("")
-    unit = simulator.createCompilationUnit(emptyPkg, "A.scala", testCode).asInstanceOf[ScalaCompilationUnit]
+    val emptyPkg = SDTTestUtils.createSourcePackage("")(project)
+    unit = SDTTestUtils.createCompilationUnit(emptyPkg, "A.scala", testCode).asInstanceOf[ScalaCompilationUnit]
     when(compilationUnitEditor.getInteractiveCompilationUnit).thenReturn(unit)
     document.set(testCode)
   }

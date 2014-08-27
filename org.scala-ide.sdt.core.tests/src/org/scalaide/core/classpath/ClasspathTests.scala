@@ -15,7 +15,6 @@ import org.eclipse.core.resources.IMarker
 import org.scalaide.core.IScalaPlugin
 import org.junit.After
 import org.junit.Ignore
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -35,9 +34,7 @@ object ClasspathTests extends TestProjectSetup("classpath") {
 
   @AfterClass
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 
 }
@@ -61,8 +58,6 @@ class ClasspathTests {
   // 60s should be enough even for Jenkins builds running under high-load
   // (increased from 10s)
   val TIMEOUT = 60000
-
-  val simulator = new EclipseUserSimulator
 
   /**
    * The default classpath, with the eclipse scala container.
@@ -355,7 +350,7 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0)
 
     // create a second project
-    val secondProject= simulator.createProjectInWorkspace("classpathMultipleProject")
+    val secondProject= SDTTestUtils.createProjectInWorkspace("classpathMultipleProject")
 
     val secondProjectCleanRawClasspath= for (classpathEntry <- secondProject.javaProject.getRawClasspath()
         if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER")
@@ -387,7 +382,6 @@ class ClasspathTests {
   @Test
   def differentAndIncompatibleVersion() {
     val newRawClasspath= cleanRawClasspath :+ createIncompatibleScalaLibraryEntry()
-
 
     setRawClasspathAndCheckMarkers(newRawClasspath, 0, 1)
   }
@@ -514,7 +508,6 @@ class ClasspathTests {
 
     assertEquals("unexpected number of scala problems in project: " + errors, 1, errors.length)
   }
-
 
   /**
    * check the code is not compiled if the classpath is not right (no error reported in scala files)

@@ -8,7 +8,6 @@ import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -18,7 +17,6 @@ import org.eclipse.core.runtime.IPath
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathContainer
 import org.scalaide.core.IScalaPlugin
@@ -35,16 +33,14 @@ import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.testsetup.SDTTestUtils
 
 object DesiredScalaInstallationTests {
-  private val simulator = new EclipseUserSimulator
   private var projects: List[ScalaProject] = List()
 
     @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
-      projects foreach (_.underlying.delete(/* force */ true, new NullProgressMonitor))
-    }
+    SDTTestUtils.deleteProjects(projects: _*)
   }
 }
 
@@ -66,12 +62,10 @@ class DesiredScalaInstallationTests {
   def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.find { si => si != dsi }
 
   def createProject(): ScalaProject = {
-    import ClasspathContainersTests.simulator
-    val project = simulator.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
+    val project = SDTTestUtils.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
     projects = project :: projects
     project
   }
-
 
   @After
   def deleteProjects() {

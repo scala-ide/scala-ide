@@ -12,24 +12,21 @@ import org.eclipse.jface.text.IRegion
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import org.scalaide.util.internal.eclipse.RegionUtils
+import org.scalaide.core.testsetup.SDTTestUtils
 
 class AbstractSymbolClassifierTest {
   import RegionUtils._
-
-  protected val simulator = new EclipseUserSimulator
 
   private var project: IScalaProject = _
 
   @Before
   def createProject() {
-    project = simulator.createProjectInWorkspace("symbols-classification", true)
+    project = SDTTestUtils.createProjectInWorkspace("symbols-classification", true)
   }
 
   @After
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 
   protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]) {

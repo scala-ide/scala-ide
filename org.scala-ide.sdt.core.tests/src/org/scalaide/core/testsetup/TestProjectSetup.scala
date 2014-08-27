@@ -14,7 +14,6 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
 import org.eclipse.core.resources.IFile
-import org.scalaide.core.EclipseUserSimulator
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
  *
@@ -30,7 +29,7 @@ import org.scalaide.core.EclipseUserSimulator
  */
 class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
-  lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
+  override lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
 
   /** The package root corresponding to /src inside the project. */
   lazy val srcPackageRoot: IPackageFragmentRoot = {
@@ -72,7 +71,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
 
   def createSourceFile(packageName: String, unitName: String)(contents: String): ScalaSourceFile = {
     val pack = SDTTestUtils.createSourcePackage(packageName)(project)
-    new EclipseUserSimulator().createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
+    SDTTestUtils.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
   def reload(unit: ScalaCompilationUnit) {

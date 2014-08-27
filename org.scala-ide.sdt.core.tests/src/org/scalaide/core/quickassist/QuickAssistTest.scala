@@ -13,19 +13,18 @@ import scala.collection.immutable
 
 trait QuickAssistTest {
   var project: IScalaProject = _
-  var simulator = new EclipseUserSimulator
 
   def create(name: String) {
-    project = simulator.createProjectInWorkspace(name)
+    project = SDTTestUtils.createProjectInWorkspace(name)
   }
 
   def createSourceFile(packageName: String, unitName: String)(contents: String): ScalaSourceFile = {
     val pack = SDTTestUtils.createSourcePackage(packageName)(project)
-    simulator.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
+    SDTTestUtils.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
   def delete() {
-    Exception.ignoring(classOf[Exception]) { project.underlying.delete(true, null) }
+    SDTTestUtils.deleteProjects(project)
   }
 }
 
