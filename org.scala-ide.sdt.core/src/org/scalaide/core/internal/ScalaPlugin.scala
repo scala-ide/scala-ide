@@ -149,7 +149,6 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     if (ScalaProject.isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
-      logger.debug("`%s` is not a Scala Project.".format(project.getName()))
       None
     }
   }

@@ -40,8 +40,14 @@ trait IScalaPlugin extends AbstractUIPlugin with HasLogger {
    */
   lazy val shortScalaVersion: String = CompilerUtils.shortString(scalaVersion)
 
-  /** Returns the ScalaProject for the given project.
-   *  Bevahior is undefined if the given project doesn't have the Scala nature.
+  /** Always returns the ScalaProject for the given project, creating a
+   *  new instance if needed.
+   *
+   *  The given project has to have the Scala nature,
+   *  otherwise it might lead to errors later on.
+   *
+   *  If it is not known if the project has the Scala nature or not,
+   *  use [[org.scalaide.core.IScalaPlugin!.asScalaProject]] instead.
    */
   def getScalaProject(project: IProject): ScalaProject
 
