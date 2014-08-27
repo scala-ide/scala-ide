@@ -16,8 +16,9 @@ import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import org.scalaide.logging.LogManager
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.SdtConstants
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
@@ -44,9 +45,9 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     messageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
     messageField.setText(
         s"""|Scala IDE version:
-            |        ${ScalaPlugin.plugin.getBundle.getVersion}
+            |        ${IScalaPlugin().getBundle.getVersion}
             |Scala compiler version:
-            |        ${ScalaPlugin.plugin.scalaVer.unparse}
+            |        ${IScalaPlugin().scalaVersion.unparse}
             |Scala library version:
             |        ${platformInstallation.version.unparse}
             |Eclipse version:
@@ -65,7 +66,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     logFileLink.addListener(SWT.Selection, OpenExternalFile(LogManager.logFile))
 
     val reportBugLink = new Link(group2, SWT.NONE)
-    reportBugLink.setText(s""" and <a href="${ScalaPlugin.IssueTracker}">report a bug</a>.""")
+    reportBugLink.setText(s""" and <a href="${SdtConstants.IssueTracker}">report a bug</a>.""")
     reportBugLink.addListener(SWT.Selection, new LinkListener())
 
     control

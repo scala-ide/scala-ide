@@ -3,6 +3,7 @@ package org.scalaide.util.internal.eclipse
 import java.io.ByteArrayInputStream
 import java.io.File
 
+import org.scalaide.util.internal.eclipse.EclipseUtils.workspaceRunnableIn
 import scala.tools.nsc.io.AbstractFile
 import scala.util.Try
 
@@ -21,9 +22,12 @@ import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
-import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.resources.EclipseResource
 import org.eclipse.core.filesystem.URIUtil
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.internal.resources.ResourceException
+import java.io.File
+import org.scalaide.core.SdtConstants
 
 object FileUtils {
 
@@ -53,26 +57,26 @@ object FileUtils {
 
   def clearBuildErrors(file: IFile, monitor: IProgressMonitor) =
     try {
-      file.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+      file.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _: ResourceException =>
     }
 
   def clearTasks(file: IFile, monitor: IProgressMonitor) =
     try {
-      file.deleteMarkers(plugin.taskMarkerId, true, IResource.DEPTH_INFINITE)
+      file.deleteMarkers(SdtConstants.TaskMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _: ResourceException =>
     }
 
   def findBuildErrors(file: IResource): Seq[IMarker] =
-    file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    file.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
 
   def hasBuildErrors(file: IResource): Boolean =
-    file.findMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
+    file.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
 
   def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
-    val mrk = file.createMarker(plugin.taskMarkerId)
+    val mrk = file.createMarker(SdtConstants.TaskMarkerId)
     val values = new Array[AnyRef](taskMarkerAttributeNames.length)
 
     val prioNum = priority match {
@@ -141,4 +145,18 @@ object FileUtils {
     resources.find(prefix isPrefixOf _.getFullPath)
   }
 
+  /** Is the file buildable by the Scala plugin? In other words, is it a
+   *  Java or Scala source file?
+   *
+   *  @note If you don't have an IFile yet, prefer the String overload, as
+   *        creating an IFile is usually expensive
+   */
+  def isBuildable(file: IFile): Boolean =
+    isBuildable(file.getName())
+
+  /** Is the file buildable by the Scala plugin? In other words, is it a
+   *  Java or Scala source file?
+   */
+  def isBuildable(fileName: String): Boolean =
+    (fileName.endsWith(SdtConstants.ScalaFileExtn) || fileName.endsWith(SdtConstants.JavaFileExtn))
 }

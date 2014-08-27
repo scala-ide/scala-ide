@@ -7,7 +7,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.events.PaintEvent
 import org.eclipse.swt.events.PaintListener
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 /**
  * This provides a painter that already handles all state necessary to detect if
@@ -18,7 +18,7 @@ abstract class EditorPainter(viewer: ISourceViewer, enablePreference: String) ex
     with IPainter with PaintListener with IPropertyChangeListener {
 
   protected val widget = viewer.getTextWidget()
-  protected val store = ScalaPlugin.prefStore
+  protected val store = IScalaPlugin().getPreferenceStore()
 
   private var isActive = false
   private var isEnabled = store.getBoolean(enablePreference)

@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IProgressMonitor
 import java.util.{ Set => JSet }
 import org.eclipse.jdt.core.IType
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaProject
@@ -84,7 +84,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
 
     val emptySet = immutable.Set[String]()
 
-    val res = ScalaPlugin.plugin.asScalaProject(javaProject.getProject()) map { scalaProject =>
+    val res = IScalaPlugin().asScalaProject(javaProject.getProject()) map { scalaProject =>
       scalaProject.presentationCompiler { comp =>
         import comp._
         object helper extends JUnit4TestClassesCollector { val global: comp.type = comp }
@@ -115,7 +115,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
    */
   private def findTestsInContainer1(element: IJavaElement, result: mutable.Set[IType], _pm: IProgressMonitor): Unit = {
     val pm = if (_pm == null) new NullProgressMonitor else _pm
-    val scalaProject = ScalaPlugin.plugin.asScalaProject(element.getJavaProject().getProject()).get // we know it's a Scala project or we wouldn't be here
+    val scalaProject = IScalaPlugin().asScalaProject(element.getJavaProject().getProject()).get // we know it's a Scala project or we wouldn't be here
 
     val progress = SubMonitor.convert(pm, JUnitMessages.JUnit4TestFinder_searching_description, 4)
     try {

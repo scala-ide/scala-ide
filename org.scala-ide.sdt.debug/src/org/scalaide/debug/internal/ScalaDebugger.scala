@@ -1,6 +1,6 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.debug.internal.ui.contexts.DebugContextManager
@@ -57,7 +57,7 @@ object ScalaDebugger {
   }
 
   def init() {
-    if (!ScalaPlugin.plugin.headlessMode) {
+    if (!IScalaPlugin().headlessMode) {
       ScalaDebuggerContextListener.register()
     }
   }

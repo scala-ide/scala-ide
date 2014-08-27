@@ -10,7 +10,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.PlatformUI
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.ui.menus.UIElement
 import org.scalaide.ui.internal.editor.decorators.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
@@ -28,7 +28,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils
  */
 abstract class AbstractToggleHandler(commandId: String, preferenceId: String) extends AbstractHandler with IElementUpdater {
 
-  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  private def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
 
   /** Call when the button is push.
    */

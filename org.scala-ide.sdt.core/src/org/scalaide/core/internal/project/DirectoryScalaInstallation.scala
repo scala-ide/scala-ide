@@ -11,8 +11,7 @@ import scala.tools.nsc.settings.ScalaVersion
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.core.internal.ScalaPlugin
 import sbt.ScalaInstance
 import java.util.zip.ZipEntry
 import org.scalaide.util.internal.CompilerUtils.isBinarySame

@@ -17,6 +17,9 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.internal.ui.DisplayThread
+import org.eclipse.ui.PlatformUI
+import org.eclipse.swt.widgets.Shell
+import org.eclipse.ui.IWorkbenchWindow
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
@@ -31,6 +34,13 @@ object SWTUtils {
   @deprecated("Use org.scalaide.util.internal.ui.DisplayThread.syncExec", "3.0.0")
   def syncExec(f: => Unit) {
     DisplayThread.syncExec(f)
+  }
+
+  def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
+
+  def getWorkbenchWindow: Option[IWorkbenchWindow] = {
+    val workbench = PlatformUI.getWorkbench
+    Option(workbench.getActiveWorkbenchWindow) orElse workbench.getWorkbenchWindows.headOption
   }
 
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {

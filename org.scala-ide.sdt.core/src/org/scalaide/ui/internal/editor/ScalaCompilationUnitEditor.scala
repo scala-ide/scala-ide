@@ -12,7 +12,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPainter
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
@@ -25,7 +25,7 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   scalaPrefStore.addPropertyChangeListener(preferenceListener)
 
-  protected def scalaPrefStore = ScalaPlugin.prefStore
+  protected def scalaPrefStore = IScalaPlugin().getPreferenceStore()
   def javaPrefStore = super.getPreferenceStore
 
   override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {

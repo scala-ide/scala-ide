@@ -8,6 +8,8 @@ import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.search.SearchRequestor
 import org.eclipse.jdt.core.search.SearchMatch
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.ScalaPlugin
 
 class EclipseUserSimulator {
   import org.eclipse.jdt.core._
@@ -29,7 +31,7 @@ class EclipseUserSimulator {
     project.open(null)
 
     val description = project.getDescription()
-    description.setNatureIds(Array(ScalaPlugin.plugin.natureId, JavaCore.NATURE_ID))
+    description.setNatureIds(Array(SdtConstants.NatureId, JavaCore.NATURE_ID))
     project.setDescription(description, null)
 
     val javaProject = JavaCore.create(project)
@@ -45,10 +47,10 @@ class EclipseUserSimulator {
       entries += JavaCore.newSourceEntry(root.getPath())
     }
 
-    entries += JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId))
+    entries += JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId))
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
 
-    ScalaPlugin.plugin.getScalaProject(project)
+    ScalaPlugin().getScalaProject(project)
   }
 
   def createPackage(packageName: String): IPackageFragment =

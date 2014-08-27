@@ -15,9 +15,10 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.util.internal.ReflectionUtils
+import org.scalaide.core.SdtConstants
 
 class ScalaProjectWizard extends {
     val pageOne = new NewScalaProjectWizardPageOne
@@ -34,7 +35,7 @@ class ScalaProjectWizard extends {
 
 class NewScalaProjectWizardPageOne extends NewJavaProjectWizardPageOne {
   override def getDefaultClasspathEntries() : Array[IClasspathEntry] =
-    (JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)) +=: ArrayBuffer(super.getDefaultClasspathEntries : _*)).toArray
+    (JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)) +=: ArrayBuffer(super.getDefaultClasspathEntries : _*)).toArray
 }
 
 class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extends NewJavaProjectWizardPageTwo(pageOne) {
@@ -61,7 +62,7 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
     if (!project.hasNature(JavaCore.NATURE_ID)) {
       val desc = project.getDescription
       val natures = ArrayBuffer(desc.getNatureIds : _*)
-      natures += ScalaPlugin.plugin.natureId
+      natures += SdtConstants.NatureId
       natures += JavaCore.NATURE_ID
       desc.setNatureIds(natures.toArray)
       project.setDescription(desc, monitor)

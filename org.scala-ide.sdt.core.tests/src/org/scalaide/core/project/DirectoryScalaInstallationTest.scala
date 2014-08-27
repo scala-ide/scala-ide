@@ -10,7 +10,7 @@ import scala.tools.nsc.settings.Development
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.api.ScalaModule
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.junit.AfterClass
 import org.scalaide.util.internal.eclipse.EclipseUtils
 
@@ -18,7 +18,7 @@ object DirectoryScalaInstallationTest extends TestProjectSetup("classpath") {
 
   @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
       project.underlying.delete(/* force */ true, new NullProgressMonitor)
     }
   }

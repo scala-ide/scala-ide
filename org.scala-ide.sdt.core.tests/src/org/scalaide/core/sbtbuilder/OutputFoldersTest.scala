@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.api.ScalaProject
 import testsetup.SDTTestUtils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.junit.Before
 
 /** Test simple operations involving the source and output

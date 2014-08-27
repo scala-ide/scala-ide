@@ -6,7 +6,7 @@
 package org.scalaide.core
 package semantic
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Before
 import org.junit.Test
@@ -21,7 +21,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
 
   @Before
   def setPreferences() {
-    ScalaPlugin.plugin.getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
+    IScalaPlugin().getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
   }
 
   @Test

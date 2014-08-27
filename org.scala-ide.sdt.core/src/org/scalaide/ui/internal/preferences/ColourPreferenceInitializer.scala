@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.resource.StringConverter
@@ -11,13 +11,13 @@ import org.scalaide.ui.syntax.ScalaSyntaxClass
 class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
-    if (!ScalaPlugin.plugin.headlessMode) {
+    if (!IScalaPlugin().headlessMode) {
       doInitializeDefaultPreferences()
     }
   }
 
   private def doInitializeDefaultPreferences() {
-    val scalaPrefStore = ScalaPlugin.prefStore
+    val scalaPrefStore = IScalaPlugin().getPreferenceStore()
 
     scalaPrefStore.setDefault(ENABLE_SEMANTIC_HIGHLIGHTING, true)
     scalaPrefStore.setDefault(USE_SYNTACTIC_HINTS, true)

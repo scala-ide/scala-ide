@@ -11,8 +11,8 @@ import org.eclipse.ltk.core.refactoring.Change
 import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.ProgressHelpers
-import org.scalaide.core.ScalaPlugin
 import scala.tools.refactoring.common.TextChange
+import org.eclipse.jdt.core.JavaCore
 
 class ScalaMoveParticipant extends MoveParticipant {
 
@@ -33,7 +33,7 @@ class ScalaMoveParticipant extends MoveParticipant {
 
     getArguments.getDestination match {
       case destination: IFolder =>
-        val javaProject = ScalaPlugin.plugin.getJavaProject(resourceToMove.getProject)
+        val javaProject = JavaCore.create(resourceToMove.getProject)
         val targetPackage = javaProject.findPackageFragment(destination.getFullPath)
 
         if(targetPackage == null) {

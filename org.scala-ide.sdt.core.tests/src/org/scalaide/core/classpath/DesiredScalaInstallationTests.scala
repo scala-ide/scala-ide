@@ -9,7 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
@@ -21,7 +21,7 @@ import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathContainer
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.jdt.core.JavaCore
 import org.junit.After
 import org.eclipse.core.runtime.Path
@@ -34,6 +34,7 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.internal.project.LabeledScalaInstallation
+import org.scalaide.core.SdtConstants
 
 object DesiredScalaInstallationTests {
   private val simulator = new EclipseUserSimulator
@@ -41,7 +42,7 @@ object DesiredScalaInstallationTests {
 
     @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
       projects foreach (_.underlying.delete(/* force */ true, new NullProgressMonitor))
     }
   }
@@ -50,13 +51,13 @@ object DesiredScalaInstallationTests {
 class DesiredScalaInstallationTests {
   import DesiredScalaInstallationTests._
 
-  val libraryId = ScalaPlugin.plugin.scalaLibId
+  val libraryId = SdtConstants.ScalaLibContId
   def getLibraryJar(project: api.ScalaProject) = {
     val libraryContainer = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
     libraryContainer.getClasspathEntries() find {e => (""".*scala-library(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
-  val compilerId = ScalaPlugin.plugin.scalaCompilerId
+  val compilerId = SdtConstants.ScalaCompilerContId
   def getCompilerJar(project: api.ScalaProject) = {
     val compilerContainer = JavaCore.getClasspathContainer(new Path(compilerId), project.javaProject)
     compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
@@ -74,10 +75,10 @@ class DesiredScalaInstallationTests {
 
   @After
   def deleteProjects() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
-        (new File(ScalaPlugin.plugin.getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()
+        (new File(IScalaPlugin().getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()
       }
     }
     projects = List()

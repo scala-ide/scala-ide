@@ -1,6 +1,7 @@
 package org.scalaide.core.internal.containers
 
 import java.util.Properties
+import java.util.zip.ZipFile
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
@@ -27,7 +28,7 @@ import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Link
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 import org.scalaide.core.api.ScalaInstallation
@@ -42,6 +43,8 @@ import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.CompilerUtils.shortString
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.core.SdtConstants
+import org.scalaide.ui.internal.preferences.PropertyStore
 import org.eclipse.ui.dialogs.PreferencesUtil
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
@@ -50,8 +53,9 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
 
+    val storage = new PropertyStore(new ProjectScope(iProject), SdtConstants.PluginId)
     val setter = new ClasspathContainerSetter(project)
-    val proj =     ScalaPlugin.plugin.asScalaProject(iProject)
+    val proj =     ScalaPlugin().asScalaProject(iProject)
     val install = proj map (_.effectiveScalaInstallation())
 
     if (proj.isDefined) setter.updateBundleFromScalaInstallation(containerPath, install.get)
@@ -69,14 +73,10 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
 }
 
 class ScalaLibraryClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala library container") {
-  val plugin = ScalaPlugin.plugin
-
   override def entries = (platformInstallation.library +: platformInstallation.extraJars).map {_.libraryEntries()}.to[Array]
 }
 
 class ScalaCompilerClasspathContainerInitializer extends ScalaClasspathContainerInitializer("Scala compiler container") {
-  val plugin = ScalaPlugin.plugin
-
   override def entries = Array(platformInstallation.compiler.libraryEntries())
 }
 
@@ -101,9 +101,9 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
   override def getSelection(): IClasspathEntry = { JavaCore.newContainerEntry(containerPath) }
 
   override def initialize(javaProject: IJavaProject, currentEntries: Array[IClasspathEntry]) = {
-    scalaProject = ScalaPlugin.plugin.asScalaProject(javaProject.getProject())
+    scalaProject = ScalaPlugin().asScalaProject(javaProject.getProject())
     val rcp = javaProject.getRawClasspath()
-    if (hasCustomContainer(rcp, new Path(ScalaPlugin.plugin.scalaLibId), IClasspathEntry.CPE_CONTAINER) && hasCustomContainer(rcp, new Path(ScalaPlugin.plugin.scalaCompilerId), IClasspathEntry.CPE_CONTAINER)) {
+    if (hasCustomContainer(rcp, new Path(SdtConstants.ScalaLibContId), IClasspathEntry.CPE_CONTAINER) && hasCustomContainer(rcp, new Path(SdtConstants.ScalaCompilerContId), IClasspathEntry.CPE_CONTAINER)) {
       createControlDelegate = { (parent: Composite) =>
         setTitle("Unhandled edition case")
         setDescription("You have both scala compiler and library classpath containers on classpath. \n Editing only one of them from this menu can lead to inconsistencies and is not supported.")
@@ -133,7 +133,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
         list.setLabelProvider(new LabelProvider)
         val previousVersionChoice = PartialFunction.condOpt(platformInstallation.version) { case ShortScalaVersion(major, minor) => ScalaInstallationChoice(ScalaVersion(f"$major%d.${minor - 1}%d")) }
         def previousVersionPrepender(l: List[ScalaInstallationChoice]) = previousVersionChoice.fold(l)(s => s :: l)
-        list.setInput(ScalaInstallationChoice(ScalaPlugin.plugin.scalaVer) :: previousVersionPrepender(availableInstallations.map(si => ScalaInstallationChoice(si))))
+        list.setInput(ScalaInstallationChoice(ScalaPlugin().scalaVersion) :: previousVersionPrepender(availableInstallations.map(si => ScalaInstallationChoice(si))))
         val initialSelection = scalaProject map (_.desiredinstallationChoice())
         initialSelection foreach { choice => list.setSelection(new StructuredSelection(choice)) }
 
@@ -173,13 +173,13 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
 
 class ScalaCompilerClasspathContainerPage extends
   ScalaClasspathContainerPage(
-    new Path(ScalaPlugin.plugin.scalaCompilerId),
+    new Path(SdtConstants.ScalaCompilerContId),
     "ScalaCompilerContainerPage",
     "Scala Compiler container",
     "Scala compiler container") {}
 
 class ScalaLibraryClasspathContainerPage extends
-  ScalaClasspathContainerPage(new Path(ScalaPlugin.plugin.scalaLibId),
+  ScalaClasspathContainerPage(new Path(SdtConstants.ScalaLibContId),
     "ScalaLibraryContainerPage",
     "Scala Library container",
     "Scala library container") {}

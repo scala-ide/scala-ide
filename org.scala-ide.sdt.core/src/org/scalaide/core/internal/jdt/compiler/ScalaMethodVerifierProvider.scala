@@ -2,7 +2,7 @@ package org.scalaide.core.internal.jdt.compiler
 
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
@@ -67,7 +67,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
           logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
 
-          ScalaPlugin.plugin.asScalaProject(project) exists { isConcreteTraitMethod(abstractMethod, _) }
+          IScalaPlugin().asScalaProject(project) exists { isConcreteTraitMethod(abstractMethod, _) }
         }
       }.getOrElse(false)
     }.getOrElse(false)

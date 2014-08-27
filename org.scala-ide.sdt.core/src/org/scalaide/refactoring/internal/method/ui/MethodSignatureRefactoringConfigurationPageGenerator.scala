@@ -19,7 +19,7 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.SWT
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.preferences.ScalaPreviewerFactory
 
 /**
@@ -156,7 +156,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
       val methodPreview = ScalaPreviewerFactory.createPreviewer(
           composite,
-          ScalaPlugin.plugin.getPreferenceStore,
+          IScalaPlugin().getPreferenceStore,
           previewString(method, paramsWithSeparators))
       methodPreview.getControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1))
 

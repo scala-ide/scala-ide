@@ -1,7 +1,7 @@
 package org.scalaide.logging
 
 import java.util.concurrent.atomic.AtomicReference
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.eclipse.SWTUtils
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
@@ -28,7 +28,7 @@ import org.eclipse.core.runtime.Status
  *  volatile fields don't offer atomic operations such as `getAndSet`).
  */
 private[logging] object EclipseLogger extends Logger {
-  private val pluginLogger: ILog = ScalaPlugin.plugin.getLog()
+  private val pluginLogger: ILog = IScalaPlugin().getLog()
 
   private val lastCrash: AtomicReference[Throwable] = new AtomicReference
 
@@ -91,8 +91,8 @@ private[logging] object EclipseLogger extends Logger {
 
   // Because of a potential deadlock in the Eclipse internals (look at #1000914), the log action need to be executed in the UI thread.
   private def logInUiThread(severity: Int, message: Any, exception: Throwable): Unit = {
-    val status = new Status(severity, ScalaPlugin.plugin.getBundle.getSymbolicName, message.toString, exception)
-    if (ScalaPlugin.plugin.headlessMode) pluginLogger.log(status)
+    val status = new Status(severity, IScalaPlugin().getBundle.getSymbolicName, message.toString, exception)
+    if (IScalaPlugin().headlessMode) pluginLogger.log(status)
     else DisplayThread.asyncExec { pluginLogger.log(status) }
   }
 }

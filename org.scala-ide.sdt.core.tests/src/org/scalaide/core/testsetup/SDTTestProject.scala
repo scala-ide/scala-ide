@@ -6,7 +6,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IProject
@@ -27,6 +26,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.launching.JavaRuntime
 import org.osgi.framework.Bundle
+import org.scalaide.core.SdtConstants
 
 /** A test project, created from scratch.
  *
@@ -106,7 +106,7 @@ class SDTTestProject(project : IProject) {
   }
 
   def addScalaNature() {
-    addNature(ScalaPlugin.plugin.natureId)
+    addNature(SdtConstants.NatureId)
   }
 
   def addNature(natureId : String) {
@@ -137,7 +137,7 @@ class SDTTestProject(project : IProject) {
   }
 
   def addScalaSystemLibraries() {
-    addToClasspath(JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)))
+    addToClasspath(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
   }
 
   def findFileInPlugin(plugin : String, file : String) : Path = {

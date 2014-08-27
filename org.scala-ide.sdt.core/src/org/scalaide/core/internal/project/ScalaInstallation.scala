@@ -10,8 +10,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.osgi.framework.Bundle
 import org.osgi.framework.Version
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.ScalaPlugin.plugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.util.internal.eclipse.OSGiUtils
 import xsbti.compile.ScalaInstance
@@ -134,7 +133,7 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends api.Sc
   }
 
   private def relativizedString(path: IPath) = {
-    path.makeRelativeTo(ScalaPlugin.plugin.getStateLocation()).toPortableString()
+    path.makeRelativeTo(ScalaPlugin().getStateLocation()).toPortableString()
   }
   def hashString: String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
 }
@@ -203,7 +202,7 @@ object BundledScalaInstallation {
   def detectBundledInstallations(): List[BundledScalaInstallation] = {
     // find the bundles with the right pattern
     val matchingBundles: List[Bundle] =
-      ScalaPlugin.plugin.getBundle().getBundleContext().getBundles().to[List]
+      ScalaPlugin().getBundle().getBundleContext().getBundles().to[List]
         .filter { b => ScalaBundleJarsRegex.unapplySeq(b.getSymbolicName()).isDefined }
 
     matchingBundles.flatMap(BundledScalaInstallation(_))
@@ -304,7 +303,7 @@ object ScalaInstallation {
   }
 
   def scalaInstanceForInstallation(si: api.ScalaInstallation): ScalaInstance = {
-      val store = ScalaPlugin.plugin.classLoaderStore
+      val store = ScalaPlugin().classLoaderStore
       val scalaLoader: ClassLoader = store.getOrUpdate(si)(new URLClassLoader(si.allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
 
       new sbt.ScalaInstance(si.version.unparse, scalaLoader, si.library.classJar.toFile, si.compiler.classJar.toFile, si.extraJars.map(_.classJar.toFile).toList, None)

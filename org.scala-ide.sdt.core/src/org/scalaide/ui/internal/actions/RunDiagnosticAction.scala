@@ -9,7 +9,7 @@ import org.eclipse.ui.IWorkbenchWindow
 import org.scalaide.util.internal.Utils
 import org.scalaide.logging.LogManager
 import org.scalaide.ui.internal.diagnostic
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.util.internal.eclipse.SWTUtils
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
@@ -30,10 +30,10 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
     Utils tryExecute {
       action.getId match {
         case RUN_DIAGNOSTICS =>
-          val shell = if (parentWindow == null) ScalaPlugin.getShell else parentWindow.getShell
+          val shell = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell
           new diagnostic.DiagnosticDialog(shell).open
         case REPORT_BUG =>
-          val shell = if (parentWindow == null) ScalaPlugin.getShell else parentWindow.getShell
+          val shell = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell
           new diagnostic.ReportBugDialog(shell).open
         case OPEN_LOG_FILE =>
           OpenExternalFile(LogManager.logFile).open()

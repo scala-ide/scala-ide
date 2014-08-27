@@ -1,7 +1,6 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import testsetup.SDTTestUtils
@@ -36,7 +35,7 @@ class MainClassVerifierTest {
 
   @After
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       project.underlying.delete(true, null)
     }
   }

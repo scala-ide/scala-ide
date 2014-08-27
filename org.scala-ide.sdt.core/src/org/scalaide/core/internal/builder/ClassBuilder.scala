@@ -2,7 +2,7 @@ package org.scalaide.core.internal.builder
 
 import org.scalaide.core.internal.jdt.builder.GeneralScalaJavaBuilder
 import org.scalaide.core.internal.jdt.builder.ScalaJavaBuilderUtils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaModelManager
@@ -12,8 +12,6 @@ import org.eclipse.jdt.internal.core.builder.State
 trait JDTBuilderFacade {
 
   protected val scalaJavaBuilder = new GeneralScalaJavaBuilder
-
-  protected def plugin = ScalaPlugin.plugin
 
   /** The underlying project. */
   protected def project: IProject

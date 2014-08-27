@@ -13,7 +13,7 @@ import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.ISourceViewer
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.hyperlink.Hyperlink
 import org.scalaide.core.hyperlink.HyperlinkFactory
@@ -36,7 +36,7 @@ class ImplicitHighlightingPresenter(sourceViewer: ISourceViewer)
 object ImplicitHighlightingPresenter {
   final val DisplayStringSeparator = " => "
 
-  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  private def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
 
   def findAllImplicitConversions(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.Tree

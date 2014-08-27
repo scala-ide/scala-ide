@@ -7,10 +7,11 @@ import java.io.IOException
 import org.eclipse.core.runtime.CoreException
 import java.io.File
 import org.eclipse.core.runtime.Status
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.Publisher
 import scala.collection.mutable.Subscriber
+import org.scalaide.core.SdtConstants
 
 case class ModifiedScalaInstallations()
 
@@ -18,7 +19,7 @@ private trait LabeledScalaInstallationSerializer extends HasLogger{
   import org.scalaide.core.internal.jdt.util.LabeledScalaInstallationsSaveHelper._
 
   private def getInstallationsStateFile() = {
-    new File(ScalaPlugin.plugin.getStateLocation().toFile(), "ScalaInstallations.back")
+    new File(IScalaPlugin().getStateLocation().toFile(), "ScalaInstallations.back")
   }
 
   def saveInstallationsState(installations: List[LabeledScalaInstallation]): Unit = {
@@ -56,7 +57,7 @@ private trait LabeledScalaInstallationSerializer extends HasLogger{
         readInstallations(is)
       } catch {
         case ex @ (_: IOException | _: ClassNotFoundException) =>
-          throw new CoreException(new Status(IStatus.ERROR, ScalaPlugin.plugin.pluginId, -1,
+          throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, -1,
             s"Can't read scala installations from $installationsStateFilePath", ex))
       } finally {
         if (is != null) {

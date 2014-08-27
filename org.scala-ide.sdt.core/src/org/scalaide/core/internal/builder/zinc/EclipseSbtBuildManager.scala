@@ -39,15 +39,14 @@ import sbt.compiler.AggressiveCompile
 import sbt.inc.IncOptions
 import xsbti.Maybe
 import org.scalaide.util.internal.SbtUtils.m2o
-import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.core.api.ScalaInstallation
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.hashing.Hashing
 import sbt.inc.SourceInfo
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.util.internal.SbtUtils
+import org.scalaide.core.SdtConstants
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -128,7 +127,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
 
-    project.underlying.deleteMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    project.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     clearTasks(added)
     removeFiles(removed)
     sources ++= added

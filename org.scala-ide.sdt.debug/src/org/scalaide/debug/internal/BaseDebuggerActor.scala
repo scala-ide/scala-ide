@@ -6,7 +6,7 @@ import scala.actors.UncaughtException
 import scala.collection.mutable.Stack
 import org.scalaide.logging.HasLogger
 import com.sun.jdi.VMDisconnectedException
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 /** A generic message to inform that an actor should terminate. */
 object PoisonPill
@@ -150,7 +150,7 @@ object BaseDebuggerActor {
    *  @see ScalaPlugin.noTimeoutMode
    */
   def timedSend(timeout: Int)(a: Actor, msg: Any): Option[Any] = {
-    if (ScalaPlugin.plugin.noTimeoutMode)
+    if (IScalaPlugin().noTimeoutMode)
       Some(a !? msg)
     else
       a !? (timeout, msg)

@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.Utils
 import org.scalaide.core.api.ScalaProject
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError
 import java.util.Collections.synchronizedList
@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.MultiStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
 import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
+import org.scalaide.core.SdtConstants
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -144,12 +145,12 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
     pcLock.synchronized {
       def updatePcStatus(msg: String, ex: Throwable) = {
         pcScalaMissingStatuses += new Status(
-            IStatus.ERROR, ScalaPlugin.plugin.pluginId,
+            IStatus.ERROR, SdtConstants.PluginId,
             MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, msg, ex)
       }
 
       try {
-        val settings = ScalaPlugin.defaultScalaSettings()
+        val settings = ScalaPresentationCompiler.defaultScalaSettings()
         project.initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(project, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
@@ -176,7 +177,7 @@ final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends Ha
           val firstStatus = pcScalaMissingStatuses.head
           val statuses: Array[IStatus] = pcScalaMissingStatuses.tail.toArray
           val status = new MultiStatus(
-              ScalaPlugin.plugin.pluginId,
+              SdtConstants.PluginId,
               MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING,
               statuses, firstStatus.getMessage(), firstStatus.getException())
           val handler = DebugPlugin.getDefault().getStatusHandler(status)

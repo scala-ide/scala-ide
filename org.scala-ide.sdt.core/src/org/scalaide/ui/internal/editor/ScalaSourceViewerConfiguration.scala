@@ -40,7 +40,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
 import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
 import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
@@ -59,9 +59,9 @@ import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
 import org.scalaide.ui.internal.editor.spelling.SpellingService
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
 import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
-
 import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
+import org.scalaide.core.internal.ScalaPlugin
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -239,7 +239,7 @@ class ScalaSourceViewerConfiguration(
               editor,
               editor.getViewer(),
               new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
-              ScalaPlugin.plugin.scalaSourceFileContentType,
+              ScalaPlugin().scalaSourceFileContentType,
               EditorsUI.getPreferenceStore())))
 
       val reconciler = new MonoReconciler(s, /* isIncremental */ false)
@@ -300,6 +300,9 @@ class ScalaSourceViewerConfiguration(
     def prefProvider = new JdtPreferenceProvider(getProject)
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
 
+    // TODO: why not using the defined scalaPrefStore, javaPrefStore or combinedPrefStore?
+    val prefStore = IScalaPlugin().getPreferenceStore()
+
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
         Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
@@ -307,26 +310,26 @@ class ScalaSourceViewerConfiguration(
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new MultiLineStringAutoIndentStrategy(partitioning, ScalaPlugin.prefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
+          new MultiLineStringAutoIndentStrategy(partitioning, prefStore),
+          new MultiLineStringAutoEditStrategy(partitioning, prefStore))
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new StringAutoEditStrategy(partitioning, ScalaPlugin.prefStore))
+          new StringAutoEditStrategy(partitioning, prefStore))
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(ScalaPlugin.prefStore),
-          new BracketAutoEditStrategy(ScalaPlugin.prefStore),
-          new LiteralAutoEditStrategy(ScalaPlugin.prefStore))
+          new AutoIndentStrategy(prefStore),
+          new BracketAutoEditStrategy(prefStore),
+          new LiteralAutoEditStrategy(prefStore))
 
       case _ =>
         Array(
             new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-            new AutoIndentStrategy(ScalaPlugin.prefStore))
+            new AutoIndentStrategy(prefStore))
     }
   }
 

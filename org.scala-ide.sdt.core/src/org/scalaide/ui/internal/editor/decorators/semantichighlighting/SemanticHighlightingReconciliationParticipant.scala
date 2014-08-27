@@ -7,7 +7,7 @@ package org.scalaide.ui.internal.editor.decorators.semantichighlighting
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.extensions.ReconciliationParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
@@ -40,6 +40,6 @@ class SemanticHighlightingReconciliationParticipant(private val reconciler: Sema
       val project = scu.getResource.getProject
       project != null && project.isOpen() && project.exists()
     }
-    !ScalaPlugin.plugin.headlessMode && checkProjectExists(scu)
+    !IScalaPlugin().headlessMode && checkProjectExists(scu)
   }
 }

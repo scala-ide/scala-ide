@@ -8,7 +8,7 @@ import org.eclipse.debug.core.ILaunchConfiguration
 import org.eclipse.jdt.launching.AbstractJavaLaunchConfigurationDelegate
 import org.eclipse.jdt.launching.ExecutionArguments
 import org.eclipse.jdt.launching.VMRunnerConfiguration
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 
 /**

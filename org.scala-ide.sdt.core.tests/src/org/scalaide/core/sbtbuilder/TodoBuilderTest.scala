@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.util.matching.Regex
+import org.scalaide.core.SdtConstants
 
 object TodoBuilderTest extends TestProjectSetup("todobuilder") with CustomAssertion
 
@@ -36,7 +37,7 @@ class TodoBuilderTest {
 
     val units = compilationUnits("test/foo/ClassA.scala")
     val allTasks = units.map { unit =>
-      val tasks = unit.getUnderlyingResource().findMarkers(ScalaPlugin.plugin.taskMarkerId, false, IResource.DEPTH_INFINITE)
+      val tasks = unit.getUnderlyingResource().findMarkers(SdtConstants.TaskMarkerId, false, IResource.DEPTH_INFINITE)
       println("tasks: %s: %s".format(unit, tasks.toList))
       tasks
     }.flatten

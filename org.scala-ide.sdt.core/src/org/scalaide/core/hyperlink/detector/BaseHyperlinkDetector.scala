@@ -12,11 +12,11 @@ import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.concurrent.TimeoutException
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 
 abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
-  val TIMEOUT = if (ScalaPlugin.plugin.noTimeoutMode) Duration.Inf else 500.millis
+  val TIMEOUT = if (IScalaPlugin().noTimeoutMode) Duration.Inf else 500.millis
 
   final override def detectHyperlinks(viewer: ITextViewer, currentSelection: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     val textEditor = getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]

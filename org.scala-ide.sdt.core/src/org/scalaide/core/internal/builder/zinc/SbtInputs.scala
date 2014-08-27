@@ -4,7 +4,6 @@ import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import org.eclipse.core.runtime.SubMonitor
-import org.scalaide.core.ScalaPlugin.plugin
 import org.scalaide.core.api.ScalaProject
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
@@ -23,13 +22,16 @@ import xsbti.Logger
 import xsbti.Maybe
 import xsbti.Reporter
 import xsbti.compile._
-import org.scalaide.core.api.ScalaInstallation
-import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import java.net.URLClassLoader
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
+import org.scalaide.core.api.ScalaInstallation
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+import org.scalaide.core.internal.ScalaPlugin
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -46,7 +48,7 @@ class SbtInputs(installation: ScalaInstallation,
 
   def cache = CompilerCache.fresh // May want to explore caching possibilities.
 
-  private val allProjects = project +: project.transitiveDependencies.flatMap(plugin.asScalaProject)
+  private val allProjects = project +: project.transitiveDependencies.flatMap(ScalaPlugin().asScalaProject)
 
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
@@ -111,7 +113,7 @@ class SbtInputs(installation: ScalaInstallation,
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
-    val store = ScalaPlugin.plugin.compilerInterfaceStore
+    val store = ScalaPlugin().compilerInterfaceStore
 
     store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerInterface =>
