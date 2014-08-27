@@ -173,7 +173,7 @@
         <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
         <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
-        <weaving.hook.plugin.version>1.1.0.v20140529-1734</weaving.hook.plugin.version>
+        <weaving.hook.plugin.version>1.1.100.weaving-hook-20140821</weaving.hook.plugin.version>
       </properties>
     </profile>
 
