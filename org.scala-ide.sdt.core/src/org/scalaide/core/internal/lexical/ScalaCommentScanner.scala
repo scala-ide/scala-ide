@@ -122,17 +122,25 @@ private class CombinedWordRule(
 ) extends IRule {
 
   def evaluate(scanner: ICharacterScanner): IToken = {
-    val wordStart = scanner.read().toChar
-    if (detector.isWordStart(wordStart)) {
-      val word = wordStart +: Iterator
-          .continually(scanner.read().toChar)
-          .takeWhile(c => c != ICharacterScanner.EOF && detector.isWordPart(c))
-          .mkString
+    var c = scanner.read().toChar
+    if (detector.isWordStart(c)) {
+      val buf = new StringBuilder
+      do {
+        buf += c
+        c = scanner.read().toChar
+      } while (c != ICharacterScanner.EOF && detector.isWordPart(c))
+
+      val word = buf.toString()
       scanner.unread()
+
       val tok = matcher.evaluate(word)
       if (!tok.isUndefined()) tok
       else {
-        for (_ <- word) scanner.unread()
+        var n = buf.length
+        while (n > 0) {
+          scanner.unread()
+          n -= 1
+        }
         Token.UNDEFINED
       }
     } else {
