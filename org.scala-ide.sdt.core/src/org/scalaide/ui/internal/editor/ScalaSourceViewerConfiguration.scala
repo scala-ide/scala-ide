@@ -302,21 +302,24 @@ class ScalaSourceViewerConfiguration(
 
     // TODO: why not using the defined scalaPrefStore, javaPrefStore or combinedPrefStore?
     val prefStore = IScalaPlugin().getPreferenceStore()
+    val tabsToSpacesConverter = new TabsToSpacesConverter(prefStore)
 
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
+        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning), tabsToSpacesConverter)
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
           new MultiLineStringAutoIndentStrategy(partitioning, prefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, prefStore))
+          new MultiLineStringAutoEditStrategy(partitioning, prefStore),
+          tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
           new SmartSemicolonAutoEditStrategy(partitioning),
-          new StringAutoEditStrategy(partitioning, prefStore))
+          new StringAutoEditStrategy(partitioning, prefStore),
+          tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
@@ -324,12 +327,14 @@ class ScalaSourceViewerConfiguration(
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
           new AutoIndentStrategy(prefStore),
           new BracketAutoEditStrategy(prefStore),
-          new LiteralAutoEditStrategy(prefStore))
+          new LiteralAutoEditStrategy(prefStore),
+          tabsToSpacesConverter)
 
       case _ =>
         Array(
-            new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-            new AutoIndentStrategy(prefStore))
+          new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
+          new AutoIndentStrategy(prefStore),
+          tabsToSpacesConverter)
     }
   }
 
