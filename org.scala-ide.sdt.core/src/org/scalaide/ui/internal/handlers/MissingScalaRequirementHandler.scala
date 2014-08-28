@@ -10,7 +10,7 @@ import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
+import org.scalaide.core.compiler.PresentationCompilerProxy
 import org.scalaide.core.internal.project.Nature
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.Utils
@@ -30,7 +30,7 @@ object MissingScalaRequirementHandler {
 class MissingScalaRequirementHandler extends RichStatusHandler {
 
   def doHandleStatus(status: IStatus, source: Object) = {
-    val scalaPc = source.asInstanceOfOpt[ScalaPresentationCompilerProxy]
+    val scalaPc = source.asInstanceOfOpt[PresentationCompilerProxy]
     val shell = SWTUtils.getShell
     val title = "Add Scala library to project classpath?"
 

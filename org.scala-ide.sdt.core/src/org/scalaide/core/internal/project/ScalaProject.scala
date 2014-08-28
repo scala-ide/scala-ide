@@ -42,7 +42,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin.plugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
+import org.scalaide.core.compiler.PresentationCompilerProxy
 import org.scalaide.core.internal.builder
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
@@ -140,7 +140,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     "Scala compiler cannot initialize for project: " + underlying.getName +
       ". Please check that your classpath contains the standard Scala library.")
 
-  override val presentationCompiler = new ScalaPresentationCompilerProxy(this)
+  override val presentationCompiler = new PresentationCompilerProxy(this)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    *  [[ScalaPlugin]] instance has been fully initialized.
