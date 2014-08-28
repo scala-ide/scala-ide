@@ -32,7 +32,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
  *        the preference store from JDT
  */
 class ScalaCommentScanner(
-    val preferenceStore: IPreferenceStore,
+    override val preferenceStore: IPreferenceStore,
     javaPreferenceStore: IPreferenceStore,
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
@@ -121,18 +121,24 @@ private class CombinedWordRule(
     matcher: WordMatcher
 ) extends IRule {
 
-  def evaluate(scanner: ICharacterScanner): IToken = {
+  override def evaluate(scanner: ICharacterScanner): IToken = {
     val wordStart = scanner.read().toChar
     if (detector.isWordStart(wordStart)) {
-      val word = wordStart +: Iterator
-          .continually(scanner.read().toChar)
-          .takeWhile(c => c != ICharacterScanner.EOF && detector.isWordPart(c))
-          .mkString
+
+      val word = new StringBuilder() append wordStart
+      var c = scanner.read().toChar
+
+      while (c != ICharacterScanner.EOF && detector.isWordPart(c)) {
+        word append c
+        c = scanner.read().toChar
+      }
+
       scanner.unread()
-      val tok = matcher.evaluate(word)
+      val tok = matcher.evaluate(word.toString())
       if (!tok.isUndefined()) tok
       else {
-        for (_ <- word) scanner.unread()
+        var i = word.length
+        while ({i -= 1; i >= 0}) scanner.unread()
         Token.UNDEFINED
       }
     } else {
@@ -197,9 +203,9 @@ private class IdentifierDetector extends IWordDetector {
 
   private val specialSigns = """$@!%&*+-<=>?\^|~/""".toSet
 
-  def isWordStart(c: Char) =
+  override def isWordStart(c: Char) =
     Character.isJavaIdentifierStart(c) || specialSigns(c)
 
-  def isWordPart(c: Char) =
+  override def isWordPart(c: Char) =
     c != '$' && Character.isJavaIdentifierPart(c)
 }
