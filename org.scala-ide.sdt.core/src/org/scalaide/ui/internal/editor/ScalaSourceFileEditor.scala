@@ -112,7 +112,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
     // disable Java indent logic, which is otherwise invoked when the tab key is entered
     setAction("IndentOnTab", null)
-    sourceViewer.setTabsToSpacesConverter(null)
 
     val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
@@ -321,11 +320,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
         } else {
           super.handlePreferenceStoreChanged(event)
         }
-
-        // whatever event occurs that leads to the creation of the converter,
-        // we don't want it. We use auto edits to describe the behavior of
-        // tab-space conversions.
-        sourceViewer.setTabsToSpacesConverter(null)
     }
   }
 
