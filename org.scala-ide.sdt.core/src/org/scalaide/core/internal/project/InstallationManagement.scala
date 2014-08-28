@@ -17,7 +17,7 @@ import org.scalaide.core.resources.MarkerFactory
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.Settings
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.api.ScalaInstallationChange
+import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 

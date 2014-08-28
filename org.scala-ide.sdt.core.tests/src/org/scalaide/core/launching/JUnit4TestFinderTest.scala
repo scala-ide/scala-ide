@@ -9,7 +9,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import scala.language.reflectiveCalls
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.launching.ScalaLaunchShortcut
 
 /** This class checks the functionality behind Run As > JUnit Test, triggered when a user right clicks on a source
@@ -72,7 +72,7 @@ class JUnit4TestFinderTest {
     SDTTestUtils.deleteProjects(project)
   }
 
-  private def project: ScalaProject = projectSetup.project
+  private def project: IScalaProject = projectSetup.project
 
   private def delete(sources: ScalaSourceFile*): Unit = {
     import scala.util.control.Exception.ignoring

@@ -20,7 +20,7 @@ import scala.util.matching.Regex
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import scala.tools.nsc.Settings
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -111,7 +111,7 @@ class SbtBuilderTest {
 
   @Test def dependent_projects_are_rebuilt_and_PC_notified() {
 
-    def rebuild(prj: ScalaProject): List[IMarker] = {
+    def rebuild(prj: IScalaProject): List[IMarker] = {
       println("building " + prj)
       prj.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 

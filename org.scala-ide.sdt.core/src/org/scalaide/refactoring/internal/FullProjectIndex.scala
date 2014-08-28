@@ -2,7 +2,7 @@ package org.scalaide.refactoring.internal
 
 import java.util.regex.Pattern
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
 import scala.tools.refactoring.MultiStageRefactoring
@@ -27,7 +27,7 @@ trait FullProjectIndex extends HasLogger {
 
   val refactoring: MultiStageRefactoring with InteractiveScalaCompiler with GlobalIndexes
 
-  val project: ScalaProject
+  val project: IScalaProject
 
   /**
    * A cleanup handler, will later be set by the refactoring

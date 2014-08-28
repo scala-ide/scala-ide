@@ -14,7 +14,7 @@ import org.eclipse.core.resources.IFile
 import org.junit.Ignore
 import org.junit.Before
 import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 
 object ScalaJavaDepTest extends testsetup.TestProjectSetup("scalajavadep")
 
@@ -76,7 +76,7 @@ class ScalaJavaDepTest {
     assertTrue("Build errors found: " + userFriendlyMarkers(problems2), problems2.isEmpty)
   }
 
-  def rebuild(prj: ScalaProject) {
+  def rebuild(prj: IScalaProject) {
     println("building " + prj)
     prj.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }

@@ -3,7 +3,7 @@ package org.scalaide.core.internal.builder.zinc
 import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import sbt.compiler.IC
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.Platform
@@ -49,7 +49,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
    *
    *  @retur An instance of Right(path) if successful, an error message inside `Left` otherwise.
    */
-  def compilerInterfaceFor(installation: ScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
+  def compilerInterfaceFor(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
     val targetJar = interfaceJar(installation)
 
     lockObject synchronized {
@@ -76,10 +76,10 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   /** Return the number of hits and misses in the store. */
   def getStats: (Int, Int) = (hits, misses)
 
-  private def cacheDir(installation: ScalaInstallation): IPath =
+  private def cacheDir(installation: IScalaInstallation): IPath =
     compilerInterfacesDir / installation.version.unparse
 
-  private def interfaceJar(installation: ScalaInstallation): IPath = {
+  private def interfaceJar(installation: IScalaInstallation): IPath = {
     cacheDir(installation) / compilerInterfaceName
   }
 
@@ -88,7 +88,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
    *  @return a right-biased `Either`, carrying either the path to the resulting compiler-interface jar, or
    *          a String with the error message.
    */
-  private def buildInterface(installation: ScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
+  private def buildInterface(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
     val name = s"Compiling compiler-interface for ${installation.version.unparse}"
     val monitor = SubMonitor.convert(pm, name, 2)
     monitor.subTask(name)

@@ -30,7 +30,7 @@ import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.api
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
@@ -225,7 +225,7 @@ object SDTTestUtils extends HasLogger {
   val simulator = new EclipseUserSimulator
 
 
-  def createSourcePackage(name: String)(project: api.ScalaProject): IPackageFragment =
+  def createSourcePackage(name: String)(project: IScalaProject): IPackageFragment =
     project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
 
   def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*) {
@@ -237,7 +237,7 @@ object SDTTestUtils extends HasLogger {
   def createProjects(names: String*): Seq[ScalaProject] =
     names map (n => simulator.createProjectInWorkspace(n, true))
 
-  def deleteProjects(projects: api.ScalaProject*) {
+  def deleteProjects(projects: IScalaProject*) {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }

@@ -6,14 +6,14 @@ import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.core.resources.MarkerFactory.Position
 import org.scalaide.core.resources.MarkerFactory.NoPosition
 import org.scalaide.core.resources.MarkerFactory.RegionPosition
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import scala.reflect.internal.util.{ Position => ScalacPosition }
 import org.scalaide.core.SdtConstants
 
 /** Factory for creating markers used to report build problems (i.e., compilation errors). */
 object BuildProblemMarker extends MarkerFactory(SdtConstants.ProblemMarkerId) {
   /** Create a marker indicating an error state for the passed Scala `project`. */
-  def create(project: ScalaProject, e: Throwable): Unit =
+  def create(project: IScalaProject, e: Throwable): Unit =
     create(project.underlying, "Error in Scala compiler: " + e.getMessage)
 
   /** Create a marker indicating an error state for the passed `resource`. */

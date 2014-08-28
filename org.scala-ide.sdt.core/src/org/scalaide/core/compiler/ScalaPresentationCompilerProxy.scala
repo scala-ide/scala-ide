@@ -5,7 +5,7 @@ import scala.tools.nsc.Settings
 import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.Utils
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError
@@ -25,7 +25,7 @@ import org.scalaide.core.SdtConstants
   *
   * @note This class is thread-safe.
   */
-final class ScalaPresentationCompilerProxy(val project: ScalaProject) extends HasLogger {
+final class ScalaPresentationCompilerProxy(val project: IScalaProject) extends HasLogger {
 
   /** Current 'live' instance of the presentation compiler.
     *

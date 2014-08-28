@@ -16,7 +16,7 @@ import org.eclipse.core.runtime.IPath
 import java.io.File
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.api
+import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -52,13 +52,13 @@ class DesiredScalaInstallationTests {
   import DesiredScalaInstallationTests._
 
   val libraryId = SdtConstants.ScalaLibContId
-  def getLibraryJar(project: api.ScalaProject) = {
+  def getLibraryJar(project: IScalaProject) = {
     val libraryContainer = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
     libraryContainer.getClasspathEntries() find {e => (""".*scala-library(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }
 
   val compilerId = SdtConstants.ScalaCompilerContId
-  def getCompilerJar(project: api.ScalaProject) = {
+  def getCompilerJar(project: IScalaProject) = {
     val compilerContainer = JavaCore.getClasspathContainer(new Path(compilerId), project.javaProject)
     compilerContainer.getClasspathEntries() find { e => (""".*scala-compiler(?:.2\.\d+(?:\.\d*?)?(?:[\.-].*)*)?\.jar""".r).pattern.matcher(e.getPath().toFile().getName()).matches }
   }

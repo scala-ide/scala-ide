@@ -1,4 +1,4 @@
-package org.scalaide.core.api
+package org.scalaide.core
 
 import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.ScalaVersion
@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.IClasspathEntry
  * e.g. scala-compiler, scala-library, scala-reflect, scala-xml ...
  * Immutable.
  */
-trait ScalaModule {
+trait IScalaModule {
   val classJar: IPath
   val sourceJar: Option[IPath]
   /**
@@ -31,7 +31,7 @@ trait ScalaModule {
  * This trait represents a handle on a complete Scala installation, containing at least compiler and library modules.
  * Immutable.
  */
-trait ScalaInstallation {
+trait IScalaInstallation {
   /**
    * A precise Scala version.
    */
@@ -39,19 +39,19 @@ trait ScalaInstallation {
   /**
    *  The compiler module itself.
    */
-  def compiler: ScalaModule
+  def compiler: IScalaModule
   /**
    * The library module for this installation.
    */
-  def library: ScalaModule
+  def library: IScalaModule
   /**
    * Extra modules, e.g. reflect, swing, actors, xml.
    */
-  def extraJars: Seq[ScalaModule]
+  def extraJars: Seq[IScalaModule]
   /**
    * Returns the whole set of all jars included in this installation.
    */
-  def allJars: Seq[ScalaModule]
+  def allJars: Seq[IScalaModule]
   /**
    * Are the registered components of this installation available on the file system ?
    */
@@ -69,6 +69,6 @@ trait ScalaInstallation {
  *
  * Immutable.
  */
-trait ScalaInstallationChoice{
+trait IScalaInstallationChoice{
   val marker: Either[ScalaVersion, Int]
 }

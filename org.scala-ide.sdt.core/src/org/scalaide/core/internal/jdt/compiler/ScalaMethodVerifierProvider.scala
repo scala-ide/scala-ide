@@ -6,7 +6,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Utils
@@ -88,7 +88,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
     }
   }
 
-  private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
+  private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: IScalaProject): Boolean = {
     project.presentationCompiler { pc =>
       pc.askOption { () =>
         import pc._

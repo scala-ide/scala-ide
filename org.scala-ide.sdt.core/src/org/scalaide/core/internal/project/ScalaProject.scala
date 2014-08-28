@@ -34,10 +34,10 @@ import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.core.api
-import org.scalaide.core.api.ScalaProjectEvent
-import org.scalaide.core.api.ScalaInstallationChange
-import org.scalaide.core.api.BuildSuccess
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.IScalaProjectEvent
+import org.scalaide.core.ScalaInstallationChange
+import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin.plugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
@@ -127,7 +127,7 @@ object ScalaProject {
     }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[ScalaProjectEvent] with HasLogger with api.ScalaProject {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -613,7 +613,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   override def toString: String = underlying.getName
 
   override def equals(other: Any): Boolean = other match {
-    case otherSP: api.ScalaProject => underlying == otherSP.underlying
+    case otherSP: IScalaProject => underlying == otherSP.underlying
     case _ => false
   }
 

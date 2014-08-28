@@ -10,7 +10,7 @@ import org.junit.Test
 import org.junit.BeforeClass
 import org.junit.AfterClass
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.resources.ProjectScope
@@ -25,7 +25,7 @@ import org.scalaide.core.SdtConstants
 
 object CompilerSettingsTest {
   private val simulator = new EclipseUserSimulator
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   @BeforeClass
   def createProject() {

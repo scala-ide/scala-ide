@@ -2,7 +2,7 @@ package org.scalaide.ui.internal.repl
 
 import org.scalaide.ui.internal.ScalaImages
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.tools.nsc.Settings
 import org.eclipse.core.resources.IProject
@@ -44,14 +44,14 @@ import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
-import org.scalaide.core.api.BuildSuccess
-import org.scalaide.core.api.ScalaProjectEvent
+import org.scalaide.core.BuildSuccess
+import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
   private var projectName: String = ""
-  private var scalaProject: ScalaProject = null
+  private var scalaProject: IScalaProject = null
   private var isStopped = true
   private var projectList: List = null
   private var view = this // gets set to null when disposed
@@ -148,7 +148,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
   }
 
-  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]] {
+  object refreshOnRebuildAction extends Action("Replay History on Project Rebuild", IAction.AS_CHECK_BOX) with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
     setToolTipText("Replay History on Project Rebuild")
 
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
@@ -159,7 +159,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       else scalaProject.removeSubscription(this)
     }
 
-    def notify(pub:Publisher[ScalaProjectEvent], event:ScalaProjectEvent) {
+    def notify(pub:Publisher[IScalaProjectEvent], event:IScalaProjectEvent) {
       event match { case e: BuildSuccess =>
         DisplayThread.asyncExec {
           if (!isStopped) {

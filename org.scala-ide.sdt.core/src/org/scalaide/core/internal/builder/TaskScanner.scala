@@ -5,9 +5,9 @@ import scala.collection.mutable.ArrayBuffer
 import org.eclipse.jdt.core.JavaCore
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.RangePosition
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 
-class TaskScanner(project : ScalaProject) {
+class TaskScanner(project : IScalaProject) {
   import TaskScanner._
 
   def getJavaOptions(key: String): Array[String] = {

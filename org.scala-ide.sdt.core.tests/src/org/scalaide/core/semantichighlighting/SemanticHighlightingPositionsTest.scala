@@ -1,7 +1,7 @@
 package org.scalaide.core
 package semantichighlighting
 
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.util.internal.eclipse.EmptyRegion
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
@@ -38,7 +38,7 @@ class SemanticHighlightingPositionsTest {
   private val Marker = "/*^*/"
 
   protected val simulator = new EclipseUserSimulator
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   private var sourceView: ISourceViewer = _
   private var document: IDocument = _
