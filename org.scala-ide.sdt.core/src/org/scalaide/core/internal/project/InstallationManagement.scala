@@ -69,7 +69,7 @@ trait InstallationManagement { this: ScalaProject =>
     implicit val sourceLevelDefault = IScalaPlugin().shortScalaVersion
     val sourceLevelPrefName = SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL
     if (!usesProjectSettings) {
-      eclipseLog.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel.")
+      logger.warn(s"Project ${this.underlying.getName()} has platform default sourceLevel.")
       sourceLevelDefault
     }
     else projectSpecificStorage.get(sourceLevelPrefName)
@@ -81,7 +81,7 @@ trait InstallationManagement { this: ScalaProject =>
     implicit val desiredinstallationChoicePrefDefault: String = desiredinstallationChoiceDefault.toString()
     val desiredinstallationChoicePrefName = SettingConverterUtil.SCALA_DESIRED_INSTALLATION
     if (!usesProjectSettings) {
-      eclipseLog.warn(s"Project ${this.underlying.getName()} runs on platform default installation.")
+      logger.warn(s"Project ${this.underlying.getName()} runs on platform default installation.")
       desiredinstallationChoiceDefault
     }
     else {
