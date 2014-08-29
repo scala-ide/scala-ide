@@ -25,14 +25,14 @@ import org.eclipse.core.runtime.IPath
 import org.scalaide.core.extensions.SourceFileProviderRegistry
 import org.eclipse.jdt.core.IJavaProject
 
-trait LocateSymbol { self : ScalaPresentationCompiler =>
+trait LocateSymbol { self: ScalaPresentationCompiler =>
 
   def locate(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)] = {
-    def find[T, V](arr : Array[T])(f : T => Option[V]) : Option[V] = {
-      for(e <- arr) {
+    def find[T, V](arr: Array[T])(f: T => Option[V]): Option[V] = {
+      for (e <- arr) {
         f(e) match {
-          case v@Some(_) => return v
-          case None =>
+          case v @ Some(_) => return v
+          case None        =>
         }
       }
       None
@@ -48,7 +48,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
         logger.debug("Trying out to get " + name)
         val cf = pf.getClassFile(name)
         cf match {
-          case classFile : ScalaClassFile =>
+          case classFile: ScalaClassFile =>
             logger.debug("Found Scala class file: " + classFile.getElementName)
             Some(classFile)
           case _ => None
@@ -80,7 +80,7 @@ trait LocateSymbol { self : ScalaPresentationCompiler =>
     val sourceFile = findSourceFile()
 
     val target =
-      if(sourceFile.isDefined)
+      if (sourceFile.isDefined)
         SourceFileProviderRegistry.getProvider(sourceFile.get).createFrom(sourceFile.get)
       else
         findClassFile()
