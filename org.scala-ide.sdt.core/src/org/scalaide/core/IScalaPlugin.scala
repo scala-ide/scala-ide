@@ -1,9 +1,12 @@
 package org.scalaide.core
 
-import org.eclipse.core.resources.IProject
-import org.scalaide.logging.HasLogger
-import org.eclipse.ui.plugin.AbstractUIPlugin
 import scala.tools.nsc.settings.ScalaVersion
+
+import org.eclipse.core.resources.IProject
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.plugin.AbstractUIPlugin
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.CompilerUtils
 
 object IScalaPlugin {
@@ -54,4 +57,10 @@ trait IScalaPlugin extends AbstractUIPlugin with HasLogger {
    * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
    */
   def asScalaProject(project: IProject): Option[IScalaProject]
+
+  /**
+   * Finds the `ScalaCompilationUnit` of a given `IEditorInput`. Returns `None`
+   * if no compilation unit is found.
+   */
+  def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit]
 }

@@ -38,7 +38,7 @@ import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
@@ -50,7 +50,6 @@ import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
 import org.scalaide.ui.internal.actions
 import org.scalaide.ui.internal.editor.autoedits._
-import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
@@ -120,7 +119,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   setPartName("Scala Editor")
-  setDocumentProvider(ScalaPlugin.plugin.documentProvider)
+  setDocumentProvider(ScalaPlugin().documentProvider)
 
   override protected def createActions() {
     super.createActions()

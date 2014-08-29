@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
@@ -60,7 +60,7 @@ object SaveActionExtensions {
    * The time a save action gets until the IDE waits no longer on its result.
    */
   private def saveActionTimeout: FiniteDuration =
-    ScalaPlugin.prefStore.getInt(SaveActionTimeoutId).millis
+    IScalaPlugin().getPreferenceStore().getInt(SaveActionTimeoutId).millis
 
   private val documentSaveActions = Seq(
     RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
@@ -148,7 +148,7 @@ trait SaveActionExtensions extends HasLogger {
     val timeout = saveActionTimeout
 
     val futureToUse: Seq[Change] => Future[Seq[Change]] =
-      if (ScalaPlugin.plugin.noTimeoutMode)
+      if (IScalaPlugin().noTimeoutMode)
         Future(_)
       else
         TimeoutFuture(timeout)(_)
@@ -217,5 +217,5 @@ trait SaveActionExtensions extends HasLogger {
 
   /** Checks if a save action given by its `id` is enabled. */
   private def isEnabled(id: String): Boolean =
-    ScalaPlugin.prefStore.getBoolean(id)
+    IScalaPlugin().getPreferenceStore().getBoolean(id)
 }

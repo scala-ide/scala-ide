@@ -63,9 +63,9 @@ abstract class BaseSemanticAction(
   private val propertiesOpt = preferencePageId.map(id => new Properties(id))
 
   protected val annotationAccess = new IAnnotationAccess {
-    def getType(annotation: Annotation) = annotation.getType
-    def isMultiLine(annotation: Annotation) = true
-    def isTemporary(annotation: Annotation) = true
+    override def getType(annotation: Annotation) = annotation.getType
+    override def isMultiLine(annotation: Annotation) = true
+    override def isTemporary(annotation: Annotation) = true
   }
 
   protected def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
@@ -134,7 +134,7 @@ abstract class BaseSemanticAction(
   }
 
   private val _listener = new IPropertyChangeListener {
-    def propertyChange(event: PropertyChangeEvent) {
+    override def propertyChange(event: PropertyChangeEvent) {
       propertiesOpt.foreach { properties =>
         val changed = event.getProperty() match {
           case properties.bold | properties.italic | P_COLOR => true
@@ -158,7 +158,7 @@ abstract class BaseSemanticAction(
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
-      scu <- ScalaPlugin.plugin.scalaCompilationUnit(editorInput)
+      scu <- IScalaPlugin().scalaCompilationUnit(editorInput)
     } apply(scu)
   }
 

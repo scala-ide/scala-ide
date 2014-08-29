@@ -129,7 +129,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
     JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
-    }
+  }
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
@@ -146,13 +146,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
-  /**
-   * Finds the `ScalaCompilationUnit` of a given `IEditorInput`. Returns `None`
-   * if no compilation unit is found.
-   */
-  def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
+  override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] =
     Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
-  }
 
   def getJavaProject(project: IProject) = JavaCore.create(project)
 

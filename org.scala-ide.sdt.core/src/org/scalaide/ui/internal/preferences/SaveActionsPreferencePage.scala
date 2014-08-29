@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.ui.internal.editor.SaveActionExtensions
 import org.scalaide.util.internal.eclipse.SWTUtils._
@@ -30,7 +30,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils._
 /** This class is referenced through plugin.xml */
 class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val prefStore = ScalaPlugin.prefStore
+  private val prefStore = IScalaPlugin().getPreferenceStore()
   private val MinSaveActionTimeout = 100
 
   private var textBefore: IDocument = _
@@ -201,10 +201,10 @@ object SaveActionsPreferenceInitializer {
 class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
   import SaveActionsPreferenceInitializer._
 
-  def initializeDefaultPreferences(): Unit = {
+  override def initializeDefaultPreferences(): Unit = {
     SaveActionExtensions.saveActionSettings foreach { s =>
-      ScalaPlugin.prefStore.setDefault(s.id, false)
+      IScalaPlugin().getPreferenceStore().setDefault(s.id, false)
     }
-    ScalaPlugin.prefStore.setDefault(SaveActionExtensions.SaveActionTimeoutId, SaveActionDefaultTimeout)
+    IScalaPlugin().getPreferenceStore().setDefault(SaveActionExtensions.SaveActionTimeoutId, SaveActionDefaultTimeout)
   }
 }

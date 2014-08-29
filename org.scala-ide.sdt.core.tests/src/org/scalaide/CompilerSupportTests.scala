@@ -1,15 +1,11 @@
 package org.scalaide
 
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.AfterClass
-import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.api.ScalaProject
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
 
 /**
  * Common functionality to be used in tests that need to interop with the
@@ -25,10 +21,7 @@ trait CompilerSupportTests {
   /** Can be overwritten in a subclass if desired. */
   val projectName: String = getClass().getSimpleName()
 
-  private val project: ScalaProject = {
-    val simulator = new EclipseUserSimulator
-    simulator.createProjectInWorkspace(projectName)
-  }
+  private val project: ScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
 
   final def withCompiler(f: ScalaPresentationCompiler => Unit): Unit =
     project.presentationCompiler { compiler =>
@@ -45,16 +38,13 @@ trait CompilerSupportTests {
    */
   final def mkCompilationUnit(source: String): ICompilationUnit = {
     val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
-    new EclipseUserSimulator().createCompilationUnit(p, "testfile.scala", source)
+    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source)
   }
 
   final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =
     mkCompilationUnit(source).asInstanceOf[ScalaCompilationUnit]
 
   @AfterClass
-  final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
-      project.underlying.delete(/* force */ true, new NullProgressMonitor)
-    }
-  }
+  final def deleteProject(): Unit =
+    SDTTestUtils.deleteProjects(project)
 }

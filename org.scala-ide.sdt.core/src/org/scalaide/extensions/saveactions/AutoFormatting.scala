@@ -1,7 +1,7 @@
 package org.scalaide.extensions
 package saveactions
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.text.Replace
 
@@ -24,12 +24,12 @@ object AutoFormattingSetting extends SaveActionSetting(
 
 trait AutoFormatting extends SaveAction with DocumentSupport {
 
-  def setting = AutoFormattingSetting
+  override def setting = AutoFormattingSetting
 
-  def perform() = {
+  override def perform() = {
     val formatted = ScalaFormatter.formatAsEdits(
         document.text,
-        FormatterPreferences.getPreferences(ScalaPlugin.prefStore))
+        FormatterPreferences.getPreferences(IScalaPlugin().getPreferenceStore()))
     formatted map { case TextEdit(pos, len, text) => Replace(pos, pos+len, text) }
   }
 }

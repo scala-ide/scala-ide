@@ -27,7 +27,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaSourceTypeElement
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ReflectionUtils
@@ -146,7 +146,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
   override def translateToMembers(part: IWorkbenchPart, selection: ISelection): ISelection = {
     def typeRoot(input: IEditorInput): Option[ITypeRoot] =
       Option(input.getAdapter(classOf[IClassFile]).asInstanceOf[IClassFile])
-        .orElse(ScalaPlugin.plugin.scalaCompilationUnit(input).asInstanceOf[Option[ICompilationUnit]])
+        .orElse(IScalaPlugin().scalaCompilationUnit(input).asInstanceOf[Option[ICompilationUnit]])
         .orElse(Option(DebugWorkingCopyManager.getWorkingCopy(input, false)))
 
     val editor = getTextEditor(part)
