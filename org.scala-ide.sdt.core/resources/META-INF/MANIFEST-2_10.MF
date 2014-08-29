@@ -25,7 +25,6 @@ Require-Bundle:
  org.eclipse.jface.text,
  org.eclipse.ltk.core.refactoring,
  org.eclipse.ltk.ui.refactoring,
- org.eclipse.osgi,
  org.eclipse.search,
  org.eclipse.text,
  org.eclipse.ui,
@@ -52,6 +51,7 @@ Require-Bundle:
  org.eclipse.e4.ui.workbench;bundle-version="1.0.2",
  org.eclipse.e4.ui.model.workbench;bundle-version="1.0.1"
 Import-Package: 
+ org.eclipse.osgi.service.datalocation,
  org.eclipse.core.runtime,
  org.eclipse.core.runtime.content,
  org.eclipse.core.runtime.dynamichelpers;version="[3.4.0,3.5.0)",
