@@ -13,6 +13,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils.RichWorkbench
 import org.scalaide.core.SdtConstants
+import org.scalaide.util.internal.eclipse.SWTUtils
 
 /**
  * The purpose of this class is to keep user defined preferences when they are
@@ -20,7 +21,7 @@ import org.scalaide.core.SdtConstants
  */
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with HasLogger {
 
-  private lazy val window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+  private lazy val window = SWTUtils.getWorkbenchWindow.get
 
   override def initializeDefaultPreferences(): Unit = {
     // do not run in an UI less environment
