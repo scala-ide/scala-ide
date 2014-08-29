@@ -13,14 +13,13 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.IScalaPlugin
 import org.junit.AfterClass
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.testsetup.SDTTestUtils
 
 object DirectoryScalaInstallationTest extends TestProjectSetup("classpath") {
 
   @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
-      project.underlying.delete(/* force */ true, new NullProgressMonitor)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 
 }
@@ -117,8 +116,6 @@ class DirectoryScalaInstallationTest {
         withSwing = false,
         withActor = false)
   }
-
-
 
   @Test(expected=classOf[IllegalArgumentException])
   def missingLibrary {

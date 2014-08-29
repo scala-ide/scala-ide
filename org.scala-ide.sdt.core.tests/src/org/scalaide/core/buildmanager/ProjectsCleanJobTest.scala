@@ -10,7 +10,6 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert
 import org.junit.Test
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.junit.Before
@@ -18,8 +17,6 @@ import org.junit.After
 import org.scalaide.core.internal.builder.ProjectsCleanJob
 
 class ProjectsCleanJobTest {
-  val simulator = new EclipseUserSimulator
-  import SDTTestUtils._
 
   @Test def clean_dependent_project_does_not_result_in_exception() {
     // The latch is used to have a deterministic (sequential) execution of the test.
@@ -38,11 +35,11 @@ class ProjectsCleanJobTest {
       }
     }
 
-    val Seq(prjA, prjB) = createProjects("A", "B")
+    val Seq(prjA, prjB) = SDTTestUtils.createProjects("A", "B")
 
     try {
       // B -> A
-      addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, false))
+      SDTTestUtils.addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, false))
 
       Assert.assertEquals("No dependencies for base project", Seq(), prjA.transitiveDependencies)
       Assert.assertEquals("One direct dependency for B", Seq(prjA.underlying), prjB.transitiveDependencies)
@@ -62,7 +59,7 @@ class ProjectsCleanJobTest {
     finally {
       ResourcesPlugin.getWorkspace().removeResourceChangeListener(resourceListener)
       RuntimeLog.removeLogListener(logListener)
-      util.control.Exception.ignoring(classOf[Exception]) { deleteProjects(prjA, prjB) }
+      util.control.Exception.ignoring(classOf[Exception]) { SDTTestUtils.deleteProjects(prjA, prjB) }
     }
   }
 
@@ -73,6 +70,6 @@ class ProjectsCleanJobTest {
   }
 
   private implicit def anonLogListener(f: (IStatus, String) => Unit): ILogListener = new ILogListener {
-    def logging(status: IStatus, plugin: String): Unit = f(status, plugin)
+    override def logging(status: IStatus, plugin: String): Unit = f(status, plugin)
   }
 }

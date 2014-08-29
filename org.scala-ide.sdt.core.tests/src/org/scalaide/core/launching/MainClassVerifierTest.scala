@@ -24,20 +24,16 @@ import org.scalaide.core.internal.launching.MainClassVerifier
 class MainClassVerifierTest {
   import MainClassVerifierTest.EmptyPackage
 
-  protected val simulator = new EclipseUserSimulator
-
   private var project: IScalaProject = _
 
   @Before
   def createProject() {
-    project = simulator.createProjectInWorkspace("main-launcher", true)
+    project = SDTTestUtils.createProjectInWorkspace("main-launcher", true)
   }
 
   @After
   def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+    SDTTestUtils.deleteProjects(project)
   }
 
   /** This test is ignored because there is no way to test it without seriously risking impairing the IDE
@@ -229,9 +225,9 @@ class MainClassVerifierTest {
   }
 
   private def createSource(pkgName: String, typeName: String, content: String): Unit = {
-    val pkg = simulator.createPackage(pkgName)
+    val pkg = SDTTestUtils.createSourcePackage(pkgName)(project)
     val fileName = typeName + ".scala"
-    simulator.createCompilationUnit(pkg, fileName, content).asInstanceOf[ScalaCompilationUnit]
+    SDTTestUtils.createCompilationUnit(pkg, fileName, content)
   }
 }
 

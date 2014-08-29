@@ -8,7 +8,6 @@ import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.scalaide.core.EclipseUserSimulator
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
@@ -19,16 +18,14 @@ import java.io.File
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.testsetup.SDTTestUtils
 
 object ClasspathContainersTests {
-  private val simulator = new EclipseUserSimulator
   private var projects: List[ScalaProject] = List()
 
   @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
-      projects foreach (_.underlying.delete(/* force */ true, new NullProgressMonitor))
-    }
+    SDTTestUtils.deleteProjects(projects: _*)
   }
 }
 
@@ -39,8 +36,7 @@ class ClasspathContainersTests {
   def getLibraryContainer(project: IScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
 
   def createProject(): ScalaProject = {
-    import ClasspathContainersTests.simulator
-    val project = simulator.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
+    val project = SDTTestUtils.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
     projects = project :: projects
     project
   }
@@ -149,7 +145,6 @@ class ClasspathContainersTests {
     // make sure we don't keep the default container here
     project1.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call : classpath container kept after close")
     val container_before = getLibraryContainer(project1)
-    import ClasspathContainersTests.simulator
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       project1.underlying.close(null)
       project1.underlying.open(null)
@@ -186,6 +181,5 @@ class ClasspathContainersTests {
       assertTrue("Going to an older source level and back again should set the original container", extensionallyEqual(container_before, container_after))
     }
   }
-
 
 }

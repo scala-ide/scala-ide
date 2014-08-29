@@ -14,12 +14,11 @@ class MainMethodFinderTest {
 
   private final val TestProjectName = "launchable"
 
-  private val simulator = new EclipseUserSimulator
   private var projectSetup: TestProjectSetup = _
 
   @Before
   def createProject() {
-    val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
+    val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
     }

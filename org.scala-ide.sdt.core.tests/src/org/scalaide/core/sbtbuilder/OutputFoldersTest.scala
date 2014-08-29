@@ -20,8 +20,6 @@ import org.junit.Before
 class OutputFoldersTest {
   val NoContent: String = ""
 
-  val simulator = new EclipseUserSimulator
-
   import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
@@ -29,10 +27,9 @@ class OutputFoldersTest {
     SDTTestUtils.enableAutoBuild(false)
   }
 
-
   @Test def defaultOutputDirectory() {
     val projectName = "test-simple-output-projects"
-    val project = simulator.createProjectInWorkspace(projectName)
+    val project = SDTTestUtils.createProjectInWorkspace(projectName)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/bin".format(projectName))), project.outputFolders)
     project.javaProject.setOutputLocation(new Path("/%s/other-bin".format(projectName)), null)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/other-bin".format(projectName))), project.outputFolders)
@@ -58,7 +55,6 @@ class OutputFoldersTest {
     Assert.assertEquals("Sources", Seq(srcMain, srcTest), sources)
     Assert.assertEquals("Sources", Seq(targetMain, targetTest), outputs)
   }
-
 
   @Test def missingSourceDirectory() {
     val projectName = "missingSources"
@@ -86,11 +82,10 @@ class OutputFoldersTest {
     Assert.assertEquals("Outputs", Seq(targetMain), outputs)
   }
 
-
   /** Create a project with the specified source folders, inclusion and exclusion patterns */
   private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): IScalaProject = {
 
-    val project = simulator.createProjectInWorkspace(name, sourceFolders.isEmpty)
+    val project = SDTTestUtils.createProjectInWorkspace(name, sourceFolders.isEmpty)
 
     val srcEntries =
       for ((dirPath, inclPats, exclPats, binPath) <- sourceFolders) yield {
@@ -103,7 +98,6 @@ class OutputFoldersTest {
     project.javaProject.setRawClasspath((project.javaProject.getRawClasspath() ++ srcEntries).toArray, null);
     project
   }
-
 
   /** Ensure that given folder exists in Eclipse workspace */
   private def ensureFolderExists(top: IContainer, path: IPath) {
@@ -119,7 +113,6 @@ class OutputFoldersTest {
     ensureFolderExists(top, path.segments.toList.drop(1))
   }
 
-
   /** Create a project with src/main/scala and src/test/scala, without any source filters. */
   private def makeDefaultLayoutProject(projectName: String) = {
     val srcMain = new Path("/" +projectName + "/src/main/scala")
@@ -129,7 +122,6 @@ class OutputFoldersTest {
 
     makeProject(projectName, (srcMain, Array(), Array(), targetMain), (srcTest, Array(), Array(), targetTest))
   }
-
 
   @Test def multipleSourceDirsWithoutFilters() {
 
