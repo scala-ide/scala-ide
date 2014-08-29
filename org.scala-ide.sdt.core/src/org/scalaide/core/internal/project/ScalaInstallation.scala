@@ -32,7 +32,9 @@ import scala.util.Failure
 import scala.util.Success
 import org.scalaide.util.internal.CompilerUtils.isBinarySame
 import org.scalaide.util.internal.CompilerUtils.shortString
-import org.scalaide.core.api
+import org.scalaide.core.IScalaInstallationChoice
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaModule
 
 sealed trait ScalaInstallationLabel extends Serializable
 case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
@@ -47,7 +49,7 @@ case class CustomScalaInstallationLabel(label: String) extends ScalaInstallation
  *
  *  @see ScalaInstallation.resolve
  */
-case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Serializable with api.ScalaInstallationChoice {
+case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Serializable with IScalaInstallationChoice {
 
   override def toString() = marker match {
     case Left(version) => shortString(version)
@@ -76,7 +78,7 @@ object ScalaInstallationChoice {
  *  - scala-reflect.jar
  *  - others (actors, swing, etc.)
  */
-trait ScalaInstallation extends api.ScalaInstallation {
+trait ScalaInstallation extends IScalaInstallation {
 
   /** The version of Scala */
   def version: ScalaVersion
@@ -122,7 +124,7 @@ trait LabeledScalaInstallation extends ScalaInstallation {
       override def equals(o: Any) = PartialFunction.cond(o){ case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
 }
 
-case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends api.ScalaModule {
+case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends IScalaModule {
 
   def isValid(): Boolean = {
     sourceJar.fold(List(classJar))(List(_, classJar)) forall {path => path.toFile().isFile()}
@@ -302,7 +304,7 @@ object ScalaInstallation {
     }
   }
 
-  def scalaInstanceForInstallation(si: api.ScalaInstallation): ScalaInstance = {
+  def scalaInstanceForInstallation(si: IScalaInstallation): ScalaInstance = {
       val store = ScalaPlugin().classLoaderStore
       val scalaLoader: ClassLoader = store.getOrUpdate(si)(new URLClassLoader(si.allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
 
@@ -359,7 +361,7 @@ object ScalaInstallation {
 
   }
 
-  def resolve(choice: api.ScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match{
+  def resolve(choice: IScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match{
     case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
     case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
   }

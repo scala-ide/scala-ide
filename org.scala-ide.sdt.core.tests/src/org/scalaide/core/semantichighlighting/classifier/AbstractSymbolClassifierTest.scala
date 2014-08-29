@@ -4,7 +4,7 @@ package semantichighlighting.classifier
 import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import testsetup.TestProjectSetup
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -18,7 +18,7 @@ class AbstractSymbolClassifierTest {
 
   protected val simulator = new EclipseUserSimulator
 
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   @Before
   def createProject() {

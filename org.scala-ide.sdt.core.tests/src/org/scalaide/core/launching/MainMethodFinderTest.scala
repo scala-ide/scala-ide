@@ -1,7 +1,7 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
 import org.junit.After
@@ -30,7 +30,7 @@ class MainMethodFinderTest {
     SDTTestUtils.deleteProjects(project)
   }
 
-  def project: ScalaProject = projectSetup.project
+  def project: IScalaProject = projectSetup.project
 
   @Test
   def findMainMethods() {

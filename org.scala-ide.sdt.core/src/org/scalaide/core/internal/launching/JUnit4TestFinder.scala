@@ -24,7 +24,7 @@ import org.eclipse.jdt.internal.junit.JUnitMessages
 import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
@@ -127,7 +127,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
       pm.done()
   }
 
-  private[core] def filteredTestResources(prj: ScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
+  private[core] def filteredTestResources(prj: IScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
     val candidates = element match {
       case project: IJavaProject => prj.allSourceFiles.toSeq
       case _                     => Seq(element.getResource)

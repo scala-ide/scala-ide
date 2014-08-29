@@ -1,4 +1,4 @@
-package org.scalaide.core.api
+package org.scalaide.core
 
 import org.eclipse.core.resources.IProject
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
@@ -18,9 +18,9 @@ import org.eclipse.core.runtime.IPath
  * A message class to signal various project-related statuses, such as a Scala Installation change, or a successful Build.
  * Immutable.
  */
-trait ScalaProjectEvent
-case class BuildSuccess() extends ScalaProjectEvent
-case class ScalaInstallationChange() extends ScalaProjectEvent
+trait IScalaProjectEvent
+case class BuildSuccess() extends IScalaProjectEvent
+case class ScalaInstallationChange() extends IScalaProjectEvent
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -30,7 +30,7 @@ case class ScalaInstallationChange() extends ScalaProjectEvent
  *  @note All paths are file-system absolute paths. Any path variables or
  *        linked resources are resolved.
  */
-trait ScalaClasspath {
+trait IScalaClasspath {
   /**
    * The JDK elements that should figure on classpath.
    */
@@ -59,7 +59,7 @@ trait ScalaClasspath {
  *
  * This class is not thread-safe.
  */
-trait ScalaProject extends Publisher[ScalaProjectEvent] {
+trait IScalaProject extends Publisher[IScalaProjectEvent] {
 
   /**
    * An IProject which is the project object at the Eclipse platform's level.
@@ -174,7 +174,7 @@ trait ScalaProject extends Publisher[ScalaProjectEvent] {
   /* Classpath Management */
 
   /** The ScalaClasspath Instance valid for tihs project */
-  def scalaClasspath: ScalaClasspath
+  def scalaClasspath: IScalaClasspath
 
   /** The result of validation checks performed on classpath */
   def isClasspathValid(): Boolean
@@ -204,7 +204,7 @@ trait ScalaProject extends Publisher[ScalaProjectEvent] {
    * Get the ScalaInstallation Choice configured for this project.
    * @returns a ScalaInstallationChoice
    */
-  def desiredinstallationChoice(): ScalaInstallationChoice
+  def desiredinstallationChoice(): IScalaInstallationChoice
 
   /**
    * Get the ScalaInstallation used for building this project.
@@ -212,12 +212,12 @@ trait ScalaProject extends Publisher[ScalaProjectEvent] {
    * e.g. if the ScalaInstallation Choice points to a version that is no longer on disk.
    * @returns a usable Scala Installation.
    */
-  def effectiveScalaInstallation(): ScalaInstallation
+  def effectiveScalaInstallation(): IScalaInstallation
 
 }
 
-object ScalaProject {
+object IScalaProject {
 
-  def apply(underlying: IProject): ScalaProject = org.scalaide.core.internal.project.ScalaProject(underlying)
+  def apply(underlying: IProject): IScalaProject = org.scalaide.core.internal.project.ScalaProject(underlying)
 
 }

@@ -16,7 +16,7 @@ import org.scalaide.core.IScalaPlugin
 import org.junit.After
 import org.junit.Ignore
 import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -564,7 +564,7 @@ class ClasspathTests {
   /**
    * Set the new classpath and check the number of errors and warnings attached to the project.
    */
-  private def setRawClasspathAndCheckMarkers(newRawClasspath: Array[IClasspathEntry], expectedWarnings: Int, expectedErrors: Int, scalaProject: ScalaProject = project) {
+  private def setRawClasspathAndCheckMarkers(newRawClasspath: Array[IClasspathEntry], expectedWarnings: Int, expectedErrors: Int, scalaProject: IScalaProject = project) {
     scalaProject.javaProject.setRawClasspath(newRawClasspath, new NullProgressMonitor)
     checkMarkers(expectedNbOfWarningMarker = expectedWarnings, expectedNbOfErrorMarker = expectedErrors, scalaProject)
   }
@@ -572,7 +572,7 @@ class ClasspathTests {
   /** Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
    *  only for classpath markers.
    */
-  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject = project) {
+  private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: IScalaProject = project) {
     // check the classpathValid state
     assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
@@ -588,7 +588,7 @@ class ClasspathTests {
     assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
   }
 
-  private def collectMarkers(scalaProject: ScalaProject): (Int, Int) = {
+  private def collectMarkers(scalaProject: IScalaProject): (Int, Int) = {
     @volatile var actualMarkers: (Int, Int) = (0, 0)
 
     // We need to use a job when counting markers because classpath markers are themselves added in a job

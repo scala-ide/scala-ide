@@ -5,14 +5,14 @@ import org.eclipse.jdt.internal.core.util.SimpleDocument
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.junit.Assert
 import java.util.ArrayList
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import testsetup.SDTTestUtils
 import scala.util.control.Exception
 import scala.collection.immutable
 
 trait QuickAssistTest {
-  var project: ScalaProject = _
+  var project: IScalaProject = _
   var simulator = new EclipseUserSimulator
 
   def create(name: String) {

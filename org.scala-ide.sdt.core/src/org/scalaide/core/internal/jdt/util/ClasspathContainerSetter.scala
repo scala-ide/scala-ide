@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.jdt.util
 
 import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.availableBundledInstallations
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.IScalaPlugin
@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IStatus
 import java.io.FileInputStream
-import org.scalaide.core.api.ScalaModule
+import org.scalaide.core.IScalaModule
 import org.scalaide.logging.HasLogger
 import java.io.FileOutputStream
 import org.eclipse.core.resources.IProject
@@ -29,11 +29,11 @@ trait ScalaClasspathContainerHandler extends HasLogger {
    existingEntries.exists(e => (e.getEntryKind() == context && e.getPath().equals(cp)))
   }
 
-  def updateScalaClasspathContainerEntry(containerPath: IPath, desc:String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): Unit = {
+  def updateScalaClasspathContainerEntry(containerPath: IPath, desc:String, versionString: String, project: IJavaProject, si:IScalaInstallation, existingEntries: Array[IClasspathEntry]): Unit = {
     getAndUpdateScalaClasspathContainerEntry(containerPath, desc, versionString, project, si, existingEntries)
   }
 
-  def getAndUpdateScalaClasspathContainerEntry(containerPath: IPath, desc: String, versionString: String, project: IJavaProject, si:ScalaInstallation, existingEntries: Array[IClasspathEntry]): IClasspathEntry = {
+  def getAndUpdateScalaClasspathContainerEntry(containerPath: IPath, desc: String, versionString: String, project: IJavaProject, si:IScalaInstallation, existingEntries: Array[IClasspathEntry]): IClasspathEntry = {
     val classpathEntriesOfScalaInstallation : Array[IClasspathEntry]=
       if (containerPath.toPortableString() startsWith(SdtConstants.ScalaLibContId))
         (si.library +: si.extraJars).map(_.libraryEntries()).toArray
@@ -60,7 +60,7 @@ class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClass
     else if (path.toPortableString() == SdtConstants.ScalaCompilerContId) "Scala Compiler container"
     else "Scala Container"
 
-  def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[ScalaInstallation] = {
+  def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[IScalaInstallation] = {
     import org.scalaide.util.internal.CompilerUtils.isBinarySame
     val available = availableBundledInstallations
     available.filter { si => isBinarySame(scalaVersion, si.version) }.sortBy(_.version).lastOption
@@ -70,7 +70,7 @@ class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClass
     bestScalaBundleForVersion(scalaVersion) foreach { best => updateBundleFromScalaInstallation(containerPath, best)}
   }
 
-  def updateBundleFromScalaInstallation(containerPath: IPath, si: ScalaInstallation) = {
+  def updateBundleFromScalaInstallation(containerPath: IPath, si: IScalaInstallation) = {
     val entries = javaProject.getRawClasspath()
     updateScalaClasspathContainerEntry(containerPath, descOfScalaPath(containerPath), si.version.unparse, javaProject, si, entries)
   }

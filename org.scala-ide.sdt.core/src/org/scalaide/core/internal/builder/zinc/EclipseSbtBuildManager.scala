@@ -31,7 +31,7 @@ import sbt.compiler.CompileFailed
 import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import xsbti.compile.Inputs
 import sbt.compiler.AnalyzingCompiler
@@ -40,7 +40,7 @@ import sbt.inc.IncOptions
 import xsbti.Maybe
 import org.scalaide.util.internal.SbtUtils.m2o
 import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.hashing.Hashing
 import sbt.inc.SourceInfo
@@ -57,7 +57,7 @@ import org.scalaide.core.SdtConstants
  *
  *  It uses the configured ScalaInstallation, meaning it can build with different versions of Scala.
  */
-class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) extends EclipseBuildManager with HasLogger {
+class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) extends EclipseBuildManager with HasLogger {
   import EclipseSbtBuildManager._
 
   /** Initialized in `build`, used by the SbtProgress. */
@@ -112,7 +112,7 @@ class EclipseSbtBuildManager(val project: ScalaProject, settings0: Settings) ext
 
   override def invalidateAfterLoad: Boolean = true
 
-  def findInstallation(project: ScalaProject): ScalaInstallation = project.effectiveScalaInstallation()
+  def findInstallation(project: IScalaProject): IScalaInstallation = project.effectiveScalaInstallation()
 
   /** Remove the given files from the managed build process. */
   private def removeFiles(files: scala.collection.Set[IFile]) {

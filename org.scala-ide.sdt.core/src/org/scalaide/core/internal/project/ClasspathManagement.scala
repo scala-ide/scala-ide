@@ -42,7 +42,7 @@ import scala.collection.immutable.HashMap
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
-import org.scalaide.core.api
+import org.scalaide.core.IScalaClasspath
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -54,7 +54,7 @@ import org.scalaide.core.api
 case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
   val scalaLibrary: Option[IPath], // scala library
   val userCp: Seq[IPath], // user classpath, excluding the Scala library and JDK
-  val scalaVersionString: Option[String]) extends api.ScalaClasspath {
+  val scalaVersionString: Option[String]) extends IScalaClasspath {
   override def toString =
     """
     jdkPaths: %s

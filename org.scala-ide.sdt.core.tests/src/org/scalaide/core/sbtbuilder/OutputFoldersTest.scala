@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import testsetup.SDTTestUtils
 import org.scalaide.core.IScalaPlugin
 import org.junit.Before
@@ -88,7 +88,7 @@ class OutputFoldersTest {
 
 
   /** Create a project with the specified source folders, inclusion and exclusion patterns */
-  private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): ScalaProject = {
+  private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): IScalaProject = {
 
     val project = simulator.createProjectInWorkspace(name, sourceFolders.isEmpty)
 

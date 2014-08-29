@@ -31,11 +31,11 @@ import org.eclipse.swt.widgets.Link
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.availableInstallations
 import org.scalaide.core.internal.project.ScalaInstallationChoice
-import org.scalaide.core.api.ScalaModule
+import org.scalaide.core.IScalaModule
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders

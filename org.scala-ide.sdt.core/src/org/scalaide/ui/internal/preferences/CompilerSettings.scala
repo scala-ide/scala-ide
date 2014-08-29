@@ -42,7 +42,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.builder.ProjectsCleanJob
 import org.eclipse.core.resources.ProjectScope
-import org.scalaide.core.api.ScalaInstallationChange
+import org.scalaide.core.ScalaInstallationChange
 import org.eclipse.jface.preference.ComboFieldEditor
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
@@ -61,7 +61,7 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.preference.FieldEditor
 import org.scalaide.util.internal.ui.DisplayThread
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.core.api.ScalaProjectEvent
+import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.SdtConstants
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.core.compiler.ScalaPresentationCompiler
@@ -119,7 +119,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
  */
 class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage
-  with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]] {
+  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
   import org.scalaide.util.internal.eclipse.SWTUtils._
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
   // has changed from the saved value
@@ -131,7 +131,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     isWorkbenchPage = true
   }
 
-  override def notify(pub: Publisher[ScalaProjectEvent], event: ScalaProjectEvent): Unit = {
+  override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
     event match { case e:ScalaInstallationChange => save() }
   }
   override def dispose() = {
@@ -395,7 +395,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   /** This widget should only be used on project property pages. */
   class UseProjectSettingsWidget(parent:Composite) extends SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent)
-  with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]]{
+  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]]{
     import SettingConverterUtil._
 
     // TODO - Does this belong here?  For now it's the only place we can really check...
@@ -405,7 +405,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     this += ((e) => handleToggle())
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
 
-    override def notify(pub: Publisher[ScalaProjectEvent], event: ScalaProjectEvent): Unit = {
+    override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match { case e: ScalaInstallationChange =>
         DisplayThread.asyncExec(doLoad())
         DisplayThread.asyncExec(handleToggle())
@@ -451,7 +451,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
         SettingConverterUtil.SCALA_DESIRED_INSTALLATION,
         "Scala Installation",
         choicesOfScalaInstallations(),
-        parent) with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]]{
+        parent) with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]]{
     setPreferenceStore(preferenceStore0)
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
     load()
@@ -465,7 +465,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     def isChanged() = !(currentValue equals initialValue)
 
-    override def notify(pub: Publisher[ScalaProjectEvent], event: ScalaProjectEvent): Unit = {
+    override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match { case e: ScalaInstallation =>
         // the semantics of the initial value have changed through this backend update
         // it's very important to do this before the Load (platform checks on file IO)
@@ -498,13 +498,13 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget(parent:Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent)
-  with Subscriber[ScalaProjectEvent, Publisher[ScalaProjectEvent]] {
+  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
     import org.scalaide.util.internal.eclipse.SWTUtils._
     setPreferenceStore(preferenceStore0)
     load()
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
 
-    override def notify(pub: Publisher[ScalaProjectEvent], event: ScalaProjectEvent): Unit = {
+    override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match { case e: ScalaInstallation =>
         DisplayThread.asyncExec(doLoad())
         DisplayThread.asyncExec(updateApply())

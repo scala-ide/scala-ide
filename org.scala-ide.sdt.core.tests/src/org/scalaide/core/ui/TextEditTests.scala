@@ -12,7 +12,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.junit.AfterClass
@@ -131,7 +131,7 @@ trait CompilerSupport extends EclipseDocumentSupport {
   /** Can be overwritten in a subclass if desired. */
   val projectName: String = getClass().getSimpleName()
 
-  private val project: ScalaProject = {
+  private val project: IScalaProject = {
     val simulator = new EclipseUserSimulator
     simulator.createProjectInWorkspace(projectName)
   }

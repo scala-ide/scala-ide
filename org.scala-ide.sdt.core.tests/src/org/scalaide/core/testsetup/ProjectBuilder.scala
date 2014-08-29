@@ -1,6 +1,6 @@
 package org.scalaide.core.testsetup
 
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.ICompilationUnit
@@ -10,7 +10,7 @@ import org.eclipse.core.resources.IResource
 
 trait ProjectBuilder {
 
-  def project: ScalaProject
+  def project: IScalaProject
 
   def cleanProject() {
     project.clean(new NullProgressMonitor())

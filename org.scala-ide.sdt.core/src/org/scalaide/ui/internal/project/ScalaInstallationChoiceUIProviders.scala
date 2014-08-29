@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.project
 import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.scalaide.core.internal.project.ScalaInstallation.resolve
 import org.eclipse.jface.viewers.Viewer
-import org.scalaide.core.api.ScalaInstallationChoice
+import org.scalaide.core.IScalaInstallationChoice
 import org.scalaide.util.internal.CompilerUtils.shortString
 
 trait ScalaInstallationChoiceUIProviders {
@@ -17,7 +17,7 @@ trait ScalaInstallationChoiceUIProviders {
 
     override def getElements(input: Any): Array[Object] = {
       input match {
-        case l: List[ScalaInstallationChoice] =>
+        case l: List[IScalaInstallationChoice] =>
           l.toArray
       }
     }
@@ -26,7 +26,7 @@ trait ScalaInstallationChoiceUIProviders {
   class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
 
     override def getText(element: Any): String = element match {
-      case ch: ScalaInstallationChoice => ch.marker match {
+      case ch: IScalaInstallationChoice => ch.marker match {
         case Left(scalaVersion) => s"Latest ${shortString(scalaVersion)} bundle (dynamic)"
         case Right(hashcode) => s"Fixed $itemTitle : ${resolve(ch) map (_.version.unparse) getOrElse " none "}"
       }

@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 
 /** A Scala compilation unit. It can be backed up by a `ScalaCompilationUnit` in usual
  *  Scala projects, or any other implementation (such as a specialized Scala DSL, a
@@ -29,7 +29,7 @@ trait InteractiveCompilationUnit {
   def exists(): Boolean
 
   /** The Scala project to which this compilation unit belongs. */
-  def scalaProject: ScalaProject
+  def scalaProject: IScalaProject
 
   /** Return a compiler `SourceFile` implementation with the given contents. The implementation decides
    *  if this is a batch file or a script/other kind of source file.

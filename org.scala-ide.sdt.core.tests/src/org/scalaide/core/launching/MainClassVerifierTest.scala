@@ -1,7 +1,7 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -26,7 +26,7 @@ class MainClassVerifierTest {
 
   protected val simulator = new EclipseUserSimulator
 
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   @Before
   def createProject() {

@@ -1,7 +1,7 @@
 package org.scalaide.core
 package findreferences
 
-import org.scalaide.core.api
+import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model._
 import org.scalaide.logging.HasLogger
@@ -38,7 +38,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   private var projectSetup: TestProjectSetup = _
 
-  def project: api.ScalaProject = projectSetup.project
+  def project: IScalaProject = projectSetup.project
 
   private var typeCheckUnitBeforeRunningTest: Boolean = _
 

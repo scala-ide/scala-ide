@@ -4,7 +4,7 @@ import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import org.eclipse.core.runtime.SubMonitor
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
@@ -27,7 +27,7 @@ import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import java.net.URLClassLoader
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
@@ -38,9 +38,9 @@ import org.scalaide.core.internal.ScalaPlugin
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
  */
-class SbtInputs(installation: ScalaInstallation,
+class SbtInputs(installation: IScalaInstallation,
   sourceFiles: Seq[File],
-  project: ScalaProject,
+  project: IScalaProject,
   javaMonitor: SubMonitor,
   scalaProgress: CompileProgress,
   tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics

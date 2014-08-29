@@ -60,7 +60,7 @@ import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.FixedSizeCache
-import org.scalaide.core.api.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.eclipse.core.runtime.content.IContentType
 import org.scalaide.core.SdtConstants
@@ -132,7 +132,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   lazy val compilerInterfaceStore: CompilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
 
   /** A LRU cache of class loaders for Scala builders */
-  lazy val classLoaderStore: FixedSizeCache[ScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
+  lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]

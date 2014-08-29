@@ -12,7 +12,7 @@ import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
 import org.scalaide.core.internal.project.Nature
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.Utils
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.util.internal.eclipse.SWTUtils
@@ -37,7 +37,7 @@ class MissingScalaRequirementHandler extends RichStatusHandler {
     val msg = status.getMessage()
 
     if (scalaPc.isDefined) {
-      val project: ScalaProject = scalaPc.get.project
+      val project: IScalaProject = scalaPc.get.project
       val projectName = project.underlying.getName
       val message = s"There was an error initializing the Scala compiler: $msg \n\n The editor compiler will be restarted when the project is cleaned or the classpath is changed. Add the Scala library to the classpath of project $projectName?"
 

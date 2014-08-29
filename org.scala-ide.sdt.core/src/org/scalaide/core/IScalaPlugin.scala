@@ -5,7 +5,6 @@ import org.scalaide.logging.HasLogger
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.core.api.ScalaProject
 
 object IScalaPlugin {
 
@@ -49,10 +48,10 @@ trait IScalaPlugin extends AbstractUIPlugin with HasLogger {
    *  If it is not known if the project has the Scala nature or not,
    *  use [[org.scalaide.core.IScalaPlugin!.asScalaProject]] instead.
    */
-  def getScalaProject(project: IProject): ScalaProject
+  def getScalaProject(project: IProject): IScalaProject
 
   /**
    * Return Some(ScalaProject) if the project has the Scala nature, None otherwise.
    */
-  def asScalaProject(project: IProject): Option[ScalaProject]
+  def asScalaProject(project: IProject): Option[IScalaProject]
 }

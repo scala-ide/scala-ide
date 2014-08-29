@@ -2,7 +2,7 @@ package org.scalaide.core.project
 
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.core.api
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
@@ -90,7 +90,7 @@ class ScalaInstallationTest {
   val m2RepoLocationPattern = "(.*/)([^/]+)/([^/]+)/[^/]+\\.jar".r
   val pluginsLocationPattern = "(.*/)([^/]+)_([^/]+)\\.jar".r
 
-  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: api.ScalaInstallation) = {
+  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: IScalaInstallation) = {
 
     def isLibraryBundle(bundle: Bundle) = {
       val version = bundle.getVersion()

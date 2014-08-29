@@ -4,7 +4,7 @@ import org.junit.Test
 import org.junit.Assert
 import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.api
+import org.scalaide.core.IScalaProject
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.JavaCore
 import org.scalaide.core.IScalaPlugin
@@ -18,7 +18,7 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import sbt.ScalaInstance
-import org.scalaide.core.api.ScalaModule
+import org.scalaide.core.IScalaModule
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.SdtConstants
@@ -58,7 +58,7 @@ class MultiScalaVersionTest {
     }
   }
 
-  private def setScalaLibrary(p: api.ScalaProject, lib: IPath): Unit = {
+  private def setScalaLibrary(p: IScalaProject, lib: IPath): Unit = {
     val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != SdtConstants.ScalaLibContId)
     p.javaProject.setRawClasspath(baseClasspath :+ JavaCore.newLibraryEntry(lib, null, null), null)
   }

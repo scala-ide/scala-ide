@@ -9,7 +9,7 @@ import xsbti.{ Position, Severity }
 import org.scalaide.util.internal.SbtUtils
 import org.scalaide.util.internal.eclipse.FileUtils
 import org.eclipse.core.runtime.Path
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.resources.MarkerFactory
@@ -36,7 +36,7 @@ private case class SbtProblem(severity: Severity, message: String, position: Pos
  *
  *  @note It removes duplicate errors coming from scalac.
  */
-private[zinc] class SbtBuildReporter(project: ScalaProject) extends xsbti.Reporter with HasLogger {
+private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Reporter with HasLogger {
   private val probs = new mutable.ArrayBuffer[xsbti.Problem]
   private var seenErrors = false
   private var seenWarnings = false

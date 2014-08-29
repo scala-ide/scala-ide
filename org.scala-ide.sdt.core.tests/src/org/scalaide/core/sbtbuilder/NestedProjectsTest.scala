@@ -3,7 +3,7 @@ package sbtbuilder
 
 import testsetup.TestProjectSetup
 import testsetup.SDTTestUtils
-import org.scalaide.core.api.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -30,7 +30,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
   /**
    * The nested scala project
    */
-  lazy val scalaProject: ScalaProject = {
+  lazy val scalaProject: IScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       // create the project
