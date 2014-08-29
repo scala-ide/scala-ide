@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor
 
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceStatus
 import org.eclipse.core.runtime.Assert
@@ -15,19 +14,23 @@ import org.eclipse.jdt.core.IJavaModelStatusConstants
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.CompilationUnitInfo
-import org.eclipse.jdt.internal.ui.javaeditor.ISavePolicy
 import org.eclipse.jdt.ui.JavaUI
+import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.ReflectAccess
 
 class ScalaDocumentProvider
     extends CompilationUnitDocumentProvider
     with HasLogger
     with SaveActionExtensions {
 
-  /** We need to access private values of the super class */
-  private val ra = ReflectAccess[CompilationUnitDocumentProvider](this)
+  /** Indicates whether the save has been initialized by this provider. */
+  private var saveInitialized = false
+
+  override def saveDocumentContent(m: IProgressMonitor, element: AnyRef, doc: IDocument, overwrite: Boolean): Unit = {
+    if (!saveInitialized)
+      super.saveDocumentContent(m, element, doc, overwrite)
+  }
 
   override def commitWorkingCopy(m: IProgressMonitor, element: AnyRef, info: CompilationUnitInfo, overwrite: Boolean): Unit = {
     val monitor = if (m == null) new NullProgressMonitor() else m
@@ -74,7 +77,7 @@ class ScalaDocumentProvider
 
     var subMonitor: IProgressMonitor = null
     try {
-      fIsAboutToSave = true
+      saveInitialized = true
 
       // the Java editor calls [[CleanUpPostSaveListener]] here and calculates
       // changed regions which we don't need
@@ -106,7 +109,7 @@ class ScalaDocumentProvider
         fireElementStateChangeFailed(element)
         throw x
     } finally {
-      fIsAboutToSave = false
+      saveInitialized = false
       if (subMonitor != null)
         subMonitor.done()
     }
@@ -124,18 +127,5 @@ class ScalaDocumentProvider
       new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
     else
       new NullProgressMonitor()
-
-  private def fIsAboutToSave: Boolean =
-    withDefaultValue(false)(ra.fIsAboutToSave[Boolean])
-
-  private def fIsAboutToSave_=(b: Boolean): Unit =
-    withDefaultValue(())(ra.fIsAboutToSave = b)
-
-  private def withDefaultValue[A](default: A)(f: => A) =
-    try f catch {
-      case e: Exception =>
-        logger.error("", e)
-        default
-    }
 
 }
