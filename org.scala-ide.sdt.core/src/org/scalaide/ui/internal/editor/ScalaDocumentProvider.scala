@@ -75,7 +75,7 @@ class ScalaDocumentProvider
       return
     }
 
-    var subMonitor: IProgressMonitor = null
+    val subMonitor = getSubProgressMonitor(monitor, 70)
     try {
       saveInitialized = true
 
@@ -83,8 +83,6 @@ class ScalaDocumentProvider
       // changed regions which we don't need
       val doc = info.fTextFileBuffer.getDocument()
       val listeners = Array(createScalaSaveActionListener(doc))
-
-      subMonitor = getSubProgressMonitor(monitor, if (listeners.length > 0) 70 else 100)
 
       info.fCopy.commitWorkingCopy(overwrite || isSynchronized, subMonitor)
       if (listeners.length > 0)
@@ -110,8 +108,7 @@ class ScalaDocumentProvider
         throw x
     } finally {
       saveInitialized = false
-      if (subMonitor != null)
-        subMonitor.done()
+      subMonitor.done()
     }
 
     // If here, the dirty state of the editor will change to "not dirty".
@@ -122,10 +119,9 @@ class ScalaDocumentProvider
     }
   }
 
-  private def getSubProgressMonitor(monitor: IProgressMonitor, ticks: Int): IProgressMonitor =
-    if (monitor != null)
-      new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
-    else
-      new NullProgressMonitor()
+  private def getSubProgressMonitor(monitor: IProgressMonitor, ticks: Int): IProgressMonitor = monitor match {
+    case m: NullProgressMonitor ⇒ m
+    case _                      ⇒ new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
+  }
 
 }
