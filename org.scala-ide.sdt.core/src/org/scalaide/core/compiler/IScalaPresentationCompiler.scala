@@ -169,7 +169,7 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *
    *  This is usually called when files changed on disk and the associated compiler
    *  symbols need to be refreshed. For example, a git checkout will trigger
-   *  such a scall.
+   *  such a call.
    */
   def refreshChangedFiles(files: List[IFile]): Unit
 
@@ -184,8 +184,16 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
   /** Convenience method for creating a Response */
   def withResponse[A](op: Response[A] => Any): Response[A]
 
-  /** Find the definition of given symbol. Returns a compilation unit and an offset in that unit. */
-  def locate(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)]
+  /** Find the definition of given symbol. Returns a compilation unit and an offset in that unit.
+   *
+   *  @note The offset is relative to the Scala source file represented by the given unit. This may
+   *        be different from the absolute offset in the workspace file of that unit, if the unit is
+   *        not a Scala source file. For example, Play templates are translated on the fly to Scala
+   *        sources. The returned offset would be relative to the Scala translation, and would need
+   *        to be mapped back to the Play template offset before being used to reveal an editor
+   *        location.
+   */
+  def findDeclaration(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)]
 
   /** Return the JDT element corresponding to this Scala symbol. This method is time-consuming
    *  and may trigger building the structure of many Scala files.

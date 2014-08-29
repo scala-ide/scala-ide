@@ -35,7 +35,7 @@ abstract class HyperlinkFactory {
 
   def create(createHyperlink: Hyperlink.Factory, scu: InteractiveCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
     global.asyncExec {
-      global.locate(sym, scu.scalaProject.javaProject) map {
+      global.findDeclaration(sym, scu.scalaProject.javaProject) map {
         case (f, pos) =>
           val text = sym.kindString + " " + sym.fullName
           createHyperlink(f, pos, sym.name.length, text, region)

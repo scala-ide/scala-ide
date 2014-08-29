@@ -27,7 +27,7 @@ import org.eclipse.jdt.core.IJavaProject
 
 trait LocateSymbol { self: ScalaPresentationCompiler =>
 
-  def locate(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)] = {
+  def findDeclaration(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)] = {
     def find[T, V](arr: Array[T])(f: T => Option[V]): Option[V] = {
       for (e <- arr) {
         f(e) match {
@@ -79,24 +79,23 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
 
     val sourceFile = findSourceFile()
 
-    val target =
+    val targetUnit: Option[InteractiveCompilationUnit] =
       if (sourceFile.isDefined)
         SourceFileProviderRegistry.getProvider(sourceFile.get).createFrom(sourceFile.get)
       else
         findClassFile()
 
-    target flatMap { file =>
+    targetUnit flatMap { cunit =>
       val pos = if (sym.pos eq NoPosition) {
-        file.withSourceFile { (f, _) =>
-          val pos = new Response[Position]
-          askLinkPos(sym, f, pos)
+        cunit.withSourceFile { (f, _) =>
+          val pos = askLinkPos(sym, f)
           pos.get.left.toOption
         }.flatten
       } else Some(sym.pos)
 
       pos flatMap { p =>
         if (p eq NoPosition) None
-        else Some(file -> p.point)
+        else Some(cunit -> p.point)
       }
     }
   }
