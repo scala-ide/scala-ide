@@ -72,9 +72,6 @@ class ScalaDocumentProvider
       return
     }
 
-    if (fSavePolicy != null)
-      fSavePolicy.preSave(info.fCopy)
-
     var subMonitor: IProgressMonitor = null
     try {
       fIsAboutToSave = true
@@ -120,19 +117,6 @@ class ScalaDocumentProvider
       val model = info.fModel.asInstanceOf[AbstractMarkerAnnotationModel]
       model.updateMarkers(document)
     }
-
-    if (fSavePolicy != null) {
-      val unit = fSavePolicy.postSave(info.fCopy)
-      if (unit != null && info.fModel.isInstanceOf[AbstractMarkerAnnotationModel]) {
-        val r = unit.getResource()
-        val markers = r.findMarkers(IMarker.MARKER, true, IResource.DEPTH_ZERO)
-        if (markers != null && markers.length > 0) {
-          val model = info.fModel.asInstanceOf[AbstractMarkerAnnotationModel]
-          for (marker <- markers)
-            model.updateMarker(document, marker, null)
-        }
-      }
-    }
   }
 
   private def getSubProgressMonitor(monitor: IProgressMonitor, ticks: Int): IProgressMonitor =
@@ -140,9 +124,6 @@ class ScalaDocumentProvider
       new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
     else
       new NullProgressMonitor()
-
-  private def fSavePolicy: ISavePolicy =
-    withDefaultValue(null: ISavePolicy)(ra.fSavePolicy[ISavePolicy])
 
   private def fIsAboutToSave: Boolean =
     withDefaultValue(false)(ra.fIsAboutToSave[Boolean])
