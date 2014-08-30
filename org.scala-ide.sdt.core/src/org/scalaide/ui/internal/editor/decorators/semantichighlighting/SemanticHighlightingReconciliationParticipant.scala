@@ -11,6 +11,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.extensions.ReconciliationParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import org.scalaide.ui.internal.editor.decorators.macros.MacroHighlightingPresenter
 
 /**
  * This class is instantiated by the reconciliationParticipants extension point and
@@ -21,6 +22,9 @@ import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlighting
  */
 class ImplicitHighlighter extends SemanticHighlightingReconciliationParticipant(
     reconciler = new SemanticHighlightingReconciliation(List(viewer => new ImplicitHighlightingPresenter(viewer))))
+
+class MacroHighlighter extends SemanticHighlightingReconciliationParticipant(
+    reconciler = new SemanticHighlightingReconciliation(List(viewer => new MacroHighlightingPresenter(viewer))))
 
 @deprecated("This is not needed and should be removed the moment implicit highlighting is hooked in the editor", "2.1.0")
 class SemanticHighlightingReconciliationParticipant(private val reconciler: SemanticHighlightingReconciliation) extends ReconciliationParticipant {
