@@ -1,7 +1,7 @@
-package org.scalaide.logging.ui.preferences
+package org.scalaide.ui.internal.logging
 
 import org.scalaide.logging.Level
-import org.scalaide.logging.LogManager
+import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
@@ -14,6 +14,7 @@ import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.SWT
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
+import org.scalaide.core.internal.logging.LoggingPreferenceConstants
 
 class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
 

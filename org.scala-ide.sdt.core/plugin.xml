@@ -106,7 +106,7 @@
       </page>
       <page
             category="org.scalaide.ui.preferences"
-            class="org.scalaide.logging.ui.preferences.LoggingPreferencePage"
+            class="org.scalaide.ui.internal.logging.LoggingPreferencePage"
             id="org.scalaide.ui.preferences.logging"
             name="Logging">
       </page>
@@ -831,7 +831,7 @@
            class="org.scalaide.ui.internal.preferences.ImplicitsPagePreferenceInitializer">
      </initializer>
      <initializer
-           class="org.scalaide.logging.ui.preferences.LoggingPreferencePageInitializer">
+           class="org.scalaide.ui.internal.logging.LoggingPreferencePageInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.PreferenceInitializer">

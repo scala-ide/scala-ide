@@ -15,7 +15,7 @@ import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
-import org.scalaide.logging.LogManager
+import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.SdtConstants

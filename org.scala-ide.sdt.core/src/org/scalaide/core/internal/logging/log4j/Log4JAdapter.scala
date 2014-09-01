@@ -1,4 +1,4 @@
-package org.scalaide.logging.log4j
+package org.scalaide.core.internal.logging.log4j
 
 import org.scalaide.logging.Logger
 import org.apache.log4j.{Logger => Log4JLogger}

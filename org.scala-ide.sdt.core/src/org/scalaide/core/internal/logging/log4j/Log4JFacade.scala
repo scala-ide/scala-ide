@@ -1,11 +1,10 @@
-package org.scalaide.logging.log4j
+package org.scalaide.core.internal.logging.log4j
 
 import org.scalaide.logging.Logger
 import org.apache.log4j.{ Level => Log4JLevel }
 import org.apache.log4j.{ Logger => Log4JLogger }
 import org.apache.log4j.LogManager
 import org.scalaide.logging.Level
-import org.scalaide.logging.log4j
 import java.io.File
 
 /**
@@ -61,7 +60,7 @@ private[logging] abstract class Log4JFacade {
       this(name)
     }
 
-    def apply(name: String): Logger = log4j.Log4JAdapter(name)
+    def apply(name: String): Logger = Log4JAdapter(name)
   }
 
   /** Get the logger instance for the passed {{{clazz}}}. */
