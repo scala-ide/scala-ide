@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.jdt.model
 import scala.tools.eclipse.contribution.weaving.jdt.imagedescriptor.IImageDescriptorSelector
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.ui.text.java.LazyJavaCompletionProposal
-import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ImageDescriptor
 import org.scalaide.core.internal.jdt.model.ScalaElement
 
 class ScalaImageDescriptorSelector extends IImageDescriptorSelector {

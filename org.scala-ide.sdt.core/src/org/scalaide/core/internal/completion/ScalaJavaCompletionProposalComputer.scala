@@ -9,7 +9,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
 import org.eclipse.jface.text.Document
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.completion.ScalaCompletionProposal
 import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.AST
