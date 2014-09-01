@@ -27,7 +27,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   val isOverwrite: Boolean) extends source.Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
 
   def open() {
-    val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
+    val tpe0 = JDTUtils.resolveType(scu.scalaProject.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
     tpe0 foreach { (tpe) =>
         val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
         if (method.exists)

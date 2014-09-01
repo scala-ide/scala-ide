@@ -13,6 +13,9 @@ import scala.collection.mutable.Publisher
 import java.io.File
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.compiler.IPresentationCompilerProxy
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.SearchableEnvironment
 
 /**
  * A message class to signal various project-related statuses, such as a Scala Installation change, or a successful Build.
@@ -214,6 +217,11 @@ trait IScalaProject extends Publisher[IScalaProjectEvent] {
    */
   def effectiveScalaInstallation(): IScalaInstallation
 
+  /** Returns a new search name environment for this Scala project.
+   *
+   *  @param workingCopyOwner A working copy owner who's copies are searched first.
+   */
+  def newSearchableEnvironment(workingCopyOwner: WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY): SearchableEnvironment
 }
 
 object IScalaProject {

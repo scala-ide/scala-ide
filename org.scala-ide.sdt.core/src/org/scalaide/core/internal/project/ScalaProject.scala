@@ -66,6 +66,10 @@ import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.SearchableEnvironment
+import org.eclipse.jdt.internal.core.JavaProject
 
 
 object ScalaProject {
@@ -589,6 +593,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (!IScalaPlugin().headlessMode)
       SWTUtils.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
     shutDownCompilers()
+  }
+
+  override def newSearchableEnvironment(workingCopyOwner: WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY): SearchableEnvironment = {
+    val jProject = javaProject.asInstanceOf[JavaProject]
+    jProject.newSearchableNameEnvironment(workingCopyOwner)
   }
 
   override def toString: String = underlying.getName

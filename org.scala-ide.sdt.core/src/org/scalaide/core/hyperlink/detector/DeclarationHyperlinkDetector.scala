@@ -76,7 +76,7 @@ object DeclarationHyperlinkDetector {
 object JavaSelectionEngine extends HasLogger {
  protected[hyperlink] def getJavaElements(icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
     try {
-      val environment = icu.newSearchableEnvironment()
+      val environment = icu.scalaProject.newSearchableEnvironment()
       val requestor = new ScalaSelectionRequestor(environment.nameLookup, openable)
       val engine = new ScalaSelectionEngine(environment, requestor, icu.scalaProject.javaProject.getOptions(true))
       val offset = mappedRegion.getOffset

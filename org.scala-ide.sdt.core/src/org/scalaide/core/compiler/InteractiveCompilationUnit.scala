@@ -68,14 +68,4 @@ trait InteractiveCompilationUnit {
   def withSourceFile[T](op: (SourceFile, IScalaPresentationCompiler) => T): Option[T] = {
     scalaProject.presentationCompiler(op(sourceFile, _))
   }
-
-  /** Returns a new search name environment for the scala project.
-   *
-   *  @param workingCopyOwner The owner of an this Compilation Unit in working copy mode.
-   */
-  def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY) : SearchableEnvironment = {
-    val javaProject = scalaProject.javaProject.asInstanceOf[JavaProject]
-    javaProject.newSearchableNameEnvironment(workingCopyOwner)
-  }
-
 }
