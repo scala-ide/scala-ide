@@ -169,9 +169,8 @@ trait ScalaCompilationUnit extends Openable
   def addToIndexer(indexer : ScalaSourceIndexer) {
     if (scalaProject.hasScalaNature) {
       try scalaProject.presentationCompiler.internal { compiler =>
-        compiler.withParseTree(sourceFile) { tree =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
-        }
+        val tree = compiler.parseTree(sourceFile)
+        new compiler.IndexBuilderTraverser(indexer).traverse(tree)
       } catch {
         case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
       }
