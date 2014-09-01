@@ -21,7 +21,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils

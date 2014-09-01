@@ -1,4 +1,4 @@
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
 import scala.tools.nsc.interactive.Global
 

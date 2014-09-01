@@ -1,4 +1,4 @@
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
@@ -24,6 +24,8 @@ import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.extensions.SourceFileProviderRegistry
 import org.eclipse.jdt.core.IJavaProject
+
+import org.scalaide.core.compiler._
 
 trait LocateSymbol { self: ScalaPresentationCompiler =>
 

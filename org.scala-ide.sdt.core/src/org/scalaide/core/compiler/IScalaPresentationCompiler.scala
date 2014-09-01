@@ -16,6 +16,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.core.compiler._
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.compiler.InternalServices
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -187,7 +188,7 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
   /** Find the definition of given symbol. Returns a compilation unit and an offset in that unit.
    *
    *  @note The offset is relative to the Scala source file represented by the given unit. This may
-   *        be different from the absolute offset in the workspace file of that unit, if the unit is
+   *        be different from the absolute offset in the workspace file of that unit if the unit is
    *        not a Scala source file. For example, Play templates are translated on the fly to Scala
    *        sources. The returned offset would be relative to the Scala translation, and would need
    *        to be mapped back to the Play template offset before being used to reveal an editor

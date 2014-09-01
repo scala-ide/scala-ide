@@ -1,10 +1,16 @@
 package org.scalaide.core.compiler
 
+import org.scalaide.core.IScalaProject
+
 /** A handle to the presentation compiler that abstracts compiler lifecycle management.
  *
  *  The Scala compiler is a managed resource. It may be shutdown when the classpath changes, etc.
  */
 trait IPresentationCompilerProxy {
+
+  /** The project to which this presentation compiler belongs. */
+  def project: IScalaProject
+
   /** Ask to restart the presentation compiler before processing the next request. */
   def askRestart(): Unit
 

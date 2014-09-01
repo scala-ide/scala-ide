@@ -14,7 +14,7 @@ import org.eclipse.jdt.internal.core.search.matching.MatchLocator
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch
 import scala.reflect.internal.util.RangePosition
 import scala.reflect.internal.util.Position
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.internal.ReflectionUtils
 import org.eclipse.jdt.internal.core.search.matching.PatternLocator
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern

@@ -6,7 +6,6 @@ import testsetup.SDTTestUtils._
 import testsetup.TestProjectSetup
 import org.eclipse.core.resources.IFile
 import java.util.NoSuchElementException
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 

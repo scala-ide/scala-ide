@@ -7,7 +7,7 @@ import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.compiler.InternalServices
+import org.scalaide.core.internal.compiler.InternalServices
 
 /** Implementation of a internal compiler services dealing with mapping Scala types and symbols
  *  to internal JDT counterparts.

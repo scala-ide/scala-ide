@@ -1,7 +1,6 @@
 package org.scalaide.core
 
 import org.eclipse.core.resources.IProject
-import org.scalaide.core.compiler.PresentationCompilerProxy
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile

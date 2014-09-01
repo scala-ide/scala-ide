@@ -32,7 +32,7 @@ import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.NoPosition
 import org.scalaide.util.internal.ReflectionUtils
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils
 import org.scalaide.core.internal.jdt.util.ImportContainerInfoUtils
 

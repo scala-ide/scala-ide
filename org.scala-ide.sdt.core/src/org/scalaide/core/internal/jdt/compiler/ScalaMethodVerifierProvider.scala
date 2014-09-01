@@ -3,7 +3,6 @@ package org.scalaide.core.internal.jdt.compiler
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IProject

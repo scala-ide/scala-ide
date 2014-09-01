@@ -8,7 +8,6 @@ import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.AfterClass
 import org.junit.ComparisonFailure
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.scalaide.core.IScalaProject

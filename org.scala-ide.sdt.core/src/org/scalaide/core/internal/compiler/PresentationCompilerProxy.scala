@@ -1,23 +1,19 @@
-package org.scalaide.core.compiler
+package org.scalaide.core
+package internal.compiler
 
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.Settings
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.util.internal.Utils
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError
-import java.util.Collections.synchronizedList
-import org.scalaide.core.internal.project.Nature
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.MultiStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
+import org.scalaide.core.compiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
-import org.scalaide.core.SdtConstants
-import org.scalaide.core._
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *

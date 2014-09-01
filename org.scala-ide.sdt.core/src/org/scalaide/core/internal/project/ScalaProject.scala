@@ -41,8 +41,8 @@ import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin.plugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.compiler.PresentationCompilerProxy
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
 import org.scalaide.core.internal.builder
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile

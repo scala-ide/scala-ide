@@ -1,6 +1,6 @@
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
-import IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 trait JavaSig { pc: ScalaPresentationCompiler =>
 

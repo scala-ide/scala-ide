@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.launching
 
 import scala.collection.mutable.ListBuffer
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.MissingRequirementError

@@ -1,6 +1,5 @@
 package org.scalaide.core.completion
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants

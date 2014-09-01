@@ -47,6 +47,11 @@ trait InteractiveCompilationUnit {
    */
   def reconcile(newContents: String): List[IProblem]
 
+  /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,
+   *  ensuring faster response when calling `getProblems`.
+   */
+  def scheduleReconcile(): Response[Unit]
+
   /** Return all compilation errors from this unit. Waits until the unit is type-checked.
    *  It may be long running, but it won't force retype-checking. If the unit was already typed,
    *  the answer is fast.
@@ -68,11 +73,6 @@ trait InteractiveCompilationUnit {
   def withSourceFile[T](op: (SourceFile, IScalaPresentationCompiler) => T): Option[T] = {
     scalaProject.presentationCompiler(op(sourceFile, _))
   }
-
-  /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,
-   *  ensuring faster response when calling `getProblems`.
-   */
-  def scheduleReconcile(): Response[Unit]
 
   /** Returns a new search name environment for the scala project.
    *

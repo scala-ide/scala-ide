@@ -39,7 +39,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.ReflectionUtils

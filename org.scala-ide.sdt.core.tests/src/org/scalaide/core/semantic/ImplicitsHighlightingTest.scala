@@ -11,7 +11,6 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Before
 import org.junit.Test
 import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler

@@ -8,7 +8,7 @@ import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit

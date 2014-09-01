@@ -20,7 +20,7 @@ import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.internal.ScalaWordFinder
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {

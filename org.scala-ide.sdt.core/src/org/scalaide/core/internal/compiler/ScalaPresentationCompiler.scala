@@ -1,4 +1,4 @@
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.concurrent
@@ -44,6 +44,7 @@ import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
+import org.scalaide.core.compiler._
 
 class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
   /*

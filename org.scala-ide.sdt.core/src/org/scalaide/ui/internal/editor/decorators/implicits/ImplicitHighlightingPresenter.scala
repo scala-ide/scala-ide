@@ -13,7 +13,7 @@ import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.hyperlink.Hyperlink
 import org.scalaide.core.hyperlink.HyperlinkFactory
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit

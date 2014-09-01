@@ -3,7 +3,6 @@ package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.CompilerAccess
 import scala.tools.refactoring.common.PimpedTrees
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._

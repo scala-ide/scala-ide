@@ -21,7 +21,7 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 trait InstallationManagement { this: ScalaProject =>
 

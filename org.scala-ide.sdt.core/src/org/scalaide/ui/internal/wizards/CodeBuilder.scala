@@ -9,7 +9,6 @@ import org.eclipse.jdt.core.Signature
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
-import org.scalaide.core.compiler.PresentationCompilerProxy
 import org.scalaide.core.compiler.IPresentationCompilerProxy
 
 trait CodeBuilder {

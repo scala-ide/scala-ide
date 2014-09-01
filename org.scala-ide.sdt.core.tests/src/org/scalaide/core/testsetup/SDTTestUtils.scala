@@ -31,7 +31,7 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.NullProgressMonitor

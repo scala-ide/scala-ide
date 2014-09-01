@@ -15,7 +15,7 @@ import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.FileUtils

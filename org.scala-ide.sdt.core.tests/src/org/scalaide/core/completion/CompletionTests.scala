@@ -5,7 +5,6 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
 import org.scalaide.util.internal.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
 import org.junit.Test

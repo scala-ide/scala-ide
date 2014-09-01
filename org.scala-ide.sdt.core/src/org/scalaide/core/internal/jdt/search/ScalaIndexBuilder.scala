@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IFile
 import scala.tools.nsc.symtab.Flags
 
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.logging.HasLogger
 
