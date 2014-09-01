@@ -155,7 +155,7 @@ trait ScalaCompilationUnit extends Openable
    *          only notifies when the unit was added to the managed sources list, *not*
    *          that it was typechecked.
    */
-  override def scheduleReconcile(): Response[Unit] = {
+  override def initialReconcile(): Response[Unit] = {
     val r = (new Response[Unit])
     r.set(())
     r

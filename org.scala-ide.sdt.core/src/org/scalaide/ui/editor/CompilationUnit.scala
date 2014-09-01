@@ -22,7 +22,7 @@ abstract class CompilationUnit(override val workspaceFile: IFile) extends Intera
   override def exists(): Boolean = workspaceFile.exists()
 
   /** no-op */
-  override def scheduleReconcile(): Response[Unit] = {
+  override def initialReconcile(): Response[Unit] = {
     val r = new Response[Unit]
     r.set(())
     r

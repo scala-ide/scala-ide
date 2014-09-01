@@ -119,7 +119,7 @@ class FreshFile {
     // still no units should be loaded
     Assert.assertTrue("Presentation compiler should not maintain any units after structure build (%s)".format(managedUnits()), managedUnits().isEmpty)
 
-    cu.scheduleReconcile().get
+    cu.initialReconcile().get
 
     // now the unit should be managed
     Assert.assertEquals("Presentation compiler should maintain one unit after reload (%s)".format(managedUnits()), 1, managedUnits().size)
@@ -130,7 +130,7 @@ class FreshFile {
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
-    Seq(cu, cu1).foreach(_.scheduleReconcile().get)
+    Seq(cu, cu1).foreach(_.initialReconcile().get)
 
     Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits())
 
@@ -146,7 +146,7 @@ class FreshFile {
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
-    Seq(cu, cu1).foreach(_.scheduleReconcile().get)
+    Seq(cu, cu1).foreach(_.initialReconcile().get)
 
     Assert.assertEquals("Managed compilation units", Set(cu, cu1), managedUnits())
 

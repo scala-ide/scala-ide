@@ -41,16 +41,21 @@ trait InteractiveCompilationUnit {
   def sourceFile(): SourceFile =
     sourceFile(getContents)
 
-  /** Reconcile the unit. Return all compilation errors.
+  /** Reconcile this unit. Return all compilation errors.
    *
    *  Blocks until the unit is type-checked.
    */
   def reconcile(newContents: String): List[IProblem]
 
-  /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,
-   *  ensuring faster response when calling `getProblems`.
+  /** Schedule the unit for reconciliation and add it to the presentation compiler managed units. This should
+   *  be called before any other calls to {{{IScalaPresentationCompiler.scheduleReload}}}
+   *
+   *  This method is the entry-point to the managed units in the presentation compiler: it should perform an initial
+   *  askReload and add the unit to the managed set, so from now on `scheduleReload` can be used instead.
+   *
+   *  This method should not block.
    */
-  def scheduleReconcile(): Response[Unit]
+  def initialReconcile(): Response[Unit]
 
   /** Return all compilation errors from this unit. Waits until the unit is type-checked.
    *  It may be long running, but it won't force retype-checking. If the unit was already typed,

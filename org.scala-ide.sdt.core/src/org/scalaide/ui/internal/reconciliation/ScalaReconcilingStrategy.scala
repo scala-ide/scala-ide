@@ -61,7 +61,7 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
 
   override def initialReconcile() {
     // an askReload there adds the scUnit to the list of managed CUs
-    icUnit.scheduleReconcile()
+    icUnit.initialReconcile()
     reconcile(null)
   }
 

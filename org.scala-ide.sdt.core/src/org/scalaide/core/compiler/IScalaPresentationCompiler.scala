@@ -28,13 +28,18 @@ import org.scalaide.core.internal.compiler.InternalServices
  *
  *  A unit can be in the following states:
  *    - unloaded (unmanaged). The PC won't attempt to parse or type-check it. Usually, any Scala file that is not
- *      open in an editor is not loaded
- *    - loaded. This state corresponds to units open inside an editor. In this state, every reload (in turn,
- *      triggered by a keystroke) will parse and type-check (and report errors as a side effect) such units. A
- *      unit gets in this state after a call to `askReload(unit, contents)`.
+ *               open in an editor is not loaded
+ *    - loaded. This state corresponds to units open inside an editor. In this state, every askReload (for example,
+ *              triggered by a keystroke) will parse and type-check (and report errors as a side effect) such units. A
+ *              unit gets in this state after a call to `askReload(unit, contents)`.
+ *    - dirty. Units that have changes that haven't been reloaded yet. This is usually a subset of `loaded` (excluding
+ *             files that have been deleted or closed). A unit is added to the dirty set using `scheduleReload`, and removed
+ *             when `flushScheduledReloads` is called (usually after the reconciliation timeout, 500ms). Dirty units are
+ *             flushed automatically when calling various `ask` methods, so that completion and hyperlinking are always
+ *             up-to-date
  *    - crashed. A loaded unit that caused the type-checker to crash will be in this state. It won't be parsed
- *      nor typechecked anymore. To re-enable it, call `askToDoFirst`, which is usually called when an editor is
- *      open (meaning the file was closed and reopen).
+ *               nor type-checked anymore. To re-enable it, call `askToDoFirst`, which is usually called when an editor is
+ *               open (meaning that when a file was closed and reopen it will be retried).
  */
 trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalServices {
 
