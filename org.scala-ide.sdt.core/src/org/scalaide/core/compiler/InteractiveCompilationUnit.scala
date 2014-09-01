@@ -61,11 +61,6 @@ trait InteractiveCompilationUnit {
   /** Return the current contents of this compilation unit. */
   def getContents(): Array[Char]
 
-  /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
-  def doWithSourceFile(op: (SourceFile, IScalaPresentationCompiler) => Unit) {
-    scalaProject.presentationCompiler { op(sourceFile, _) }
-  }
-
   /** Perform an operation on the source file, with the current presentation compiler.
    *
    *  @param op The operation to be performed

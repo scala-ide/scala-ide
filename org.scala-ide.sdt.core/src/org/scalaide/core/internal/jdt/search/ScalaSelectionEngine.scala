@@ -34,7 +34,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
   def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    icu.doWithSourceFile { (src, compiler) =>
+    val src = icu.sourceFile()
+    icu.scalaProject.presentationCompiler { compiler =>
 
       import compiler.{ log => _, _ }
 

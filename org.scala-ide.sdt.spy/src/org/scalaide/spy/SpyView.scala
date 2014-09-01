@@ -49,10 +49,10 @@ class SpyView extends ViewPart with HasLogger {
     part match {
       case icuEditor: InteractiveCompilationUnitEditor =>
         val cu = icuEditor.getInteractiveCompilationUnit
-        cu.doWithSourceFile { (source, compiler) =>
+        cu.scalaProject.presentationCompiler { compiler =>
           import compiler._
 
-          typedTreeAtSelection(compiler)(source, selection) match {
+          typedTreeAtSelection(compiler)(cu.sourceFile, selection) match {
             case Left(tree) =>
               val buf = new StringBuffer
               buf.append("\n\n============\n\nTree: \t\t" + tree.productPrefix)
@@ -120,10 +120,10 @@ class SpyView extends ViewPart with HasLogger {
       override def run() {
         val editor = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor()
         doWithCompilationUnit(editor) { unit =>
-          unit.doWithSourceFile { (source, compiler) =>
+          unit.scalaProject.presentationCompiler { compiler =>
             import compiler._
 
-            typedTreeAtSelection(compiler)(source, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
+            typedTreeAtSelection(compiler)(unit.sourceFile, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
               case Left(tree) =>
                 import treeBrowsers._
 
