@@ -58,7 +58,6 @@ import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.ui.DisplayThread
 
-
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
 
@@ -69,7 +68,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
 
   private lazy val selectionListener = new ISelectionListener() {
-    def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+    override def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
       selection match {
         case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
         case _ =>
@@ -112,7 +111,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
     // disable Java indent logic, which is otherwise invoked when the tab key is entered
     setAction("IndentOnTab", null)
-    sourceViewer.setTabsToSpacesConverter(null)
 
     val selectEnclosingAction = new actions.ScalaStructureSelectEnclosingAction(this, selectionHistory)
     selectEnclosingAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.SELECT_ENCLOSING)
@@ -131,6 +129,15 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
   }
+
+  /**
+   * The tabs to spaces converter of the editor is not partition aware,
+   * therefore we disable it here. There is an auto edit strategy configured in
+   * the [[ScalaSourceViewerConfiguration]] that handles the conversion for each
+   * partition separately.
+   */
+  override def isTabsToSpacesConversionEnabled(): Boolean =
+    false
 
   override protected def initializeKeyBindingScopes() {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
@@ -321,11 +328,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
         } else {
           super.handlePreferenceStoreChanged(event)
         }
-
-        // whatever event occurs that leads to the creation of the converter,
-        // we don't want it. We use auto edits to describe the behavior of
-        // tab-space conversions.
-        sourceViewer.setTabsToSpacesConverter(null)
     }
   }
 
