@@ -25,7 +25,7 @@ import org.eclipse.core.runtime.Platform
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
-import org.scalaide.logging.LogManager
+import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import java.io.File
 import java.net.URI

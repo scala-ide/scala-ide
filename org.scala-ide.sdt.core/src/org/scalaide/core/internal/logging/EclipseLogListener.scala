@@ -1,10 +1,9 @@
-package org.scalaide.logging
+package org.scalaide.core.internal.logging
 
 import org.eclipse.core.runtime.ILogListener
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
-import scala.collection.mutable.StringBuilder
-import org.eclipse.core.runtime.Status
+import org.scalaide.logging.Logger
 
 /**
  * This class forwards to the provided {{{Logger}}} all log requests occurring in the Eclipse

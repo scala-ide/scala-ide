@@ -1,6 +1,6 @@
-package org.scalaide.logging.ui.preferences
+package org.scalaide.core.internal.logging
 
-private[logging] object LoggingPreferenceConstants {
+object LoggingPreferenceConstants {
   private final val Prefix = "scala.tools.eclipse.logging.ui.properties."
   final val LogLevel = Prefix + "LogLevel"
   final val IsConsoleAppenderEnabled = Prefix + "ConsoleAppenderEnabled"

@@ -1,4 +1,4 @@
-package org.scalaide.logging
+package org.scalaide.core.internal.logging
 
 private[logging] object StreamRedirect {
   import java.io.OutputStream

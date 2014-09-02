@@ -7,7 +7,7 @@ import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IWorkbenchWindow
 import org.scalaide.util.internal.Utils
-import org.scalaide.logging.LogManager
+import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.eclipse.SWTUtils
 

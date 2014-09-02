@@ -1,10 +1,12 @@
-package org.scalaide.logging
+package org.scalaide.core.internal.logging
 
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.logging.log4j.Log4JFacade
-import org.scalaide.logging.ui.preferences.LoggingPreferenceConstants._
+import org.scalaide.core.internal.logging.log4j.Log4JFacade
+import org.scalaide.core.internal.logging.LoggingPreferenceConstants._
 import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.logging.HasLogger
+import org.scalaide.logging.Level
 
 object LogManager extends Log4JFacade with HasLogger {
 
@@ -66,7 +68,7 @@ object LogManager extends Log4JFacade with HasLogger {
     else Level.withName(levelName)
   }
 
-  private[logging] def defaultLogLevel: Level.Value = Level.WARN
+  def defaultLogLevel: Level.Value = Level.WARN
 
   override def isConsoleAppenderEnabled: Boolean =
     ScalaPlugin().getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)

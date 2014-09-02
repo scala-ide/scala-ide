@@ -1,4 +1,4 @@
-package org.scalaide.logging
+package org.scalaide.core.internal.logging
 
 import java.util.concurrent.atomic.AtomicReference
 import org.scalaide.core.IScalaPlugin
@@ -10,6 +10,7 @@ import scala.util.control.ControlThrowable
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
+import org.scalaide.logging.Logger
 
 /** Use the `EclipseLogger` when you want to communicate with the user. Messages logged
  *  through the `EclipseLogger` are persisted in the Error Log.
@@ -27,7 +28,7 @@ import org.eclipse.core.runtime.Status
  *  [[java.util.concurrent.atomic.AtomicReference]]) would have made this class less correct (because
  *  volatile fields don't offer atomic operations such as `getAndSet`).
  */
-private[logging] object EclipseLogger extends Logger {
+object EclipseLogger extends Logger {
   private val pluginLogger: ILog = IScalaPlugin().getLog()
 
   private val lastCrash: AtomicReference[Throwable] = new AtomicReference

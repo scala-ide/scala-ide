@@ -2,6 +2,8 @@ package org.scalaide.logging
 
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
+import org.scalaide.core.internal.logging.EclipseLogListener
+import org.scalaide.core.internal.logging.LogManager
 
 /**
  * This trait can be used to configure an Eclipse plug-in to use an external logging framework (such as Log4J).
