@@ -33,6 +33,13 @@ class EditorUtilsTest {
    */
   final def test(input: String, expectedOutput: String, changes: Seq[String]): Unit = {
 
+    require(((n: Int) ⇒ n == 1 || n == 2)(input.count(_ == '^')), "No selection specified.")
+    val selStart = input.indexOf('^')
+    val selEnd = {
+      val e = input.indexOf('^', selStart+1)
+      if (e > selStart) e else selStart
+    }
+
     def findBraces(pos: Int, m: Map[Int, Int]): Map[Int, Int] = {
       val open = input.indexOf("[", pos)
 
@@ -41,7 +48,12 @@ class EditorUtilsTest {
       else {
         val close = input.indexOf(']', open+1)
         val s = (m.size)*2
-        findBraces(close, m + ((open-s, close-s-1)))
+        if (open < selStart)
+          findBraces(close, m + ((open-s, close-s-1)))
+        else if (close < selEnd)
+          findBraces(close, m + ((open-s-1, close-s-1)))
+        else
+          findBraces(close, m + ((open-s-1, close-s-2)))
       }
     }
 
@@ -55,9 +67,6 @@ class EditorUtilsTest {
     val braces = findBraces(0, Map())
     val sourceWithoutBraces = input.replaceAll("\\[|\\]", "")
 
-    require(((n: Int) ⇒ n == 1 || n == 2)(sourceWithoutBraces.count(_ == '^')), "No selection specified.")
-    val sel = findSelection(sourceWithoutBraces)
-
     require(braces.size == changes.size, "The number of changes need to be equal to the number of the regions.")
     val edit = new MultiTextEdit
     changes zip braces foreach {
@@ -65,6 +74,7 @@ class EditorUtilsTest {
         edit.addChild(new ReplaceEdit(start, end-start, change))
     }
 
+    val sel = findSelection(sourceWithoutBraces)
     val sourceWithoutCursor = sourceWithoutBraces.replaceAll("\\^", "")
     val doc = new Document(sourceWithoutCursor)
     val s = EditorUtils.applyMultiTextEdit(doc, sel, edit)
@@ -136,4 +146,147 @@ class EditorUtilsTest {
     |  def f = 0^
     |}
     |""".stripMargin after Seq("class S", "def g = 0")
+
+  @Test
+  def remove_after_cursor_position() = """|
+    |class X {
+    |  def f = 0^
+    |  [def g = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test
+  def multiple_remove_after_cursor_position() = """|
+    |class X {
+    |  def f = 0^
+    |  [def g = 0]
+    |}
+    |[class S]
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  $
+    |}
+    |
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def add_after_cursor_position() = """|
+    |class X {
+    |  def f = 0^
+    |  []
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  def g = 0
+    |}
+    |""".stripMargin after Seq("def g = 0")
+
+  @Test
+  def multiple_add_after_cursor_position() = """|
+    |class X {
+    |  def f = 0^
+    |  []
+    |}
+    |[]
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  def g = 0
+    |}
+    |class S
+    |""".stripMargin after Seq("def g = 0", "class S")
+
+  @Test
+  def remove_before_and_after_cursor_position() = """|
+    |class X {
+    |  [def g = 0]
+    |  def f = 0^
+    |  [def x = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $
+    |  def f = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def multiple_remove_before_and_after_cursor_position() = """|
+    |[class S]
+    |class X {
+    |  [def g = 0]
+    |  def f = 0^
+    |  [def x = 0]
+    |}
+    |[class M]
+    |""".stripMargin becomes """|
+    |
+    |class X {
+    |  $
+    |  def f = 0^
+    |  $
+    |}
+    |
+    |""".stripMargin after Seq("", "", "", "")
+
+  @Test
+  def add_before_and_after_cursor_position() = """|
+    |class X {
+    |  []
+    |  def f = 0^
+    |  []
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def g = 0
+    |  def f = 0^
+    |  def x = 0
+    |}
+    |""".stripMargin after Seq("def g = 0", "def x = 0")
+
+  @Test
+  def multiple_add_before_and_after_cursor_position() = """|
+    |[]
+    |class X {
+    |  []
+    |  def f = 0^
+    |  []
+    |}
+    |[]
+    |""".stripMargin becomes """|
+    |class S
+    |class X {
+    |  def g = 0
+    |  def f = 0^
+    |  def x = 0
+    |}
+    |class M
+    |""".stripMargin after Seq("class S", "def g = 0", "def x = 0", "class M")
+
+  @Test
+  def remove_and_add_before_and_after_cursor_position() = """|
+    |[class S]
+    |class X {
+    |  []
+    |  def f = 0^
+    |  []
+    |}
+    |[class M]
+    |""".stripMargin becomes """|
+    |
+    |class X {
+    |  def g = 0
+    |  def f = 0^
+    |  def x = 0
+    |}
+    |
+    |""".stripMargin after Seq("", "def g = 0", "def x = 0", "")
 }
