@@ -583,12 +583,13 @@ class ClasspathTests {
 
   private def collectMarkers(scalaProject: IScalaProject): (Int, Int) = {
     @volatile var actualMarkers: (Int, Int) = (0, 0)
+    @volatile var jobDone = false
 
     // We need to use a job when counting markers because classpath markers are themselves added in a job
     // By using the project as a scheduling rule, we are forced to wait until the classpath marker job has
     // finished. Otherwise, there's a race condition between the classpath validator job (that removes old
     // markers and adds new ones) and this thread, that might read between the delete and the add
-    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", project.underlying) { monitor =>
+    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", scalaProject.underlying) { monitor =>
       // count the markers on the project
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0
