@@ -7,6 +7,8 @@ import org.eclipse.jface.text.TextSelection
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 object HasArgs extends Enumeration {
   val NoArgs, EmptyArgs, NonEmptyArgs = Value
@@ -35,6 +37,7 @@ object CompletionContext {
   case object ApplyContext extends ContextType
   case object NewContext extends ContextType
   case object ImportContext extends ContextType
+  case object InfixMethodContext extends ContextType
 }
 
 
@@ -60,7 +63,7 @@ case class CompletionProposal(
   getParamNames: () => List[List[String]], // parameter names (excluding any implicit parameter sections)
   paramTypes: List[List[String]],          // parameter types matching parameter names (excluding implicit parameter sections)
   fullyQualifiedName: String, // for Class, Trait, Type, Objects: the fully qualified name
-  needImport: Boolean        // for Class, Trait, Type, Objects: import statement has to be added
+  needImport: Boolean         // for Class, Trait, Type, Objects: import statement has to be added
 ) {
 
   /** `getParamNames` is expensive, save this result once computed.
@@ -86,21 +89,80 @@ case class CompletionProposal(
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
   def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
-    if (context.contextType == CompletionContext.ImportContext
-        || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist)
-        || (isJava && explicitParamNames == List(Nil) && completion.startsWith("get")))
+    if ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist)
       completion
-    else {
-      val buffer = new StringBuffer(completion)
+    else
+      completionData.completionString
+  }
 
-      for (section <- explicitParamNames)
-        buffer.append(section.mkString("(", ", ", ")"))
-      buffer.toString
+  private case class CompletionData(completionString: String, linkedModeGroups: IndexedSeq[(Int, Int)])
+
+  /** Compute the full completion string and linked-mode groups.
+   *
+   *  The default completion string consists of the method name (`completion`) followed
+   *  by all explicit argument lists, pre-filled with the name of the corresponding
+   *  parameter at that position.
+   *
+   *  Special cases:
+   *    - Java getters. A Java method with no parameters will omit the empty param list
+   *    - one-argument higher-order functions. The parameter is surrounded by braces instead
+   *      of parenthesis, and a dummy function `x => ???` is placed instead of the parameter
+   *      name.
+   *    - non-argument higher order functions. The parameter is surrounded by braces and
+   *      a dummy function `() => ???` is placed instead of the parameter name
+   */
+  private lazy val completionData = {
+    import CompletionContext._
+    if (context.contextType == ImportContext
+        || (isJava && explicitParamNames == List(Nil) && completion.startsWith("get")))
+      CompletionData(completion, IndexedSeq.empty)
+    else {
+      val offset = startPos + completion.length
+      explicitParamNames.zip(paramTypes) match {
+        case List((List(_), List(SimpleFunctionType("()", _)))) if shouldInsertLambda =>
+          CompletionData(s"""$completion { () => ??? }""", IndexedSeq((offset + 9, 3)))
+
+        case List((List(_), List(SimpleFunctionType(x, _)))) if shouldInsertLambda && !x.contains(",") =>
+          CompletionData(s"""$completion { x => ??? }""", IndexedSeq((offset + 3, 1), (offset + 8, 3)))
+
+        case _ =>
+          val buffer = new StringBuffer(completion)
+
+          for (section <- explicitParamNames)
+            buffer.append(section.mkString("(", ", ", ")"))
+          CompletionData(buffer.toString, explicitParamsLinkedGroups)
+      }
     }
   }
 
+  private val shouldInsertLambda =
+    (context.contextType == CompletionContext.InfixMethodContext
+        || ScalaPlugin().getPreferenceStore.getBoolean(EditorPreferencePage.P_ENABLE_HOF_COMPLETION))
+
+  /** Match a simple function of form {{{A => B}}}
+   *  where neither A nor B are function types.
+   */
+  private case object SimpleFunctionType {
+    def unapply(fun: String): Option[(String, String)] = {
+      fun.split("=>") match {
+        case Array(a, b) => Some(a.trim, b.trim)
+        case _           => None
+      }
+    }
+  }
+
+  /** Return the pair of offset -> length for linked-mode groups corresponding to
+   *  the completion string. Offsets are relative to the document.
+   *
+   *  For example, for a completion string like {{{meth(a, bar)}}} this method would
+   *  return {{{IndexedSeq((offset + 1) -> 1, (offset + 4) -> 3}}}, where offset is
+   *  the index at the beginning of the parameter list.
+   */
+  def linkedModeGroups: IndexedSeq[(Int, Int)] =
+    completionData.linkedModeGroups
+
   /** Non GUI logic that calculates the `(offset, length)` groups for the `LinkedModeModel` */
-  def linkedModeGroups: IndexedSeq[(Int, Int)] = {
+  private def explicitParamsLinkedGroups: IndexedSeq[(Int, Int)] = {
     var groups = IndexedSeq[(Int, Int)]()
     var offset = startPos + completion.length
     for (section <- explicitParamNames) {

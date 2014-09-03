@@ -146,7 +146,7 @@ class StandardCompletionTests {
   """ becomes """
     class Ticket1000475 {
       val m = Map(1 -> "1")
-      m(1) forall([[p]])^
+      m(1) forall { [[x]] => [[???]] }^
       println()
     }
   """ after Completion("forall(Char => Boolean): Boolean")
@@ -289,5 +289,35 @@ class StandardCompletionTests {
     }
   """ after Completion(
       "canRead(): Boolean",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHigherOrderFunction() = """
+    object Test {
+      def withResource[T](f: T => Unit): Unit = ???
+      this.withR^
+    }
+  """ becomes """
+    object Test {
+      def withResource[T](f: T => Unit): Unit = ???
+      this.withResource { [[x]] => [[???]] }^
+    }
+  """ after Completion(
+      "withResource[T](T => Unit): Unit",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHOFWithEmptyParens() = """
+    object Test {
+      def lzyEval(f: () => Any): Unit = ???
+      this.lzy^
+    }
+  """ becomes """
+    object Test {
+      def lzyEval(f: () => Any): Unit = ???
+      this.lzyEval { () => [[???]] }^
+    }
+  """ after Completion(
+      "lzyEval(() => Any): Unit",
       expectedNumberOfCompletions = 1)
 }
