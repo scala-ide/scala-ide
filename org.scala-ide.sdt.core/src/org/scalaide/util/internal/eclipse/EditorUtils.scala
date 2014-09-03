@@ -118,7 +118,6 @@ object EditorUtils {
     r <- Option(e.getEditorInput().getAdapter(classOf[IResource]))
   } yield r.asInstanceOf[IResource]
 
-
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
     PartialFunction.condOpt(e) {
       case t: ISourceViewerEditor => t
@@ -219,7 +218,9 @@ object EditorUtils {
       selectionStart >= regionStart && selectionEnd <= regionEnd
     }
 
-    val selectionCannotBeRetained = edit.getChildren map (_.getRegion) exists selectionIsInManipulatedRegion
+    val subregions = edit.getChildren map (_.getRegion)
+    val intersection = subregions find selectionIsInManipulatedRegion
+    val selectionCannotBeRetained = intersection.isDefined
 
     if (selectionCannotBeRetained) {
       // the selection overlaps the selected region, so we are on
@@ -230,12 +231,13 @@ object EditorUtils {
         // we just keep the current selection
         new TextSelection(document, textSelection.getOffset, textSelection.getLength)
       } else {
-        // if the edit starts before the selection, we keep the
-        // selection relative to the end of the document.
-        val originalLength = document.getLength
+        val lenAfterSelection = subregions.collect { case r if r.getOffset() > textSelection.getOffset() ⇒ r.getLength() }.sum
+        val offsetInIntersection = intersection.fold(0)(r ⇒ r.getLength()-(textSelection.getOffset()-r.getOffset()))
+        val originalLength = document.getLength()
         edit.apply(document)
-        val modifiedLength = document.getLength
-        new TextSelection(document, textSelection.getOffset + (modifiedLength - originalLength), textSelection.getLength())
+        val modifiedLength = document.getLength()-originalLength
+        val newOffset = textSelection.getOffset()+modifiedLength+lenAfterSelection+offsetInIntersection
+        new TextSelection(document, newOffset, textSelection.getLength())
       }
 
     } else {

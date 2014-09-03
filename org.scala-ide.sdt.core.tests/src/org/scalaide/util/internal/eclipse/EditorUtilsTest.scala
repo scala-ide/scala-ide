@@ -289,4 +289,56 @@ class EditorUtilsTest {
     |}
     |
     |""".stripMargin after Seq("", "def g = 0", "def x = 0", "")
+
+  @Test
+  def remove_after_cursor_with_cursor_at_beginning_of_range() = """|
+    |class X {
+    |  def f = 0^[  ]
+    |  [def g = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def remove_after_cursor_with_cursor_at_end_of_range() = """|
+    |class X {
+    |  def f = 0[  ]^
+    |  [def g = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def remove_before_and_after_cursor_with_cursor_at_beginning_of_range() = """|
+    |class X {
+    |  [def g = 0]
+    |  def f = 0^[  ]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $
+    |  def f = 0^
+    |}
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def remove_before_and_after_with_cursor_at_end_of_range() = """|
+    |class X {
+    |  [def g = 0]
+    |  def f = 0[  ]^
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $
+    |  def f = 0^
+    |}
+    |""".stripMargin after Seq("", "")
 }
