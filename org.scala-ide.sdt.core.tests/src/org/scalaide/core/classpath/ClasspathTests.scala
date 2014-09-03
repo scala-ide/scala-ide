@@ -566,16 +566,12 @@ class ClasspathTests {
    *  only for classpath markers.
    */
   private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: IScalaProject = project) {
+
+    val (nbOfErrorMarker, nbOfWarningMarker) = collectMarkers(scalaProject)
+
     // check the classpathValid state
-    assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
-    @volatile var actualMarkers = (0, 0)
-    SDTTestUtils.waitUntil(TIMEOUT) {
-      actualMarkers = collectMarkers(scalaProject)
-      actualMarkers == ((expectedNbOfErrorMarker, expectedNbOfWarningMarker))
-    }
-
-    val (nbOfErrorMarker, nbOfWarningMarker) = actualMarkers
     // after TIMEOUT, we didn't get the expected value
     assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
     assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
@@ -601,18 +597,11 @@ class ClasspathTests {
           case _                        =>
         }
       actualMarkers = (nbOfErrorMarker, nbOfWarningMarker)
+      jobDone = true
       Status.OK_STATUS
     }
 
-    @volatile var jobDone = false
-    object jobListener extends JobChangeAdapter {
-      override def done(event: IJobChangeEvent) {
-        jobDone = true
-      }
-    }
-
     val job = countMarkersJob()
-    job.addJobChangeListener(jobListener)
     job.schedule()
 
     SDTTestUtils.waitUntil(TIMEOUT) { jobDone }
