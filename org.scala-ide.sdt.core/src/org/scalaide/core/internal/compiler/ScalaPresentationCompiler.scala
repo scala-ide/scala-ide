@@ -44,6 +44,7 @@ import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
 
 class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
@@ -208,41 +209,8 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
 
   @deprecated("Use asyncExec instead", "4.0.0")
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
-    val response = askForResponse(op)
-
-    val res = if (IScalaPlugin().noTimeoutMode) Some(response.get) else response.get(timeout)
-
-    res match {
-      case None =>
-        eclipseLog.info("Timeout in askOption", new Throwable) // log a throwable for its stacktrace
-        None
-
-      case Some(result) =>
-        result match {
-          case Right(fi: FailedInterrupt) =>
-            fi.getCause() match {
-              case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
-              case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
-              case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
-              // This can happen if you ask long queries of the
-              // PC, triggering long sleep() sessions on caller
-              // side.
-              case i: InterruptedException       => logger.debug("InterruptedException in ask:\n" + i)
-              case e                             => eclipseLog.error("Error during askOption", e)
-            }
-            None
-
-          case Right(m: MissingResponse) =>
-            logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
-            None
-
-          case Right(e: Throwable) =>
-            eclipseLog.error("Error during askOption", e)
-            None
-
-          case Left(v) => Some(v)
-        }
-    }
+    import scala.concurrent.duration._
+    asyncExec(op()).getOption(timeout.millis)
   }
 
   /** Ask to put scu in the beginning of the list of files to be typechecked.
@@ -271,9 +239,9 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
       askFilesDeleted(units.map(_.sourceFile()).toList, new Response[Unit])
   }
 
-  def discardCompilationUnit(scu: InteractiveCompilationUnit) {
+  def discardCompilationUnit(scu: InteractiveCompilationUnit): Unit = {
     logger.info("discarding " + scu.sourceFile.path)
-    askOption { () => removeUnitOf(scu.sourceFile) }
+    asyncExec { removeUnitOf(scu.sourceFile) }.getOption()
   }
 
   /** Tell the presentation compiler to refresh the given files,

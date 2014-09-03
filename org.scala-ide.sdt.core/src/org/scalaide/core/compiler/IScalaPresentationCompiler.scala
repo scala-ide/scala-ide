@@ -44,13 +44,13 @@ import org.scalaide.core.internal.compiler.InternalServices
 trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalServices {
 
   /** Removes source files and top-level symbols, and issues a new typer run.
-   *  Returns () to syncvar `response` on completion.
+   *
+   *  @return A `Response[Unit]` to sync when the operation was completed.
    */
   def askFilesDeleted(sources: List[SourceFile]): Response[Unit] =
     withResponse[Unit](askFilesDeleted(sources, _))
 
-  /** Sets sync var `response` to the position of the definition of the given link in
-   *  the given source file.
+  /** Return the position of the definition of the given symbol in the given source file.
    *
    *  @param   sym      The symbol referenced by the link (might come from a classfile)
    *  @param   source   The source file that's supposed to contain the definition
@@ -64,7 +64,8 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
   def askLinkPos(sym: Symbol, source: SourceFile): Response[Position] =
     withResponse[Position](askLinkPos(sym, source, _))
 
-  /** Set sync var `response` to the parse tree of `source` with all top-level symbols entered.
+  /** Return the parse tree of `source` with all top-level symbols entered.
+   *
    *  @param source       The source file to be analyzed
    *  @param keepLoaded   If set to `true`, source file will be kept as a loaded unit afterwards.
    *                      If keepLoaded is `false` the operation is run at low priority, only after
@@ -116,8 +117,8 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
     withResponse[Tree](askLoadedTyped(sourceFile, keepLoaded, _))
 
   /** If source if not yet loaded, get an outline view with askParseEntered.
-   *  If source is loaded, wait for it to be typechecked.
-   *  In both cases, set response to parsed (and possibly typechecked) tree.
+   *  If source is loaded, wait for it to be type-checked.
+   *  In both cases, set response to parsed (and possibly type-checked) tree.
    *
    *  @param keepSrcLoaded If set to `true`, source file will be kept as a loaded unit afterwards.
    *  @param keepLoaded    Whether to keep that file in the PC if it was not loaded before. If
@@ -136,7 +137,7 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *
    *  This operation might interrupt background type-checking and take precedence. It
    *  is important that such operations are fast, or otherwise they will 'starve' any
-   *  job waiting for a full typecheck.
+   *  job waiting for a full type-check.
    */
   def asyncExec[A](op: => A): Response[A]
 
@@ -255,7 +256,7 @@ object IScalaPresentationCompiler extends HasLogger {
        *  Failures are logged:
        *   - TypeError and FreshRunReq are printed to stdout, all the others are logged in the platform error log.
        */
-      def getOrElse[B >: A](default: B)(timeout: Duration = AskTimeout) = {
+      def getOrElse[B >: A](default: B)(timeout: Duration = AskTimeout): B = {
         getOption(timeout).getOrElse(default)
       }
 
@@ -291,7 +292,7 @@ object IScalaPresentationCompiler extends HasLogger {
                 None
 
               case Right(m: MissingResponse) =>
-                logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
+                logger.info("MissingResponse in ask. Called from: ", m)
                 None
 
               case Right(e: Throwable) =>
