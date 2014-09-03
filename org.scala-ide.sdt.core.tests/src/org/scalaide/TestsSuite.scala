@@ -42,6 +42,7 @@ import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
+import org.scalaide.util.internal.eclipse.EditorUtilsTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -87,6 +88,7 @@ import org.scalaide.ui.wizards.WizardTests
     classOf[MultiScalaVersionTest],
     classOf[DirectoryScalaInstallationTest],
     classOf[CompletionTestSuite],
-    classOf[WizardTests]
+    classOf[WizardTests],
+    classOf[EditorUtilsTest]
 ))
 class TestsSuite
