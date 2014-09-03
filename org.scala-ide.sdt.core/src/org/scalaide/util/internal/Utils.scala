@@ -37,7 +37,7 @@ object Utils extends HasLogger {
       case t: Throwable =>
         msgIfError match {
           case Some(errMsg) => eclipseLog.error(errMsg, t)
-          case None         => eclipseLog.error(t)
+          case None         => eclipseLog.error("Error during tryExecute", t)
         }
         None
     }
