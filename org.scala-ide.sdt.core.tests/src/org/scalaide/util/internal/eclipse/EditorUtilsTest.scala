@@ -47,11 +47,12 @@ class EditorUtilsTest {
         m
       else {
         val close = input.indexOf(']', open+1)
-        val s = (m.size)*2
+        val s = m.size*2
         if (open < selStart)
-          findBraces(close, m + ((open-s, close-s-1)))
-        else if (close < selEnd)
-          findBraces(close, m + ((open-s-1, close-s-1)))
+          if (close < selEnd)
+            findBraces(close, m + ((open-s, close-s-1)))
+          else
+            findBraces(close, m + ((open-s, close-s-2)))
         else
           findBraces(close, m + ((open-s-1, close-s-2)))
       }
@@ -367,4 +368,30 @@ class EditorUtilsTest {
     |  def f = 0+1^
     |}
     |""".stripMargin after Seq("def g = 0", "+1")
+
+  @Test
+  def remove_after_cursor_with_cursor_inside_of_range() = """|
+    |class X {
+    |  def f = 0[ ^ ]
+    |  [def g = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("", "")
+
+  @Test
+  def remove_before_cursor_with_cursor_inside_of_range() = """|
+    |class X {
+    |  [def g = 0]
+    |  def f = 0[ ^ ]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $
+    |  def f = 0^
+    |}
+    |""".stripMargin after Seq("", "")
 }
