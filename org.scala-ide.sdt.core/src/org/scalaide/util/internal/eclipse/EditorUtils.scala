@@ -245,7 +245,7 @@ object EditorUtils {
         edit.apply(document)
         val modifiedLength = document.getLength()-originalLength
         val newOffset = textSelection.getOffset()+modifiedLength+lenAfterSelection+offsetInIntersection
-        new TextSelection(document, newOffset, textSelection.getLength())
+        new TextSelection(document, newOffset, 0)
       }
 
     } else {

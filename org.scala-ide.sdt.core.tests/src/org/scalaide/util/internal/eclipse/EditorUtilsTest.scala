@@ -455,7 +455,7 @@ class EditorUtilsTest {
     |class S
     |""".stripMargin after Seq("")
 
-  @Test @Ignore
+  @Test
   def remove_with_selection_case_4() = """|
     |class X {
     |  [def ^g =^ 0]
