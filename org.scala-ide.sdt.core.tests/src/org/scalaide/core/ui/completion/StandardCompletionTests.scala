@@ -260,4 +260,34 @@ class StandardCompletionTests {
   """ after Completion(
       "doNothingWith(Any): Unit",
       expectedNumberOfCompletions = 1)
+
+  @Test
+  def noEmptyParensForJavaGetter() = """
+    object Test {
+      val a = "test string"
+      a.getB^
+    }
+  """ becomes """
+    object Test {
+      val a = "test string"
+      a.getBytes^
+    }
+  """ after Completion(
+      "getBytes(): Array[Byte]",
+      expectedNumberOfCompletions = 4)
+
+  @Test
+  def emptyParensForJavaNonGetter() = """
+    object Test {
+      val a: java.io.File = new java.io.File("")
+      a.canR^
+    }
+  """ becomes """
+    object Test {
+      val a: java.io.File = new java.io.File("")
+      a.canRead()^
+    }
+  """ after Completion(
+      "canRead(): Boolean",
+      expectedNumberOfCompletions = 1)
 }

@@ -400,7 +400,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
     relevance -= casePenalty
 
     val namesAndTypes = for {
-      section <- sym.paramss
+      section <- tpe.paramss
       if section.isEmpty || !section.head.isImplicit
     } yield for (param <- section) yield (param.name.toString, param.tpe.toString)
 
