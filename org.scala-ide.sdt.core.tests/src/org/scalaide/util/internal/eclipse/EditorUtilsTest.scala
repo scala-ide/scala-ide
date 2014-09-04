@@ -6,6 +6,7 @@ import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.junit.ComparisonFailure
 import org.junit.Test
+import org.junit.Ignore
 
 class EditorUtilsTest {
 
@@ -33,7 +34,8 @@ class EditorUtilsTest {
    */
   final def test(input: String, expectedOutput: String, changes: Seq[String]): Unit = {
 
-    require(((n: Int) ⇒ n == 1 || n == 2)(input.count(_ == '^')), "No selection specified.")
+    val carets = input.count(_ == '^')
+    require(carets == 1 || carets == 2, "No selection specified.")
     val selStart = input.indexOf('^')
     val selEnd = {
       val e = input.indexOf('^', selStart+1)
@@ -48,20 +50,33 @@ class EditorUtilsTest {
       else {
         val close = input.indexOf(']', open+1)
         val s = m.size*2
-        if (open < selStart)
-          if (close < selEnd)
-            findBraces(close, m + ((open-s, close-s-1)))
-          else
-            findBraces(close, m + ((open-s, close-s-2)))
-        else
-          findBraces(close, m + ((open-s-1, close-s-2)))
+
+        // ^ = selStart/selEnd, [ = open, ] = close
+        // case 1: ^  ^ [  ], ^ [  ]
+        if (selStart < open && selEnd < open)
+          findBraces(close+1, m + ((open-s-carets, close-s-carets-1)))
+        // case 2: ^ [ ^ ]
+        else if (selStart < open && selEnd < close)
+          findBraces(close+1, m + ((open-s-1, close-s-3)))
+        // case 3: ^ [  ] ^
+        else if (selStart < open && selEnd > close)
+          findBraces(close+1, m + ((open-s-1, close-s-2)))
+        // case 4: [^  ^], [ ^ ]
+        else if (selStart < close && selEnd < close)
+          findBraces(close+1, m + ((open-s, close-s-carets-1)))
+        // case 5: [ ^ ] ^
+        else if (selStart < close && selEnd > close)
+          findBraces(close+1, m + ((open-s, close-s-2)))
+        // case 6: [  ] ^  ^, [  ] ^
+        else// if (selStart > close && selEnd > close)
+          findBraces(close+1, m + ((open-s, close-s-1)))
       }
     }
 
     def findSelection(source: String): TextSelection = {
       val open = source.indexOf('^')
       val close = source.indexOf('^', open+1)
-      new TextSelection(open, if (close >= open) close-open else 0)
+      new TextSelection(open, if (close >= open) close-open-1 else 0)
     }
 
     require(input.count(_ == '[') == input.count(_ == ']'), "Invalid range area found.")
@@ -394,4 +409,131 @@ class EditorUtilsTest {
     |  def f = 0^
     |}
     |""".stripMargin after Seq("", "")
+
+  // tests for selections
+
+  @Test
+  def remove_with_selection_case_1() = """|
+    |class X {
+    |  ^def g = 0^
+    |  [def f = 0]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  ^def g = 0^
+    |  $
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test @Ignore
+  def remove_with_selection_case_2() = """|
+    |^class X {
+    |  [def g^ = 0]
+    |  def f = 0
+    |}
+    |""".stripMargin becomes """|
+    |^class X {
+    |  $^
+    |  def f = 0
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test @Ignore
+  def remove_with_selection_case_3() = """|
+    |class M
+    |^class X {
+    |  [def g = 0]
+    |  def f = 0
+    |}^
+    |class S
+    |""".stripMargin becomes """|
+    |class M
+    |^class X {
+    |  $
+    |  def f = 0
+    |}^
+    |class S
+    |""".stripMargin after Seq("")
+
+  @Test @Ignore
+  def remove_with_selection_case_4() = """|
+    |class X {
+    |  [def ^g =^ 0]
+    |  def f = 0
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $^
+    |  def f = 0
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test @Ignore
+  def remove_with_selection_case_5() = """|
+    |class X {
+    |  [def ^g = 0]
+    |  def f = 0^
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $^
+    |  def f = 0^
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test
+  def remove_with_selection_case_6() = """|
+    |class X {
+    |  [def g = 0]
+    |  ^def f = 0^
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  $
+    |  ^def f = 0^
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test
+  def add_with_selection_case_1() = """|
+    |class X {
+    |  ^def g = 0^
+    |  []
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  ^def g = 0^
+    |  def f = 0
+    |}
+    |""".stripMargin after Seq("def f = 0")
+
+  @Test @Ignore
+  def add_with_selection_case_3() = """|
+    |class M
+    |^class X {
+    |  []
+    |  def f = 0
+    |}^
+    |class S
+    |""".stripMargin becomes """|
+    |class M
+    |^class X {
+    |  def g = 0
+    |  def f = 0
+    |}^
+    |class S
+    |""".stripMargin after Seq("def g = 0")
+
+  @Test
+  def add_with_selection_case_6() = """|
+    |class X {
+    |  []
+    |  ^def f = 0^
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def g = 0
+    |  ^def f = 0^
+    |}
+    |""".stripMargin after Seq("def g = 0")
 }

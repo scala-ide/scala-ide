@@ -215,7 +215,8 @@ object EditorUtils {
       val selectionStart = textSelection.getOffset()
       val selectionEnd = selectionStart + textSelection.getLength()
 
-      selectionStart >= regionStart && selectionEnd <= regionEnd
+      !(selectionStart < regionStart && selectionEnd < regionStart
+          || selectionStart > regionEnd && selectionEnd > regionEnd)
     }
 
     val subregions = edit.getChildren map (_.getRegion)
