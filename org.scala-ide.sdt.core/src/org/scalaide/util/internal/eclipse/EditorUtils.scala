@@ -231,7 +231,14 @@ object EditorUtils {
         // we just keep the current selection
         new TextSelection(document, textSelection.getOffset, textSelection.getLength)
       } else {
-        val lenAfterSelection = subregions.collect { case r if r.getOffset() > textSelection.getOffset() ⇒ r.getLength() }.sum
+        val lenAfterSelection = edit.getChildren().collect {
+          case e if e.getOffset() > textSelection.getOffset() ⇒
+            e match {
+              case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
+              case e ⇒ e.getLength()
+            }
+        }.sum
+
         val offsetInIntersection = intersection.fold(0)(r ⇒ r.getLength()-(textSelection.getOffset()-r.getOffset()))
         val originalLength = document.getLength()
         edit.apply(document)

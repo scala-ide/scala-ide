@@ -341,4 +341,30 @@ class EditorUtilsTest {
     |  def f = 0^
     |}
     |""".stripMargin after Seq("", "")
+
+  @Test
+  def add_after_cursor_with_cursor_at_beginning_of_range() = """|
+    |class X {
+    |  def f = 0^[]
+    |  []
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def f = 0+1^
+    |  def g = 0
+    |}
+    |""".stripMargin after Seq("+1", "def g = 0")
+
+  @Test
+  def add_before_and_after_cursor_with_cursor_at_beginning_of_range() = """|
+    |class X {
+    |  []
+    |  def f = 0^[]
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  def g = 0
+    |  def f = 0+1^
+    |}
+    |""".stripMargin after Seq("def g = 0", "+1")
 }
