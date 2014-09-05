@@ -23,6 +23,8 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class TextHoverFactory extends TextHoverFactoryInterface {
+  import IScalaPresentationCompiler.Implicits._
+
   def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
     var stringWasReturnedAtGetHoverInfo2 = false
 
@@ -30,13 +32,12 @@ class TextHoverFactory extends TextHoverFactoryInterface {
       icu.withSourceFile{(src, compiler) =>
         import compiler._
 
-        val resp = new Response[Tree]
-        askTypeAt(region.toRangePos(src), resp)
+        val resp = askTypeAt(region.toRangePos(src))
 
         stringWasReturnedAtGetHoverInfo2 = false
 
         for {
-          t <- resp.get.left.toOption
+          t <- resp.getOption()
           stackFrame <- Option(ScalaDebugger.currentStackFrame)
           variable <- StackFrameVariableOfTreeFinder.find(src, compiler, stackFrame)(t)
         } yield variable

@@ -261,7 +261,7 @@ object IScalaPresentationCompiler extends HasLogger {
        *  Failures are logged:
        *   - TypeError and FreshRunReq are printed to stdout, all the others are logged in the platform error log.
        */
-      def getOrElse[B >: A](default: B)(timeout: Duration = AskTimeout): B = {
+      def getOrElse[B >: A](default: => B)(timeout: Duration = AskTimeout): B = {
         getOption(timeout).getOrElse(default)
       }
 

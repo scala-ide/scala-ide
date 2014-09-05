@@ -19,13 +19,9 @@ class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
     if (!unit.exists()) throw new IllegalArgumentException(s"File at '$path' does not exist!")
 
     unit.withSourceFile { (src, compiler) =>
-      val dummy = new compiler.Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+      compiler.askReload(List(unit)).get
 
-      val tree = new compiler.Response[compiler.Tree]
-      compiler.askLoadedTyped(src, tree)
-      tree.get
+      compiler.askLoadedTyped(src, false).get
       test(compiler, unit)
     }
   }

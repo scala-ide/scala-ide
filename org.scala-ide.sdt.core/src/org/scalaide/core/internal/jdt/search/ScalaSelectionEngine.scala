@@ -153,11 +153,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
 
       val pos = compiler.rangePos(src, actualSelectionStart, actualSelectionStart, actualSelectionEnd + 1)
 
-      val typed = new compiler.Response[compiler.Tree]
-      compiler.askTypeAt(pos, typed)
-      val typedRes = typed.get
+
+      val typedRes = compiler.askTypeAt(pos).getOption()
       val cont: Cont = compiler.asyncExec {
-        typedRes.left.toOption match {
+        typedRes match {
           case Some(tree) => {
             tree match {
               case i: compiler.Ident =>

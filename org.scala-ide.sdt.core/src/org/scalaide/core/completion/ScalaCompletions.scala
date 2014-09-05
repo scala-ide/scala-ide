@@ -30,10 +30,9 @@ class ScalaCompletions extends HasLogger {
     val wordStart = region.getOffset
     val wordAtPosition = (if (position <= wordStart) "" else scu.getContents.slice(wordStart, position).mkString.trim).toArray
     val defaultContext = if (scu.getContents()(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
-    val typed = new compiler.Response[compiler.Tree]
     val pos = compiler.rangePos(sourceFile, position, position, position)
-    compiler.askTypeAt(pos, typed)
-    val t1 = typed.get.left.toOption
+    val typed = compiler.askTypeAt(pos)
+    val t1 = typed.getOption()
 
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
 
@@ -84,9 +83,8 @@ class ScalaCompletions extends HasLogger {
                             matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def typeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-        val completed = new compiler.Response[List[compiler.Member]]
-        compiler.askTypeCompletion(cpos, completed)
-        completed.get.left.toOption.getOrElse(Nil)
+        val completed = compiler.askTypeCompletion(cpos)
+        completed.getOrElse(Nil)()
       }
       addCompletions(typeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
     }
@@ -95,9 +93,8 @@ class ScalaCompletions extends HasLogger {
                              matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-        val completed = new compiler.Response[List[compiler.Member]]
-        compiler.askScopeCompletion(cpos, completed)
-        completed.get.left.toOption.getOrElse(Nil)
+        val completed = compiler.askScopeCompletion(cpos)
+        completed.getOrElse(Nil)()
       }
 
       addCompletions(scopeCompletionsAt(pos), matchName, start, prefixMatch, contextType)

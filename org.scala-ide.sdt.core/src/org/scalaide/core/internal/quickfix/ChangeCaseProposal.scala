@@ -69,9 +69,8 @@ object ChangeCaseProposal {
     def membersAtPosition(offset: Int): List[String] = {
       val memberNames = scu.withSourceFile { (srcFile, compiler) =>
         compiler.asyncExec {
-          val completed = new compiler.Response[List[compiler.Member]]
-          compiler.askScopeCompletion(new RangePosition(srcFile, offset, offset, offset), completed)
-          completed.get.left.getOrElse(Nil).map(_.sym.nameString).distinct
+          val completed = compiler.askScopeCompletion(new RangePosition(srcFile, offset, offset, offset))
+          completed.getOrElse(Nil)().map(_.sym.nameString).distinct
         } getOption()
       }
       memberNames.flatten.getOrElse(Nil)

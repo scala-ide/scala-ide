@@ -36,9 +36,8 @@ class MissingMemberInfo(
     val start = pos.offset
     val scu = compilationUnit.asInstanceOf[ScalaCompilationUnit]
     val allPossibleTargets = scu.withSourceFile { (srcFile, compiler) =>
-      val membersInScope = new compiler.Response[List[compiler.Member]]
       val cpos = compiler.rangePos(srcFile, start, start, start)
-      compiler.askScopeCompletion(cpos, membersInScope)
+      val membersInScope = compiler.askScopeCompletion(cpos)
 
       for (members <- membersInScope.getOption()) yield {
         compiler.asyncExec {
@@ -101,8 +100,7 @@ object MissingMemberInfo {
         }
 
         val pos = compiler.rangePos(srcFile, offset, offset, offset + length)
-        val typed = new compiler.Response[compiler.Tree]
-        compiler.askTypeAt(pos, typed)
+        val typed = compiler.askTypeAt(pos)
         compiler.asyncExec {
           for {
             t <- typed.getOption()

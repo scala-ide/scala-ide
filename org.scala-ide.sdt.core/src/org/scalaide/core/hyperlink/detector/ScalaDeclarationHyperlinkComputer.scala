@@ -31,13 +31,11 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         import compiler.{ log => _, _ }
 
-        val response = new Response[compiler.Tree]
-        askTypeAt(pos, response)
-        val typed = response.get
+        val typed = askTypeAt(pos).getOption()
 
         logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
         compiler.asyncExec {
-          typed.left.toOption map {
+          typed map {
             case Import(expr, sels) =>
               if (expr.pos.includes(pos)) {
                 @annotation.tailrec

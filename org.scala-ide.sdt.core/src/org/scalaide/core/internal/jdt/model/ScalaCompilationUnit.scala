@@ -224,11 +224,9 @@ trait ScalaCompilationUnit extends Openable
     withSourceFile { (srcFile, compiler) =>
       val pos = compiler.rangePos(srcFile, offset, offset, offset)
 
-      val typed = new compiler.Response[compiler.Tree]
-      compiler.askTypeAt(pos, typed)
-      val typedRes = typed.get
+      val typedRes = compiler.askTypeAt(pos).getOption()
       val element = for {
-       t <- typedRes.left.toOption
+       t <- typedRes
        if t.hasSymbolField
        sym = if (t.symbol.isSetter) t.symbol.getterIn(t.symbol.owner) else t.symbol
        element <- compiler.getJavaElement(sym, scalaProject.javaProject)

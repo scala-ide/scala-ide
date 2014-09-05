@@ -47,8 +47,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
 
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
 
-         val r = new compiler.Response[compiler.Tree]
-         compiler.askLoadedTyped(sourceFile, r)
+         val r = compiler.askLoadedTyped(sourceFile, false)
          (r.get match {
            case Right(error) =>
              eclipseLog.error(error)

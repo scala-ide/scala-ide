@@ -115,8 +115,7 @@ abstract class BaseSemanticAction(
     scu.scalaProject.presentationCompiler.internal { compiler =>
 
       def findAnnotations(): Map[Annotation, JFacePosition] = {
-        val response = new compiler.Response[compiler.Tree]
-        compiler.askLoadedTyped(scu.sourceFile, response)
+        val response = compiler.askLoadedTyped(scu.sourceFile, false)
         response.get(200) match {
           case Some(Left(_)) => findAll(compiler, scu, scu.sourceFile)
           case Some(Right(exc)) =>

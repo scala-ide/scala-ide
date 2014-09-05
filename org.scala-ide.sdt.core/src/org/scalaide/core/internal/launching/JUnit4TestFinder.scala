@@ -212,14 +212,13 @@ object JUnit4TestFinder {
     import comp.Response
     import comp.Tree
     import org.scalaide.util.internal.Utils._
-    val response = new Response[Tree]
-    comp.askParsedEntered(source, keepLoaded = false, response)
+
+    val trees = comp.askParsedEntered(source, keepLoaded = false).getOrElse(comp.EmptyTree)()
 
     object JUnit4TestClasses extends JUnit4TestClassesCollector {
       val global: comp.type = comp
     }
 
-    val trees = response.get.left.getOrElse(comp.EmptyTree)
     for {
       cdef <- JUnit4TestClasses.collect(trees)
       jdtElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)

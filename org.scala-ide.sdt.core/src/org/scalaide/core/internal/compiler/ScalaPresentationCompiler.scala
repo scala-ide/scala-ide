@@ -171,9 +171,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   def problemsOf(file: AbstractFile): List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) =>
-        val response = new Response[Tree]
-        askLoadedTyped(unit.source, response)
-        response.get
+        askLoadedTyped(unit.source, false).get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None =>
         logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
@@ -188,11 +186,9 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   def body(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = loadedType(sourceFile, keepLoaded)
 
   def loadedType(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = {
-    val response = new Response[Tree]
     if (self.onCompilerThread)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
-    askLoadedTyped(sourceFile, keepLoaded, response)
-    response.get
+    askLoadedTyped(sourceFile, keepLoaded).get
   }
 
   /** Perform `op' on the compiler thread. This method returns a `Response` that may
@@ -237,7 +233,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
     logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
-      askFilesDeleted(units.map(_.sourceFile()).toList, new Response[Unit])
+      askFilesDeleted(units.map(_.sourceFile()).toList)
   }
 
   def discardCompilationUnit(scu: InteractiveCompilationUnit): Unit = {

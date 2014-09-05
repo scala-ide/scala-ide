@@ -149,10 +149,9 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
       }
 
       def typeMessage = {
-        val resp = new Response[Tree]
-        askTypeAt(region.toRangePos(src), resp)
+        val tree = askTypeAt(region.toRangePos(src)).getOption()
 
-        val content = resp.get.left.toOption.flatMap(typeInfo).getOrElse("")
+        val content = tree.flatMap(typeInfo).getOrElse("")
         if (content.isEmpty())
           NoHoverInfo
         else

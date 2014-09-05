@@ -196,10 +196,7 @@ object ScalaLaunchShortcut {
           def hasMainMethod(cdef: Tree): Boolean =
             comp.asyncExec(hasJavaMainMethod(cdef.symbol)).getOrElse(false)()
 
-          val response = new Response[Tree]
-          comp.askParsedEntered(source, keepLoaded = false, response)
-
-          response.get match {
+          comp.askParsedEntered(source, keepLoaded = false).get match {
             case Left(trees) =>
               for {
                 cdef <- trees
