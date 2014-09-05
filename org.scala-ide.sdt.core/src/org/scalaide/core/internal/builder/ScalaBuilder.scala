@@ -41,7 +41,6 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     ensureProject()
     scalaJavaBuilder.clean(monitor)
-    project.buildManager.clean(monitor)
     JDTUtils.refreshPackageExplorer
   }
 
