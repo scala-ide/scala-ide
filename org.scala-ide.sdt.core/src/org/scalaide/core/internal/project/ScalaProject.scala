@@ -1,6 +1,3 @@
-/*
- * Copyright (c) 2014 Contributor. All rights reserved.
- */
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
@@ -636,9 +633,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       isEqual.getOrElse(false)
     }
 
-    ScalaPlugin.getWorkbenchWindow.map { workbenchWindow =>
+    IScalaPlugin().getWorkbench().getWorkbenchWindows().exists { workbenchWindow =>
       val pages = workbenchWindow.getPages()
       pages exists hasOpenEditorForThisProject
-    }.getOrElse(false)
+    }
   }
 }

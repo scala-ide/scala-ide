@@ -11,14 +11,14 @@ import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.SWT
 import org.scalaide.logging.HasLogger
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage with HasLogger {
 
   /** Pulls the preference store associated with this plugin */
   override def doGetPreferenceStore(): IPreferenceStore = {
-    ScalaPlugin.prefStore
+    IScalaPlugin().getPreferenceStore()
   }
 
   override def init(wb: IWorkbench) {}

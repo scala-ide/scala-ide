@@ -5,10 +5,9 @@ package org.scalaide.core.compiler
 
 import java.util.Timer
 import java.util.TimerTask
-
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
 
@@ -150,7 +149,7 @@ object PresentationCompilerActivityListener {
 
   private val timer: Timer = new Timer( /*isDaemon =*/ true)
 
-  private val prefStore = ScalaPlugin.prefStore
+  private val prefStore = IScalaPlugin().getPreferenceStore()
 
   private def closingEnabled: Boolean = prefStore.getBoolean(ResourcesPreferences.PRES_COMP_CLOSE_UNUSED)
 

@@ -15,13 +15,13 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Group
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import scala.util.Try
 
 class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferencePage.GRID) with IWorkbenchPreferencePage {
   import ResourcesPreferences._
 
-  setPreferenceStore(ScalaPlugin.prefStore)
+  setPreferenceStore(IScalaPlugin().getPreferenceStore())
 
   // vars due to proper ordering of initialization
   private var presCompGroup: Group = null
@@ -143,7 +143,7 @@ class ResourcesPreferencePageInitializer extends AbstractPreferenceInitializer {
   import ResourcesPreferences._
 
   override def initializeDefaultPreferences(): Unit = {
-    val store = ScalaPlugin.prefStore
+    val store = IScalaPlugin().getPreferenceStore()
     store.setDefault(PRES_COMP_CLOSE_UNUSED, true)
     store.setDefault(PRES_COMP_MAX_IDLENESS_LENGTH, 120)
     store.setDefault(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, false)
