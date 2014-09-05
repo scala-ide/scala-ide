@@ -92,10 +92,7 @@ class SpyView extends ViewPart with HasLogger {
     selection match {
       case textSel: ITextSelection =>
         val (offset, length) = (textSel.getOffset(), textSel.getLength())
-
-        compiler.withResponse[Tree] { response =>
-          compiler.askTypeAt(rangePos(source, offset, offset, offset + length), response)
-        }.get
+        compiler.askTypeAt(rangePos(source, offset, offset, offset + length)).get
 
       case _ => Right(new Exception("unkown selection"))
     }

@@ -59,9 +59,7 @@ object ExplicitReturnType {
 
       val enclosing = compiler.enclosingValOrDef(sourceFile, offset)
       if (enclosing != EmptyTree) {
-        compiler.withResponse[Tree] { response =>
-          compiler.askTypeAt(enclosing.pos, response)
-        }.getOption() flatMap {
+        compiler.askTypeAt(enclosing.pos).getOption() flatMap {
           case vd @ ValDef(_, _, tpt: TypeTree, _) if expandableType(tpt) =>
             expandProposal(vd)
           case dd @ DefDef(_, _, _, _, tpt: TypeTree, _) if expandableType(tpt) =>

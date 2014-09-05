@@ -6,6 +6,7 @@ import scala.tools.refactoring.implementations.AddToClosest
 import scala.reflect.internal.util.SourceFile
 import scala.collection.immutable
 
+import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object ImplAbstractMembers {
@@ -37,9 +38,7 @@ object ImplAbstractMembers {
 
       val enclosingTree = enclosingClassOrModule(srcFile, offset)
       if (enclosingTree != EmptyTree) {
-        compiler.withResponse[Tree] { response =>
-          compiler.askTypeAt(enclosingTree.pos, response)
-        }.get.left.toOption flatMap {
+          compiler.askTypeAt(enclosingTree.pos).getOption() flatMap {
           case implDef: ImplDef =>
             Option(implAbstractProposals(implDef))
           case _ => None

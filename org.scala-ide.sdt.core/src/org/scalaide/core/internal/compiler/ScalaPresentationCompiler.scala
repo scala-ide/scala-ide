@@ -46,6 +46,7 @@ import scala.reflect.internal.util.RangePosition
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler._
 
 class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
   /*
@@ -275,12 +276,6 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   }
 
   override def synchronizeNames = true
-
-  def withResponse[A](op: Response[A] => Any): Response[A] = {
-    val response = new Response[A]
-    op(response)
-    response
-  }
 
   override def logError(msg: String, t: Throwable) =
     eclipseLog.error(msg, t)
