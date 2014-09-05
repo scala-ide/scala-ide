@@ -30,7 +30,7 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
@@ -41,6 +41,7 @@ import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.ui.AutoCompletionOverlay
 import org.scalaide.util.internal.ui.Dialogs
+import org.scalaide.util.internal.eclipse.OSGiUtils
 
 /**
  * Wizard of the Scala IDE to create new files. It can not only create new
@@ -194,7 +195,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
       case (m, i) =>
         val ti = new TableItem(cmTemplate.getTable(), SWT.NONE)
         ti.setText(m.name)
-        val img = ScalaImages.fromBundle(m.bundleId, m.iconPath).createImage()
+        val img = OSGiUtils.getImageDescriptorFromBundle(m.bundleId, m.iconPath).createImage()
         disposables +:= img
         ti.setImage(0, img)
 

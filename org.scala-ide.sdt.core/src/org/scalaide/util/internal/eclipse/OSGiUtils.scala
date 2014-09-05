@@ -3,12 +3,15 @@ package org.scalaide.util.internal.eclipse
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.net.URL
-
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.osgi.framework.Bundle
+import org.scalaide.core.SdtConstants
+import org.scalaide.ui.ScalaImages
+import org.eclipse.jface.resource.ImageDescriptor
+import org.eclipse.ui.plugin.AbstractUIPlugin
 
 object OSGiUtils {
   private def urlToPath(url: URL): IPath = Path.fromOSString(FileLocator.toFileURL(url).getPath)
@@ -42,4 +45,21 @@ object OSGiUtils {
       res
     }
   }
+
+  /** Returns the ImageDescriptor for the image at the given {{path}} in
+   *  the Scala IDE core bundle.
+   *  Returns the default missing image descriptor if the path is invalid.
+   */
+  def getImageDescriptorFromCoreBundle(path: String): ImageDescriptor =
+    getImageDescriptorFromBundle(SdtConstants.PluginId, path)
+
+  /** Returns the ImageDescriptor for the image at the given {{path}} in
+   *  the bundle with the given {{id}}.
+   *  Returns the default missing image descriptor if the bundle is not
+   *  in a running state, or if the path is invalid.
+   */
+  def getImageDescriptorFromBundle(bundleId: String, path: String): ImageDescriptor =
+    Option(AbstractUIPlugin.imageDescriptorFromPlugin(bundleId, path))
+      .getOrElse(ScalaImages.MISSING_ICON)
+
 }

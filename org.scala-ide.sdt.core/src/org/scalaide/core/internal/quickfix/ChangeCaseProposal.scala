@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.quickfix
 
 import scala.reflect.internal.util.RangePosition
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit

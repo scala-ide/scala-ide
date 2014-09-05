@@ -37,7 +37,7 @@ import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
@@ -275,10 +275,8 @@ trait ScalaCompilationUnit extends Openable
     import scala.util.control.Exception
 
     val descriptor = Exception.catching(classOf[JavaModelException]).opt(getCorrespondingResource) map { file =>
-      import ScalaImages.SCALA_FILE
-      import ScalaImages.EXCLUDED_SCALA_FILE
       val javaProject = JavaCore.create(scalaProject.underlying)
-      if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+      if (javaProject.isOnClasspath(file)) ScalaImages.SCALA_FILE else ScalaImages.EXCLUDED_SCALA_FILE
     }
     descriptor.orNull
   }

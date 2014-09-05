@@ -2,7 +2,7 @@ package org.scalaide.core.internal.jdt.model
 
 import java.util.{ HashMap => JHashMap }
 
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
