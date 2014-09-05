@@ -145,8 +145,8 @@ case class CompletionProposal(
   private case object SimpleFunctionType {
     def unapply(fun: String): Option[(String, String)] = {
       fun.split("=>") match {
-        case Array(a, b) => Some(a.trim, b.trim)
-        case _           => None
+        case Array(a, b) if !a.isEmpty => Some(a.trim, b.trim)
+        case _                         => None
       }
     }
   }

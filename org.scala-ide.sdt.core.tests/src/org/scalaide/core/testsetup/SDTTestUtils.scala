@@ -320,6 +320,16 @@ object SDTTestUtils extends HasLogger {
     ScalaPlugin().getScalaProject(project)
   }
 
+  def withWorkspacePreference[A](name: String, value: Boolean)(thunk: => A): A = {
+    val store = ScalaPlugin().getPreferenceStore
+    val old = store.getBoolean(name)
+    try {
+      store.setValue(name, value)
+      thunk
+    } finally
+      store.setValue(name, old)
+  }
+
   def buildWorkspace(): Unit =
     ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
 }

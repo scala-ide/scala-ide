@@ -2,6 +2,8 @@ package org.scalaide.core.ui.completion
 
 import org.junit.Test
 import org.junit.AfterClass
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 object StandardCompletionTests extends CompletionTests
 class StandardCompletionTests {
@@ -320,4 +322,61 @@ class StandardCompletionTests {
   """ after Completion(
       "lzyEval(() => Any): Unit",
       expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeCallByNameParam() = """
+    object Test {
+      def cbn(f: => Any): Unit = ???
+      this.cb^
+    }
+  """ becomes """
+    object Test {
+      def cbn(f: => Any): Unit = ???
+      this.cbn([[f]])^
+    }
+  """ after Completion(
+      "cbn(=> Any): Unit",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHOFWithoutInfixNotation() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, false) {
+      """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withR^
+      }
+    """ becomes """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withResource([[f]])^
+      }
+    """ after Completion(
+          "withResource[T](T => Unit): Unit",
+          expectedNumberOfCompletions = 1)
+    }
+  }
+
+  @Test
+  def completeParameterInHOFWithInfixNotation() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, false) {
+      """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this withR^
+      }
+    """ becomes """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this withResource { [[x]] => [[???]] }^
+      }
+    """ after Completion(
+          "withResource[T](T => Unit): Unit",
+          expectedNumberOfCompletions = 1)
+    }
+  }
 }
