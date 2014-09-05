@@ -425,7 +425,7 @@ class EditorUtilsTest {
     |}
     |""".stripMargin after Seq("")
 
-  @Test @Ignore
+  @Test
   def remove_with_selection_case_2() = """|
     |^class X {
     |  [def g^ = 0]
@@ -438,7 +438,7 @@ class EditorUtilsTest {
     |}
     |""".stripMargin after Seq("")
 
-  @Test @Ignore
+  @Test
   def remove_with_selection_case_3() = """|
     |class M
     |^class X {
@@ -468,7 +468,7 @@ class EditorUtilsTest {
     |}
     |""".stripMargin after Seq("")
 
-  @Test @Ignore
+  @Test
   def remove_with_selection_case_5() = """|
     |class X {
     |  [def ^g = 0]
@@ -507,7 +507,7 @@ class EditorUtilsTest {
     |}
     |""".stripMargin after Seq("def f = 0")
 
-  @Test @Ignore
+  @Test
   def add_with_selection_case_3() = """|
     |class M
     |^class X {

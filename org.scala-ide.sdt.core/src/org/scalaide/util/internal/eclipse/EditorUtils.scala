@@ -226,27 +226,54 @@ object EditorUtils {
     if (selectionCannotBeRetained) {
       // the selection overlaps the selected region, so we are on
       // our own in trying to the preserve the user's selection.
-      if (edit.getOffset > textSelection.getOffset) {
-        edit.apply(document)
-        // if the edit starts after the start of the selection,
-        // we just keep the current selection
-        new TextSelection(document, textSelection.getOffset, textSelection.getLength)
-      } else {
-        val lenAfterSelection = edit.getChildren().collect {
-          case e if e.getOffset() > textSelection.getOffset() ⇒
-            e match {
-              case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
-              case e ⇒ e.getLength()
-            }
-        }.sum
+      val lenAfterSelection = edit.getChildren().collect {
+        case e if e.getOffset() > textSelection.getOffset() ⇒
+          e match {
+            case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
+            case e ⇒ e.getLength()
+          }
+      }.sum
 
-        val offsetInIntersection = intersection.fold(0)(r ⇒ r.getLength()-(textSelection.getOffset()-r.getOffset()))
-        val originalLength = document.getLength()
-        edit.apply(document)
-        val modifiedLength = document.getLength()-originalLength
-        val newOffset = textSelection.getOffset()+modifiedLength+lenAfterSelection+offsetInIntersection
-        new TextSelection(document, newOffset, 0)
+      val (newOffset, newLen) = {
+        val r = intersection.get
+        val selStart = textSelection.getOffset()
+        val selEnd = textSelection.getOffset()+textSelection.getLength()
+        val rStart = r.getOffset()
+        val rEnd = r.getOffset()+r.getLength()
+
+        def offsetInIntersection = r.getLength()-(textSelection.getOffset()-r.getOffset())
+
+        def adjustOffset(offsetInIntersection: Int) = {
+          val originalLength = document.getLength()
+          edit.apply(document)
+          val modifiedLength = document.getLength()-originalLength
+          textSelection.getOffset()+modifiedLength+lenAfterSelection+offsetInIntersection
+        }
+
+        // case 2
+        if (selStart < rStart && selEnd > rStart && selEnd < rEnd)
+          (adjustOffset(0), textSelection.getLength()-(selEnd-rStart))
+        // case 3
+        else if (selStart < rStart && selEnd > rEnd) {
+          val sub = edit.getChildren().find(e ⇒ selectionIsInManipulatedRegion(e.getRegion())).get match {
+            case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
+            case e ⇒ e.getLength()
+          }
+          (adjustOffset(0), textSelection.getLength()-sub)
+        }
+        // case 4
+        else if (selStart > rStart && selEnd < rEnd)
+          (adjustOffset(offsetInIntersection), 0)
+        // case 5
+        else if (selStart > rStart && selStart < rEnd && selEnd > rEnd) {
+          (adjustOffset(offsetInIntersection), textSelection.getLength()-(rEnd-selStart))
+        }
+        // case 1, case 6
+        else
+          (adjustOffset(offsetInIntersection), 0)
       }
+
+      new TextSelection(document, newOffset, newLen)
 
     } else {
       // Otherwise, we can track the selection and restore it after the refactoring.
