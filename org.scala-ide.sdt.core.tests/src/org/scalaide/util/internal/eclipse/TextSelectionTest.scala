@@ -8,7 +8,7 @@ import org.junit.ComparisonFailure
 import org.junit.Test
 import org.junit.Ignore
 
-class EditorUtilsTest {
+class TextSelectionTest {
 
   final implicit class OhILikeThisDslSoMuch(input: String) {
     def becomes(expectedOutput: String) = input → expectedOutput
