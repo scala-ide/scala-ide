@@ -1,6 +1,3 @@
-/*
- * Copyright (c) 2014 Contributor. All rights reserved.
- */
 package org.scalaide
 
 import org.junit.runner.RunWith

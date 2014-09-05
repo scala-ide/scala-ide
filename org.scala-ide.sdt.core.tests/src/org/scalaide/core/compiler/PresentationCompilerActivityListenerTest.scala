@@ -7,6 +7,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
+import java.lang.Thread.sleep
 
 class PresentationCompilerActivityListenerTest {
 
@@ -54,9 +55,6 @@ class PresentationCompilerActivityListenerTest {
       current
     }
   }
-
-  // just for readability
-  def sleep(millis: Long): Unit = Thread.sleep(millis)
 
   @Test
   def checkIfClosingIsEnabledDuringEachStart(): Unit = {

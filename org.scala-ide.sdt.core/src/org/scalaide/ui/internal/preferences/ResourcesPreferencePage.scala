@@ -113,10 +113,8 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
 
 object ResourcesPreferences {
 
-  private val BASE = ScalaPlugin.id + ".resources."
-  private val PRESENTATION_COMPILER_BASE = BASE + "presentationCompiler."
-  val PRES_COMP_CLOSE_UNUSED = PRESENTATION_COMPILER_BASE + "closeUnused"
-  val PRES_COMP_MAX_IDLENESS_LENGTH = PRESENTATION_COMPILER_BASE + "maxIdlenessLength"
+  val PRES_COMP_CLOSE_UNUSED = "org.scala-ide.sdt.core.resources.presentationCompiler.closeUnused"
+  val PRES_COMP_MAX_IDLENESS_LENGTH = "org.scala-ide.sdt.core.resources.presentationCompiler.maxIdlenessLength"
 
   /**
    * Whether idle presentation compiler should be closed even if there are open editors for related project.
@@ -130,7 +128,7 @@ object ResourcesPreferences {
    *
    * When working directly with SPC instances it's important to check, whether made changes don't disturb GC.
    */
-  val PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS = PRESENTATION_COMPILER_BASE + "closeRegardlessOfOpenEditors"
+  val PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS = "org.scala-ide.sdt.core.resources.presentationCompiler.closeRegardlessOfOpenEditors"
 
   /**
    * Changes in preferences related to closing presentation compilers should be always taken into account together.
@@ -138,7 +136,7 @@ object ResourcesPreferences {
    * of another ones are stored in preference store. That's why we need some hack - to send one notification when new values of all
    * related preferences are stored.
    */
-  val PRES_COMP_PREFERENCES_CHANGE_MARKER = PRESENTATION_COMPILER_BASE + "preferencesChangeMarker"
+  val PRES_COMP_PREFERENCES_CHANGE_MARKER = "org.scala-ide.sdt.core.resources.presentationCompiler.preferencesChangeMarker"
 }
 
 class ResourcesPreferencePageInitializer extends AbstractPreferenceInitializer {

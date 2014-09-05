@@ -23,17 +23,18 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
   extends HasLogger {
 
   import PresentationCompilerActivityListener.prefStore
+  import PresentationCompilerActivityListener.timer
 
   private var started = false
 
   /**
    * Timestamp that indicates last time when related presentation compiler was used
    */
-  @volatile private var pcLastActivityTime: Long = 0
+  @volatile private var pcLastActivityTime = 0L
 
-  private var closingEnabled: Boolean = true
-
-  private var timer: Timer = null
+  private var closingEnabled = true
+  private var maxIdlenessLengthMillis = 120000L
+  private var ignoreOpenEditors = false
 
   /**
    * Checks length of inactivity and shuts down presentation compiler when it's needed
@@ -61,38 +62,34 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 
     private def onClosingEnabledChanged(): Unit =
       if (closingEnabled)
-        startTimer()
+        startKillerTask()
       else
-        stopTimer()
+        stopKillerTask()
 
     private def onKillerPropertiesChanged(): Unit =
       if (closingEnabled) updateKillerTask()
   }
 
-  private class PresentationCompilerKillerTask(killAfterMillis: Long, ignoreOpenEditors: Boolean) extends TimerTask {
+  private class PresentationCompilerKillerTask extends TimerTask {
 
     override def run(): Unit = lock.synchronized {
       if (killerTask == this) { // otherwise killer task has been closed / replaced in meantime (this task couldn't be canceled because it started execution) so we don't need this one anymore
         try {
-          if (!isTimeToBeKilled) {
-            val delay = remainingDelayToNextCheck(killAfterMillis)
-            scheduleNextCheck(delay)
-          } else if (!ignoreOpenEditors && projectHasOpenEditors())
-            scheduleNextCheck(delay = killAfterMillis)
-          else
+          if (!isTimeToBeKilled)
+            scheduleNextCheck(remainingDelayToNextCheck)
+          else if (!ignoreOpenEditors && projectHasOpenEditors())
+            scheduleNextCheck(delay = maxIdlenessLengthMillis)
+          else {
+            logger.info(s"Presentation compiler for project $projectName will be shut down due to inactivity")
             shutdownPresentationCompiler()
+          }
         } catch {
           case e: Throwable => logger.error(s"Unexpected error occurred during running presentation compiler killer task for project $projectName", e)
         }
       }
     }
 
-    private def isTimeToBeKilled = pcLastActivityTime + killAfterMillis <= System.currentTimeMillis()
-
-    private def scheduleNextCheck(delay: Long): Unit = {
-      killerTask = new PresentationCompilerKillerTask(killAfterMillis, ignoreOpenEditors)
-      timer.schedule(killerTask, delay)
-    }
+    private def isTimeToBeKilled = pcLastActivityTime + maxIdlenessLengthMillis <= System.currentTimeMillis()
   }
 
   def start(): Unit = lock.synchronized {
@@ -100,7 +97,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
       logger.debug(s"Starting PresentationCompilerActivityListener for project $projectName")
       noteActivity()
       closingEnabled = readClosingEnabled
-      if (closingEnabled) startTimer()
+      if (closingEnabled) startKillerTask()
       prefStore.addPropertyChangeListener(propertyChangeListener)
       started = true
     }
@@ -112,7 +109,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
       // we don't need it, as preferences anyway will be updated during another start
       prefStore.removePropertyChangeListener(propertyChangeListener)
 
-      stopTimer()
+      stopKillerTask()
       started = false
     }
   }
@@ -124,21 +121,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
   protected def readIgnoreOpenEditors = PresentationCompilerActivityListener.shouldCloseRegardlessOfOpenEditors
   protected def readMaxIdlenessLengthMillis = PresentationCompilerActivityListener.currentMaxIdlenessLengthMillis
 
-  private def startTimer(): Unit =
-    if (timer == null) {
-      timer = new Timer( /*isDaemon =*/ true)
-      startKillerTask()
-    }
-
-  private def stopTimer(): Unit =
-    if (timer != null) {
-      stopKillerTask()
-      timer.cancel()
-      timer = null
-    }
-
-  private def updateKillerTask(): Unit =
-    if (timer != null) {
+  private def updateKillerTask(): Unit = {
       stopKillerTask()
       startKillerTask()
     }
@@ -150,16 +133,23 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
     }
 
   private def startKillerTask(): Unit = {
-    val maxIdlenessLengthMillis = readMaxIdlenessLengthMillis
-    killerTask = new PresentationCompilerKillerTask(maxIdlenessLengthMillis, readIgnoreOpenEditors)
-    val checkDelay = remainingDelayToNextCheck(maxIdlenessLengthMillis)
-    timer.schedule(killerTask, checkDelay)
+    maxIdlenessLengthMillis = readMaxIdlenessLengthMillis
+    ignoreOpenEditors = readIgnoreOpenEditors
+    scheduleNextCheck(remainingDelayToNextCheck)
   }
 
-  private def remainingDelayToNextCheck(killAfterMillis: Long) = math.max(0, killAfterMillis + pcLastActivityTime - System.currentTimeMillis())
+  private def scheduleNextCheck(delay: Long): Unit = {
+    killerTask = new PresentationCompilerKillerTask
+    timer.schedule(killerTask, delay)
+  }
+
+  private def remainingDelayToNextCheck = math.max(0, maxIdlenessLengthMillis + pcLastActivityTime - System.currentTimeMillis())
 }
 
 object PresentationCompilerActivityListener {
+
+  private val timer: Timer = new Timer( /*isDaemon =*/ true)
+
   private val prefStore = ScalaPlugin.prefStore
 
   private def closingEnabled: Boolean = prefStore.getBoolean(ResourcesPreferences.PRES_COMP_CLOSE_UNUSED)
