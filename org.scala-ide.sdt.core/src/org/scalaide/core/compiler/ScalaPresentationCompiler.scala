@@ -456,7 +456,12 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
-        val reducedPos = toSingleLine(pos)
+        val reducedPos =
+          if (pos.isRange)
+            toSingleLine(pos)
+          else
+            new RangePosition(pos.source, pos.point, pos.point, pos.point + ScalaWordFinder.findWord(source.content, pos.start).getLength)
+
         val fileName =
           source.file match {
             case EclipseFile(file) =>
