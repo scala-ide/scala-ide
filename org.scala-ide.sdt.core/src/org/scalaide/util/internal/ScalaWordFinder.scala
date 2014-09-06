@@ -29,6 +29,9 @@ object ScalaWordFinder extends IScalaWordFinder {
     override def length = buf.getLength
   }
 
+  override def getWord(document: IDocument, offset: Int): IRegion =
+    findWord(document, offset)
+
   def findWord(document : IDocument, offset : Int) : IRegion =
     findWord(docToSeq(document), offset)
 
