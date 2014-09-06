@@ -36,7 +36,6 @@ import scala.tools.nsc.io.AbstractFile
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.ScalaPresentationCompiler
@@ -65,7 +64,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def scalaProject = IScalaPlugin().getScalaProject(getJavaProject.getProject)
 
-  val file : AbstractFile
+  override val file : AbstractFile
 
   /** Lock object for operating on `cachedSourceFile` */
   private val sourceFileLock = new Object
@@ -143,7 +142,6 @@ trait ScalaCompilationUnit extends Openable
       }
     }) getOrElse false
   }
-
 
   /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
    *  implement custom behavior. @see ScalaSourceFile
@@ -280,8 +278,6 @@ trait ScalaCompilationUnit extends Openable
     }
     descriptor.orNull
   }
-
-  override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
 
   def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit =
     followReference(DeclarationHyperlinkDetector(), editor, selection)

@@ -1,6 +1,5 @@
 package org.scalaide.util.internal
 
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import scala.tools.nsc.util.Chars.isIdentifierPart
 import scala.tools.nsc.util.Chars.isOperatorPart
 
@@ -9,7 +8,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 
-object ScalaWordFinder extends IScalaWordFinder {
+object ScalaWordFinder {
 
   private def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
     override def apply(i: Int) = doc.getChar(i)
@@ -20,9 +19,6 @@ object ScalaWordFinder extends IScalaWordFinder {
     override def apply(i: Int) = buf.getChar(i)
     override def length = buf.getLength
   }
-
-  override def getWord(document: IDocument, offset: Int): IRegion =
-    findWord(document, offset).orNull
 
   /** See [[findWord(IndexedSeq[Char],Int):Option[IRegion]]. */
   def findWord(document: IDocument, offset: Int): Option[IRegion] =
