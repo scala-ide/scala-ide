@@ -36,7 +36,6 @@ import scala.tools.nsc.io.AbstractFile
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
@@ -71,7 +70,7 @@ trait ScalaCompilationUnit extends Openable
   override def scalaProject: internal.project.ScalaProject =
     ScalaPlugin().getScalaProject(getJavaProject.getProject)
 
-  val file: AbstractFile
+  override val file : AbstractFile
 
   override def sourceMap(contents: Array[Char]): ISourceMap = sourceFileLock.synchronized {
     cachedSourceInfo = ISourceMap.plainScala(file, contents)
@@ -269,8 +268,6 @@ trait ScalaCompilationUnit extends Openable
     }
     descriptor.orNull
   }
-
-  override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
 
   def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit =
     followReference(DeclarationHyperlinkDetector(), editor, selection)
