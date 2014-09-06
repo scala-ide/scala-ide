@@ -44,7 +44,7 @@ import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 
-class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(project: IScalaProject, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -54,7 +54,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
