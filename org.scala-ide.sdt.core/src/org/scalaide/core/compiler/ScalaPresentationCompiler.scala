@@ -458,29 +458,33 @@ object ScalaPresentationCompiler {
         val source = pos.source
         val reducedPos =
           if (pos.isRange)
-            toSingleLine(pos)
+            Option(toSingleLine(pos))
           else
-            new RangePosition(pos.source, pos.point, pos.point, pos.point + ScalaWordFinder.findWord(source.content, pos.start).getLength)
+            ScalaWordFinder.findWord(source.content, pos.start) map { w ⇒
+              new RangePosition(source, pos.point, pos.point, pos.point + w.getLength())
+            }
 
-        val fileName =
-          source.file match {
-            case EclipseFile(file) =>
-              Some(file.getFullPath().toString.toCharArray)
-            case vf: VirtualFile =>
-              Some(vf.path.toCharArray)
-            case _ =>
-              None
-          }
-        fileName.map(new DefaultProblem(
-          _,
-          formatMessage(msg),
-          0,
-          new Array[String](0),
-          nscSeverityToEclipse(severityLevel),
-          reducedPos.start,
-          math.max(reducedPos.start, reducedPos.end - 1),
-          reducedPos.line,
-          reducedPos.column))
+        reducedPos flatMap { reducedPos ⇒
+          val fileName =
+            source.file match {
+              case EclipseFile(file) =>
+                Some(file.getFullPath().toString.toCharArray)
+              case vf: VirtualFile =>
+                Some(vf.path.toCharArray)
+              case _ =>
+                None
+            }
+          fileName.map(new DefaultProblem(
+            _,
+            formatMessage(msg),
+            0,
+            new Array[String](0),
+            nscSeverityToEclipse(severityLevel),
+            reducedPos.start,
+            math.max(reducedPos.start, reducedPos.end - 1),
+            reducedPos.line,
+            reducedPos.column))
+        }
       } else None
     }
 

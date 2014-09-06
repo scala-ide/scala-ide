@@ -21,7 +21,8 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
 
-class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
+class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _])
+    extends Engine(settings) with ISearchRequestor with HasLogger {
 
   var actualSelectionStart: Int = _
   var actualSelectionEnd: Int = _
@@ -38,7 +39,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       import compiler.{ log => _, _ }
 
       val source = icu.getContents
-      val region = ScalaWordFinder.findWord(source, selectionStart0)
+      val region = ScalaWordFinder.findWordOrEmptyRegion(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =
         if (selectionStart0 <= selectionEnd0)

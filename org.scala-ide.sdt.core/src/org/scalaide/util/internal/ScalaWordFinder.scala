@@ -1,41 +1,35 @@
 package org.scalaide.util.internal
 
-import scala.collection.immutable.IndexedSeq
-
-import scala.tools.nsc.Global
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 import scala.tools.nsc.util.Chars.isIdentifierPart
 import scala.tools.nsc.util.Chars.isOperatorPart
-import scala.tools.nsc.util.Chars.CR
-import scala.tools.nsc.util.Chars.LF
-import scala.tools.nsc.util.Chars.FF
 
 import org.eclipse.jdt.core.IBuffer
-import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
-
 object ScalaWordFinder extends IScalaWordFinder {
 
-  def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
+  private def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
     override def apply(i: Int) = doc.getChar(i)
     override def length = doc.getLength
   }
 
-  def bufferToSeq(buf: IBuffer) = new IndexedSeq[Char] {
-    override def apply(i: Int) = if (i >= buf.getLength()) 0.toChar else buf.getChar(i)
+  private def bufferToSeq(buf: IBuffer) = new IndexedSeq[Char] {
+    override def apply(i: Int) = buf.getChar(i)
     override def length = buf.getLength
   }
 
   override def getWord(document: IDocument, offset: Int): IRegion =
-    findWord(document, offset)
+    findWord(document, offset).orNull
 
-  def findWord(document: IDocument, offset: Int): IRegion =
+  /** See [[findWord(IndexedSeq[Char],Int):Option[IRegion]]. */
+  def findWord(document: IDocument, offset: Int): Option[IRegion] =
     findWord(docToSeq(document), offset)
 
-  def findWord(buffer: IBuffer, offset: Int): IRegion =
+  /** See [[findWord(IndexedSeq[Char],Int):Option[IRegion]]. */
+  def findWord(buffer: IBuffer, offset: Int): Option[IRegion] =
     findWord(bufferToSeq(buffer), offset)
 
   /**
@@ -47,14 +41,17 @@ object ScalaWordFinder extends IScalaWordFinder {
    * {{{ s"Hello, $name" }}}
    *
    * Here, the identifier is only `name`.
+   *
+   * Returns `None` if offset is invalid.
    */
-  def findWord(document: Seq[Char], offset: Int): IRegion = {
+  def findWord(document: IndexedSeq[Char], offset: Int): Option[IRegion] = {
+    if (offset < 0 || offset > document.length)
+      None
+    else {
+      def find(p: Char => Boolean) = {
+        var start = -2
+        var end = -1
 
-    def find(p: Char => Boolean): IRegion = {
-      var start = -2
-      var end = -1
-
-      try {
         var pos = Math.min(offset - 1, document.size - 1)
 
         while (pos >= 0 && p(document(pos)))
@@ -68,27 +65,32 @@ object ScalaWordFinder extends IScalaWordFinder {
           pos += 1
 
         end = pos
-      } catch {
-        case ex: BadLocationException => // Deliberately ignored
+
+        new Region(start + 1, end - start - 1)
       }
 
-      new Region(start + 1, end - start - 1)
+      val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
+      if (idRegion.getLength == 0)
+        Some(find(isOperatorPart))
+      else
+        Some(idRegion)
     }
-
-    val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
-    if (idRegion == null || idRegion.getLength == 0)
-      find(isOperatorPart)
-    else
-      idRegion
   }
 
-  def findCompletionPoint(document: IDocument, offset: Int): IRegion =
+  /**
+   * Calls [[findWord(IndexedSeq[Char],Int):Option[IRegion]] and if that returns
+   * `None` returns a region whose offset and length is 0.
+   */
+  def findWordOrEmptyRegion(document: IndexedSeq[Char], offset: Int): IRegion =
+    findWord(document, offset).getOrElse(new Region(0, 0))
+
+  def findCompletionPoint(document: IDocument, offset: Int): Option[IRegion] =
     findCompletionPoint(docToSeq(document), offset)
 
-  def findCompletionPoint(buffer: IBuffer, offset: Int): IRegion =
+  def findCompletionPoint(buffer: IBuffer, offset: Int): Option[IRegion] =
     findCompletionPoint(bufferToSeq(buffer), offset)
 
-  def findCompletionPoint(document: Seq[Char], offset0: Int): IRegion = {
+  def findCompletionPoint(document: IndexedSeq[Char], offset0: Int): Option[IRegion] = {
     def isWordPart(ch: Char) = isIdentifierPart(ch) || isOperatorPart(ch)
 
     val offset = if (offset0 >= document.length) (document.length - 1) else offset0
@@ -98,10 +100,10 @@ object ScalaWordFinder extends IScalaWordFinder {
     else if (offset > 0 && isWordPart(document(offset - 1)))
       findWord(document, offset - 1)
     else
-      new Region(offset, 0)
+      Some(new Region(offset, 0))
   }
 
   /** Returns the length of the identifier which is located at the offset position. */
   def identLenAtOffset(doc: IDocument, offset: Int): Int =
-    ScalaWordFinder.findWord(doc, offset).getLength()
+    ScalaWordFinder.findWord(doc, offset).fold(0)(_.getLength())
 }
