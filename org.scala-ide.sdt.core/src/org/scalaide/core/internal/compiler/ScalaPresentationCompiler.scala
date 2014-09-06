@@ -51,7 +51,7 @@ import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 
-class ScalaPresentationCompiler(name: String, settings: Settings) extends {
+class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -61,7 +61,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, name)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
