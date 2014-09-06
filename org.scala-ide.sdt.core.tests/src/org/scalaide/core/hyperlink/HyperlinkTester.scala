@@ -40,13 +40,13 @@ trait HyperlinkTester extends TestProjectSetup {
     if(forceTypeChecking) waitUntilTypechecked(unit)
     new VerifyHyperlink {
       /** @param expectations A collection of expected `Link` (test's oracle). */
-      def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks) = {
+      override def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks) = {
         val positions = findMarker(HyperlinkMarker).in(unit)
 
         println("checking %d positions".format(positions.size))
         assertEquals(positions.size, expectations.size)
         for ((pos, oracle) <- positions.zip(expectations)) {
-          val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos)
+          val wordRegion = ScalaWordFinder.findWordOrEmptyRegion(unit.getContents, pos)
           val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
           println("hyperlinking at position %d (%s)".format(pos, word))
           checker(unit, wordRegion, word, oracle)

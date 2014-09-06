@@ -26,7 +26,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
     val doc = textEditor.getDocumentProvider.getDocument(input)
     val wordRegion = ScalaWordFinder.findWord(doc.get, currentSelection.getOffset)
 
-    findHyperlinks(textEditor, icu, wordRegion)
+    wordRegion.map(findHyperlinks(textEditor, icu, _)).getOrElse(Nil)
   }
 
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion): List[IHyperlink] = {
