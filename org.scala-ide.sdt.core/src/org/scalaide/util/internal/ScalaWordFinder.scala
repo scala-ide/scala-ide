@@ -19,23 +19,23 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
 
 object ScalaWordFinder extends IScalaWordFinder {
 
-  def docToSeq(doc : IDocument) = new IndexedSeq[Char] {
-    override def apply(i : Int) = doc.getChar(i)
+  def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
+    override def apply(i: Int) = doc.getChar(i)
     override def length = doc.getLength
   }
 
-  def bufferToSeq(buf : IBuffer) = new IndexedSeq[Char] {
-    override def apply(i : Int) = if (i >= buf.getLength()) 0.toChar else buf.getChar(i)
+  def bufferToSeq(buf: IBuffer) = new IndexedSeq[Char] {
+    override def apply(i: Int) = if (i >= buf.getLength()) 0.toChar else buf.getChar(i)
     override def length = buf.getLength
   }
 
   override def getWord(document: IDocument, offset: Int): IRegion =
     findWord(document, offset)
 
-  def findWord(document : IDocument, offset : Int) : IRegion =
+  def findWord(document: IDocument, offset: Int): IRegion =
     findWord(docToSeq(document), offset)
 
-  def findWord(buffer : IBuffer, offset : Int) : IRegion =
+  def findWord(buffer: IBuffer, offset: Int): IRegion =
     findWord(bufferToSeq(buffer), offset)
 
   /**
@@ -48,9 +48,9 @@ object ScalaWordFinder extends IScalaWordFinder {
    *
    * Here, the identifier is only `name`.
    */
-  def findWord(document : Seq[Char], offset : Int) : IRegion = {
+  def findWord(document: Seq[Char], offset: Int): IRegion = {
 
-    def find(p : Char => Boolean) : IRegion = {
+    def find(p: Char => Boolean): IRegion = {
       var start = -2
       var end = -1
 
@@ -69,7 +69,7 @@ object ScalaWordFinder extends IScalaWordFinder {
 
         end = pos
       } catch {
-        case ex : BadLocationException => // Deliberately ignored
+        case ex: BadLocationException => // Deliberately ignored
       }
 
       new Region(start + 1, end - start - 1)
@@ -82,21 +82,21 @@ object ScalaWordFinder extends IScalaWordFinder {
       idRegion
   }
 
-  def findCompletionPoint(document : IDocument, offset : Int) : IRegion =
+  def findCompletionPoint(document: IDocument, offset: Int): IRegion =
     findCompletionPoint(docToSeq(document), offset)
 
-  def findCompletionPoint(buffer : IBuffer, offset : Int) : IRegion =
+  def findCompletionPoint(buffer: IBuffer, offset: Int): IRegion =
     findCompletionPoint(bufferToSeq(buffer), offset)
 
-  def findCompletionPoint(document : Seq[Char], offset0 : Int) : IRegion = {
-    def isWordPart(ch : Char) = isIdentifierPart(ch) || isOperatorPart(ch)
+  def findCompletionPoint(document: Seq[Char], offset0: Int): IRegion = {
+    def isWordPart(ch: Char) = isIdentifierPart(ch) || isOperatorPart(ch)
 
     val offset = if (offset0 >= document.length) (document.length - 1) else offset0
     val ch = document(offset)
     if (isWordPart(ch))
       findWord(document, offset)
-    else if(offset > 0 && isWordPart(document(offset-1)))
-      findWord(document, offset-1)
+    else if (offset > 0 && isWordPart(document(offset - 1)))
+      findWord(document, offset - 1)
     else
       new Region(offset, 0)
   }
