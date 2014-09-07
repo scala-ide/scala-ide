@@ -42,10 +42,24 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
         val mods = d.mods.withFlag(Flag.OVERRIDE)
         d match {
           case d: DefDef =>
-            d.copy(mods = mods) replaces d
+            val lazyValMods =
+              if (mods.hasFlag(Flag.LAZY))
+                if (mods.positions.contains(Flag.LAZY))
+                  mods
+                else
+                  mods.withFlag(Flag.LAZY).withFlag(Tokens.VAL)
+              else
+                mods
+
+            d.copy(mods = lazyValMods) replaces d
 
           case d: ValDef =>
-            val valMods = if (mods.positions.contains(Tokens.VAL)) mods else mods.withFlag(Tokens.VAL)
+            val valMods =
+              if (mods.positions.contains(Tokens.VAL))
+                mods
+              else
+                mods.withFlag(Tokens.VAL)
+
             d.copy(mods = valMods) replaces d
 
           case d: TypeDef =>

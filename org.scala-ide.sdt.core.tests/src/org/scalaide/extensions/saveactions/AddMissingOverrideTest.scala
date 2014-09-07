@@ -194,4 +194,21 @@ class AddMissingOverrideTest {
       override def meth = 0
     }
     """ after SaveEvent
+
+  @Test
+  def add_override_to_lazy_val() = """^
+    trait T {
+      def f: Int
+    }
+    trait TT extends T {
+      lazy val f = 0
+    }
+    """ becomes """^
+    trait T {
+      def f: Int
+    }
+    trait TT extends T {
+      override lazy val f = 0
+    }
+    """ after SaveEvent
 }
