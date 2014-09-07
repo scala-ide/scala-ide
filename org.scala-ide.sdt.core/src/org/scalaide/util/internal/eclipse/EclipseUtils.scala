@@ -87,7 +87,6 @@ object EclipseUtils extends HasLogger {
     }
     job.setRule(rule)
     job.setPriority(priority)
-    job.schedule()
     job
   }
 

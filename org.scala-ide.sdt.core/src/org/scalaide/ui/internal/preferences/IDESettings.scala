@@ -12,7 +12,9 @@ object IDESettings {
 
     List(
       Box("Standard",
-        List(lint, deprecation, feature, g, optimise, target, unchecked,
+        // TODO: re-enable -Xlint when the changes to Mutable#settings has been stabilised
+        // in Scala master and some of the PRs with the old code have been through. See #1002253
+        List(/*lint, */deprecation, feature, g, optimise, target, unchecked,
              pluginOptions, nospecialization, verbose, explaintypes, nowarn)),
       Box("Advanced",
       List(checkInit, elidebelow,

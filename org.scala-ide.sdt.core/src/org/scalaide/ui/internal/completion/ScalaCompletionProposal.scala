@@ -29,7 +29,7 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.completion._
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
 

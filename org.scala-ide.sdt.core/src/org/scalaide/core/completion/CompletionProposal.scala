@@ -86,7 +86,9 @@ case class CompletionProposal(
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
   def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
-    if (context.contextType == CompletionContext.ImportContext || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist))
+    if (context.contextType == CompletionContext.ImportContext
+        || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist)
+        || (isJava && explicitParamNames == List(Nil) && completion.startsWith("get")))
       completion
     else {
       val buffer = new StringBuffer(completion)

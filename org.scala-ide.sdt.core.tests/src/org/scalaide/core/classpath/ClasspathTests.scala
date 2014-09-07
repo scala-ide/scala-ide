@@ -566,16 +566,12 @@ class ClasspathTests {
    *  only for classpath markers.
    */
   private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: IScalaProject = project) {
+
+    val (nbOfErrorMarker, nbOfWarningMarker) = collectMarkers(scalaProject)
+
     // check the classpathValid state
-    assertEquals("Unexpected classpath validity state : " + collectMarkers(scalaProject), expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
+    assertEquals("Unexpected classpath validity state", expectedNbOfErrorMarker == 0, scalaProject.isClasspathValid())
 
-    @volatile var actualMarkers = (0, 0)
-    SDTTestUtils.waitUntil(TIMEOUT) {
-      actualMarkers = collectMarkers(scalaProject)
-      actualMarkers == ((expectedNbOfErrorMarker, expectedNbOfWarningMarker))
-    }
-
-    val (nbOfErrorMarker, nbOfWarningMarker) = actualMarkers
     // after TIMEOUT, we didn't get the expected value
     assertEquals("Unexpected nb of warning markers", expectedNbOfWarningMarker, nbOfWarningMarker)
     assertEquals("Unexpected nb of error markers", expectedNbOfErrorMarker, nbOfErrorMarker)
@@ -583,12 +579,13 @@ class ClasspathTests {
 
   private def collectMarkers(scalaProject: IScalaProject): (Int, Int) = {
     @volatile var actualMarkers: (Int, Int) = (0, 0)
+    @volatile var jobDone = false
 
     // We need to use a job when counting markers because classpath markers are themselves added in a job
     // By using the project as a scheduling rule, we are forced to wait until the classpath marker job has
     // finished. Otherwise, there's a race condition between the classpath validator job (that removes old
     // markers and adds new ones) and this thread, that might read between the delete and the add
-    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", project.underlying) { monitor =>
+    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", scalaProject.underlying) { monitor =>
       // count the markers on the project
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0
@@ -600,18 +597,11 @@ class ClasspathTests {
           case _                        =>
         }
       actualMarkers = (nbOfErrorMarker, nbOfWarningMarker)
+      jobDone = true
       Status.OK_STATUS
     }
 
-    @volatile var jobDone = false
-    object jobListener extends JobChangeAdapter {
-      override def done(event: IJobChangeEvent) {
-        jobDone = true
-      }
-    }
-
     val job = countMarkersJob()
-    job.addJobChangeListener(jobListener)
     job.schedule()
 
     SDTTestUtils.waitUntil(TIMEOUT) { jobDone }

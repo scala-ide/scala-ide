@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.repl
 
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass

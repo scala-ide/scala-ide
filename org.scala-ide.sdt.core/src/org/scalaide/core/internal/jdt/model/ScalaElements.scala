@@ -31,7 +31,7 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
 import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
 import org.scalaide.util.internal.ReflectionUtils
