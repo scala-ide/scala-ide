@@ -1,12 +1,6 @@
 package org.scalaide.ui
 
-import org.eclipse.core.runtime.FileLocator
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.resource.ImageDescriptor
-import org.osgi.framework.Bundle
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.SdtConstants
 import org.scalaide.util.internal.eclipse.OSGiUtils
 
 object ScalaImages {
