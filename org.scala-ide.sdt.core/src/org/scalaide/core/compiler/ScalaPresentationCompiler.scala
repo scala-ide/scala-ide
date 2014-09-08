@@ -44,7 +44,7 @@ import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 
-class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(project: IScalaProject, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -54,7 +54,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -458,29 +458,33 @@ object ScalaPresentationCompiler {
         val source = pos.source
         val reducedPos =
           if (pos.isRange)
-            toSingleLine(pos)
+            Option(toSingleLine(pos))
           else
-            new RangePosition(pos.source, pos.point, pos.point, pos.point + ScalaWordFinder.findWord(source.content, pos.start).getLength)
+            ScalaWordFinder.findWord(source.content, pos.start) map { w ⇒
+              new RangePosition(source, pos.point, pos.point, pos.point + w.getLength())
+            }
 
-        val fileName =
-          source.file match {
-            case EclipseFile(file) =>
-              Some(file.getFullPath().toString.toCharArray)
-            case vf: VirtualFile =>
-              Some(vf.path.toCharArray)
-            case _ =>
-              None
-          }
-        fileName.map(new DefaultProblem(
-          _,
-          formatMessage(msg),
-          0,
-          new Array[String](0),
-          nscSeverityToEclipse(severityLevel),
-          reducedPos.start,
-          math.max(reducedPos.start, reducedPos.end - 1),
-          reducedPos.line,
-          reducedPos.column))
+        reducedPos flatMap { reducedPos ⇒
+          val fileName =
+            source.file match {
+              case EclipseFile(file) =>
+                Some(file.getFullPath().toString.toCharArray)
+              case vf: VirtualFile =>
+                Some(vf.path.toCharArray)
+              case _ =>
+                None
+            }
+          fileName.map(new DefaultProblem(
+            _,
+            formatMessage(msg),
+            0,
+            new Array[String](0),
+            nscSeverityToEclipse(severityLevel),
+            reducedPos.start,
+            math.max(reducedPos.start, reducedPos.end - 1),
+            reducedPos.line,
+            reducedPos.column))
+        }
       } else None
     }
 
