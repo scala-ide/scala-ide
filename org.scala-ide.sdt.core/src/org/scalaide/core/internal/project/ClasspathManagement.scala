@@ -409,7 +409,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     // the marker manipulation needs to be done in a Job, because it requires
     // a change on the IProject, which is locked for modification during
     // the classpath change notification
-    EclipseUtils.scheduleJob("Update classpath error markers", underlying) { monitor =>
+    EclipseUtils.scheduleJob("Update classpath error markers", underlying, Job.BUILD) { monitor =>
       if (underlying.isOpen()) { // cannot change markers on closed project
         // clean the classpath markers
         underlying.deleteMarkers(SdtConstants.ClasspathProblemMarkerId, true, IResource.DEPTH_ZERO)
