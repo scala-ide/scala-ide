@@ -20,7 +20,7 @@ import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.internal.ScalaWordFinder
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
@@ -43,7 +43,7 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
     context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
         case scu : ScalaCompilationUnit =>
-          scu.withSourceFile { findCompletions(position, context, scu) } getOrElse (javaEmptyList())
+          scu.scalaProject.presentationCompiler.internal { findCompletions(position, context, scu) } getOrElse (javaEmptyList())
         case _ => javaEmptyList()
       }
       case _ => javaEmptyList()
@@ -51,11 +51,11 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
   }
 
   private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[ICompletionProposal] = {
+                             (compiler: ScalaPresentationCompiler): java.util.List[ICompletionProposal] = {
     val chars = context.getDocument.get.toCharArray
     val region = ScalaWordFinder.findCompletionPoint(chars, position)
 
-    val res = findCompletions(region)(position, scu)(sourceFile, compiler)
+    val res = findCompletions(region)(position, scu)(scu.sourceFile, compiler)
 
     import collection.JavaConversions._
 

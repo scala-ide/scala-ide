@@ -7,7 +7,7 @@ import org.scalaide.util.internal.SettingConverterUtil._
 import org.scalaide.util.internal.Utils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 /**
  * This is responsible for initializing Scala Compiler

@@ -41,8 +41,8 @@ import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin.plugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
 import org.scalaide.core.internal.builder
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
@@ -65,6 +65,11 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.SearchableEnvironment
+import org.eclipse.jdt.internal.core.JavaProject
 
 
 object ScalaProject {
@@ -90,7 +95,7 @@ object ScalaProject {
       }
     }
 
-    private def doWithCompilerAndFile(part: IWorkbenchPart)(op: (ScalaPresentationCompiler, ScalaSourceFile) => Unit) {
+    private def doWithCompilerAndFile(part: IWorkbenchPart)(op: (IScalaPresentationCompiler, ScalaSourceFile) => Unit) {
       part match {
         case editor: IEditorPart =>
           editor.getEditorInput match {
@@ -139,7 +144,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     "Scala compiler cannot initialize for project: " + underlying.getName +
       ". Please check that your classpath contains the standard Scala library.")
 
-  val presentationCompiler = new ScalaPresentationCompilerProxy(this)
+  override val presentationCompiler = new PresentationCompilerProxy(this)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    *  [[ScalaPlugin]] instance has been fully initialized.
@@ -492,29 +497,9 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   @deprecated("removed this cache to avoid sync issues with desired Source level", "4.0.1")
   private val compatibilityModeCache = null
 
-  /** Performs `op` on the presentation compiler, if the compiler could be initialized.
-   *  Otherwise, do nothing (no exception thrown).
-   */
-  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
-  def doWithPresentationCompiler(op: ScalaPresentationCompiler => Unit): Unit = presentationCompiler(op)
-
   @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   def defaultOrElse[T]: T = {
     throw InvalidCompilerSettings()
-  }
-
-  /** If the presentation compiler has failed to initialize and no `orElse` is specified,
-   *  the default handler throws an `InvalidCompilerSettings` exception
-   *  If T = Unit, then doWithPresentationCompiler can be used, which does not throw.
-   */
-  @deprecated("Use `presentationCompiler.apply` instead", since = "4.0.0")
-  def withPresentationCompiler[T](op: ScalaPresentationCompiler => T)(orElse: => T = defaultOrElse): T = {
-    presentationCompiler(op) getOrElse defaultOrElse
-  }
-
-  @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
-  def withSourceFile[T](scu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T)(orElse: => T = defaultOrElse): T = {
-    scu.withSourceFile(op) getOrElse (orElse)
   }
 
   @deprecated("Use `presentationCompiler.askRestart()` instead", since = "4.0.0")
@@ -608,6 +593,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     if (!IScalaPlugin().headlessMode)
       SWTUtils.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
     shutDownCompilers()
+  }
+
+  override def newSearchableEnvironment(workingCopyOwner: WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY): SearchableEnvironment = {
+    val jProject = javaProject.asInstanceOf[JavaProject]
+    jProject.newSearchableNameEnvironment(workingCopyOwner)
   }
 
   override def toString: String = underlying.getName

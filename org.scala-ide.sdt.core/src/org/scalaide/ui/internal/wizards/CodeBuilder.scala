@@ -9,7 +9,7 @@ import org.eclipse.jdt.core.Signature
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.reflect.NameTransformer
-import org.scalaide.core.compiler.ScalaPresentationCompilerProxy
+import org.scalaide.core.compiler.IPresentationCompilerProxy
 
 trait CodeBuilder {
 
@@ -18,7 +18,7 @@ trait CodeBuilder {
 
   val imports: ImportSupport
   val buffer: Buffer
-  val compilerProxy: ScalaPresentationCompilerProxy
+  val compilerProxy: IPresentationCompilerProxy
 
   protected val convertAndAdd = (s: String) => {
     imports.addImport(convertSignature(s))
@@ -87,7 +87,7 @@ object CodeBuilder {
 
   import BufferSupport._
 
-  def apply(packageName: String, superTypes: List[String], buffer: Buffer, proxy: ScalaPresentationCompilerProxy): CodeBuilder = {
+  def apply(packageName: String, superTypes: List[String], buffer: Buffer, proxy: IPresentationCompilerProxy): CodeBuilder = {
     val imports = ImportSupport(packageName)
     imports.addImports(superTypes)
     new CodeBuilderImpl(imports, superTypes, buffer, proxy)
@@ -225,7 +225,7 @@ object CodeBuilder {
       y.getNumberOfParameters - x.getNumberOfParameters
   }
 
-  private class CodeBuilderImpl(val imports: ImportSupport, superTypes: List[String], val buffer: Buffer, val compilerProxy: ScalaPresentationCompilerProxy)
+  private class CodeBuilderImpl(val imports: ImportSupport, superTypes: List[String], val buffer: Buffer, val compilerProxy: IPresentationCompilerProxy)
       extends QualifiedNameSupport with BufferSupport with CodeBuilder {
 
     private val generatedMethods: ListBuffer[String] = ListBuffer()

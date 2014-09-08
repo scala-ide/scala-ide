@@ -11,6 +11,7 @@ import java.io.PrintWriter
 import java.io.FileOutputStream
 import java.util.Calendar
 import org.junit.Assert
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object compilerProject extends TestProjectSetup("scala-compiler")
 
@@ -98,13 +99,12 @@ class MemoryLeaksTest extends HasLogger {
     logger.debug("Problems: " + unit.asInstanceOf[ScalaSourceFile].getProblems)
 
     // then
-    unit.withSourceFile { (sourceFile, compiler) =>
-      compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-        compiler.askOption { () =>
-          val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
+    unit.scalaProject.presentationCompiler.internal { compiler =>
+      val tree = compiler.askStructure(unit.sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+      compiler.asyncExec {
+        val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
 
-          overrideIndicatorBuilder.traverse(tree)
-        }
+        overrideIndicatorBuilder.traverse(tree)
       }
     }
   }

@@ -87,6 +87,7 @@ Export-Package:
  org.scalaide.core.hyperlink.detector,
  org.scalaide.core.internal.builder,
  org.scalaide.core.internal.builder.zinc,
+ org.scalaide.core.internal.compiler,
  org.scalaide.core.internal.completion,
  org.scalaide.core.internal.containers,
  org.scalaide.core.internal.decorators.markoccurrences,

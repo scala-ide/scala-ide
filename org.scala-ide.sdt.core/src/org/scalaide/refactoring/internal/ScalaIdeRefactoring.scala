@@ -15,7 +15,8 @@ import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.FileUtils
@@ -78,9 +79,9 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     val sel = selection()
 
     withCompiler{ compiler =>
-      compiler.askOption { () =>
+      compiler.asyncExec {
         refactoring.prepare(sel)
-      } getOrElse fail()
+      }.getOption() getOrElse fail()
     }
   }
 
@@ -156,9 +157,9 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     val sel = selection()
 
     val result = withCompiler { compiler =>
-      compiler.askOption {() =>
+      compiler.asyncExec {
         refactoring.perform(sel, preparationResult().right.get, params)
-      }
+      }.getOption()
     }
 
     result match {
@@ -171,7 +172,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   }
 
   private [refactoring] def withCompiler[T](f: ScalaPresentationCompiler => T): T = {
-    file.withSourceFile((_, c) => f(c)) getOrElse fail()
+    file.scalaProject.presentationCompiler.internal(f) getOrElse fail()
   }
 
   private [refactoring] def withSourceFile[T](f: SourceFile => T): T = {

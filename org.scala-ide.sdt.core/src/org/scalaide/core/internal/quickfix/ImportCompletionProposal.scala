@@ -13,6 +13,7 @@ import org.eclipse.swt.graphics.Point
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
 
@@ -46,17 +47,16 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
 
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
 
-         val r = new compiler.Response[compiler.Tree]
-         compiler.askLoadedTyped(sourceFile, r)
+         val r = compiler.askLoadedTyped(sourceFile, false)
          (r.get match {
            case Right(error) =>
              eclipseLog.error(error)
              None
            case _ =>
-             compiler.askOption {() =>
+             compiler.asyncExec {
                val refactoring = new AddImportStatement { val global = compiler }
                refactoring.addImport(scalaSourceFile.file, importName)
-             }
+             } getOption()
          }) getOrElse Nil
 
       } getOrElse (Nil)

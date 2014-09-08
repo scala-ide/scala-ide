@@ -46,7 +46,7 @@ import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaProjectEvent
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 

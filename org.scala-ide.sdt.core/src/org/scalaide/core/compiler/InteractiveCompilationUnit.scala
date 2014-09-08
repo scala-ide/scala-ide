@@ -41,11 +41,21 @@ trait InteractiveCompilationUnit {
   def sourceFile(): SourceFile =
     sourceFile(getContents)
 
-  /** Reconcile the unit. Return all compilation errors.
+  /** Reconcile this unit. Return all compilation errors.
    *
    *  Blocks until the unit is type-checked.
    */
   def reconcile(newContents: String): List[IProblem]
+
+  /** Schedule the unit for reconciliation and add it to the presentation compiler managed units. This should
+   *  be called before any other calls to {{{IScalaPresentationCompiler.scheduleReload}}}
+   *
+   *  This method is the entry-point to the managed units in the presentation compiler: it should perform an initial
+   *  askReload and add the unit to the managed set, so from now on `scheduleReload` can be used instead.
+   *
+   *  This method should not block.
+   */
+  def initialReconcile(): Response[Unit]
 
   /** Return all compilation errors from this unit. Waits until the unit is type-checked.
    *  It may be long running, but it won't force retype-checking. If the unit was already typed,
@@ -56,31 +66,11 @@ trait InteractiveCompilationUnit {
   /** Return the current contents of this compilation unit. */
   def getContents(): Array[Char]
 
-  /** Perform a side-effecting operation on the source file, with the current presentation compiler. */
-  def doWithSourceFile(op: (SourceFile, ScalaPresentationCompiler) => Unit) {
-    scalaProject.presentationCompiler { op(sourceFile, _) }
-  }
-
   /** Perform an operation on the source file, with the current presentation compiler.
    *
    *  @param op The operation to be performed
    */
-  def withSourceFile[T](op: (SourceFile, ScalaPresentationCompiler) => T): Option[T] = {
+  def withSourceFile[T](op: (SourceFile, IScalaPresentationCompiler) => T): Option[T] = {
     scalaProject.presentationCompiler(op(sourceFile, _))
   }
-
-  /** Schedule the unit for reconciliation. Not blocking. Used by the usual Scala editor to signal a need for `askReload`,
-   *  ensuring faster response when calling `getProblems`.
-   */
-  def scheduleReconcile(): Response[Unit]
-
-  /** Returns a new search name environment for the scala project.
-   *
-   *  @param workingCopyOwner The owner of an this Compilation Unit in working copy mode.
-   */
-  def newSearchableEnvironment(workingCopyOwner : WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY) : SearchableEnvironment = {
-    val javaProject = scalaProject.javaProject.asInstanceOf[JavaProject]
-    javaProject.newSearchableNameEnvironment(workingCopyOwner)
-  }
-
 }

@@ -14,6 +14,7 @@ import org.scalaide.refactoring.internal.FullProjectIndex
 import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import org.scalaide.refactoring.internal.ui.NewNameWizardPage
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /**
  * This refactoring is used for all global rename refactorings and also from
@@ -86,9 +87,9 @@ class GlobalRename extends RefactoringExecutorWithWizard {
 
       val selectedSymbol = selection().selectedSymbolTree map (_.symbol) getOrElse refactoring.global.NoSymbol
 
-      refactoring.global.askOption { () =>
+      refactoring.global.asyncExec {
         refactoring.doesNameCollide(name, selectedSymbol)
-      } map {
+      } getOption() map {
         case Nil => ()
         case collisions =>
           val names = collisions map (s => s.fullName) mkString ", "

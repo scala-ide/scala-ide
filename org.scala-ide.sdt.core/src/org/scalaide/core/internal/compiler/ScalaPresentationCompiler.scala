@@ -1,4 +1,4 @@
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
 import scala.tools.nsc.interactive.FreshRunReq
 import scala.collection.concurrent
@@ -43,6 +43,10 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
+import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler._
 
 class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
   /*
@@ -63,6 +67,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   with JavaSig
   with LocateSymbol
   with CompilerApiExtensions
+  with IScalaPresentationCompiler
   with HasLogger { self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
@@ -119,52 +124,54 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
     res
   }
 
-  override def askFilesDeleted(sources: List[SourceFile], response: Response[Unit]) = {
+  override def askFilesDeleted(sources: List[SourceFile], response: Response[Unit]): Unit = {
     flushScheduledReloads()
     super.askFilesDeleted(sources, response)
   }
 
-  override def askLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]) = {
+  override def askLinkPos(sym: Symbol, source: SourceFile, response: Response[Position]): Unit = {
     flushScheduledReloads()
     super.askLinkPos(sym, source, response)
   }
 
-  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]) = {
+  override def askParsedEntered(source: SourceFile, keepLoaded: Boolean, response: Response[Tree]): Unit = {
     flushScheduledReloads()
     super.askParsedEntered(source, keepLoaded, response)
   }
 
-  override def askScopeCompletion(pos: Position, response: Response[List[Member]]) = {
+  override def askScopeCompletion(pos: Position, response: Response[List[Member]]): Unit = {
     flushScheduledReloads()
     super.askScopeCompletion(pos, response)
   }
 
-  override def askToDoFirst(source: SourceFile) = {
+  override def askToDoFirst(source: SourceFile): Unit = {
     flushScheduledReloads()
     super.askToDoFirst(source)
   }
 
-  override def askTypeAt(pos: Position, response: Response[Tree]) = {
+  override def askTypeAt(pos: Position, response: Response[Tree]): Unit = {
     flushScheduledReloads()
     super.askTypeAt(pos, response)
   }
 
-  override def askTypeCompletion(pos: Position, response: Response[List[Member]]) = {
+  override def askTypeCompletion(pos: Position, response: Response[List[Member]]): Unit = {
     flushScheduledReloads()
     super.askTypeCompletion(pos, response)
   }
 
-  override def askLoadedTyped(sourceFile: SourceFile, keepLoaded: Boolean, response: Response[Tree]) = {
+  override def askLoadedTyped(sourceFile: SourceFile, keepLoaded: Boolean, response: Response[Tree]): Unit = {
     flushScheduledReloads()
     super.askLoadedTyped(sourceFile, keepLoaded, response)
+  }
+
+  override def askStructure(sourceFile: SourceFile, keepLoaded: Boolean): Response[Tree] = {
+    withResponse[Tree](askStructure(keepLoaded)(sourceFile, _))
   }
 
   def problemsOf(file: AbstractFile): List[IProblem] = {
     unitOfFile get file match {
       case Some(unit) =>
-        val response = new Response[Tree]
-        askLoadedTyped(unit.source, response)
-        response.get
+        askLoadedTyped(unit.source, false).get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None =>
         logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
@@ -173,83 +180,41 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
     }
   }
 
-  def problemsOf(scu: ScalaCompilationUnit): List[IProblem] = problemsOf(scu.file)
-
-  @deprecated("Use `InteractiveCompilationUnit.withSourceFile` instead", since = "4.0.0")
-  def withSourceFile[T](icu: InteractiveCompilationUnit)(op: (SourceFile, ScalaPresentationCompiler) => T): T =
-    icu.withSourceFile(op) getOrElse (throw new UnsupportedOperationException("Use `InteractiveCompilationUnit.withSourceFile`"))
+  def problemsOf(scu: InteractiveCompilationUnit): List[IProblem] = problemsOf(scu.file)
 
   @deprecated("Use loadedType instead.", "4.0.0")
   def body(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = loadedType(sourceFile, keepLoaded)
 
   def loadedType(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = {
-    val response = new Response[Tree]
     if (self.onCompilerThread)
       throw ScalaPresentationCompiler.InvalidThread("Tried to execute `askLoadedType` while inside `ask`")
-    askLoadedTyped(sourceFile, keepLoaded, response)
-    response.get
+    askLoadedTyped(sourceFile, keepLoaded).get
   }
 
-  def withParseTree[T](sourceFile: SourceFile)(op: Tree => T): T = {
-    op(parseTree(sourceFile))
-  }
-
-  def withStructure[T](sourceFile: SourceFile, keepLoaded: Boolean = false)(op: Tree => T): Either[T, Throwable] = {
-    val response = new Response[Tree]
-    askStructure(keepLoaded)(sourceFile, response)
-    response.get.left.map(op)
+  /** Perform `op' on the compiler thread. This method returns a `Response` that may
+   *  never complete (there is no default timeout). In very rare cases, the current presentation compiler
+   *  might restart and miss to complete a pending request. Clients should always specify
+   *  a timeout value when awaiting on a future returned by this method.
+   */
+  def asyncExec[A](op: => A): Response[A] = {
+    askForResponse(() => op)
   }
 
   /** Ask with a default timeout. Keep around for compatibility with the m2 release. */
+  @deprecated("Use asyncExec instead", "4.0.0")
   def askOption[A](op: () => A): Option[A] = askOption(op, 10000)
 
-  /** Perform `op' on the compiler thread. Catch all exceptions, and return
-   *  None if an exception occurred. TypeError and FreshRunReq are printed to
-   *  stdout, all the others are logged in the platform error log.
-   */
+  @deprecated("Use asyncExec instead", "4.0.0")
   def askOption[A](op: () => A, timeout: Int): Option[A] = {
-    val response = askForResponse(op)
-
-    val res = if (IScalaPlugin().noTimeoutMode) Some(response.get) else response.get(timeout)
-
-    res match {
-      case None =>
-        eclipseLog.info("Timeout in askOption", new Throwable) // log a throwable for its stacktrace
-        None
-
-      case Some(result) =>
-        result match {
-          case Right(fi: FailedInterrupt) =>
-            fi.getCause() match {
-              case e: TypeError                  => logger.info("TypeError in ask:\n" + e)
-              case f: FreshRunReq                => logger.info("FreshRunReq in ask:\n" + f)
-              case m: MissingResponse            => logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
-              // This can happen if you ask long queries of the
-              // PC, triggering long sleep() sessions on caller
-              // side.
-              case i: InterruptedException       => logger.debug("InterruptedException in ask:\n" + i)
-              case e                             => eclipseLog.error("Error during askOption", e)
-            }
-            None
-
-          case Right(m: MissingResponse) =>
-            logger.info("MissingResponse in ask. Called from: " + m.getStackTrace().mkString("\n"))
-            None
-
-          case Right(e: Throwable) =>
-            eclipseLog.error("Error during askOption", e)
-            None
-
-          case Left(v) => Some(v)
-        }
-    }
+    import scala.concurrent.duration._
+    asyncExec(op()).getOption(timeout.millis)
   }
 
   /** Ask to put scu in the beginning of the list of files to be typechecked.
    *
    *  If the file has not been 'reloaded' first, it does nothing.
    */
-  def askToDoFirst(scu: ScalaCompilationUnit) {
+  def askToDoFirst(scu: InteractiveCompilationUnit) {
     askToDoFirst(scu.sourceFile())
   }
 
@@ -265,15 +230,15 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
     withResponse[Unit] { res => askReload(units.map(_.sourceFile), res) }
   }
 
-  def filesDeleted(units: List[ScalaCompilationUnit]) {
-    logger.info("files deleted:\n" + (units map (_.getPath) mkString "\n"))
+  def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
+    logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
-      askFilesDeleted(units.map(_.sourceFile), new Response[Unit])
+      askFilesDeleted(units.map(_.sourceFile()).toList)
   }
 
-  def discardCompilationUnit(scu: ScalaCompilationUnit) {
+  def discardCompilationUnit(scu: InteractiveCompilationUnit): Unit = {
     logger.info("discarding " + scu.sourceFile.path)
-    askOption { () => removeUnitOf(scu.sourceFile) }
+    asyncExec { removeUnitOf(scu.sourceFile) }.getOption()
   }
 
   /** Tell the presentation compiler to refresh the given files,
@@ -307,12 +272,6 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   }
 
   override def synchronizeNames = true
-
-  def withResponse[A](op: Response[A] => Any): Response[A] = {
-    val response = new Response[A]
-    op(response)
-    response
-  }
 
   override def logError(msg: String, t: Throwable) =
     eclipseLog.error(msg, t)

@@ -64,7 +64,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.SdtConstants
 import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>

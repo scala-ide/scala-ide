@@ -80,7 +80,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   /** Schedule this source file for reconciliation. Add the file to
    *  the loaded files managed by the presentation compiler.
    */
-  override def scheduleReconcile(): Response[Unit] = {
+  override def initialReconcile(): Response[Unit] = {
     val reloaded = scalaProject.presentationCompiler { compiler =>
       compiler.askReload(this, getContents)
     } getOrElse {
