@@ -16,7 +16,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.core.compiler._
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.compiler.InternalServices
+import org.scalaide.core.internal.compiler.InternalCompilerServices
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -41,7 +41,7 @@ import org.scalaide.core.internal.compiler.InternalServices
  *               nor type-checked anymore. To re-enable it, call `askToDoFirst`, which is usually called when an editor is
  *               open (meaning that when a file was closed and reopen it will be retried).
  */
-trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalServices {
+trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalCompilerServices {
   import IScalaPresentationCompiler._
 
   /** Removes source files and top-level symbols, and issues a new typer run.

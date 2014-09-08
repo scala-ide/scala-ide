@@ -5,7 +5,7 @@ import scala.tools.nsc.interactive.Global
 /** This trait groups methods are only available to core IDE implementations.
  *  They may change without notice or deprecation cycle.
  */
-trait InternalServices extends Global {
+trait InternalCompilerServices extends Global {
   /** Return the enclosing package. Correctly handle the empty package, by returning
    *  the empty string, instead of <empty>.
    */
