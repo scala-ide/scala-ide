@@ -28,6 +28,7 @@ class ScalaCompletions extends HasLogger {
                              (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
     val wordAtPosition = (if (position <= wordStart) "" else scu.getContents.slice(wordStart, position).mkString.trim).toArray
+    val defaultContext = if (scu.getContents()(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
     val typed = new compiler.Response[compiler.Tree]
     val pos = compiler.rangePos(sourceFile, position, position, position)
     compiler.askTypeAt(pos, typed)
@@ -173,7 +174,7 @@ class ScalaCompletions extends HasLogger {
           Array(), name.pos.start, false)
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
-        fillTypeCompletions(qualifier.pos.end)
+        fillTypeCompletions(qualifier.pos.end, defaultContext)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
         fillTypeCompletions(expr.pos.end, CompletionContext.ImportContext)
@@ -191,7 +192,7 @@ class ScalaCompletions extends HasLogger {
               fun.pos.start, false)
         }
       case _ =>
-        fillScopeCompletions(position)
+        fillScopeCompletions(position, defaultContext)
     }
 
     listedTypes.values.flatten.toList
