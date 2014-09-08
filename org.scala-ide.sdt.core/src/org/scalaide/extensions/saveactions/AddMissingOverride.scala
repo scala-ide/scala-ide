@@ -29,8 +29,11 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
     def canOverride(sym: Symbol) = sym.isOverridingSymbol && !sym.isOverride && !sym.isAbstractOverride
 
     val symbolWithoutOverride = filter {
+      case d: ValDef if d.mods.positions.contains(Tokens.VAR) && !overridesVar(getterOf(d.symbol)) ⇒
+        false
+
       case d: ValDef =>
-        val getter = d.symbol.getterIn(d.symbol.owner)
+        val getter = getterOf(d.symbol)
         canOverride(if (getter != NoSymbol) getter else d.symbol)
 
       case d @ (_: DefDef | _: TypeDef) =>
@@ -55,7 +58,7 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
 
           case d: ValDef =>
             val valMods =
-              if (mods.positions.contains(Tokens.VAL))
+              if (mods.positions.contains(Tokens.VAR) || mods.positions.contains(Tokens.VAL))
                 mods
               else
                 mods.withFlag(Tokens.VAL)
@@ -73,5 +76,18 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
       }
     }
     transformFile(refactoring)
+  }
+
+  private def getterOf(sym: Symbol): Symbol =
+    sym.getterIn(sym.owner)
+
+  private def overridesVar(symbol: Symbol): Boolean = {
+    val base = symbol.owner
+    val baseType = base.toType
+    val bcs = base.info.baseClasses dropWhile (symbol.owner != _) drop 1
+
+    bcs exists { sym ⇒
+      symbol.matchingSymbol(sym, baseType).setterIn(sym) != NoSymbol
+    }
   }
 }

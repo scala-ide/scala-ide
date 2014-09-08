@@ -211,4 +211,38 @@ class AddMissingOverrideTest {
       override lazy val f = 0
     }
     """ after SaveEvent
+
+  @Test
+  def add_no_override_to_var_that_overrides_non_var() = """^
+    trait T {
+      def f: Int
+    }
+    trait TT extends T {
+      var f = 0
+    }
+    """ becomes """^
+    trait T {
+      def f: Int
+    }
+    trait TT extends T {
+      var f = 0
+    }
+    """ after SaveEvent
+
+  @Test
+  def add_override_to_var_that_overrides_a_var() = """^
+    trait T {
+      var f: Int
+    }
+    trait TT extends T {
+      var f = 0
+    }
+    """ becomes """^
+    trait T {
+      var f: Int
+    }
+    trait TT extends T {
+      override var f = 0
+    }
+    """ after SaveEvent
 }
