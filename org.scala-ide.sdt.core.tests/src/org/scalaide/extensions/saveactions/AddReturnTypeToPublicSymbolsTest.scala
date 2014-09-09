@@ -22,13 +22,13 @@ class AddReturnTypeToPublicSymbolsTest {
     class X {
       def meth: java.io.File = new java.io.File("")
       val value: java.io.File = new java.io.File("")
-      var value: java.io.File = new java.io.File("")
+      var variable: java.io.File = new java.io.File("")
     }
     """ becomes """^
     class X {
       def meth: java.io.File = new java.io.File("")
       val value: java.io.File = new java.io.File("")
-      var value: java.io.File = new java.io.File("")
+      var variable: java.io.File = new java.io.File("")
     }
     """ after SaveEvent
 
