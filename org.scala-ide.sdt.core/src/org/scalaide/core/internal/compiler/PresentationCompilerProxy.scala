@@ -14,6 +14,7 @@ import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
+import org.scalaide.ui.internal.editor.ScalaEditor
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -24,7 +25,8 @@ import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
   */
 final class PresentationCompilerProxy(val project: IScalaProject) extends IPresentationCompilerProxy with HasLogger {
 
-  private lazy val activityListener = new PresentationCompilerActivityListener(project.underlying.getName, project.hasOpenEditors, shutdown)
+  private lazy val activityListener =
+    new PresentationCompilerActivityListener(project.underlying.getName, ScalaEditor.projectHasOpenEditors(project), shutdown)
 
   /** Current 'live' instance of the presentation compiler.
     *

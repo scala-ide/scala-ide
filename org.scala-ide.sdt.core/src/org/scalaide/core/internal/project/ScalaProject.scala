@@ -68,9 +68,6 @@ import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.ui.IFileEditorInput
-import org.eclipse.ui.IEditorReference
-import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
 
@@ -612,30 +609,4 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   override def hashCode(): Int = underlying.hashCode()
-
-  import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-
-  def hasOpenEditors(): Boolean = {
-
-    def hasOpenEditorForThisProject(page: IWorkbenchPage) = {
-      val editorRefs = page.getEditorReferences
-      editorRefs exists hasEqualProject
-    }
-
-    def hasEqualProject(editorRef: IEditorReference) = {
-      val isEqual = for {
-        editor <- Option(editorRef.getEditor( /*restore =*/ false))
-        input <- editor.getEditorInput.asInstanceOfOpt[IFileEditorInput]
-      } yield {
-        val file = input.getFile
-        underlying equals file.getProject
-      }
-      isEqual.getOrElse(false)
-    }
-
-    IScalaPlugin().getWorkbench().getWorkbenchWindows().exists { workbenchWindow =>
-      val pages = workbenchWindow.getPages()
-      pages exists hasOpenEditorForThisProject
-    }
-  }
 }

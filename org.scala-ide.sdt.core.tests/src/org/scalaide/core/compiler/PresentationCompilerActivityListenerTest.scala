@@ -33,7 +33,7 @@ class PresentationCompilerActivityListenerTest {
   implicit def anyVal2Fun[T <: AnyVal](x: T) = () => x
 
   def createListener(shutdownFun: () => Unit = (), ignoreOpenEditors: () => Boolean, maxIdlenessLengthMillis: () => Long,
-    hasOpenEditors: () => Boolean = false, closingEnabled: () => Boolean = true) = {
+    hasOpenEditors: => Boolean = false, closingEnabled: () => Boolean = true) = {
 
     new PresentationCompilerActivityListener(projectName = "notImportantHere", hasOpenEditors, shutdownFun) {
       override protected def readClosingEnabled = closingEnabled()
@@ -127,7 +127,7 @@ class PresentationCompilerActivityListenerTest {
   def doNotCloseDueToOpenEditors(): Unit = {
     val shutdownMock = new MockShutdownFun
     val hasOpenEditorsMock = new MockFun(projectHasOpenEditorsFunName, true)
-    val listener = createListener(shutdownMock, ignoreOpenEditors = false, maxIdlenessLengthMillis = 50, hasOpenEditors = hasOpenEditorsMock)
+    val listener = createListener(shutdownMock, ignoreOpenEditors = false, maxIdlenessLengthMillis = 50, hasOpenEditors = hasOpenEditorsMock())
 
     listener.start()
     sleep(140)
@@ -141,7 +141,7 @@ class PresentationCompilerActivityListenerTest {
   def closeInTheCaseOfLackOfOpenEditors(): Unit = {
     val shutdownMock = new MockShutdownFun
     val hasOpenEditorsMock = new MockFun(projectHasOpenEditorsFunName, false)
-    val listener = createListener(shutdownMock, ignoreOpenEditors = false, maxIdlenessLengthMillis = 50, hasOpenEditors = hasOpenEditorsMock)
+    val listener = createListener(shutdownMock, ignoreOpenEditors = false, maxIdlenessLengthMillis = 50, hasOpenEditors = hasOpenEditorsMock())
 
     listener.start()
     sleep(90)

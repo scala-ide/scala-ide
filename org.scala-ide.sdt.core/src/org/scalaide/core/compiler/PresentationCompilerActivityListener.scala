@@ -15,10 +15,10 @@ import org.scalaide.ui.internal.preferences.ResourcesPreferences
  * Tracks activity of ScalaPresentationCompiler and shuts it down if it's unused sufficiently long
  * and there are no open files in editor which are related to it
  * @param projectName name shown in logs
- * @param projectHasOpenEditors function checking whether there are currently open editors for this project
+ * @param projectHasOpenEditors checks whether there are currently open editors for this project
  * @param shutdownPresentationCompiler function which should be invoked, when SPC should be closed
  */
-class PresentationCompilerActivityListener(projectName: String, projectHasOpenEditors: () => Boolean, shutdownPresentationCompiler: () => Unit)
+class PresentationCompilerActivityListener(projectName: String, projectHasOpenEditors: => Boolean, shutdownPresentationCompiler: () => Unit)
   extends HasLogger {
 
   import PresentationCompilerActivityListener.prefStore
@@ -76,7 +76,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
         try {
           if (!isTimeToBeKilled)
             scheduleNextCheck(remainingDelayToNextCheck)
-          else if (!ignoreOpenEditors && projectHasOpenEditors())
+          else if (!ignoreOpenEditors && projectHasOpenEditors)
             scheduleNextCheck(delay = maxIdlenessLengthMillis)
           else {
             logger.info(s"Presentation compiler for project $projectName will be shut down due to inactivity")

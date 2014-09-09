@@ -222,12 +222,6 @@ trait IScalaProject extends Publisher[IScalaProjectEvent] {
    *  @param workingCopyOwner A working copy owner who's copies are searched first.
    */
   def newSearchableEnvironment(workingCopyOwner: WorkingCopyOwner = DefaultWorkingCopyOwner.PRIMARY): SearchableEnvironment
-
-  /**
-   * Checks whether there are open editors related to this project
-   */
-  def hasOpenEditors(): Boolean
-
 }
 
 object IScalaProject {
