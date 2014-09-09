@@ -306,12 +306,12 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     fragmentRoots.toSeq
   }
 
-  private def checkClasspath() {
+  private[internal] def checkClasspath(canFixInstallationFromScalaLib: Boolean = false) {
     // check the version of Scala library used, and if enabled, the Scala compatibility of the other jars.
     val withVersionClasspathValidator =
       storage.getBoolean(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.withVersionClasspathValidator.name))
     val errors =
-      validateScalaLibrary(scalaLibraries) ++
+      validateScalaLibrary(scalaLibraries, canFixInstallationFromScalaLib) ++
         (if (withVersionClasspathValidator) {
           validateBinaryVersionsOnClasspath()
         } else {
@@ -321,7 +321,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     classpathHasBeenChecked = true
   }
 
-  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary]): Seq[(Int, String, String)] = {
+  private def isBundledPath(library: IPath): Boolean = {
+    ScalaInstallation.bundledInstallations.map(_.library.classJar) contains library
+  }
+
+  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary], canFixInstallationFromScalaLib: Boolean = false): Seq[(Int, String, String)] = {
     import org.scalaide.util.internal.CompilerUtils._
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
@@ -349,15 +353,22 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             Nil
           case Some(v) if ScalaPlugin().isCompatibleVersion(v, this) =>
             // compatible version (major, minor are the same). Still, add warning message
-            (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path ($v) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", SdtConstants.ClasspathProblemMarkerId) :: Nil
+            (IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path (${v.unparse}) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", SdtConstants.ClasspathProblemMarkerId) :: Nil
           case Some(v) if (isBinaryPrevious(ScalaPlugin().scalaVersion, v)) => {
-            val msg = s"The version of scala library found in the build path of ${underlying.getName()} ($v) is prior to the one provided by scala IDE ($scalaVersion). Please set a Scala Installation in this project's compiler Options."
-             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-             (IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
+            val msg = s"The version of scala library found in the build path of ${underlying.getName()} (${v.unparse}) is prior to the one provided by scala IDE ($scalaVersion). Setting a Scala Installation Choice to match."
+            // It's important here to check we're not mistakenly "fixing" the scala installation of a project which already has a scala container on classpath
+            // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
+            if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
+              projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+              projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
+              (IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
+            }
+            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
+            else (IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
           }
           case Some(v) => {
             // incompatible version
-            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path ($v) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.", SdtConstants.ClasspathProblemMarkerId) :: Nil
+            (IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path (${v.unparse}) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.", SdtConstants.ClasspathProblemMarkerId) :: Nil
           }
           case None =>
             // no version found

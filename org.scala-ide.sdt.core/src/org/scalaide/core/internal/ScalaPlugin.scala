@@ -186,7 +186,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         if (delta.getKind() == IResourceDelta.OPEN){
           val resource = delta.getResource().asInstanceOfOpt[IProject]
           resource foreach {(r) =>
-            asScalaProject(r) foreach (_.classpathHasChanged())
+            // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
+            // setting the Installation triggers a recursive check
+            asScalaProject(r) foreach (_.checkClasspath(true))
           }
           false
         } else
