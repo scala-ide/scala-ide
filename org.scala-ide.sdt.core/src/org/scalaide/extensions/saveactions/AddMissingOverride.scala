@@ -29,21 +29,14 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
     def canOverride(sym: Symbol) = sym.isOverridingSymbol && !sym.isOverride && !sym.isAbstractOverride
 
     val symbolWithoutOverride = filter {
-      case d: ValDef if isJavaField(getterOf(d.symbol)) ⇒
+      case d: ValOrDefDef if overridesJavaField(d.symbol) ⇒
         false
 
-      case d: DefDef if isJavaField(d.symbol) ⇒
+      case d: ValDef if d.mods.positions.contains(Tokens.VAR) && !overridesVar(d.symbol) ⇒
         false
 
-      case d: ValDef if d.mods.positions.contains(Tokens.VAR) && !overridesVar(getterOf(d.symbol)) ⇒
-        false
-
-      case d: ValDef =>
-        val getter = getterOf(d.symbol)
-        canOverride(if (getter != NoSymbol) getter else d.symbol)
-
-      case d @ (_: DefDef | _: TypeDef) =>
-        canOverride(d.symbol)
+      case d: MemberDef =>
+        canOverride(accessorOf(d.symbol))
     }
 
     val addOverrideKeyword = transform {
@@ -84,27 +77,40 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
     transformFile(refactoring)
   }
 
-  private def getterOf(sym: Symbol): Symbol =
-    sym.getterIn(sym.owner)
+  /**
+   * Returns the getter of `symbol` or `symbol` itself if no getter exists.
+   */
+  private def accessorOf(symbol: Symbol): Symbol =
+    if (symbol.hasGetter) symbol.getterIn(symbol.owner) else symbol
 
+  /**
+   * Returns true if `symbol` overrides a var.
+   */
   private def overridesVar(symbol: Symbol): Boolean = {
-    val base = symbol.owner
-    val baseType = base.toType
-    val bcs = base.info.baseClasses dropWhile (symbol.owner != _) drop 1
-
-    bcs exists { sym ⇒
-      symbol.matchingSymbol(sym, baseType).setterIn(sym) != NoSymbol
-    }
+    val s = superSymbolOf(accessorOf(symbol))
+    s.setterIn(s.owner) != NoSymbol
   }
 
-  private def isJavaField(symbol: Symbol): Boolean = {
+  /**
+   * Returns true if `symbol` overrides a field defined with Java.
+   */
+  private def overridesJavaField(symbol: Symbol): Boolean = {
+    val s = superSymbolOf(accessorOf(symbol))
+    s.isJava && !s.isMethod
+  }
+
+  /**
+   * Finds the symbol which is overridden by `symbol`. If there exists more than
+   * one (which can be the case in a deep inheritance hierarchy) the first one
+   * that is found is returned.
+   *
+   * Returns `NoSymbol` if no overridden symbol is found.
+   */
+  private def superSymbolOf(symbol: Symbol): Symbol = {
     val base = symbol.owner
     val baseType = base.toType
-    val bcs = base.info.baseClasses dropWhile (symbol.owner != _) drop 1
+    val bcs = base.info.baseClasses.iterator dropWhile (symbol.owner != _) drop 1
 
-    bcs exists { sym ⇒
-      val s = symbol.matchingSymbol(sym, baseType)
-      s.isJava && !s.isMethod
-    }
+    bcs map (symbol.matchingSymbol(_, baseType)) find (_ != NoSymbol) getOrElse NoSymbol
   }
 }
