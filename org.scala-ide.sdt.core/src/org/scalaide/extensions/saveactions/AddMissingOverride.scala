@@ -29,6 +29,12 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
     def canOverride(sym: Symbol) = sym.isOverridingSymbol && !sym.isOverride && !sym.isAbstractOverride
 
     val symbolWithoutOverride = filter {
+      case d: ValDef if isJavaField(getterOf(d.symbol)) ⇒
+        false
+
+      case d: DefDef if isJavaField(d.symbol) ⇒
+        false
+
       case d: ValDef if d.mods.positions.contains(Tokens.VAR) && !overridesVar(getterOf(d.symbol)) ⇒
         false
 
@@ -88,6 +94,17 @@ trait AddMissingOverride extends SaveAction with CompilerSupport {
 
     bcs exists { sym ⇒
       symbol.matchingSymbol(sym, baseType).setterIn(sym) != NoSymbol
+    }
+  }
+
+  private def isJavaField(symbol: Symbol): Boolean = {
+    val base = symbol.owner
+    val baseType = base.toType
+    val bcs = base.info.baseClasses dropWhile (symbol.owner != _) drop 1
+
+    bcs exists { sym ⇒
+      val s = symbol.matchingSymbol(sym, baseType)
+      s.isJava && !s.isMethod
     }
   }
 }

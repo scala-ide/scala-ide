@@ -245,4 +245,82 @@ class AddMissingOverrideTest {
       override var f = 0
     }
     """ after SaveEvent
+
+  @Test
+  def add_override_to_def_that_overrides_java_method() = {
+    val jPkg = uniquePkgName()
+    val sPkg = uniquePkgName()
+    mkJavaCompilationUnit(s"""
+      package $jPkg;
+      public class T {
+        public String f() { return ""; }
+      }
+    """)
+
+    s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      def f = ""
+    }
+    """ becomes s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      override def f = ""
+    }
+    """ after SaveEvent
+  }
+
+  @Test
+  def add_no_override_to_val_that_overrides_java_field() = {
+    val jPkg = uniquePkgName()
+    val sPkg = uniquePkgName()
+    mkJavaCompilationUnit(s"""
+      package $jPkg;
+      public class T {
+        public String f = "";
+      }
+    """)
+
+    s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      val f = ""
+    }
+    """ becomes s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      val f = ""
+    }
+    """ after SaveEvent
+  }
+
+  @Test
+  def add_no_override_to_def_that_overrides_java_field() = {
+    val jPkg = uniquePkgName()
+    val sPkg = uniquePkgName()
+    mkJavaCompilationUnit(s"""
+      package $jPkg;
+      public class T {
+        public String f = "";
+      }
+    """)
+
+    s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      def f = ""
+    }
+    """ becomes s"""^
+    package $sPkg
+    import $jPkg.T
+    trait TT extends T {
+      def f = ""
+    }
+    """ after SaveEvent
+  }
 }
