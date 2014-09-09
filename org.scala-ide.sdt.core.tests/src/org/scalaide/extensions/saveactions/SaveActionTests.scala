@@ -4,7 +4,8 @@ package saveactions
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jface.text.{Document => EDocument}
 import org.scalaide.CompilerSupportTests
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.text.Document
@@ -50,7 +51,7 @@ abstract class DocumentSaveActionTests extends SaveActionTests {
 
 abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupportTests {
 
-  def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int): SaveAction
+  def saveAction(spc: IScalaPresentationCompiler, tree: IScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int): SaveAction
 
   private var udoc: EDocument = _
 
@@ -69,8 +70,7 @@ abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupp
 
       val unit = mkScalaCompilationUnit(udoc.get())
       val sf = unit.sourceFile()
-      val r = new Response[Tree]
-      askLoadedTyped(sf, r)
+      val r = askLoadedTyped(sf, false)
 
       r.get match {
         case Left(tree) =>
@@ -79,7 +79,7 @@ abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupp
             throw new IllegalArgumentException(s"Got compilation errors:\n\t${ps.mkString("\n\t")}")
 
           val sa = saveAction(compiler, tree, sf, 0, 0)
-          val changes = compiler.askOption(() => sa.perform()).getOrElse(Seq())
+          val changes = compiler.asyncExec(sa.perform()).getOrElse(Seq())()
           applyChanges(udoc, changes)
         case Right(e) =>
           throw e

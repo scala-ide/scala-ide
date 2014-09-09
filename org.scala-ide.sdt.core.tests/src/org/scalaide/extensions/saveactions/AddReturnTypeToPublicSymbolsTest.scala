@@ -1,11 +1,11 @@
 package org.scalaide.extensions.saveactions
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.junit.Test
 
 object AddReturnTypeToPublicSymbolsTest extends CompilerSaveActionTests {
-  override def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
+  override def saveAction(spc: IScalaPresentationCompiler, tree: IScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
     new AddReturnTypeToPublicSymbols {
       override val global = spc
       override val sourceFile = sf

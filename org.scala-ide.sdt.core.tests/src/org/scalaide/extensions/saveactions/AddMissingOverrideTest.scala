@@ -4,10 +4,10 @@ import scala.reflect.internal.util.SourceFile
 
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 object AddMissingOverrideTest extends CompilerSaveActionTests {
-  override def saveAction(spc: ScalaPresentationCompiler, tree: ScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
+  override def saveAction(spc: IScalaPresentationCompiler, tree: IScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
     new AddMissingOverride {
       override val global = spc
       override val sourceFile = sf

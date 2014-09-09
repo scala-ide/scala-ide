@@ -2,13 +2,13 @@ package org.scalaide.core.internal.extensions.saveactions
 
 import scala.reflect.internal.util.SourceFile
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.extensions.saveactions.AddReturnTypeToPublicSymbols
 
 object AddReturnTypeToPublicSymbolsCreator {
   def create(
-      c: ScalaPresentationCompiler,
-      t: ScalaPresentationCompiler#Tree,
+      c: IScalaPresentationCompiler,
+      t: IScalaPresentationCompiler#Tree,
       sf: SourceFile,
       selectionStart: Int,
       selectionEnd: Int): AddReturnTypeToPublicSymbols =

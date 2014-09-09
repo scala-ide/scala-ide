@@ -5,7 +5,7 @@ import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.compiler.IProblem
 import org.junit.AfterClass
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -26,7 +26,7 @@ trait CompilerSupportTests {
 
   private val project: ScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
 
-  final def withCompiler(f: ScalaPresentationCompiler => Unit): Unit =
+  final def withCompiler(f: IScalaPresentationCompiler => Unit): Unit =
     project.presentationCompiler { compiler =>
       f(compiler)
     }

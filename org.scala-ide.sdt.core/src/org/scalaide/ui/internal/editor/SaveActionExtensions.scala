@@ -12,7 +12,8 @@ import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
 import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
 import org.scalaide.core.internal.extensions.saveactions.AddReturnTypeToPublicSymbolsCreator
@@ -124,9 +125,9 @@ trait SaveActionExtensions extends HasLogger {
     for ((setting, ext) <- compilerSaveActions if isEnabled(setting.id)) {
       createExtensionWithCompilerSupport(ext) foreach { instance =>
         performExtension(instance, udoc) {
-          instance.global.asInstanceOf[ScalaPresentationCompiler].askOption { () =>
+          instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
             instance.perform()
-          }.getOrElse(Seq())
+          }.getOrElse(Seq())()
         }
       }
     }
@@ -192,7 +193,7 @@ trait SaveActionExtensions extends HasLogger {
   }
 
   private type CompilerSupportCreator = (
-      ScalaPresentationCompiler, ScalaPresentationCompiler#Tree,
+      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
       SourceFile, Int, Int
     ) => SaveAction with CompilerSupport
 
