@@ -71,8 +71,13 @@ abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupp
       val sf = unit.sourceFile()
       val r = new Response[Tree]
       askLoadedTyped(sf, r)
+
       r.get match {
         case Left(tree) =>
+          val ps = unit.currentProblems()
+          if (ps.nonEmpty)
+            throw new IllegalArgumentException(s"Got compilation errors:\n\t${ps.mkString("\n\t")}")
+
           val sa = saveAction(compiler, tree, sf, 0, 0)
           val changes = compiler.askOption(() => sa.perform()).getOrElse(Seq())
           applyChanges(udoc, changes)
