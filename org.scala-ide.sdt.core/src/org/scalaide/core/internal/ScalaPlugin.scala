@@ -66,6 +66,9 @@ import org.eclipse.core.runtime.content.IContentType
 import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.eclipse.ui.preferences.ScopedPreferenceStore
+import java.io.IOException
 
 object ScalaPlugin {
 
@@ -80,7 +83,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   import org.scalaide.core.SdtConstants._
 
-   /** Check if the given version is compatible with the current plug-in version.
+  /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
    *
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
@@ -90,7 +93,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     if (project.isUsingCompatibilityMode())
       isBinaryPrevious(ScalaVersion.current, version)
     else
-      isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
+      isBinarySame(ScalaVersion.current, version) // don't treat 2 unknown versions as equal
   }
 
   private lazy val sdtCoreBundle = getBundle()
@@ -106,6 +109,24 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   lazy val scalaClassFileContentType: IContentType =
     Platform.getContentTypeManager().getContentType("scala.tools.eclipse.scalaClass")
+
+  private var preferenceStore: Option[IPreferenceStore] = None
+  override def getPreferenceStore(): IPreferenceStore = {
+    if (preferenceStore.isEmpty) {
+      preferenceStore = Some(new ScopedPreferenceStore(new InstanceScope(), getBundle().getSymbolicName()) {
+        override def save() {
+          try {
+            super.save()
+          } catch {
+            case e: IOException =>
+              logger.error("An Exception occured saving the project-specific preferences for the workspace ! Your settings will not be persisted. Please report !")
+              throw (e)
+          }
+        }
+      })
+    }
+    preferenceStore.get
+  }
 
   override def start(context: BundleContext) = {
     ScalaPlugin.plugin = this
@@ -132,7 +153,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   lazy val compilerInterfaceStore: CompilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
 
   /** A LRU cache of class loaders for Scala builders */
-  lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
+  lazy val classLoaderStore: FixedSizeCache[IScalaInstallation, ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
@@ -197,7 +218,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
           innerDelta.getElement() match {
             // classpath change should only impact projects
             case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
+              asScalaProject(javaProject.getProject()).foreach { (p) => p.classpathHasChanged(false) }
             }
             case _ =>
           }
@@ -292,7 +313,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p))
-              p.presentationCompiler.internal (_.filesDeleted(srcs))
+              p.presentationCompiler.internal(_.filesDeleted(srcs))
           }
       }
     }
