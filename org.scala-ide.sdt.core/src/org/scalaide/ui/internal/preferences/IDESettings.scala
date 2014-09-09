@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.preferences
 
 import scala.tools.nsc.Settings
+import language.implicitConversions
 
 object IDESettings {
 
@@ -76,7 +77,7 @@ object ScalaPluginSettings extends Settings {
 
   }
 
-    implicit def booleanSettingOfDefault(b: BooleanSettingWithDefault): Settings#BooleanSetting = {
+  implicit def booleanSettingOfDefault(b: BooleanSettingWithDefault): Settings#BooleanSetting = {
     val v = b.value
     val s = BooleanSetting(b.name, b.helpDescription)
     if (v) s.tryToSet(Nil)

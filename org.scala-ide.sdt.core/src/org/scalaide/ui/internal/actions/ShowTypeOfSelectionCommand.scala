@@ -14,6 +14,7 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.scalaide.util.internal.eclipse.RegionUtils._
 import org.scalaide.ui.internal.editor.hover.HtmlHover
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 
@@ -39,6 +40,7 @@ object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
   }
 
   def getInformation(textViewer: ITextViewer, region: IRegion): String = {
+    import IScalaPresentationCompiler.Implicits._
 
     EditorUtility.getActiveEditorJavaInput match {
       case scu: ScalaCompilationUnit =>
@@ -48,10 +50,8 @@ object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
           def typeInfo(tpe: Type): String =
             Option(tpe).map(tpe => createHtmlOutput { _ append convertContentToHtml(tpe.toString) }).orNull
 
-          val response = new Response[Tree]
-          askTypeAt(region.toRangePos(src), response)
           (for {
-            t <- response.get.left.toOption
+            t <- askTypeAt(region.toRangePos(src)).getOption()
           } yield t match {
             case ValDef(_, _, _, rhs) =>
               typeInfo(rhs.tpe)

@@ -20,11 +20,12 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * Represents basic properties - enabled, bold an italic.
@@ -110,13 +111,12 @@ abstract class BaseSemanticAction(
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
   override def apply(scu: ScalaCompilationUnit): Unit = {
-    scu.doWithSourceFile { (sourceFile, compiler) =>
+    scu.scalaProject.presentationCompiler.internal { compiler =>
 
       def findAnnotations(): Map[Annotation, JFacePosition] = {
-        val response = new compiler.Response[compiler.Tree]
-        compiler.askLoadedTyped(sourceFile, response)
+        val response = compiler.askLoadedTyped(scu.sourceFile, false)
         response.get(200) match {
-          case Some(Left(_)) => findAll(compiler, scu, sourceFile)
+          case Some(Left(_)) => findAll(compiler, scu, scu.sourceFile)
           case Some(Right(exc)) =>
             logger.error(exc); Map.empty
           case None => logger.warn("Timeout while waiting for `askLoadedTyped` during semantic highlighting."); Map.empty

@@ -5,18 +5,17 @@ import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.extraction.ExtractCode
-
 import org.eclipse.core.resources.IMarker
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.ui.IFileEditorInput
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.quickfix.BasicCompletionProposal
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, highlightTo: Int, relevance: Int = 0)
   extends BasicCompletionProposal(relevance, displayString) with ICompletionProposalExtension2 {
@@ -77,7 +76,7 @@ object ExtractionProposal {
     proposals.toArray
   }
 
-  private def createRefactoring(compiler: ScalaPresentationCompiler, file: SourceFile, selectionStart: Int, selectionEnd: Int) =
+  private def createRefactoring(compiler: IScalaPresentationCompiler, file: SourceFile, selectionStart: Int, selectionEnd: Int) =
     new ExtractCode with InteractiveScalaCompiler {
       val global = compiler
 

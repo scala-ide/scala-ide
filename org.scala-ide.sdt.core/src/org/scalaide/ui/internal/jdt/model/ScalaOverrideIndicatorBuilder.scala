@@ -8,7 +8,7 @@ import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -27,7 +27,7 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   val isOverwrite: Boolean) extends source.Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
 
   def open() {
-    val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
+    val tpe0 = JDTUtils.resolveType(scu.scalaProject.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
     tpe0 foreach { (tpe) =>
         val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
         if (method.exists)
@@ -42,7 +42,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
     extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
-      ask { () => locate(base, scu) } map {
+      ask { () => findDeclaration(base, scu.scalaProject.javaProject) } map {
         case (file, pos) =>
           EditorUtility.openInEditor(file, true) match {
             case editor: ITextEditor => editor.selectAndReveal(pos, 0)

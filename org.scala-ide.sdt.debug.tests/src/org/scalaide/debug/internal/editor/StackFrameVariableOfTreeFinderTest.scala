@@ -14,6 +14,7 @@ import org.junit.Assert._
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 object StackFrameVariableOfTreeFinderTest
 extends TestProjectSetup("sfValFinding", bundleName = "org.scala-ide.sdt.debug.tests")
@@ -52,6 +53,7 @@ class StackFrameVariableOfTreeFinderTest {
 
   def assertFoundValue(atMarker: String, when: String = null, is: Option[String])
   (implicit cu: ScalaCompilationUnit) {
+    import IScalaPresentationCompiler.Implicits._
     cu.withSourceFile {(src, compiler) =>
       import compiler.{Try => _, _}
 
@@ -60,9 +62,7 @@ class StackFrameVariableOfTreeFinderTest {
         assertEquals(s"Couldn't find exactly one occurence of marker $markerName in ${src.path}.", 1, positions.size)
         val markerPos = new OffsetPosition(src, positions.head - 1)
 
-        val resp = new Response[Tree]
-        askTypeAt(markerPos, resp)
-        resp.get.left getOrElse (throw new RuntimeException(s"Failed to get the Tree at marker $markerName."))
+        askTypeAt(markerPos).getOrElse(throw new RuntimeException(s"Failed to get the Tree at marker $markerName."))()
       }
 
       val whenClause = if(when!=null) s"($when) " else ""

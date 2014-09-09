@@ -25,13 +25,9 @@ class OccurrencesFinderTest {
 
     // first, 'open' the file by telling the compiler to load it
     unit.withSourceFile { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+      compiler.askReload(List(unit)).get
 
-      val tree =  new Response[compiler.Tree]
-      compiler.askLoadedTyped(src, false,tree)
-      tree.get
+      compiler.askLoadedTyped(src, false).get
     }
 
     val contents = unit.getContents

@@ -77,9 +77,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   def reload(unit: ScalaCompilationUnit) {
     // first, 'open' the file by telling the compiler to load it
     unit.withSourceFile { (src, compiler) =>
-      val dummy = new compiler.Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+      compiler.askReload(List(unit)).get
     }
   }
 
@@ -117,9 +115,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     // give a chance to the background compiler to report the error
     unit.withSourceFile { (source, compiler) =>
       import scala.tools.nsc.interactive.Response
-      val res = new Response[compiler.Tree]
-      compiler.askLoadedTyped(source, true, res)
-      res.get // wait until unit is typechecked
+      compiler.askLoadedTyped(source, true).get // wait until unit is typechecked
     }
   }
 

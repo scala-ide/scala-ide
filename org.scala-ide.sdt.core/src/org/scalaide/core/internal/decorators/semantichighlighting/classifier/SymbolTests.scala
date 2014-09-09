@@ -5,6 +5,7 @@ import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.util.internal.eclipse.RegionUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>
   import RegionUtils._
@@ -24,7 +25,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
   private def classifyTerm(sym: Symbol): SymbolType = {
 
     lazy val isCaseModule =
-      global.askOption(() => sym.companionClass.isCaseClass).getOrElse(false)
+      global.asyncExec(sym.companionClass.isCaseClass).getOrElse(false)()
 
     import sym._
     if (hasPackageFlag)
@@ -79,7 +80,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
     */
   private def hasSetter(sym: Symbol): Boolean = {
     assert(sym.isGetter)
-    global.askOption(() => sym.setterIn(sym.owner) != NoSymbol).getOrElse(false)
+    global.asyncExec(sym.setterIn(sym.owner) != NoSymbol).getOrElse(false)()
   }
 
   private def classifyType(sym: Symbol): SymbolType = {

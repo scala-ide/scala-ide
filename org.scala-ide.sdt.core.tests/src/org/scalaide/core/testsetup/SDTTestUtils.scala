@@ -31,7 +31,7 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -285,7 +285,7 @@ object SDTTestUtils extends HasLogger {
       projectSetup = new TestProjectSetup(testProjectName) {
         override lazy val project = scalaProject
       }
-      projectSetup.project.presentationCompiler { c => f(c) }
+      projectSetup.project.presentationCompiler.internal { c => f(c) }
     }
     finally deleteProjects(projectSetup.project)
   }
@@ -318,6 +318,16 @@ object SDTTestUtils extends HasLogger {
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
 
     ScalaPlugin().getScalaProject(project)
+  }
+
+  def withWorkspacePreference[A](name: String, value: Boolean)(thunk: => A): A = {
+    val store = ScalaPlugin().getPreferenceStore
+    val old = store.getBoolean(name)
+    try {
+      store.setValue(name, value)
+      thunk
+    } finally
+      store.setValue(name, old)
   }
 
   def buildWorkspace(): Unit =

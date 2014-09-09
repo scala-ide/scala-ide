@@ -14,7 +14,7 @@ class PresentationCompilerRefreshTest {
   @Test def removeExistingFileAndChangeReferenceToNewFile() {
     val unitA = scalaCompilationUnit("a/A.scala")
 
-    unitA.doWithSourceFile { (sf, comp) =>
+    unitA.scalaProject.presentationCompiler { comp =>
       comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
     }
 
@@ -25,7 +25,7 @@ class PresentationCompilerRefreshTest {
       SDTTestUtils.changeContentOfFile(unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
     }
 
-    unitA.doWithSourceFile { (sf, comp) =>
+    unitA.scalaProject.presentationCompiler { comp =>
       comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
     }
 

@@ -1,22 +1,19 @@
-package org.scalaide.core.compiler
+package org.scalaide.core
+package internal.compiler
 
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.Settings
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.util.internal.Utils
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaPlugin
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError
-import java.util.Collections.synchronizedList
-import org.scalaide.core.internal.project.Nature
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.MultiStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
+import org.scalaide.core.compiler._
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
-import org.scalaide.core.SdtConstants
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -25,7 +22,7 @@ import org.scalaide.core.SdtConstants
   *
   * @note This class is thread-safe.
   */
-final class ScalaPresentationCompilerProxy(val project: IScalaProject) extends HasLogger {
+final class PresentationCompilerProxy(val project: IScalaProject) extends IPresentationCompilerProxy with HasLogger {
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -57,11 +54,17 @@ final class ScalaPresentationCompilerProxy(val project: IScalaProject) extends H
   /** Ask to restart the presentation compiler before processing the next request. */
   def askRestart(): Unit = { restartNextTime = true }
 
-  /** Executes the passed `op` on the presentation compiler.
+  override def apply[U](op: IScalaPresentationCompiler => U): Option[U] =
+    internal(op)
+
+  /** This method gives access to the full Scala Presentation compiler. This should be used by
+   *  internal code only.
+   *
+   *  Executes the passed `op` on the presentation compiler.
    *
    *  @return `None` if `op` returns `null`, `Some(value)` otherwise.
    */
-  def apply[U](op: ScalaPresentationCompiler => U): Option[U] = {
+  private[scalaide] def internal[U](op: ScalaPresentationCompiler => U): Option[U] = {
     def obtainPc(): ScalaPresentationCompiler = {
       var unitsToReload: List[InteractiveCompilationUnit] = Nil
       pcLock.synchronized {

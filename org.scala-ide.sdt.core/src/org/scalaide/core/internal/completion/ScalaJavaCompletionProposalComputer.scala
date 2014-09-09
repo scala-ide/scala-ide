@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.scalaide.core.completion.CompletionContext
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
@@ -119,7 +120,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           !sym.isConstructor &&
           !sym.isPrivate)
 
-      compiler.askOption { () =>
+      compiler.asyncExec {
         val currentClass = rootMirror.getClassByName(newTypeName(referencedTypeName))
         val proposals = currentClass.info.members.filter(mixedInMethod).toList
         val defaultContext = CompletionContext(CompletionContext.DefaultContext)
@@ -129,7 +130,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
             tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext)
           new ScalaCompletionProposal(prop)
         }
-      }.getOrElse(Nil)
+      }.getOrElse(Nil)()
     } getOrElse (Nil)
 
     import scala.collection.JavaConversions._

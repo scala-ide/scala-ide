@@ -6,7 +6,8 @@ import testsetup.SDTTestUtils._
 import testsetup.TestProjectSetup
 import org.eclipse.core.resources.IFile
 import java.util.NoSuchElementException
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object ScalaJavaMapperTest extends TestProjectSetup("javamapper") {
   val unit = scalaCompilationUnit("/pack/Target.scala")
@@ -19,7 +20,7 @@ class ScalaJavaMapperTest {
   def intDescriptor() {
     withTargetTree("abstract class Target { val target: Int }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "I", desc)
         }
@@ -31,7 +32,7 @@ class ScalaJavaMapperTest {
   def listDescriptor() {
     withTargetTree("abstract class Target { val target: List[Int] }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "Lscala/collection/immutable/List;", desc)
         }
@@ -43,7 +44,7 @@ class ScalaJavaMapperTest {
   def primitiveArrayDescriptor() {
     withTargetTree("abstract class Target { val target: Array[Array[Char]] }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "[[C", desc)
         }
@@ -55,7 +56,7 @@ class ScalaJavaMapperTest {
   def refArrayDescriptor() {
     withTargetTree("abstract class Target { val target: Array[Object] }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "[Ljava/lang/Object;", desc)
         }
@@ -67,7 +68,7 @@ class ScalaJavaMapperTest {
   def innerClassDescriptor() {
     withTargetTree("abstract class Target { class Inner; val target: Inner }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "LTarget/Inner;", desc)
         }
@@ -79,7 +80,7 @@ class ScalaJavaMapperTest {
   def typeVarClassDescriptor() {
     withTargetTree("abstract class Target[T] { val target: T }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "Ljava/lang/Object;", desc)
         }
@@ -91,7 +92,7 @@ class ScalaJavaMapperTest {
   def errorClassDescriptor() {
     withTargetTree("abstract class Target { val target: NotFount }") {
       new TypeTest {
-        def apply(compiler: ScalaPresentationCompiler)(tpe: compiler.Type) {
+        def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
           Assert.assertEquals("wrong descriptor", "Ljava/lang/Object;", desc)
         }
@@ -111,7 +112,7 @@ class ScalaJavaMapperTest {
 
     unit.withSourceFile { (srcFile, compiler) =>
       compiler.askReload(unit, src.toCharArray())
-      val targets = compiler.loadedType(srcFile) match {
+      val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>
           loadedType.collect {
             case t: compiler.DefDef if t.name.toString startsWith "target" => t
@@ -119,9 +120,9 @@ class ScalaJavaMapperTest {
         case Right(e) =>
           throw e
       }
-      compiler.askOption { () =>
+      compiler.asyncExec {
         f(compiler)(targets.head.symbol.info.finalResultType)
-      }
+      }.getOption()
     } getOrElse (throw new NoSuchElementException(s"Could not find target element in $src"))
   }
 }
@@ -131,5 +132,5 @@ class ScalaJavaMapperTest {
  *  in anonymous functions.
  */
 trait TypeTest {
-  def apply(compiler: ScalaPresentationCompiler)(tree: compiler.Type)
+  def apply(compiler: IScalaPresentationCompiler)(tree: compiler.Type)
 }

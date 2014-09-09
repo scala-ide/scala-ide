@@ -1,6 +1,5 @@
 package org.scalaide.core.completion
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants
@@ -15,6 +14,8 @@ import scala.collection.mutable.MultiMap
 import org.scalaide.util.internal.Utils
 import org.scalaide.core.IScalaPlugin
 import CompletionContext.ContextType
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /** Base class for Scala completions. No UI dependency, can be safely used in a
  *  headless testing environment.
@@ -25,13 +26,13 @@ class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
 
   def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): List[CompletionProposal] = {
+                             (sourceFile: SourceFile, compiler: IScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
     val wordAtPosition = (if (position <= wordStart) "" else scu.getContents.slice(wordStart, position).mkString.trim).toArray
-    val typed = new compiler.Response[compiler.Tree]
+    val defaultContext = if (scu.getContents()(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
     val pos = compiler.rangePos(sourceFile, position, position, position)
-    compiler.askTypeAt(pos, typed)
-    val t1 = typed.get.left.toOption
+    val typed = compiler.askTypeAt(pos)
+    val t1 = typed.getOption()
 
     val listedTypes = new mutable.HashMap[String, mutable.Set[CompletionProposal]] with MultiMap[String, CompletionProposal]
 
@@ -59,7 +60,7 @@ class ScalaCompletions extends HasLogger {
 
       val context = CompletionContext(contextType)
 
-      compiler.askOption { () =>
+      compiler.asyncExec {
         for (completion <- completions) {
           val completionProposal = completion match {
             case compiler.TypeMember(sym, tpe, true, inherited, viaView) if completionFilter(sym, viaView, Some(inherited)) =>
@@ -75,16 +76,15 @@ class ScalaCompletions extends HasLogger {
             }
           }
         }
-      }
+      }.getOption()
     }
 
     def fillTypeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
                             matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def typeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-        val completed = new compiler.Response[List[compiler.Member]]
-        compiler.askTypeCompletion(cpos, completed)
-        completed.get.left.toOption.getOrElse(Nil)
+        val completed = compiler.askTypeCompletion(cpos)
+        completed.getOrElse(Nil)()
       }
       addCompletions(typeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
     }
@@ -93,9 +93,8 @@ class ScalaCompletions extends HasLogger {
                              matchName: Array[Char] = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
-        val completed = new compiler.Response[List[compiler.Member]]
-        compiler.askScopeCompletion(cpos, completed)
-        completed.get.left.toOption.getOrElse(Nil)
+        val completed = compiler.askScopeCompletion(cpos)
+        completed.getOrElse(Nil)()
       }
 
       addCompletions(scopeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
@@ -173,7 +172,7 @@ class ScalaCompletions extends HasLogger {
           Array(), name.pos.start, false)
       case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
-        fillTypeCompletions(qualifier.pos.end)
+        fillTypeCompletions(qualifier.pos.end, defaultContext)
       case Some(compiler.Import(expr, _)) =>
         // completion on `imports`
         fillTypeCompletions(expr.pos.end, CompletionContext.ImportContext)
@@ -191,7 +190,7 @@ class ScalaCompletions extends HasLogger {
               fun.pos.start, false)
         }
       case _ =>
-        fillScopeCompletions(position)
+        fillScopeCompletions(position, defaultContext)
     }
 
     listedTypes.values.flatten.toList

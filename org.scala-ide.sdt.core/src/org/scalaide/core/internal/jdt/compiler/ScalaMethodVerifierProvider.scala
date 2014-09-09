@@ -3,16 +3,17 @@ package org.scalaide.core.internal.jdt.compiler
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.IScalaProject
 import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.ScalaPlugin
 
 /**
  * <p>
@@ -43,7 +44,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
   import ScalaMethodVerifierProvider.JDTMethodVerifierCarryOnMsg
 
   /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
-  def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
+  override def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
     EclipseUtils.withSafeRunner("An error occurred while checking method binding.") {
       logger.debug("Entered `isConcreteTraitMethod`")
       // get the file containing the declaration of the abstract method
@@ -67,7 +68,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
           logger.debug("Found definition for `%s` in file `%s` of project `%s`".format(abstractMethod, file.getFullPath(), project.getName()))
 
-          IScalaPlugin().asScalaProject(project) exists { isConcreteTraitMethod(abstractMethod, _) }
+          ScalaPlugin().asScalaProject(project) exists { isConcreteTraitMethod(abstractMethod, _) }
         }
       }.getOrElse(false)
     }.getOrElse(false)
@@ -88,9 +89,9 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
     }
   }
 
-  private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: IScalaProject): Boolean = {
-    project.presentationCompiler { pc =>
-      pc.askOption { () =>
+  private def isConcreteTraitMethod(abstractMethod: MethodBinding, project: ScalaProject): Boolean = {
+    project.presentationCompiler.internal { pc =>
+      pc.asyncExec {
         import pc._
         /** Find the method's symbol for the given `abstractMethod` definition. */
         def findMethodSymbol(methodOwner: Symbol, abstractMethod: MethodBinding): Option[Symbol] = {
@@ -106,7 +107,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
               // with `abstractMethod` is meaningful
               val paramsTypeSigs =
                 if (javaSig.isDefined) javaSig.paramsType.map(_.mkString)
-                else fps.map(s => mapType(s.info.finalResultType)).toArray
+                else fps.map(s => javaTypeNameMono(s.info.finalResultType)).toArray
 
               if (abstractMethod.parameters.length == paramsTypeSigs.size) {
                 val pairedParams = paramsTypeSigs.zip(abstractMethod.parameters.map(_.readableName().mkString))
@@ -164,7 +165,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
       }.getOrElse {
         logger.info("`askOption` failed. Check the Presentation Compiler log for more information. %s".format(JDTMethodVerifierCarryOnMsg))
         false
-      }
+      }()
     } getOrElse {
       logger.info("Failed to instantiate Presentation Compiler. %s".format(JDTMethodVerifierCarryOnMsg))
       false

@@ -62,9 +62,7 @@ object QuickFixesTests extends TestProjectSetup("quickfix") {
     unit.withSourceFile { (src, compiler) =>
 
       // do a compiler reload before checking for problems
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+      compiler.askReload(List(unit)).get
 
       val problems = compiler.problemsOf(unit)
       assertTrue("No problems found.", problems.nonEmpty)

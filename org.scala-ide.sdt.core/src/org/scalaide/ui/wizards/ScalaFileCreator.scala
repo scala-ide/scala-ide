@@ -7,6 +7,8 @@ import org.eclipse.core.runtime.IPath
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.Commons
 import org.scalaide.util.internal.eclipse.ProjectUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.project.ScalaProject
 
@@ -129,9 +131,9 @@ trait ScalaFileCreator extends FileCreator {
       val scalaProject = IScalaPlugin().asScalaProject(folder.getProject())
       val typeExists = scalaProject flatMap { scalaProject =>
         scalaProject.presentationCompiler { compiler =>
-          compiler.askOption { () =>
+          compiler.asyncExec {
             compiler.rootMirror.getClassIfDefined(fullyQualifiedType) != compiler.NoSymbol
-          }
+          }.getOption()
         }.flatten
       } getOrElse false
 

@@ -5,7 +5,8 @@ import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.hyperlink._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class ScalaDeclarationHyperlinkComputer extends HasLogger {
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion): Option[List[IHyperlink]] = {
@@ -30,13 +31,11 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         import compiler.{ log => _, _ }
 
-        val response = new Response[compiler.Tree]
-        askTypeAt(pos, response)
-        val typed = response.get
+        val typed = askTypeAt(pos).getOption()
 
         logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
-        compiler.askOption { () =>
-          typed.left.toOption map {
+        compiler.asyncExec {
+          typed map {
             case Import(expr, sels) =>
               if (expr.pos.includes(pos)) {
                 @annotation.tailrec
@@ -68,7 +67,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
                   DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu, sym, wordRegion).toList ::: links
               })
           }
-        }.flatten.headOption
+        }.getOption().flatten.headOption
       }
     }).flatten
   }

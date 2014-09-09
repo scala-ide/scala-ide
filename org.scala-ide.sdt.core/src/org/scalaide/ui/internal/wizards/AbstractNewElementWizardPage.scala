@@ -437,7 +437,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       val scalaProject = IScalaPlugin().asScalaProject(parentCU.getJavaProject.getProject).get
 
       scalaProject.presentationCompiler { compiler =>
-        compiler.askOption[Unit] { () =>
+        compiler.asyncExec[Unit] {
           //start control of buffer
           val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer, scalaProject.presentationCompiler)
           cb.append(commentTemplate(comment(getFileComment _)))
@@ -515,6 +515,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
   override def getCreatedType() = createdType
 
   override protected def typeNameChanged(): IStatus = {
+    import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
     val status = super.typeNameChanged.asInstanceOf[StatusInfo]
     logger.info(">>>> Status = " + status)
@@ -538,15 +539,12 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
       if (!isEnclosingTypeSelected && (status.getSeverity < IStatus.ERROR)) {
         try {
-          val doubleDef =
-            scalaProject.flatMap(
-              _.presentationCompiler(compiler =>
-                compiler.askOption { () => compiler.rootMirror.getClassIfDefined(getFullyQualifiedName) != compiler.NoSymbol } ))
-              .flatten.getOrElse(false)
-
-          if (doubleDef) {
-            status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
-          }
+          for {
+            p <- scalaProject
+            compiler <- p.presentationCompiler
+            doubleDef <- compiler.asyncExec(compiler.rootMirror.getClassIfDefined(getFullyQualifiedName) != compiler.NoSymbol).getOption()
+            if (doubleDef)
+          } status.setError(NewWizardMessages.NewTypeWizardPage_error_TypeNameExists)
         } catch {
           case _: JavaModelException =>
         }

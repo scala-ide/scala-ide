@@ -306,7 +306,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p))
-              p presentationCompiler (_.filesDeleted(srcs))
+              p.presentationCompiler.internal (_.filesDeleted(srcs))
           }
       }
     }

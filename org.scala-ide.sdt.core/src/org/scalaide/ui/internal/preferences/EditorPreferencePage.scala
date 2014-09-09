@@ -67,7 +67,10 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     val highlighting = group("Highlighting", base)
     checkBox(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", highlighting)
     checkBox(P_SHOW_INFERRED_SEMICOLONS, "Show inferred semicolons", highlighting)
-  }
+
+    val completion = group("Completion", base)
+    checkBox(P_ENABLE_HOF_COMPLETION, "Always insert lambdas when completing higher-order functions", completion)
+}
 
   private def group(text: String, parent: Composite): Group = {
     val g = new Group(parent, SWT.NONE)
@@ -124,6 +127,7 @@ object EditorPreferencePage {
 
   final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
   final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
+  final val P_ENABLE_HOF_COMPLETION = BASE + "completionAlwaysLambdas"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -146,6 +150,8 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_BREAKING_COMMENTS, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
+    store.setDefault(P_ENABLE_HOF_COMPLETION, true)
+
     // TODO This preference is added in 4.0. Delete the former preference once support for the former release is dropped.
     store.setDefault(P_SHOW_INFERRED_SEMICOLONS, store.getBoolean("actions.showInferredSemicolons"))
 
