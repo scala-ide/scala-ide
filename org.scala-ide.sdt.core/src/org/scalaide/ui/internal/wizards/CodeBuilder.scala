@@ -244,6 +244,7 @@ object CodeBuilder {
         val sym = comp.rootMirror.getClassIfDefined(superTypes.head)
         val ctors = sym.info.members.filter(_.isConstructor).toSeq
 
+        // TODO what about these commented out fragments of code?
         //      val sastc = astc.sorted(constructorIMethodOrdering)
         for {
           ctor <- ctors

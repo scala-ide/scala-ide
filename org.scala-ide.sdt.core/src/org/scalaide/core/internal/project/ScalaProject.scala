@@ -115,7 +115,7 @@ object ScalaProject {
   }
 
   /**
-   * Return true if the given Java project is also a Scala project, false othrerwise.
+   * Return true if the given Java project is also a Scala project, false otherwise.
    */
   def isScalaProject(project: IJavaProject): Boolean =
     (project ne null) && isScalaProject(project.getProject)
@@ -592,6 +592,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
     if (!IScalaPlugin().headlessMode)
       SWTUtils.getWorkbenchWindow map (_.getPartService().removePartListener(worbenchPartListener))
+    projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     shutDownCompilers()
   }
 

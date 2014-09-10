@@ -38,6 +38,7 @@ import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.ui.completion.CompletionTestSuite
+import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
@@ -62,6 +63,7 @@ import org.scalaide.ui.wizards.WizardTests
     classOf[LexicalTestsSuite],
     classOf[PresentationCompilerRefreshTest],
     classOf[PresentationCompilerTest],
+    classOf[PresentationCompilerActivityListenerTest],
     classOf[MultipleErrorsTest],
     classOf[NestedProjectsTest],
     classOf[OccurrencesFinderTest],

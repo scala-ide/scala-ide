@@ -14,6 +14,7 @@ import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
+import org.scalaide.ui.internal.editor.ScalaEditor
 
 /** Holds a reference to the currently 'live' presentation compiler.
   *
@@ -23,6 +24,9 @@ import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
   * @note This class is thread-safe.
   */
 final class PresentationCompilerProxy(val project: IScalaProject) extends IPresentationCompilerProxy with HasLogger {
+
+  private lazy val activityListener =
+    new PresentationCompilerActivityListener(project.underlying.getName, ScalaEditor.projectHasOpenEditors(project), shutdown)
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -96,7 +100,12 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
       pc
     }
 
-    Option(obtainPc()) flatMap (pc => Option(op(pc)))
+    activityListener.noteActivity()
+    Option(obtainPc()) flatMap { pc =>
+      val result = Option(op(pc))
+      activityListener.noteActivity()
+      result
+    }
   }
 
   /** Updates `pc` with a new Presentation Compiler instance.
@@ -129,6 +138,7 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
     * @note If you need the presentation compiler to be re-initialized (because, for instance, you have changed the project's classpath), use `askRestart`.
     */
   def shutdown(): Unit = {
+    activityListener.stop()
     val oldPc = pcLock.synchronized {
       val temp = pc
       pc = null
@@ -157,6 +167,7 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
         project.initializeCompilerSettings(settings, isPCSetting(settings))
         val pc = new ScalaPresentationCompiler(project, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
+        activityListener.start()
         pc
       } catch {
         case ex @ MissingRequirementError(required) =>

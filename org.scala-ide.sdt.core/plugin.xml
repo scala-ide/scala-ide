@@ -112,6 +112,12 @@
       </page>
       <page
             category="org.scalaide.ui.preferences"
+            class="org.scalaide.ui.internal.preferences.ResourcesPreferencePage"
+            id="org.scalaide.ui.preferences.resources"
+            name="Resources">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.EditorPreferencePage"
             id="org.scalaide.ui.preferences.editor"
             name="Editor">
@@ -815,6 +821,9 @@
 
   <extension
         point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ResourcesPreferencePageInitializer">
+     </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
      </initializer>

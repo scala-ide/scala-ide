@@ -17,26 +17,26 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   with ScalaPluginPreferencePage with HasLogger {
 
   /** Pulls the preference store associated with this plugin */
-  override def doGetPreferenceStore() : IPreferenceStore = {
-      IScalaPlugin().getPreferenceStore()
+  override def doGetPreferenceStore(): IPreferenceStore = {
+    IScalaPlugin().getPreferenceStore()
   }
 
-  override def init(wb : IWorkbench) { }
+  override def init(wb: IWorkbench) {}
 
   /** Returns the id of what preference page we use */
   override val eclipseBoxes: List[EclipseSetting.EclipseBox] = Nil
 
-  def createContents(parent : Composite) : Control = {
+  def createContents(parent: Composite): Control = {
     val composite = {
-        //No Outer Composite
-        val tmp = new Composite(parent, SWT.NONE)
+      //No Outer Composite
+      val tmp = new Composite(parent, SWT.NONE)
       val layout = new GridLayout(1, false)
-        tmp.setLayout(layout)
-        val data = new GridData(GridData.FILL)
-        data.grabExcessHorizontalSpace = true
-        data.horizontalAlignment = GridData.FILL
-        tmp.setLayoutData(data)
-        tmp
+      tmp.setLayout(layout)
+      val data = new GridData(GridData.FILL)
+      data.grabExcessHorizontalSpace = true
+      data.horizontalAlignment = GridData.FILL
+      tmp.setLayoutData(data)
+      tmp
     }
 
     eclipseBoxes.foreach(eBox => {
@@ -66,10 +66,10 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   /** Updates the apply button with the appropriate enablement. */
-  protected override def updateApplyButton() : Unit = {
-    if(getApplyButton != null) {
-      if(isValid) {
-          getApplyButton.setEnabled(isChanged)
+  protected override def updateApplyButton(): Unit = {
+    if (getApplyButton != null) {
+      if (isValid) {
+        getApplyButton.setEnabled(isChanged)
       } else {
         getApplyButton.setEnabled(false)
       }
