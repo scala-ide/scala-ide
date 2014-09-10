@@ -221,10 +221,11 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *  @param start     The position where the completion should be inserted (usually the beginning of `prefix`)
    *  @param sym       The symbol corresponding to this completion proposal
    *  @param tpe       The type of the given symbol. This is usually more precise than the type of `sym`, taking into
-   *                   account the context where the symbol will be inserted (type parameters may be instatiated).
+   *                   account the context where the symbol will be inserted (type parameters may be instantiated).
    *  @param inherited Whether the symbol was inherited
    *  @param viaView   If the symbol is added by an implicit conversion, the symbol of that method
    *  @param context   The context in which completion is invoked
+   *  @param project   The project in which additional info can be searched for (like parameter names for Java methods)
    *
    *  @see CompletionProposal
    */

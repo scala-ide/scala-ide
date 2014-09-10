@@ -144,7 +144,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     "Scala compiler cannot initialize for project: " + underlying.getName +
       ". Please check that your classpath contains the standard Scala library.")
 
-  override val presentationCompiler = new PresentationCompilerProxy(this)
+  override val presentationCompiler = new PresentationCompilerProxy(underlying.getName, prepareCompilerSettings _)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    *  [[ScalaPlugin]] instance has been fully initialized.
@@ -409,6 +409,31 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
     val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
+  }
+
+  private def prepareCompilerSettings(): Settings = {
+     val settings = ScalaPresentationCompiler.defaultScalaSettings()
+     initializeCompilerSettings(settings, isPCSetting(settings))
+     settings
+  }
+
+  /** Compiler settings that are honored by the presentation compiler. */
+  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
+    import settings.{ plugin => pluginSetting, _ }
+    Set(deprecation,
+      unchecked,
+      pluginOptions,
+      verbose,
+      Xexperimental,
+      future,
+      Ylogcp,
+      pluginSetting,
+      pluginsDir,
+      YpresentationDebug,
+      YpresentationVerbose,
+      YpresentationLog,
+      YpresentationReplay,
+      YpresentationDelay)
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String) {

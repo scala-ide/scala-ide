@@ -15,14 +15,11 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.editor.ScalaEditor
 
-/** Holds a reference to the currently 'live' presentation compiler.
-  *
-  * @note Instance of this class should only be created by `ScalaProject` (in the future, we may implement
-  * this restriction in the code itself, so you have been warned).
+/** Holds a reference to a 'live' presentation compiler and manages its lifecycle.
   *
   * @note This class is thread-safe.
   */
-final class PresentationCompilerProxy(val project: IScalaProject) extends IPresentationCompilerProxy with HasLogger {
+final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy with HasLogger {
 
   private lazy val activityListener =
     new PresentationCompilerActivityListener(project.underlying.getName, ScalaEditor.projectHasOpenEditors(project), shutdown)
@@ -154,9 +151,7 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
   private def create(): ScalaPresentationCompiler = {
     pcLock.synchronized {
       try {
-        val settings = ScalaPresentationCompiler.defaultScalaSettings()
-        project.initializeCompilerSettings(settings, isPCSetting(settings))
-        val pc = new ScalaPresentationCompiler(project.underlying.getName, settings)
+        val pc = new ScalaPresentationCompiler(name, initializeSettings())
         logger.debug("Presentation compiler classpath: " + pc.classPath)
         activityListener.start()
         pc
@@ -174,24 +169,4 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
       }
     }
   }
-
-  /** Compiler settings that are honored by the presentation compiler. */
-  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
-    import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation,
-      unchecked,
-      pluginOptions,
-      verbose,
-      Xexperimental,
-      future,
-      Ylogcp,
-      pluginSetting,
-      pluginsDir,
-      YpresentationDebug,
-      YpresentationVerbose,
-      YpresentationLog,
-      YpresentationReplay,
-      YpresentationDelay)
-  }
-
 }
