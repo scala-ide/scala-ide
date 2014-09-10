@@ -30,6 +30,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IWorkbenchWindow
 import java.io.FileNotFoundException
+import scala.util.Try
 
 object EclipseUtils extends HasLogger {
 
@@ -114,7 +115,8 @@ object EclipseUtils extends HasLogger {
 
   def getWorkbenchPages: List[IWorkbenchPage] =
     for {
-      window <- PlatformUI.getWorkbench.getWorkbenchWindows.toList
+      wbench <- Try(List(PlatformUI.getWorkbench)).getOrElse(Nil)
+      window <- wbench.getWorkbenchWindows.toList
       page <- window.getPages
     } yield page
 

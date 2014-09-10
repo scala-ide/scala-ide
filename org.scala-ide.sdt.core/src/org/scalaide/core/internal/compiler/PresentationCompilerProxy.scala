@@ -14,15 +14,16 @@ import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.editor.ScalaEditor
+import scala.collection.mutable.Publisher
 
 /** Holds a reference to a 'live' presentation compiler and manages its lifecycle.
   *
   * @note This class is thread-safe.
   */
-final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy with HasLogger {
+final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy
+    with Publisher[PresentationCompilerActivity] with HasLogger {
 
-  private lazy val activityListener =
-    new PresentationCompilerActivityListener(project.underlying.getName, ScalaEditor.projectHasOpenEditors(project), shutdown)
+  type Pub = PresentationCompilerProxy
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -96,10 +97,10 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
       pc
     }
 
-    activityListener.noteActivity()
+    publish(Activity)
     Option(obtainPc()) flatMap { pc =>
       val result = Option(op(pc))
-      activityListener.noteActivity()
+      publish(Activity)
       result
     }
   }
@@ -134,7 +135,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     * @note If you need the presentation compiler to be re-initialized (because, for instance, you have changed the project's classpath), use `askRestart`.
     */
   def shutdown(): Unit = {
-    activityListener.stop()
+    publish(Shutdown)
     val oldPc = pcLock.synchronized {
       val temp = pc
       pc = null
@@ -153,7 +154,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
       try {
         val pc = new ScalaPresentationCompiler(name, initializeSettings())
         logger.debug("Presentation compiler classpath: " + pc.classPath)
-        activityListener.start()
+        publish(Start)
         pc
       } catch {
         case ex @ MissingRequirementError(required) =>
@@ -170,3 +171,15 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     }
   }
 }
+
+/** Listeners can receive this kind of events */
+sealed trait PresentationCompilerActivity
+
+/** The presentation compiler is about, or just serviced a request */
+case object Activity extends PresentationCompilerActivity
+
+/** The presentation compiler is about to shut down. */
+case object Shutdown extends PresentationCompilerActivity
+
+/** The presentation compiler is about to start. */
+case object Start    extends PresentationCompilerActivity

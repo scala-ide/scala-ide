@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor
 
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.IScalaEditor
-
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.ui.IEditorReference
 import org.eclipse.ui.IFileEditorInput
@@ -11,6 +10,7 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.scalaide.core.internal.lexical.ScalaPartitions
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.internal.eclipse.EclipseUtils
 
 trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 
@@ -50,9 +50,6 @@ object ScalaEditor {
       isEqual.getOrElse(false)
     }
 
-    IScalaPlugin().getWorkbench().getWorkbenchWindows().exists { workbenchWindow =>
-      val pages = workbenchWindow.getPages()
-      pages exists hasOpenEditorForThisProject
-    }
+    EclipseUtils.getWorkbenchPages.exists(hasOpenEditorForThisProject)
   }
 }

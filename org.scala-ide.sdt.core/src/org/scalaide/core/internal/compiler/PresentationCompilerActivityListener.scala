@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.core.compiler
+package org.scalaide.core.internal.compiler
 
 import java.util.Timer
 import java.util.TimerTask
@@ -10,6 +10,10 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
+import scala.collection.mutable.Subscriber
+import org.scalaide.core.internal.compiler.PresentationCompilerActivity
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.internal.compiler._
 
 /**
  * Tracks activity of ScalaPresentationCompiler and shuts it down if it's unused sufficiently long
@@ -19,7 +23,7 @@ import org.scalaide.ui.internal.preferences.ResourcesPreferences
  * @param shutdownPresentationCompiler function which should be invoked, when SPC should be closed
  */
 class PresentationCompilerActivityListener(projectName: String, projectHasOpenEditors: => Boolean, shutdownPresentationCompiler: () => Unit)
-  extends HasLogger {
+  extends Subscriber[PresentationCompilerActivity, PresentationCompilerProxy] with HasLogger {
 
   import PresentationCompilerActivityListener.prefStore
   import PresentationCompilerActivityListener.timer
@@ -143,6 +147,12 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
   }
 
   private def remainingDelayToNextCheck = math.max(0, maxIdlenessLengthMillis + pcLastActivityTime - System.currentTimeMillis())
+
+  def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
+    case Shutdown => stop()
+    case Start    => start()
+    case Activity => noteActivity()
+  }
 }
 
 object PresentationCompilerActivityListener {
