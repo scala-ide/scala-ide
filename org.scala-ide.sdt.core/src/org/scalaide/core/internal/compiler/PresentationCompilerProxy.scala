@@ -13,7 +13,6 @@ import org.eclipse.core.runtime.Status
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
 import org.scalaide.ui.internal.editor.ScalaEditor
 
 /** Holds a reference to the currently 'live' presentation compiler.
@@ -148,20 +147,12 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
     if (oldPc ne null) oldPc.destroy()
   }
 
-  private val pcInitMessageShown: AtomicBoolean = new AtomicBoolean(false)
   /** Creates a presentation compiler instance.
    *
    *  @note Should not throw.
    */
   private def create(): ScalaPresentationCompiler = {
-    val pcScalaMissingStatuses = new scala.collection.mutable.ListBuffer[IStatus]()
     pcLock.synchronized {
-      def updatePcStatus(msg: String, ex: Throwable) = {
-        pcScalaMissingStatuses += new Status(
-            IStatus.ERROR, SdtConstants.PluginId,
-            MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, msg, ex)
-      }
-
       try {
         val settings = ScalaPresentationCompiler.defaultScalaSettings()
         project.initializeCompilerSettings(settings, isPCSetting(settings))
@@ -171,34 +162,15 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
         pc
       } catch {
         case ex @ MissingRequirementError(required) =>
-          updatePcStatus("could not find a required class: " + required, ex)
           eclipseLog.error(ex)
           null
         case ex @ FatalError(required) if required.startsWith("package scala does not have a member") =>
-          updatePcStatus("could not find a required class: " + required, ex)
           eclipseLog.error(ex)
           null
         case ex: Throwable =>
           eclipseLog.error("Error thrown while initializing the presentation compiler.", ex)
-          if (project.underlying.isOpen) {
-            updatePcStatus("An unhandled Throwable was caught, see the error log for more details.", ex)
-          }
           shutdown()
           null
-      } finally {
-        val messageShown = pcInitMessageShown.getAndSet(true)
-        if (!messageShown && pcScalaMissingStatuses.nonEmpty) {
-          val firstStatus = pcScalaMissingStatuses.head
-          val statuses: Array[IStatus] = pcScalaMissingStatuses.tail.toArray
-          val status = new MultiStatus(
-              SdtConstants.PluginId,
-              MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING,
-              statuses, firstStatus.getMessage(), firstStatus.getException())
-          val handler = DebugPlugin.getDefault().getStatusHandler(status)
-          // Don't allow asyncExec bec. of the concurrent nature of this call,
-          // we're create()-ing instances repeatedly otherwise
-          if (handler != null) handler.handleStatus(status, this)
-        }
       }
     }
   }
