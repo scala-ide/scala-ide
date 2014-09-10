@@ -119,7 +119,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
       new RegistryExtender().perform()
     }
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
     logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
   }
@@ -183,7 +183,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     }
     (event.getDelta().accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
-        if (delta.getKind() == IResourceDelta.OPEN){
+        if (delta.getFlags == IResourceDelta.OPEN){
           val resource = delta.getResource().asInstanceOfOpt[IProject]
           resource foreach {(r) =>
             // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)

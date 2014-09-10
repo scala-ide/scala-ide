@@ -23,6 +23,7 @@ import org.scalaide.util.internal.SettingConverterUtil
 import org.eclipse.ui.IWorkbenchPart
 import org.scalaide.util.internal.CompilerUtils.shortString
 import scala.tools.nsc.settings.ScalaVersion
+import org.scalaide.core.internal.ScalaPlugin
 
 /** Offers to set a Scala Installation (and by consequence project-specific settings) for a
  *  selection (possibly multiple) of Scala Projects
@@ -70,8 +71,8 @@ class ScalaInstallationAction extends IObjectActionDelegate {
       val chosenScalaInstallation = chooseScalaInstallation()
       chosenScalaInstallation foreach { (sic) =>
         currSelected foreach {
-          scalaPlugin.asScalaProject(_) foreach { (spj) =>
-            spj.storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+          ScalaPlugin().asScalaProject(_) foreach { (spj) =>
+            spj.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
             spj.storage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, sic.toString())
           }
         }
