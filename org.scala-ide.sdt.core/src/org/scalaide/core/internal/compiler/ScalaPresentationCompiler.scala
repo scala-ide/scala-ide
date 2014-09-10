@@ -48,7 +48,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler._
 
-class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) extends {
+class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -58,7 +58,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, name)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -277,7 +277,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
     eclipseLog.error(msg, t)
 
   def destroy() {
-    logger.info("shutting down presentation compiler on project: " + project)
+    logger.info("shutting down presentation compiler on project: " + name)
     askShutdown()
   }
 
@@ -295,7 +295,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
    *       pattern, 'new' call, etc.)
    */
   def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
-    inherited: Boolean, viaView: Symbol, context: CompletionContext): CompletionProposal = {
+    inherited: Boolean, viaView: Symbol, context: CompletionContext, project: IScalaProject): CompletionProposal = {
 
     /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
      *  source. This function adds the back-ticks to a given identifier, if necessary.
@@ -393,7 +393,7 @@ class ScalaPresentationCompiler(project: IScalaProject, settings: Settings) exte
   }
 
   override def inform(msg: String): Unit =
-    logger.debug("[%s]: %s".format(project, msg))
+    logger.debug("[%s]: %s".format(name, msg))
 }
 
 object ScalaPresentationCompiler {

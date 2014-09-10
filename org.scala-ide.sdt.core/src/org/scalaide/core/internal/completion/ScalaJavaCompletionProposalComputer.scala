@@ -127,7 +127,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
 
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
           val prop = compiler.mkCompletionProposal(prefix.toCharArray, start, sym = sym,
-            tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext)
+            tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext, prj)
           new ScalaCompletionProposal(prop)
         }
       }.getOrElse(Nil)()

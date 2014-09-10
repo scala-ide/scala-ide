@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.core.compiler._
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.compiler.InternalCompilerServices
+import org.scalaide.core.IScalaProject
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -233,7 +234,8 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
     tpe: Type,
     inherited: Boolean,
     viaView: Symbol,
-    context: CompletionContext): CompletionProposal
+    context: CompletionContext,
+    project: IScalaProject): CompletionProposal
 }
 
 object IScalaPresentationCompiler extends HasLogger {
@@ -252,7 +254,7 @@ object IScalaPresentationCompiler extends HasLogger {
 
       /** Extract the value from this response, blocking the calling thread.
        *
-       *  @param default The default value to be returned in case the unerlying Response failed
+       *  @param default The default value to be returned in case the underlying Response failed
        *                 or a timeout occurred
        *
        *  Clients should always specify a timeout value when calling this method. In rare cases

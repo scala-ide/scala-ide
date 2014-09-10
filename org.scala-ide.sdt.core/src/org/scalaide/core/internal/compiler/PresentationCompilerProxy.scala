@@ -165,7 +165,7 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
       try {
         val settings = ScalaPresentationCompiler.defaultScalaSettings()
         project.initializeCompilerSettings(settings, isPCSetting(settings))
-        val pc = new ScalaPresentationCompiler(project, settings)
+        val pc = new ScalaPresentationCompiler(project.underlying.getName, settings)
         logger.debug("Presentation compiler classpath: " + pc.classPath)
         activityListener.start()
         pc
