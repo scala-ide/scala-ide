@@ -72,8 +72,7 @@ class ScalaInstallationAction extends IObjectActionDelegate {
       chosenScalaInstallation foreach { (sic) =>
         currSelected foreach {
           ScalaPlugin().asScalaProject(_) foreach { (spj) =>
-            spj.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-            spj.storage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, sic.toString())
+            spj.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, sic.toString())
           }
         }
       }

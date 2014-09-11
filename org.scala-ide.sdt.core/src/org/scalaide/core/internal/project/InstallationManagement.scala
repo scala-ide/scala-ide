@@ -36,7 +36,7 @@ trait InstallationManagement { this: ScalaProject =>
     WithValidation(
         p.contains,
         p.getString,
-        { (key:String, default:String) => eclipseLog.warn(s"Preference ${key} was uninitialized, setting default to ${default}.")
+        { (key:String, default:String) => eclipseLog.warn(s"Preference ${key} was uninitialized for ${underlying.getName()}, setting default to ${default}.")
           p.setDefault(key, default); validatedProjectPrefStore(p) }
     )
 
@@ -100,7 +100,7 @@ trait InstallationManagement { this: ScalaProject =>
   private def turnOnProjectSpecificSettings(reason: String){
     if (!usesProjectSettings) {
       val pName = this.toString
-      eclipseLog.warn(s"Turning on project-specific settings for $pName because of $reason")
+      eclipseLog.debug(s"Turning on project-specific settings for $pName because of $reason")
       projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
     }
   }
@@ -108,7 +108,7 @@ trait InstallationManagement { this: ScalaProject =>
   private def turnOffProjectSpecificSettings(reason: String){
     if (usesProjectSettings){
       val pName = this.toString
-      eclipseLog.warn(s"Turning off project-specific settings for $pName because of $reason")
+      eclipseLog.debug(s"Turning off project-specific settings for $pName because of $reason")
       projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, false)
     }
   }
@@ -120,7 +120,7 @@ trait InstallationManagement { this: ScalaProject =>
     }
   }
 
-  def setDesiredInstallation(choice: ScalaInstallationChoice = desiredinstallationChoice()) : Unit = {
+  def setDesiredInstallation(choice: ScalaInstallationChoice = desiredinstallationChoice(), slReason: String = "requested Scala Installation change") : Unit = {
     val optsi = ScalaInstallation.resolve(choice) // This shouldn't do anything if the choice doesn't resolve
     val sourceLevel = optsi map {si => CompilerUtils.shortString(si.version)}
 
@@ -132,7 +132,7 @@ trait InstallationManagement { this: ScalaProject =>
 
     // This is a precaution against scala installation loss and does not set anything by itself, see `SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL`
     sourceLevel foreach {sl => projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, sl)}
-    optsi foreach {si => setDesiredSourceLevel(si.version, "requested Scala Installation change", Some(bundleUpdater(si)))}
+    optsi foreach {si => setDesiredSourceLevel(si.version, slReason, Some(bundleUpdater(si)))}
     publish(ScalaInstallationChange())
   }
 
@@ -242,7 +242,7 @@ trait InstallationManagement { this: ScalaProject =>
         val installChoice = installString flatMap (parseScalaInstallationChoice(_))
         // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
         // will not turn on the project settings and depends on them being set right beforehand
-        installChoice foreach (setDesiredInstallation(_))
+        installChoice foreach (setDesiredInstallation(_, "requested Scala Installation change from settings update"))
       }
       if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
         if (isUnderlyingValid) classpathHasChanged()

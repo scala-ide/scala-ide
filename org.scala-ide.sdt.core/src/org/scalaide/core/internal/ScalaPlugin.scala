@@ -181,7 +181,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         disposeProject(project)
       case _ =>
     }
-    (event.getDelta().accept(new IResourceDeltaVisitor() {
+    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
         if (delta.getFlags == IResourceDelta.OPEN){
           val resource = delta.getResource().asInstanceOfOpt[IProject]
@@ -194,7 +194,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         } else
         true
       }
-    }))
+    })))
   }
 
   override def elementChanged(event: ElementChangedEvent) {
