@@ -437,6 +437,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
       val scalaProject = IScalaPlugin().asScalaProject(parentCU.getJavaProject.getProject).get
 
       scalaProject.presentationCompiler { compiler =>
+        import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
         compiler.asyncExec[Unit] {
           //start control of buffer
           val cb = CodeBuilder(getPackageNameToInject.getOrElse(""), superTypes, buffer, scalaProject.presentationCompiler)
@@ -457,7 +458,7 @@ abstract class AbstractNewElementWizardPage extends NewTypeWizardPage(1, "") wit
 
           //end control of buffer
 
-        }
+        }.getOption()
       }
 
       val cu = createdType.getCompilationUnit
