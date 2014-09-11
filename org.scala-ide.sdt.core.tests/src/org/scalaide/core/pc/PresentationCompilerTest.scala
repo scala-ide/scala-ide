@@ -14,6 +14,8 @@ import hyperlink.HyperlinkTester
 import testsetup.CustomAssertion
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.eclipse.jdt.core.JavaCore
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester
 
@@ -172,4 +174,41 @@ class FreshFile {
     // verify
     assertNoErrors(unitB)
   }
+
+  @Test
+  def libraryDocumentation(): Unit =
+    project.presentationCompiler{ compiler =>
+      import PresentationCompilerTest._
+      import compiler.{ reload => _, _ }
+      import definitions.ListClass
+      val javaProject = JavaCore.create(project.underlying)
+      val unit = asyncExec{compiler.findCompilationUnit(ListClass, javaProject).get}.getOption().get
+      reload(unit.asInstanceOf[ScalaCompilationUnit])
+      parseAndEnter(unit)
+
+      unit.withSourceFile { (source, _) =>
+        val documented = asyncExec {
+          // Only check if doc comment is present in the class itself.
+          // This doesn't include symbols that are inherited from documented symbols.
+          // An alternative would be to check allOverriddenSymbols, but
+          // that would require getting sourceFiles for those as well.
+          ListClass.info.decls filter { sym =>
+            getUnitOf(source).get.body exists {
+              case DocDef(_, defn: DefTree) if defn.name eq sym.name => true
+              case _ => false
+            }
+          }
+        }.getOption()
+        Assert.assertTrue("Couldn't find documented declarations", documented.nonEmpty)
+        documented foreach { (sc) =>
+          sc.foreach { (sym) =>
+            Assert.assertTrue(s"Couldn't retrieve $sym documentation",
+              parsedDocComment(sym, sym.enclClass, javaProject).isDefined)
+          }
+        }
+      }
+    } getOrElse {
+      Assert.fail("shouldn't happen")
+    }
+
 }

@@ -36,10 +36,10 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
       if ((sym.isClass || sym.isModule) && sym.hasPackageFlag) sym else sym.enclosingPackageClass
     }
 
-    def symClassName(sym: Symbol): Option[String] = askOption { () =>
+    def symClassName(sym: Symbol): Option[String] = asyncExec {
       val top = sym.enclosingTopLevelClass
       if ((sym != NoSymbol) && sym.owner.isPackageObjectClass) "package$.class" else top.name + (if (top.isModuleClass) "$" else "") + ".class"
-      }
+    }.getOption()
 
     def findClassFile(): Option[InteractiveCompilationUnit] = {
       logger.debug("Looking for a classfile for " + sym.fullName)

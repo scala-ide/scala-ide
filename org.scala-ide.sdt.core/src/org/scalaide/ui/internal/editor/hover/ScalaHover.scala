@@ -109,18 +109,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
       import RegionUtils._
       import HTMLPrinter._
 
-      def typeInfo(t: Tree): Option[String] = asyncExec {
-        def compose(ss: List[String]): String = ss.filter(_.nonEmpty).mkString(" ")
-        def defString(sym: Symbol, tpe: Type): String = {
-          // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
-          val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info
-          compose(List(sym.flagString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString +
-            sym.infoString(tpeinfo)))
-        }
-
-        for (sym <- Option(t.symbol); tpe <- Option(t.tpe))
-          yield if (sym.isClass || sym.isModule) sym.fullName else defString(sym, tpe)
-      }.getOrElse(None)()
+      def typeInfo(t: Tree): Option[String] = (for (sym <- Option(t.symbol); tpe <- Option(t.tpe)) yield compiler.headerForSymbol(sym,tpe)).flatten
 
       def typecheckingErrorMessage(problems: Seq[IProblem]) = {
         createHtmlOutput { sb =>

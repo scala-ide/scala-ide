@@ -47,6 +47,8 @@ import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler._
+import scala.tools.nsc.interactive.InteractiveReporter
+import scala.tools.nsc.interactive.CommentPreservingTypers
 
 class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   /*
@@ -59,6 +61,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   private val nameLock = new Object
 
 } with Global(settings, new ScalaPresentationCompiler.PresentationReporter, name)
+  with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -68,7 +71,14 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   with LocateSymbol
   with CompilerApiExtensions
   with IScalaPresentationCompiler
-  with HasLogger { self =>
+  with HasLogger
+  with Scaladoc { self =>
+
+  override lazy val analyzer = new {
+    val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
+  } with InteractiveScaladocAnalyzer with CommentPreservingTypers
+
+  override def forScaladoc = true
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
