@@ -1,5 +1,7 @@
 package org.scalaide.ui.internal.completion
 
+import scala.tools.refactoring.implementations.AddImportStatement
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
@@ -7,6 +9,8 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
@@ -16,6 +20,8 @@ import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.TextPresentation
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension3
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension5
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension6
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.link._
@@ -27,11 +33,20 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.Point
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
-import org.scalaide.core.completion._
+import org.scalaide.core.completion.CompletionContext
+import org.scalaide.core.completion.CompletionProposal
+import org.scalaide.core.completion.MemberKind
+import org.scalaide.core.completion.prefixMatches
 import org.scalaide.ui.ScalaImages
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
+import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.internal.editor.hover.HoverControlCreator
+import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 
 /** A UI class for displaying completion proposals.
  *
@@ -39,10 +54,8 @@ import org.scalaide.util.internal.eclipse.EditorUtils
  *  between them.
  */
 class ScalaCompletionProposal(proposal: CompletionProposal)
-  extends IJavaCompletionProposal
-  with ICompletionProposalExtension
-  with ICompletionProposalExtension2
-  with ICompletionProposalExtension6 {
+    extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension2
+    with ICompletionProposalExtension3 with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
 
   import proposal._
   import ScalaCompletionProposal._
@@ -82,7 +95,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
 
   /** A simple display string
    */
-  override def getDisplayString() = display
+  override def getDisplayString(): String = display
 
   /** A display string with grayed out extra details
    */
@@ -95,8 +108,10 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
 
   /** Some additional info (like javadoc ...)
    */
-  override def getAdditionalProposalInfo() = null
-  override def getSelection(d: IDocument) = null
+  override def getAdditionalProposalInfo(): String = null  // Rather the next method is called.
+  override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation() orNull
+
+  override def getSelection(d: IDocument): Point = null
   override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
 
   override def apply(d: IDocument, trigger: Char, offset: Int) {
@@ -217,6 +232,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     ui
   }
 
+  // ICompletionProposalExtension3
+  override def getInformationControlCreator: IInformationControlCreator = new HoverControlCreator(new JavadocHover.HoverControlCreator(new FocusedControlCreator(ScalaHover.HoverFontId), true), ScalaHover.HoverFontId)
+
+  override def getPrefixCompletionStart(d: IDocument, offset: Int): Int = startPos
+  override def getPrefixCompletionText(d: IDocument, offset: Int): CharSequence = null
+
   private def repairPresentation(viewer: ITextViewer) {
     if (cachedStyleRange != null) viewer match {
       case viewer2: ITextViewerExtension2 =>
@@ -282,8 +303,7 @@ object ScalaCompletionProposal {
   val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
   val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
 
-  @deprecated("Use the constructor of ScalaCompletionProposal instead", "4.0")
-  def apply(selectionProvider: ISelectionProvider)(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal)
+  def apply(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal)
 
   def insertCompletion(): Boolean = {
     val preference = JavaPlugin.getDefault().getPreferenceStore()

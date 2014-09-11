@@ -49,6 +49,7 @@ import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
+import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 
 class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   /*
@@ -386,6 +387,11 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
         } getOrElse scalaParamNames
       } else scalaParamNames
     }
+    val docFun = () => {
+      val comment = parsedDocComment(sym, sym.enclClass, project.javaProject)
+      val header = headerForSymbol(sym, tpe)
+      if (comment.isDefined) Some(ScalaDocHtmlProducer(this, project.javaProject).getBrowserInput(comment.get, sym, header.getOrElse(""))) else None
+    }
 
     CompletionProposal(
       kind,
@@ -399,7 +405,8 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
       getParamNames,
       paramTypes,
       sym.fullName,
-      false)
+      false,
+      docFun)
   }
 
   override def inform(msg: String): Unit =
