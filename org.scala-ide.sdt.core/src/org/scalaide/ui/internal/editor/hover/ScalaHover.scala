@@ -23,6 +23,11 @@ import org.scalaide.util.internal.eclipse.OSGiUtils
 import org.scalaide.util.internal.eclipse.RegionUtils
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.core.SdtConstants
+import scala.tools.nsc.interactive.CompilerControl
+import scala.tools.nsc.symtab.Flags
+import org.scalaide.util.internal.Utils._
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
 
 object ScalaHover extends HasLogger {
   /** could return null, but prefer to return empty (see API of ITextHover). */
@@ -100,14 +105,43 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
   def getInformationPresenterControlCreator(): IInformationControlCreator =
     new FocusedControlCreator(HoverFontId)
 
-  override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef =
-    getHoverInfo(viewer, region)
-
-  override def getHoverInfo(viewer: ITextViewer, region: IRegion) = {
+  override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
     icu.withSourceFile({ (src, compiler) =>
-      import compiler.{stringToTermName => _, stringToTypeName => _, _}
+      import compiler.{ stringToTermName => _, stringToTypeName => _, _ }
       import RegionUtils._
       import HTMLPrinter._
+
+      val docComment = {
+        val scompiler = compiler.asInstanceOfOpt[ScalaPresentationCompiler]
+        val thisComment = scompiler flatMap { (scompiler) =>
+          import scompiler._
+          val wordPos = region.toRangePos(src)
+          val pos = { val pTree = locateTree(wordPos); if (pTree.hasSymbolField) pTree.pos else wordPos }
+          val tree = askTypeAt(pos).getOption()
+          val askedOpt = asyncExec {
+
+            def pre(tsym: Symbol, t: Tree): Type = t match {
+              case Apply(fun, _) => pre(tsym, fun)
+              case Select(qual, _) => qual.tpe
+              case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
+              case _ => NoType
+            }
+            for (
+              t <- tree;
+              tsym <- Option(t.symbol);
+              pt <- Option(pre(tsym, t))
+            ) yield {
+              val site = pt.typeSymbol
+              val sym = if (tsym.isCaseApplyOrUnapply) site else tsym
+              val header = headerForSymbol(sym, t.tpe)
+              (sym, site, header)
+            }
+          }.getOption().flatten
+
+          for ((sym, site, header) <- askedOpt) yield parsedDocComment(sym, site, icu.scalaProject.javaProject).map { (comment) => ScalaDocHtmlProducer(scompiler, icu.scalaProject.javaProject).getBrowserInput(comment, sym, header.getOrElse("")) }
+        }
+        thisComment.flatten
+      }
 
       def typeInfo(t: Tree): Option[String] = (for (sym <- Option(t.symbol); tpe <- Option(t.tpe)) yield compiler.headerForSymbol(sym,tpe)).flatten
 
@@ -193,11 +227,16 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
         typecheckingErrorMessage(problemsInRange)
       else if (markerMessages.nonEmpty)
         buildErrorMessage(markerMessages)
+      else if (docComment.isDefined)
+        docComment.get
       else
         typeMessage
 
     }) getOrElse NoHoverInfo
   }
+
+  @deprecated("Use getHoverInfo2", "4.0.0")
+  override def getHoverInfo(viewer: ITextViewer, region: IRegion) = null
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
     ScalaWordFinder.findWord(viewer.getDocument, offset)

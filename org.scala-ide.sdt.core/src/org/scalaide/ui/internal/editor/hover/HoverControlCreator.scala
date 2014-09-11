@@ -29,7 +29,7 @@ class HoverControlCreator(focusedCreator: IInformationControlCreator, fontId: St
     val tas = EditorsUI.getTooltipAffordanceString()
 
     if (BrowserInformationControl.isAvailable(parent)) {
-      new BrowserInformationControl(parent, fontId, tas) with BrowserControlAdditions {
+      new BrowserInformationControl(parent, fontId, tas: String) with BrowserControlAdditions {
         override def getInformationPresenterControlCreator() = focusedCreator
       }
     }
@@ -52,7 +52,7 @@ class FocusedControlCreator(fontId: String)
   override def doCreateInformationControl(parent: Shell): IInformationControl = {
     if (BrowserInformationControl.isAvailable(parent)) {
       val tbm = new ToolBarManager(SWT.FLAT)
-      new BrowserInformationControl(parent, fontId, tbm) with BrowserControlAdditions
+      new BrowserInformationControl(parent, fontId, tbm: ToolBarManager) with BrowserControlAdditions
     }
     else
       new DefaultInformationControl(parent, /* isResizeable */ true)
