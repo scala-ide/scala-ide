@@ -58,7 +58,7 @@ class ScalaPresentationCompiler(val project: IScalaProject, settings: Settings) 
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
+} with ScaladocEnabledGlobal(settings, new ScalaPresentationCompiler.PresentationReporter, project.underlying.getName)
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -68,7 +68,8 @@ class ScalaPresentationCompiler(val project: IScalaProject, settings: Settings) 
   with LocateSymbol
   with CompilerApiExtensions
   with IScalaPresentationCompiler
-  with HasLogger { self =>
+  with HasLogger
+  with Scaladoc { self =>
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
