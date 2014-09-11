@@ -306,6 +306,25 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     fragmentRoots.toSeq
   }
 
+  /**
+   * Checks the classpath for invalid/several scala library references, wrong versions, etc.
+   *
+   * @param canFixInstallationFromScalaLib whether to configure the project to use a specific
+   *                                       Scala Installation in reaction to a versioned, unknown[1]
+   *                                       scala-library found in the classpath's contents
+   *
+   * Beware: this code path  is not watched by the compilerSettingListener
+   * normally a preference change such as below would trigger a cascade of changes[2].
+   * To make sure they are consistent, they finish with a classpath check.
+   * That final classpath check (right here) can't be watched on, otherwise we may risk a recursion.
+   *
+   * Hence, changes to the Scala Installation made here need to replicate that cascade manually:
+   * - setting the SCALA_DESIRED_INSTALLATION to a ScalaInstallationChoice
+   * - calling setDesiredScalaInstallation with that choice
+   *
+   * [1] said library can't be a scala container
+   * [2] see ScalaProject's `setDesiredInstallation` and `compilerSettingsListener`
+   */
   private[internal] def checkClasspath(canFixInstallationFromScalaLib: Boolean = false) {
     // check the version of Scala library used, and if enabled, the Scala compatibility of the other jars.
     val withVersionClasspathValidator =
@@ -359,8 +378,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // It's important here to check we're not mistakenly "fixing" the scala installation of a project which already has a scala container on classpath
             // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
             if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
-              // BEWARE : at this stage, we do not benefit from the compilerSettingsListener watching over us !
-              // settings change do NOT trigger setDesiredScalaInstallation() calls, we have to do it ourselves
+              // see the comment to checkClasspath above
               projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
               setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
               (IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
