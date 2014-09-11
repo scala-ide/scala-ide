@@ -32,9 +32,9 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 abstract class HyperlinkFactory {
   protected val global: IScalaPresentationCompiler
 
-  def create(createHyperlink: Hyperlink.Factory, scu: InteractiveCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
+  def create(createHyperlink: Hyperlink.Factory, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
     global.asyncExec {
-      global.findDeclaration(sym, scu.scalaProject.javaProject) map {
+      global.findDeclaration(sym) map {
         case (f, pos) =>
           val text = sym.kindString + " " + sym.fullName
           createHyperlink(f, pos, sym.name.length, text, region)

@@ -198,7 +198,7 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *        to be mapped back to the Play template offset before being used to reveal an editor
    *        location.
    */
-  def findDeclaration(sym: Symbol, javaProject: IJavaProject): Option[(InteractiveCompilationUnit, Int)]
+  def findDeclaration(sym: Symbol): Option[(InteractiveCompilationUnit, Int)]
 
   /** Return the JDT element corresponding to this Scala symbol. This method is time-consuming
    *  and may trigger building the structure of many Scala files.
