@@ -9,6 +9,8 @@ import org.junit.Assert._
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import Thread.sleep
 
+import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+
 class PresentationCompilerActivityListenerTest {
 
   class MockFun[T](realFunctionName: String, x: => T) extends Function0[T] {

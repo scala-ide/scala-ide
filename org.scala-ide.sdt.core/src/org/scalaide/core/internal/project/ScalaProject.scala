@@ -70,6 +70,8 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
+import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+import org.scalaide.ui.internal.editor.ScalaEditor
 
 
 object ScalaProject {
@@ -144,12 +146,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     "Scala compiler cannot initialize for project: " + underlying.getName +
       ". Please check that your classpath contains the standard Scala library.")
 
-  override val presentationCompiler = new PresentationCompilerProxy(this)
+  override val presentationCompiler = new PresentationCompilerProxy(underlying.getName, prepareCompilerSettings _)
+  private val watchdog = new PresentationCompilerActivityListener(underlying.getName, ScalaEditor.projectHasOpenEditors(this), presentationCompiler.shutdown _)
 
   /** To avoid letting 'this' reference escape during initialization, this method is called right after a
    *  [[ScalaPlugin]] instance has been fully initialized.
    */
   private def init(): Unit = {
+    presentationCompiler.subscribe(watchdog)
+
     if (!IScalaPlugin().headlessMode)
       SWTUtils.getWorkbenchWindow map (_.getPartService().addPartListener(worbenchPartListener))
   }
@@ -409,6 +414,31 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
     val extraArgs = defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
     shownArgs.flatten ++ encArgs ++ extraArgs
+  }
+
+  private def prepareCompilerSettings(): Settings = {
+     val settings = ScalaPresentationCompiler.defaultScalaSettings()
+     initializeCompilerSettings(settings, isPCSetting(settings))
+     settings
+  }
+
+  /** Compiler settings that are honored by the presentation compiler. */
+  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
+    import settings.{ plugin => pluginSetting, _ }
+    Set(deprecation,
+      unchecked,
+      pluginOptions,
+      verbose,
+      Xexperimental,
+      future,
+      Ylogcp,
+      pluginSetting,
+      pluginsDir,
+      YpresentationDebug,
+      YpresentationVerbose,
+      YpresentationLog,
+      YpresentationReplay,
+      YpresentationDelay)
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String) {
