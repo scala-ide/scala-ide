@@ -23,7 +23,7 @@ abstract class PresentationCompilerExtensions {
     override def isEligible(t: Tree) = super.isEligible(t) && p(t)
   }
 
-  def getEnclosingMethd(src: SourceFile, offset: Int) = {
+  def getEnclosingMethod(src: SourceFile, offset: Int): Tree = {
     locateIn(parseTree(src), rangePos(src, offset, offset, offset), t => t.isInstanceOf[DefDef])
   }
 }

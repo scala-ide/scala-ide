@@ -112,6 +112,12 @@
       </page>
       <page
             category="org.scalaide.ui.preferences"
+            class="org.scalaide.ui.internal.preferences.ResourcesPreferencePage"
+            id="org.scalaide.ui.preferences.resources"
+            name="Resources">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.EditorPreferencePage"
             id="org.scalaide.ui.preferences.editor"
             name="Editor">
@@ -529,6 +535,10 @@
    <extension point="org.eclipse.ui.ide.markerResolution">
    <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickfix.BadScalaVersionMarkerResolver">
    </markerResolutionGenerator>
+   <markerResolutionGenerator
+         class="org.scalaide.core.internal.quickfix.NoScalaLibraryMarkerResolver"
+         markerType="org.scala-ide.sdt.core.classpathProblem">
+   </markerResolutionGenerator>
    </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
       <statusHandler
@@ -536,12 +546,6 @@
        class="org.scalaide.ui.internal.handlers.GenericExceptionStatusHandler"
        plugin="org.scala-ide.sdt.core"
        code="1010">
-     </statusHandler>
-     <statusHandler
-       id="MissingScalaRequirement"
-       class="org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler"
-       plugin="org.scala-ide.sdt.core"
-       code="1002">
      </statusHandler>
      <statusHandler
        id="CompilerLaunchError"
@@ -821,6 +825,9 @@
 
   <extension
         point="org.eclipse.core.runtime.preferences">
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ResourcesPreferencePageInitializer">
+     </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
      </initializer>

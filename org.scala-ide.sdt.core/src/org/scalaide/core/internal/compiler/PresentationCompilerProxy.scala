@@ -13,16 +13,17 @@ import org.eclipse.core.runtime.Status
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler
+import org.scalaide.ui.internal.editor.ScalaEditor
+import scala.collection.mutable.Publisher
 
-/** Holds a reference to the currently 'live' presentation compiler.
-  *
-  * @note Instance of this class should only be created by `ScalaProject` (in the future, we may implement
-  * this restriction in the code itself, so you have been warned).
+/** Holds a reference to a 'live' presentation compiler and manages its lifecycle.
   *
   * @note This class is thread-safe.
   */
-final class PresentationCompilerProxy(val project: IScalaProject) extends IPresentationCompilerProxy with HasLogger {
+final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy
+    with Publisher[PresentationCompilerActivity] with HasLogger {
+
+  type Pub = PresentationCompilerProxy
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -96,7 +97,12 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
       pc
     }
 
-    Option(obtainPc()) flatMap (pc => Option(op(pc)))
+    publish(Activity)
+    Option(obtainPc()) flatMap { pc =>
+      val result = Option(op(pc))
+      publish(Activity)
+      result
+    }
   }
 
   /** Updates `pc` with a new Presentation Compiler instance.
@@ -129,6 +135,7 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
     * @note If you need the presentation compiler to be re-initialized (because, for instance, you have changed the project's classpath), use `askRestart`.
     */
   def shutdown(): Unit = {
+    publish(Shutdown)
     val oldPc = pcLock.synchronized {
       val temp = pc
       pc = null
@@ -138,77 +145,41 @@ final class PresentationCompilerProxy(val project: IScalaProject) extends IPrese
     if (oldPc ne null) oldPc.destroy()
   }
 
-  private val pcInitMessageShown: AtomicBoolean = new AtomicBoolean(false)
   /** Creates a presentation compiler instance.
    *
    *  @note Should not throw.
    */
   private def create(): ScalaPresentationCompiler = {
-    val pcScalaMissingStatuses = new scala.collection.mutable.ListBuffer[IStatus]()
     pcLock.synchronized {
-      def updatePcStatus(msg: String, ex: Throwable) = {
-        pcScalaMissingStatuses += new Status(
-            IStatus.ERROR, SdtConstants.PluginId,
-            MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING, msg, ex)
-      }
-
       try {
-        val settings = ScalaPresentationCompiler.defaultScalaSettings()
-        project.initializeCompilerSettings(settings, isPCSetting(settings))
-        val pc = new ScalaPresentationCompiler(project, settings)
+        val pc = new ScalaPresentationCompiler(name, initializeSettings())
         logger.debug("Presentation compiler classpath: " + pc.classPath)
+        publish(Start)
         pc
       } catch {
         case ex @ MissingRequirementError(required) =>
-          updatePcStatus("could not find a required class: " + required, ex)
           eclipseLog.error(ex)
           null
         case ex @ FatalError(required) if required.startsWith("package scala does not have a member") =>
-          updatePcStatus("could not find a required class: " + required, ex)
           eclipseLog.error(ex)
           null
         case ex: Throwable =>
           eclipseLog.error("Error thrown while initializing the presentation compiler.", ex)
-          if (project.underlying.isOpen) {
-            updatePcStatus("An unhandled Throwable was caught, see the error log for more details.", ex)
-          }
           shutdown()
           null
-      } finally {
-        val messageShown = pcInitMessageShown.getAndSet(true)
-        if (!messageShown && pcScalaMissingStatuses.nonEmpty) {
-          val firstStatus = pcScalaMissingStatuses.head
-          val statuses: Array[IStatus] = pcScalaMissingStatuses.tail.toArray
-          val status = new MultiStatus(
-              SdtConstants.PluginId,
-              MissingScalaRequirementHandler.STATUS_CODE_SCALA_MISSING,
-              statuses, firstStatus.getMessage(), firstStatus.getException())
-          val handler = DebugPlugin.getDefault().getStatusHandler(status)
-          // Don't allow asyncExec bec. of the concurrent nature of this call,
-          // we're create()-ing instances repeatedly otherwise
-          if (handler != null) handler.handleStatus(status, this)
-        }
       }
     }
   }
-
-  /** Compiler settings that are honored by the presentation compiler. */
-  private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
-    import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation,
-      unchecked,
-      pluginOptions,
-      verbose,
-      Xexperimental,
-      future,
-      Ylogcp,
-      pluginSetting,
-      pluginsDir,
-      YpresentationDebug,
-      YpresentationVerbose,
-      YpresentationLog,
-      YpresentationReplay,
-      YpresentationDelay)
-  }
-
 }
+
+/** Listeners can receive this kind of events */
+sealed trait PresentationCompilerActivity
+
+/** The presentation compiler is about, or just serviced a request */
+case object Activity extends PresentationCompilerActivity
+
+/** The presentation compiler is about to shut down. */
+case object Shutdown extends PresentationCompilerActivity
+
+/** The presentation compiler is about to start. */
+case object Start    extends PresentationCompilerActivity
