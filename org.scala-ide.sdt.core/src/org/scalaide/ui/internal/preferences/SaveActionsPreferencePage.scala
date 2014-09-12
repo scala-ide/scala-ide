@@ -86,7 +86,9 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     viewer = new CheckboxTableViewer(table)
     viewer.setContentProvider(ContentProvider)
     viewer.addSelectionChangedListener { e: SelectionChangedEvent =>
-      selectSaveAction(table.getSelection().head.getData().asInstanceOf[SaveActionSetting])
+      table.getSelection().headOption foreach { item =>
+        selectSaveAction(item.getData().asInstanceOf[SaveActionSetting])
+      }
     }
     viewer.addCheckStateListener { e: CheckStateChangedEvent =>
       toggleSaveAction(e.getElement().asInstanceOf[SaveActionSetting])
