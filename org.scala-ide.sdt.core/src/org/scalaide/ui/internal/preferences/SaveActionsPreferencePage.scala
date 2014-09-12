@@ -131,6 +131,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
       prefStore.setValue(saveAction.id, !previousValue)
     }
     prefStore.setValue(SaveActionExtensions.SaveActionTimeoutId, timeoutValue.getText())
+    changes = Set()
     super.performOk()
   }
 
