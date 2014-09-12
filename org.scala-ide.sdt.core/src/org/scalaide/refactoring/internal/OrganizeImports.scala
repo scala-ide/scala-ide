@@ -2,9 +2,7 @@ package org.scalaide.refactoring.internal
 
 import java.text.Collator
 import java.util.Comparator
-
 import scala.tools.refactoring.implementations
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
@@ -22,6 +20,7 @@ import org.scalaide.core.internal.jdt.model.ScalaElement
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 /**
  * The Scala implemention of Organize Imports.
@@ -125,7 +124,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
           pm.subTask("Applying the changes.")
           val changes = createChanges(scalaSourceFile, imports, pm)
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
-          EditorUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes, false)
+          TextEditUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes, false)
           None
         }
       }

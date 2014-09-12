@@ -16,6 +16,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.quickfix.BasicCompletionProposal
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, highlightTo: Int, relevance: Int = 0)
   extends BasicCompletionProposal(relevance, displayString) with ICompletionProposalExtension2 {
@@ -62,7 +63,7 @@ object ExtractionProposal {
             refactoring.perform(extraction) match {
               case Right((change: TextChange) :: Nil) =>
                 EditorUtils.doWithCurrentEditor { editor =>
-                  EditorUtils.applyRefactoringChangeToEditor(change, editor)
+                  TextEditUtils.applyRefactoringChangeToEditor(change, editor)
                   LocalNameOccurrences(extraction.abstractionName).performInlineRenaming()
                 }
             }
