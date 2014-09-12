@@ -2,7 +2,6 @@ package org.scalaide.core.ui.completion
 
 import org.junit.Test
 import org.junit.Ignore
-import org.scalaide.core.FlakyTest
 
 object CompletionOverwriteTests extends CompletionTests
 class CompletionOverwriteTests {
@@ -10,8 +9,7 @@ class CompletionOverwriteTests {
   import CompletionOverwriteTests._
 
   @Test
-  def doNotOverwriteWhenFeatureDisabled() = FlakyTest.retry("doNotOverwriteWhenFeatureDisabled") {
-    """
+  def doNotOverwriteWhenFeatureDisabled() = """
     class A {
       def foo(i: Int) = 0
       def bar(i: Int) = 0
@@ -28,11 +26,9 @@ class CompletionOverwriteTests {
       (new A).bar([[i]])^foo(3)
     }
   """ after Completion("bar(Int): Int")
-  }
 
   @Test
-  def doNotOverwriteWhenThereIsNothingToBeOverwritten() = FlakyTest.retry("doNotOverwriteWhenThereIsNothingToBeOverwritten") {
-    """
+  def doNotOverwriteWhenThereIsNothingToBeOverwritten() = """
     class A {
       def foo(i: Int) = 0
     }
@@ -47,11 +43,9 @@ class CompletionOverwriteTests {
       (new A).foo([[i]])^
     }
   """ after Completion("foo(Int): Int", enableOverwrite = true)
-  }
 
   @Test
-  def overwriteBeforeParamList() = FlakyTest.retry("overwriteBeforeParamList") {
-    """
+  def overwriteBeforeParamList() = """
     class A {
       def foo(i: Int) = 0
       def bar(i: Int) = 0
@@ -68,11 +62,9 @@ class CompletionOverwriteTests {
       (new A).bar^(3)
     }
   """ after Completion("bar(Int): Int", enableOverwrite = true)
-  }
 
   @Test
-  def overwriteInsideOfParamList() = FlakyTest.retry("overwriteInsideOfParamList") {
-    """
+  def overwriteInsideOfParamList() = """
     object X {
       def meth = 0
       val value = 0
@@ -87,11 +79,9 @@ class CompletionOverwriteTests {
       println(meth^)
     }
   """ after Completion("meth: Int", enableOverwrite = true)
-  }
 
   @Test
-  def overwriteBeforeInfixMethodCall() = FlakyTest.retry("overwriteBeforeInfixMethodCall") {
-    """
+  def overwriteBeforeInfixMethodCall() = """
     object X {
       val ident1, ident2 = true
       val x = ide^nt1 && ident1
@@ -102,11 +92,9 @@ class CompletionOverwriteTests {
       val x = ident2^ && ident1
     }
   """ after Completion("ident2", enableOverwrite = true)
-  }
 
   @Test
-  def overwriteBeforeMethodCallWithPunctuation() = FlakyTest.retry("overwriteBeforeMethodCallWithPunctuation") {
-    """
+  def overwriteBeforeMethodCallWithPunctuation() = """
     object X {
       val ident1, ident2 = true
       val x = ide^nt1.&&(ident1)
@@ -117,7 +105,6 @@ class CompletionOverwriteTests {
       val x = ident2^.&&(ident1)
     }
   """ after Completion("ident2", enableOverwrite = true)
-  }
 
   @Test @Ignore("unimplemented, see #1002092")
   def overwriteBeforeParamListWhenNoParensExist() = """
@@ -143,8 +130,7 @@ class CompletionOverwriteTests {
   """ after Completion("func(Int): Int", enableOverwrite = true)
 
   @Test
-  def overwriteBeforeEndOfLine() = FlakyTest.retry("overwriteBeforeEndOfLine") {
-    """
+  def overwriteBeforeEndOfLine() = """
     object X {
       val ident1, ident2 = 0
       val x = iden^t1
@@ -155,11 +141,9 @@ class CompletionOverwriteTests {
       val x = ident2^
     }
   """ after Completion("ident2", enableOverwrite = true)
-  }
 
   @Test
-  def overwriteBeforeComment() = FlakyTest.retry("overwriteBeforeComment") {
-    """
+  def overwriteBeforeComment() = """
     object X {
       val ident1, ident2 = 0
       val x = iden^t1 // comment
@@ -170,7 +154,6 @@ class CompletionOverwriteTests {
       val x = ident2^ // comment
     }
   """ after Completion("ident2", enableOverwrite = true)
-  }
 
   @Test @Ignore("unimplemented, see #1002093")
   def overwriteBeforeUnderscore() = """
