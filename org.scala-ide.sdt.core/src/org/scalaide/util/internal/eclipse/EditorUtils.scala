@@ -213,16 +213,17 @@ object EditorUtils {
    * applied.
    */
   def applyMultiTextEdit(document: IDocument, textSelection: ITextSelection, edit: MultiTextEdit): ITextSelection = {
-    val selStart = textSelection.getOffset()
-    val selLen = textSelection.getLength()
-    val selEnd = selStart+selLen
+    import RegionUtils._
+    val selStart = textSelection.start
+    val selLen = textSelection.length
+    val selEnd = textSelection.end
 
     /**
      * Checks if the selection overlaps with `region`.
      */
     def selectionOverlapsRegion(region: IRegion): Boolean = {
-      val rStart = region.getOffset
-      val rEnd = rStart + region.getLength()
+      val rStart = region.start
+      val rEnd = region.end
 
       !(selStart < rStart && selEnd < rStart || selStart > rEnd && selEnd > rEnd)
     }
@@ -235,7 +236,7 @@ object EditorUtils {
       val currentPosition = new RangeMarker(selStart, selLen)
       edit.addChild(currentPosition)
       edit.apply(document)
-      new TextSelection(document, currentPosition.getOffset, currentPosition.getLength)
+      new TextSelection(document, currentPosition.start, currentPosition.length)
     }
 
     /**
@@ -245,24 +246,24 @@ object EditorUtils {
      */
     def handleOverlap(overlappingEdit: TextEdit) = {
       val (newOffset, newLen) = {
-        val rStart = overlappingEdit.getOffset()
-        val rLen = overlappingEdit.getLength()
-        val rEnd = overlappingEdit.getOffset()+overlappingEdit.getLength()
+        val rStart = overlappingEdit.start
+        val rLen = overlappingEdit.length
+        val rEnd = overlappingEdit.end
 
         def offsetInIntersection = rLen-(selStart-rStart)
 
         def adjustOffset(overlapToPreserve: Int) = {
           val lenAfterSelection = edit.getChildren().collect {
-            case e if e.getOffset() > selStart ⇒
+            case e if e.start > selStart ⇒
               e match {
-                case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
-                case e ⇒ e.getLength()
+                case e: ReplaceEdit ⇒ e.length-e.getText().length
+                case e ⇒ e.length
               }
           }.sum
 
-          val originalLength = document.getLength()
+          val originalLength = document.length
           edit.apply(document)
-          val modifiedLength = document.getLength()-originalLength
+          val modifiedLength = document.length-originalLength
           selStart+modifiedLength+lenAfterSelection+overlapToPreserve
         }
 
@@ -276,8 +277,8 @@ object EditorUtils {
         // case 3: ^ [  ] ^
         else if (selStart < rStart && selEnd > rEnd) {
           val sub = overlappingEdit match {
-            case e: ReplaceEdit ⇒ e.getLength()-e.getText().length()
-            case e ⇒ e.getLength()
+            case e: ReplaceEdit ⇒ e.length-e.getText().length
+            case e ⇒ e.length
           }
           (adjustOffset(0), selLen-sub)
         }
