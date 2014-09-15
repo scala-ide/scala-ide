@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.ui.internal.editor.AutoEditExtensions
 import org.scalaide.util.internal.Commons
@@ -30,7 +30,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils._
 /** This class is referenced through plugin.xml */
 class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val prefStore = ScalaPlugin.prefStore
+  private val prefStore = IScalaPlugin().getPreferenceStore()
 
   private var descriptionArea: Text = _
   private var configurationArea: Text = _
@@ -182,7 +182,7 @@ class AutoEditsPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
     AutoEditExtensions.autoEditSettings foreach { s =>
-      ScalaPlugin.prefStore.setDefault(s.id, false)
+      IScalaPlugin().getPreferenceStore().setDefault(s.id, false)
     }
   }
 }

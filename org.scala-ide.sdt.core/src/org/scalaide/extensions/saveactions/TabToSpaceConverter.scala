@@ -1,7 +1,7 @@
 package org.scalaide.extensions
 package saveactions
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.core.text.Replace
 
@@ -22,7 +22,7 @@ trait TabToSpaceConverter extends SaveAction with DocumentSupport {
   override def setting = TabToSpaceConverterSetting
 
   override def perform() = {
-    val tabWidth = ScalaPlugin.prefStore.getInt(IndentSpaces.eclipseKey)
+    val tabWidth = IScalaPlugin().getPreferenceStore().getInt(IndentSpaces.eclipseKey)
     val spaces = " "*tabWidth
     val len = document.length
     val text = document.text

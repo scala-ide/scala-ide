@@ -3,7 +3,6 @@ package org.scalaide.ui.internal.editor
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager.UndoSpec
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.IDocumentExtension3
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TextUtilities
@@ -16,7 +15,7 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits._
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Add
@@ -256,5 +255,5 @@ trait AutoEditExtensions extends HasLogger {
 
   /** Checks if an auto edit given by its `id` is enabled. */
   private def isEnabled(id: String): Boolean =
-    ScalaPlugin.prefStore.getBoolean(id)
+    IScalaPlugin().getPreferenceStore().getBoolean(id)
 }

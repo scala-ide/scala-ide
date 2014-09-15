@@ -6,7 +6,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.Template
 import org.eclipse.jface.text.templates.TemplateBuffer
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.Replace
@@ -82,7 +82,7 @@ trait ApplyTemplate extends AutoEdit {
   }
 
   def findTemplateByName(name: String): Option[Template] =
-    Option(ScalaPlugin.plugin.templateManager.templateStore.findTemplate(name))
+    Option(ScalaPlugin().templateManager.templateStore.findTemplate(name))
 
   def mkTemplateBuffer(template: Template, offset: Int): TemplateBuffer = {
     val line = document.lineInformationOfOffset(offset)

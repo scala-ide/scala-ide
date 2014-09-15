@@ -3,11 +3,10 @@ package org.scalaide.extensions
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Commons
+import org.scalaide.core.IScalaPlugin
 
 /**
  * Base interface for all Scala IDE extensions.
@@ -71,5 +70,5 @@ trait ExtensionSetting extends HasLogger {
   }
 
   private[extensions] def prefStore: IPreferenceStore =
-    ScalaPlugin.prefStore
+    IScalaPlugin().getPreferenceStore()
 }
