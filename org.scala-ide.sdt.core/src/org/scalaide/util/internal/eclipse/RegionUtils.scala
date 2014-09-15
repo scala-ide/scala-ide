@@ -6,6 +6,7 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TypedRegion
+import scala.annotation.tailrec
 
 object RegionUtils {
   implicit class RichProblem(private val problem: IProblem) extends AnyVal {
@@ -68,26 +69,99 @@ object RegionUtils {
   }
 
   implicit class AdvancedTypedRegionList(val a: List[TypedRegion]) extends AnyVal {
-    def U(b: List[TypedRegion]) =
-      union(a, b)
-    def \(b: List[TypedRegion]) =
-      subtract(a, b)
-    def ^(b: List[TypedRegion]) =
-      intersect(a, b)
 
+    /** Merges two lists of regions.
+     *
+     *  @see RegionUtils.union
+     */
+    def merge(b: List[TypedRegion]): List[TypedRegion] =
+      RegionUtils.merge(a, b)
+
+    /** Subtracts a list of regions from another one.
+     *
+     *  @see RegionUtils.subtract
+     *  @throwIllegalArgumentException if one of the list is not ordered or with non-overlapping regions
+     */
+    def subtract(b: List[TypedRegion]): List[TypedRegion] =
+      RegionUtils.subtract(a, b)
+
+    /** Intersects between two lists of regions
+     *
+     *  @see RegionUtils.union
+     *  @throwIllegalArgumentException if one of the list is not ordered or with non-overlapping regions
+     */
+    def intersect(b: List[TypedRegion]): List[TypedRegion] =
+      RegionUtils.intersect(a, b)
   }
 
-  /**
-   * Intersects between two lists of regions
+  /** Intersects between two lists of regions. The returned list contains the sections of the regions of list {{a}}
+   *  which are also covered by the regions of list {{b}}.
+   *  The regions in each list need to be ordered and non-overlapping, an {{IllegalArgumentException}} is thrown otherwise.
+   *  The regions in the returned list are ordered and non-overlapping.
+   *
+   *  @throw IllegalArgumentException if one of the list is not ordered or with non-overlapping regions
    */
   def intersect(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
-    subtract(a, subtract(a, b))
+    checkInput(a, b)
+
+    subtractImpl(a, subtractImpl(a, b))
   }
 
-  /**
-   * Subtracts a list of regions from another one
+  /** Subtracts a list of regions from another one. The returned list contains the sections of the regions of list {{a}}
+   *  which are not covered by the regions of list {{b}}.
+   *
+   *  The regions in each list need to be ordered and non-overlapping, an {{IllegalArgumentException}} is thrown otherwise.
+   *  The regions in the returned list are ordered and non-overlapping.
+   *
+   *  @throw IllegalArgumentException if one of the list is not ordered or with non-overlapping regions
    */
   def subtract(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
+    checkInput(a, b)
+
+    subtractImpl(a, b)
+  }
+
+  /** Merges two lists of regions.
+   *  If the 2 input lists are ordered by their offset, the result is also ordered by
+   *  the offset.
+   *  The resulting list might have overlapping regions, if the input regions have overlaps.
+   */
+  def merge(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
+    merge[TypedRegion](a, b, ((x, y) => x.getOffset() < y.getOffset()))
+  }
+
+  private def checkInput(a: List[TypedRegion], b: List[TypedRegion]) {
+    if (!orderedAndNonOverlapping(a))
+      throw new IllegalArgumentException("The regions of the first list are not ordered and non-ovelapping")
+    if (!orderedAndNonOverlapping(b))
+      throw new IllegalArgumentException("The regions of the second list are not ordered and non-ovelapping")
+  }
+
+  /** Returns {{true}} if the regions are ordered and non-overlapping, false otherwise.
+   */
+  private def orderedAndNonOverlapping(l: List[TypedRegion]): Boolean = {
+    @tailrec
+    def loop(c: TypedRegion, l: List[TypedRegion]): Boolean = {
+      l match {
+        case head :: tail =>
+          (head.getOffset >= c.getOffset + c.getLength) && loop(head, tail)
+        case Nil =>
+          true
+      }
+    }
+
+    l match {
+      case head :: tail =>
+        loop(head, tail)
+      case Nil =>
+        true
+    }
+  }
+
+  /** Implements the subtract method
+   *  Lists must be ordered and non-overlapping
+   */
+  private def subtractImpl(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
     (a, b) match {
       case (x :: xs, y :: ys) =>
         val xStart = x.getOffset()
@@ -148,25 +222,18 @@ object RegionUtils {
     }
   }
 
-  /**
-   * Unions two lists of regions
-   * The lists must have no intersection
+  /** Implements the merge/union method
    */
-  def union(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
-    merge[TypedRegion](a, b, ((x, y) => x.getOffset() < y.getOffset()))
-  }
-
-  private def merge[T](aList: List[T], bList: List[T], lt: (T, T) => Boolean): List[T] = bList match {
-    case Nil => aList
-    case _ =>
-      aList match {
-        case Nil => bList
-        case x :: xs =>
-          if (lt(x, bList.head))
-            x :: merge(xs, bList, lt)
-          else
-            bList.head :: merge(aList, bList.tail, lt)
+  private def merge[T](aList: List[T], bList: List[T], lt: (T, T) => Boolean): List[T] = {
+    @tailrec
+    def merge_aux(aList: List[T], bList: List[T], res: List[T]): List[T] =
+      (aList, bList) match {
+        case (Nil, _) => bList.reverse ::: res
+        case (_, Nil) => aList.reverse ::: res
+        case (a :: as, b :: bs) => if (lt(a, b)) merge_aux(as, bList, a :: res)
+        else merge_aux(aList, bs, b :: res)
       }
+    merge_aux(aList, bList, Nil).reverse
   }
 }
 

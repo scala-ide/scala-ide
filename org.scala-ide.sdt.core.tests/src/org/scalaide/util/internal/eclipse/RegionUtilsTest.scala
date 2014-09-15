@@ -45,6 +45,30 @@ class RegionUtilsTest {
 
   }
 
+  @Test(expected = classOf[IllegalArgumentException])
+  def substractWithOverlappingList {
+    val a = List(new TypedRegion(0, 10, "A"), new TypedRegion(9, 2, "B")) // overlapping
+    val b = List(new TypedRegion(1, 1, "C"))
+
+    RegionUtils.subtract(a, b)
+  }
+
+  @Test(expected = classOf[IllegalArgumentException])
+  def intersectWithNonOrderedList {
+    val a = List(new TypedRegion(1, 1, "C"))
+    val b = List(new TypedRegion(12, 10, "A"), new TypedRegion(5, 2, "B")) // non-ordered
+
+    RegionUtils.intersect(a, b)
+  }
+
+  @Test(expected = classOf[IllegalArgumentException])
+  def unionWithOvelappingNonOrderedList {
+    val a = List(new TypedRegion(5, 10, "A"), new TypedRegion(2, 8, "B")) // overlapping and non-ordered
+    val b = List(new TypedRegion(1, 1, "C"))
+
+    RegionUtils.merge(a, b)
+  }
+
   /** |       ++++
    *  | ----
    */
