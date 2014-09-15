@@ -43,6 +43,8 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import org.scalaide.core.IScalaClasspath
+import org.scalaide.core.ScalaInstallationChange
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -379,8 +381,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
             if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
               // see the comment to checkClasspath above
-              projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
-              setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
+              EclipseUtils.scheduleJob(s"Update Scala Installation from raw classpath for ${underlying.getName()}", underlying, Job.BUILD) { monitor =>
+                projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
+                setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
+                projectSpecificStorage.save()
+                publish(ScalaInstallationChange())
+                Status.OK_STATUS
+              }
               (IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
             }
             // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
