@@ -133,7 +133,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
             ) yield {
               val site = pt.typeSymbol
               val sym = if (tsym.isCaseApplyOrUnapply) site else tsym
-              val header = headerForSymbol(sym, t.tpe)
+              val header = headerForSymbol(sym, pt)
               (sym, site, header)
             }
           }.getOption().flatten
