@@ -221,6 +221,25 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     asyncExec(op()).getOption(timeout.millis)
   }
 
+
+    /**Returns a `Response` containing doc comment information for a given symbol.
+   *
+   *  @param   sym        The symbol whose doc comment should be retrieved (might come from a classfile)
+   *  @param   source     The source file that's supposed to contain the definition
+   *  @param   site       The symbol where 'sym' is observed
+   *  @param   fragments  All symbols that can contribute to the generated documentation
+   *                      together with their source files.
+   *  @return   response   A response that will be set to the following:
+   *                      If `source` contains a definition of a given symbol that has a doc comment,
+   *                      the (expanded, raw, position) triplet for a comment, otherwise ("", "", NoPosition).
+   *  Note: This operation does not automatically load sources that are not yet loaded.
+   */
+  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol,SourceFile)]): Response[(String, String, Position)] = {
+    val response = new Response[(String, String, Position)]
+    askDocComment(sym, source, site, fragments, response)
+    response
+  }
+
   /** Ask to put scu in the beginning of the list of files to be typechecked.
    *
    *  If the file has not been 'reloaded' first, it does nothing.
@@ -390,7 +409,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     val docFun = () => {
       val comment = parsedDocComment(sym, sym.enclClass, project.javaProject)
       val header = headerForSymbol(sym, tpe)
-      if (comment.isDefined) Some(ScalaDocHtmlProducer(this, project.javaProject).getBrowserInput(comment.get, sym, header.getOrElse(""))) else None
+      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this, project.javaProject)(comment.get, sym, header.getOrElse("")) else None
     }
 
     CompletionProposal(

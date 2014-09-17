@@ -15,9 +15,9 @@ import scala.reflect.internal.Flags
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.internal.text.html.BrowserInput
 
-trait ScalaDocHtmlProducer {
+class ScalaDocHtmlProducer {
 
-  def bodiesToHtml(caption: String, bodies: List[Body]): NodeSeq =
+  private def bodiesToHtml(caption: String, bodies: List[Body]): NodeSeq =
     bodies match {
       case Nil => NodeSeq.Empty
       case _ =>
@@ -30,8 +30,8 @@ trait ScalaDocHtmlProducer {
         </p>
     }
 
-  def bodyToHtml(body: Body): NodeSeq = body.blocks flatMap blockToHtml
-  def blockToHtml(block: comment.Block): NodeSeq = block match {
+  private def bodyToHtml(body: Body): NodeSeq = body.blocks flatMap blockToHtml
+  private def blockToHtml(block: comment.Block): NodeSeq = block match {
     case Title(in, _) => <h6>{ inlineToHtml(in) }</h6>
     case Paragraph(in) => <p>{ inlineToHtml(in) }</p>
     case Code(data) => <br/><pre><i>{ scala.xml.Text(data) }</i></pre><br/>
@@ -42,7 +42,7 @@ trait ScalaDocHtmlProducer {
     case HorizontalRule() => <hr/>
   }
 
-  def listItemsToHtml(items: Seq[comment.Block]) =
+  private def listItemsToHtml(items: Seq[comment.Block]) =
     items.foldLeft(NodeSeq.Empty) { (xmlList, item) =>
       item match {
         case OrderedList(_, _) | UnorderedList(_) => // html requires sub ULs to be put into the last LI
@@ -54,7 +54,7 @@ trait ScalaDocHtmlProducer {
       }
     }
 
-  def inlineToHtml(inl: Inline): NodeSeq = inl match {
+  private def inlineToHtml(inl: Inline): NodeSeq = inl match {
     case Chain(items) => items flatMap inlineToHtml
     case Italic(in) => <i>{ inlineToHtml(in) }</i>
     case Bold(in) => <b>{ inlineToHtml(in) }</b>
@@ -69,7 +69,7 @@ trait ScalaDocHtmlProducer {
     case EntityLink(in, _) => inlineToHtml(in)
   }
 
-  def htmlContents(header: String, comment: Comment): NodeSeq = {
+  private def htmlContents(header: String, comment: Comment): NodeSeq = {
     val headerHtml =
       if (header.isEmpty) NodeSeq.Empty
       else
@@ -91,24 +91,24 @@ trait ScalaDocHtmlProducer {
 
     headerHtml ++ mainHtml
   }
-}
 
-object ScalaDocHtmlProducer {
-
-  def apply(compiler: IScalaPresentationCompiler, javaProject: IJavaProject) = new ScalaDocHtmlProducer {
-    def getBrowserInput(comment: Comment, sym: compiler.Symbol, header: String): BrowserInput = {
-      val htmlOutput =
+     def getBrowserInput(compiler: IScalaPresentationCompiler, javaProject: IJavaProject)(comment: Comment, sym: compiler.Symbol, header: String): Option[BrowserInput] = {
+      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+      import compiler._
+      val htmlOutput = asyncExec {
         <html>
           <body>
             { htmlContents(header, comment) }
           </body>
         </html>
-      val javaElement = compiler.getJavaElement(sym, javaProject)
-      new BrowserInformationControlInput(null) {
-        override def getHtml: String = htmlOutput.toString
-        override def getInputElement: Object = javaElement
-        override def getInputName: String = javaElement.map(_.getElementName()).getOrElse("")
+      }.getOption()
+      val javaElement = getJavaElement(sym, javaProject)
+      htmlOutput.map { (htmlOutput) =>
+        new BrowserInformationControlInput(null) {
+          override def getHtml: String = htmlOutput.toString
+          override def getInputElement: Object = javaElement
+          override def getInputName: String = javaElement.map(_.getElementName()).getOrElse("")
+        }
       }
     }
-  }
 }

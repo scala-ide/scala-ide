@@ -25,7 +25,6 @@ import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.core.SdtConstants
 import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
-import org.scalaide.util.internal.Utils._
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
 
@@ -112,9 +111,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
       import HTMLPrinter._
 
       val docComment = {
-        val scompiler = compiler.asInstanceOfOpt[ScalaPresentationCompiler]
-        val thisComment = scompiler flatMap { (scompiler) =>
-          import scompiler._
+        val thisComment = {
+          import compiler._
           val wordPos = region.toRangePos(src)
           val pos = { val pTree = locateTree(wordPos); if (pTree.hasSymbolField) pTree.pos else wordPos }
           val tree = askTypeAt(pos).getOption()
@@ -138,7 +136,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
             }
           }.getOption().flatten
 
-          for ((sym, site, header) <- askedOpt) yield parsedDocComment(sym, site, icu.scalaProject.javaProject).map { (comment) => ScalaDocHtmlProducer(scompiler, icu.scalaProject.javaProject).getBrowserInput(comment, sym, header.getOrElse("")) }
+          for ((sym, site, header) <- askedOpt) yield parsedDocComment(sym, site, icu.scalaProject.javaProject).flatMap { (comment) => (new ScalaDocHtmlProducer).getBrowserInput(compiler, icu.scalaProject.javaProject)(comment, sym, header.getOrElse(""))
+          }
         }
         thisComment.flatten
       }

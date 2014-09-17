@@ -144,6 +144,20 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    */
   def asyncExec[A](op: => A): Response[A]
 
+  /** Returns a `Response` containing doc comment information for a given symbol.
+   *
+   *  @param   sym        The symbol whose doc comment should be retrieved (might come from a classfile)
+   *  @param   source     The source file that's supposed to contain the definition
+   *  @param   site       The symbol where 'sym' is observed
+   *  @param   fragments  All symbols that can contribute to the generated documentation
+   *                      together with their source files.
+   *  @return   response   A response that will be set to the following:
+   *                      If `source` contains a definition of a given symbol that has a doc comment,
+   *                      the (expanded, raw, position) triplet for a comment, otherwise ("", "", NoPosition).
+   *  Note: This operation does not automatically load sources that are not yet loaded.
+   */
+  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol,SourceFile)]): Response[(String, String, Position)]
+
   /** Ask a fresh type-checking round on all loaded compilation units. */
   def askReloadManagedUnits(): Unit
 

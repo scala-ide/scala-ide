@@ -29,7 +29,7 @@ class PresentationCompilerDocTest {
   @Test
   def packagedComment() {
     val expect: Comment => Boolean = { cmt =>
-      existsText(cmt.body, "This is a basic comment")
+      existsText(cmt.body, "This is another basic comment")
     }
     doTest(open("packaged.scala"), expect)
   }

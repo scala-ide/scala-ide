@@ -1,6 +1,6 @@
 package dummy
 
 /**
- * This is a basic comment
+ * This is another basic comment
  */
 class /*s*/pC/*e*/

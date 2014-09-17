@@ -55,9 +55,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
         )
 
         def withFragments(fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] = {
-          val response = new Response[(String, String, Position)]
-          askDocComment(sym, source, site, fragments, response)
-          response.get.left.toOption
+          asyncDocComment(sym, source, site, fragments).getOption()
         }
 
         asyncExec {
