@@ -14,6 +14,8 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.eclipse.jdt.core.IJavaElement
 import scala.reflect.internal.Flags
 import org.eclipse.jdt.core.IJavaProject
+import org.scalaide.core.IScalaPlugin
+import scala.concurrent.duration._
 
 trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPresentationCompiler =>
   val global: this.type = this
@@ -45,6 +47,9 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   override def warnNoLink: Boolean = false
   override def findExternalLink(sym: Symbol, name: String): Option[LinkToExternal] = None
 
+  val TIMEOUT = if (IScalaPlugin().noTimeoutMode) Duration.Inf else 500.millis
+
+
   def parsedDocComment(sym: Symbol, site: Symbol, javaProject:IJavaProject): Option[Comment] = {
     val res =
 
@@ -55,7 +60,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
         )
 
         def withFragments(fragments: List[(Symbol, SourceFile)]): Option[(String, String, Position)] = {
-          asyncDocComment(sym, source, site, fragments).getOption()
+          asyncDocComment(sym, source, site, fragments).getOption(timeout = TIMEOUT)
         }
 
         asyncExec {

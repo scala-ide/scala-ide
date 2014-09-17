@@ -221,8 +221,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     asyncExec(op()).getOption(timeout.millis)
   }
 
-
-    /**Returns a `Response` containing doc comment information for a given symbol.
+  /** Returns a `Response` containing doc comment information for a given symbol.
    *
    *  @param   sym        The symbol whose doc comment should be retrieved (might come from a classfile)
    *  @param   source     The source file that's supposed to contain the definition
@@ -234,9 +233,12 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    *                      the (expanded, raw, position) triplet for a comment, otherwise ("", "", NoPosition).
    *  Note: This operation does not automatically load sources that are not yet loaded.
    */
-  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol,SourceFile)]): Response[(String, String, Position)] = {
+  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol, SourceFile)]): Response[(String, String, Position)] = {
     val response = new Response[(String, String, Position)]
-    askDocComment(sym, source, site, fragments, response)
+    // we can only ensure sym.owner is a class after lambda-lifting, but to be past lambda-lifting, we need to retype, which on hovers is heavy
+    if (asyncExec { sym.owner.isClass || sym.owner.isFreeType }.getOrElse(false)()) {
+      askDocComment(sym, source, site, fragments, response)
+    }
     response
   }
 
