@@ -28,7 +28,7 @@ import scala.tools.nsc.Settings
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
 object closedProject extends TestProjectSetup("closed-project-test") {
-  
+
   def closeProject() {
     project.underlying.close(null)
   }
@@ -147,7 +147,7 @@ class SbtBuilderTest {
     val Seq(prjClient, prjLib) = createProjects("client", "library")
     val packLib = createSourcePackage("scala")(prjLib)
     val baseRawClasspath= prjClient.javaProject.getRawClasspath()
-    
+
     /* The classpath, with the eclipse scala container removed. */
     def cleanRawClasspath = baseRawClasspath.filterNot(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
 
@@ -158,7 +158,7 @@ class SbtBuilderTest {
     prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
-    
+
     val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
     Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
     deleteProjects(prjClient, prjLib)
@@ -216,6 +216,35 @@ class SbtBuilderTest {
     Assert.assertTrue("Errors expected, but none found", markers.nonEmpty)
 
     deleteProjects(prjClient, prjLib)
+  }
+
+   @Test def bootLibrariesCanBeUnorderedOnClasspath() {
+    import SDTTestUtils._
+
+    val Seq(prjClient) = createProjects("client")
+    try {
+      val packLib = createSourcePackage("scala")(prjClient)
+      val baseRawClasspath = prjClient.javaProject.getRawClasspath()
+
+      // The classpath, with the eclipse scala container removed
+      val (scalaContainerPath, cleanRawClasspath) = baseRawClasspath.partition(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+
+      // add the scala classpath at the end
+      prjClient.javaProject.setRawClasspath(cleanRawClasspath ++ scalaContainerPath, null)
+
+      // add a source file
+      val packA = createSourcePackage("test")(prjClient)
+      packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+
+      // now test that the build succeeds with the out-of-order Scala library
+      prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+      prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+      Assert.assertTrue("No errors expected", markers.isEmpty)
+    } finally {
+      deleteProjects(prjClient)
+    }
   }
 
   @Test def checkClosedProject() {
