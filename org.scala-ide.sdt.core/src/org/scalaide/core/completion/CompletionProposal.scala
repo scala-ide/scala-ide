@@ -5,7 +5,7 @@ import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
 import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
@@ -247,7 +247,7 @@ case class CompletionProposal(
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
-      val selection = EditorUtils.applyChangesToFile(
+      val selection = TextEditUtils.applyChangesToFile(
         d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
 
       if (applyLinkedMode)
