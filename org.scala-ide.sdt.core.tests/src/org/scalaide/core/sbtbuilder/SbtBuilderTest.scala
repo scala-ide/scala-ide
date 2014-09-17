@@ -272,6 +272,35 @@ class SbtBuilderTest {
     }
   }
 
+   @Test def bootLibrariesCanBeUnorderedOnClasspath() {
+    import SDTTestUtils._
+
+    val Seq(prjClient) = createProjects("client")
+    try {
+      val packLib = createSourcePackage("scala")(prjClient)
+      val baseRawClasspath = prjClient.javaProject.getRawClasspath()
+
+      // The classpath, with the eclipse scala container removed
+      val (scalaContainerPath, cleanRawClasspath) = baseRawClasspath.partition(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+
+      // add the scala classpath at the end
+      prjClient.javaProject.setRawClasspath(cleanRawClasspath ++ scalaContainerPath, null)
+
+      // add a source file
+      val packA = createSourcePackage("test")(prjClient)
+      packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
+
+      // now test that the build succeeds with the out-of-order Scala library
+      prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+      prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+      Assert.assertTrue("No errors expected", markers.isEmpty)
+    } finally {
+      deleteProjects(prjClient)
+    }
+  }
+
   @Test def checkClosedProject() {
     closedProject.closeProject()
     Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
