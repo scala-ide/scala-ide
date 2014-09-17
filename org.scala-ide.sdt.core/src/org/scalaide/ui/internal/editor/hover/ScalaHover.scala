@@ -27,6 +27,9 @@ import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
+import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.eclipse.core.filebuffers.FileBuffers
+import org.scalaide.core.extensions.SourceFileProviderRegistry
 
 object ScalaHover extends HasLogger {
   /** could return null, but prefer to return empty (see API of ITextHover). */
@@ -90,8 +93,20 @@ object ScalaHover extends HasLogger {
   }
 }
 
-class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with ITextHoverExtension with ITextHoverExtension2 with HtmlHover {
+class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExtension2 with HtmlHover {
   import ScalaHover._
+
+  protected def getCompilationUnit(textViewer: ITextViewer): InteractiveCompilationUnit = {
+    val doc = textViewer.getDocument
+    val icu = for {
+      buffer <- Option(FileBuffers.getTextFileBufferManager.getTextFileBuffer(doc))
+      location = buffer.getLocation
+      provider <- Option(SourceFileProviderRegistry.getProvider(location))
+      icu <- provider.createFrom(location)
+    } yield icu
+    icu.getOrElse(null)
+  }
+
 
   /**
    * Returns the focused control creator, which is known as the presenter
@@ -105,6 +120,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
     new FocusedControlCreator(HoverFontId)
 
   override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
+    val icu = getCompilationUnit(viewer)
     icu.withSourceFile({ (src, compiler) =>
       import compiler.{ stringToTermName => _, stringToTypeName => _, _ }
       import RegionUtils.RichRegion

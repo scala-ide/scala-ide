@@ -24,10 +24,11 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 class TextHoverFactory extends TextHoverFactoryInterface {
   import IScalaPresentationCompiler.Implicits._
 
-  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
+  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover with ITextHoverExtension with ITextHoverExtension2 {
     var stringWasReturnedAtGetHoverInfo2 = false
 
     override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
+      val icu = getCompilationUnit(viewer)
       icu.withSourceFile{(src, compiler) =>
         import compiler._
         import org.scalaide.util.eclipse.RegionUtils.RichRegion
