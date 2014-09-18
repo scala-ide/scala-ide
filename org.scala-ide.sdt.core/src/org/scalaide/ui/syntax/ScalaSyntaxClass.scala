@@ -95,10 +95,7 @@ case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled
 }
 
 object ScalaSyntaxClass {
-  def unapply(a: AnyRef): Option[(String, String, Boolean)] = a match {
-    case syntaxClass: ScalaSyntaxClass =>
-      Some((syntaxClass.displayName, syntaxClass.baseName, syntaxClass.canBeDisabled))
-    case _ =>
-      None
-  }
+
+  case class Category(name: String, children: List[ScalaSyntaxClass])
+
 }

@@ -844,7 +844,7 @@
            class="org.scalaide.ui.internal.preferences.ResourcesPreferencePageInitializer">
      </initializer>
      <initializer
-           class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.ColorPreferenceInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.ScalaCompilerPreferenceInitializer">

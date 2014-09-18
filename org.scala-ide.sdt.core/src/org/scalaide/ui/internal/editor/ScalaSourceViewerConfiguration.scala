@@ -62,6 +62,7 @@ import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
 import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
 import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.jface.util.IPropertyChangeListener
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -71,7 +72,7 @@ class ScalaSourceViewerConfiguration(
       JavaPlugin.getDefault.getJavaTextTools.getColorManager,
       javaPreferenceStore,
       editor,
-      IJavaPartitions.JAVA_PARTITIONING) {
+      IJavaPartitions.JAVA_PARTITIONING) with IPropertyChangeListener {
 
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
@@ -347,6 +348,10 @@ class ScalaSourceViewerConfiguration(
   override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
     super.handlePropertyChangeEvent(event)
     codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
+  }
+
+  override def propertyChange(event: PropertyChangeEvent): Unit = {
+    handlePropertyChangeEvent(event)
   }
 
   /**

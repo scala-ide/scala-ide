@@ -2,6 +2,7 @@ package org.scalaide.ui.syntax
 
 import scalariform.lexer.Tokens._
 import scalariform.lexer._
+import ScalaSyntaxClass.Category
 
 object ScalaSyntaxClasses {
 
@@ -56,8 +57,6 @@ object ScalaSyntaxClasses {
   val DYNAMIC_UPDATE = ScalaSyntaxClass("Call of updateDynamic", "syntaxColouring.semantic.updateDynamic", canBeDisabled = true)
   val DYNAMIC_APPLY = ScalaSyntaxClass("Call of applyDynamic", "syntaxColouring.semantic.applyDynamic", canBeDisabled = true)
   val DYNAMIC_APPLY_NAMED = ScalaSyntaxClass("Call of applyDynamicNamed", "syntaxColouring.semantic.applyDynamicNamed", canBeDisabled = true)
-
-  case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Syntactic", List(
     BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, CHARACTER, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
