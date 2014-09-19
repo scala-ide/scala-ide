@@ -9,6 +9,7 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.eclipse.jface.internal.text.html.BrowserInput
 
 object HasArgs extends Enumeration {
   val NoArgs, EmptyArgs, NonEmptyArgs = Value
@@ -63,7 +64,8 @@ case class CompletionProposal(
   getParamNames: () => List[List[String]], // parameter names (excluding any implicit parameter sections)
   paramTypes: List[List[String]],          // parameter types matching parameter names (excluding implicit parameter sections)
   fullyQualifiedName: String, // for Class, Trait, Type, Objects: the fully qualified name
-  needImport: Boolean         // for Class, Trait, Type, Objects: import statement has to be added
+  needImport: Boolean,        // for Class, Trait, Type, Objects: import statement has to be added
+  documentation: () => Option[BrowserInput]  // on-demand generated documentation HTML.
 ) {
 
   /** `getParamNames` is expensive, save this result once computed.

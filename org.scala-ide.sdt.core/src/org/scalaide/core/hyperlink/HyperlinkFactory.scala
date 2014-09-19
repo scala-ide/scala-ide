@@ -1,10 +1,10 @@
 package org.scalaide.core.hyperlink
 
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
-import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 
 /** A factory that builds IHyperlink instances from compiler Symbols.
  *
@@ -32,9 +32,9 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 abstract class HyperlinkFactory {
   protected val global: IScalaPresentationCompiler
 
-  def create(createHyperlink: Hyperlink.Factory, scu: InteractiveCompilationUnit, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
+  def create(createHyperlink: Hyperlink.Factory, javaProject: IJavaProject, sym: global.Symbol, region: IRegion): Option[IHyperlink] = {
     global.asyncExec {
-      global.findDeclaration(sym, scu.scalaProject.javaProject) map {
+      global.findDeclaration(sym, javaProject) map {
         case (f, pos) =>
           val text = sym.kindString + " " + sym.fullName
           createHyperlink(f, pos, sym.name.length, text, region)

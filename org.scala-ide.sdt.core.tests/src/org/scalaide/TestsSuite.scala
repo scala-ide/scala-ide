@@ -24,6 +24,7 @@ import org.scalaide.core.semantic.HighlightingTestsSuite
 import org.scalaide.core.buildmanager.ProjectsCleanJobTest
 import org.scalaide.core.semantichighlighting.classifier.SymbolClassifierTestSuite
 import org.scalaide.core.pc.PresentationCompilerRefreshTest
+import org.scalaide.core.pc.PresentationCompilerDocTest
 import org.scalaide.core.sbtbuilder.SbtBuilderTest
 import org.scalaide.core.semantichighlighting.SemanticHighlightingPositionsTest
 import org.scalaide.core.hyperlink.ScalaWordFinderTest
@@ -62,6 +63,7 @@ import org.scalaide.ui.wizards.WizardTests
     classOf[ScalaDocumentPartitionerTest],
     classOf[LexicalTestsSuite],
     classOf[PresentationCompilerRefreshTest],
+    classOf[PresentationCompilerDocTest],
     classOf[PresentationCompilerTest],
     classOf[PresentationCompilerActivityListenerTest],
     classOf[MultipleErrorsTest],

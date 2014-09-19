@@ -13,6 +13,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.util.JDTUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 
 object ScalaOverrideIndicatorBuilder {
   val OVERRIDE_ANNOTATION_TYPE = "org.eclipse.jdt.ui.overrideIndicator"
@@ -42,7 +43,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
     extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
-      ask { () => findDeclaration(base, scu.scalaProject.javaProject) } map {
+      asyncExec{ findDeclaration(base, scu.scalaProject.javaProject) }.getOption().flatten map {
         case (file, pos) =>
           EditorUtility.openInEditor(file, true) match {
             case editor: ITextEditor => editor.selectAndReveal(pos, 0)

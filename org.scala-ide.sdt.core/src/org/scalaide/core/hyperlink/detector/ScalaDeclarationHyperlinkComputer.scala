@@ -14,6 +14,8 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
   }
 
   def findHyperlinks(icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): Option[List[IHyperlink]] = {
+    logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
+
     icu.withSourceFile({ (sourceFile, compiler) =>
       object DeclarationHyperlinkFactory extends HyperlinkFactory {
         protected val global: compiler.type = compiler
@@ -33,8 +35,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         val typed = askTypeAt(pos).getOption()
 
-        logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
-        compiler.asyncExec {
+        val symsOpt = compiler.asyncExec {
           typed map {
             case Import(expr, sels) =>
               if (expr.pos.includes(pos)) {
@@ -55,19 +56,17 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
               }
             case Annotated(atp, _)                                => List(atp.symbol)
             case Literal(const) if const.tag == compiler.ClazzTag => List(const.typeValue.typeSymbol)
-            case ap @ Select(qual, nme.apply)                     => List(qual.symbol, ap.symbol)
+            case ap @ Select(qual, nme.apply)                     => List(ap.symbol, qual.symbol)
             case st if st.symbol ne null                          => List(st.symbol)
             case _                                                => List()
-          } flatMap { list =>
-            val filteredSyms = list filterNot { sym => sym.hasPackageFlag || sym == NoSymbol }
-            if (filteredSyms.isEmpty) None else Some(
-              filteredSyms.foldLeft(List[IHyperlink]()) { (links, sym) =>
-                if (sym.isJavaDefined) links
-                else
-                  DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu, sym, wordRegion).toList ::: links
-              })
+          } map (_.filterNot{ sym => sym == NoSymbol || sym.hasPackageFlag || sym.isJavaDefined })
+        }.getOption().flatten
+
+        symsOpt map { syms =>
+          syms flatMap { sym =>
+             DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu.scalaProject.javaProject, sym, wordRegion)
           }
-        }.getOption().flatten.headOption
+        }
       }
     }).flatten
   }
