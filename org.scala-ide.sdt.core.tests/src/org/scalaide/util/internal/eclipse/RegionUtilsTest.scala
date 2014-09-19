@@ -66,7 +66,7 @@ class RegionUtilsTest {
     val a = List(new TypedRegion(5, 10, "A"), new TypedRegion(2, 8, "B")) // overlapping and non-ordered
     val b = List(new TypedRegion(1, 1, "C"))
 
-    RegionUtils.merge(a, b)
+    RegionUtils.union(a, b)
   }
 
   /** |       ++++

@@ -74,8 +74,8 @@ object RegionUtils {
      *
      *  @see RegionUtils.union
      */
-    def merge(b: List[TypedRegion]): List[TypedRegion] =
-      RegionUtils.merge(a, b)
+    def unionWith(b: List[TypedRegion]): List[TypedRegion] =
+      RegionUtils.union(a, b)
 
     /** Subtracts a list of regions from another one.
      *
@@ -90,7 +90,7 @@ object RegionUtils {
      *  @see RegionUtils.union
      *  @throwIllegalArgumentException if one of the list is not ordered or with non-overlapping regions
      */
-    def intersect(b: List[TypedRegion]): List[TypedRegion] =
+    def intersectWith(b: List[TypedRegion]): List[TypedRegion] =
       RegionUtils.intersect(a, b)
   }
 
@@ -126,7 +126,7 @@ object RegionUtils {
    *  the offset.
    *  The resulting list might have overlapping regions, if the input regions have overlaps.
    */
-  def merge(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
+  def union(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
     merge[TypedRegion](a, b, ((x, y) => x.getOffset() < y.getOffset()))
   }
 
