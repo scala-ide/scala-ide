@@ -51,9 +51,9 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
    *  is cleaned during the execution..
    *  The [[HashMap]] returned when using [[JavaConvertes#asJava]] does not support the clean operation.
    */
-  private def asJavaHashMap(map: Map[String,IDocumentPartitioner]): HashMap[String,IDocumentPartitioner] = {
-    val res = new HashMap[String,IDocumentPartitioner]
-    map.foreach {entry =>
+  private def asJavaHashMap(map: Map[String, IDocumentPartitioner]): HashMap[String, IDocumentPartitioner] = {
+    val res = new HashMap[String, IDocumentPartitioner]
+    map.foreach { entry =>
       res.put(entry._1, entry._2)
     }
     res

@@ -80,8 +80,8 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
 
 object SyntaxColoringPreferencePage {
 
-    val PreviewText = 
-      ("""package foo.bar.baz
+  val PreviewText =
+    ("""package foo.bar.baz
         |/**
         | * Scaladoc
         | * @scaladocAnnotation value

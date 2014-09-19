@@ -51,7 +51,7 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
-  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
+  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColor = false, canBeDisabled = true)
 
   val DYNAMIC_SELECT = ScalaSyntaxClass("Call of selectDynamic", "syntaxColouring.semantic.selectDynamic", canBeDisabled = true)
   val DYNAMIC_UPDATE = ScalaSyntaxClass("Call of updateDynamic", "syntaxColouring.semantic.updateDynamic", canBeDisabled = true)
@@ -77,16 +77,6 @@ object ScalaSyntaxClasses {
     XML_TAG_NAME, XML_PI))
 
   val categories = List(scalaSyntacticCategory, scalaSemanticCategory, dynamicCategory, commentsCategory, xmlCategory)
-
-  val ALL_SYNTAX_CLASSES = categories.flatMap(_.children)
-
-  val ENABLED_SUFFIX = ".enabled"
-  val FOREGROUND_COLOUR_SUFFIX = ".colour"
-  val BACKGROUND_COLOUR_SUFFIX = ".backgroundColour"
-  val BACKGROUND_COLOUR_ENABLED_SUFFIX = ".backgroundColourEnabled"
-  val BOLD_SUFFIX = ".bold"
-  val ITALIC_SUFFIX = ".italic"
-  val UNDERLINE_SUFFIX = ".underline"
 
   val ENABLE_SEMANTIC_HIGHLIGHTING = "syntaxColouring.semantic.enabled"
 

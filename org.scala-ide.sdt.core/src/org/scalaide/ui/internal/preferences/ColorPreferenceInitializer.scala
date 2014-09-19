@@ -97,10 +97,10 @@ class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
     {
       lazy val WHITE = new RGB(255, 255, 255)
       scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
-      scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
+      scalaPrefStore.setDefault(syntaxClass.foregroundColorKey, StringConverter.asString(foregroundRGB))
       val defaultBackgroundColor = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourKey, defaultBackgroundColor)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourEnabledKey, backgroundRGBOpt.isDefined)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorKey, defaultBackgroundColor)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorEnabledKey, backgroundRGBOpt.isDefined)
       scalaPrefStore.setDefault(syntaxClass.boldKey, bold)
       scalaPrefStore.setDefault(syntaxClass.italicKey, italic)
       scalaPrefStore.setDefault(syntaxClass.underlineKey, underline)

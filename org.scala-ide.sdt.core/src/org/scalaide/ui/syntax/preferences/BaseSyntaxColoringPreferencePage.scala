@@ -12,7 +12,7 @@ import org.eclipse.jface.viewers._
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.widgets.{List => SWT_List, _}
+import org.eclipse.swt.widgets.{ List => SWT_List, _ }
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil
@@ -41,18 +41,16 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
 
   /** Creates the additional UI elements to configure the additional preferences.
    *
-   *  The parent composite can be used directly, without additional composite. It is configured with a 2 columns [GridLayout] layout.
+   *  The parent composite can be used directly, without additional composite. It is configured with a 2 columns [[GridLayout]] layout.
    */
   protected def additionalCreateContent(parent: Composite) {}
 
-	/**
-	 * Returns the keys of the additional preferences to configure.
-	 */
-	def additionalOverlayKeys: List[OverlayKey] = Nil
-			
-  /**
-   * Additional actions to be performed when the `Restore Default` button is used. Usually,
-   * resetting the UI according to the preferences defaults.
+  /** Returns the keys of the additional preferences to configure.
+   */
+  def additionalOverlayKeys: List[OverlayKey] = Nil
+
+  /** Additional actions to be performed when the `Restore Default` button is used. Usually,
+   *  resetting the UI according to the preferences defaults.
    */
   def additionalPerformDefaults() {}
 
@@ -88,21 +86,21 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
   private def makeOverlayKeys(syntaxClass: ScalaSyntaxClass): List[OverlayKey] = {
     List(
       new OverlayKey(BOOLEAN, syntaxClass.enabledKey),
-      new OverlayKey(STRING, syntaxClass.foregroundColourKey),
-      new OverlayKey(STRING, syntaxClass.backgroundColourKey),
-      new OverlayKey(BOOLEAN, syntaxClass.backgroundColourEnabledKey),
+      new OverlayKey(STRING, syntaxClass.foregroundColorKey),
+      new OverlayKey(STRING, syntaxClass.backgroundColorKey),
+      new OverlayKey(BOOLEAN, syntaxClass.backgroundColorEnabledKey),
       new OverlayKey(BOOLEAN, syntaxClass.boldKey),
       new OverlayKey(BOOLEAN, syntaxClass.italicKey),
       new OverlayKey(BOOLEAN, syntaxClass.underlineKey))
   }
 
-  private def allSyntaxClasses = categories.flatMap{ _.children }
-  
+  private def allSyntaxClasses = categories.flatMap { _.children }
+
   private def makeOverlayPreferenceStore = {
     val keys = additionalOverlayKeys ::: allSyntaxClasses.flatMap(makeOverlayKeys)
     new OverlayPreferenceStore(getPreferenceStore, keys.toArray)
   }
-  
+
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
@@ -121,11 +119,11 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
     handleSyntaxColorListSelection()
     additionalPerformDefaults()
   }
-  
+
   def createTreeViewer(editorComposite: Composite) {
     treeViewer = new TreeViewer(editorComposite, SWT.SINGLE | SWT.BORDER)
 
-    val contentAndLabelProvider= new SyntaxColoringTreeContentAndLabelProvider(categories)
+    val contentAndLabelProvider = new SyntaxColoringTreeContentAndLabelProvider(categories)
     treeViewer.setContentProvider(contentAndLabelProvider)
     treeViewer.setLabelProvider(contentAndLabelProvider)
 
@@ -177,7 +175,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
       horizontalSpan = 2))
 
     additionalCreateContent(composite)
-    
+
     val elementLabel = new Label(composite, SWT.LEFT)
     elementLabel.setText(PreferencesMessages.JavaEditorPreferencePage_coloring_element)
     elementLabel.setLayoutData(gridData(horizontalSpan = 2))
@@ -187,8 +185,8 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
     val stylesGroup = new Group(composite, SWT.NONE)
     stylesGroup.setText("style")
     stylesGroup.setLayout(new GridLayout(2, /*makeColumnsEqualWidth*/ false))
-    stylesGroup.setLayoutData(gridData(verticalAlignment= SWT.TOP))
-    
+    stylesGroup.setLayoutData(gridData(verticalAlignment = SWT.TOP))
+
     enabledCheckBox = new Button(stylesGroup, SWT.CHECK)
     enabledCheckBox.setText(PreferencesMessages.JavaEditorPreferencePage_enable)
     enabledCheckBox.setLayoutData(gridData(horizontalSpan = 2))
@@ -248,7 +246,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
 
     composite
   }
-    
+
   private def setUpSelectionListeners() {
     enabledCheckBox.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
@@ -256,15 +254,15 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
     }
     foregroundColorButton.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
-        PreferenceConverter.setValue(overlayStore, syntaxClass.foregroundColourKey, syntaxForegroundColorEditor.getColorValue)
+        PreferenceConverter.setValue(overlayStore, syntaxClass.foregroundColorKey, syntaxForegroundColorEditor.getColorValue)
     }
     backgroundColorButton.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
-        PreferenceConverter.setValue(overlayStore, syntaxClass.backgroundColourKey, syntaxBackgroundColorEditor.getColorValue)
+        PreferenceConverter.setValue(overlayStore, syntaxClass.backgroundColorKey, syntaxBackgroundColorEditor.getColorValue)
     }
     backgroundColorEnabledCheckBox.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass) {
-        overlayStore.setValue(syntaxClass.backgroundColourEnabledKey, backgroundColorEnabledCheckBox.getSelection)
+        overlayStore.setValue(syntaxClass.backgroundColorEnabledKey, backgroundColorEnabledCheckBox.getSelection)
         backgroundColorButton.setEnabled(backgroundColorEnabledCheckBox.getSelection)
       }
     }
@@ -306,9 +304,9 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
         massSetEnablement(false)
       else {
         import syntaxClass._
-        syntaxForegroundColorEditor.setColorValue(overlayStore getColor foregroundColourKey)
-        syntaxBackgroundColorEditor.setColorValue(overlayStore getColor backgroundColourKey)
-        val backgroundColorEnabled = overlayStore getBoolean backgroundColourEnabledKey
+        syntaxForegroundColorEditor.setColorValue(overlayStore getColor foregroundColorKey)
+        syntaxBackgroundColorEditor.setColorValue(overlayStore getColor backgroundColorKey)
+        val backgroundColorEnabled = overlayStore getBoolean backgroundColorEnabledKey
         backgroundColorEnabledCheckBox.setSelection(backgroundColorEnabled)
         enabledCheckBox.setSelection(overlayStore getBoolean enabledKey)
         boldCheckBox.setSelection(overlayStore getBoolean boldKey)
@@ -318,7 +316,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
         massSetEnablement(true)
         enabledCheckBox.setEnabled(canBeDisabled)
         syntaxBackgroundColorEditor.getButton.setEnabled(backgroundColorEnabled)
-        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColour)
+        syntaxForegroundColorEditor.getButton.setEnabled(hasForegroundColor)
       }
   }
 

@@ -16,6 +16,6 @@ object SWTUtils {
     grabExcessVerticalSpace: Boolean = false,
     horizontalSpan: Int = 1,
     verticalSpan: Int = 1): GridData =
-      new GridData(horizontalAlignment, verticalAlignment, grabExcessHorizontalSpace, grabExcessVerticalSpace, horizontalSpan, verticalSpan)
+    new GridData(horizontalAlignment, verticalAlignment, grabExcessHorizontalSpace, grabExcessVerticalSpace, horizontalSpan, verticalSpan)
 
 }

@@ -52,7 +52,7 @@ object SWTUtils {
       override def widgetSelected(e: SelectionEvent) { p(e) }
     }
 
-  implicit def fnToSelectionChangedEvent(p:SelectionChangedEvent => Unit): ISelectionChangedListener = new ISelectionChangedListener() {
+  implicit def fnToSelectionChangedEvent(p: SelectionChangedEvent => Unit): ISelectionChangedListener = new ISelectionChangedListener() {
     override def selectionChanged(e: SelectionChangedEvent) { p(e) }
   }
 
@@ -102,14 +102,13 @@ object SWTUtils {
 
   }
 
-  /**
-   * This represents a check box that is associated with a preference, a preference
-   * store and a text label. It is automatically loaded with the preference value
-   * from the store. Furthermore, it automatically saves the preference to the
-   * store when its value changes.
+  /** This represents a check box that is associated with a preference, a preference
+   *  store and a text label. It is automatically loaded with the preference value
+   *  from the store. Furthermore, it automatically saves the preference to the
+   *  store when its value changes.
    */
   class CheckBox(store: IPreferenceStore, preference: String, textLabel: String, parent: Composite)
-      extends BooleanFieldEditor(preference, textLabel, parent) {
+    extends BooleanFieldEditor(preference, textLabel, parent) {
 
     setPreferenceStore(store)
     load()
@@ -117,7 +116,7 @@ object SWTUtils {
     def isChecked: Boolean =
       getBooleanValue()
 
-    def += (f: SelectionEvent => Unit): Unit =
+    def +=(f: SelectionEvent => Unit): Unit =
       getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
   }
 

@@ -11,15 +11,15 @@ import org.eclipse.jface.text.IDocumentPartitioner
 trait PreviewerFactoryConfiguration {
 
   import PreviewerFactoryConfiguration._
-  
+
   /** Returns the configuration to use on the source viewer.
    *  The configuration needs to also be an [[IPropertyChangeListener]], and react to preferences
    *  changes.
-   *  
+   *
    *  @param preferenceStore the preference store to use for the configuration.
    */
   def getConfiguration(preferenceStore: IPreferenceStore): PreviewerConfiguration
-  
+
   /** Returns the document partitioniers to use in the previewer.
    */
   def getDocumentPartitioners(): Map[String, IDocumentPartitioner]
@@ -27,5 +27,5 @@ trait PreviewerFactoryConfiguration {
 }
 
 object PreviewerFactoryConfiguration {
-  type PreviewerConfiguration = SourceViewerConfiguration with IPropertyChangeListener 
+  type PreviewerConfiguration = SourceViewerConfiguration with IPropertyChangeListener
 }
