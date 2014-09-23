@@ -76,6 +76,12 @@ class ScalaDocHtmlProducer extends HtmlHover {
         <h3>{ header }</h3>
 
     val mainHtml = List(
+      bodiesToHtml("Parameters", comment.valueParams.toList.sortBy(_._1).map {
+        case (name, body) => Body(Paragraph(Bold(Text(name))) :: body.blocks.toList)
+      }),
+      bodiesToHtml("Type Parameters", comment.typeParams.toList.sortBy(_._1).map {
+        case (name, body) => Body(Paragraph(Bold(Text(name))) :: body.blocks.toList)
+      }),
       bodyToHtml(comment.body),
       bodiesToHtml("Example" + (if (comment.example.length > 1) "s" else ""), comment.example),
       bodiesToHtml("Version", comment.version.toList),
