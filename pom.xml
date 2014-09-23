@@ -35,9 +35,10 @@
     <mockito.version>1.9.5</mockito.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.16.0</tycho.plugin.version>
-    <scala.plugin.version>3.0.2</scala.plugin.version>
-    <aspectj.plugin.version>1.4</aspectj.plugin.version>
+    <tycho.plugin.version>0.20.0</tycho.plugin.version>
+    <scala.plugin.version>3.1.6</scala.plugin.version>
+    <aspectj.plugin.version>1.6</aspectj.plugin.version>
+    <aspectj.version>1.7.4</aspectj.version>
     <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
     <maven-bunble.plugin.version>2.3.7</maven-bunble.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
@@ -353,6 +354,13 @@
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>aspectj-maven-plugin</artifactId>
           <version>${aspectj.plugin.version}</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.aspectj</groupId>
+              <artifactId>aspectjtools</artifactId>
+              <version>${aspectj.version}</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <!-- scala compiler -->
         <plugin>
