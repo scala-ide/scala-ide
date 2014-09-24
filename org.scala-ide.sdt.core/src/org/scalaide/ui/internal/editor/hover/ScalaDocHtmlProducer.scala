@@ -15,7 +15,7 @@ import scala.reflect.internal.Flags
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.internal.text.html.BrowserInput
 
-class ScalaDocHtmlProducer {
+class ScalaDocHtmlProducer extends HtmlHover {
 
   private def bodiesToHtml(caption: String, bodies: List[Body]): NodeSeq =
     bodies match {
@@ -63,7 +63,7 @@ class ScalaDocHtmlProducer {
     case Subscript(in) => <sub>{ inlineToHtml(in) }</sub>
     case Link(raw, title) => <a href={ raw } target="_blank">{ inlineToHtml(title) }</a>
     case Monospace(in) => <code>{ inlineToHtml(in) }</code>
-    case Text(text) => scala.xml.Text(text)
+    case Text(text) => scala.xml.Text(text) // ScalaDoc already escapes, no need to call HMTLPrinter.convertToHTMLContent or some such
     case Summary(in) => inlineToHtml(in)
     case HtmlTag(tag) => scala.xml.Unparsed(tag)
     case EntityLink(in, _) => inlineToHtml(in)
@@ -78,6 +78,12 @@ class ScalaDocHtmlProducer {
     val mainHtml = List(
       bodyToHtml(comment.body),
       bodiesToHtml("Example" + (if (comment.example.length > 1) "s" else ""), comment.example),
+      bodiesToHtml("Parameters", comment.valueParams.toList.sortBy(_._1).map {
+        case (name, body) => Body(Paragraph(Bold(Text(name))) :: body.blocks.toList)
+      }),
+      bodiesToHtml("Type Parameters", comment.typeParams.toList.sortBy(_._1).map {
+        case (name, body) => Body(Paragraph(Bold(Text(name))) :: body.blocks.toList)
+      }),
       bodiesToHtml("Version", comment.version.toList),
       bodiesToHtml("Since", comment.since.toList),
       bodiesToHtml("Note", comment.note),
@@ -95,17 +101,14 @@ class ScalaDocHtmlProducer {
      def getBrowserInput(compiler: IScalaPresentationCompiler, javaProject: IJavaProject)(comment: Comment, sym: compiler.Symbol, header: String): Option[BrowserInput] = {
       import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
       import compiler._
-      val htmlOutput = asyncExec {
-        <html>
-          <body>
-            { htmlContents(header, comment) }
-          </body>
-        </html>
+      val rawOutput = asyncExec {
+        htmlContents(header, comment)
       }.getOption()
+      val htmlOutput = rawOutput map {(comm) => createHtmlOutput {(sb) => sb append comm }}
       val javaElement = getJavaElement(sym, javaProject)
-      htmlOutput.map { (htmlOutput) =>
+      htmlOutput.map { (output) =>
         new BrowserInformationControlInput(null) {
-          override def getHtml: String = htmlOutput.toString
+          override def getHtml: String = output.toString
           override def getInputElement: Object = javaElement
           override def getInputName: String = javaElement.map(_.getElementName()).getOrElse("")
         }
