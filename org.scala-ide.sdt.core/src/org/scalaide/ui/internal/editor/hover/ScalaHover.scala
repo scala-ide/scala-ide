@@ -238,7 +238,7 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = null
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
-    ScalaWordFinder.findWord(viewer.getDocument, offset).orNull
+    ScalaWordFinder.findWord(viewer.getDocument, offset)
   }
 
   override def getHoverControlCreator(): IInformationControlCreator =
