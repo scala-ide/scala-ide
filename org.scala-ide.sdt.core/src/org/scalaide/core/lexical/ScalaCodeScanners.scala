@@ -49,7 +49,7 @@ object ScalaCodeScanners {
    */
   def scalaCodeScanner(preferenceStore: IPreferenceStore, scalaVersion: ScalaVersion): AbstractScalaScanner =
     new ScalaCodeScanner(preferenceStore, scalaVersion)
-  
+
   /** Creates a code tokenizer for Scala code
    */
   def scalaCodeTokenizer(scalaVersion: ScalaVersion): ScalaCodeTokenizer =

@@ -13,8 +13,8 @@ import scalariform.lexer.{Token => ScalariformToken}
 import org.scalaide.core.lexical.ScalaCodeTokenizer
 
 class ScalaCodeTokenizerScalariformBased(val scalaVersion: ScalaVersion) extends ScalaCodeTokenizer {
-  
-	import ScalaCodeTokenizer.Token
+
+  import ScalaCodeTokenizer.Token
 
   def tokenize(contents: String, offset: Int = 0): IndexedSeq[Token] = {
     val token = ScalaLexer.createRawLexer(contents, forgiveErrors = true).toIndexedSeq.init

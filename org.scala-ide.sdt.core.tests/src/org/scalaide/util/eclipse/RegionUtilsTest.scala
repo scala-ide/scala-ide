@@ -1,10 +1,13 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import org.junit.Test
 import org.junit.Assert._
 import org.eclipse.jface.text.TypedRegion
+import org.eclipse.jface.text.Region
 
 class RegionUtilsTest {
+
+  import RegionUtilsTest._
 
   @Test
   def substractAContainsB {
@@ -61,86 +64,63 @@ class RegionUtilsTest {
     RegionUtils.intersect(a, b)
   }
 
-  /** |       ++++
-   *  | ----
-   */
+  private def test(cas: UseCase, testF: UseCase => Unit) = {
+    testF(cas)
+  }
+
   @Test
   def overlapBefore {
-    testNoOverlap(13, 7, 5, 5)
+    test(CaseBefore, testNoOverlap)
   }
 
-  /** |     ++++
-   *  | ----
-   */
   @Test
   def overlapBeforeTouching {
-    testNoOverlap(13, 7, 5, 8)
+    test(CaseBeforeTouching, testNoOverlap)
   }
 
-  /** |   ++++
-   *  | ----
-   */
   @Test
   def overlapOverBeginning {
-    testOverlap(13, 7, 11, 5)
+    test(CaseOverBeginning, testOverlap)
   }
 
-  /** | ++++++
-   *  |  ----
-   */
   @Test
   def overlapInsideSmaller {
-    testOverlap(13, 7, 14, 3)
+    test(CaseInsideSmaller, testOverlap)
   }
 
-  /** | ++++
-   *  | ----
-   */
   @Test
   def overlapSame {
-    testOverlap(13, 7, 14, 3)
+    test(CaseSame, testOverlap)
   }
 
-  /** |  ++++
-   *  | ------
-   */
   @Test
   def overlapOverLarger {
-    testOverlap(13, 7, 11, 11)
+    test(CaseOverLarger, testOverlap)
   }
 
-  /** | ++++
-   *  |   ----
-   */
   @Test
   def overlapOverEnd {
-    testOverlap(13, 7, 17, 5)
+    test(CaseOverEnd, testOverlap)
   }
 
-  /** | ++++
-   *  |     ----
-   */
   @Test
   def overlapAfterTouching {
-    testNoOverlap(13, 7, 20, 5)
+    test(CaseAfterTouching, testNoOverlap)
   }
 
-  /** | ++++
-   *  |       ----
-   */
   @Test
   def overlapAfter {
-    testNoOverlap(13, 7, 22, 5)
+    test(CaseAfter, testNoOverlap)
   }
 
-  private def testNoOverlap(offsetA: Int, lengthA: Int, offsetB: Int, lengthB: Int) {
-    import RegionUtils._
-    assertFalse(s"($offsetA, $lengthA) should not overlap with ($offsetB, $lengthB)", new TypedRegion(offsetA, lengthA, "A").overlapsWith(new TypedRegion(offsetB, lengthB, "B")))
+  private def testNoOverlap(cas: UseCase) {
+    import RegionUtils.RichRegion
+    assertFalse(s"(${cas.offsetA}, ${cas.lengthA}) should not overlap with (${cas.offsetB}, ${cas.lengthB})", new Region(cas.offsetA, cas.lengthA).intersects(new Region(cas.offsetB, cas.lengthB)))
   }
 
-  private def testOverlap(offsetA: Int, lengthA: Int, offsetB: Int, lengthB: Int) {
-    import RegionUtils._
-    assertTrue(s"($offsetA, $lengthA) should overlap with ($offsetB, $lengthB)", new TypedRegion(offsetA, lengthA, "A").overlapsWith(new TypedRegion(offsetB, lengthB, "B")))
+  private def testOverlap(cas: UseCase) {
+    import RegionUtils.RichRegion
+    assertTrue(s"(${cas.offsetA}, ${cas.lengthA}) should not overlap with (${cas.offsetB}, ${cas.lengthB})", new Region(cas.offsetA, cas.lengthA).intersects(new Region(cas.offsetB, cas.lengthB)))
   }
 
   @Test
@@ -167,56 +147,108 @@ class RegionUtilsTest {
   }
 
   @Test
-  def cropLarger {
-    testCrop(22, 9, 18, 15, 22, 9)
+  def coreBefore {
+    test(CaseBefore, testCrop(0,0))
   }
 
   @Test
-  def cropSameSize {
-    testCrop(20, 7, 20, 7, 20, 7)
+  def coreBeforeTouching {
+    test(CaseBeforeTouching, testCrop(0,0))
   }
 
   @Test
-  def cropSmaller {
-    testCrop(21, 8, 23, 4, 23, 4)
+  def coreOverBeginning {
+    test(CaseOverBeginning, testCrop(13, 3))
   }
 
   @Test
-  def cropOverStart {
-    testCrop(23, 6, 18, 8, 23, 3)
+  def coreInsideSmaller {
+    test(CaseInsideSmaller, testCrop(14, 3))
   }
 
   @Test
-  def cropOverEnd {
-    testCrop(24, 7, 27, 8, 27, 4)
+  def coreSame {
+    test(CaseSame, testCrop(13, 7))
   }
 
   @Test
-  def cropBeforeDisjointed {
-    testCrop(25, 8, 12, 9, 0, 0)
+  def coreOverLarger {
+    test(CaseOverLarger, testCrop(13, 7))
   }
 
   @Test
-  def cropAfterDisjointed {
-    testCrop(26, 7, 40, 6, 0, 0)
+  def coreOverEnd {
+    test(CaseOverEnd, testCrop(17,3))
   }
 
   @Test
-  def cropBeforeContiguous {
-    testCrop(27, 9, 18, 9, 0, 0)
+  def coreAfterTouching {
+    test(CaseAfterTouching, testCrop(0,0))
   }
 
   @Test
-  def cropAfterContiguous {
-    testCrop(28, 6, 34, 2, 0, 0)
+  def coreAfter {
+    test(CaseAfter, testCrop(0,0))
   }
 
-  def testCrop(startOffset: Int, startLength: Int, cropOffset: Int, cropLength: Int, expectedOffset: Int, expectedLength: Int) {
-    import RegionUtils._
-    val startRegion = new TypedRegion(startOffset, startLength, "crop")
+  def testCrop(expectedOffset: Int, expectedLength: Int)(cas: UseCase) {
+    import RegionUtils.RichTypedRegion
+    val startRegion = new TypedRegion(cas.offsetA, cas.lengthA, "crop")
     val expectedRegion = new TypedRegion(expectedOffset, expectedLength, "crop")
-    val croppedRegion = startRegion.crop(cropOffset, cropLength)
+    val croppedRegion = startRegion.crop(cas.offsetB, cas.lengthB)
     assertEquals("Incorrect shifted region", expectedRegion, croppedRegion)
   }
+
+}
+
+object RegionUtilsTest {
+
+  case class UseCase(offsetA: Int, lengthA: Int, offsetB: Int, lengthB: Int)
+
+  /** |       ++++
+   *  | ----
+   */
+  val CaseBefore = UseCase(13, 7, 5, 5)
+
+  /** |     ++++
+   *  | ----
+   */
+  val CaseBeforeTouching = UseCase(13, 7, 5, 8)
+
+  /** |   ++++
+   *  | ----
+   */
+  val CaseOverBeginning = UseCase(13, 7, 11, 5)
+
+  /** | ++++++
+   *  |  ----
+   */
+  val CaseInsideSmaller = UseCase(13, 7, 14, 3)
+
+  /** | ++++
+   *  | ----
+   */
+  val CaseSame = UseCase(13, 7, 13, 7)
+
+  /** |  ++++
+   *  | ------
+   */
+  val CaseOverLarger = UseCase(13, 7, 11, 11)
+
+  /** | ++++
+   *  |   ----
+   */
+  val CaseOverEnd = UseCase(13, 7, 17, 5)
+
+  /** | ++++
+   *  |     ----
+   */
+  val CaseAfterTouching = UseCase(13, 7, 20, 5)
+
+  /** | ++++
+   *  |       ----
+   */
+  val CaseAfter = UseCase(13, 7, 22, 5)
+
 
 }

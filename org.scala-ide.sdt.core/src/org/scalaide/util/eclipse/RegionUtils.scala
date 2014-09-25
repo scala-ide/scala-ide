@@ -1,4 +1,4 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import scala.reflect.internal.util.RangePosition
 import scala.reflect.internal.util.SourceFile
@@ -8,36 +8,65 @@ import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TypedRegion
 import scala.annotation.tailrec
 import org.eclipse.jface.text.ITypedRegion
+import java.lang.Math.max
+import java.lang.Math.min
 
+/** Utility methods and extension classes around [[org.eclipse.jface.text.IRegion]]
+ */
 object RegionUtils {
+
+  /** Creates an [[IRegion]] starting at `start` (inclusive) and ending at `end` (exclusive).
+   */
+  def regionOf(start: Int, end: Int): IRegion =
+    new Region(start, end - start)
+
+  /** Enrich [[org.eclipse.jdt.core.compiler.IProblem]].
+   */
   implicit class RichProblem(private val problem: IProblem) extends AnyVal {
+
+    /** Returns the region where this problem is situated
+     */
     def toRegion: IRegion =
       new Region(problem.getSourceStart(), problem.getSourceEnd() - problem.getSourceStart())
   }
 
+  /** Enrich [[org.eclipse.jface.text.IRegion]].
+   */
   implicit class RichRegion(private val region: IRegion) extends AnyVal {
+
+    /** Returns `true` if this region intersects with the `other` region, i.e.: they have at least one character
+     *  in common.
+     *  Otherwise returns `false`.
+     */
     def intersects(other: IRegion): Boolean =
       !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
 
+    /** Returns the section of the given array described by this region.
+     */
     def of(s: Array[Char]): String =
-      s.slice(region.getOffset, region.getOffset + region.getLength).mkString
+      new String(s).substring(region.getOffset, region.getOffset + region.getLength)
 
+    /** Returns the section of the given string described by this region.
+     */
     def of(s: String): String =
-      s.slice(region.getOffset, region.getOffset + region.getLength)
+      s.substring(region.getOffset, region.getOffset + region.getLength)
 
+    /** Creates a [[scala.reflect.internal.util.RangePosition]] of this region.
+     */
     def toRangePos(sourceFile: SourceFile): RangePosition = {
       val offset = region.getOffset()
       new RangePosition(sourceFile, offset, offset, offset + region.getLength())
     }
   }
 
-  def regionOf(start: Int, end: Int): IRegion =
-    new Region(start, end - start)
-
+  /** Enrich [[org.eclipse.jface.text.ITypedRegion]].
+   */
   implicit class RichTypedRegion(val region: ITypedRegion) extends AnyVal {
 
+    /** Returns a new Region, shifted of `n` characters from this one.
+     */
     def shift(n: Int): ITypedRegion =
-        new TypedRegion(region.getOffset() + n, region.getLength(), region.getType())
+      new TypedRegion(region.getOffset() + n, region.getLength(), region.getType())
 
     /** Checks if the given position is contained in this region.
      *  This check is inclusive. If this region has offset 5, and length 3, it will return
@@ -55,12 +84,8 @@ object RegionUtils {
      *  This check is exclusive. If this region has offset 5, and length 3, it will return
      *  true for 5, 6 and 7.
      */
-    def containsPositionExclusive(offset: Int) : Boolean = {
-        region.getOffset() <= offset &&  offset < (region.getOffset() + region.getLength())
-    }
-
-    def overlapsWith(otherRegion: IRegion): Boolean = {
-      region.getOffset() < otherRegion.getOffset + otherRegion.getLength && otherRegion.getOffset < region.getOffset() + region.getLength
+    def containsPositionExclusive(offset: Int): Boolean = {
+      region.getOffset() <= offset && offset < (region.getOffset() + region.getLength())
     }
 
     /** Check if the given region is contained in this region.
@@ -74,7 +99,6 @@ object RegionUtils {
      *  Returns Region(0,0) if this region doesn't intersect with the cropping region.
      */
     def crop(offset: Int, length: Int): ITypedRegion = {
-
       val rOffset = region.getOffset
       val rEnd = region.getOffset + region.getLength
       val cEnd = offset + length
@@ -91,6 +115,8 @@ object RegionUtils {
 
   }
 
+  /** Enrich [[List[org.eclipse.jface.text.TypedRegion]]].
+   */
   implicit class AdvancedTypedRegionList(val a: List[TypedRegion]) extends AnyVal {
 
     /** Merges two lists of regions.
@@ -191,7 +217,7 @@ object RegionUtils {
         val xEnd = xStart + x.getLength() - 1
         val yStart = y.getOffset()
         val yEnd = yStart + y.getLength() - 1
-        if (x.getLength() == 0){
+        if (x.getLength() == 0) {
           subtract(xs, b)
         } else if (xEnd < yStart)
           //x: ___

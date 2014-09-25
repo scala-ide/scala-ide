@@ -16,8 +16,8 @@ class ScalaCodeScanner(
   val scalaVersion: ScalaVersion)
     extends AbstractScalaScanner {
 
-	import org.scalaide.core.lexical.ScalaCodeTokenizer.{Token => SToken}
-  
+  import org.scalaide.core.lexical.ScalaCodeTokenizer.{Token => SToken}
+
   private val tokenizer = new ScalaCodeTokenizerScalariformBased(scalaVersion)
 
   private var ranges: IndexedSeq[SToken] = _

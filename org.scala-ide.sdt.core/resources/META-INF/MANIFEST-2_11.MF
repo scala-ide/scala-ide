@@ -148,6 +148,7 @@ Export-Package:
  org.scalaide.ui.syntax,
  org.scalaide.ui.syntax.preferences,
  org.scalaide.ui.wizards,
+ org.scalaide.util.eclipse,
  org.scalaide.util.internal,
  org.scalaide.util.internal.eclipse,
  org.scalaide.util.internal.scalariform,

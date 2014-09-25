@@ -10,7 +10,7 @@ import org.scalaide.core.lexical.ScalaCodePartitioner
 class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentPartitioner with IDocumentPartitionerExtension with IDocumentPartitionerExtension2 {
 
   import ScalaDocumentPartitioner._
-  import org.scalaide.util.internal.eclipse.RegionUtils.RichTypedRegion
+  import org.scalaide.util.eclipse.RegionUtils.RichTypedRegion
 
   private var partitionRegions: List[ITypedRegion] = Nil
 

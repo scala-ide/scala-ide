@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
-import org.scalaide.util.internal.eclipse.RegionUtils
+import org.scalaide.util.eclipse.RegionUtils
 import org.scalaide.core.testsetup.SDTTestUtils
 
 class AbstractSymbolClassifierTest {
