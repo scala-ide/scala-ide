@@ -70,7 +70,7 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        val completions = wordRegion.map(completion.findCompletions(_)(pos + 1, unit)(src, compiler)).getOrElse(Nil)
+        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
         val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
         body(i, position, sortedCompletions)
       }

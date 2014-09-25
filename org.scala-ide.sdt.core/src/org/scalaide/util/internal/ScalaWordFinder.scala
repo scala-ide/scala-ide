@@ -22,14 +22,14 @@ object ScalaWordFinder extends IScalaWordFinder {
   }
 
   override def getWord(document: IDocument, offset: Int): IRegion =
-    findWord(document, offset).orNull
+    findWord(document, offset)
 
-  /** See [[findWord(IndexedSeq[Char],Int):Option[IRegion]]. */
-  def findWord(document: IDocument, offset: Int): Option[IRegion] =
+  /** See [[findWord(IndexedSeq[Char],Int):IRegion]]. */
+  def findWord(document: IDocument, offset: Int): IRegion =
     findWord(docToSeq(document), offset)
 
-  /** See [[findWord(IndexedSeq[Char],Int):Option[IRegion]]. */
-  def findWord(buffer: IBuffer, offset: Int): Option[IRegion] =
+  /** See [[findWord(IndexedSeq[Char],Int):IRegion]]. */
+  def findWord(buffer: IBuffer, offset: Int): IRegion =
     findWord(bufferToSeq(buffer), offset)
 
   /**
@@ -41,56 +41,45 @@ object ScalaWordFinder extends IScalaWordFinder {
    * {{{ s"Hello, $name" }}}
    *
    * Here, the identifier is only `name`.
-   *
-   * Returns `None` if offset is invalid.
    */
-  def findWord(document: IndexedSeq[Char], offset: Int): Option[IRegion] = {
-    if (offset < 0 || offset > document.length)
-      None
-    else {
-      def find(p: Char => Boolean) = {
-        var start = -2
-        var end = -1
+  def findWord(document: IndexedSeq[Char], offset: Int): IRegion = {
+    if (offset < 0 || offset > document.length) throw new IndexOutOfBoundsException("Received an invalid offset for word finding.")
 
-        var pos = Math.min(offset - 1, document.size - 1)
+    def find(p: Char => Boolean): IRegion = {
+      var start = -2
+      var end = -1
 
-        while (pos >= 0 && p(document(pos)))
-          pos -= 1
+      var pos = Math.min(offset - 1, document.size - 1)
 
-        start = pos
+      while (pos >= 0 && p(document(pos)))
+        pos -= 1
 
-        pos = offset
-        val len = document.length
-        while (pos < len && p(document(pos)))
-          pos += 1
+      start = pos
 
-        end = pos
+      pos = offset
+      val len = document.length
+      while (pos < len && p(document(pos)))
+        pos += 1
 
-        new Region(start + 1, end - start - 1)
-      }
+      end = pos
 
-      val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
-      if (idRegion.getLength == 0)
-        Some(find(isOperatorPart))
-      else
-        Some(idRegion)
+      new Region(start + 1, end - start - 1)
     }
+
+    val idRegion = find(ch => isIdentifierPart(ch) && ch != '$')
+    if (idRegion.getLength == 0)
+      find(isOperatorPart)
+    else
+      idRegion
   }
 
-  /**
-   * Calls [[findWord(IndexedSeq[Char],Int):Option[IRegion]] and if that returns
-   * `None` returns a region whose offset and length is 0.
-   */
-  def findWordOrEmptyRegion(document: IndexedSeq[Char], offset: Int): IRegion =
-    findWord(document, offset).getOrElse(new Region(0, 0))
-
-  def findCompletionPoint(document: IDocument, offset: Int): Option[IRegion] =
+  def findCompletionPoint(document: IDocument, offset: Int): IRegion =
     findCompletionPoint(docToSeq(document), offset)
 
-  def findCompletionPoint(buffer: IBuffer, offset: Int): Option[IRegion] =
+  def findCompletionPoint(buffer: IBuffer, offset: Int): IRegion =
     findCompletionPoint(bufferToSeq(buffer), offset)
 
-  def findCompletionPoint(document: IndexedSeq[Char], offset0: Int): Option[IRegion] = {
+  def findCompletionPoint(document: IndexedSeq[Char], offset0: Int): IRegion = {
     def isWordPart(ch: Char) = isIdentifierPart(ch) || isOperatorPart(ch)
 
     val offset = if (offset0 >= document.length) (document.length - 1) else offset0
@@ -100,10 +89,10 @@ object ScalaWordFinder extends IScalaWordFinder {
     else if (offset > 0 && isWordPart(document(offset - 1)))
       findWord(document, offset - 1)
     else
-      Some(new Region(offset, 0))
+      new Region(offset, 0)
   }
 
   /** Returns the length of the identifier which is located at the offset position. */
   def identLenAtOffset(doc: IDocument, offset: Int): Int =
-    ScalaWordFinder.findWord(doc, offset).fold(0)(_.getLength())
+    ScalaWordFinder.findWord(doc, offset).getLength()
 }

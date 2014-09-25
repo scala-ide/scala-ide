@@ -37,7 +37,7 @@ class OccurrencesFinderTest {
 
     for ((pos, count) <- positions) {
       println("looking at position %d for %d occurrences".format(pos, count))
-      val region = ScalaWordFinder.findWordOrEmptyRegion(contents, pos - 1)
+      val region = ScalaWordFinder.findWord(contents, pos - 1)
       val word = new String(contents.slice(region.getOffset(), region.getOffset() + region.getLength()))
       println("using word region: " + region)
       val occurrences = new ScalaOccurrencesFinder(unit).findOccurrences(region, 1)

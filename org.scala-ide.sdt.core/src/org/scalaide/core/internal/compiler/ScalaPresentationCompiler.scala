@@ -50,6 +50,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
+import scala.util.Try
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -453,13 +454,13 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
-        val reducedPos =
+        val reducedPos: Option[Position]=
           if (pos.isRange)
-            Option(toSingleLine(pos))
-          else
-            ScalaWordFinder.findWord(source.content, pos.start) map { w ⇒
-              new RangePosition(source, pos.point, pos.point, pos.point + w.getLength())
-            }
+            Some(toSingleLine(pos))
+          else{
+            val wordPos = Try(ScalaWordFinder.findWord(source.content, pos.start).getLength).toOption
+            wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
+          }
 
         reducedPos flatMap { reducedPos ⇒
           val fileName =
