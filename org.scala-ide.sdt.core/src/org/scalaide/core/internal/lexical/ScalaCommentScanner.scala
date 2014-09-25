@@ -10,6 +10,7 @@ import org.eclipse.jface.text.rules.IWordDetector
 import org.eclipse.jface.text.rules.RuleBasedScanner
 import org.eclipse.jface.text.rules.Token
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.scalaide.core.lexical.AbstractScalaScanner
 
 /**
  * This class works nearly the same way as [[org.eclipse.jdt.internal.ui.text.JavaCommentScanner]],
@@ -37,14 +38,6 @@ class ScalaCommentScanner(
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
       extends RuleBasedScanner with AbstractScalaScanner {
-
-  @deprecated("use primary constructor instead", "4.0")
-  def this(
-      syntaxClass: ScalaSyntaxClass,
-      taskTagClass: ScalaSyntaxClass,
-      preferenceStore: IPreferenceStore,
-      javaPreferenceStore: IPreferenceStore) =
-    this(preferenceStore, javaPreferenceStore, syntaxClass, taskTagClass)
 
   private val wordMatcher = {
     val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)

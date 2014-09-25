@@ -63,6 +63,8 @@ import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.util.IPropertyChangeListener
+import org.scalaide.core.lexical.ScalaCodeScanners
+import org.scalaide.core.lexical.ScalaPartitions
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -77,37 +79,7 @@ class ScalaSourceViewerConfiguration(
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
 
-  private val codeHighlightingScanners = {
-    val scalaCodeScanner = new ScalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT)
-    val singleLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
-    val multiLineCommentScanner = new ScalaCommentScanner(scalaPreferenceStore, javaPreferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
-    val scaladocScanner = new ScaladocTokenScanner(scalaPreferenceStore, javaPreferenceStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
-    val scaladocCodeBlockScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.SCALADOC_CODE_BLOCK)
-    val stringScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.STRING)
-    val characterScanner = new StringTokenScanner(scalaPreferenceStore, SSC.ESCAPE_SEQUENCE, SSC.CHARACTER)
-    val multiLineStringScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.MULTI_LINE_STRING)
-    val xmlTagScanner = new XmlTagScanner(scalaPreferenceStore)
-    val xmlCommentScanner = new XmlCommentScanner(scalaPreferenceStore)
-    val xmlCDATAScanner = new XmlCDATAScanner(scalaPreferenceStore)
-    val xmlPCDATAScanner = new SingleTokenScanner(scalaPreferenceStore, SSC.DEFAULT)
-    val xmlPIScanner = new XmlPIScanner(scalaPreferenceStore)
-
-    Map(
-      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner,
-      IJavaPartitions.JAVA_DOC -> scaladocScanner,
-      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner,
-      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> singleLineCommentScanner,
-      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> multiLineCommentScanner,
-      IJavaPartitions.JAVA_STRING -> stringScanner,
-      IJavaPartitions.JAVA_CHARACTER -> characterScanner,
-      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner,
-      ScalaPartitions.XML_TAG -> xmlTagScanner,
-      ScalaPartitions.XML_COMMENT -> xmlCommentScanner,
-      ScalaPartitions.XML_CDATA -> xmlCDATAScanner,
-      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner,
-      ScalaPartitions.XML_PI -> xmlPIScanner
-    )
-  }
+  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(scalaPreferenceStore, javaPreferenceStore)
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
     scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)

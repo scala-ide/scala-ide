@@ -9,7 +9,7 @@ import org.junit.AfterClass
 import org.junit.ComparisonFailure
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.internal.eclipse.EclipseUtils
@@ -112,7 +112,7 @@ trait EclipseDocumentSupport {
 
   override def runTest(source: String, operation: Operation): Unit = {
     doc = new Document(source)
-    val partitioner = new ScalaDocumentPartitioner
+    val partitioner = ScalaCodePartitioner.documentPartitioner()
 
     doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
     doc.setDocumentPartitioner(IDocumentExtension3.DEFAULT_PARTITIONING, partitioner)
