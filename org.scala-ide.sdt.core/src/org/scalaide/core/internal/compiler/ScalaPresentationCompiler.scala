@@ -77,7 +77,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
 
   override lazy val analyzer = new {
     val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
-  } with InteractiveScaladocAnalyzer
+  } with InteractiveScaladocAnalyzer with CommentPreservingTypers
 
   override def forScaladoc = true
 
@@ -256,12 +256,12 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    *  compiler, it will be from now on.
    */
   def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(List(scu.sourceFile(content)), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.sourceFile), res) }
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
