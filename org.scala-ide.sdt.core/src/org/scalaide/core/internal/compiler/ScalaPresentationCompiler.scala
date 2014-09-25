@@ -77,7 +77,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
 
   override lazy val analyzer = new {
     val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
-  } with InteractiveScaladocAnalyzer with CommentPreservingTypers
+  } with InteractiveScaladocAnalyzer
 
   override def forScaladoc = true
 
