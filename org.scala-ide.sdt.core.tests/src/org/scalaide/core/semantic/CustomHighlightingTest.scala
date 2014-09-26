@@ -18,7 +18,7 @@ trait CustomHighlightingTest {
   def annotations(annotationId: String)(traversers: Seq[TraverserDef])(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit): List[String] = {
     val result = for {
       traverser <- traversers.toList
-      (ann, pos) <- TraverserImpl.extract(compiler)(scu.sourceFile, annotationId, Seq(traverser.init(compiler)))
+      (ann, pos) <- TraverserImpl.extract(compiler)(scu.lastSourceMap().sourceFile, annotationId, Seq(traverser.init(compiler)))
     } yield ann.getText() + " [" + pos.getOffset() + ", " + pos.getLength() + "]"
 
     result sortBy identity

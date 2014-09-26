@@ -54,7 +54,7 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
     val chars = context.getDocument
     val region = ScalaWordFinder.findCompletionPoint(chars, position)
 
-    val res = findCompletions(region)(position, scu)(scu.sourceFile, compiler)
+    val res = findCompletions(region)(position, scu)(scu.lastSourceMap().sourceFile, compiler)
 
     import collection.JavaConverters._
 

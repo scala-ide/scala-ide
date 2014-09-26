@@ -56,6 +56,9 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal
 import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.compiler.ISourceMap
+import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
+import org.scalaide.core.compiler.IPositionInformation
 
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit
@@ -68,31 +71,29 @@ trait ScalaCompilationUnit extends Openable
   override def scalaProject: internal.project.ScalaProject =
     ScalaPlugin().getScalaProject(getJavaProject.getProject)
 
-  val file : AbstractFile
+  val file: AbstractFile
+
+  override def sourceMap(contents: Array[Char]): ISourceMap = sourceFileLock.synchronized {
+    cachedSourceInfo = ISourceMap.plainScala(file, contents)
+    cachedSourceInfo
+  }
+
+  override def lastSourceMap(): ISourceMap = sourceFileLock.synchronized {
+    if (cachedSourceInfo == null) sourceMap(getContents)
+    else cachedSourceInfo
+  }
 
   /** Lock object for operating on `cachedSourceFile` */
   private val sourceFileLock = new Object
 
   // @GuardedBy("sourceFileLock")
-  private var cachedSourceFile: SourceFile = _
-
-  override def sourceFile(contents: Array[Char]): SourceFile = sourceFileLock.synchronized {
-    cachedSourceFile = new BatchSourceFile(file, contents)
-    cachedSourceFile
-  }
-
-  /** Return the most recent source file, or a fresh one based on the underlying file contents. */
-  override def sourceFile(): SourceFile = sourceFileLock.synchronized {
-    if (cachedSourceFile == null)
-      sourceFile(getContents)
-    else cachedSourceFile
-  }
+  private var cachedSourceInfo: ISourceMap = _
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
   override def bufferChanged(e : BufferChangedEvent) {
     if (!e.getBuffer.isClosed)
-      scalaProject.presentationCompiler(_.scheduleReload(this, getContents))
+      scalaProject.presentationCompiler(_.scheduleReload(this, sourceMap(getContents).sourceFile))
 
     super.bufferChanged(e)
   }
@@ -116,6 +117,7 @@ trait ScalaCompilationUnit extends Openable
     scalaProject.presentationCompiler.internal { compiler =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val tmpMap = new java.util.HashMap[AnyRef, AnyRef]
+      val sourceFile = lastSourceMap().sourceFile
       val sourceLength = sourceFile.length
 
       try {
@@ -148,19 +150,6 @@ trait ScalaCompilationUnit extends Openable
   }
 
 
-  /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
-   *  implement custom behavior. @see ScalaSourceFile
-   *
-   *  @return A response on which clients can synchronize. The response
-   *          only notifies when the unit was added to the managed sources list, *not*
-   *          that it was typechecked.
-   */
-  override def initialReconcile(): Response[Unit] = {
-    val r = (new Response[Unit])
-    r.set(())
-    r
-  }
-
   /** Index this source file, but only if the project has the Scala nature.
    *
    *  This avoids crashes if the indexer kicks in on a project that has Scala sources
@@ -169,7 +158,7 @@ trait ScalaCompilationUnit extends Openable
   def addToIndexer(indexer : ScalaSourceIndexer) {
     if (scalaProject.hasScalaNature) {
       try scalaProject.presentationCompiler.internal { compiler =>
-        val tree = compiler.parseTree(sourceFile)
+        val tree = compiler.parseTree(lastSourceMap().sourceFile)
         new compiler.IndexBuilderTraverser(indexer).traverse(tree)
       } catch {
         case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
@@ -244,7 +233,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
     scalaProject.presentationCompiler.internal { compiler =>
-      compiler.askLoadedTyped(sourceFile(), false).get match {
+      compiler.askLoadedTyped(lastSourceMap().sourceFile, false).get match {
         case Left(tree) =>
           compiler.asyncExec {
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
@@ -259,14 +248,14 @@ trait ScalaCompilationUnit extends Openable
     if (scalaProject.hasScalaNature)
       scalaProject.presentationCompiler.internal { compiler =>
         try {
-          val tree = compiler.askStructure(sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+          val tree = compiler.askStructure(lastSourceMap().sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
 
           compiler.asyncExec {
             new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
           }.getOption()  // block until traverser finished
         } catch {
           case ex: Exception =>
-           logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
+           logger.error("Exception thrown while creating override indicators for %s".format(lastSourceMap().sourceFile), ex)
         }
       }
   }

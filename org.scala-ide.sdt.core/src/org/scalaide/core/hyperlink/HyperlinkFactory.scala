@@ -37,7 +37,7 @@ abstract class HyperlinkFactory {
       global.findDeclaration(sym, javaProject) map {
         case (f, pos) =>
           val text = sym.kindString + " " + sym.fullName
-          createHyperlink(f, pos, sym.name.length, text, region)
+          createHyperlink(f, f.lastSourceMap().originalPos(pos), sym.name.decodedName.length, text, region)
       }
     }.getOrElse(None)()
   }

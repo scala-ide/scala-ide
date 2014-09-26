@@ -28,8 +28,10 @@ class ScalaCompletions extends HasLogger {
   def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
                              (sourceFile: SourceFile, compiler: IScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
-    val wordAtPosition = (if (position <= wordStart) "" else scu.getContents.slice(wordStart, position).mkString.trim).toArray
-    val defaultContext = if (scu.getContents()(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
+    val scalaContents = scu.lastSourceMap().scalaSource
+    println(scalaContents.mkString(""))
+    val wordAtPosition = (if (position <= wordStart) "" else scalaContents.slice(wordStart, position).mkString.trim).toArray
+    val defaultContext = if (scalaContents(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
     val pos = compiler.rangePos(sourceFile, position, position, position)
     val typed = compiler.askTypeAt(pos)
     val t1 = typed.getOption()
@@ -186,7 +188,7 @@ class ScalaCompletions extends HasLogger {
             fillTypeCompletions(qualifier.pos.end, CompletionContext.ApplyContext,
               name.decoded.toArray, qualifier.pos.end + 1, false)
           case _ =>
-            val funName = scu.getContents.slice(fun.pos.start, fun.pos.end)
+            val funName = scalaContents.slice(fun.pos.start, fun.pos.end)
             fillScopeCompletions(fun.pos.end, CompletionContext.ApplyContext, funName,
               fun.pos.start, false)
         }

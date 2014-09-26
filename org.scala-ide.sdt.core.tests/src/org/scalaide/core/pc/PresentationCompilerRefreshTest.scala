@@ -15,7 +15,7 @@ class PresentationCompilerRefreshTest {
     val unitA = scalaCompilationUnit("a/A.scala")
 
     unitA.scalaProject.presentationCompiler { comp =>
-      comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
+      comp.askReload(unitA, unitA.lastSourceMap().sourceFile).get // synchronize with the presentation compiler
     }
 
     assertNoErrors(unitA)
@@ -26,7 +26,7 @@ class PresentationCompilerRefreshTest {
     }
 
     unitA.scalaProject.presentationCompiler { comp =>
-      comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
+      comp.askReload(unitA, unitA.lastSourceMap().sourceFile).get // synchronize with the presentation compiler
     }
 
     assertNoErrors(unitA)

@@ -34,12 +34,12 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
   def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    val src = icu.sourceFile()
+    val src = icu.lastSourceMap().sourceFile
     icu.scalaProject.presentationCompiler { compiler =>
 
       import compiler.{ log => _, _ }
 
-      val source = icu.getContents
+      val source = icu.lastSourceMap().scalaSource
       val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =

@@ -19,6 +19,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.compiler.InternalCompilerServices
 import org.scalaide.core.IScalaProject
 import scala.tools.nsc.doc.base.comment.Comment
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -42,8 +43,11 @@ import scala.tools.nsc.doc.base.comment.Comment
  *    - crashed. A loaded unit that caused the type-checker to crash will be in this state. It won't be parsed
  *               nor type-checked anymore. To re-enable it, call `askToDoFirst`, which is usually called when an editor is
  *               open (meaning that when a file was closed and reopen it will be retried).
+ *
+ *  @note The self-type is necessary, since it changes the way calls to overridden ask methods are dispatched. Without the self-type
+ *        they would go to the `CompilerControl` implementation, missing the overrides that call `flushScheduledReloads`
  */
-trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalCompilerServices {
+trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with InternalCompilerServices { self: ScalaPresentationCompiler =>
   import IScalaPresentationCompiler._
 
   /** Removes source files and top-level symbols, and issues a new typer run.
@@ -173,12 +177,12 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
 
   /** Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
    */
-  def scheduleReload(icu: InteractiveCompilationUnit, contents: Array[Char]): Unit
+  def scheduleReload(icu: InteractiveCompilationUnit, contents: SourceFile): Unit
 
   /** Reload the given compilation unit. If the unit is not tracked by the presentation
    *  compiler, it will be from now on.
    */
-  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit]
+  def askReload(scu: InteractiveCompilationUnit, content: SourceFile): Response[Unit]
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit]
@@ -203,7 +207,7 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *  @note This method does not trigger a fresh type-checking round on its own. Instead,
    *        it reports compiler errors/warnings from the last type-checking round.
    */
-  def problemsOf(scu: InteractiveCompilationUnit): List[IProblem]
+  def problemsOf(scu: InteractiveCompilationUnit): List[ScalaCompilationProblem]
 
   /** Find the definition of given symbol. Returns a compilation unit and an offset in that unit.
    *

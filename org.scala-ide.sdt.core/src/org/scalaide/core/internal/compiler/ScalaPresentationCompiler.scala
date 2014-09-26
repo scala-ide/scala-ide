@@ -51,6 +51,7 @@ import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 import scala.util.Try
+import scala.reflect.internal.util.NoPosition
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -107,13 +108,13 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    * Refresh rounds can be triggered by the reconciler, but also interactive requests
    * (e.g. completion)
    */
-  private val scheduledUnits = new scala.collection.mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
+  private val scheduledUnits = new scala.collection.mutable.HashMap[InteractiveCompilationUnit, SourceFile]
 
   /**
    * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
    */
-  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
-    scheduledUnits.synchronized { scheduledUnits += ((icu, contents)) }
+  def scheduleReload(icu : InteractiveCompilationUnit, srcFile: SourceFile) : Unit = {
+    scheduledUnits.synchronized { scheduledUnits += ((icu, srcFile)) }
   }
 
   /**
@@ -123,12 +124,13 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   def flushScheduledReloads(): Response[Unit] = {
     val res = new Response[Unit]
     scheduledUnits.synchronized {
-      val reloadees = scheduledUnits.filter{(scu:(InteractiveCompilationUnit, Array[Char])) => compilationUnits.contains(scu._1)}.toList
+      val reloadees = scheduledUnits.filter{(scu:(InteractiveCompilationUnit, SourceFile)) => compilationUnits.contains(scu._1)}.toList
 
       if (reloadees.isEmpty) res.set(())
       else {
-        val reloadFiles = reloadees map { case (s, c) => s.sourceFile(c) }
+        val reloadFiles = reloadees map { case (_, srcFile) => srcFile }
         askReload(reloadFiles, res)
+        logger.info(s"Flushed ${reloadees.mkString("", ",", "")}")
         res.get
       }
       scheduledUnits.clear()
@@ -180,7 +182,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     withResponse[Tree](askStructure(keepLoaded)(sourceFile, _))
   }
 
-  def problemsOf(file: AbstractFile): List[IProblem] = {
+  def problemsOf(file: AbstractFile): List[ScalaCompilationProblem] = {
     unitOfFile get file match {
       case Some(unit) =>
         askLoadedTyped(unit.source, false).get
@@ -192,7 +194,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     }
   }
 
-  def problemsOf(scu: InteractiveCompilationUnit): List[IProblem] = problemsOf(scu.file)
+  def problemsOf(scu: InteractiveCompilationUnit): List[ScalaCompilationProblem] = problemsOf(scu.file)
 
   @deprecated("Use loadedType instead.", "4.0.0")
   def body(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = loadedType(sourceFile, keepLoaded)
@@ -250,30 +252,30 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  If the file has not been 'reloaded' first, it does nothing.
    */
   def askToDoFirst(scu: InteractiveCompilationUnit) {
-    askToDoFirst(scu.sourceFile())
+    askToDoFirst(scu.lastSourceMap().sourceFile)
   }
 
   /** Reload the given compilation unit. If the unit is not tracked by the presentation
    *  compiler, it will be from now on.
    */
-  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(List(scu.sourceFile(content)), res) }
+  def askReload(scu: InteractiveCompilationUnit, source: SourceFile): Response[Unit] = {
+    withResponse[Unit] { res => clearDocComments(); askReload(List(source), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.lastSourceMap().sourceFile), res) }
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
     logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
-      askFilesDeleted(units.map(_.sourceFile()).toList)
+      askFilesDeleted(units.map(_.lastSourceMap().sourceFile).toList)
   }
 
   def discardCompilationUnit(scu: InteractiveCompilationUnit): Unit = {
-    logger.info("discarding " + scu.sourceFile.path)
-    asyncExec { removeUnitOf(scu.sourceFile) }.getOption()
+    logger.info("discarding " + scu.file.path)
+    asyncExec { removeUnitOf(scu.lastSourceMap().sourceFile) }.getOption()
   }
 
   /** Tell the presentation compiler to refresh the given files,
@@ -452,7 +454,7 @@ object ScalaPresentationCompiler {
         case INFO.id    => ProblemSeverities.Ignore
       }
 
-    def eclipseProblem(prob: Problem): Option[IProblem] = {
+    def eclipseProblem(prob: Problem): Option[ScalaCompilationProblem] = {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
@@ -468,18 +470,16 @@ object ScalaPresentationCompiler {
           val fileName =
             source.file match {
               case EclipseFile(file) =>
-                Some(file.getFullPath().toString.toCharArray)
+                Some(file.getFullPath().toString)
               case vf: VirtualFile =>
-                Some(vf.path.toCharArray)
+                Some(vf.path)
               case _ =>
                 None
             }
-          fileName.map(new DefaultProblem(
+          fileName.map(ScalaCompilationProblem(
             _,
-            formatMessage(msg),
-            0,
-            new Array[String](0),
             nscSeverityToEclipse(severityLevel),
+            formatMessage(msg),
             reducedPos.start,
             math.max(reducedPos.start, reducedPos.end - 1),
             reducedPos.line,

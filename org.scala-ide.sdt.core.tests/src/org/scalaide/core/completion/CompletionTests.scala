@@ -33,7 +33,7 @@ class CompletionTests {
 
     // first, 'open' the file by telling the compiler to load it
     unit.scalaProject.presentationCompiler.internal { compiler =>
-      val src = unit.sourceFile
+      val src = unit.lastSourceMap().sourceFile
       compiler.askReload(List(unit)).get
 
       compiler.askLoadedTyped(src, false).get
