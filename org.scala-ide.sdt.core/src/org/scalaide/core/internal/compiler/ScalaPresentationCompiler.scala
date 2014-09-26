@@ -238,6 +238,8 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     // we can only ensure sym.owner is a class after lambda-lifting, but to be past lambda-lifting, we need to retype, which on hovers is heavy
     if (asyncExec { sym.owner.isClass || sym.owner.isFreeType }.getOrElse(false)()) {
       askDocComment(sym, source, site, fragments, response)
+    } else {
+      response.set("", "", NoPosition)
     }
     response
   }
