@@ -238,6 +238,8 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     // we can only ensure sym.owner is a class after lambda-lifting, but to be past lambda-lifting, we need to retype, which on hovers is heavy
     if (asyncExec { sym.owner.isClass || sym.owner.isFreeType }.getOrElse(false)()) {
       askDocComment(sym, source, site, fragments, response)
+    } else {
+      response.set("", "", NoPosition)
     }
     response
   }
@@ -254,12 +256,12 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    *  compiler, it will be from now on.
    */
   def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(List(scu.sourceFile(content)), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.sourceFile), res) }
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
