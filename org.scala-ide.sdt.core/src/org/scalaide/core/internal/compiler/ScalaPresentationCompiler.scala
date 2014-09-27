@@ -50,8 +50,9 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
+import scala.util.Try
 
-class ScalaPresentationCompiler(name: String, settings: Settings) extends {
+class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -61,7 +62,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    */
   private val nameLock = new Object
 
-} with Global(settings, new ScalaPresentationCompiler.PresentationReporter, name)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
@@ -455,31 +456,35 @@ object ScalaPresentationCompiler {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
-        val reducedPos =
+        val reducedPos: Option[Position]=
           if (pos.isRange)
-            toSingleLine(pos)
-          else
-            new RangePosition(pos.source, pos.point, pos.point, pos.point + ScalaWordFinder.findWord(source.content, pos.start).getLength)
-
-        val fileName =
-          source.file match {
-            case EclipseFile(file) =>
-              Some(file.getFullPath().toString.toCharArray)
-            case vf: VirtualFile =>
-              Some(vf.path.toCharArray)
-            case _ =>
-              None
+            Some(toSingleLine(pos))
+          else{
+            val wordPos = Try(ScalaWordFinder.findWord(source.content, pos.start).getLength).toOption
+            wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
           }
-        fileName.map(new DefaultProblem(
-          _,
-          formatMessage(msg),
-          0,
-          new Array[String](0),
-          nscSeverityToEclipse(severityLevel),
-          reducedPos.start,
-          math.max(reducedPos.start, reducedPos.end - 1),
-          reducedPos.line,
-          reducedPos.column))
+
+        reducedPos flatMap { reducedPos ⇒
+          val fileName =
+            source.file match {
+              case EclipseFile(file) =>
+                Some(file.getFullPath().toString.toCharArray)
+              case vf: VirtualFile =>
+                Some(vf.path.toCharArray)
+              case _ =>
+                None
+            }
+          fileName.map(new DefaultProblem(
+            _,
+            formatMessage(msg),
+            0,
+            new Array[String](0),
+            nscSeverityToEclipse(severityLevel),
+            reducedPos.start,
+            math.max(reducedPos.start, reducedPos.end - 1),
+            reducedPos.line,
+            reducedPos.column))
+        }
       } else None
     }
 
