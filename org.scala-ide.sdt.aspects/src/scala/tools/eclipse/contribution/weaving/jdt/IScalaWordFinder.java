@@ -9,5 +9,5 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 
 public interface IScalaWordFinder {
-  public IRegion findWord(IDocument document, int offset); 
+  public IRegion getWord(IDocument document, int offset);
 }

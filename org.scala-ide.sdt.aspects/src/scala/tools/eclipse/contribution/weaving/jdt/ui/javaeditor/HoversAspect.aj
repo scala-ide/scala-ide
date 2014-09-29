@@ -38,7 +38,7 @@ public privileged aspect HoversAspect {
       return proceed(th, textViewer, offset);
     
     IScalaCompilationUnit scu = (IScalaCompilationUnit)codeAssist;
-    return scu.getScalaWordFinder().findWord(textViewer.getDocument(), offset);
+    return scu.getScalaWordFinder().getWord(textViewer.getDocument(), offset);
   }
 
   void around(JavaElementLabelComposer jelc, IJavaElement element, long flags) :

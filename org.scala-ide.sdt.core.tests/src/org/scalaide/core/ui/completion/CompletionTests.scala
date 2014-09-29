@@ -42,7 +42,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       expectedNumberOfCompletions: Int = -1)
         extends Operation {
 
-    def execute() = withCompiler { compiler =>
+    override def execute() = withCompiler { compiler =>
       val unit = mkScalaCompilationUnit(doc.get())
       val src = unit.sourceFile()
       val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
