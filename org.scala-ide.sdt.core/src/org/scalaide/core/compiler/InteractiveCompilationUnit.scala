@@ -179,7 +179,6 @@ trait InteractiveCompilationUnit {
 
       val probs = pc.problemsOf(this)
       for (p <- probs) yield {
-        println(p)
         p.copy(start = failAsValue(classOf[IndexOutOfBoundsException])(0)(originalPos(p.start)),
           end = failAsValue(classOf[IndexOutOfBoundsException])(1)(originalPos(p.end)),
           lineNumber = failAsValue(classOf[IndexOutOfBoundsException])(1)(originalLine(p.lineNumber - 1)) + 1)

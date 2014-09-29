@@ -29,7 +29,6 @@ class ScalaCompletions extends HasLogger {
                              (sourceFile: SourceFile, compiler: IScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
     val scalaContents = scu.lastSourceMap().scalaSource
-    println(scalaContents.mkString(""))
     val wordAtPosition = (if (position <= wordStart) "" else scalaContents.slice(wordStart, position).mkString.trim).toArray
     val defaultContext = if (scalaContents(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
     val pos = compiler.rangePos(sourceFile, position, position, position)
