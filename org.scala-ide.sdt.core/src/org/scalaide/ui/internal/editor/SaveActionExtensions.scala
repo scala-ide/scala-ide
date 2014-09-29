@@ -36,6 +36,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions {
 
@@ -187,7 +188,7 @@ trait SaveActionExtensions extends HasLogger {
             throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
           new RTextChange(sf, start, end, text)
       }
-      EditorUtils.applyChangesToFileWhileKeepingSelection(udoc, sel, ssf.file, edits.toList)
+      TextEditUtils.applyChangesToFileWhileKeepingSelection(udoc, sel, ssf.file, edits.toList)
       None
     }
   }
