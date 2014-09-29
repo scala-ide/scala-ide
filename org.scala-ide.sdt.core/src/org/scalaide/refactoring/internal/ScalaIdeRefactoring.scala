@@ -18,7 +18,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.util.internal.eclipse.FileUtils
 import org.scalaide.core.SdtConstants
 
@@ -132,7 +132,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
     changes groupBy (_.sourceFile.file) map {
       case (file, fileChanges) =>
         FileUtils.toIFile(file) map { file =>
-          EditorUtils.createTextFileChange(file, fileChanges)
+          TextEditUtils.createTextFileChange(file, fileChanges)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path
           throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, 0, msg, null))

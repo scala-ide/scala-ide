@@ -18,6 +18,7 @@ import org.scalaide.core.compiler._
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.compiler.InternalCompilerServices
 import org.scalaide.core.IScalaProject
+import scala.tools.nsc.doc.base.comment.Comment
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -143,6 +144,20 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    */
   def asyncExec[A](op: => A): Response[A]
 
+  /** Returns a `Response` containing doc comment information for a given symbol.
+   *
+   *  @param   sym        The symbol whose doc comment should be retrieved (might come from a classfile)
+   *  @param   source     The source file that's supposed to contain the definition
+   *  @param   site       The symbol where 'sym' is observed
+   *  @param   fragments  All symbols that can contribute to the generated documentation
+   *                      together with their source files.
+   *  @return   response   A response that will be set to the following:
+   *                      If `source` contains a definition of a given symbol that has a doc comment,
+   *                      the (expanded, raw, position) triplet for a comment, otherwise ("", "", NoPosition).
+   *  Note: This operation does not automatically load sources that are not yet loaded.
+   */
+  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol,SourceFile)]): Response[(String, String, Position)]
+
   /** Ask a fresh type-checking round on all loaded compilation units. */
   def askReloadManagedUnits(): Unit
 
@@ -212,6 +227,28 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *                  is passed.
    */
   def getJavaElement(sym: Symbol, projects: IJavaProject*): Option[IJavaElement]
+
+  /** Return the compilation unit (Scala File) in which the symbol passed as an argument is defined.
+   *  This method is time-consuming and may trigger building the structure of many Scala files.
+   *
+   *  @param sym      The symbol to seek a compilation unit for.
+   */
+  def findCompilationUnit(sym: Symbol, javaProject: IJavaProject): Option[InteractiveCompilationUnit]
+
+  /** Return the parsed scaladoc comment available at the definition of a Scala symbol.
+   *
+   *  @param sym      The symbol to find documentation for.
+   *  @param site     The symbol which declaration contains the declaration of that member,
+   *                  often its enclosing class.
+   */
+  def parsedDocComment(sym: Symbol, site: Symbol, javaProject: IJavaProject): Option[Comment]
+
+  /** Return a type info string for a symbol and its type
+   *
+   *  @param sym      The symbol to return type info on
+   *  @param tpe      The symbol's type
+   */
+  def headerForSymbol(sym:Symbol, tpe:Type): Option[String]
 
   /** Create a Scala CompletionProposal. This method is the exit point from the compiler cake,
    *  extracting all the information needed from compiler Symbols and Types to present a completion

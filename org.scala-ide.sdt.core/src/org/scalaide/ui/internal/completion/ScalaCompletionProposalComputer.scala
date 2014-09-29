@@ -57,8 +57,8 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
 
     val res = findCompletions(region)(position, scu)(scu.sourceFile, compiler)
 
-    import collection.JavaConversions._
+    import collection.JavaConverters._
 
-    res.map(new ScalaCompletionProposal(_)): java.util.List[ICompletionProposal]
+    res.map(new ScalaCompletionProposal(_): ICompletionProposal).asJava
   }
 }

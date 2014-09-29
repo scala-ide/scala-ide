@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.quickfix
 
 import scala.tools.refactoring.implementations.AddImportStatement
-
+import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.eclipse.jdt.ui.ISharedImages
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -61,7 +61,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
 
       } getOrElse (Nil)
 
-      EditorUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
+      TextEditUtils.applyChangesToFileWhileKeepingSelection(document, textSelection, scalaSourceFile.file, changes)
 
       None
     }

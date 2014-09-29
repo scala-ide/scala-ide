@@ -47,6 +47,9 @@ import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler._
+import scala.tools.nsc.interactive.InteractiveReporter
+import scala.tools.nsc.interactive.CommentPreservingTypers
+import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 
 class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   /*
@@ -59,6 +62,7 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   private val nameLock = new Object
 
 } with Global(settings, new ScalaPresentationCompiler.PresentationReporter, name)
+  with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
   with ScalaMatchLocator
@@ -68,7 +72,14 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
   with LocateSymbol
   with CompilerApiExtensions
   with IScalaPresentationCompiler
-  with HasLogger { self =>
+  with HasLogger
+  with Scaladoc { self =>
+
+  override lazy val analyzer = new {
+    val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
+  } with InteractiveScaladocAnalyzer with CommentPreservingTypers
+
+  override def forScaladoc = true
 
   def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
   presentationReporter.compiler = this
@@ -210,6 +221,29 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
     asyncExec(op()).getOption(timeout.millis)
   }
 
+  /** Returns a `Response` containing doc comment information for a given symbol.
+   *
+   *  @param   sym        The symbol whose doc comment should be retrieved (might come from a classfile)
+   *  @param   source     The source file that's supposed to contain the definition
+   *  @param   site       The symbol where 'sym' is observed
+   *  @param   fragments  All symbols that can contribute to the generated documentation
+   *                      together with their source files.
+   *  @return   response   A response that will be set to the following:
+   *                      If `source` contains a definition of a given symbol that has a doc comment,
+   *                      the (expanded, raw, position) triplet for a comment, otherwise ("", "", NoPosition).
+   *  Note: This operation does not automatically load sources that are not yet loaded.
+   */
+  def asyncDocComment(sym: Symbol, source: SourceFile, site: Symbol, fragments: List[(Symbol, SourceFile)]): Response[(String, String, Position)] = {
+    val response = new Response[(String, String, Position)]
+    // we can only ensure sym.owner is a class after lambda-lifting, but to be past lambda-lifting, we need to retype, which on hovers is heavy
+    if (asyncExec { sym.owner.isClass || sym.owner.isFreeType }.getOrElse(false)()) {
+      askDocComment(sym, source, site, fragments, response)
+    } else {
+      response.set("", "", NoPosition)
+    }
+    response
+  }
+
   /** Ask to put scu in the beginning of the list of files to be typechecked.
    *
    *  If the file has not been 'reloaded' first, it does nothing.
@@ -222,12 +256,12 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
    *  compiler, it will be from now on.
    */
   def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(List(scu.sourceFile(content)), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(List(scu.sourceFile(content)), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.sourceFile), res) }
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
@@ -376,6 +410,11 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
         } getOrElse scalaParamNames
       } else scalaParamNames
     }
+    val docFun = () => {
+      val comment = parsedDocComment(sym, sym.enclClass, project.javaProject)
+      val header = headerForSymbol(sym, tpe)
+      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this, project.javaProject)(comment.get, sym, header.getOrElse("")) else None
+    }
 
     CompletionProposal(
       kind,
@@ -389,7 +428,8 @@ class ScalaPresentationCompiler(name: String, settings: Settings) extends {
       getParamNames,
       paramTypes,
       sym.fullName,
-      false)
+      false,
+      docFun)
   }
 
   override def inform(msg: String): Unit =
