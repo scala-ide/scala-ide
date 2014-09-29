@@ -41,8 +41,8 @@ import org.scalaide.core.completion.CompletionProposal
 import org.scalaide.core.completion.MemberKind
 import org.scalaide.core.completion.prefixMatches
 import org.scalaide.ui.ScalaImages
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.EditorUtils
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.hover.HoverControlCreator
@@ -125,7 +125,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
       val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
       val d = viewer.getDocument()
 
-      EditorUtils.withScalaFileAndSelection { (scalaSourceFile, _) =>
+      EditorUtils().withScalaFileAndSelection { (scalaSourceFile, _) =>
         applyCompletionToDocument(d, scalaSourceFile, offset, overwrite) foreach {
           case (cursorPos, applyLinkedMode) =>
             if (applyLinkedMode) {
@@ -133,7 +133,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
               ui.enter()
             }
             else
-              EditorUtils.doWithCurrentEditor { _.selectAndReveal(cursorPos, 0) }
+              EditorUtils().doWithCurrentEditor { _.selectAndReveal(cursorPos, 0) }
         }
         None
       }
@@ -272,7 +272,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
     if (modelCaret > startPos + completion.length)
       return null
 
-    val wordLen = ScalaWordFinder.identLenAtOffset(viewer.getDocument(), modelCaret)
+    val wordLen = ScalaWordFinder().identLenAtOffset(viewer.getDocument(), modelCaret)
     val length = startPos + wordLen - modelCaret
 
     new StyleRange(modelCaret, length, getForegroundColor, getBackgroundColor)

@@ -31,7 +31,7 @@ import org.scalaide.core.internal.ScalaPlugin
 import java.io.File
 import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.resources.MarkerFactory
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 import org.osgi.framework.Version
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
@@ -164,13 +164,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       ) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT =>
-          val depProject = EclipseUtils.workspaceRoot.getProject(cpe.getPath.lastSegment)
+          val depProject = EclipseUtils().workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
             computeClasspath(JavaCore.create(depProject), true)
           }
         case IClasspathEntry.CPE_LIBRARY =>
           if (cpe.getPath != null) {
-            val absPath = EclipseUtils.workspaceRoot.findMember(cpe.getPath)
+            val absPath = EclipseUtils().workspaceRoot.findMember(cpe.getPath)
             if (absPath != null)
               path += absPath.getLocation
             else {
@@ -183,7 +183,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
 
           if (outputLocation != null) {
-            val absPath = EclipseUtils.workspaceRoot.findMember(outputLocation)
+            val absPath = EclipseUtils().workspaceRoot.findMember(outputLocation)
             if (absPath != null)
               path += absPath.getLocation
           }
@@ -381,7 +381,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
             // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
             if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
               // see the comment to checkClasspath above
-              EclipseUtils.scheduleJob(s"Update Scala Installation from raw classpath for ${underlying.getName()}", underlying, Job.BUILD) { monitor =>
+              EclipseUtils().scheduleJob(s"Update Scala Installation from raw classpath for ${underlying.getName()}", underlying, Job.BUILD) { monitor =>
                 projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
                 setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
                 projectSpecificStorage.save()
@@ -447,7 +447,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     // the marker manipulation needs to be done in a Job, because it requires
     // a change on the IProject, which is locked for modification during
     // the classpath change notification
-    EclipseUtils.scheduleJob("Update classpath error markers", underlying, Job.BUILD) { monitor =>
+    EclipseUtils().scheduleJob("Update classpath error markers", underlying, Job.BUILD) { monitor =>
       if (underlying.isOpen()) { // cannot change markers on closed project
         // clean the classpath markers
         underlying.deleteMarkers(SdtConstants.ClasspathProblemMarkerId, true, IResource.DEPTH_ZERO)

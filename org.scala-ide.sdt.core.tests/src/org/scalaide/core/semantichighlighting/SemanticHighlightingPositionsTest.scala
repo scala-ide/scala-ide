@@ -7,7 +7,6 @@ import org.scalaide.util.internal.eclipse.EmptyRegion
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.util.CurrentThread
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument

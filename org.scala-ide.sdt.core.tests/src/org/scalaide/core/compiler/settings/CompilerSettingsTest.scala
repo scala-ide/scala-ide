@@ -10,7 +10,6 @@ import org.junit.Test
 import org.junit.BeforeClass
 import org.junit.AfterClass
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.preferences.InstanceScope

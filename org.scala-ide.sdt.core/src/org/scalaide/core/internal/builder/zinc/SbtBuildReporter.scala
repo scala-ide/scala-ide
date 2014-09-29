@@ -7,7 +7,7 @@ import org.scalaide.util.internal.SbtUtils.m2o
 import org.eclipse.core.resources.IMarker
 import xsbti.{ Position, Severity }
 import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.FileUtils
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
@@ -80,7 +80,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
 
     val marker: Option[Unit] = for {
       file <- m2o(pos.sourceFile)
-      resource <- FileUtils.resourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
+      resource <- FileUtils().resourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
       offset <- m2o(pos.offset)
       line <- m2o(pos.line)
     } yield if (resource.getFileExtension != "java") {

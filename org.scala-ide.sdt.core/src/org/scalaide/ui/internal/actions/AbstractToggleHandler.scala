@@ -14,7 +14,7 @@ import org.scalaide.core.IScalaPlugin
 import org.eclipse.ui.menus.UIElement
 import org.scalaide.ui.internal.editor.decorators.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.SWTUtils
 
 /** Base handler for a toggle command linked to a platform preference.
  *

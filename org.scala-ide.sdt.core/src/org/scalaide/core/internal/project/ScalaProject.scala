@@ -40,7 +40,6 @@ import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin.plugin
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
 import org.scalaide.core.internal.builder
@@ -56,15 +55,15 @@ import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
+import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+import org.scalaide.util.SWTUtils.fnToPropertyChangeListener
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.core.runtime.CoreException
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.SWTUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.SWTUtils
+import org.scalaide.util.EclipseUtils
+import org.scalaide.util.FileUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
@@ -196,7 +195,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     for {
       entry <- resolvedClasspath
       if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
-    } yield EclipseUtils.workspaceRoot.getProject(entry.getPath().toString)
+    } yield EclipseUtils().workspaceRoot.getProject(entry.getPath().toString)
   }
 
   lazy val javaProject: IJavaProject = JavaCore.create(underlying)
@@ -204,7 +203,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   def sourceFolders: Seq[IPath] = {
     for {
       cpe <- resolvedClasspath if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
-      resource <- Option(EclipseUtils.workspaceRoot.findMember(cpe.getPath)) if resource.exists
+      resource <- Option(EclipseUtils().workspaceRoot.findMember(cpe.getPath)) if resource.exists
     } yield resource.getLocation
   }
 
@@ -218,12 +217,12 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     val cpes = resolvedClasspath
     for {
       cpe <- cpes if cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
-      source <- Option(EclipseUtils.workspaceRoot.findMember(cpe.getPath)) if source.exists
+      source <- Option(EclipseUtils().workspaceRoot.findMember(cpe.getPath)) if source.exists
     } yield {
       val cpeOutput = cpe.getOutputLocation
       val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
 
-      val wsroot = EclipseUtils.workspaceRoot
+      val wsroot = EclipseUtils().workspaceRoot
       val binPath = wsroot.getFolder(outputLocation) // may not exist
 
       (source.asInstanceOf[IContainer], binPath)
@@ -248,7 +247,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
 
   def allSourceFiles(): Set[IFile] = {
-    allFilesInSourceDirs() filter (f => FileUtils.isBuildable(f.getName))
+    allFilesInSourceDirs() filter (f => FileUtils().isBuildable(f.getName))
   }
 
   def allFilesInSourceDirs(): Set[IFile] = {
@@ -288,7 +287,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     for {
       srcEntry <- javaProject.getResolvedClasspath(true)
       if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
-      srcFolder = EclipseUtils.workspaceRoot.findMember(srcEntry.getPath())
+      srcFolder = EclipseUtils().workspaceRoot.findMember(srcEntry.getPath())
       if srcFolder ne null
     } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
@@ -357,7 +356,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       }
 
     val outputLocation = javaProject.getOutputLocation
-    val resource = EclipseUtils.workspaceRoot.findMember(outputLocation)
+    val resource = EclipseUtils().workspaceRoot.findMember(outputLocation)
     resource match {
       case container: IContainer => delete(container, container != javaProject.getProject)(_.endsWith(".class"))
       case _ =>
@@ -378,7 +377,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   // TODO Per-file encodings
   private def encoding: Option[String] =
     sourceFolders.headOption flatMap { path =>
-      EclipseUtils.workspaceRoot.findContainersForLocation(path) match {
+      EclipseUtils().workspaceRoot.findContainersForLocation(path) match {
         case Array(container) => Some(container.getDefaultCharset)
         case _ => None
       }

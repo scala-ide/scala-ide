@@ -3,7 +3,7 @@ package org.scalaide.util.internal
 import org.scalaide.logging.HasLogger
 import scala.reflect.ClassTag
 
-object Utils extends HasLogger {
+object Utils extends HasLogger with org.scalaide.util.Utils {
 
   /** Return the time in ms required to evaluate `f()`. */
   def time(f: => Any): Long = {
@@ -43,7 +43,7 @@ object Utils extends HasLogger {
     }
   }
 
-  implicit class WithAsInstanceOfOpt(obj: AnyRef) {
+  implicit class WithAsInstanceOfOpt(obj: AnyRef) extends org.scalaide.util.UtilsImplicits.WithAsInstanceOfOpt(obj) {
 
     /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
      *

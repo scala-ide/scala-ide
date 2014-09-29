@@ -17,7 +17,6 @@ import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.resources.IWorkspaceRunnable
-import scala.PartialFunction._
 import scalariform.utils.TextEdit
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.preference.IPreferenceStore
@@ -32,9 +31,9 @@ import org.eclipse.ui.IWorkbenchWindow
 import java.io.FileNotFoundException
 import scala.util.Try
 
-object EclipseUtils extends HasLogger {
+object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
 
-  implicit class PimpedAdaptable(adaptable: IAdaptable) {
+  implicit class PimpedAdaptable(adaptable: IAdaptable) extends org.scalaide.util.UtilsImplicits.PimpedAdaptable(adaptable) {
 
     def adaptTo[T](implicit m: Manifest[T]): T = adaptable.getAdapter(m.runtimeClass).asInstanceOf[T]
 
@@ -42,13 +41,13 @@ object EclipseUtils extends HasLogger {
 
   }
 
-  implicit class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
+  implicit class PimpedPreferenceStore(preferenceStore: IPreferenceStore) extends org.scalaide.util.UtilsImplicits.PimpedPreferenceStore(preferenceStore) {
 
-    def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
+    override def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
 
   }
 
-  implicit class PimpedDocument(document: IDocument) {
+  implicit class PimpedDocument(document: IDocument) extends org.scalaide.util.UtilsImplicits.PimpedDocument(document) {
 
     def apply(offset: Int): Char = document.getChar(offset)
 
@@ -106,12 +105,6 @@ object EclipseUtils extends HasLogger {
 
   def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
     IDE.computeSelectedResources(selection).toList.asInstanceOf[List[IResource]]
-
-  object SelectedItems {
-    def unapplySeq(selection: ISelection): Option[List[Any]] = condOpt(selection) {
-      case structuredSelection: IStructuredSelection => structuredSelection.toArray.toList
-    }
-  }
 
   def getWorkbenchPages: List[IWorkbenchPage] =
     for {

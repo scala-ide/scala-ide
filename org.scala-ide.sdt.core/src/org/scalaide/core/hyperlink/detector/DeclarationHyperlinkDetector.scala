@@ -7,7 +7,7 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.search.ScalaSelectionEngine
 import org.scalaide.core.internal.jdt.search.ScalaSelectionRequestor
 import org.scalaide.logging.HasLogger
@@ -24,7 +24,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
   override protected def runDetectionStrategy(icu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] = {
     val input = textEditor.getEditorInput
     val doc = textEditor.getDocumentProvider.getDocument(input)
-    val wordRegion = ScalaWordFinder.findWord(doc.get, currentSelection.getOffset)
+    val wordRegion = ScalaWordFinder().findWord(doc.get, currentSelection.getOffset)
 
     findHyperlinks(textEditor, icu, wordRegion)
   }

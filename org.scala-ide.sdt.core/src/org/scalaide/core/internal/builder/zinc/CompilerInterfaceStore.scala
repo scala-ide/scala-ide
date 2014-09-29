@@ -7,14 +7,15 @@ import org.scalaide.core.IScalaInstallation
 import sbt.compiler.IC
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.Platform
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.OSGiUtils
 import java.io.File
 import xsbti.Logger
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.ListBuffer
 import org.eclipse.core.runtime.SubMonitor
-import org.scalaide.util.internal.eclipse.EclipseUtils._
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.EclipseUtils
+import org.scalaide.util.internal.eclipse.EclipseUtils.RichPath
+import org.scalaide.util.FileUtils
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.core.SdtConstants
 
@@ -38,9 +39,9 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   private var hits, misses = 0
 
   private lazy val compilerInterfaceSrc =
-    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(computeSourcePath(SdtConstants.SbtCompilerInterfacePluginId, _))
+    OSGiUtils().getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(EclipseUtils().computeSourcePath(SdtConstants.SbtCompilerInterfacePluginId, _))
 
-  private lazy val sbtFullJar = OSGiUtils.getBundlePath(plugin.sbtCompilerBundle)
+  private lazy val sbtFullJar = OSGiUtils().getBundlePath(plugin.sbtCompilerBundle)
 
   /** Return the location of a compiler-interface.jar
    *
@@ -69,7 +70,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
     lockObject synchronized {
       hits = 0
       misses = 0
-      FileUtils.deleteDir(compilerInterfacesDir.toFile)
+      FileUtils().deleteDir(compilerInterfacesDir.toFile)
     }
   }
 

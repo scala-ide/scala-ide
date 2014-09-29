@@ -3,7 +3,7 @@ package pc
 
 import org.junit.Test
 import org.eclipse.core.resources.IFile
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 import testsetup._
 
 object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") with CustomAssertion
@@ -20,7 +20,7 @@ class PresentationCompilerRefreshTest {
 
     assertNoErrors(unitA)
 
-    EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { monitor =>
+    EclipseUtils().workspaceRunnableIn(SDTTestUtils.workspace) { monitor =>
       SDTTestUtils.addFileToProject(project.underlying, "src/b/C.scala", C_scala)
       SDTTestUtils.changeContentOfFile(unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
     }

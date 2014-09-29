@@ -12,7 +12,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 import org.junit.AfterClass
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 
@@ -135,7 +135,7 @@ trait CompilerSupport extends EclipseDocumentSupport {
   }
 
   override def runTest(source: String, operation: Operation): Unit = {
-    EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
+    EclipseUtils().workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       super.runTest(source, operation)
     }
   }
@@ -163,7 +163,7 @@ trait CompilerSupport extends EclipseDocumentSupport {
 
   @AfterClass
   final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
+    EclipseUtils().workspaceRunnableIn(EclipseUtils().workspaceRoot.getWorkspace()) { _ =>
       project.underlying.delete(/* force */ true, new NullProgressMonitor)
     }
   }

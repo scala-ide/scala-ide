@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 
 object MainClassVerifier {
   private final val ModuleClassSuffix = "$"
@@ -50,7 +50,7 @@ class MainClassVerifier {
     (for {
       outputLocation <- outputLocations
       classFileLocation = outputLocation.append(s"${classFileName}.class")
-      classFile <- Option(EclipseUtils.workspaceRoot.findMember(classFileLocation))
+      classFile <- Option(EclipseUtils().workspaceRoot.findMember(classFileLocation))
     } yield classFile).headOption
   }
 }

@@ -7,7 +7,7 @@ import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.ui.internal.repl.ReplConsoleView
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
 
 class RunSelection extends AbstractHandler {
 

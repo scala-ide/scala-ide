@@ -23,7 +23,7 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
@@ -104,7 +104,7 @@ class SbtBuilderTest {
     depProject.project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val targetResource = depProject.project.javaProject.getOutputLocation().append(new Path("resource.txt"))
-    val file = EclipseUtils.workspaceRoot.findMember(targetResource)
+    val file = EclipseUtils().workspaceRoot.findMember(targetResource)
     Assert.assertNotNull("Resource has been copied to the output directory", file ne null)
     Assert.assertTrue("Resource has been copied to the output directory and exists", file.exists())
   }
@@ -203,7 +203,7 @@ class SbtBuilderTest {
 
       Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
-      val expectedLib = EclipseUtils.workspaceRoot.findMember("/library/bin").getLocation
+      val expectedLib = EclipseUtils().workspaceRoot.findMember("/library/bin").getLocation
       Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLibrary.get)
     } finally {
       deleteProjects(prjClient, prjLib)

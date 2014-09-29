@@ -2,7 +2,7 @@ package org.scalaide.ui.internal.handlers
 
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.IStatusHandler
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.DisplayThread
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.ui.PlatformUI
 
@@ -17,7 +17,7 @@ trait RichStatusHandler extends IStatusHandler {
           // The current thread is the display thread, execute synchronously
           doHandleStatus(status, source);
         } else {
-          DisplayThread.syncExec(doHandleStatus(status, source))
+          DisplayThread().syncExec(doHandleStatus(status, source))
         }
       }
     }

@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.wizards
 import org.eclipse.core.runtime.CoreException
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.wizards.FileCreator
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 
 object FileCreatorMapping extends HasLogger {
 
@@ -14,7 +14,7 @@ object FileCreatorMapping extends HasLogger {
    * `FileCreatorMapping` class.
    */
   def mappings: Seq[FileCreatorMapping] = {
-    val elems = EclipseUtils.configElementsForExtension(FileCreatorId)
+    val elems = EclipseUtils().configElementsForExtension(FileCreatorId)
 
     try
       elems.filterNot(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator").map(e => FileCreatorMapping(
@@ -51,7 +51,7 @@ case class FileCreatorMapping
    */
   def withInstance[A](f: FileCreator => A): Option[A] = {
     var a = null.asInstanceOf[A]
-    EclipseUtils.withSafeRunner {
+    EclipseUtils().withSafeRunner {
       a = f(unsafeInstanceAccess)
     }
     Option(a)

@@ -14,7 +14,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.wizards.FileCreatorMapping
 import org.scalaide.ui.internal.wizards.ScalaWizardElement
 import org.scalaide.util.internal.ReflectAccess
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 
 /**
  * Performs tasks that need to extend the Eclipse based registries. Normally the
@@ -100,7 +100,7 @@ class RegistryExtender extends AnyRef with HasLogger {
       val elems = reader.getWizardElements()
 
       Option(elems.findCategory(ScalaWizardCategory)) foreach { category =>
-        val configElems = EclipseUtils.configElementsForExtension(FileCreatorMapping.FileCreatorId)
+        val configElems = EclipseUtils().configElementsForExtension(FileCreatorMapping.FileCreatorId)
         val configElem = configElems.find(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator")
         configElem foreach (category add new ScalaWizardElement(_))
       }

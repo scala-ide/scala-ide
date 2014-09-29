@@ -14,7 +14,6 @@ import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.internal.eclipse.EclipseUtils._
 import org.eclipse.core.resources.IResource
 
 class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {
@@ -50,6 +49,8 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
   }
 
   private def expandToWholeLines(offsetAndLength: (Int, Int)): (Int, Int) = {
+    import org.scalaide.util.UtilsImplicits.pimpedDocument
+
     val (offset, length) = offsetAndLength
     var current = offset
     while (current >= 0 && document(current) != '\n')
@@ -81,6 +82,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     this.regionOpt = None
   }
 
+  import org.scalaide.util.UtilsImplicits.pimpedAdaptable
   private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IResource].getProject
 
   def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null

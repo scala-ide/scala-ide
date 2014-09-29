@@ -6,10 +6,10 @@ import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.eclipse.ui.IWorkbenchWindow
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.diagnostic
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.SWTUtils
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null
@@ -27,7 +27,7 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   override def selectionChanged(action: IAction, selection: ISelection) {  }
 
   override def run(action: IAction) {
-    Utils tryExecute {
+    Utils().tryExecute {
       action.getId match {
         case RUN_DIAGNOSTICS =>
           val shell = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell

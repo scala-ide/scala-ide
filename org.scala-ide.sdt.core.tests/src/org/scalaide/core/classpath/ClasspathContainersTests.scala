@@ -12,7 +12,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -71,7 +71,7 @@ class ClasspathContainersTests {
 
   @After
   def deleteProjects() {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils().workspaceRunnableIn(EclipseUtils().workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
         (new File(IScalaPlugin().getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()
@@ -145,7 +145,7 @@ class ClasspathContainersTests {
     // make sure we don't keep the default container here
     project1.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call : classpath container kept after close")
     val container_before = getLibraryContainer(project1)
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils().workspaceRunnableIn(EclipseUtils().workspaceRoot.getWorkspace) { _ =>
       project1.underlying.close(null)
       project1.underlying.open(null)
     }

@@ -13,7 +13,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.EclipseUtils.RichWorkbench
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.SWTUtils
 
 /**
  * The purpose of this class is to keep user defined preferences when they are

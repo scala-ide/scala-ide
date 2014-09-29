@@ -6,7 +6,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants
@@ -24,7 +24,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
     configs map { e =>
-      Utils.tryExecute {
+      Utils().tryExecute {
         e.createExecutableExtension("class")
       }
     } collect {
@@ -34,7 +34,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
 
   def runBefore(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      Utils.tryExecute {
+      Utils().tryExecute {
         extension.beforeReconciliation(scu, monitor, workingCopyOwner)
       }
     }
@@ -42,7 +42,7 @@ object ReconciliationParticipantsExtensionPoint extends HasLogger {
 
   def runAfter(scu: ScalaCompilationUnit, monitor: IProgressMonitor, workingCopyOwner: WorkingCopyOwner) {
     extensions foreach { extension =>
-      Utils.tryExecute {
+      Utils().tryExecute {
         extension.afterReconciliation(scu, monitor, workingCopyOwner)
       }
     }

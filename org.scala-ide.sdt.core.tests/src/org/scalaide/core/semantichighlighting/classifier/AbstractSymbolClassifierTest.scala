@@ -5,7 +5,6 @@ import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import testsetup.TestProjectSetup
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion

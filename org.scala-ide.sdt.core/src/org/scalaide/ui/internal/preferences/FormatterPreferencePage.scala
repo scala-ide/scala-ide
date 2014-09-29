@@ -80,6 +80,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     private def formatPreviewText: String = ScalaFormatter.format(previewText, getPreferences(overlayStore))
 
     protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor) {
+      import org.scalaide.util.SWTUtils.fnToSelectionAdapter
+      import org.scalaide.util.SWTUtils.fnToPropertyChangeListener
+
       val checkBox = new Button(parent, SWT.CHECK | SWT.WRAP)
       checkBox.setText(text)
       checkBox.setToolTipText(preference.description + " (" + preference.key + ")")
@@ -99,6 +102,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]) {
+      import org.scalaide.util.SWTUtils.fnToPropertyChangeListener
+      import org.scalaide.util.SWTUtils.pimpedControl
+
       val IntegerPreference(min, max) = preference.preferenceType
       val label = new Label(parent, SWT.LEFT)
       label.setText(text)
@@ -227,6 +233,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   }
 
   def createContents(parent: Composite): Control = {
+    import org.scalaide.util.SWTUtils.fnToSelectionAdapter
+    import org.scalaide.util.SWTUtils.noArgFnToSelectionAdapter
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 

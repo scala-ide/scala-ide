@@ -22,7 +22,7 @@ import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.BooleanSettingWithDefault
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>
@@ -267,7 +267,7 @@ trait EclipseSettings {
 
     val f = new File(name)
     if (name.nonEmpty && !f.isAbsolute) {
-      val workspacePath = EclipseUtils.workspaceRoot.getLocation
+      val workspacePath = EclipseUtils().workspaceRoot.getLocation
       new File(workspacePath.toFile, name).getAbsolutePath
     } else name
   }

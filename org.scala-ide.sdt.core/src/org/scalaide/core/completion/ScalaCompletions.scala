@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.IScalaPlugin
 import CompletionContext.ContextType
 import org.scalaide.core.compiler.IScalaPresentationCompiler

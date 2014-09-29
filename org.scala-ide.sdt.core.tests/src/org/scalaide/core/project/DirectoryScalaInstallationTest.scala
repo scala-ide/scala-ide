@@ -12,7 +12,6 @@ import org.scalaide.core.IScalaModule
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.IScalaPlugin
 import org.junit.AfterClass
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.core.testsetup.SDTTestUtils
 
 object DirectoryScalaInstallationTest extends TestProjectSetup("classpath") {

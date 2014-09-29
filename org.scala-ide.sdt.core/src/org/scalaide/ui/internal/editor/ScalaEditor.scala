@@ -27,7 +27,7 @@ object ScalaEditor {
     IJavaPartitions.JAVA_CHARACTER,
     ScalaPartitions.SCALA_MULTI_LINE_STRING)
 
-  import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+  import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
 
   /**
    * Checks whether there's at least one open editor related to given project
@@ -49,6 +49,6 @@ object ScalaEditor {
       isEqual.getOrElse(false)
     }
 
-    EclipseUtils.getWorkbenchPages.exists(hasOpenEditorForThisProject)
+    EclipseUtils().getWorkbenchPages.exists(hasOpenEditorForThisProject)
   }
 }

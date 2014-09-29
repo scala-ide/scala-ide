@@ -7,7 +7,7 @@ import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.OSGiUtils
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.core.runtime.Platform
@@ -38,7 +38,7 @@ class ScalaInstallationTest {
             fail(s"Unexpected bundled Scala version: ${scalaInstallation.version}")
         }
 
-        val bundlePath = OSGiUtils.pathInBundle(Platform.getBundle("org.scala-ide.scala210.jars"), "target").get.removeLastSegments(1)
+        val bundlePath = OSGiUtils().pathInBundle(Platform.getBundle("org.scala-ide.scala210.jars"), "target").get.removeLastSegments(1)
 
         assertEquals("Wrong library jar", bundlePath.append(BundledScalaInstallation.ScalaLibraryPath), scalaInstallation.library.classJar)
         assertEquals("Wrong compiler jar", bundlePath.append(BundledScalaInstallation.ScalaCompilerPath), scalaInstallation.compiler.classJar)
@@ -101,7 +101,7 @@ class ScalaInstallationTest {
 
     val libraryBundle = IScalaPlugin().getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
 
-    val libraryPath = OSGiUtils.getBundlePath(libraryBundle).get
+    val libraryPath = OSGiUtils().getBundlePath(libraryBundle).get
 
     // create a path builder depending on when the library bundle jar is coming from: a plugins folder or a m2 repo
     val bundlePathBuilder: (String) => IPath = libraryPath.toString match {

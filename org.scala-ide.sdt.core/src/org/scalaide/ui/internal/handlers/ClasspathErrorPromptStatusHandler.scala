@@ -10,13 +10,13 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+import org.scalaide.util.Utils
 import org.scalaide.util.internal.CompilerUtils
 import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.SWTUtils
 
 object ClasspathErrorPromptStatusHandler {
 
@@ -65,7 +65,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
         1)
       dialog.open()
       val buttonId = dialog.getReturnCode()
-      if (buttonId == IDialogConstants.OK_ID) continuation.get trySuccess {() => Utils.tryExecute(project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")) }
+      if (buttonId == IDialogConstants.OK_ID) continuation.get trySuccess {() => Utils().tryExecute(project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")) }
       else continuation.get trySuccess { () => }
     } else continuation map { _ failure (new IllegalArgumentException) }
   }

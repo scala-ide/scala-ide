@@ -14,7 +14,7 @@ import org.eclipse.ui.IFileEditorInput
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.quickfix.BasicCompletionProposal
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
@@ -27,7 +27,7 @@ abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, hi
 
   def selected(viewer: ITextViewer, smartToggle: Boolean) = {
     markerOpt.foreach(_.delete())
-    EditorUtils.doWithCurrentEditor { editor =>
+    EditorUtils().doWithCurrentEditor { editor =>
       markerOpt = editor.getEditorInput() match {
         case f: IFileEditorInput =>
           val m = f.getFile().createMarker("org.scalaide.refactoring.extractionScope")
@@ -62,7 +62,7 @@ object ExtractionProposal {
           def apply(doc: IDocument) = {
             refactoring.perform(extraction) match {
               case Right((change: TextChange) :: Nil) =>
-                EditorUtils.doWithCurrentEditor { editor =>
+                EditorUtils().doWithCurrentEditor { editor =>
                   TextEditUtils.applyRefactoringChangeToEditor(change, editor)
                   LocalNameOccurrences(extraction.abstractionName).performInlineRenaming()
                 }

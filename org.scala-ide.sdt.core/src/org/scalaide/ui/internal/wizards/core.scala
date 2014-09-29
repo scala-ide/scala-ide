@@ -1,6 +1,6 @@
 package org.scalaide.ui.internal.wizards
 
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.DisplayThread
 
 class NewClassWizardPage extends {
   val declarationType = "Class"
@@ -114,7 +114,7 @@ class NewPackageObjectWizard
   private def renameResource() {
     import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 
-    DisplayThread.asyncExec {
+    DisplayThread().asyncExec {
       val res = wizardPage.getModifiedResource()
       val rename = new RenameResourceChange(res.getFullPath, "package.scala")
 

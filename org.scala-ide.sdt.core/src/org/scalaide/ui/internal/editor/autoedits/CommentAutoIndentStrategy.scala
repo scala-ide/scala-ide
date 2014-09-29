@@ -8,7 +8,7 @@ import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.eclipse.jface.text.IRegion
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:

@@ -87,7 +87,7 @@ object TextEditUtils {
       saveAfter: Boolean = true): Unit = {
 
     applyChangesToFile(document, textSelection, file, changes, saveAfter) foreach { selection =>
-      EditorUtils.doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
+      org.scalaide.util.EditorUtils().doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
     }
   }
 

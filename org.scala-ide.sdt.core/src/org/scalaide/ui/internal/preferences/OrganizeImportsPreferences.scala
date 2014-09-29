@@ -27,8 +27,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.util.internal.eclipse.SWTUtils._
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
@@ -82,6 +81,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
   }
 
   def createContents(parent: Composite): Control = {
+    import org.scalaide.util.SWTUtils.noArgFnToSelectionAdapter
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 
@@ -250,7 +250,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
 
-    Utils.tryExecute {
+    Utils().tryExecute {
       val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
       node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
       node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")

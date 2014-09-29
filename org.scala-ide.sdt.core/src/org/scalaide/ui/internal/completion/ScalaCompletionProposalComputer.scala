@@ -21,7 +21,7 @@ import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
   override def sessionStarted() {}
@@ -52,7 +52,7 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
   private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
                              (compiler: ScalaPresentationCompiler): java.util.List[ICompletionProposal] = {
     val chars = context.getDocument
-    val region = ScalaWordFinder.findCompletionPoint(chars, position)
+    val region = ScalaWordFinder().findCompletionPoint(chars, position)
 
     val res = findCompletions(region)(position, scu)(scu.lastSourceMap().sourceFile, compiler)
 

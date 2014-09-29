@@ -14,7 +14,6 @@ import scala.tools.nsc.interactive.FreshRunReq
 import scala.tools.nsc.interactive.MissingResponse
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaProject
-import org.scalaide.core.compiler._
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.compiler.InternalCompilerServices
 import org.scalaide.core.IScalaProject

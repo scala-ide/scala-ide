@@ -3,7 +3,7 @@ package org.scalaide.core.completion
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
@@ -50,7 +50,7 @@ class CompletionTests {
         val pos = positions(i)
 
         val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
-        val wordRegion = ScalaWordFinder.findWord(content, position.point)
+        val wordRegion = ScalaWordFinder().findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 

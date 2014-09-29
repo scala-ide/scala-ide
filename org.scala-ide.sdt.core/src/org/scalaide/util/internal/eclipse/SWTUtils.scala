@@ -16,24 +16,24 @@ import org.eclipse.swt.events._
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.IWorkbenchWindow
 
 // TODO move out implicit conversions to a separate module?
-object SWTUtils {
+object SWTUtils extends org.scalaide.util.SWTUtils {
 
   import scala.language.implicitConversions
 
-  @deprecated("Use org.scalaide.util.internal.ui.DisplayThread.asyncExec", "3.0.0")
+  @deprecated("Use org.scalaide.util.DisplayThread.asyncExec", "3.0.0")
   def asyncExec(f: => Unit) {
-    DisplayThread.asyncExec(f)
+    DisplayThread().asyncExec(f)
   }
 
-  @deprecated("Use org.scalaide.util.internal.ui.DisplayThread.syncExec", "3.0.0")
+  @deprecated("Use org.scalaide.util.DisplayThread.syncExec", "3.0.0")
   def syncExec(f: => Unit) {
-    DisplayThread.syncExec(f)
+    DisplayThread().syncExec(f)
   }
 
   def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
@@ -80,9 +80,9 @@ object SWTUtils {
       def doubleClick(event: DoubleClickEvent) { p(event) }
     }
 
-  implicit class PimpedControl(control: Control) {
+  class PimpedControl(control: Control) extends org.scalaide.util.PimpedControl(control) {
 
-    def onKeyReleased(p: KeyEvent => Any) {
+   def onKeyReleased(p: KeyEvent => Any) {
       control.addKeyListener(new KeyAdapter {
         override def keyReleased(e: KeyEvent) { p(e) }
       })

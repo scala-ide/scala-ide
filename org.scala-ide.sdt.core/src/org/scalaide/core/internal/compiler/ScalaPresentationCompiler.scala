@@ -13,12 +13,12 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.Problem
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.completion.CompletionContext
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
 import org.scalaide.core.internal.jdt.model.ScalaJavaMapper
 import org.scalaide.core.internal.jdt.search.ScalaMatchLocator
@@ -31,7 +31,6 @@ import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import org.scalaide.core.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
-import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.extensions.SourceFileProviderRegistry
@@ -40,7 +39,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
@@ -462,7 +461,7 @@ object ScalaPresentationCompiler {
           if (pos.isRange)
             Some(toSingleLine(pos))
           else{
-            val wordPos = Try(ScalaWordFinder.findWord(source.content, pos.start).getLength).toOption
+            val wordPos = Try(ScalaWordFinder().findWord(source.content, pos.start).getLength).toOption
             wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
           }
 

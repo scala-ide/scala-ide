@@ -52,11 +52,11 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPrese
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.util.internal.Utils
-import org.scalaide.util.internal.eclipse.AnnotationUtils._
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.Utils
+import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
+import org.scalaide.util.EclipseUtils
+import org.scalaide.util.EditorUtils
+import org.scalaide.util.DisplayThread
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
@@ -165,7 +165,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   }
 
   private def getAnnotations(selection: ITextSelection, documentLastModified: Long): Map[Annotation, Position] = {
-    val region = EditorUtils.textSelection2region(selection)
+    val region = EditorUtils().textSelection2region(selection)
     val occurrences = occurrencesFinder.findOccurrences(region, documentLastModified)
     for {
       Occurrences(name, locations) <- occurrences.toList
@@ -189,9 +189,9 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       case _ => return
     }
 
-    EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
+    EclipseUtils().scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
       val fileName = getInteractiveCompilationUnit.file.name
-      Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
+      Utils().debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
         performOccurrencesUpdate(selection, lastModified)
       }
       Status.OK_STATUS
@@ -324,7 +324,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       case _ =>
         if (affectsTextPresentation(event)) {
           // those events will trigger an UI change
-          DisplayThread.asyncExec(super.handlePreferenceStoreChanged(event))
+          DisplayThread().asyncExec(super.handlePreferenceStoreChanged(event))
         } else {
           super.handlePreferenceStoreChanged(event)
         }

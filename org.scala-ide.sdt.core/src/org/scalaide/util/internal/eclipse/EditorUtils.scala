@@ -28,7 +28,7 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.editor.ISourceViewerEditor
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
 
 /**
  * Provides helper methods for the text editor of Eclipse, which is a GUI aware
@@ -36,7 +36,7 @@ import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
  * UI environment is loaded - if this is not the case these methods will fail at
  * runtime.
  */
-object EditorUtils {
+object EditorUtils extends org.scalaide.util.EditorUtils {
 
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
     editor(JavaUI.openInEditor(element))
@@ -76,7 +76,6 @@ object EditorUtils {
     new Region(selection.getOffset, selection.getLength)
 
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    import org.scalaide.util.internal.Utils._
     for {
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)

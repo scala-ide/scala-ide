@@ -2,7 +2,7 @@ package org.scalaide.core
 package findreferences
 
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model._
 import org.scalaide.logging.HasLogger
 import testsetup.FileUtils
@@ -92,7 +92,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
     val offset = offsets.head
 
-    val wordRegion = ScalaWordFinder.findWord(unit.getContents, offset)
+    val wordRegion = ScalaWordFinder().findWord(unit.getContents, offset)
     val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
 
     if (word.trim.isEmpty) fail("No word found at offset: " + offset)

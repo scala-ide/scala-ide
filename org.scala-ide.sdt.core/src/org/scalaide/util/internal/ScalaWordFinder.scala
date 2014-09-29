@@ -8,7 +8,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 
-object ScalaWordFinder {
+object ScalaWordFinder extends org.scalaide.util.ScalaWordFinder {
 
   private def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
     override def apply(i: Int) = doc.getChar(i)

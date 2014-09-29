@@ -3,7 +3,7 @@ package org.scalaide.util.internal.eclipse
 import java.io.ByteArrayInputStream
 import java.io.File
 
-import org.scalaide.util.internal.eclipse.EclipseUtils.workspaceRunnableIn
+import org.scalaide.util.EclipseUtils
 import scala.tools.nsc.io.AbstractFile
 import scala.util.Try
 
@@ -29,7 +29,7 @@ import org.eclipse.core.internal.resources.ResourceException
 import java.io.File
 import org.scalaide.core.SdtConstants
 
-object FileUtils {
+object FileUtils extends org.scalaide.util.FileUtils {
 
   def toIFile(file: AbstractFile): Option[IFile] = file match {
     case null                         => None

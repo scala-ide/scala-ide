@@ -4,7 +4,7 @@ import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
@@ -230,7 +230,7 @@ case class CompletionProposal(
     val completionFullString = completionString(overwrite, paramsProbablyExists)
 
     scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-      val endPos = if (overwrite) startPos + ScalaWordFinder.identLenAtOffset(d, offset) else offset
+      val endPos = if (overwrite) startPos + ScalaWordFinder().identLenAtOffset(d, offset) else offset
       val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
 
       val importStmt =

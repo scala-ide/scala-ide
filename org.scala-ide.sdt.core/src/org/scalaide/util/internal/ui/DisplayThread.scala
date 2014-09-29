@@ -2,7 +2,7 @@ package org.scalaide.util.internal.ui
 
 import org.eclipse.swt.widgets.Display
 
-object DisplayThread extends UIThread {
+object DisplayThread extends UIThread with org.scalaide.util.DisplayThread {
 
   /** Asynchronously run `f` on the UI thread.  */
   override def asyncExec(f: => Unit) {

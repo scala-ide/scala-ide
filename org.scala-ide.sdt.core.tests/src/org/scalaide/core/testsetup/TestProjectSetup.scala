@@ -125,7 +125,6 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   def waitUntilTypechecked(unit: ScalaCompilationUnit) {
     // give a chance to the background compiler to report the error
     unit.withSourceFile { (source, compiler) =>
-      import scala.tools.nsc.interactive.Response
       compiler.askLoadedTyped(source, true).get // wait until unit is typechecked
     }
   }

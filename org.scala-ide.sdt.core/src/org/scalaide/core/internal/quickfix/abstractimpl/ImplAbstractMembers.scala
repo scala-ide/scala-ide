@@ -6,7 +6,6 @@ import scala.tools.refactoring.implementations.AddToClosest
 import scala.reflect.internal.util.SourceFile
 import scala.collection.immutable
 
-import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object ImplAbstractMembers {

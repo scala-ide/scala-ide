@@ -42,7 +42,6 @@ object ScalaHover extends HasLogger {
    * hover.
    */
   private object msgFormatter extends (String => String) with HtmlHover {
-    import HTMLPrinter._
 
     val UnimplementedMembers = """(class .* needs to be abstract, since:\W*it has \d+ unimplemented members\.)([\S\s]*)""".r
 
@@ -85,7 +84,7 @@ object ScalaHover extends HasLogger {
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
   def DefaultScalaHoverStyleSheet: String = {
-    OSGiUtils.fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
+    OSGiUtils().fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
       case util.Success(css) =>
         css
       case util.Failure(f) =>
@@ -285,7 +284,7 @@ class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExte
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = null
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
-    ScalaWordFinder.findWord(viewer.getDocument, offset)
+    ScalaWordFinder().findWord(viewer.getDocument, offset)
   }
 
   override def getHoverControlCreator(): IInformationControlCreator =

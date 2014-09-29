@@ -233,10 +233,10 @@ trait InstallationManagement { this: ScalaProject =>
   def usesProjectSettings: Boolean =
     projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
-  import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
+  import org.scalaide.util.SWTUtils.fnToPropertyChangeListener
   val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
     {
-      import org.scalaide.util.internal.Utils._
+      import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
       if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
         val installString = (event.getNewValue()).asInstanceOfOpt[String]
         val installChoice = installString flatMap (parseScalaInstallationChoice(_))

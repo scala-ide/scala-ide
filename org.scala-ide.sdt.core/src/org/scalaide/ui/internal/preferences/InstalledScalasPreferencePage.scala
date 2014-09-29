@@ -30,7 +30,7 @@ import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.FileUtils
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ModifiedScalaInstallations
 import scala.util.Try
@@ -58,7 +58,8 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
   }
 
   def createContents(parent: Composite): Control = {
-    import org.scalaide.util.internal.eclipse.SWTUtils._
+    import org.scalaide.util.SWTUtils.fnToSelectionAdapter
+    import org.scalaide.util.SWTUtils.fnToSelectionChangedEvent
     val composite = new Composite(parent, SWT.NONE)
 
     composite.setLayout(new GridLayout(2, false))

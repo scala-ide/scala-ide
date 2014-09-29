@@ -6,7 +6,7 @@ import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.EditorUtils
 import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Future
 import scala.concurrent.Await
@@ -32,7 +32,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasL
   final def detectHyperlinks(textEditor: ITextEditor, currentSelection: IRegion, canShowMultipleHyperlinks: Boolean): Array[IHyperlink] = {
     if (textEditor == null) null // can be null if generated through ScalaPreviewerFactory
     else {
-      EditorUtils.getEditorCompilationUnit(textEditor) match {
+      EditorUtils().getEditorCompilationUnit(textEditor) match {
         case Some(scu) =>
           val hyperlinks = Future { runDetectionStrategy(scu, textEditor, currentSelection) }
 

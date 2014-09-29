@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.UtilsImplicits.pimpedAdaptable
 
 trait AbstractPopupAction extends IObjectActionDelegate {
   private var selectionOption: Option[ISelection] = None

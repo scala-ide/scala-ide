@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IMethod
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaModelException
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.UtilsImplicits.pimpedAdaptable
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 class ScalaLaunchableTester extends PropertyTester {

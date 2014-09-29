@@ -6,7 +6,7 @@ import testsetup.SDTTestUtils
 import org.scalaide.core.IScalaProject
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.EclipseUtils
 import org.eclipse.core.resources.ResourcesPlugin
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.Path
@@ -32,7 +32,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
    */
   lazy val scalaProject: IScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
-    EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
+    EclipseUtils().workspaceRunnableIn(workspace) { monitor =>
       // create the project
       val newProject= workspace.getRoot().getProject(scalaProjectName)
       val projectDescription= workspace.newProjectDescription(scalaProjectName)

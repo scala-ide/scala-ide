@@ -19,7 +19,7 @@ import org.scalaide.core.internal.jdt.model.LazyToplevelClass
 import org.scalaide.core.internal.jdt.model.ScalaElement
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 /**
@@ -88,7 +88,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
      * true is returned as well to signal that no further processing needs to be attempted.
      */
     def allProblemsFixed = {
-      EditorUtils.withCurrentScalaSourceFile { file =>
+      EditorUtils().withCurrentScalaSourceFile { file =>
         Option(file.getProblems).map(_.isEmpty) getOrElse true
       } getOrElse true // no editor? then we are in trouble and can abort anyway
     }
@@ -116,11 +116,11 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
         } getOrElse (Nil)
       }
 
-      EditorUtils.withCurrentEditor { editor =>
+      EditorUtils().withCurrentEditor { editor =>
 
         pm.subTask("Waiting for the compiler to finish..")
 
-        EditorUtils.withScalaSourceFileAndSelection { (scalaSourceFile, textSelection) =>
+        EditorUtils().withScalaSourceFileAndSelection { (scalaSourceFile, textSelection) =>
           pm.subTask("Applying the changes.")
           val changes = createChanges(scalaSourceFile, imports, pm)
           val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
@@ -197,7 +197,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
       iterate(missingTypes, 3)
     }
 
-    EditorUtils.withCurrentScalaSourceFile { file =>
+    EditorUtils().withCurrentScalaSourceFile { file =>
       getMissingTypeErrorsFromFile(file) match {
         case missingTypes if missingTypes.isEmpty =>
           // continue with organizing imports

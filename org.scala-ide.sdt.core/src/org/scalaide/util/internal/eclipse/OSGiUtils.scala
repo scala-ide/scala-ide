@@ -13,7 +13,7 @@ import org.scalaide.ui.ScalaImages
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.ui.plugin.AbstractUIPlugin
 
-object OSGiUtils {
+object OSGiUtils extends org.scalaide.util.OSGiUtils {
   private def urlToPath(url: URL): IPath = Path.fromOSString(FileLocator.toFileURL(url).getPath)
 
   def pathInBundle(bundle: Bundle, path: String): Option[IPath] = {

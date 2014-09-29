@@ -4,10 +4,9 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import scala.collection.immutable
 import scala.reflect.internal.Chars
 import org.scalaide.core.compiler.Token
-import org.scalaide.core.compiler.IScalaPresentationCompiler._
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.nsc.ast.parser.Tokens
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /** A quick fix that adds an explicit return type to a given val or def
  */
@@ -17,8 +16,9 @@ object ExplicitReturnType {
   }
 
   private def addReturnType(ssf: ScalaSourceFile, offset: Int): Option[IJavaCompletionProposal] = {
+
     ssf.withSourceFile { (sourceFile, compiler) =>
-      import compiler.{ Tree, ValDef, EmptyTree, TypeTree, DefDef, ValOrDefDef }
+      import compiler.{ ValDef, EmptyTree, TypeTree, DefDef, ValOrDefDef }
 
       /** Find the tokens leading to tree `rhs` and return the position before `=`,
        *  or -1 if not found.

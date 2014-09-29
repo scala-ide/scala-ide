@@ -30,12 +30,9 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Link
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
-import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
-import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.availableInstallations
 import org.scalaide.core.internal.project.ScalaInstallationChoice
-import org.scalaide.core.IScalaModule
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
@@ -46,6 +43,7 @@ import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.eclipse.ui.dialogs.PreferencesUtil
+import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 
 abstract class ScalaClasspathContainerInitializer(desc: String) extends ClasspathContainerInitializer with HasLogger {
   def entries: Array[IClasspathEntry]
@@ -85,7 +83,7 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
   with IClasspathContainerPage
   with IClasspathContainerPageExtension
   with ScalaInstallationChoiceUIProviders {
-  import org.scalaide.util.internal.eclipse.SWTUtils._
+
 
   private var choiceOfScalaInstallation: ScalaInstallationChoice = null
   protected var scalaProject: Option[ScalaProject] = None
@@ -101,6 +99,9 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
   override def getSelection(): IClasspathEntry = { JavaCore.newContainerEntry(containerPath) }
 
   override def initialize(javaProject: IJavaProject, currentEntries: Array[IClasspathEntry]) = {
+    import org.scalaide.util.SWTUtils.fnToSelectionChangedEvent
+    import org.scalaide.util.SWTUtils.noArgFnToSelectionAdapter
+
     scalaProject = ScalaPlugin().asScalaProject(javaProject.getProject())
     val rcp = javaProject.getRawClasspath()
     if (hasCustomContainer(rcp, new Path(SdtConstants.ScalaLibContId), IClasspathEntry.CPE_CONTAINER) && hasCustomContainer(rcp, new Path(SdtConstants.ScalaCompilerContId), IClasspathEntry.CPE_CONTAINER)) {

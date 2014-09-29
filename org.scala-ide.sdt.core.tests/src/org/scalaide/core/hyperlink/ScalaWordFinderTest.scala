@@ -1,6 +1,6 @@
 package org.scalaide.core.hyperlink
 
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.eclipse.jface.text.IRegion
 import org.junit.Test
 import org.junit.Assert
@@ -10,7 +10,7 @@ class ScalaWordFinderTest {
   private def findWord(doc: String): IRegion = {
     val pos = doc.indexOf('|')
     val filteredDoc = doc.filterNot(_ == '|')
-    ScalaWordFinder.findWord(filteredDoc.toIndexedSeq, pos)
+    ScalaWordFinder().findWord(filteredDoc.toIndexedSeq, pos)
   }
 
   private def test(doc: String, r: (Int, Int)) {

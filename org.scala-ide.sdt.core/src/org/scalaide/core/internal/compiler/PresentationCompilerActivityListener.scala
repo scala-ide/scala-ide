@@ -11,9 +11,6 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import scala.collection.mutable.Subscriber
-import org.scalaide.core.internal.compiler.PresentationCompilerActivity
-import org.scalaide.core.internal.compiler.PresentationCompilerProxy
-import org.scalaide.core.internal.compiler._
 
 /**
  * Tracks activity of ScalaPresentationCompiler and shuts it down if it's unused sufficiently long

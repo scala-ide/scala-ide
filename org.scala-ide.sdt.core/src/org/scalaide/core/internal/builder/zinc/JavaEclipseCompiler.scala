@@ -4,7 +4,7 @@ import java.io.File
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
@@ -31,7 +31,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
     val allSourceFiles = scalaProject.allSourceFiles()
     val depends = scalaProject.directDependencies
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
+    if (allSourceFiles.exists(FileUtils().hasBuildErrors(_)))
       depends.toArray
     else {
       ensureProject

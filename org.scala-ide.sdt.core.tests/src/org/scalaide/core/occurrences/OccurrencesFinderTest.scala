@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.Ignore
 import org.eclipse.jface.text.Region
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.tools.nsc.interactive.Response
 
 object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking")
@@ -37,7 +37,7 @@ class OccurrencesFinderTest {
 
     for ((pos, count) <- positions) {
       println("looking at position %d for %d occurrences".format(pos, count))
-      val region = ScalaWordFinder.findWord(contents, pos - 1)
+      val region = ScalaWordFinder().findWord(contents, pos - 1)
       val word = new String(contents.slice(region.getOffset(), region.getOffset() + region.getLength()))
       println("using word region: " + region)
       val occurrences = new ScalaOccurrencesFinder(unit).findOccurrences(region, 1)

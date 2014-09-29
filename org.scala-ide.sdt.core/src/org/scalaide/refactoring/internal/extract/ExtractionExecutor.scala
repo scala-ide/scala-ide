@@ -17,7 +17,7 @@ import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 trait ExtractionExecutor extends RefactoringExecutor {
@@ -30,14 +30,14 @@ trait ExtractionExecutor extends RefactoringExecutor {
     def refactoringParameters: refactoring.RefactoringParameters =
       selectedExtraction.get
 
-    val initialSelection = EditorUtils.withCurrentEditor { editor =>
+    val initialSelection = EditorUtils().withCurrentEditor { editor =>
       Some(editor.getViewer().getSelectedRange())
     }
 
     def highlightExtractionSource = {
       preparationResult().right.map { pr =>
         pr.extractions.headOption.foreach { e =>
-          EditorUtils.doWithCurrentEditor { editor =>
+          EditorUtils().doWithCurrentEditor { editor =>
             val viewer = editor.getViewer()
             val pos = e.extractionSource.pos
             viewer.setSelectedRange(pos.start, pos.end - pos.start)
@@ -47,7 +47,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
     }
 
     def resetSelection() = initialSelection.map { s =>
-      EditorUtils.doWithCurrentEditor { editor =>
+      EditorUtils().doWithCurrentEditor { editor =>
         editor.getViewer().setSelectedRange(s.x, s.y)
       }
     }
@@ -87,7 +87,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
   def runRefactoring(refactoring: ScalaIdeExtractionRefactoring, shell: Shell): Boolean = {
     refactoring.performRefactoring() match {
       case (change: TextChange) :: Nil if refactoring.getPages.isEmpty =>
-        EditorUtils.doWithCurrentEditor { editor =>
+        EditorUtils().doWithCurrentEditor { editor =>
           TextEditUtils.applyRefactoringChangeToEditor(change, editor)
         }
         true
@@ -109,7 +109,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
    * called with the selected extraction, otherwise with `None`.
    */
   def doWithSelectedExtraction(ideRefactoring: ScalaIdeExtractionRefactoring)(block: Option[ideRefactoring.refactoring.Extraction] => Unit) = {
-    EditorUtils.doWithCurrentEditor { editor =>
+    EditorUtils().doWithCurrentEditor { editor =>
       ideRefactoring.preparationResult().fold(
         { _ => block(None) },
         { es =>

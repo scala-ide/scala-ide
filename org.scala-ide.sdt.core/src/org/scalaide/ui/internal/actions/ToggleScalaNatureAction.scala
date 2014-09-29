@@ -7,7 +7,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.internal.project.ScalaLibraryPluginDependencyUtils
 import org.scalaide.core.SdtConstants
 
@@ -24,7 +24,7 @@ class ToggleScalaNatureAction extends AbstractPopupAction {
   }
 
   private def toggleScalaNature(project: IProject) =
-    Utils tryExecute {
+    Utils().tryExecute {
       if (project.hasNature(SdtConstants.NatureId)) {
         doIfPdePresent(project) { ScalaLibraryPluginDependencyUtils.removeScalaLibraryRequirement(project) }
         updateNatureIds(project) { _ filterNot (_ == SdtConstants.NatureId) }
