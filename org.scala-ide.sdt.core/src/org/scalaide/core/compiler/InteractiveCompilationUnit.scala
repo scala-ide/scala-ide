@@ -16,6 +16,14 @@ import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
 /** This trait represents a possibly translated Scala source. In the default case,
  *  the original and Scala sources and positions are the same.
  *
+ *  This trait allows implementers to specify on-the-fly translations from any source ('original')
+ *  to Scala source. For example, Play templates are an HTML-based format with Scala snippets that
+ *  are translated to Scala source. If this trait is correctly implemented, the corresponding
+ *  compilation unit can perform 'errors-as-you-type', hyperlinking, completions, hovers.
+ *
+ *  The presentation compiler will rely on this trait to translate offsets or regions to and from
+ *  original and Scala sources.
+ *
  *  Implementations of this trait should be immutable and thread-safe.
  */
 trait ISourceMap {
@@ -87,9 +95,9 @@ object IPositionInformation {
  *  Script file, an Sbt build file, etc.).
  *
  *  This class is a stable representation of a compilation unit. Its contents may change over time, but
- *  *snapshots* can be obtained through `sourceInfo`.
+ *  *snapshots* can be obtained through `sourceMap`.
  *
- *  A `SourceInfo` is a translation from any surface language (for example, Play HTML templates) to a
+ *  An `ISourceMap` is a translation from any surface language (for example, Play HTML templates) to a
  *  Scala source that can be type-checked by the Scala presentation compiler.
  *
  *  Implementations are expected to be thread-safe.
@@ -99,13 +107,18 @@ trait InteractiveCompilationUnit {
   /** The `AbstractFile` that the Scala compiler uses to read this compilation unit. It should not change through the lifetime of this unit. */
   def file: AbstractFile
 
-  /** Return the source info for the given contents */
+  /** Return the source info for the given contents. */
   def sourceMap(contents: Array[Char]): ISourceMap
 
-  /** Return the source info for the current contents. */
+  /** Return the most recent available source map for the current contents. */
   def lastSourceMap(): ISourceMap
 
-  /** Return the current contents of this compilation unit. */
+  /** Return the current contents of this compilation unit. This is the 'original' contents, that may be
+   *  translated to a Scala source using `sourceMap`.
+   *
+   *  If we take Play templates as an example, this method would return HTML interspersed with Scala snippets. If
+   *  one wanted the translated Scala source, he'd have to call `lastSourceMap().scalaSource`
+   */
   def getContents(): Array[Char]
 
   /** The workspace file corresponding to this compilation unit. */

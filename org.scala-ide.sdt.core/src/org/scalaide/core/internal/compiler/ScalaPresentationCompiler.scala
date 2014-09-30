@@ -466,7 +466,7 @@ object ScalaPresentationCompiler {
             wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
           }
 
-        reducedPos flatMap { reducedPos ⇒
+        reducedPos flatMap { reducedPos =>
           val fileName =
             source.file match {
               case EclipseFile(file) =>
