@@ -18,7 +18,15 @@ import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.scalaide.core.internal.lexical.XmlTagScanner
 import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased
 
-/** Entry point for code scanners related to Scala code.
+/** Entry point to the Scala code scanners.
+ *
+ *  Code scanners are made to work on partitions (see [[ScalaCodePartition]]). They parse the content of partitions, and
+ *  return a lists of 'token'. A token represent anything remarkable in the code: keyword, braces, id, symbols, ...
+ *
+ *  The type of the tokens returned by the Scala scanners is defined in [[org.scalaide.ui.syntax.ScalaSyntaxClasses]].
+ *
+ *  @see org.eclipse.jface.text.rules.ITokenScanner
+ *  @see org.scalaide.core.lexical.ScalaCodePartitioner
  */
 object ScalaCodeScanners {
 
@@ -45,12 +53,16 @@ object ScalaCodeScanners {
   def singleTokenScanner(preferenceStore: IPreferenceStore, syntaxClass: ScalaSyntaxClass): AbstractScalaScanner =
     new SingleTokenScanner(preferenceStore, syntaxClass)
 
-  /** Creates a code scanner for Scala code.
+  /** Creates a code scanner for plain Scala code.
    */
   def scalaCodeScanner(preferenceStore: IPreferenceStore, scalaVersion: ScalaVersion): AbstractScalaScanner =
     new ScalaCodeScanner(preferenceStore, scalaVersion)
 
-  /** Creates a code tokenizer for Scala code
+  /** Creates a code tokenizer for plain Scala code.
+   *
+   *  This tokenizer has a richer interface, but is not compatible with the Eclipse [[org.eclipse.jface.text.rules.ITokenScanner]].
+   *
+   *  @see ScalaCodeTokenizer
    */
   def scalaCodeTokenizer(scalaVersion: ScalaVersion): ScalaCodeTokenizer =
     new ScalaCodeTokenizerScalariformBased(scalaVersion)
@@ -95,4 +107,31 @@ object ScalaCodeScanners {
   private def xmlPIScanner(preferenceStore: IPreferenceStore): AbstractScalaScanner =
     new XmlPIScanner(preferenceStore)
 
+}
+
+/** A tokenizer for plain Scala code. Like the code scanners in [[ScalaCodeScanners]], but returns tokens with a richer interface.
+ */
+trait ScalaCodeTokenizer {
+
+  import ScalaCodeTokenizer.Token
+
+  /** Tokenizes a string of Scala code.
+   *
+   *  @param contents the string to tokenize
+   *  @param offset If `contents` is a snippet within a larger document, use `offset` to indicate it `contents` offset within the larger document so that resultant tokens are properly positioned with respect to the larger document.
+   *  @return an sequence of the tokens for the given string
+   */
+  def tokenize(contents: String, offset: Int = 0): IndexedSeq[Token]
+
+}
+
+object ScalaCodeTokenizer {
+
+  /** A Scala token.
+   *
+   *  @param offset the position of the first character of the token
+   *  @param length the length of the token
+   *  @param syntaxClass the class of the token
+   */
+  case class Token(offset: Int, length: Int, syntaxClass: ScalaSyntaxClass)
 }

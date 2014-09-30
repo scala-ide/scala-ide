@@ -2,6 +2,7 @@ package org.scalaide.core.lexical
 
 /** The partitions defined for Scala sources.
  *
+ *  @see org.scalaide.core.lexical.ScalaCodePartitioner
  *  @see org.eclipse.jdt.ui.text.IJavaPartitions
  */
 object ScalaPartitions {

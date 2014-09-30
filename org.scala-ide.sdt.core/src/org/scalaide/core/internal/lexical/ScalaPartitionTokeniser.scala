@@ -25,6 +25,8 @@ object ScalaPartitionTokeniser {
 
 }
 
+/** @see org.scalaide.core.lexical.ScalaCodePartitioner
+ */
 class ScalaPartitionTokeniser(text: String) extends TokenTests {
   import ScalaDocumentPartitioner.EOF
 

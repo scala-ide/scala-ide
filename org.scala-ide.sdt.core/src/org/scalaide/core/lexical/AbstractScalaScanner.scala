@@ -1,11 +1,14 @@
 package org.scalaide.core.lexical
 
-import org.eclipse.jface.text.rules._
+import org.eclipse.jface.text.rules.Token
+import org.eclipse.jface.text.rules.ITokenScanner
 import org.scalaide.ui.syntax.ScalaSyntaxClass
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
 
 /** Base class for Scala specific token scanners.
+ *
+ *  @see org.scalaide.core.lexical.ScalaCodeScanners.
  */
 trait AbstractScalaScanner extends ITokenScanner {
 
