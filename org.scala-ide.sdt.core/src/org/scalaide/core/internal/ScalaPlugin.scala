@@ -66,6 +66,8 @@ import org.eclipse.core.runtime.content.IContentType
 import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
+import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.scalaide.util.internal.Utils._
 
 object ScalaPlugin {
 
@@ -117,9 +119,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
       new RegistryExtender().perform()
     }
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString())
+    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
   }
 
   override def stop(context: BundleContext) = {
@@ -179,6 +181,20 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         disposeProject(project)
       case _ =>
     }
+    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
+      override def visit(delta: IResourceDelta): Boolean = {
+        if (delta.getFlags == IResourceDelta.OPEN){
+          val resource = delta.getResource().asInstanceOfOpt[IProject]
+          resource foreach {(r) =>
+            // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
+            // setting the Installation triggers a recursive check
+            asScalaProject(r) foreach (_.checkClasspath(true))
+          }
+          false
+        } else
+        true
+      }
+    })))
   }
 
   override def elementChanged(event: ElementChangedEvent) {

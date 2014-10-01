@@ -48,7 +48,7 @@ private trait LabeledScalaInstallationSerializer extends HasLogger{
   def getSavedInstallations(): List[LabeledScalaInstallation] = {
     val installationsStateFile = getInstallationsStateFile()
     val installationsStateFilePath = installationsStateFile.getPath()
-    //logger.debug(s"Trying to read classpath container state from $installationsStateFilePath")
+    logger.debug(s"Trying to read classpath container state from $installationsStateFilePath")
     if (!installationsStateFile.exists()) Nil
     else {
       var is: FileInputStream = null
@@ -64,8 +64,8 @@ private trait LabeledScalaInstallationSerializer extends HasLogger{
           try {
             is.close();
           } catch {
-            case ex: IOException => //logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
-          } finally () //logger.debug(s"Successfully read scala installations from $installationsStateFilePath")
+            case ex: IOException => logger.error("Can't close output stream for " + installationsStateFile.getAbsolutePath(), ex)
+          } finally logger.debug(s"Successfully read scala installations from $installationsStateFilePath")
         }
       }
     }

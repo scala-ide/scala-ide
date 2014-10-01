@@ -3,7 +3,6 @@ package org.scalaide.refactoring.internal.extract
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.extraction.ExtractionRefactoring
-
 import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
@@ -19,6 +18,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 trait ExtractionExecutor extends RefactoringExecutor {
   abstract class ScalaIdeExtractionRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile)
@@ -88,7 +88,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
     refactoring.performRefactoring() match {
       case (change: TextChange) :: Nil if refactoring.getPages.isEmpty =>
         EditorUtils.doWithCurrentEditor { editor =>
-          EditorUtils.applyRefactoringChangeToEditor(change, editor)
+          TextEditUtils.applyRefactoringChangeToEditor(change, editor)
         }
         true
       case _ =>

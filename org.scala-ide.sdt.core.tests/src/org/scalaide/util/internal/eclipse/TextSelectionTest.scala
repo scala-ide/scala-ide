@@ -93,7 +93,7 @@ class TextSelectionTest {
     val sel = findSelection(sourceWithoutBraces)
     val sourceWithoutCursor = sourceWithoutBraces.replaceAll("\\^", "")
     val doc = new Document(sourceWithoutCursor)
-    val s = EditorUtils.applyMultiTextEdit(doc, sel, edit)
+    val s = TextEditUtils.applyMultiTextEdit(doc, sel, edit)
 
     doc.replace(s.getOffset(), 0, "^")
     if (s.getLength() > 0)

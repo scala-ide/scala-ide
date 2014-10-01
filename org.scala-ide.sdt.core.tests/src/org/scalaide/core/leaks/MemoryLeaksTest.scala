@@ -66,6 +66,8 @@ class MemoryLeaksTest extends HasLogger {
     val usedMem = for (i <- 1 to N) yield {
       val src = if (i % 2 == 0) originalTyper else changedTyper
 
+      // reconcile once in a while
+      if (i % 3 == 0) typerUnit.withSourceFile((_, comp) => comp.askReloadManagedUnits())
       val usedMem = withGC {
         typeCheckWith(typerUnit, src)
         typeCheckWith(implicitsUnit, new String(implicitsUnit.getContents))
