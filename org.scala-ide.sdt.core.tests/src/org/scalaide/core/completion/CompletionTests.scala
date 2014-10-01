@@ -196,7 +196,7 @@ class CompletionTests {
         assertTrue("The completion should return doNothingWith", completions.exists(
           _ match {
             case c:CompletionProposal =>
-              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+              c.kind == MemberKind.Def && c.context == CompletionContext.ImportContext && c.completion == "doNothingWith"
             case _ =>
               false
           }))

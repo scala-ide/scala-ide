@@ -1,4 +1,4 @@
-package org.scalaide.core.completion
+package org.scalaide.core.internal.quickfix
 
 object RelevanceValues {
 

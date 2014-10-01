@@ -123,11 +123,10 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
       compiler.asyncExec {
         val currentClass = rootMirror.getClassByName(newTypeName(referencedTypeName))
         val proposals = currentClass.info.members.filter(mixedInMethod).toList
-        val defaultContext = CompletionContext(CompletionContext.DefaultContext)
 
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
-          val prop = compiler.mkCompletionProposal(prefix.toCharArray, start, sym = sym,
-            tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext, prj)
+          val prop = compiler.mkCompletionProposal(prefix, start, sym = sym,
+            tpe = sym.info, inherited = true, viaView = NoSymbol, CompletionContext.DefaultContext, prj)
           new ScalaCompletionProposal(prop)
         }
       }.getOrElse(Nil)()

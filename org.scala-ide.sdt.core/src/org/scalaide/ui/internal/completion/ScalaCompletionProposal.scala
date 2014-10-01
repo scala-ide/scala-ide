@@ -39,7 +39,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.completion.CompletionContext
 import org.scalaide.core.completion.CompletionProposal
 import org.scalaide.core.completion.MemberKind
-import org.scalaide.core.completion.prefixMatches
+import org.scalaide.util.internal.Commons
 import org.scalaide.ui.ScalaImages
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.eclipse.EditorUtils
@@ -83,14 +83,14 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 
   /** Position after the opening parenthesis of this proposal */
-  val startOfArgumentList = startPos + completion.length + 1
+  private val startOfArgumentList = startPos + completion.length + 1
 
   override def getRelevance = relevance
   override def getImage = image
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   override def getContextInformation(): IContextInformation =
-    if (context.contextType != CompletionContext.ImportContext && tooltip.length > 0)
+    if (context != CompletionContext.ImportContext && tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
 
@@ -120,7 +120,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
-    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
+    val showOnlyTooltips = context == CompletionContext.NewContext || context == CompletionContext.ApplyContext
 
     if (!showOnlyTooltips) {
       val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
@@ -146,7 +146,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   override def getContextInformationPosition = startOfArgumentList
 
   override def isValidFor(d: IDocument, pos: Int) =
-    prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
+    Commons.prefixMatches(completion, d.get.substring(startPos, pos))
 
   /** Highlight the part of the text that would be overwritten by the current selection
    */
