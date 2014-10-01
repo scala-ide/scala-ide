@@ -70,6 +70,8 @@ import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.scalaide.util.internal.Utils._
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
+import org.eclipse.jdt.core.IClassFile
 
 object ScalaPlugin {
 
@@ -148,8 +150,16 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
-  override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] =
-    Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+  override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
+    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+
+    def unitOfClassFile = input.getAdapter(classOf[IClassFile]) match {
+      case tr: ScalaClassFile => Some(tr)
+      case _                  => None
+    }
+
+    unitOfSourceFile orElse unitOfClassFile
+  }
 
   def getJavaProject(project: IProject) = JavaCore.create(project)
 
