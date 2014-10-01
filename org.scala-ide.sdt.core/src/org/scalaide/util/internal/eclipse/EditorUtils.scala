@@ -254,10 +254,10 @@ object EditorUtils {
 
         def adjustOffset(overlapToPreserve: Int) = {
           val lenAfterSelection = edit.getChildren().collect {
-            case e if e.start > selStart ⇒
+            case e if e.start > selStart =>
               e match {
-                case e: ReplaceEdit ⇒ e.length-e.getText().length
-                case e ⇒ e.length
+                case e: ReplaceEdit => e.length-e.getText().length
+                case e => e.length
               }
           }.sum
 
@@ -277,8 +277,8 @@ object EditorUtils {
         // case 3: ^ [  ] ^
         else if (selStart < rStart && selEnd > rEnd) {
           val sub = overlappingEdit match {
-            case e: ReplaceEdit ⇒ e.length-e.getText().length
-            case e ⇒ e.length
+            case e: ReplaceEdit => e.length-e.getText().length
+            case e => e.length
           }
           (adjustOffset(0), selLen-sub)
         }
@@ -296,7 +296,7 @@ object EditorUtils {
       new TextSelection(document, newOffset, newLen)
     }
 
-    val overlappingEdit = edit.getChildren().find(e ⇒ selectionOverlapsRegion(e.getRegion()))
+    val overlappingEdit = edit.getChildren().find(e => selectionOverlapsRegion(e.getRegion()))
     overlappingEdit map handleOverlap getOrElse handleNonOverlap
   }
 

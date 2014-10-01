@@ -11,7 +11,7 @@ import org.junit.Ignore
 class TextSelectionTest {
 
   final implicit class OhILikeThisDslSoMuch(input: String) {
-    def becomes(expectedOutput: String) = input → expectedOutput
+    def becomes(expectedOutput: String) = input -> expectedOutput
   }
   final implicit class IWannaHaveMoreOfIt(testData: (String, String)) {
     def after(changes: Seq[String]) = test(testData._1, testData._2, changes)
@@ -86,7 +86,7 @@ class TextSelectionTest {
     require(braces.size == changes.size, "The number of changes need to be equal to the number of the regions.")
     val edit = new MultiTextEdit
     changes zip braces foreach {
-      case (change, (start, end)) ⇒
+      case (change, (start, end)) =>
         edit.addChild(new ReplaceEdit(start, end-start, change))
     }
 
