@@ -24,20 +24,9 @@ object ScalaWordFinder extends org.scalaide.util.ScalaWordFinder {
   def findWord(document: IDocument, offset: Int): IRegion =
     findWord(docToSeq(document), offset)
 
-  /** See [[findWord(IndexedSeq[Char],Int):IRegion]]. */
   def findWord(buffer: IBuffer, offset: Int): IRegion =
     findWord(bufferToSeq(buffer), offset)
 
-  /**
-   * Find the word enclosing the given `offset`. `$` is not considered part of
-   * an identifier, even though the Scala Specification allows it. We choose this
-   * tradeoff so the word finder does the right thing in interpolated strings, where
-   * `$` is used as a delimiter:
-   *
-   * {{{ s"Hello, $name" }}}
-   *
-   * Here, the identifier is only `name`.
-   */
   def findWord(document: IndexedSeq[Char], offset: Int): IRegion = {
     if (offset < 0 || offset > document.length) throw new IndexOutOfBoundsException("Received an invalid offset for word finding.")
 

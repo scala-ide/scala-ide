@@ -116,13 +116,6 @@ object FileUtils extends org.scalaide.util.FileUtils {
     }
   }
 
-  /**
-   * Creates a file of a given `IFile` and all of its parent folders if needed.
-   * Resource listeners are also notified about the changes.
-   *
-   * Returns `Unit` if the file creation was successful, otherwise the thrown
-   * exception.
-   */
   def createFile(file: IFile): Try[Unit] = Try {
     def createParentFolders(c: IContainer): Unit = c match {
       case f: IFolder if !f.exists() =>
@@ -135,28 +128,15 @@ object FileUtils extends org.scalaide.util.FileUtils {
     file.create(new ByteArrayInputStream(Array()), /* force */ true, null)
   }
 
-  /**
-   * Find a File that matches the given absolute location on the file systme. Since a given
-   * file might "mounted" under multiple locations in the Eclipse file system, the `prefix`
-   * path is used disambiguate.
-   */
+
   def resourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
     val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
     resources.find(prefix isPrefixOf _.getFullPath)
   }
 
-  /** Is the file buildable by the Scala plugin? In other words, is it a
-   *  Java or Scala source file?
-   *
-   *  @note If you don't have an IFile yet, prefer the String overload, as
-   *        creating an IFile is usually expensive
-   */
   def isBuildable(file: IFile): Boolean =
     isBuildable(file.getName())
 
-  /** Is the file buildable by the Scala plugin? In other words, is it a
-   *  Java or Scala source file?
-   */
   def isBuildable(fileName: String): Boolean =
     (fileName.endsWith(SdtConstants.ScalaFileExtn) || fileName.endsWith(SdtConstants.JavaFileExtn))
 }

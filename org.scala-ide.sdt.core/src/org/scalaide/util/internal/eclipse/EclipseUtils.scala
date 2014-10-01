@@ -61,11 +61,6 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
   def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
     new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
-  /** Run the given function as a workspace runnable inside `wspace`.
-   *
-   *  @param wspace the workspace
-   *  @param monitor the progress monitor (defaults to null for no progress monitor).
-   */
   def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
     wspace.run(new IWorkspaceRunnable {
       def run(monitor: IProgressMonitor) {
@@ -90,13 +85,6 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
     job
   }
 
-  /** Create and schedule a job with the given name. Default values for scheduling rules and priority are taken
-   *  from the `Job` implementation.
-   *
-   *  @param rule The scheduling rule
-   *  @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
-   *  @return The job
-   */
   def scheduleJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
     val j = prepareJob(name, rule, priority)(f)
     j.schedule()
@@ -113,12 +101,6 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
       page <- window.getPages
     } yield page
 
-  /**
-   * Returns the location of the source bundle for the bundle.
-   *
-   * @param bundleId the bundle id
-   * @param bundelPath the bundle location
-   */
   def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
     val jarFile = bundlePath.lastSegment()
     val parentFolder = bundlePath.removeLastSegments(1)
@@ -156,17 +138,9 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
       p append other
   }
 
-  /**
-   * Returns all existing configuration elements of a given extension point ID.
-   * Returns an empty array if the ID is not found.
-   */
   def configElementsForExtension(id: String): Array[IConfigurationElement] =
     Platform.getExtensionRegistry().getConfigurationElementsFor(id)
 
-  /**
-   * Executes a given function in a safe runner that catches potential occuring
-   * exceptions and logs them if this is the case.
-   */
   def withSafeRunner(f: => Unit): Unit = {
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =

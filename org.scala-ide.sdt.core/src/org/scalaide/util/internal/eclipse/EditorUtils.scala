@@ -93,15 +93,6 @@ object EditorUtils extends org.scalaide.util.EditorUtils {
   def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
     if (p.isEditorAreaVisible) Some(p.getActiveEditor) else None
 
-  /**
-   * Returns the resource of the active editor if it exists.
-   *
-   * This method returns `None` in the following cases:
-   * - It is not executed on the UI thread
-   * - The active selection is not an editor
-   * - The active editor doesn't provide a resource (which is the case if an
-   *   [[IClassFile]] is opened)
-   */
   def resourceOfActiveEditor: Option[IResource] = for {
     w <- activeWorkbenchWindow
     p <- activePage(w)
@@ -167,13 +158,6 @@ object EditorUtils extends org.scalaide.util.EditorUtils {
     }
   }
 
-  /**
-   * Given an `ISourceViewer` it applies `f` on the underlying document's model.
-   * If one of the involved components is `null`, even if `f` returns `null`, this
-   * method returns `None`, otherwise the result of `f`.
-   *
-   * This method is UI independent.
-   */
   def withDocument[A](sourceViewer: ISourceViewer)(f: IDocument => A): Option[A] =
     for {
       s <- Option(sourceViewer)
@@ -181,11 +165,6 @@ object EditorUtils extends org.scalaide.util.EditorUtils {
       r <- Option(f(d))
     } yield r
 
-  /**
-   * Enters the editor in the LinkedModeUI with the given list of position groups.
-   * Each position group is a list of positions with identical strings.
-   * A position is given as an offset and the length.
-   */
   def enterMultiLinkedModeUi(positionGroups: List[List[(Int, Int)]], selectFirst: Boolean): Unit =
     EditorUtils.doWithCurrentEditor { editor =>
 
@@ -214,10 +193,6 @@ object EditorUtils extends org.scalaide.util.EditorUtils {
         viewer.setSelectedRange(priorSelection.x, priorSelection.y)
     }
 
-  /**
-   * Enters the editor in the LinkedModeUI with the given list of positions.
-   * A position is given as an offset and the length.
-   */
   def enterLinkedModeUi(ps: List[(Int, Int)], selectFirst: Boolean): Unit =
     enterMultiLinkedModeUi(ps :: Nil, selectFirst)
 

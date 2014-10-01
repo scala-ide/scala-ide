@@ -19,8 +19,6 @@ object Utils extends HasLogger with org.scalaide.util.Utils {
     (res, System.currentTimeMillis() - start)
   }
 
-  /** Evaluated `op' and log the time in ms it took to execute it.
-   */
   def debugTimed[A](name: String)(op: => A): A = {
     val start = System.currentTimeMillis
     val res = op
@@ -30,7 +28,6 @@ object Utils extends HasLogger with org.scalaide.util.Utils {
     res
   }
 
-  /** Try executing the passed `action` and log any exception occurring. */
   def tryExecute[T](action: => T, msgIfError: => Option[String] = None): Option[T] = {
     try Some(action)
     catch {
@@ -45,18 +42,6 @@ object Utils extends HasLogger with org.scalaide.util.Utils {
 
   implicit class WithAsInstanceOfOpt(obj: AnyRef) extends org.scalaide.util.UtilsImplicits.WithAsInstanceOfOpt(obj) {
 
-    /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
-     *
-     *  xs: List[Int]
-     *
-     *  xs.asInstanceOfOpt[List[Int]] == xs.asInstanceOfOpt[List[Double]] == xs.asInstanceOfOpt[Seq[Int]] == Some(xs)
-     *
-     *  and
-     *
-     *  xs.asInstanceOfOpt[String] == xs.asInstanceOfOpt[Set[Int]] == None
-     *
-     *  @return None if the cast fails or the object is null, Some[B] otherwise
-     */
     def asInstanceOfOpt[B: ClassTag]: Option[B] = obj match {
       case b: B => Some(b)
       case _    => None
