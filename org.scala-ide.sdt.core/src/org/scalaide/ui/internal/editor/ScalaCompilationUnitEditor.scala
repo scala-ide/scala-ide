@@ -14,6 +14,7 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPainter
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
 trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
@@ -42,7 +43,6 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
     val sv = sourceViewer
     val painter = Seq(new IndentGuidePainter(sv), new InferredSemicolonPainter(sv))
     painter foreach sv.addPainter
-
 
     if (isScalaSemanticHighlightingEnabled)
       installScalaSemanticHighlighting(forceSemanticHighlightingOnInstallment)
@@ -97,7 +97,6 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
     new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
 
   override final def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
-    // getInputJavaElement always returns the right value
-    super.getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
+    IScalaPlugin().scalaCompilationUnit(getEditorInput()).orNull
   }
 }

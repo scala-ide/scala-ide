@@ -406,9 +406,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
-      event match { case e: ScalaInstallationChange =>
-        DisplayThread.asyncExec(doLoad())
-        DisplayThread.asyncExec(handleToggle())
+      event match {
+        case e: ScalaInstallationChange =>
+          DisplayThread.asyncExec(doLoad())
+          DisplayThread.asyncExec(handleToggle())
+        case _ => ()
       }
     }
 
@@ -466,13 +468,15 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     def isChanged() = !(currentValue equals initialValue)
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
-      event match { case e: ScalaInstallationChange =>
-        // the semantics of the initial value have changed through this backend update
-        // it's very important to do this before the Load (platform checks on file IO)
-        initialValue = getPreferenceStore().getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
-        fireValueChanged(FieldEditor.VALUE, "", initialValue)
-        DisplayThread.asyncExec(doLoad())
-        DisplayThread.asyncExec(updateApply())
+      event match {
+        case e: ScalaInstallationChange =>
+          // the semantics of the initial value have changed through this backend update
+          // it's very important to do this before the Load (platform checks on file IO)
+          initialValue = getPreferenceStore().getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
+          fireValueChanged(FieldEditor.VALUE, "", initialValue)
+          DisplayThread.asyncExec(doLoad())
+          DisplayThread.asyncExec(updateApply())
+        case _ => ()
       }
     }
 
@@ -505,9 +509,11 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
-      event match { case e: ScalaInstallationChange =>
-        DisplayThread.asyncExec(doLoad())
-        DisplayThread.asyncExec(updateApply())
+      event match {
+        case e: ScalaInstallationChange =>
+          DisplayThread.asyncExec(doLoad())
+          DisplayThread.asyncExec(updateApply())
+        case _ => ()
       }
     }
 

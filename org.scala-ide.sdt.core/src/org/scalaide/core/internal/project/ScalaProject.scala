@@ -72,7 +72,7 @@ import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
 import org.scalaide.ui.internal.editor.ScalaEditor
-
+import java.io.IOException
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -500,7 +500,18 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    *  @see `storage` for a method that decides based on user preference
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
-    val p = new PropertyStore(new ProjectScope(underlying), SdtConstants.PluginId)
+    val p = new PropertyStore(new ProjectScope(underlying), SdtConstants.PluginId) {
+      override def save() {
+        try {
+          super.save()
+        } catch {
+          case e:IOException =>
+            logger.error(s"An Exception occured saving the project-specific preferences for ${underlying.getName()} ! Your settings will not be persisted. Please report !")
+            throw(e)
+          }
+        }
+
+      }
     p.addPropertyChangeListener(compilerSettingsListener)
     p
   }

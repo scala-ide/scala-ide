@@ -43,7 +43,7 @@ class TextHoverFactory extends TextHoverFactoryInterface {
         } yield variable
       }.flatten getOrElse {
         stringWasReturnedAtGetHoverInfo2 = true
-        super.getHoverInfo(viewer, region)
+        super.getHoverInfo2(viewer, region)
       }
     }
 

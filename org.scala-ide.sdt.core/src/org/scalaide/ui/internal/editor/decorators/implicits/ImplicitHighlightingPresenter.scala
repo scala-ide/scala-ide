@@ -61,12 +61,14 @@ object ImplicitHighlightingPresenter {
     }
 
     def mkImplicitConversionAnnotation(t: ApplyImplicitView) = {
+      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
       val txt = new String(sourceFile.content, t.pos.start, math.max(0, t.pos.end - t.pos.start)).trim()
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
+      val sname = scu.withSourceFile((_, compiler) => compiler.asyncExec{t.fun.symbol.name}.getOption()).flatten
       val annotation = new ImplicitConversionAnnotation(
-          () => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu, t.symbol, region),
-          s"Implicit conversion found: `$txt`$DisplayStringSeparator`${t.fun.symbol.name}($txt): ${t.tpe}`")
+          () => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu.scalaProject.javaProject, t.symbol, region),
+          s"Implicit conversion found: `$txt`$DisplayStringSeparator`${sname.getOrElse("")}($txt): ${t.tpe}`")
 
       (annotation, pos)
     }

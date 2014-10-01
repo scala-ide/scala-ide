@@ -66,8 +66,12 @@ import org.eclipse.core.runtime.content.IContentType
 import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
+import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.scalaide.util.internal.Utils._
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
+import org.eclipse.jdt.core.IClassFile
 
 object ScalaPlugin {
 
@@ -126,9 +130,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
       new RegistryExtender().perform()
     }
-    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE)
+    ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString())
+    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
   }
 
   override def stop(context: BundleContext) = {
@@ -146,12 +150,15 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
-  /**
-   * Finds the `ScalaCompilationUnit` of a given `IEditorInput`. Returns `None`
-   * if no compilation unit is found.
-   */
-  def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
-    Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+  override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
+    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+
+    def unitOfClassFile = input.getAdapter(classOf[IClassFile]) match {
+      case tr: ScalaClassFile => Some(tr)
+      case _                  => None
+    }
+
+    unitOfSourceFile orElse unitOfClassFile
   }
 
   def getJavaProject(project: IProject) = JavaCore.create(project)
@@ -198,6 +205,20 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         disposeProject(project)
       case _ =>
     }
+    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
+      override def visit(delta: IResourceDelta): Boolean = {
+        if (delta.getFlags == IResourceDelta.OPEN){
+          val resource = delta.getResource().asInstanceOfOpt[IProject]
+          resource foreach {(r) =>
+            // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
+            // setting the Installation triggers a recursive check
+            asScalaProject(r) foreach (_.checkClasspath(true))
+          }
+          false
+        } else
+        true
+      }
+    })))
   }
 
   override def elementChanged(event: ElementChangedEvent) {

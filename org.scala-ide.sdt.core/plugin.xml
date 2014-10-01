@@ -745,6 +745,27 @@
 
 
     </objectContribution>
+	<objectContribution
+      id="org.scala-ide.sdt.ui.interperter.start"
+      objectClass="org.eclipse.jdt.core.IJavaElement">
+      <action
+        class="org.scalaide.ui.internal.actions.ScalaInstallationAction"
+        enablesFor="1"
+        menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+        icon="icons/full/etool16/scala_app.gif"
+        id="org.scala-ide.sdt.ui.createInt"
+        label="Set the Scala Installation"
+        tooltip="Set the ScalaInstallation for the selected Project"/>
+
+      <visibility>
+        <and>
+          <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
+          <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+        </and>
+      </visibility>
+
+
+    </objectContribution>
     <objectContribution
           adaptable="true"
           id="org.scala-ide.sdt.core.addScalaLibrary"

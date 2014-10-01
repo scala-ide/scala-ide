@@ -21,6 +21,7 @@ class AddMissingOverrideTest {
 
   @Test
   def no_change_when_nothing_is_overriden() = """^
+    package no_change_when_nothing_is_overriden
     trait T
     trait TT extends T {
       def meth = 0
@@ -28,6 +29,7 @@ class AddMissingOverrideTest {
       type Type = Int
     }
     """ becomes """^
+    package no_change_when_nothing_is_overriden
     trait T
     trait TT extends T {
       def meth = 0
@@ -38,6 +40,7 @@ class AddMissingOverrideTest {
 
   @Test
   def no_change_when_everything_is_already_overriden() = """^
+    package no_change_when_everything_is_already_overriden
     trait T {
       def meth: Int
       val value: Int
@@ -49,6 +52,7 @@ class AddMissingOverrideTest {
       override type Type = Int
     }
     """ becomes """^
+    package no_change_when_everything_is_already_overriden
     trait T {
       def meth: Int
       val value: Int
@@ -63,6 +67,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_method() = """^
+    package add_override_to_method
     trait T {
       def meth: Int
     }
@@ -70,6 +75,7 @@ class AddMissingOverrideTest {
       def meth = 0
     }
     """ becomes """^
+    package add_override_to_method
     trait T {
       def meth: Int
     }
@@ -80,6 +86,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_value() = """^
+    package add_override_to_value
     trait T {
       val value: Int
     }
@@ -87,6 +94,7 @@ class AddMissingOverrideTest {
       val value = 0
     }
     """ becomes """^
+    package add_override_to_value
     trait T {
       val value: Int
     }
@@ -97,6 +105,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_type() = """^
+    package add_override_to_type
     trait T {
       type Type
     }
@@ -104,6 +113,7 @@ class AddMissingOverrideTest {
       type Type = Int
     }
     """ becomes """^
+    package add_override_to_type
     trait T {
       type Type
     }
@@ -114,6 +124,7 @@ class AddMissingOverrideTest {
 
   @Test
   def no_change_for_override_abstract() = """^
+    package no_change_for_override_abstract
     trait T {
       def f = 0
     }
@@ -121,6 +132,7 @@ class AddMissingOverrideTest {
       abstract override def f = super.f+0
     }
     """ becomes """^
+    package no_change_for_override_abstract
     trait T {
       def f = 0
     }
@@ -131,12 +143,14 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_modifier_to_constructor_param() = """^
+    package add_override_modifier_to_constructor_param
     trait T {
       def meth: Int
     }
     case class C(val meth: Int) extends T
     class D(val meth: Int) extends T
     """ becomes """^
+    package add_override_modifier_to_constructor_param
     trait T {
       def meth: Int
     }
@@ -146,12 +160,14 @@ class AddMissingOverrideTest {
 
   @Test
   def add_val_keyword_when_override_modifier_is_added_to_constructor_param() = """^
+    package add_val_keyword_when_override_modifier_is_added_to_constructor_param
     trait T {
       def meth: Int
     }
     case class C(meth: Int) extends T
     class D(meth: Int) extends T
     """ becomes """^
+    package add_val_keyword_when_override_modifier_is_added_to_constructor_param
     trait T {
       def meth: Int
     }
@@ -161,6 +177,7 @@ class AddMissingOverrideTest {
 
   @Test
   def no_change_to_constructor_param_when_nothing_is_overriden() = """^
+    package no_change_to_constructor_param_when_nothing_is_overriden
     trait T {
       def meth: Int
     }
@@ -168,6 +185,7 @@ class AddMissingOverrideTest {
     class C(meth: Int)
     class D(meth: Int, func: Int) extends T
     """ becomes """^
+    package no_change_to_constructor_param_when_nothing_is_overriden
     trait T {
       def meth: Int
     }
@@ -178,6 +196,7 @@ class AddMissingOverrideTest {
 
   @Test @Ignore("Unimplemented. See ticket #1002222")
   def add_override_to_symbols_from_self_references() = """^
+    package add_override_to_symbols_from_self_references
     trait T {
       def meth: Int
     }
@@ -186,6 +205,7 @@ class AddMissingOverrideTest {
       def meth = 0
     }
     """ becomes """^
+    package add_override_to_symbols_from_self_references
     trait T {
       def meth: Int
     }
@@ -197,6 +217,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_lazy_val() = """^
+    package add_override_to_lazy_val
     trait T {
       def f: Int
     }
@@ -204,6 +225,7 @@ class AddMissingOverrideTest {
       lazy val f = 0
     }
     """ becomes """^
+    package add_override_to_lazy_val
     trait T {
       def f: Int
     }
@@ -214,6 +236,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_no_override_to_var_that_overrides_non_var() = """^
+    package add_no_override_to_var_that_overrides_non_var
     trait T {
       def f: Int
     }
@@ -221,6 +244,7 @@ class AddMissingOverrideTest {
       var f = 0
     }
     """ becomes """^
+    package add_no_override_to_var_that_overrides_non_var
     trait T {
       def f: Int
     }
@@ -231,6 +255,7 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_var_that_overrides_a_var() = """^
+    package add_override_to_var_that_overrides_a_var
     trait T {
       var f: Int
     }
@@ -238,6 +263,7 @@ class AddMissingOverrideTest {
       var f = 0
     }
     """ becomes """^
+    package add_override_to_var_that_overrides_a_var
     trait T {
       var f: Int
     }

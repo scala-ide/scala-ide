@@ -14,6 +14,7 @@ import org.eclipse.jface.text.information.IInformationProviderExtension2
 final class HoverInformationProvider(hover: Option[ScalaHover])
     extends IInformationProvider with IInformationProviderExtension with IInformationProviderExtension2 {
 
+  @deprecated("Use getInformation2 instead", "4.0.0")
   def getInformation(viewer: ITextViewer, subject: IRegion): String =
     hover.map(_.getHoverInfo(viewer, subject)).orNull
 
