@@ -73,7 +73,7 @@ trait UtilsImplicits {
     def asInstanceOfOpt[B: ClassTag]: Option[B]
   }
 
-  abstract class PimpedPreferenceStore(preferenceStore: IPreferenceStore) {
+  abstract class RichPreferenceStore(preferenceStore: IPreferenceStore) {
     /**
      * Returns the current value of the color-valued preference with the
      * given name in the given preference store.
@@ -82,7 +82,7 @@ trait UtilsImplicits {
     def getColor(key: String): RGB
   }
 
-  abstract class PimpedDocument(document: IDocument) {
+  abstract class RichDocument(document: IDocument) {
   /**
    * Returns the character at the given document offset in this document.
    *
@@ -91,7 +91,7 @@ trait UtilsImplicits {
     def apply(offset: Int): Char
   }
 
-  abstract class PimpedAdaptable(adaptable: IAdaptable) {
+  abstract class RichAdaptable(adaptable: IAdaptable) {
 
     /**
    * Returns an object which is an instance of the given class
@@ -109,27 +109,27 @@ trait UtilsImplicits {
      *
      * @see [[adaptTo]]
      */
-    def adaptToSafe[T](implicit m: Manifest[T]): Option[T]
+    def adaptToOpt[T](implicit m: Manifest[T]): Option[T]
 
   }
 
   def withAsInstanceOfOpt(obj:AnyRef): WithAsInstanceOfOpt
-  def pimpedPreferenceStore(preferenceStore: IPreferenceStore):PimpedPreferenceStore
-  def pimpedDocument(document: IDocument): PimpedDocument
-  def pimpedAdaptable(adaptable: IAdaptable): PimpedAdaptable
+  def richPreferenceStore(preferenceStore: IPreferenceStore):RichPreferenceStore
+  def richDocument(document: IDocument): RichDocument
+  def richAdaptable(adaptable: IAdaptable): RichAdaptable
 }
 
 object UtilsImplicits extends UtilsImplicits {
 
   import org.scalaide.util.internal.Utils.{WithAsInstanceOfOpt => WithAsInstanceOfOptImplem}
-  import org.scalaide.util.internal.eclipse.EclipseUtils.{PimpedPreferenceStore => PimpedPreferenceStoreImplem}
-  import org.scalaide.util.internal.eclipse.EclipseUtils.{PimpedDocument => PimpedDocumentImplem}
-  import org.scalaide.util.internal.eclipse.EclipseUtils.{PimpedAdaptable => PimpedAdaptableImplem}
+  import org.scalaide.util.internal.eclipse.EclipseUtils.{RichPreferenceStore => RichPreferenceStoreImplem}
+  import org.scalaide.util.internal.eclipse.EclipseUtils.{RichDocument => RichDocumentImplem}
+  import org.scalaide.util.internal.eclipse.EclipseUtils.{RichAdaptable => RichAdaptableImplem}
 
   implicit def withAsInstanceOfOpt(obj: AnyRef) = WithAsInstanceOfOptImplem(obj)
-  implicit def pimpedPreferenceStore(preferenceStore: IPreferenceStore) = PimpedPreferenceStoreImplem(preferenceStore)
-  implicit def pimpedDocument(document: IDocument) = PimpedDocumentImplem(document)
-  implicit def pimpedAdaptable(adaptable: IAdaptable) = PimpedAdaptableImplem(adaptable)
+  implicit def richPreferenceStore(preferenceStore: IPreferenceStore) = RichPreferenceStoreImplem(preferenceStore)
+  implicit def richDocument(document: IDocument) = RichDocumentImplem(document)
+  implicit def richAdaptable(adaptable: IAdaptable) = RichAdaptableImplem(adaptable)
 
 }
 
@@ -137,7 +137,7 @@ object UtilsImplicits extends UtilsImplicits {
  *  A class which augments a `Control` with functions to define listeners
  *  for key presses, key releases, and lost focus.
  */
-abstract class PimpedControl(control: Control) {
+abstract class RichControl(control: Control) {
 
   def onKeyReleased(p: KeyEvent => Any): Unit
 
@@ -213,7 +213,7 @@ object EclipseUtils {
 
 trait SWTUtils {
 
-  def pimpedControl(control: Control): PimpedControl
+  def richControl(control: Control): RichControl
 
   /** Returns an adapter class that provides default implementations for the
    *  methods described by the SelectionListener interface.
@@ -290,7 +290,7 @@ object SWTUtils extends SWTUtils {
 
   import org.scalaide.util.internal.eclipse.{SWTUtils => SWTUtilsImplem}
 
-  implicit def pimpedControl(control:Control): PimpedControl = new SWTUtilsImplem.PimpedControl(control)
+  implicit def richControl(control:Control): RichControl = new SWTUtilsImplem.RichControl(control)
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any) = SWTUtilsImplem.fnToSelectionAdapter(p)
   implicit def fnToDoubleClickListener(p: DoubleClickEvent => Any) = SWTUtilsImplem.fnToDoubleClickListener(p)
   implicit def fnToPropertyChangeListener(p: PropertyChangeEvent => Any) = SWTUtilsImplem.fnToPropertyChangeListener(p)

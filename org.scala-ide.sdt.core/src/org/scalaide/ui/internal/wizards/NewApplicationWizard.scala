@@ -118,7 +118,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     launchConfig.doSave()
   }
 
-  import org.scalaide.util.UtilsImplicits.pimpedAdaptable
+  import org.scalaide.util.UtilsImplicits.richAdaptable
   import org.scalaide.util.EclipseUtils
 
   private def getCurrentEditorAsSelection: Option[IStructuredSelection] =
@@ -126,7 +126,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
       workbenchWindow <- Option(getWorkbench.getActiveWorkbenchWindow)
       page <- Option(workbenchWindow.getActivePage)
       editor <- Option(page.getActiveEditor)
-      resource <- editor.getEditorInput.adaptToSafe[IResource]
+      resource <- editor.getEditorInput.adaptToOpt[IResource]
     } yield new StructuredSelection(resource)
 
   private def getPackageFragments(selection: IStructuredSelection): List[IPackageFragment] =

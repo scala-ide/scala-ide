@@ -79,8 +79,9 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     g
   }
 
-  private def checkBox(preference: String, labelText: String, parent: Composite): org.scalaide.util.internal.eclipse.SWTUtils.CheckBox = {
-    val b = new org.scalaide.util.internal.eclipse.SWTUtils.CheckBox(store, preference, labelText, parent)
+  import org.scalaide.util.internal.eclipse.SWTUtils.CheckBox
+  private def checkBox(preference: String, labelText: String, parent: Composite): CheckBox = {
+    val b = new CheckBox(store, preference, labelText, parent)
     preferencesToSave += { () => b.store() }
     b
   }

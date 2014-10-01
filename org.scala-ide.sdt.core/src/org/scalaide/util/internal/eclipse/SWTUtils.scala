@@ -80,7 +80,7 @@ object SWTUtils extends org.scalaide.util.SWTUtils {
       def doubleClick(event: DoubleClickEvent) { p(event) }
     }
 
-  class PimpedControl(control: Control) extends org.scalaide.util.PimpedControl(control) {
+  class RichControl(control: Control) extends org.scalaide.util.RichControl(control) {
 
    def onKeyReleased(p: KeyEvent => Any) {
       control.addKeyListener(new KeyAdapter {

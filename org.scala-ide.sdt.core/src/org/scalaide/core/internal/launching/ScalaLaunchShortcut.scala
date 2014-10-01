@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.launching
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.UtilsImplicits.pimpedAdaptable
+import org.scalaide.util.UtilsImplicits.richAdaptable
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.DebugPlugin
@@ -179,7 +179,7 @@ object ScalaLaunchShortcut {
   /** Return all objects that have an executable main method. */
   def getMainMethods(element: AnyRef): List[IType] = {
     (for {
-      je <- element.asInstanceOf[IAdaptable].adaptToSafe[IJavaElement]
+      je <- element.asInstanceOf[IAdaptable].adaptToOpt[IJavaElement]
     } yield je.getOpenable match {
       case scu: ScalaSourceFile =>
 

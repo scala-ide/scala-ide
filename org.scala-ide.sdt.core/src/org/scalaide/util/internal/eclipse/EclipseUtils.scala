@@ -33,21 +33,21 @@ import scala.util.Try
 
 object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
 
-  implicit class PimpedAdaptable(adaptable: IAdaptable) extends org.scalaide.util.UtilsImplicits.PimpedAdaptable(adaptable) {
+  implicit class RichAdaptable(adaptable: IAdaptable) extends org.scalaide.util.UtilsImplicits.RichAdaptable(adaptable) {
 
     def adaptTo[T](implicit m: Manifest[T]): T = adaptable.getAdapter(m.runtimeClass).asInstanceOf[T]
 
-    def adaptToSafe[T](implicit m: Manifest[T]): Option[T] = Option(adaptable.getAdapter(m.runtimeClass).asInstanceOf[T])
+    def adaptToOpt[T](implicit m: Manifest[T]): Option[T] = Option(adaptable.getAdapter(m.runtimeClass).asInstanceOf[T])
 
   }
 
-  implicit class PimpedPreferenceStore(preferenceStore: IPreferenceStore) extends org.scalaide.util.UtilsImplicits.PimpedPreferenceStore(preferenceStore) {
+  implicit class RichPreferenceStore(preferenceStore: IPreferenceStore) extends org.scalaide.util.UtilsImplicits.RichPreferenceStore(preferenceStore) {
 
     override def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
 
   }
 
-  implicit class PimpedDocument(document: IDocument) extends org.scalaide.util.UtilsImplicits.PimpedDocument(document) {
+  implicit class RichDocument(document: IDocument) extends org.scalaide.util.UtilsImplicits.RichDocument(document) {
 
     def apply(offset: Int): Char = document.getChar(offset)
 

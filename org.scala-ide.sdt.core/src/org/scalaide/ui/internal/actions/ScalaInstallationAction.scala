@@ -8,7 +8,7 @@ import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.IAdaptable
-import org.scalaide.util.UtilsImplicits.pimpedAdaptable
+import org.scalaide.util.UtilsImplicits.richAdaptable
 import org.eclipse.jface.viewers.IContentProvider
 import org.eclipse.jface.viewers.ILabelProvider
 import org.eclipse.ui.dialogs.ElementListSelectionDialog
@@ -35,7 +35,7 @@ class ScalaInstallationAction extends IObjectActionDelegate {
 
   private def selectionObjectToProject(selectionElement: Object): Option[IProject] = selectionElement match {
     case project: IProject => Some(project)
-    case adaptable: IAdaptable => adaptable.adaptToSafe[IProject]
+    case adaptable: IAdaptable => adaptable.adaptToOpt[IProject]
     case _ => None
   }
 

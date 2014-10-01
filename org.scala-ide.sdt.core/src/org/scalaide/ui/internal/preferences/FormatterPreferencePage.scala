@@ -103,7 +103,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
     protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]) {
       import org.scalaide.util.SWTUtils.fnToPropertyChangeListener
-      import org.scalaide.util.SWTUtils.pimpedControl
+      import org.scalaide.util.SWTUtils.richControl
 
       val IntegerPreference(min, max) = preference.preferenceType
       val label = new Label(parent, SWT.LEFT)
