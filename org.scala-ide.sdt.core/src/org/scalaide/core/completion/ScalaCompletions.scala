@@ -25,10 +25,21 @@ import org.scalaide.util.internal.Commons
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
 
-  def findCompletions(region: IRegion)(position: Int, scu: InteractiveCompilationUnit)
-                             (sourceFile: SourceFile, compiler: IScalaPresentationCompiler): List[CompletionProposal] = {
+  /** Returns the list of possible completions, at the given position in the compilation unit,
+   *  with the given region as completion prefix.
+   */
+  def findCompletions(region: IRegion, position: Int, icu: InteractiveCompilationUnit): List[CompletionProposal] =
+    icu.scalaProject.presentationCompiler { compiler =>
+      findCompletion(region, position, icu, compiler)
+    }.getOrElse(Nil)
+
+  private def findCompletion(region: IRegion, position: Int, icu: InteractiveCompilationUnit, compiler: IScalaPresentationCompiler): List[CompletionProposal] = {
     val wordStart = region.getOffset
-    val scalaContents = scu.lastSourceMap().scalaSource
+
+    val sourceMap = icu.lastSourceMap()
+    val sourceFile = sourceMap.sourceFile
+
+    val scalaContents = sourceMap.scalaSource
     val wordAtPosition = if (position <= wordStart) "" else scalaContents.slice(wordStart, position).mkString.trim
     val defaultContext = if (scalaContents(wordStart - 1) != '.') CompletionContext.InfixMethodContext else CompletionContext.DefaultContext
     val pos = compiler.rangePos(sourceFile, position, position, position)
@@ -58,14 +69,13 @@ class ScalaCompletions extends HasLogger {
           !sym.isConstructor && nameMatches(sym)
       }
 
-
       compiler.asyncExec {
         for (completion <- completions) {
           val completionProposal = completion match {
             case compiler.TypeMember(sym, tpe, true, inherited, viaView) if completionFilter(sym, viaView, Some(inherited)) =>
-              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, contextType, scu.scalaProject))
+              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, inherited, viaView, contextType, icu.scalaProject))
             case compiler.ScopeMember(sym, tpe, true, _) if completionFilter(sym) =>
-              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, contextType, scu.scalaProject))
+              Some(compiler.mkCompletionProposal(matchName, start, sym, tpe, false, compiler.NoSymbol, contextType, icu.scalaProject))
             case _ => None
           }
 
@@ -79,7 +89,7 @@ class ScalaCompletions extends HasLogger {
     }
 
     def fillTypeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
-                            matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def typeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
         val completed = compiler.askTypeCompletion(cpos)
@@ -89,7 +99,7 @@ class ScalaCompletions extends HasLogger {
     }
 
     def fillScopeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
-                             matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
         val completed = compiler.askScopeCompletion(cpos)
@@ -104,9 +114,9 @@ class ScalaCompletions extends HasLogger {
         e <- t1 if (e.pos.isDefined && pos > e.pos.start)
         length = pos - e.pos.start
         // get text of tree element, removing all whitespace
-        content = sourceFile.content.slice(e.pos.start, position).filterNot {c => c.isWhitespace}
+        content = sourceFile.content.slice(e.pos.start, position).filterNot { c => c.isWhitespace }
         // see if it looks like qualified type reference
-        if (length > matchName.length + 1 && content.find {c => !c.isUnicodeIdentifierPart && c != ','} == None)
+        if (length > matchName.length + 1 && content.find { c => !c.isUnicodeIdentifierPart && c != ',' } == None)
       } yield content.slice(0, content.length - matchName.length - 1)
 
       logger.info(s"Search for: [${packageName.map(_.mkString)}].${matchName.mkString}")
@@ -152,10 +162,10 @@ class ScalaCompletions extends HasLogger {
         new SearchEngine().searchAllTypeNames(
           packageName.getOrElse(null),
           SearchPattern.R_EXACT_MATCH,
-          matchName.toCharArray,
+          matchName.toCharArray(),
           if (prefixMatch) SearchPattern.R_PREFIX_MATCH else SearchPattern.R_EXACT_MATCH,
           IJavaSearchConstants.TYPE,
-          SearchEngine.createJavaSearchScope(Array[IJavaElement](scu.scalaProject.javaProject), true),
+          SearchEngine.createJavaSearchScope(Array[IJavaElement](icu.scalaProject.javaProject), true),
           requestor,
           if (IScalaPlugin().noTimeoutMode) {
             IJavaSearchConstants.WAIT_UNTIL_READY_TO_SEARCH

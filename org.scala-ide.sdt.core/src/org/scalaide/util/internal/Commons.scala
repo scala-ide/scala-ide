@@ -34,9 +34,12 @@ object Commons {
     xs
   }
 
-  /**
+  /** Returns `true` if the given name match the prefix, in a case insensitive way, or
+   *  as a camel case match.
+   *
+   *  @see org.eclipse.jdt.core.compiler.CharOperation#camelCaseMatch
    */
-  def prefixMatches(name: String, prefix: String) = {
+  def prefixMatches(name: String, prefix: String): Boolean = {
     val nameA = name.toCharArray()
     val prefixA = prefix.toCharArray()
     CharOperation.prefixEquals(prefixA, nameA, false) || CharOperation.camelCaseMatch(prefixA, nameA)
