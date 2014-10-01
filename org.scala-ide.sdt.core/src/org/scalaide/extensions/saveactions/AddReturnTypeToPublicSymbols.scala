@@ -47,6 +47,12 @@ trait AddReturnTypeToPublicSymbols extends SaveAction with CompilerSupport {
           }
     }
 
+    val validSymbol = filter {
+      case d @ ValOrDefDef(_, TermName(name), tpt, _) =>
+        val t = tpt.tpe
+        !(t =:= typeOf[Nothing] || t =:= typeOf[Null] || t.isErroneous)
+    }
+
     val addReturnType = transform {
       case d @ ValOrDefDef(_, _, tpt: TypeTree, _) =>
         val newTpt = tpt setOriginal mkReturn(List(tpt.tpe.typeSymbol))
@@ -58,7 +64,7 @@ trait AddReturnTypeToPublicSymbols extends SaveAction with CompilerSupport {
 
     val refactoring = topdown {
       matchingChildren {
-        symbolWithoutReturnType &> addReturnType
+        symbolWithoutReturnType &> validSymbol &> addReturnType
       }
     }
     transformFile(refactoring)

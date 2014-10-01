@@ -287,4 +287,30 @@ class AddReturnTypeToPublicSymbolsTest {
       def meth: Int
     }
     """ after SaveEvent
+
+  @Test
+  def do_no_add_Null_type() = """^
+    package do_no_add_Null_type
+    object X {
+      def f = null
+    }
+    """ becomes """^
+    package do_no_add_Null_type
+    object X {
+      def f = null
+    }
+    """ after SaveEvent
+
+  @Test
+  def do_no_add_Nothing_type() = """^
+    package do_no_add_Nothing_type
+    object X {
+      def f = ???
+    }
+    """ becomes """^
+    package do_no_add_Nothing_type
+    object X {
+      def f = ???
+    }
+    """ after SaveEvent
 }
