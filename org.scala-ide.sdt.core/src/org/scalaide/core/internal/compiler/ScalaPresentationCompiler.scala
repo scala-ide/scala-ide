@@ -204,7 +204,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     askLoadedTyped(sourceFile, keepLoaded).get
   }
 
-  /** Perform `op' on the compiler thread. This method returns a `Response` that may
+  /** Perform `op` on the compiler thread. This method returns a `Response` that may
    *  never complete (there is no default timeout). In very rare cases, the current presentation compiler
    *  might restart and miss to complete a pending request. Clients should always specify
    *  a timeout value when awaiting on a future returned by this method.
