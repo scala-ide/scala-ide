@@ -6,6 +6,7 @@ import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.rename.Rename
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
 abstract class ProposalRefactoringHandlerAdapter(
     handler: RefactoringHandler,

@@ -11,6 +11,8 @@ import scala.concurrent.Await
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.util.Try
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits._
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
 /*
  * Find another member with the same spelling but different capitalization.

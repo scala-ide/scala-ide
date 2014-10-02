@@ -13,7 +13,7 @@ import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.ui.IFileEditorInput
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.quickfix.BasicCompletionProposal
+import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.util.internal.eclipse.TextEditUtils
@@ -21,11 +21,11 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, highlightTo: Int, relevance: Int = 0)
   extends BasicCompletionProposal(relevance, displayString) with ICompletionProposalExtension2 {
 
-  def apply(doc: IDocument)
+  override def apply(doc: IDocument): Unit
 
   private var markerOpt: Option[IMarker] = None
 
-  def selected(viewer: ITextViewer, smartToggle: Boolean) = {
+  override def selected(viewer: ITextViewer, smartToggle: Boolean): Unit = {
     markerOpt.foreach(_.delete())
     EditorUtils.doWithCurrentEditor { editor =>
       markerOpt = editor.getEditorInput() match {
@@ -39,12 +39,12 @@ abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, hi
     }
   }
 
-  def unselected(viewer: ITextViewer) = {
+  override def unselected(viewer: ITextViewer): Unit = {
     markerOpt.foreach(_.delete())
   }
 
-  def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int) = apply(null)
-  def validate(document: IDocument, offset: Int, event: DocumentEvent) = true
+  override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = apply(null)
+  override def validate(document: IDocument, offset: Int, event: DocumentEvent): Boolean = true
 }
 
 object ExtractionProposal {
@@ -59,7 +59,7 @@ object ExtractionProposal {
         val pos = extraction.extractionTarget.enclosing.pos
 
         proposals += new ExtractionProposal(extraction.displayName, pos.start, pos.end, relevance) {
-          def apply(doc: IDocument) = {
+          override def apply(doc: IDocument) = {
             refactoring.perform(extraction) match {
               case Right((change: TextChange) :: Nil) =>
                 EditorUtils.doWithCurrentEditor { editor =>
@@ -79,7 +79,7 @@ object ExtractionProposal {
 
   private def createRefactoring(compiler: IScalaPresentationCompiler, file: SourceFile, selectionStart: Int, selectionEnd: Int) =
     new ExtractCode with InteractiveScalaCompiler {
-      val global = compiler
+      override val global = compiler
 
       val selection =
         askLoadedAndTypedTreeForFile(file).fold(new FileSelection(file.file, _, selectionStart, selectionEnd), throw _)

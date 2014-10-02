@@ -4,6 +4,7 @@ import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
 class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
   extends BasicCompletionProposal(relevance = RelevanceValues.ExpandingProposalBase, displayString = displayString + msg) {
@@ -13,7 +14,7 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
    *
    * @param document the document into which to insert the proposed completion
    */
-  def apply(document: IDocument): Unit = {
+  override def apply(document: IDocument): Unit = {
     // We extract the replacement string from the marker's message.
     val ReplacementExtractor = s"(?s).*${ImplicitHighlightingPresenter.DisplayStringSeparator}(.*)".r
     val ReplacementExtractor(replacement) = msg

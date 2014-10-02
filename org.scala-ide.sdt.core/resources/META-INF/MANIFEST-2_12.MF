@@ -108,6 +108,7 @@ Export-Package:
  org.scalaide.core.internal.quickfix.explicit,
  org.scalaide.core.internal.repl,
  org.scalaide.core.lexical,
+ org.scalaide.core.quickassist,
  org.scalaide.core.resources,
  org.scalaide.logging,
  org.scalaide.refactoring.internal,

@@ -9,6 +9,7 @@ import org.eclipse.jface.wizard.WizardDialog
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.wizards.NewFileWizardAdapter
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
 /**
  * Opens a `NewFileWizard`, which has the class creator selected on startup. If
