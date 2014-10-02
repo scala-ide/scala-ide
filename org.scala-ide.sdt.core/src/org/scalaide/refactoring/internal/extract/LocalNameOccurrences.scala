@@ -4,11 +4,11 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.common.Occurrences
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 case class LocalNameOccurrences(name: String) {
   private val os =
-    EditorUtils().withCurrentScalaSourceFile { file =>
+    EditorUtils.withCurrentScalaSourceFile { file =>
       file.withSourceFile { (sourceFile, compiler) =>
         new Occurrences with GlobalIndexes with InteractiveScalaCompiler {
           val global = compiler
@@ -34,6 +34,6 @@ case class LocalNameOccurrences(name: String) {
     val nameOccurrences = termNameOccurrences(name)
     val paramOccurrences = parameterOccurrences(name)
 
-    EditorUtils().enterMultiLinkedModeUi(nameOccurrences :: paramOccurrences, selectFirst = true)
+    EditorUtils.enterMultiLinkedModeUi(nameOccurrences :: paramOccurrences, selectFirst = true)
   }
 }

@@ -11,7 +11,7 @@ import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.IFormatterCleanUpProvider
-import org.scalaide.util.internal.eclipse.EclipseUtils.asEclipseTextEdit
+import org.scalaide.util.eclipse.EclipseUtils.asEclipseTextEdit
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
 
 class ScalaFormatterCleanUpProvider extends IFormatterCleanUpProvider {

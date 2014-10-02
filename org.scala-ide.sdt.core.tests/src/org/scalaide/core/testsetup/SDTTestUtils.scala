@@ -17,8 +17,8 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.scalaide.util.OSGiUtils
-import org.scalaide.util.EclipseUtils
+import org.scalaide.util.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -51,7 +51,7 @@ object SDTTestUtils extends HasLogger {
 
   def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName)
-    OSGiUtils().pathInBundle(bundle, File.separatorChar + "test-workspace").get
+    OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
 
   /** Enable workspace auto-building */
@@ -70,7 +70,7 @@ object SDTTestUtils extends HasLogger {
    *  exist in the source workspace.
    */
   def setupProject(name: String, bundleName: String): ScalaProject = {
-    EclipseUtils().workspaceRunnableIn(workspace) { monitor =>
+    EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
       val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
@@ -244,7 +244,7 @@ object SDTTestUtils extends HasLogger {
     names map (n => createProjectInWorkspace(n, true))
 
   def deleteProjects(projects: IScalaProject*): Unit = {
-    EclipseUtils().workspaceRunnableIn(EclipseUtils().workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }
   }

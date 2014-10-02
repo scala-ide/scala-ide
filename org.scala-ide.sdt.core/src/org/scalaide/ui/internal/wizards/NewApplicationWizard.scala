@@ -90,7 +90,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
   }
 
   override def performFinish: Boolean = page.getSelectedPackage forall
-      {(pkg) => Utils().tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)}
+      {(pkg) => Utils.tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)}
 
 
   private def openInEditor(file: IFile) = {
@@ -118,8 +118,8 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     launchConfig.doSave()
   }
 
-  import org.scalaide.util.UtilsImplicits.richAdaptable
-  import org.scalaide.util.EclipseUtils
+  import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
+  import org.scalaide.util.eclipse.EclipseUtils
 
   private def getCurrentEditorAsSelection: Option[IStructuredSelection] =
     for {
@@ -135,14 +135,14 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
         List(packageFragment)
       case _ =>
         (for {
-          resource <- EclipseUtils().computeSelectedResources(selection)
+          resource <- EclipseUtils.computeSelectedResources(selection)
           if resource.getProject.isOpen
           packageFragment <- getPackageFragments(resource.getProject)
         } yield packageFragment).distinct
     }
 
   private def getPackageFragments(project: IProject): List[IPackageFragment] = {
-    import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
     for {
       packageFragmentRoot <- JavaCore.create(project).getAllPackageFragmentRoots.toList
       if packageFragmentRoot.getKind == IPackageFragmentRoot.K_SOURCE

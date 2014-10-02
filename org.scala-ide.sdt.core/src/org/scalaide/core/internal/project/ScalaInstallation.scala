@@ -12,12 +12,12 @@ import org.osgi.framework.Bundle
 import org.osgi.framework.Version
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
-import org.scalaide.util.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import xsbti.compile.ScalaInstance
 import java.net.URLClassLoader
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.collection.mutable.Set
-import org.scalaide.util.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.IStatus
@@ -142,7 +142,7 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends IScala
 
 object ScalaModule {
   def apply(bundleId: String, classJar: IPath): ScalaModule = {
-    ScalaModule(classJar, EclipseUtils().computeSourcePath(bundleId, classJar))
+    ScalaModule(classJar, EclipseUtils.computeSourcePath(bundleId, classJar))
   }
 }
 
@@ -166,8 +166,8 @@ case class BundledScalaInstallation(
       findExtraJar(bundle, ScalaSwingPath, ScalaSwingSourcesPath)).flatten
 
   private def findExtraJar(bundle: Bundle, classPath: String, sourcePath: String): Option[ScalaModule] = {
-    OSGiUtils().pathInBundle(bundle, classPath).map { p =>
-      ScalaModule(p, OSGiUtils().pathInBundle(bundle, sourcePath))
+    OSGiUtils.pathInBundle(bundle, classPath).map { p =>
+      ScalaModule(p, OSGiUtils.pathInBundle(bundle, sourcePath))
     }
   }
 }
@@ -187,14 +187,14 @@ object BundledScalaInstallation {
 
   def apply(bundle: Bundle): Option[BundledScalaInstallation] = {
     for {
-      scalaLibrary <- OSGiUtils().pathInBundle(bundle, ScalaLibraryPath)
+      scalaLibrary <- OSGiUtils.pathInBundle(bundle, ScalaLibraryPath)
       version <- ScalaInstallation.extractVersion(scalaLibrary)
-      scalaCompiler <- OSGiUtils().pathInBundle(bundle, ScalaCompilerPath)
+      scalaCompiler <- OSGiUtils.pathInBundle(bundle, ScalaCompilerPath)
     } yield BundledScalaInstallation(
       version,
       bundle,
-      ScalaModule(scalaLibrary, OSGiUtils().pathInBundle(bundle, ScalaLibrarySourcesPath)),
-      ScalaModule(scalaCompiler, OSGiUtils().pathInBundle(bundle, ScalaCompilerSourcesPath)))
+      ScalaModule(scalaLibrary, OSGiUtils.pathInBundle(bundle, ScalaLibrarySourcesPath)),
+      ScalaModule(scalaCompiler, OSGiUtils.pathInBundle(bundle, ScalaCompilerSourcesPath)))
   }
 
   val ScalaBundleJarsRegex = "org\\.scala-ide\\.scala[0-9]{3}\\.jars".r
@@ -257,7 +257,7 @@ object MultiBundleScalaInstallation {
 
   private def findLibraryForBundle(bundleId: String, version: Version): Option[ScalaModule] = {
     val classPath = findBundle(bundleId, version).map(bundlePath)
-    classPath.map(cp => ScalaModule(cp, EclipseUtils().computeSourcePath(bundleId, cp)))
+    classPath.map(cp => ScalaModule(cp, EclipseUtils.computeSourcePath(bundleId, cp)))
   }
 
   def apply(libraryBundle: Bundle): Option[MultiBundleScalaInstallation] = {
@@ -270,7 +270,7 @@ object MultiBundleScalaInstallation {
     } yield MultiBundleScalaInstallation(
       version,
       libraryBundleVersion,
-      ScalaModule(bundlePath(libraryBundle), EclipseUtils().computeSourcePath(ScalaLibraryBundleId, library)),
+      ScalaModule(bundlePath(libraryBundle), EclipseUtils.computeSourcePath(ScalaLibraryBundleId, library)),
       compiler)
   }
 

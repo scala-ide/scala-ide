@@ -2,7 +2,7 @@ package org.scalaide.debug.internal.model
 
 import com.sun.jdi.Method
 import org.scalaide.debug.internal.classfile.ConstantPool
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils._
 
 /** Classifies `scalac` synthetic methods according to their purpose.
  *
@@ -33,7 +33,7 @@ object MethodClassifier extends Enumeration {
       case DefaultGetter =>
         defaultR.findFirstIn(method.name()).isDefined
 
-      case Forwarder => Utils.debugTimed("Testing flag Forwarder for %s".format(method)) {
+      case Forwarder => debugTimed("Testing flag Forwarder for %s".format(method)) {
         (method.virtualMachine().canGetBytecodes()
           && method.virtualMachine().canGetConstantPool()
           && isForwarderBytecode(method))

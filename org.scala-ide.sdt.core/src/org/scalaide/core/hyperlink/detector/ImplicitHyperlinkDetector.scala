@@ -21,11 +21,11 @@ private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
   //        2) Because we use the editor's annotation model, this functionality cannot be tested in a UI-less environment.
   private def findHyperlinkToImplicit(offset: Int, editor: ITextEditor): List[IHyperlink] = {
     import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitConversionAnnotation
-    import org.scalaide.util.EditorUtils
+    import org.scalaide.util.eclipse.EditorUtils
 
     var hyperlinks = List[IHyperlink]()
 
-    for ((ann, pos) <- EditorUtils().getAnnotationsAtOffset(editor, offset)) ann match {
+    for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, offset)) ann match {
       case a: ImplicitConversionAnnotation if a.sourceLink.isDefined =>
         hyperlinks = a.sourceLink.get :: hyperlinks
       case _ => ()

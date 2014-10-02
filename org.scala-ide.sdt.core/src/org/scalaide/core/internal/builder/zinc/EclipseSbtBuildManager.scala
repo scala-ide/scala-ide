@@ -17,7 +17,7 @@ import xsbti.F0
 import sbt.Process
 import sbt.ClasspathOptions
 import org.scalaide.core.resources.EclipseResource
-import org.scalaide.util.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.eclipse.core.resources.IResource
 import org.scalaide.logging.HasLogger
@@ -135,7 +135,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   }
 
   private def clearTasks(included: scala.collection.Set[IFile]) {
-    included foreach { FileUtils().clearTasks(_, monitor) }
+    included foreach { FileUtils.clearTasks(_, monitor) }
   }
 
   private def runCompiler(sources: Seq[File]) {
@@ -235,9 +235,9 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
 
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
       if (phaseName == "parser") {
-        val file = FileUtils().resourceForPath(unitIPath, project.underlying.getFullPath)
+        val file = FileUtils.resourceForPath(unitIPath, project.underlying.getFullPath)
         file.foreach { f =>
-          FileUtils().clearTasks(f, null)
+          FileUtils.clearTasks(f, null)
           compiledFiles += f
         }
       }

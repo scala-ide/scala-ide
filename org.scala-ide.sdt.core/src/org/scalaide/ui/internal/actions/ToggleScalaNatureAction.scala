@@ -24,7 +24,7 @@ class ToggleScalaNatureAction extends AbstractPopupAction {
   }
 
   private def toggleScalaNature(project: IProject) =
-    Utils().tryExecute {
+    Utils.tryExecute {
       if (project.hasNature(SdtConstants.NatureId)) {
         doIfPdePresent(project) { ScalaLibraryPluginDependencyUtils.removeScalaLibraryRequirement(project) }
         updateNatureIds(project) { _ filterNot (_ == SdtConstants.NatureId) }

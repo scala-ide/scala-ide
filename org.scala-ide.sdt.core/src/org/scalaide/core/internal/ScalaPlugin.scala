@@ -40,7 +40,7 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
@@ -65,7 +65,7 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
 object ScalaPlugin {
 
@@ -97,7 +97,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   lazy val sbtCompilerBundle = Platform.getBundle(SbtPluginId)
   lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SbtCompilerInterfacePluginId)
-  lazy val sbtCompilerInterface = OSGiUtils().pathInBundle(sbtCompilerInterfaceBundle, "/")
+  lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
 
   lazy val templateManager = new ScalaTemplateManager()
 

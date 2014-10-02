@@ -92,7 +92,7 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
     val offset = offsets.head
 
-    val wordRegion = ScalaWordFinder().findWord(unit.getContents, offset)
+    val wordRegion = ScalaWordFinder.findWord(unit.getContents, offset)
     val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
 
     if (word.trim.isEmpty) fail("No word found at offset: " + offset)

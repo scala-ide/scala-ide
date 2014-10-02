@@ -10,7 +10,7 @@ import org.eclipse.text.edits.ReplaceEdit
 import org.scalaide.core.internal.quickfix.createmethod.{ ParameterList, ReturnType, TypeParameterList }
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import scala.tools.refactoring.implementations.{ AddMethod, AddField, AddMethodTarget }
 import scala.reflect.internal.util.SourceFile
 import tools.nsc.interactive.Global
@@ -28,7 +28,7 @@ trait AddValOrDefProposal extends IJavaCompletionProposal {
     for {
       scalaSourceFile <- targetSourceFile
       //we must open the editor before doing the refactoring on the compilation unit:
-      theDocument <- EditorUtils().findOrOpen(scalaSourceFile.workspaceFile)
+      theDocument <- EditorUtils.findOrOpen(scalaSourceFile.workspaceFile)
     } {
       val scu = scalaSourceFile.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
       val changes = scu.withSourceFile(addRefactoring) getOrElse Nil
@@ -41,7 +41,7 @@ trait AddValOrDefProposal extends IJavaCompletionProposal {
       //TODO: we should allow them to change parameter names and types by tabbing
       for (change <- changes.headOption) {
         val offset = change.from + change.text.lastIndexOf("???")
-        EditorUtils().enterLinkedModeUi(List((offset, "???".length)), selectFirst = true)
+        EditorUtils.enterLinkedModeUi(List((offset, "???".length)), selectFirst = true)
       }
     }
   }

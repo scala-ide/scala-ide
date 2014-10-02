@@ -25,7 +25,7 @@ import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
-import org.scalaide.util.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
@@ -156,9 +156,9 @@ abstract class BaseSemanticAction(
   }
 
   private def refresh() = {
-    import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
     for {
-      page <- EclipseUtils().getWorkbenchPages
+      page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
       compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))

@@ -18,7 +18,7 @@ import org.junit.Ignore
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils.prepareJob
+import org.scalaide.util.eclipse.EclipseUtils.prepareJob
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.IJobChangeEvent
 import org.eclipse.core.runtime.jobs.JobChangeAdapter

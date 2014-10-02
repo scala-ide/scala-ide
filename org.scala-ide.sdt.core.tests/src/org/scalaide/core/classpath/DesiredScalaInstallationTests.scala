@@ -15,7 +15,7 @@ import org.eclipse.core.runtime.IPath
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.util.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.JavaCore
 import org.junit.After
@@ -66,7 +66,7 @@ class DesiredScalaInstallationTests {
 
   @After
   def deleteProjects() {
-    EclipseUtils().workspaceRunnableIn(EclipseUtils().workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
         (new File(IScalaPlugin().getStateLocation().toFile(), project.underlying.getName + new Path(libraryId).toPortableString() + ".container")).delete()

@@ -8,7 +8,7 @@ import org.eclipse.ui.texteditor.spelling.ISpellingEngine
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
 import org.eclipse.ui.texteditor.spelling.SpellingContext
 import org.eclipse.ui.texteditor.spelling.{SpellingService => ESpellingService}
-import org.scalaide.util.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * The purpose of the super class is to find a spelling engine in a given
@@ -40,7 +40,7 @@ final class SpellingService(store: IPreferenceStore, engine: ISpellingEngine) ex
       collector.beginCollecting()
 
       if (store.getBoolean(ESpellingService.PREFERENCE_SPELLING_ENABLED)) {
-        EclipseUtils().withSafeRunner {
+        EclipseUtils.withSafeRunner {
           engine.check(document, regions, context, collector, monitor)
         }
       }

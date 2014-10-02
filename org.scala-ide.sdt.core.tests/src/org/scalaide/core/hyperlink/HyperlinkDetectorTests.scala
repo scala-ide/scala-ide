@@ -3,7 +3,6 @@ package hyperlink
 
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
-import org.scalaide.util.ScalaWordFinder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor

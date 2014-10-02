@@ -9,7 +9,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
-import org.scalaide.util.internal.eclipse.SWTUtils.noArgFnToSelectionAdapter
+import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
 import org.scalaide.util.ui.SWTUtils.gridData
 
 /** Syntax Coloring preference page for the Scala editors.

@@ -1,4 +1,4 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import scala.collection.JavaConversions._
 import org.eclipse.core.resources._
@@ -31,36 +31,72 @@ import org.eclipse.ui.IWorkbenchWindow
 import java.io.FileNotFoundException
 import scala.util.Try
 
-object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
+object EclipseUtils extends HasLogger {
 
-  implicit class RichAdaptable(adaptable: IAdaptable) extends org.scalaide.util.UtilsImplicits.RichAdaptable(adaptable) {
+  implicit class RichAdaptable(adaptable: IAdaptable) {
 
+    /** Returns an object which is an instance of the given class
+     *  associated with this object. Returns `null` if
+     *  no such object can be found.
+     *
+     *  @see [[org.eclipse.core.runtime.IAdaptable.getAdapter]]
+     */
     def adaptTo[T](implicit m: Manifest[T]): T = adaptable.getAdapter(m.runtimeClass).asInstanceOf[T]
 
+    /** Returns an object which is an instance of the given class
+     *  associated with this object. Returns None if
+     *  no such object can be found.
+     *
+     *  @see [[adaptTo]]
+     */
     def adaptToOpt[T](implicit m: Manifest[T]): Option[T] = Option(adaptable.getAdapter(m.runtimeClass).asInstanceOf[T])
 
   }
 
-  implicit class RichPreferenceStore(preferenceStore: IPreferenceStore) extends org.scalaide.util.UtilsImplicits.RichPreferenceStore(preferenceStore) {
+  implicit class RichPreferenceStore(preferenceStore: IPreferenceStore) {
 
-    override def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
+    /** Returns the current value of the color-valued preference with the
+     *  given name in the given preference store.
+     *  @see [[org.eclipse.jface.preference.PreferenceConverter]]
+     */
+    def getColor(key: String): RGB = PreferenceConverter.getColor(preferenceStore, key)
 
   }
 
-  implicit class RichDocument(document: IDocument) extends org.scalaide.util.UtilsImplicits.RichDocument(document) {
+  implicit class RichDocument(document: IDocument) {
 
+    /** Returns the character at the given document offset in this document.
+     *
+     *  @see [[org.eclipse.jface.text.IDocument.getChar]]
+     */
     def apply(offset: Int): Char = document.getChar(offset)
 
   }
 
-  implicit class RichWorkbench(w: IWorkbenchWindow) {
-    def serviceOf[A : reflect.ClassTag]: A =
+  private[scalaide] implicit class RichWorkbench(w: IWorkbenchWindow) {
+    def serviceOf[A: reflect.ClassTag]: A =
       w.getService(reflect.classTag[A].runtimeClass).asInstanceOf[A]
   }
 
-  def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
+  /** A sequence extractor which takes an [[ISelection]] and returns the [[IStructuredSelection]] that it may contain.
+   *  @see [[IStructuredSelection]]
+   */
+  object SelectedItems {
+
+    def unapplySeq(selection: ISelection): Option[List[Any]] = PartialFunction.condOpt(selection) {
+      case structuredSelection: IStructuredSelection => structuredSelection.toArray.toList
+    }
+
+  }
+
+  private[scalaide] def asEclipseTextEdit(edit: TextEdit): EclipseTextEdit =
     new ReplaceEdit(edit.position, edit.length, edit.replacement)
 
+  /** Run the given function as a workspace runnable inside `wspace`.
+   *
+   *  @param wspace the workspace
+   *  @param monitor the progress monitor (defaults to `null` for no progress monitor).
+   */
   def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
     wspace.run(new IWorkspaceRunnable {
       def run(monitor: IProgressMonitor) {
@@ -76,7 +112,7 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
    *  @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
    *  @return The job
    */
-  def prepareJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
+  private[scalaide] def prepareJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
     val job = new Job(name) {
       override def run(monitor: IProgressMonitor): IStatus = f(monitor)
     }
@@ -85,15 +121,30 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
     job
   }
 
+  /** Create and schedule a job with the given name. Default values for scheduling rules and priority are taken
+   *  from the `Job` implementation.
+   *
+   *  @param rule The scheduling rule
+   *  @param priority The job priority (defaults to Job.LONG, like the platform `Job` class)
+   *  @return The job
+   */
   def scheduleJob(name: String, rule: ISchedulingRule = null, priority: Int = Job.LONG)(f: IProgressMonitor => IStatus): Job = {
     val j = prepareJob(name, rule, priority)(f)
     j.schedule()
     j
   }
 
+  /** Extracts and returns the IResources in the given
+   *  selection or the resource objects they adapts to.
+   *
+   *  @see `org.eclipse.ui.ide.IDE.computeSelectedResources`
+   */
   def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
     IDE.computeSelectedResources(selection).toList.asInstanceOf[List[IResource]]
 
+  /** Returns a list of pages in all the open main windows associated with this workbench.
+   *
+   */
   def getWorkbenchPages: List[IWorkbenchPage] =
     for {
       wbench <- Try(List(PlatformUI.getWorkbench)).getOrElse(Nil)
@@ -101,6 +152,11 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
       page <- window.getPages
     } yield page
 
+  /** Returns the location of the source bundle for the bundle.
+   *
+   *  @param bundleId the bundle id
+   *  @param bundelPath the bundle location
+   */
   def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
     val jarFile = bundlePath.lastSegment()
     val parentFolder = bundlePath.removeLastSegments(1)
@@ -138,9 +194,15 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
       p append other
   }
 
+  /** Returns all existing configuration elements of a given extension point ID.
+   *  Returns an empty array if the ID is not found.
+   */
   def configElementsForExtension(id: String): Array[IConfigurationElement] =
     Platform.getExtensionRegistry().getConfigurationElementsFor(id)
 
+  /** Executes a given function in a safe runner that catches potential occurring
+   *  exceptions and logs them if this is the case.
+   */
   def withSafeRunner(f: => Unit): Unit = {
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
@@ -150,6 +212,10 @@ object EclipseUtils extends HasLogger with org.scalaide.util.EclipseUtils {
     })
   }
 
+  /** Returns the root resource of this workspace.
+   *
+   *  @see `org.eclipse.core.resources.IWorkspace.getRoot`
+   */
   def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
 }

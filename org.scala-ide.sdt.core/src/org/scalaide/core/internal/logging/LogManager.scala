@@ -4,7 +4,7 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.logging.log4j.Log4JFacade
 import org.scalaide.core.internal.logging.LoggingPreferenceConstants._
-import org.scalaide.util.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.logging.HasLogger
 import org.scalaide.logging.Level
 

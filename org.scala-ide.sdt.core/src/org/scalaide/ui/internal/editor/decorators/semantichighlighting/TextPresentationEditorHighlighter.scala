@@ -18,7 +18,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /** This class is responsible of:
  *
@@ -63,7 +63,7 @@ private class TextPresentationEditorHighlighter(editor: ScalaCompilationUnitEdit
   }
 
   private def createRepairDescription(damage: IRegion): Option[TextPresentation] =
-    EditorUtils().withDocument(sourceViewer) { document =>
+    EditorUtils.withDocument(sourceViewer) { document =>
       val configuration = editor.createJavaSourceViewerConfiguration()
       val presentationReconciler = configuration.getPresentationReconciler(sourceViewer)
       presentationReconciler.createRepairDescription(damage, document)

@@ -17,11 +17,11 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.eclipse.RegionUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.SdtConstants
 import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
@@ -84,7 +84,7 @@ object ScalaHover extends HasLogger {
 
   /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
   def DefaultScalaHoverStyleSheet: String = {
-    OSGiUtils().fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
+    OSGiUtils.fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
       case util.Success(css) =>
         css
       case util.Failure(f) =>
@@ -284,7 +284,7 @@ class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExte
   override def getHoverInfo(viewer: ITextViewer, region: IRegion) = null
 
   override def getHoverRegion(viewer: ITextViewer, offset: Int) = {
-    ScalaWordFinder().findWord(viewer.getDocument, offset)
+    ScalaWordFinder.findWord(viewer.getDocument, offset)
   }
 
   override def getHoverControlCreator(): IInformationControlCreator =

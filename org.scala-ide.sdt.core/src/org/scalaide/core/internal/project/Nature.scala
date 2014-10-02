@@ -57,7 +57,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(JavaCore.BUILDER_ID), SdtConstants.BuilderId)
 
-    Utils().tryExecute {
+    Utils.tryExecute {
       Nature.addScalaLibAndSave(getProject)
     }
   }
@@ -68,7 +68,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(SdtConstants.BuilderId), JavaCore.BUILDER_ID)
 
-    Utils().tryExecute {
+    Utils.tryExecute {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
@@ -76,7 +76,7 @@ class Nature extends IProjectNature {
   }
 
   private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    Utils().tryExecute {
+    Utils.tryExecute {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

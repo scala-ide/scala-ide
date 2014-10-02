@@ -6,12 +6,12 @@ import org.eclipse.jface.text.source.IAnnotationModelExtension
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import scala.collection.breakOut
 import org.eclipse.jdt.core.compiler.IProblem
-import org.scalaide.util.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.util.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 
 trait DecoratedInteractiveEditor extends ISourceViewerEditor {
 
@@ -43,9 +43,9 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
         val taintedBounds : (Int, Int) = ((Int.MaxValue, 0) /: newPositions) {(acc, p1) => (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1)))}
         val taintedLength = (taintedBounds._2 - taintedBounds._1 +1)
 
-        DisplayThread().asyncExec { presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength) }
+        DisplayThread.asyncExec { presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength) }
     } else {
-        DisplayThread().asyncExec { getViewer.invalidateTextPresentation() }
+        DisplayThread.asyncExec { getViewer.invalidateTextPresentation() }
     }
   }
 

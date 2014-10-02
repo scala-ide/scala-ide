@@ -16,7 +16,7 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.jdt.internal.core.builder.State
-import org.scalaide.util.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
@@ -68,13 +68,13 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     else {
       kind match {
         case INCREMENTAL_BUILD | AUTO_BUILD =>
-          val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils().hasBuildErrors(_))
+          val addedOrUpdated0 = new HashSet[IFile] ++ allSourceFiles.filter(FileUtils.hasBuildErrors(_))
           val removed0 = new HashSet[IFile]
 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
             override def visit(delta : IResourceDelta) = {
               delta.getResource match {
-                case file : IFile if FileUtils().isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
+                case file : IFile if FileUtils.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
                     case IResourceDelta.ADDED | IResourceDelta.CHANGED =>
                       addedOrUpdated0 += file
@@ -138,7 +138,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     }
 
     // SBT build manager already calls java builder internally
-    if (allSourceFiles.exists(FileUtils().hasBuildErrors(_)) || !shouldRunJavaBuilder)
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
       depends.toArray
     else {
       ensureProject()

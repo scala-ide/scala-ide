@@ -5,7 +5,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.implementations.AddToClosest
 import org.scalaide.core.internal.quickfix.createmethod.{ ParameterList, ReturnType, TypeParameterList }
 import scala.tools.refactoring.implementations.AddMethodTarget
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.quickfix.{AddMethodProposal, AddValOrDefProposal}
 import org.scalaide.core.internal.quickfix.AddFieldProposal

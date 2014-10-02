@@ -230,7 +230,7 @@ case class CompletionProposal(
     val completionFullString = completionString(overwrite, paramsProbablyExists)
 
     scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-      val endPos = if (overwrite) startPos + ScalaWordFinder().identLenAtOffset(d, offset) else offset
+      val endPos = if (overwrite) startPos + ScalaWordFinder.identLenAtOffset(d, offset) else offset
       val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
 
       val importStmt =

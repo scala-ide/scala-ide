@@ -17,7 +17,7 @@ import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.logging.HasLogger
 import scala.util.Try
-import org.scalaide.util.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 
 object EclipseResource extends HasLogger {
   def apply(r: IResource): EclipseResource[_ <: IResource] = r match {
@@ -49,14 +49,14 @@ object EclipseResource extends HasLogger {
    */
   def fromString(path: String, prefix: IPath = Path.EMPTY): Option[EclipseResource[IResource]] = {
     val path0 = new Path(path)
-    FileUtils().resourceForPath(path0, prefix) match {
+    FileUtils.resourceForPath(path0, prefix) match {
       case Some(res) => Some(EclipseResource(res))
       case None =>
         // Attempt to refresh the parent folder and try again
-        FileUtils().resourceForPath(path0.removeLastSegments(1)) match {
+        FileUtils.resourceForPath(path0.removeLastSegments(1)) match {
           case Some(res) =>
             res.refreshLocal(IResource.DEPTH_ONE, null)
-            FileUtils().resourceForPath(path0).map(EclipseResource(_))
+            FileUtils.resourceForPath(path0).map(EclipseResource(_))
           case None => None
         }
     }

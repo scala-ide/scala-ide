@@ -10,7 +10,7 @@ class ScalaWordFinderTest {
   private def findWord(doc: String): IRegion = {
     val pos = doc.indexOf('|')
     val filteredDoc = doc.filterNot(_ == '|')
-    ScalaWordFinder().findWord(filteredDoc.toIndexedSeq, pos)
+    ScalaWordFinder.findWord(filteredDoc.toIndexedSeq, pos)
   }
 
   private def test(doc: String, r: (Int, Int)) {

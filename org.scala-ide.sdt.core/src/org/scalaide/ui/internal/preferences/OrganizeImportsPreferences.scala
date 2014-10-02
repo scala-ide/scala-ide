@@ -81,7 +81,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
   }
 
   def createContents(parent: Composite): Control = {
-    import org.scalaide.util.SWTUtils.noArgFnToSelectionAdapter
+    import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 
@@ -250,7 +250,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
 
-    Utils().tryExecute {
+    Utils.tryExecute {
       val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
       node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
       node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")

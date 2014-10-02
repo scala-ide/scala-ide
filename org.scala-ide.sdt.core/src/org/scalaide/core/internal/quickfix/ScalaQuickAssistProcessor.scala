@@ -2,7 +2,7 @@ package org.scalaide.core.internal.quickfix
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
@@ -29,9 +29,9 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
   override def getAssists(context: IInvocationContext, locations: Array[IProblemLocation]): Array[IJavaCompletionProposal] =
     context.getCompilationUnit match {
       case ssf: ScalaSourceFile =>
-        import org.scalaide.util.EditorUtils
-        val assists = EditorUtils().openEditorAndApply(ssf) { editor =>
-          val corrections = EditorUtils().getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
+        import org.scalaide.util.eclipse.EditorUtils
+        val assists = EditorUtils.openEditorAndApply(ssf) { editor =>
+          val corrections = EditorUtils.getAnnotationsAtOffset(editor, context.getSelectionOffset()) flatMap {
             case (ann, pos) =>
               suggestAssist(context.getCompilationUnit(), ann.getText, pos)
           }

@@ -14,7 +14,7 @@ object ScalaHoverDebugOverrideExtensionPoint {
     // A max of 1 extension is allowed for this extension point. In case more than one is available, only one
     // will be used, non-deterministically.
     configElem <- Platform.getExtensionRegistry.getConfigurationElementsFor(EXTENSION_POINT_ID).headOption
-    f <- Utils().tryExecute(configElem.createExecutableExtension("hoverFactoryClass")) collect {case f: TextHoverFactory => f}
+    f <- Utils.tryExecute(configElem.createExecutableExtension("hoverFactoryClass")) collect {case f: TextHoverFactory => f}
   } yield f
 }
 

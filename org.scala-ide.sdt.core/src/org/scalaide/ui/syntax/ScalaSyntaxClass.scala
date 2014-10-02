@@ -6,9 +6,9 @@ import org.eclipse.jface.text.TextAttribute
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.RGB
-import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedPreferenceStore
+import org.scalaide.util.eclipse.EclipseUtils.RichPreferenceStore
 
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 
 /** Represent a class of element in the Scala syntax coloring support.
  *  [[ScalaSyntaxClasses]] contains the list of classes of element recognized by the IDE.

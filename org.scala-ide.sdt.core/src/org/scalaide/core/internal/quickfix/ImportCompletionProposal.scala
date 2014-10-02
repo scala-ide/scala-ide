@@ -12,7 +12,7 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {
@@ -43,7 +43,7 @@ case class ImportCompletionProposal(val importName: String) extends IJavaComplet
    */
   private def applyByASTTransformation(document: IDocument) {
 
-    EditorUtils().withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
+    EditorUtils.withScalaFileAndSelection { (scalaSourceFile, textSelection) =>
 
       val changes = scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
 

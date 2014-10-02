@@ -1,8 +1,8 @@
 package org.scalaide.refactoring.internal.source
 package ui
 
-import org.scalaide.util.SWTUtils.noArgFnToSelectionAdapter
-import org.scalaide.util.SWTUtils.noArgFnToMouseUpListener
+import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
+import org.scalaide.util.eclipse.SWTUtils.noArgFnToMouseUpListener
 
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.swt.SWT

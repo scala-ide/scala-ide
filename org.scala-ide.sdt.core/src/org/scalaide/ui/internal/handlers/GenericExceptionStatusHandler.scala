@@ -5,7 +5,7 @@ import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.ui.UIStatusesConverter
 import org.eclipse.swt.SWT
-import org.scalaide.util.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 
 object GenericExceptionStatusHandler {
 

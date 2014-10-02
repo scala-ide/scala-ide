@@ -7,7 +7,7 @@ import scala.tools.refactoring.implementations
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.util.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * Supports renaming of identifiers inside a single file using Eclipse's
@@ -60,7 +60,7 @@ class LocalRename extends RefactoringExecutor {
         }
       }
 
-      EditorUtils().enterLinkedModeUi(positions, selectFirst = false)
+      EditorUtils.enterLinkedModeUi(positions, selectFirst = false)
     }
 
     createScalaIdeRefactoringForCurrentEditorAndSelection() map {

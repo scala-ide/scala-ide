@@ -1,4 +1,4 @@
-package org.scalaide.util.internal
+package org.scalaide.util
 
 import scala.tools.nsc.util.Chars.isIdentifierPart
 import scala.tools.nsc.util.Chars.isOperatorPart
@@ -8,7 +8,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 
-object ScalaWordFinder extends org.scalaide.util.ScalaWordFinder {
+object ScalaWordFinder {
 
   private def docToSeq(doc: IDocument) = new IndexedSeq[Char] {
     override def apply(i: Int) = doc.getChar(i)
@@ -24,9 +24,19 @@ object ScalaWordFinder extends org.scalaide.util.ScalaWordFinder {
   def findWord(document: IDocument, offset: Int): IRegion =
     findWord(docToSeq(document), offset)
 
+  /** See [[findWord(IndexedSeq[Char],Int):IRegion]]. */
   def findWord(buffer: IBuffer, offset: Int): IRegion =
     findWord(bufferToSeq(buffer), offset)
 
+  /** Find the word enclosing the given `offset`. `$` is not considered part of
+   *  an identifier, even though the Scala Specification allows it. We choose this
+   *  tradeoff so the word finder does the right thing in interpolated strings, where
+   *  `$` is used as a delimiter:
+   *
+   *  {{{ s"Hello, $name" }}}
+   *
+   *  Here, the identifier is only `name`.
+   */
   def findWord(document: IndexedSeq[Char], offset: Int): IRegion = {
     if (offset < 0 || offset > document.length) throw new IndexOutOfBoundsException("Received an invalid offset for word finding.")
 
@@ -58,12 +68,17 @@ object ScalaWordFinder extends org.scalaide.util.ScalaWordFinder {
       idRegion
   }
 
+  /** See [[findCompletionPoint(IndexedSeq[Char],Int):IRegion]]. */
   def findCompletionPoint(document: IDocument, offset: Int): IRegion =
     findCompletionPoint(docToSeq(document), offset)
 
+  /** See [[findCompletionPoint(IndexedSeq[Char],Int):IRegion]]. */
   def findCompletionPoint(buffer: IBuffer, offset: Int): IRegion =
     findCompletionPoint(bufferToSeq(buffer), offset)
 
+  /**
+   * Find the point after which a completion should be inserted in the document.
+   */
   def findCompletionPoint(document: IndexedSeq[Char], offset0: Int): IRegion = {
     def isWordPart(ch: Char) = isIdentifierPart(ch) || isOperatorPart(ch)
 

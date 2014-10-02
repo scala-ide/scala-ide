@@ -11,7 +11,7 @@ class NoScalaLibraryMarkerResolver extends IMarkerResolutionGenerator {
     val addScalaLibrary = new IMarkerResolution() {
       def getLabel: String = "Add Scala Library to Classpath"
       def run(marker: IMarker): Unit = {
-        Utils().tryExecute(Nature.addScalaLibAndSave(marker.getResource.getProject))
+        Utils.tryExecute(Nature.addScalaLibAndSave(marker.getResource.getProject))
       }
     }
 

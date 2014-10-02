@@ -7,8 +7,8 @@ import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.IWorkbenchPage
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.lexical.ScalaPartitions
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.lexical.ScalaCodePartitioner
 
 trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
@@ -27,7 +27,7 @@ object ScalaEditor {
     IJavaPartitions.JAVA_CHARACTER,
     ScalaPartitions.SCALA_MULTI_LINE_STRING)
 
-  import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+  import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
   /**
    * Checks whether there's at least one open editor related to given project
@@ -49,6 +49,6 @@ object ScalaEditor {
       isEqual.getOrElse(false)
     }
 
-    EclipseUtils().getWorkbenchPages.exists(hasOpenEditorForThisProject)
+    EclipseUtils.getWorkbenchPages.exists(hasOpenEditorForThisProject)
   }
 }

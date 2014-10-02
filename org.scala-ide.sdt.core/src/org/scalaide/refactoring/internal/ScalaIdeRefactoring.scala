@@ -19,7 +19,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.TextEditUtils
-import org.scalaide.util.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.core.SdtConstants
 
 /**
@@ -131,7 +131,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   private [refactoring] def scalaChangesToEclipseChanges(changes: List[TextChange]) = {
     changes groupBy (_.sourceFile.file) map {
       case (file, fileChanges) =>
-        FileUtils().toIFile(file) map { file =>
+        FileUtils.toIFile(file) map { file =>
           TextEditUtils.createTextFileChange(file, fileChanges)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path

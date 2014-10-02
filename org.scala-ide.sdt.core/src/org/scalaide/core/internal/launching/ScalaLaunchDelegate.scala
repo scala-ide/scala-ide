@@ -14,7 +14,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchConfiguration
-import org.scalaide.util.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus

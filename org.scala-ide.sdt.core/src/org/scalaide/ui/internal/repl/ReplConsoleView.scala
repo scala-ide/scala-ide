@@ -40,7 +40,7 @@ import org.eclipse.ui.part.ViewPart
 import org.scalaide.core.internal.repl.EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
-import org.scalaide.util.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
@@ -59,7 +59,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   private lazy val repl = new EclipseRepl(
     // lazy so "project chooser UI" doesn't instantiate
     new EclipseRepl.Client {
-      def run(f: => Unit) = DisplayThread().asyncExec(if (view != null) f)
+      def run(f: => Unit) = DisplayThread.asyncExec(if (view != null) f)
       import EclipseRepl._
       import scala.tools.nsc.interpreter.Results._
 
@@ -161,7 +161,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
     def notify(pub:Publisher[IScalaProjectEvent], event:IScalaProjectEvent) {
       event match { case e: BuildSuccess =>
-        DisplayThread().asyncExec {
+        DisplayThread.asyncExec {
           if (!isStopped) {
             displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
             setStarted
@@ -238,7 +238,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       if (event.getDelta() != null) {
         event.getDelta().accept(resourceDeltaVisitor)
         if (resourceDeltaVisitor.isProjectChange) {
-          DisplayThread().asyncExec {
+          DisplayThread.asyncExec {
             refreshProjectList()
           }
         }

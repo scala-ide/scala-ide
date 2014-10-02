@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.editor.decorators.semicolon
 import java.util.Date
 import java.util.concurrent.locks.ReentrantLock
 
-import org.scalaide.util.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.util.internal.ThreadUtils.withLock
 
 object TypingDelayHelper {
@@ -72,7 +72,7 @@ class TypingDelayHelper {
           if (now.before(nextScheduledTime)) {
             nextScheduledTime.getTime - now.getTime
           } else {
-            DisplayThread().asyncExec(callback())
+            DisplayThread.asyncExec(callback())
             nextScheduledEventOpt = None
             0
           }

@@ -45,7 +45,7 @@ class ScalaMethodVerifierProvider extends IMethodVerifierProvider with HasLogger
 
   /** Checks that `abstractMethod` is a non-deferred member of a Scala Trait. */
   def isConcreteTraitMethod(abstractMethod: MethodBinding): Boolean = {
-    Utils().tryExecute {
+    Utils.tryExecute {
       logger.debug("Entered `isConcreteTraitMethod`")
       // get the file containing the declaration of the abstract method
       val maybeFile = getFile(abstractMethod)

@@ -461,7 +461,7 @@ object ScalaPresentationCompiler {
           if (pos.isRange)
             Some(toSingleLine(pos))
           else{
-            val wordPos = Try(ScalaWordFinder().findWord(source.content, pos.start).getLength).toOption
+            val wordPos = Try(ScalaWordFinder.findWord(source.content, pos.start).getLength).toOption
             wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
           }
 

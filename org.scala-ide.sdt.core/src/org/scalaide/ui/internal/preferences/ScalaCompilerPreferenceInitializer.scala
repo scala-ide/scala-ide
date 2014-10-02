@@ -17,7 +17,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
 
   /** Actually initializes preferences */
   def initializeDefaultPreferences() : Unit = {
-    Utils().tryExecute {
+    Utils.tryExecute {
       val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, SdtConstants.PluginId)
 
       def defaultPreference(s: Settings#Setting) {

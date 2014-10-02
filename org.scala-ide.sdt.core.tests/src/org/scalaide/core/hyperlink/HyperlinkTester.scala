@@ -46,7 +46,7 @@ trait HyperlinkTester extends TestProjectSetup {
         println("checking %d positions".format(positions.size))
         assertEquals(positions.size, expectations.size)
         for ((pos, oracle) <- positions.zip(expectations)) {
-          val wordRegion = ScalaWordFinder().findWord(unit.getContents, pos)
+          val wordRegion = ScalaWordFinder.findWord(unit.getContents, pos)
           val word = new String(unit.getContents.slice(wordRegion.getOffset, wordRegion.getOffset + wordRegion.getLength))
           println("hyperlinking at position %d (%s)".format(pos, word))
           checker(unit, wordRegion, word, oracle)

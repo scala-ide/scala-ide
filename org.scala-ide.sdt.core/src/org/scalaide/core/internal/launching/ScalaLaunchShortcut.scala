@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.launching
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.UtilsImplicits.richAdaptable
+import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.debug.core.DebugPlugin

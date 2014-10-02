@@ -1,7 +1,7 @@
 package org.scalaide.ui.internal.editor.decorators.semicolon
 
 import scala.math.min
-import org.scalaide.util.UtilsImplicits.richDocument
+import org.scalaide.util.eclipse.EclipseUtils.RichDocument
 import scalariform.lexer._
 import scalariform.parser._
 import org.eclipse.swt.widgets.Display

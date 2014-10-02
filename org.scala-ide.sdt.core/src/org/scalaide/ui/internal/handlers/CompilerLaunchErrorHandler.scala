@@ -9,10 +9,10 @@ import org.eclipse.jface.dialogs.{ MessageDialog => MD, MessageDialogWithToggle}
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.UtilsImplicits.withAsInstanceOfOpt
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
 import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.util.DisplayThread
-import org.scalaide.util.SWTUtils
+import org.scalaide.util.ui.DisplayThread
+import org.scalaide.util.eclipse.SWTUtils
 
 object CompilerLaunchErrorHandler {
 

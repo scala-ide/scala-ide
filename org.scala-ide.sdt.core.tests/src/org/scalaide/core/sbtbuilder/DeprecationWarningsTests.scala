@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert
 import org.junit.Test
 import scala.language.reflectiveCalls
-import org.scalaide.util.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
@@ -143,7 +143,7 @@ class DeprecationWarningsTests {
   private def doBuild(buildFlag: Int) = new {
     def andGetProblemsOf(unit: ICompilationUnit): Warnings = {
       deprecationWarningsProject.project.underlying.build(buildFlag, new NullProgressMonitor)
-      FileUtils().findBuildErrors(unit.getResource()).map(_.getAttribute(IMarker.MESSAGE).toString)
+      FileUtils.findBuildErrors(unit.getResource()).map(_.getAttribute(IMarker.MESSAGE).toString)
     }
   }
 }
