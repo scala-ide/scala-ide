@@ -45,8 +45,7 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
 
   override def reconcile(partition: IRegion) {
     listeningEditor.foreach(_.aboutToBeReconciled())
-    icUnit.scalaProject.presentationCompiler(_.flushScheduledReloads())
-    val errors = icUnit.reconcile(document.get)
+    val errors = icUnit.forceReconcile()
 
     // Some features, such as quick fixes, are dependent upon getting an ICompilationUnit there
     val cu: Option[ICompilationUnit] = icUnit.asInstanceOfOpt[ICompilationUnit]

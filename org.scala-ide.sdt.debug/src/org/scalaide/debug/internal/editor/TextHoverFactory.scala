@@ -20,15 +20,22 @@ import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
 import org.eclipse.debug.core.model.IVariable
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 class TextHoverFactory extends TextHoverFactoryInterface {
   import IScalaPresentationCompiler.Implicits._
 
-  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
+  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover with ITextHoverExtension with ITextHoverExtension2 {
     var stringWasReturnedAtGetHoverInfo2 = false
 
+    // fix the compilation unit
+    override def getCompilationUnit(viewer: ITextViewer): Option[InteractiveCompilationUnit] =
+      Option(scu)
+
     override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
-      icu.withSourceFile{(src, compiler) =>
+      val hoverInfo = for {
+        icu <- getCompilationUnit(viewer)
+      } yield icu.withSourceFile { (src, compiler) =>
         import compiler._
         import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
@@ -45,6 +52,7 @@ class TextHoverFactory extends TextHoverFactoryInterface {
         stringWasReturnedAtGetHoverInfo2 = true
         super.getHoverInfo2(viewer, region)
       }
+      hoverInfo.getOrElse(null)
     }
 
     override def getHoverControlCreator: IInformationControlCreator =

@@ -152,9 +152,9 @@ class SbtBuilderTest {
     for (p <- problems)
       Assert.assertTrue("Error marker length is zero", (p.getAttribute(IMarker.CHAR_END, 0) - p.getAttribute(IMarker.CHAR_START, 0) > 0))
 
-    val sf = fooClientCU.sourceFile
+    val sf = fooClientCU.lastSourceMap().sourceFile
     fooClientCU.scalaProject.presentationCompiler { comp =>
-      comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
+      comp.askReload(fooClientCU, sf).get // synchronize with the good compiler
     }
 
     val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()

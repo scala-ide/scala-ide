@@ -52,7 +52,7 @@ class SpyView extends ViewPart with HasLogger {
         cu.scalaProject.presentationCompiler { compiler =>
           import compiler._
 
-          typedTreeAtSelection(compiler)(cu.sourceFile, selection) match {
+          typedTreeAtSelection(compiler)(cu.lastSourceMap().sourceFile, selection) match {
             case Left(tree) =>
               val buf = new StringBuffer
               buf.append("\n\n============\n\nTree: \t\t" + tree.productPrefix)
@@ -120,7 +120,7 @@ class SpyView extends ViewPart with HasLogger {
           unit.scalaProject.presentationCompiler { compiler =>
             import compiler._
 
-            typedTreeAtSelection(compiler)(unit.sourceFile, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
+            typedTreeAtSelection(compiler)(unit.lastSourceMap().sourceFile, editor.asInstanceOf[ITextEditor].getSelectionProvider().getSelection()) match {
               case Left(tree) =>
                 import treeBrowsers._
 

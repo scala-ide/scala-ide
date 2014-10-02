@@ -111,7 +111,7 @@ class ScalaJavaMapperTest {
     changeContentOfFile(unit.getResource().asInstanceOf[IFile], src)
 
     unit.withSourceFile { (srcFile, compiler) =>
-      compiler.askReload(unit, src.toCharArray())
+      compiler.askReload(unit, srcFile)
       val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>
           loadedType.collect {

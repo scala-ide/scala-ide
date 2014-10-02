@@ -35,7 +35,7 @@ class PresentationCompilerTest {
 
     // then
     unit.scalaProject.presentationCompiler.internal { compiler =>
-      val tree = compiler.askStructure(unit.sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+      val tree = compiler.askStructure(unit.lastSourceMap().sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
       compiler.asyncExec {
         val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap) {
           override val eclipseLog = mockLogger
