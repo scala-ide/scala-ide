@@ -2,7 +2,7 @@ package org.scalaide.debug.internal.editor
 
 import scala.util.Try
 import scala.reflect.internal.util.{Position, RangePosition, OffsetPosition, SourceFile}
-import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.internal.editor.hover.ScalaHoverImpl
 import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
 import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}
@@ -25,7 +25,7 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 class TextHoverFactory extends TextHoverFactoryInterface {
   import IScalaPresentationCompiler.Implicits._
 
-  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover with ITextHoverExtension with ITextHoverExtension2 {
+  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHoverImpl with ITextHoverExtension with ITextHoverExtension2 {
     var stringWasReturnedAtGetHoverInfo2 = false
 
     // fix the compilation unit

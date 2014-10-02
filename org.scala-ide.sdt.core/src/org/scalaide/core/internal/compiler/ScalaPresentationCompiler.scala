@@ -415,7 +415,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     val docFun = () => {
       val comment = parsedDocComment(sym, sym.enclClass, project.javaProject)
       val header = headerForSymbol(sym, tpe)
-      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this, project.javaProject)(comment.get, sym, header.getOrElse("")) else None
+      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this)(comment.get, sym, header.getOrElse("")) else None
     }
 
     CompletionProposal(

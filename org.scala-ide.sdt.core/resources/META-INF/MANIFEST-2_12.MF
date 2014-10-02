@@ -120,6 +120,8 @@ Export-Package:
  org.scalaide.refactoring.internal.ui,
  org.scalaide.ui,
  org.scalaide.ui.editor,
+ org.scalaide.ui.editor.extensionpoints,
+ org.scalaide.ui.editor.hover,
  org.scalaide.ui.internal,
  org.scalaide.ui.internal.actions,
  org.scalaide.ui.internal.actions.hyperlinks,

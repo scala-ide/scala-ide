@@ -53,7 +53,6 @@ import org.scalaide.ui.internal.editor.autoedits._
 import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
 import org.scalaide.ui.internal.editor.hover.HoverInformationProvider
 import org.scalaide.ui.internal.editor.hover.HtmlHover
-import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.spelling.ScalaSpellingEngine
 import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
 import org.scalaide.ui.internal.editor.spelling.SpellingService
@@ -65,6 +64,7 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.scalaide.core.lexical.ScalaCodeScanners
 import org.scalaide.core.lexical.ScalaPartitions
+import org.scalaide.ui.editor.hover.IScalaHover
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -168,7 +168,7 @@ class ScalaSourceViewerConfiguration(
     override def getHoverControlCreator(): IInformationControlCreator = new AbstractReusableInformationControlCreator {
       override def doCreateInformationControl(parent: Shell): IInformationControl = {
         if (BrowserInformationControl.isAvailable(parent))
-          new BrowserInformationControl(parent, ScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
+          new BrowserInformationControl(parent, IScalaHover.HoverFontId, /* resizable */ false) with BrowserControlAdditions
         else
           new DefaultInformationControl(parent, /* resizable */ false)
       }
@@ -187,7 +187,7 @@ class ScalaSourceViewerConfiguration(
 
   override def getInformationPresenter(sourceViewer: ISourceViewer) = {
     val p = new InformationPresenter(getInformationControlCreator(sourceViewer))
-    val ip = new HoverInformationProvider(Some(new ScalaHover(editor)))
+    val ip = new HoverInformationProvider(Some(IScalaHover(editor)))
 
     p.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
     getConfiguredContentTypes(sourceViewer) foreach (p.setInformationProvider(ip, _))
@@ -235,7 +235,7 @@ class ScalaSourceViewerConfiguration(
 
   override def getTextHover(sv: ISourceViewer, contentType: String, stateMask: Int): ITextHover =
     compilationUnit.map { scu =>
-      val hover = new ScalaHover(editor)
+      val hover = IScalaHover(editor)
       ScalaHoverDebugOverrideExtensionPoint.hoverFor(scu).getOrElse(hover)
     }.getOrElse(new DefaultTextHover(sv))
 

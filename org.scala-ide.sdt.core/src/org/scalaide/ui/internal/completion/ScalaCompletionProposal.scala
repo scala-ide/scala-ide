@@ -44,9 +44,10 @@ import org.scalaide.ui.ScalaImages
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
-import org.scalaide.ui.internal.editor.hover.ScalaHover
+import org.scalaide.ui.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.hover.HoverControlCreator
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
+import org.scalaide.ui.editor.hover.IScalaHover
 
 /** A UI class for displaying completion proposals.
  *
@@ -233,7 +234,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 
   // ICompletionProposalExtension3
-  override def getInformationControlCreator: IInformationControlCreator = new HoverControlCreator(new JavadocHover.HoverControlCreator(new FocusedControlCreator(ScalaHover.HoverFontId), true), ScalaHover.HoverFontId)
+  override def getInformationControlCreator: IInformationControlCreator =
+    new HoverControlCreator(new JavadocHover.HoverControlCreator(new FocusedControlCreator(IScalaHover.HoverFontId), true), IScalaHover.HoverFontId)
 
   override def getPrefixCompletionStart(d: IDocument, offset: Int): Int = startPos
   override def getPrefixCompletionText(d: IDocument, offset: Int): CharSequence = null
