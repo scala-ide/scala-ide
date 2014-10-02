@@ -15,7 +15,7 @@ class Preferences(val store: IPreferenceStore) {
     store.getBoolean(ScalaSyntaxClasses.USE_SYNTACTIC_HINTS)
 
   def isInterpolatedStringCodeDecorationEnabled(): Boolean =
-    ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.getStyleInfo(store).enabled
+    ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.enabled(store)
 
   def interpolatedStringTextAttribute(): TextAttribute =
     ScalaSyntaxClasses.IDENTIFIER_IN_INTERPOLATED_STRING.getTextAttribute(store)

@@ -20,7 +20,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.OSGiUtils
-import org.scalaide.util.internal.eclipse.RegionUtils
+import org.scalaide.util.eclipse.RegionUtils
 import org.scalaide.util.internal.ui.DisplayThread
 import org.scalaide.core.SdtConstants
 import scala.tools.nsc.interactive.CompilerControl
@@ -107,7 +107,8 @@ class ScalaHover(val icu: InteractiveCompilationUnit) extends ITextHover with IT
   override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
     icu.withSourceFile({ (src, compiler) =>
       import compiler.{ stringToTermName => _, stringToTypeName => _, _ }
-      import RegionUtils._
+      import RegionUtils.RichRegion
+      import RegionUtils.RichProblem
       import HTMLPrinter._
 
       val docComment = {

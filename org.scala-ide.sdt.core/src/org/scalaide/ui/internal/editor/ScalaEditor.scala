@@ -5,16 +5,15 @@ import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.ui.IEditorReference
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.IWorkbenchPage
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
 import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.core.lexical.ScalaCodePartitioner
 
 trait ScalaEditor extends IScalaEditor with ISourceViewerEditor with InteractiveCompilationUnitEditor {
 
-  override def createDocumentPartitioner = new ScalaDocumentPartitioner
+  override def createDocumentPartitioner = ScalaCodePartitioner.documentPartitioner()
 
 }
 

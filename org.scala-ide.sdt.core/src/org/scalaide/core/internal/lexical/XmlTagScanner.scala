@@ -4,13 +4,16 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.rules._
 import scala.annotation.switch
 import scala.annotation.tailrec
-import org.eclipse.swt.SWT
-import org.scalaide.ui.syntax.ScalaSyntaxClass
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
-import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.preference.IPreferenceStore
+import org.scalaide.core.lexical.AbstractScalaScanner
 
+/** Code scanner to detect XML tags.
+ *
+ *  If you do not intent to extend it, prefer the [[ScalaCodeScanners.xmlTagScanner]] method.
+ *
+ *  @param preferenceStore the preference store to use for the configuration of the scanner.
+ */
 class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
   import XmlTagScanner._
 

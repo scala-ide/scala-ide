@@ -30,7 +30,7 @@ case class HighlightingStyle(styledTextAttribute: TextAttribute, enabled: Boolea
 object HighlightingStyle {
   def apply(preferences: Preferences, symbolType: SymbolTypes.SymbolType): HighlightingStyle = {
     val syntaxClass = symbolTypeToSyntaxClass(symbolType)
-    val enabled = syntaxClass.getStyleInfo(preferences.store).enabled
+    val enabled = syntaxClass.enabled(preferences.store)
     val deprecation = DeprecationStyle(preferences.isStrikethroughDeprecatedDecorationEnabled())
     val stringInterpolation = StringInterpolationStyle(preferences.isInterpolatedStringCodeDecorationEnabled(), preferences.interpolatedStringTextAttribute())
     HighlightingStyle(syntaxClass.getTextAttribute(preferences.store), enabled, ScalaSyntaxClasses.DEFAULT.getTextAttribute(preferences.store), deprecation, stringInterpolation)

@@ -4,11 +4,11 @@ import scala.xml.Elem
 import org.eclipse.jface.text.IDocument
 import org.junit.Test
 import org.junit.Before
-import org.scalaide.core.internal.lexical.ScalaPartitions._
+import org.scalaide.core.lexical.ScalaPartitions._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import org.eclipse.jdt.ui.text.IJavaPartitions._
-import org.scalaide.core.internal.lexical.ScalaPartitionTokeniser
-import org.scalaide.core.internal.lexical.ScalaPartitionRegion
+import org.scalaide.core.lexical.ScalaCodePartitioner
+import org.eclipse.jface.text.TypedRegion
 
 class ScalaPartitionTokeniserTest {
   import ScalaPartitionTokeniserTest._
@@ -188,8 +188,8 @@ object ScalaPartitionTokeniserTest {
 
   class PimpedString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
-      val actualPartitions = ScalaPartitionTokeniser.tokenise(source)
-      val expected = expectedPartitions.map(ScalaPartitionRegion.tupled)
+      val actualPartitions = ScalaCodePartitioner.partition(source)
+      val expected = expectedPartitions.map(p => new TypedRegion(p._2, p._3 - p._2 + 1, p._1))
       if (actualPartitions != expected)
         throw new AssertionError("""Expected != Actual
           |Expected: %s

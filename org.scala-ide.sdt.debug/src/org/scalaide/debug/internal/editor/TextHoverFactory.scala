@@ -18,7 +18,6 @@ import org.eclipse.jface.text.IInformationControlCreator
 import org.eclipse.jface.text.DefaultInformationControl
 import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
 import org.eclipse.debug.core.model.IVariable
-import org.scalaide.util.internal.eclipse.RegionUtils._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
@@ -31,6 +30,7 @@ class TextHoverFactory extends TextHoverFactoryInterface {
     override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
       icu.withSourceFile{(src, compiler) =>
         import compiler._
+        import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
         val resp = askTypeAt(region.toRangePos(src))
 

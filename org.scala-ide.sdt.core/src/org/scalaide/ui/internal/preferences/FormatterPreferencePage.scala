@@ -31,7 +31,6 @@ import org.eclipse.ui.editors.text.TextEditor
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 import org.scalaide.util.internal.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
@@ -147,7 +146,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def createPreviewer(parent: Composite): Control = {
-      val previewer = ScalaPreviewerFactory.createPreviewer(parent, getPreferenceStore, formatPreviewText)
+      val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, getPreferenceStore, formatPreviewText)
       previewDocument = previewer.getDocument
       val control = previewer.getControl
       allEnableDisableControls += control

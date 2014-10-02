@@ -27,7 +27,7 @@ import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
 import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
+import org.scalaide.core.lexical.ScalaCodePartitioner
 
 @RunWith(classOf[JUnit4ClassRunner])
 class TestScalaIndenter {
@@ -80,7 +80,7 @@ class TestScalaIndenter {
     def nrOfCarets(str: String): Int = s"\\Q$CARET\\E".r.findAllIn(str).size
 
     val document = new Document(textSoFar.replace(CARET, ""))
-    val partitioner = new ScalaDocumentPartitioner
+    val partitioner = ScalaCodePartitioner.documentPartitioner()
     partitioner.connect(document)
     document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
 

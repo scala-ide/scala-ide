@@ -20,7 +20,8 @@ import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.SWT
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.ui.internal.preferences.ScalaPreviewerFactory
+import org.scalaide.ui.internal.preferences.ScalaPreviewerFactoryConfiguration
+import org.scalaide.ui.internal.preferences.PreviewerFactory
 
 /**
  * Generates the generic wizard page for method signature refactorings.
@@ -154,7 +155,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       }
       paramsTable.selectionObs = selectionObs
 
-      val methodPreview = ScalaPreviewerFactory.createPreviewer(
+      val methodPreview = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(
           composite,
           IScalaPlugin().getPreferenceStore,
           previewString(method, paramsWithSeparators))

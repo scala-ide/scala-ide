@@ -8,7 +8,7 @@ import org.eclipse.swt.graphics.RGB
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.ScalaSyntaxClass
 
-class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
+class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     if (!IScalaPlugin().headlessMode) {
@@ -97,10 +97,10 @@ class ColourPreferenceInitializer extends AbstractPreferenceInitializer {
     {
       lazy val WHITE = new RGB(255, 255, 255)
       scalaPrefStore.setDefault(syntaxClass.enabledKey, enabled)
-      scalaPrefStore.setDefault(syntaxClass.foregroundColourKey, StringConverter.asString(foregroundRGB))
-      val defaultBackgroundColour = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourKey, defaultBackgroundColour)
-      scalaPrefStore.setDefault(syntaxClass.backgroundColourEnabledKey, backgroundRGBOpt.isDefined)
+      scalaPrefStore.setDefault(syntaxClass.foregroundColorKey, StringConverter.asString(foregroundRGB))
+      val defaultBackgroundColor = StringConverter.asString(backgroundRGBOpt getOrElse WHITE)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorKey, defaultBackgroundColor)
+      scalaPrefStore.setDefault(syntaxClass.backgroundColorEnabledKey, backgroundRGBOpt.isDefined)
       scalaPrefStore.setDefault(syntaxClass.boldKey, bold)
       scalaPrefStore.setDefault(syntaxClass.italicKey, italic)
       scalaPrefStore.setDefault(syntaxClass.underlineKey, underline)

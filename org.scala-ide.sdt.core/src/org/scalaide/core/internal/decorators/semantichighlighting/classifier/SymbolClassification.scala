@@ -10,7 +10,6 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import org.scalaide.util.internal.eclipse.RegionUtils._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
@@ -118,13 +117,15 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: ISc
     (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
   }
 
-  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
+  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] = {
+    import org.scalaide.util.eclipse.RegionUtils.RichRegion
     getNameRegion(pos) flatMap { region =>
       val text = region of sourceFile.content
       val symName = sym.nameString
       if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
       else None
     }
+  }
 
   private def getNameRegion(pos: Position): Option[IRegion] =
     try

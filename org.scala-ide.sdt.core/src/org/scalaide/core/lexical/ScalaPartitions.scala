@@ -1,7 +1,9 @@
-package org.scalaide.core.internal.lexical
+package org.scalaide.core.lexical
 
-/**
- * @see org.eclipse.jdt.ui.text.IJavaPartitions
+/** The partitions defined for Scala sources.
+ *
+ *  @see org.scalaide.core.lexical.ScalaCodePartitioner
+ *  @see org.eclipse.jdt.ui.text.IJavaPartitions
  */
 object ScalaPartitions {
 

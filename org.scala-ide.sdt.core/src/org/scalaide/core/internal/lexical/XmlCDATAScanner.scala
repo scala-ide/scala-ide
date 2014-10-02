@@ -6,6 +6,7 @@ import scala.collection.mutable.ListBuffer
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.eclipse.jface.preference.IPreferenceStore
+import org.scalaide.core.lexical.AbstractScalaScanner
 
 class XmlCDATAScanner(val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
 
