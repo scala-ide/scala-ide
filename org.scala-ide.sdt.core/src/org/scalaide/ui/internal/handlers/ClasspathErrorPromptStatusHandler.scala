@@ -10,13 +10,13 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.Utils
 import org.scalaide.util.internal.CompilerUtils
 import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 
 object ClasspathErrorPromptStatusHandler {
 

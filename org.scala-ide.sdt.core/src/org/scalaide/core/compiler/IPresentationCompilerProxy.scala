@@ -1,6 +1,5 @@
 package org.scalaide.core.compiler
 
-import org.scalaide.core.IScalaProject
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
 

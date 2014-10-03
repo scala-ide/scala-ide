@@ -10,7 +10,7 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.SdtConstants
 
 object Nature {
@@ -57,7 +57,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(JavaCore.BUILDER_ID), SdtConstants.BuilderId)
 
-    Utils tryExecute {
+    Utils.tryExecute {
       Nature.addScalaLibAndSave(getProject)
     }
   }
@@ -68,7 +68,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(SdtConstants.BuilderId), JavaCore.BUILDER_ID)
 
-    Utils tryExecute {
+    Utils.tryExecute {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
@@ -76,7 +76,7 @@ class Nature extends IProjectNature {
   }
 
   private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    Utils tryExecute {
+    Utils.tryExecute {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

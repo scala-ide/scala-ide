@@ -1,4 +1,4 @@
-package org.scalaide.util.internal
+package org.scalaide.util
 
 import org.scalaide.logging.HasLogger
 import scala.reflect.ClassTag
@@ -6,14 +6,14 @@ import scala.reflect.ClassTag
 object Utils extends HasLogger {
 
   /** Return the time in ms required to evaluate `f()`. */
-  def time(f: => Any): Long = {
+  private [scalaide] def time(f: => Any): Long = {
     val start = System.currentTimeMillis()
     f
     System.currentTimeMillis() - start
   }
 
   /** Evaluate 'f' and return its value and the time required to compute it. */
-  def timed[A](f: => A): (A, Long) = {
+  private [scalaide] def timed[A](f: => A): (A, Long) = {
     val start = System.currentTimeMillis()
     val res = f
     (res, System.currentTimeMillis() - start)
@@ -47,15 +47,15 @@ object Utils extends HasLogger {
 
     /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
      *
-     *  xs: List[Int]
+     *  `xs: List[Int]`
      *
-     *  xs.asInstanceOfOpt[List[Int]] == xs.asInstanceOfOpt[List[Double]] == xs.asInstanceOfOpt[Seq[Int]] == Some(xs)
+     *  `xs.asInstanceOfOpt[List[Int]] == xs.asInstanceOfOpt[List[Double]] == xs.asInstanceOfOpt[Seq[Int]] == Some(xs)`
      *
      *  and
      *
-     *  xs.asInstanceOfOpt[String] == xs.asInstanceOfOpt[Set[Int]] == None
+     *  `xs.asInstanceOfOpt[String] == xs.asInstanceOfOpt[Set[Int]] == None`
      *
-     *  @return None if the cast fails or the object is null, Some[B] otherwise
+     *  @return None if the cast fails or the object is `null`, `Some[B]` otherwise
      */
     def asInstanceOfOpt[B: ClassTag]: Option[B] = obj match {
       case b: B => Some(b)

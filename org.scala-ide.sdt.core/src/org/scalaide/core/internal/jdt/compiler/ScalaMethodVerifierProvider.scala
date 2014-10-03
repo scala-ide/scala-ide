@@ -7,7 +7,7 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile

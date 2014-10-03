@@ -4,7 +4,7 @@ import org.eclipse.ui.IMarkerResolutionGenerator
 import org.eclipse.ui.IMarkerResolution
 import org.eclipse.core.resources.IMarker
 import org.scalaide.core.internal.project.Nature
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 
 class NoScalaLibraryMarkerResolver extends IMarkerResolutionGenerator {
   def getResolutions(marker: IMarker): Array[IMarkerResolution] = {

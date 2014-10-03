@@ -16,7 +16,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.editor.hover.ScalaHover
-import org.scalaide.util.internal.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
@@ -25,6 +24,8 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
   private var cssArea: Text = _
 
   override def createContents(parent: Composite): Control = {
+    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
 

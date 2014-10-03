@@ -17,11 +17,11 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.eclipse.RegionUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.SdtConstants
 import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
@@ -42,7 +42,6 @@ object ScalaHover extends HasLogger {
    * hover.
    */
   private object msgFormatter extends (String => String) with HtmlHover {
-    import HTMLPrinter._
 
     val UnimplementedMembers = """(class .* needs to be abstract, since:\W*it has \d+ unimplemented members\.)([\S\s]*)""".r
 

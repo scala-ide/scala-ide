@@ -16,7 +16,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 
 class ImplicitsPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
   import ImplicitsPreferencePage._
-  import org.scalaide.util.internal.eclipse.SWTUtils._
+  import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
 
   setPreferenceStore(IScalaPlugin().getPreferenceStore)
   setDescription("""

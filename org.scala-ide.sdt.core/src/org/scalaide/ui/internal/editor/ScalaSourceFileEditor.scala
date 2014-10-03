@@ -52,11 +52,11 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPrese
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.util.internal.Utils
-import org.scalaide.util.internal.eclipse.AnnotationUtils._
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.Utils
+import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.ui.DisplayThread
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._

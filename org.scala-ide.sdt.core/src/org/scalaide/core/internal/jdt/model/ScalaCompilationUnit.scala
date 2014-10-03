@@ -39,7 +39,7 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.ReflectionUtils
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaElement
@@ -50,7 +50,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal

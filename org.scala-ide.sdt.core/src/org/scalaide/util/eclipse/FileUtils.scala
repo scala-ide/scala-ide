@@ -1,9 +1,9 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import java.io.ByteArrayInputStream
 import java.io.File
 
-import org.scalaide.util.internal.eclipse.EclipseUtils.workspaceRunnableIn
+import org.scalaide.util.eclipse.EclipseUtils
 import scala.tools.nsc.io.AbstractFile
 import scala.util.Try
 
@@ -31,6 +31,10 @@ import org.scalaide.core.SdtConstants
 
 object FileUtils {
 
+  /**
+   * Tries to obtain the most accurate [[IFile]] embedded in an [[AbstractFile]],
+   * whether through subtyping or path-related methods.
+   */
   def toIFile(file: AbstractFile): Option[IFile] = file match {
     case null                         => None
     case EclipseResource(file: IFile) => Some(file)
@@ -40,14 +44,14 @@ object FileUtils {
   }
 
   @deprecated("Use resourceForPath instead", "4.0.0")
-  def toIFile(path: IPath): Option[IFile] = {
+  private def toIFile(path: IPath): Option[IFile] = {
     val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
 
     if (file == null || !file.exists) None
     else Some(file)
   }
 
-  def length(file: IFile) = {
+  private def length(file: IFile) = {
     val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
     if (fs != null)
       fs.fetchInfo.getLength.toInt
@@ -55,6 +59,9 @@ object FileUtils {
       -1
   }
 
+  /**
+   * Removes all problem markers from this IFile.
+   */
   def clearBuildErrors(file: IFile, monitor: IProgressMonitor) =
     try {
       file.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
@@ -62,6 +69,9 @@ object FileUtils {
       case _: ResourceException =>
     }
 
+  /**
+   * Removes all task markers from this file.
+   */
   def clearTasks(file: IFile, monitor: IProgressMonitor) =
     try {
       file.deleteMarkers(SdtConstants.TaskMarkerId, true, IResource.DEPTH_INFINITE)
@@ -69,13 +79,19 @@ object FileUtils {
       case _: ResourceException =>
     }
 
+  /**
+   * Returns all problem markers for a given file.
+   */
   def findBuildErrors(file: IResource): Seq[IMarker] =
     file.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
 
+  /**
+   * Returns true if the file bears problem markers with error severity.
+   */
   def hasBuildErrors(file: IResource): Boolean =
     file.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
 
-  def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
+  private def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
     val mrk = file.createMarker(SdtConstants.TaskMarkerId)
     val values = new Array[AnyRef](taskMarkerAttributeNames.length)
 
@@ -116,12 +132,11 @@ object FileUtils {
     }
   }
 
-  /**
-   * Creates a file of a given `IFile` and all of its parent folders if needed.
-   * Resource listeners are also notified about the changes.
+  /** Creates a file of a given `IFile` and all of its parent folders if needed.
+   *  Resource listeners are also notified about the changes.
    *
-   * Returns `Unit` if the file creation was successful, otherwise the thrown
-   * exception.
+   *  Returns `Unit` if the file creation was successful, otherwise the thrown
+   *  exception.
    */
   def createFile(file: IFile): Try[Unit] = Try {
     def createParentFolders(c: IContainer): Unit = c match {
@@ -154,8 +169,8 @@ object FileUtils {
   def isBuildable(file: IFile): Boolean =
     isBuildable(file.getName())
 
-  /** Is the file buildable by the Scala plugin? In other words, is it a
-   *  Java or Scala source file?
+  /**
+   * @see [[isBuildable(IFile):Boolean]
    */
   def isBuildable(fileName: String): Boolean =
     (fileName.endsWith(SdtConstants.ScalaFileExtn) || fileName.endsWith(SdtConstants.JavaFileExtn))

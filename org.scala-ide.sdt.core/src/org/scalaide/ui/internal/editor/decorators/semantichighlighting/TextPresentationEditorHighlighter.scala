@@ -18,7 +18,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /** This class is responsible of:
  *

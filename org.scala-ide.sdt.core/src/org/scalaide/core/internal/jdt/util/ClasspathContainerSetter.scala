@@ -11,7 +11,6 @@ import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IStatus
 import java.io.FileInputStream
-import org.scalaide.core.IScalaModule
 import org.scalaide.logging.HasLogger
 import java.io.FileOutputStream
 import org.eclipse.core.resources.IProject

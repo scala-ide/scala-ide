@@ -132,7 +132,6 @@ class ScalaSourceViewerConfiguration(
   private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false)
       with IAnnotationHoverExtension
       with HtmlHover {
-    import HTMLPrinter._
 
     override def isIncluded(a: Annotation) =
       isShowInVerticalRuler(a)

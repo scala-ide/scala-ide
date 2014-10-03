@@ -10,7 +10,7 @@ import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils._
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 

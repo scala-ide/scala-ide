@@ -1,4 +1,4 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
@@ -28,7 +28,7 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.editor.ISourceViewerEditor
 import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
 /**
  * Provides helper methods for the text editor of Eclipse, which is a GUI aware
@@ -38,6 +38,9 @@ import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
  */
 object EditorUtils {
 
+  /** Opens the element passed as an argument in an Editor and applies the given method to it.
+   *  @see [[org.eclipse.jdt.ui.JavaUI.openInEditor]]
+   */
   def openEditorAndApply[T](element: IJavaElement)(editor: IEditorPart => T): T =
     editor(JavaUI.openInEditor(element))
 
@@ -51,6 +54,9 @@ object EditorUtils {
     }
   }
 
+  /** For a given IEditorPart, returns the annotations which position includes the offset
+   *  passed as an argument.
+   */
   def getAnnotationsAtOffset(part: org.eclipse.ui.IEditorPart, offset: Int): Iterator[(Annotation, Position)] = {
     import scala.collection.JavaConverters._
     val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
@@ -72,11 +78,14 @@ object EditorUtils {
     annotationsAtOffset
   }
 
+  /** Returns a region matching the given text selection.
+   */
   def textSelection2region(selection: ITextSelection): IRegion =
     new Region(selection.getOffset, selection.getLength)
 
+  /** Returns the current selection for a given editor
+   */
   def getTextSelection(editor: ITextEditor): Option[ITextSelection] = {
-    import org.scalaide.util.internal.Utils._
     for {
       workbenchSite <- Option(editor.getSite)
       provider <- Option(workbenchSite.getSelectionProvider)
@@ -85,22 +94,21 @@ object EditorUtils {
     } yield textSelection
   }
 
-  def activeWorkbenchWindow: Option[IWorkbenchWindow] =
+  private def activeWorkbenchWindow: Option[IWorkbenchWindow] =
     Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow)
 
-  def activePage(w: IWorkbenchWindow): Option[IWorkbenchPage] =
+  private def activePage(w: IWorkbenchWindow): Option[IWorkbenchPage] =
     Option(w.getActivePage)
 
-  def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
+  private def activeEditor(p: IWorkbenchPage): Option[IEditorPart] =
     if (p.isEditorAreaVisible) Some(p.getActiveEditor) else None
 
-  /**
-   * Returns the resource of the active editor if it exists.
+  /** Returns the resource of the active editor if it exists.
    *
-   * This method returns `None` in the following cases:
-   * - It is not executed on the UI thread
-   * - The active selection is not an editor
-   * - The active editor doesn't provide a resource (which is the case if an
+   *  This method returns `None` in the following cases:
+   *  - It is not executed on the UI thread
+   *  - The active selection is not an editor
+   *  - The active editor doesn't provide a resource (which is the case if an
    *   [[IClassFile]] is opened)
    */
   def resourceOfActiveEditor: Option[IResource] = for {
@@ -110,22 +118,25 @@ object EditorUtils {
     r <- Option(e.getEditorInput().getAdapter(classOf[IResource]))
   } yield r.asInstanceOf[IResource]
 
-
+  /** Type-safe downcast of an [[IEditorPart]] to a [[ISourceViewerEditor]].
+   */
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =
     PartialFunction.condOpt(e) {
       case t: ISourceViewerEditor => t
     }
 
-  def file(e: ITextEditor): Option[IFile] =
+  private def file(e: ITextEditor): Option[IFile] =
     PartialFunction.condOpt(e.getEditorInput()) {
       case f: IFileEditorInput => f.getFile
     }
 
-  def selection(e: ITextEditor): Option[ITextSelection] =
+  private def selection(e: ITextEditor): Option[ITextSelection] =
     PartialFunction.condOpt(e.getSelectionProvider.getSelection) {
       case s: ITextSelection => s
     }
 
+  /** Applies the side-effecting function passed as an argument to the current editor.
+   */
   def doWithCurrentEditor(block: ISourceViewerEditor => Unit): Unit = {
     withCurrentEditor { editor =>
       block(editor)
@@ -133,6 +144,8 @@ object EditorUtils {
     }
   }
 
+  /** Applies the function passed as an argument monadically to the current editor.
+   */
   def withCurrentEditor[T](block: ISourceViewerEditor => Option[T]): Option[T] = for {
     w <- activeWorkbenchWindow
     p <- activePage(w)
@@ -141,6 +154,8 @@ object EditorUtils {
     b <- block(t)
   } yield b
 
+  /** Applies the function passed as an argument monadically to the given Scala source file.
+   */
   def withCurrentScalaSourceFile[T](block: ScalaSourceFile => T): Option[T] = {
     withCurrentEditor { textEditor =>
       file(textEditor) flatMap { file =>
@@ -149,6 +164,8 @@ object EditorUtils {
     }
   }
 
+  /** @see [[ withScalaSourceFileAndSelection(ScalaSourceFile, ITextSelection): Option[T] ]]
+   */
   def withScalaFileAndSelection[T](block: (InteractiveCompilationUnit, ITextSelection) => Option[T]): Option[T] = {
     withCurrentEditor { textEditor =>
       EditorUtils.getEditorCompilationUnit(textEditor) flatMap { icu =>
@@ -159,6 +176,8 @@ object EditorUtils {
     }
   }
 
+  /** Applies the function passed as an argument monadically to the given Scala source file and current selection.
+   */
   def withScalaSourceFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
     withScalaFileAndSelection { (icu, selection) =>
       icu match {
@@ -168,12 +187,11 @@ object EditorUtils {
     }
   }
 
-  /**
-   * Given an `ISourceViewer` it applies `f` on the underlying document's model.
-   * If one of the involved components is `null`, even if `f` returns `null`, this
-   * method returns `None`, otherwise the result of `f`.
+  /** Given an `ISourceViewer` it applies `f` on the underlying document's model.
+   *  If one of the involved components is `null`, even if `f` returns `null`, this
+   *  method returns `None`, otherwise the result of `f`.
    *
-   * This method is UI independent.
+   *  This method is UI independent.
    */
   def withDocument[A](sourceViewer: ISourceViewer)(f: IDocument => A): Option[A] =
     for {
@@ -182,10 +200,9 @@ object EditorUtils {
       r <- Option(f(d))
     } yield r
 
-  /**
-   * Enters the editor in the LinkedModeUI with the given list of position groups.
-   * Each position group is a list of positions with identical strings.
-   * A position is given as an offset and the length.
+  /** Enters the editor in the LinkedModeUI with the given list of position groups.
+   *  Each position group is a list of positions with identical strings.
+   *  A position is given as an offset and the length.
    */
   def enterMultiLinkedModeUi(positionGroups: List[List[(Int, Int)]], selectFirst: Boolean): Unit =
     EditorUtils.doWithCurrentEditor { editor =>
@@ -215,13 +232,16 @@ object EditorUtils {
         viewer.setSelectedRange(priorSelection.x, priorSelection.y)
     }
 
-  /**
-   * Enters the editor in the LinkedModeUI with the given list of positions.
-   * A position is given as an offset and the length.
+  /** Enters the editor in the LinkedModeUI with the given list of positions.
+   *  A position is given as an offset and the length.
    */
   def enterLinkedModeUi(ps: List[(Int, Int)], selectFirst: Boolean): Unit =
     enterMultiLinkedModeUi(ps :: Nil, selectFirst)
 
+  /** Returns the document attached to an editor of the file passed as an argument,
+   *  opening the editor if the file is not already opened, just bringing the editor
+   *  toplevel otherwise.
+   */
   def findOrOpen(file: IFile): Option[IDocument] = {
     for (window <- activeWorkbenchWindow) yield {
       val page = window.getActivePage()

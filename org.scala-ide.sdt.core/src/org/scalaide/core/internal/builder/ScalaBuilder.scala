@@ -16,7 +16,7 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.jdt.internal.core.builder.State
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule

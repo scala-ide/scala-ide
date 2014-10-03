@@ -19,9 +19,8 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
 import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
 import org.scalaide.ui.internal.editor.decorators.SemanticAction
-import org.scalaide.util.internal.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.internal.eclipse.EclipseUtils
-
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * Manages the SemanticHighlightingPresenter instances for the open editors.

@@ -40,13 +40,12 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
 import org.scalaide.logging.HasLogger
 import org.osgi.framework.Bundle
-import org.scalaide.util.internal.Utils
 import org.eclipse.jdt.core.ICompilationUnit
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.settings.ScalaVersion
@@ -58,7 +57,6 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.ui.internal.diagnostic
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
@@ -67,7 +65,7 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.scalaide.util.internal.Utils._
+import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
 object ScalaPlugin {
 

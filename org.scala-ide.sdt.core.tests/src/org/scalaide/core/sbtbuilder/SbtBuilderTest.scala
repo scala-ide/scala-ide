@@ -23,7 +23,7 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion

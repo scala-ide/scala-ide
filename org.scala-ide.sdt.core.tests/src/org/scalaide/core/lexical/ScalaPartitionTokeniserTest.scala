@@ -183,10 +183,10 @@ class ScalaPartitionTokeniserTest {
 
 object ScalaPartitionTokeniserTest {
   import scala.language.implicitConversions
-  implicit def string2PimpedString(from: String): PimpedString = new PimpedString(from)
-  implicit def element2PimpedString(from: Elem): PimpedString = new PimpedString(from.text)
+  implicit def string2RichString(from: String): RichString = new RichString(from)
+  implicit def element2RichString(from: Elem): RichString = new RichString(from.text)
 
-  class PimpedString(source: String) {
+  class RichString(source: String) {
     def ==>(expectedPartitions: List[(String, Int, Int)]) {
       val actualPartitions = ScalaCodePartitioner.partition(source)
       val expected = expectedPartitions.map(p => new TypedRegion(p._2, p._3 - p._2 + 1, p._1))

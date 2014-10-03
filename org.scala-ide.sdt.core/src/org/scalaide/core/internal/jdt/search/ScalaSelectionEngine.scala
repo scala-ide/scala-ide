@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 

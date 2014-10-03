@@ -35,13 +35,12 @@ import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
-import org.scalaide.util.internal.eclipse.SWTUtils
 import org.scalaide.util.internal.ui.AutoCompletionOverlay
 import org.scalaide.util.internal.ui.Dialogs
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 
 /**
  * Wizard of the Scala IDE to create new files. It can not only create new
@@ -95,7 +94,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
     Option(file)
 
   def createContents(parent: Composite): Control = {
-    import SWTUtils._
+    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
 
     val c = new Composite(parent, SWT.NONE)
     c.setLayout(new GridLayout(2, false))

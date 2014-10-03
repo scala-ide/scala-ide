@@ -31,7 +31,7 @@ import org.scalaide.core.internal.ScalaPlugin
 import java.io.File
 import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.resources.MarkerFactory
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.osgi.framework.Version
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings

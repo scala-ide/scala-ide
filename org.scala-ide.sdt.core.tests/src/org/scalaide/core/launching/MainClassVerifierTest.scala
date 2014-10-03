@@ -4,7 +4,6 @@ package launching
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.DebugPlugin

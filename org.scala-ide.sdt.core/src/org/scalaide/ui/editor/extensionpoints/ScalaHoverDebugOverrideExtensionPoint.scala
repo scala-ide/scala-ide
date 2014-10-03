@@ -3,7 +3,7 @@ package org.scalaide.ui.editor.extensionpoints
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jface.text.ITextHover
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 
 object ScalaHoverDebugOverrideExtensionPoint {
   final val EXTENSION_POINT_ID = "org.scala-ide.sdt.core.scalaHoverDebugOverride"

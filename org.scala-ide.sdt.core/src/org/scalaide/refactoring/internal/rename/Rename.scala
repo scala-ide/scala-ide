@@ -6,7 +6,7 @@ import scala.tools.refactoring.implementations
 
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.RefactoringHandler
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * This implementation supports renaming of all identifiers that occur in the program.

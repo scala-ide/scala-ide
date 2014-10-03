@@ -3,7 +3,7 @@ package pc
 
 import org.junit.Test
 import org.eclipse.core.resources.IFile
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import testsetup._
 
 object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") with CustomAssertion

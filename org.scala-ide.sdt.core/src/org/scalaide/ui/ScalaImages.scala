@@ -1,7 +1,7 @@
 package org.scalaide.ui
 
 import org.eclipse.jface.resource.ImageDescriptor
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 
 object ScalaImages {
   val MISSING_ICON: ImageDescriptor = ImageDescriptor.getMissingImageDescriptor

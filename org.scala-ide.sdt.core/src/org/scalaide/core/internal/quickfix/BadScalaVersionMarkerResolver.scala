@@ -6,8 +6,8 @@ import org.eclipse.ui.IMarkerResolution
 import org.eclipse.ui.IMarkerResolutionGenerator
 import org.eclipse.ui.internal.dialogs.PropertyDialog
 import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.scalaide.util.internal.eclipse.SWTUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.ui.DisplayThread
 
 class BadScalaVersionMarkerResolver extends IMarkerResolutionGenerator {
 

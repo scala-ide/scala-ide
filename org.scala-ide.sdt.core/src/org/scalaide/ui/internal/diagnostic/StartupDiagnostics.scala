@@ -2,13 +2,13 @@ package org.scalaide.ui.internal.diagnostic
 
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 
 
 object MessageDialog {

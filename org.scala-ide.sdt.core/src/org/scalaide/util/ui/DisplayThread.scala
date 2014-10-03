@@ -1,6 +1,7 @@
-package org.scalaide.util.internal.ui
+package org.scalaide.util.ui
 
 import org.eclipse.swt.widgets.Display
+import org.scalaide.util.internal.ui.UIThread
 
 object DisplayThread extends UIThread {
 
@@ -18,5 +19,5 @@ object DisplayThread extends UIThread {
     }
   }
 
-  override def get: Thread = Display.getDefault.getThread()
+  private[scalaide] override def get: Thread = Display.getDefault.getThread()
 }

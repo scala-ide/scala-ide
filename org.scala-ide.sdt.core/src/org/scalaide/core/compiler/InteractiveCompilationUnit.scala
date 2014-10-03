@@ -6,10 +6,6 @@ import org.eclipse.jdt.core.compiler.IProblem
 import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.io.AbstractFile
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.SearchableEnvironment
-import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
 

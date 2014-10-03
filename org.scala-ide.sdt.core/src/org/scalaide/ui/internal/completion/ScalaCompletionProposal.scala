@@ -41,8 +41,8 @@ import org.scalaide.core.completion.CompletionProposal
 import org.scalaide.core.completion.MemberKind
 import org.scalaide.core.completion.prefixMatches
 import org.scalaide.ui.ScalaImages
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
 import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.hover.HoverControlCreator

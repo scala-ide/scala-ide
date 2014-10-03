@@ -39,7 +39,6 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: ISc
   import global.Symbol
   import global.Position
   import global.NoSymbol
-  import org.scalaide.core.compiler.IScalaPresentationCompiler._
 
   def compilationUnitOfFile(f: AbstractFile) = global.unitOfFile.get(f)
 

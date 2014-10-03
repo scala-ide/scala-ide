@@ -1,4 +1,4 @@
-package org.scalaide.util.internal.eclipse
+package org.scalaide.util.eclipse
 
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -12,21 +12,30 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.ui.ScalaImages
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.ui.plugin.AbstractUIPlugin
+import java.io.IOException
+import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 
 object OSGiUtils {
+
   private def urlToPath(url: URL): IPath = Path.fromOSString(FileLocator.toFileURL(url).getPath)
 
+  /**
+   * Uses [[FileLocator.find]] to find a path in a given bundle.
+   */
   def pathInBundle(bundle: Bundle, path: String): Option[IPath] = {
     val url = FileLocator.find(bundle, Path.fromPortableString(path), null)
     Option(url) map urlToPath
   }
 
-  /** accepts `null`*/
+  /**
+   *  Uses [[FileLocator.getBundlePath]] to obtain the path of a bundle.
+   *  accepts `null`
+   */
   def getBundlePath(bundle: Bundle): Option[IPath] = util.control.Exception.failing(classOf[IOException]) {
     Option(bundle).map(b => Path.fromOSString(FileLocator.getBundleFile(b).getAbsolutePath()))
   }
 
-  def allPathsInBundle(bundle: Bundle, path: String, filePattern: String): Iterator[IPath] = {
+  private def allPathsInBundle(bundle: Bundle, path: String, filePattern: String): Iterator[IPath] = {
     import scala.collection.JavaConverters._
     bundle.findEntries(path, filePattern, false).asScala map urlToPath
   }

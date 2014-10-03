@@ -19,7 +19,7 @@ import org.scalaide.core.internal.jdt.model.LazyToplevelClass
 import org.scalaide.core.internal.jdt.model.ScalaElement
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 /**

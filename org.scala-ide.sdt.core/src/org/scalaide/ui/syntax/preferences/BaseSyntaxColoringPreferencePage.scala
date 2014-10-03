@@ -21,8 +21,8 @@ import org.scalaide.ui.internal.preferences.SyntaxColoringTreeContentAndLabelPro
 import org.scalaide.ui.syntax.ScalaSyntaxClass
 import org.scalaide.ui.syntax.ScalaSyntaxClass.Category
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.util.internal.eclipse.EclipseUtils._
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.eclipse.EclipseUtils._
+import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.util.ui.SWTUtils.gridData
 import org.scalaide.ui.internal.preferences.PreviewerFactory
 

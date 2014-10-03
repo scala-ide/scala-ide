@@ -12,7 +12,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.junit.AfterClass
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 

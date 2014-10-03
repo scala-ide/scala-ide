@@ -7,7 +7,7 @@ import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MarkOccurrences
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import scala.ref.WeakReference
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
@@ -59,7 +59,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
         val occurrencesIndex = getCachedIndex(lastModified, compiler) getOrElse {
           val occurrencesIndex = new MarkOccurrencesIndex {
             val global = compiler
-            import global.{askLoadedTyped, Tree}
+            import global.askLoadedTyped
             override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
               askLoadedTyped(sourceFile, keepLoaded = false).get match {
                 case Left(tree) => compiler.asyncExec(GlobalIndex(tree)).getOrElse(EmptyIndex)()
