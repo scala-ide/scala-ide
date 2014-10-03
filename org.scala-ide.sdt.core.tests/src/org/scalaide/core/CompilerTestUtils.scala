@@ -32,7 +32,7 @@ class CompilerTestUtils(unit: ScalaSourceFile) {
     changeContentOfFile(unit.getResource().asInstanceOf[IFile], src)
 
     unit.withSourceFile { (srcFile, compiler) =>
-      compiler.askReload(unit, srcFile)
+      compiler.askReload(unit, unit.sourceMap(src.toCharArray()).sourceFile)
 
       val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>

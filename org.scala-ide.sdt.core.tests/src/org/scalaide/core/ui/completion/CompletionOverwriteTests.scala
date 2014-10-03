@@ -27,7 +27,7 @@ class CompletionOverwriteTests {
     object X {
       (new A).bar([[i]])^foo(3)
     }
-  """ after Completion("bar(Int): Int")
+  """ after Completion("bar(i: Int): Int")
   }
 
   @Test
@@ -46,7 +46,7 @@ class CompletionOverwriteTests {
     object X {
       (new A).foo([[i]])^
     }
-  """ after Completion("foo(Int): Int", enableOverwrite = true)
+  """ after Completion("foo(i: Int): Int", enableOverwrite = true)
   }
 
   @Test
@@ -67,7 +67,7 @@ class CompletionOverwriteTests {
     object X {
       (new A).bar^(3)
     }
-  """ after Completion("bar(Int): Int", enableOverwrite = true)
+  """ after Completion("bar(i: Int): Int", enableOverwrite = true)
   }
 
   @Test

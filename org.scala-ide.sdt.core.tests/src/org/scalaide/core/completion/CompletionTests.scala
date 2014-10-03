@@ -163,7 +163,7 @@ class CompletionTests {
 
   @Test
   def t1001218() {
-    val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
+    val oraclePos8_14 = List("println(): Unit", "println(x: Any): Unit")
     val oraclePos10_12 = List("foo(): Int")
     val oraclePos12_12 = List("foo(): Int")
     val oraclePos18_10 = List("foo(): Int")
@@ -176,10 +176,10 @@ class CompletionTests {
 
   @Test
   def t1001272() {
-    val oraclePos16_18 = List("A(): t1001272.A", "A(Int): t1001272.A")
-    val oraclePos17_18 = List("B(): t1001272.B")
-    val oraclePos18_20 = List("E(Int): t1001272.D.E")
-    val oraclePos19_26 = List("InnerA(Int): t1001272.Test.a.InnerA")
+    val oraclePos16_18 = List("A(): A", "A(a: Int): A")
+    val oraclePos17_18 = List("B(): B")
+    val oraclePos18_20 = List("E(i: Int): D.E")
+    val oraclePos19_26 = List("InnerA(i: Int): a.InnerA")
 
     val unit = scalaCompilationUnit("t1001272/A.scala")
     reload(unit)

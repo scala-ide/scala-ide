@@ -372,10 +372,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
 
     val signature =
       if (sym.isMethod) {
-        name +
-          (if (!sym.typeParams.isEmpty) sym.typeParams.map { _.name }.mkString("[", ",", "]") else "") +
-          tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
-          ": " + tpe.finalResultType.toString
+        declPrinter.defString(sym, flagMask = 0L, showKind = false)(tpe)
       } else name
     val container = sym.owner.enclClass.fullName
 

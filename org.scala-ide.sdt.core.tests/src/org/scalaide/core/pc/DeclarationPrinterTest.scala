@@ -6,6 +6,7 @@ import org.scalaide.core.CompilerTestUtils
 import org.junit.Test
 import org.junit.Assert
 import org.junit.Ignore
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object DeclarationPrinterTest extends TestProjectSetup("decl-printer") {
   val unit = scalaCompilationUnit("/pack/Target.scala")
@@ -57,7 +58,7 @@ class DeclarationPrinterTest {
          trait targetTrait[+X, -Y <: String]""",
       List("type targetPair = (File, Int)",
         "type targetGenericPair[+T] = (T, T)",
-        "type targetBounded >: File <: Any",
+        "type targetBounded >: File",
         "type targetBoundedTwo <: List[File]",
         "abstract trait targetTrait[+X, -Y <: String] extends AnyRef"))
   }
@@ -136,7 +137,7 @@ class DeclarationPrinterTest {
         val result = compiler.asyncExec {
           t.symbol.initialize
           compiler.declPrinter.defString(t.symbol.asInstanceOf[compiler.Symbol])()
-        }
+        }.getOption()
 
         Assert.assertEquals("Wrong type printer", exp.head, result.get)
         exp = exp.tail

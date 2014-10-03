@@ -39,7 +39,7 @@ abstract class DeclarationPrinter extends HasLogger {
    *
    *  @note Should be run on the presentation compiler thread (inside askOption).
    */
-  def defString(sym: Symbol, flagMask: Long = Flags.ExplicitFlags)(seenAs: Type = sym.rawInfo): String = {
+  def defString(sym: Symbol, flagMask: Long = Flags.ExplicitFlags, showKind: Boolean = true)(seenAs: Type = sym.rawInfo): String = {
 
     def infoString(tp: Type): String = {
       def isStructuralThisType = (
@@ -64,11 +64,26 @@ abstract class DeclarationPrinter extends HasLogger {
       }
     }
 
+    /** Inspired from Symbol, but take into account the mask access modifiers.
+     *  The original would always display access modifiers, even when the mask is `0L`.
+     */
+    def flagString(sym: Symbol, basis: Long): String = {
+      import sym._
+      import Flags._
+      val access = if ((basis & AccessFlags) != 0) accessString else ""
+      val nonAccess = flagBitsToString(basis & ~AccessFlags)
+
+      if (access == "") nonAccess
+      else if (nonAccess == "") access
+      else nonAccess + " " + access
+    }
+
+    val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
     compose(
       // TODO: Annotations
-      sym.flagString(flagMask),
-      sym.keyString,
-      sym.varianceString + sym.nameString + infoString(seenAs) // don't force the symbol
+      flagString(sym, flagMask & sym.flags),
+      if (showKind) sym.keyString else "",
+      sym.varianceString + name + infoString(seenAs) // don't force the symbol
       )
   }
 
