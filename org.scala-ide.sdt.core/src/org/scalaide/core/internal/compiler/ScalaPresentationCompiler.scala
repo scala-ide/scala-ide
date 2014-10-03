@@ -131,10 +131,10 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
         val reloadFiles = reloadees map { case (_, srcFile) => srcFile }
         askReload(reloadFiles, res)
         logger.info(s"Flushed ${reloadees.mkString("", ",", "")}")
-        res.get
       }
       scheduledUnits.clear()
     }
+    res.get
     res
   }
 
