@@ -16,11 +16,12 @@ import scala.reflect.internal.util.SourceFile
 import tools.nsc.interactive.Global
 import scala.tools.refactoring.common.TextChange
 import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.ui.ScalaImages
 
 abstract class AddValOrDefProposal extends BasicCompletionProposal(
     relevance = 90,
     displayString = "",
-    image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()) {
+    image = ScalaImages.ADD_METHOD_PROPOSAL) {
   protected val returnType: ReturnType
   protected val target: AddMethodTarget
 
