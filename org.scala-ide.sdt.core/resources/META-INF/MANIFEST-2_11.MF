@@ -94,6 +94,7 @@ Export-Package:
  org.scalaide.core.internal.decorators.semantichighlighting,
  org.scalaide.core.internal.decorators.semantichighlighting.classifier,
  org.scalaide.core.internal.formatter,
+ org.scalaide.core.internal.hyperlink,
  org.scalaide.core.internal.jdt.builder,
  org.scalaide.core.internal.jdt.compiler,
  org.scalaide.core.internal.jdt.model,

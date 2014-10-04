@@ -19,6 +19,8 @@ import org.scalaide.core.internal.compiler.InternalCompilerServices
 import org.scalaide.core.IScalaProject
 import scala.tools.nsc.doc.base.comment.Comment
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.hyperlink.IHyperlink
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -277,6 +279,15 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
     viaView: Symbol,
     context: CompletionContext,
     project: IScalaProject): CompletionProposal
+
+  /** Create a hyperlink to the given symbol. This is an exit point from the compiler cake.
+   *
+   * @param sym         The symbol definition to which the hyperlink should go
+   * @param name        The primary information to be displayed, if more than one hyperlink is available
+   * @param region      The region to be underlined in the editor
+   * @param javaProject The java project where to search for the definition of this symbol
+   */
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject): Option[IHyperlink]
 }
 
 object IScalaPresentationCompiler extends HasLogger {

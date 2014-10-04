@@ -51,6 +51,10 @@ import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 import scala.util.Try
 import scala.reflect.internal.util.NoPosition
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import org.scalaide.core.internal.hyperlink.ScalaHyperlink
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -437,6 +441,22 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       false,
       docFun)
   }
+
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject): Option[IHyperlink] = {
+    asyncExec {
+      findDeclaration(sym, javaProject) map {
+        case (f, pos) =>
+          val text1 = sym.kindString + " " + sym.fullName
+          new ScalaHyperlink(openableOrUnit = f,
+              pos = f.lastSourceMap().originalPos(pos),
+              len = sym.name.decodedName.length,
+              label = name,
+              text = text1,
+              wordRegion = region)
+      }
+    }.getOrElse(None)()
+  }
+
 
   override def inform(msg: String): Unit =
     logger.debug("[%s]: %s".format(name, msg))

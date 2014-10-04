@@ -17,10 +17,6 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
     logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
 
     icu.withSourceFile({ (sourceFile, compiler) =>
-      object DeclarationHyperlinkFactory extends HyperlinkFactory {
-        protected val global: compiler.type = compiler
-      }
-
       if (mappedRegion == null || mappedRegion.getLength == 0)
         None
       else {
@@ -64,7 +60,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         symsOpt map { syms =>
           syms flatMap { sym =>
-             DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu.scalaProject.javaProject, sym, wordRegion)
+             compiler.mkHyperlink(sym, "Open Declaration", wordRegion, icu.scalaProject.javaProject)
           }
         }
       }
