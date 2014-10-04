@@ -1,38 +1,36 @@
 package org.scalaide.core.internal.quickassist
 
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.logging.HasLogger
-import org.scalaide.util.eclipse.EditorUtils
-import org.scalaide.core.internal.quickassist.createmethod.CreateMethodProposal
-import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import scala.tools.refactoring.implementations.AddToClass
 import scala.tools.refactoring.implementations.AddToClosest
 import scala.tools.refactoring.implementations.AddToObject
+
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jdt.ui.JavaUI
-import org.eclipse.jdt.ui.text.java.IInvocationContext
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jdt.ui.text.java.IProblemLocation
-import org.eclipse.jdt.ui.text.java.IQuickFixProcessor
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
 import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jdt.core.IJavaProject
-import org.scalaide.core.quickassist.QuickAssist
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.quickassist.createmethod.CreateMethodProposal
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.core.quickassist.QuickAssist
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * Contains quick fixes that can only be applied to compiler errors. If there
  * are no compilation errors than this component doesn't anything to apply.
  */
-class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger with QuickAssist {
+class ScalaQuickFixProcessor extends QuickAssist with HasLogger {
   private val TypeNotFoundError = "not found: type (.*)".r
   private val ValueNotFoundError = "not found: value (.*)".r
   private val XXXXXNotFoundError = "not found: (.*)".r
@@ -42,33 +40,24 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger with Quic
   // regex for extracting expected and required type on type mismatch
   private val TypeMismatchError = """type mismatch;\s*found\s*: (\S*)\s*required: (.*)""".r
 
-  /**
-   * Checks if the processor has any corrections.
-   *
-   * Currently this always returns true. At some point it may be worthwhile
-   * to expend some effort on implementing this properly to make the plug-in
-   * slightly more responsive.
-   */
-  override def hasCorrections(unit : ICompilationUnit, problemId : Int): Boolean = true
-
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
     ctx.compilationUnit match {
       case ssf: ScalaSourceFile => {
-      val editor = JavaUI.openInEditor(ssf)
-        var corrections : List[IJavaCompletionProposal] = Nil
+        val editor = JavaUI.openInEditor(ssf)
+        var corrections: List[IJavaCompletionProposal] = Nil
         for (location <- ctx.problemLocations)
           for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)) {
-             val importFix = suggestImportFix(ssf, ann.getText)
-             val createClassFix = suggestCreateClassFix(ssf, ann.getText)
+            val importFix = suggestImportFix(ssf, ann.getText)
+            val createClassFix = suggestCreateClassFix(ssf, ann.getText)
 
-             // compute all possible type mismatch quick fixes
-             val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
-             val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
+            // compute all possible type mismatch quick fixes
+            val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
+            val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
 
-             val createMethodFix = suggestCreateMethodFix(ssf, ann.getText, pos)
-             val changeMethodCase = suggestChangeMethodCase(ssf, ann.getText, pos)
+            val createMethodFix = suggestCreateMethodFix(ssf, ann.getText, pos)
+            val changeMethodCase = suggestChangeMethodCase(ssf, ann.getText, pos)
 
-             // concatenate lists of found quick fixes
+            // concatenate lists of found quick fixes
             corrections = corrections ++
               importFix ++
               typeMismatchFix ++
@@ -77,54 +66,11 @@ class ScalaQuickFixProcessor extends IQuickFixProcessor with HasLogger with Quic
               changeMethodCase
 
           }
-      corrections.distinct.asInstanceOf[Seq[BasicCompletionProposal]]
+        corrections.distinct.asInstanceOf[Seq[BasicCompletionProposal]]
       }
 
       case _ => Nil
     }
-  }
-
-  /**
-   * Collects corrections or code manipulations for the given context.
-   *
-   * @param context Defines current compilation unit, position and a shared AST
-   * @param locations Problems are the current location.
-   * @return the corrections applicable at the location or <code>null</code> if no proposals
-   *      can be offered
-   * @throws CoreException CoreException can be thrown if the operation fails
-   */
-  override def getCorrections(context : IInvocationContext, locations : Array[IProblemLocation]): Array[IJavaCompletionProposal] =
-    context.getCompilationUnit match {
-      case ssf : ScalaSourceFile => {
-      val editor = JavaUI.openInEditor(context.getCompilationUnit)
-        var corrections : List[IJavaCompletionProposal] = Nil
-        for (location <- locations)
-          for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)) {
-             val importFix = suggestImportFix(context.getCompilationUnit(), ann.getText)
-             val createClassFix = suggestCreateClassFix(context.getCompilationUnit(), ann.getText)
-
-             // compute all possible type mismatch quick fixes
-             val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
-             val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
-
-             val createMethodFix = suggestCreateMethodFix(context.getCompilationUnit(), ann.getText, pos)
-             val changeMethodCase = suggestChangeMethodCase(context.getCompilationUnit(), ann.getText, pos)
-
-             // concatenate lists of found quick fixes
-            corrections = corrections ++
-              importFix ++
-              typeMismatchFix ++
-              createClassFix ++
-              createMethodFix ++
-              changeMethodCase
-
-          }
-        corrections match {
-          case Nil => null
-          case l => l.distinct.toArray
-        }
-      }
-      case _ => null
   }
 
   private def suggestChangeMethodCase(cu: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {

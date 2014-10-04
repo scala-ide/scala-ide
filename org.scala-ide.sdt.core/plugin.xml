@@ -1034,39 +1034,6 @@
       class="org.scalaide.ui.internal.jdt.model.ScalaImageDescriptorSelector">
     </selector>
   </extension>
-  <extension
-        point="org.eclipse.jdt.ui.quickFixProcessors">
-     <quickFixProcessor
-           class="org.scalaide.core.internal.quickassist.ScalaQuickFixProcessor"
-           id="scala-plugin.quickFixProcessor1">
-        <enablement>
-          <with variable="projectNatures">
-             <iterate operator="or">
-                <or>
-                  <equals value="org.scala-ide.sdt.core.scalanature"/>
-                </or>
-             </iterate>
-          </with>
-        </enablement>
-     </quickFixProcessor>
-  </extension>
- <extension
-       point="org.eclipse.jdt.ui.quickAssistProcessors">
-    <quickAssistProcessor
-          class="org.scalaide.core.internal.quickassist.ScalaQuickAssistProcessor"
-          id="org.scala-ide.sdt.core.quickAssistProcessor"
-          name="Scala Quick Assist Processor">
-        <enablement>
-          <with variable="projectNatures">
-             <iterate operator="or">
-                <or>
-                  <equals value="org.scala-ide.sdt.core.scalanature"/>
-                </or>
-             </iterate>
-          </with>
-        </enablement>
-    </quickAssistProcessor>
- </extension>
 
   <!-- refactoring -->
 
