@@ -1144,13 +1144,18 @@
             id="org.scalaide.core.handler.indentGuide"
             name="Show Indent Guide">
       </command>
-      <command
-            categoryId="scala.tools.eclipse.category"
-            description="Opens the Scala Quick Assist dialog"
-            id="org.scalaide.quickassist.handler"
-            name="Scala Quick Assist">
-      </command>
 </extension>
+  <extension
+        name="Quick Assists"
+        point="org.eclipse.ui.commands">
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Opens the Scala Quick Assist dialog"
+           id="org.scalaide.core.quickassist"
+           name="Scala Quick Assist">
+     </command>
+  </extension>
 
    <extension point="org.eclipse.ui.contexts">
      <context name="Editing Scala Source"
@@ -1219,7 +1224,7 @@
    <extension
          point="org.eclipse.ui.bindings">
       <key
-            commandId="org.scalaide.quickassist.handler"
+            commandId="org.scalaide.core.quickassist"
             contextId="scala.tools.eclipse.scalaEditorScope"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+1">
@@ -1315,10 +1320,6 @@
     <handler
           class="org.scalaide.ui.internal.actions.RunSelection"
           commandId="org.scalaide.core.handler.RunSelection">
-    </handler>
-    <handler
-          class="org.scalaide.core.internal.quickassist.QuickAssistHandler"
-          commandId="org.scalaide.quickassist.handler">
     </handler>
  </extension>
  <extension
