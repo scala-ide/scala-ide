@@ -57,6 +57,23 @@ object RegionUtils {
       val offset = region.getOffset()
       new RangePosition(sourceFile, offset, offset, offset + region.getLength())
     }
+
+    /** Return a new Region with `f` applied to both start and end offsets.
+     *
+     *  Equivalent to `new Region(f(start), f(end))`.
+     */
+    def map(f: Int => Int): IRegion = {
+      val newOffset = f(region.getOffset)
+      val newLen = f(region.getOffset + region.getLength) - newOffset
+      new Region(newOffset, newLen)
+    }
+
+    /** Translate this region by applying `f` to the offset, and keeping the length
+     *  unchanged.
+     */
+    def translate(f: Int => Int): IRegion = {
+      new Region(f(region.getOffset), region.getLength)
+    }
   }
 
   /** Enrich [[org.eclipse.jface.text.ITypedRegion]].

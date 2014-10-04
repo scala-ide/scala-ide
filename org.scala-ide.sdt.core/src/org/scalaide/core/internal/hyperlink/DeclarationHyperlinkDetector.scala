@@ -12,6 +12,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
+import org.scalaide.util.eclipse.RegionUtils._
 
 class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger {
 
@@ -26,7 +27,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
   }
 
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion): List[IHyperlink] = {
-    findHyperlinks(textEditor, icu, wordRegion, wordRegion)
+    findHyperlinks(textEditor, icu, wordRegion, wordRegion.map(icu.lastSourceMap().scalaPos))
   }
 
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): List[IHyperlink] = {
