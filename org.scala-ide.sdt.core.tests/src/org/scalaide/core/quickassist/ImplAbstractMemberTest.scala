@@ -8,8 +8,8 @@ import org.junit.BeforeClass
 import org.junit.Test
 import testsetup.SDTTestUtils
 import scala.util.control.Exception
-import org.scalaide.core.internal.quickfix.abstractimpl.ImplAbstractMembers
-import org.scalaide.core.internal.quickfix.abstractimpl.AbstractMemberProposal
+import org.scalaide.core.internal.quickassist.abstractimpl.ImplAbstractMembers
+import org.scalaide.core.internal.quickassist.abstractimpl.AbstractMemberProposal
 
 object ImplAbstractMemberTest extends QuickAssistTest {
   @BeforeClass

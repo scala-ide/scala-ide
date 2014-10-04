@@ -527,10 +527,10 @@
       </classpathContainerPage>
    </extension>
    <extension point="org.eclipse.ui.ide.markerResolution">
-   <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickfix.BadScalaVersionMarkerResolver">
+   <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickassist.BadScalaVersionMarkerResolver">
    </markerResolutionGenerator>
    <markerResolutionGenerator
-         class="org.scalaide.core.internal.quickfix.NoScalaLibraryMarkerResolver"
+         class="org.scalaide.core.internal.quickassist.NoScalaLibraryMarkerResolver"
          markerType="org.scala-ide.sdt.core.classpathProblem">
    </markerResolutionGenerator>
    </extension>
@@ -1037,7 +1037,7 @@
   <extension
         point="org.eclipse.jdt.ui.quickFixProcessors">
      <quickFixProcessor
-           class="org.scalaide.core.internal.quickfix.ScalaQuickFixProcessor"
+           class="org.scalaide.core.internal.quickassist.ScalaQuickFixProcessor"
            id="scala-plugin.quickFixProcessor1">
         <enablement>
           <with variable="projectNatures">
@@ -1053,7 +1053,7 @@
  <extension
        point="org.eclipse.jdt.ui.quickAssistProcessors">
     <quickAssistProcessor
-          class="org.scalaide.core.internal.quickfix.ScalaQuickAssistProcessor"
+          class="org.scalaide.core.internal.quickassist.ScalaQuickAssistProcessor"
           id="org.scala-ide.sdt.core.quickAssistProcessor"
           name="Scala Quick Assist Processor">
         <enablement>
