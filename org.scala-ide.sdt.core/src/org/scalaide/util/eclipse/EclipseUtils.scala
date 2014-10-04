@@ -97,9 +97,9 @@ object EclipseUtils extends HasLogger {
    *  @param wspace the workspace
    *  @param monitor the progress monitor (defaults to `null` for no progress monitor).
    */
-  def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
+  def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit): Unit = {
     wspace.run(new IWorkspaceRunnable {
-      def run(monitor: IProgressMonitor) {
+      override def run(monitor: IProgressMonitor) {
         f(monitor)
       }
     }, monitor)
@@ -203,19 +203,31 @@ object EclipseUtils extends HasLogger {
   /** Executes a given function in a safe runner that catches potential occurring
    *  exceptions and logs them if this is the case.
    */
-  def withSafeRunner(f: => Unit): Unit = {
+  @deprecated("use the overloaded alternative", "4.0")
+  def withSafeRunner(f: => Unit): Unit =
+    withSafeRunner("")(f)
+
+  /**
+   * Executes a given function `f` in a safe runner that catches potential
+   * occuring exceptions and logs them together with `errorMsg` if this is the
+   * case.
+   *
+   * If no error occurs, the result of `f` is returned, otherwise `None`.
+   */
+  def withSafeRunner[A](errorMsg: String)(f: => A): Option[A] = {
+    var res = null.asInstanceOf[A]
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
-        eclipseLog.error("Error occured while executing extension.", e)
-
-      override def run() = f
+        eclipseLog.error(errorMsg, e)
+      override def run() = res = f
     })
+    Option(res)
   }
 
   /** Returns the root resource of this workspace.
    *
    *  @see `org.eclipse.core.resources.IWorkspace.getRoot`
    */
-  def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
+  def workspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
 }
