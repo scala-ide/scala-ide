@@ -15,6 +15,7 @@ import org.eclipse.ui.IEditorInput
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * Referenced in the plugins.xml. This handler gets called when an user asks for
@@ -75,20 +76,21 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
   import QuickAssistProcessor._
 
   override def computeQuickAssistProposals(ctx: IQuickAssistInvocationContext): Array[ICompletionProposal] = {
-    val cu = JavaUI.getWorkingCopyManager.getWorkingCopy(input)
-    val model = JavaUI.getDocumentProvider.getAnnotationModel(input)
+    def problems = {
+      import collection.JavaConverters._
+      val model = JavaUI.getDocumentProvider.getAnnotationModel(input)
+      val iter = model.getAnnotationIterator.asScala
 
-    import collection.JavaConverters._
-    val iter = model.getAnnotationIterator.asScala
-    val problems = (iter foldLeft IndexedSeq[ProblemLocation]()) {
-      case (ps, a: Annotation with IJavaAnnotation) =>
-        val pos = model.getPosition(a)
-        if (isInside(ctx.getOffset, pos.offset, pos.offset+pos.length))
-          ps :+ new ProblemLocation(pos.offset, pos.length, a)
-        else
+      (iter foldLeft IndexedSeq[ProblemLocation]()) {
+        case (ps, a: Annotation with IJavaAnnotation) =>
+          val pos = model.getPosition(a)
+          if (isInside(ctx.getOffset, pos.offset, pos.offset+pos.length))
+            ps :+ new ProblemLocation(pos.offset, pos.length, a)
+          else
+            ps
+        case (ps, _) =>
           ps
-      case (ps, _) =>
-        ps
+      }
     }
 
     val assists =
@@ -97,14 +99,20 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
       else
         QuickAssists.find(_.id == id).toSeq
 
-    val ictx = InvocationContext(cu, ctx.getOffset, ctx.getLength, problems)
-    val proposals = assists flatMap (_ withInstance (_ compute ictx))
-    val sorted = proposals.flatten.sortBy(-_.getRelevance())
+    JavaUI.getWorkingCopyManager.getWorkingCopy(input) match {
+      case ssf: ScalaSourceFile if assists.nonEmpty =>
+        val ictx = InvocationContext(ssf, ctx.getOffset, ctx.getLength, problems)
+        val proposals = assists flatMap (_ withInstance (_ compute ictx))
+        val sorted = proposals.flatten.sortBy(-_.getRelevance())
 
-    if (sorted.isEmpty)
-      Array(NoProposals)
-    else
-      sorted.toArray
+        if (sorted.isEmpty)
+          Array(NoProposals)
+        else
+          sorted.toArray
+
+      case _ =>
+        Array(NoProposals)
+    }
   }
 
   override def canAssist(ctx: IQuickAssistInvocationContext): Boolean = true

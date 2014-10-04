@@ -41,36 +41,31 @@ class ScalaQuickFixProcessor extends QuickAssist with HasLogger {
   private val TypeMismatchError = """type mismatch;\s*found\s*: (\S*)\s*required: (.*)""".r
 
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
-    ctx.compilationUnit match {
-      case ssf: ScalaSourceFile => {
-        val editor = JavaUI.openInEditor(ssf)
-        var corrections: List[IJavaCompletionProposal] = Nil
-        for (location <- ctx.problemLocations)
-          for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)) {
-            val importFix = suggestImportFix(ssf, ann.getText)
-            val createClassFix = suggestCreateClassFix(ssf, ann.getText)
+    val ssf = ctx.sourceFile
+    val editor = JavaUI.openInEditor(ssf)
+    var corrections: List[IJavaCompletionProposal] = Nil
+    for (location <- ctx.problemLocations)
+      for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)) {
+        val importFix = suggestImportFix(ssf, ann.getText)
+        val createClassFix = suggestCreateClassFix(ssf, ann.getText)
 
-            // compute all possible type mismatch quick fixes
-            val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
-            val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
+        // compute all possible type mismatch quick fixes
+        val document = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
+        val typeMismatchFix = suggestTypeMismatchFix(document, ann.getText, pos)
 
-            val createMethodFix = suggestCreateMethodFix(ssf, ann.getText, pos)
-            val changeMethodCase = suggestChangeMethodCase(ssf, ann.getText, pos)
+        val createMethodFix = suggestCreateMethodFix(ssf, ann.getText, pos)
+        val changeMethodCase = suggestChangeMethodCase(ssf, ann.getText, pos)
 
-            // concatenate lists of found quick fixes
-            corrections = corrections ++
-              importFix ++
-              typeMismatchFix ++
-              createClassFix ++
-              createMethodFix ++
-              changeMethodCase
+        // concatenate lists of found quick fixes
+        corrections = corrections ++
+          importFix ++
+          typeMismatchFix ++
+          createClassFix ++
+          createMethodFix ++
+          changeMethodCase
 
-          }
-        corrections.distinct.asInstanceOf[Seq[BasicCompletionProposal]]
       }
-
-      case _ => Nil
-    }
+    corrections.distinct.asInstanceOf[Seq[BasicCompletionProposal]]
   }
 
   private def suggestChangeMethodCase(cu: ICompilationUnit, problemMessage : String, pos: Position): List[IJavaCompletionProposal] = {

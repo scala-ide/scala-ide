@@ -21,26 +21,22 @@ class ScalaQuickAssistProcessor extends QuickAssist with HasLogger {
   import ScalaQuickAssistProcessor._
 
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
-    val (start, len) = (ctx.selectionStart, ctx.selectionLength)
+    val (start, len, ssf) = (ctx.selectionStart, ctx.selectionLength, ctx.sourceFile)
 
-    ctx.compilationUnit match {
-      case ssf: ScalaSourceFile =>
-        import EditorUtils._
-        val assists = openEditorAndApply(ssf) { editor =>
-          val corrections = getAnnotationsAtOffset(editor, start) flatMap {
-            case (ann, pos) =>
-              suggestAssist(ann.getText, pos)
-          }
-          corrections.toArray.distinct
-        }
-
-        val allAssists = ExplicitReturnType.suggestsFor(ssf, start).toArray ++
-          ImplAbstractMembers.suggestsFor(ssf, start) ++ assists ++
-          ExtractionProposal.getQuickAssistProposals(ssf, start, start + len)
-
-        allAssists.toSeq.asInstanceOf[Seq[BasicCompletionProposal]]
-      case _ => Nil
+    import EditorUtils._
+    val assists = openEditorAndApply(ssf) { editor =>
+      val corrections = getAnnotationsAtOffset(editor, start) flatMap {
+        case (ann, pos) =>
+          suggestAssist(ann.getText, pos)
+      }
+      corrections.toArray.distinct
     }
+
+    val allAssists = ExplicitReturnType.suggestsFor(ssf, start).toArray ++
+      ImplAbstractMembers.suggestsFor(ssf, start) ++ assists ++
+      ExtractionProposal.getQuickAssistProposals(ssf, start, start + len)
+
+    allAssists.toSeq.asInstanceOf[Seq[BasicCompletionProposal]]
   }
 
   private def suggestAssist(problemMessage: String, location: Position): Seq[IJavaCompletionProposal] = {
