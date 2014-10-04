@@ -47,9 +47,9 @@ import org.eclipse.jdt.internal.core.SourceRefElement
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.interactive.Response
 import org.eclipse.jface.text.source.ISourceViewer
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
 import org.eclipse.ui.texteditor.ITextEditor
-import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.BaseHyperlinkDetector
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._

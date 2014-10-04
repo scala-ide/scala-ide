@@ -446,12 +446,12 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     asyncExec {
       findDeclaration(sym, javaProject) map {
         case (f, pos) =>
-          val text1 = sym.kindString + " " + sym.fullName
+          val label1 = sym.kindString + " " + sym.fullName
           new ScalaHyperlink(openableOrUnit = f,
               pos = f.lastSourceMap().originalPos(pos),
               len = sym.name.decodedName.length,
-              label = name,
-              text = text1,
+              label = label1,
+              text = name,
               wordRegion = region)
       }
     }.getOrElse(None)()

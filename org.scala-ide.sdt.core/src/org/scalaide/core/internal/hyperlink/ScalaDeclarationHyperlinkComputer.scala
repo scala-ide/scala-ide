@@ -1,11 +1,9 @@
-package org.scalaide.core.hyperlink.detector
+package org.scalaide.core.internal.hyperlink
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.scalaide.logging.HasLogger
-import org.scalaide.core.hyperlink._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class ScalaDeclarationHyperlinkComputer extends HasLogger {
@@ -60,7 +58,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         symsOpt map { syms =>
           syms flatMap { sym =>
-             compiler.mkHyperlink(sym, "Open Declaration", wordRegion, icu.scalaProject.javaProject)
+             compiler.mkHyperlink(sym, s"Open Declaration (${sym.toString})", wordRegion, icu.scalaProject.javaProject)
           }
         }
       }

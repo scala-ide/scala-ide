@@ -10,7 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer
+import org.scalaide.core.internal.hyperlink.ScalaDeclarationHyperlinkComputer
 import org.junit.BeforeClass
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester {
