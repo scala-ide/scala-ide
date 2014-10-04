@@ -12,16 +12,42 @@ import org.eclipse.jface.text.Position
 import org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType
 import org.scalaide.core.internal.quickassist.abstractimpl.ImplAbstractMembers
 import org.scalaide.refactoring.internal.extract.ExtractionProposal
+import org.scalaide.core.quickassist.QuickAssist
+import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
 /**
  * Enables all quick fixes that don't resolve errors in the document. Instead they
  * just apply refactorings.
  */
-class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
+class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger with QuickAssist {
 
   import ScalaQuickAssistProcessor._
 
   override def hasAssists(context: IInvocationContext): Boolean = true
+
+  override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
+    val (start, len) = (ctx.selectionStart, ctx.selectionLength)
+
+    ctx.compilationUnit match {
+      case ssf: ScalaSourceFile =>
+        import EditorUtils._
+        val assists = openEditorAndApply(ssf) { editor =>
+          val corrections = getAnnotationsAtOffset(editor, start) flatMap {
+            case (ann, pos) =>
+              suggestAssist(ssf, ann.getText, pos)
+          }
+          corrections.toArray.distinct
+        }
+
+        val allAssists = ExplicitReturnType.suggestsFor(ssf, start).toArray ++
+          ImplAbstractMembers.suggestsFor(ssf, start) ++ assists ++
+          ExtractionProposal.getQuickAssistProposals(ssf, start, start + len)
+
+        allAssists.toSeq.asInstanceOf[Seq[BasicCompletionProposal]]
+      case _ => Nil
+    }
+  }
 
   /**
    * Needs to return ``null`` when no assists could be found.
@@ -68,8 +94,7 @@ object ScalaQuickAssistProcessor {
 
   private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
 
-  val availableAssists = Seq(
+  val availableAssists: Seq[ProposalRefactoringHandlerAdapter] = Seq(
     ExpandCaseClassBindingProposal,
     InlineLocalProposal)
 }
-
