@@ -17,6 +17,7 @@ import tools.nsc.interactive.Global
 import scala.tools.refactoring.common.TextChange
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 abstract class AddValOrDefProposal extends BasicCompletionProposal(
     relevance = 90,
@@ -36,7 +37,10 @@ abstract class AddValOrDefProposal extends BasicCompletionProposal(
       theDocument <- EditorUtils.findOrOpen(scalaSourceFile.workspaceFile)
     } {
       val scu = scalaSourceFile.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
-      val changes = scu.withSourceFile(addRefactoring) getOrElse Nil
+
+      val changes = scu.withSourceFile { (sf, compiler) =>
+        compiler.asyncExec(addRefactoring(sf, compiler)).getOrElse(Nil)()
+      } getOrElse Nil
 
       for (change <- changes) {
         val edit = new ReplaceEdit(change.from, change.to - change.from, change.text)
