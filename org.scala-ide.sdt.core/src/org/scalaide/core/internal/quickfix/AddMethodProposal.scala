@@ -15,8 +15,12 @@ import scala.tools.refactoring.implementations.{ AddMethod, AddField, AddMethodT
 import scala.reflect.internal.util.SourceFile
 import tools.nsc.interactive.Global
 import scala.tools.refactoring.common.TextChange
+import org.scalaide.core.quickassist.BasicCompletionProposal
 
-trait AddValOrDefProposal extends IJavaCompletionProposal {
+abstract class AddValOrDefProposal extends BasicCompletionProposal(
+    relevance = 90,
+    displayString = "",
+    image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()) {
   protected val returnType: ReturnType
   protected val target: AddMethodTarget
 
@@ -47,12 +51,6 @@ trait AddValOrDefProposal extends IJavaCompletionProposal {
   }
 
   protected def addRefactoring: (SourceFile, Global) => List[TextChange]
-
-  override def getRelevance = 90
-  override def getSelection(document: IDocument): Point = null
-  override def getAdditionalProposalInfo(): String = null
-  override def getImage(): Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
-  override def getContextInformation: IContextInformation = null
 }
 
 trait AddFieldProposal {
@@ -64,7 +62,7 @@ trait AddFieldProposal {
 
   protected def addFieldRefactoring =
     (scalaSourceFile: SourceFile, compiler: Global) => {
-      val refactoring = new AddField { val global = compiler }
+      val refactoring = new AddField { override val global = compiler }
       //if we're here, className should be defined because of the check in isApplicable
       refactoring.addField(scalaSourceFile.file, className.get, defName, isVar, returnType, target)
     }
@@ -80,12 +78,12 @@ trait AddMethodProposal {
 
   protected def addMethodRefactoring =
     (scalaSourceFile: SourceFile, compiler: Global) => {
-      val refactoring = new AddMethod { val global = compiler }
+      val refactoring = new AddMethod { override val global = compiler }
       //if we're here, className should be defined because of the check in isApplicable
       refactoring.addMethod(scalaSourceFile.file, className.get, defName, parameters, typeParameters, returnType, target)
     }
 
-  def getDefInfo(parameters: ParameterList, returnType: ReturnType) = {
+  def getDefInfo(parameters: ParameterList, returnType: ReturnType): (String, String) = {
     val prettyParameterList = (for (parameterList <- parameters) yield {
       parameterList.map(_._2).mkString(", ")
     }).mkString("(", ")(", ")")

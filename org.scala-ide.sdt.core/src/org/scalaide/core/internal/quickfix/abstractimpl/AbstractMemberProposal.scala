@@ -26,14 +26,14 @@ object AbstractMemberProposal {
   }
 }
 
-trait AbstractMemberProposal extends AddMethodProposal with AddFieldProposal with AddValOrDefProposal {
+trait AbstractMemberProposal extends AddValOrDefProposal with AddMethodProposal with AddFieldProposal {
   protected val compiler: Global
   import compiler._
 
-  val targetSourceFile: Option[ScalaSourceFile]
+  override val targetSourceFile: Option[ScalaSourceFile]
   protected val abstractMethod: MethodSymbol
   protected val implDef: ImplDef
-  protected val target: AddMethodTarget
+  override protected val target: AddMethodTarget
 
   private def initValOrDef: (TypeParameterList, ParameterList, ReturnType, Boolean, Boolean) = {
     def processType(tp: Type) =
@@ -59,11 +59,11 @@ trait AbstractMemberProposal extends AddMethodProposal with AddFieldProposal wit
     (typeParams, paramss, retType, isDef, isVar)
   }
 
-  val abstrInfo = initValOrDef
-  override protected val (typeParameters: TypeParameterList, parameters: ParameterList, returnType: ReturnType, _, isVar) = abstrInfo
+  private val abstrInfo = initValOrDef
+  override protected val (typeParameters: TypeParameterList, parameters: ParameterList, returnType: ReturnType, _, isVar: Boolean) = abstrInfo
   val isDef: Boolean = abstrInfo._4
-  val defName = abstractMethod.nameString
-  val className = Option(implDef.name.decode)
+  override val defName: String = abstractMethod.nameString
+  override val className: Option[String] = Option(implDef.name.decode)
 
   override protected def addRefactoring = if (isDef) addMethodRefactoring else addFieldRefactoring
 

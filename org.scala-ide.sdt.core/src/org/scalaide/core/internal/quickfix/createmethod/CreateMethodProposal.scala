@@ -14,7 +14,7 @@ import org.scalaide.core.internal.quickfix.AddValOrDefProposal
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], defName: String,
-  target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends AddMethodProposal with AddValOrDefProposal {
+  target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends AddValOrDefProposal with AddMethodProposal {
 
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 
