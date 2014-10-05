@@ -14,8 +14,8 @@ class ImplicitArgumentExpandingProposal(s: String, pos: Position)
   extends ExpandingProposalBase(s, "Explicitly inline the implicit arguments: ", pos)
 
 object ExpandImplicits {
-  private final val ImplicitConversionFound = "(?s)Implicit conversions found: (.*)".r
-  private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
+  private final val ImplicitConversionFound = "(?s)Implicit conversion found: `(.*?)` => `(.*):.*?`".r
+  private final val ImplicitArgFound = "(?s)Implicit arguments found: `(.*?)` => `(.*?)`".r
 }
 
 class ExpandImplicits extends QuickAssist {
@@ -25,9 +25,12 @@ class ExpandImplicits extends QuickAssist {
       EditorUtils.getAnnotationsAtOffset(editor, ctx.selectionStart) flatMap {
         case (ann, pos) =>
           ann.getText match {
-            case ImplicitConversionFound(s) => List(new ImplicitConversionExpandingProposal(s, pos))
-            case ImplicitArgFound(s)        => List(new ImplicitArgumentExpandingProposal(s, pos))
-            case _                          => Nil
+            case ImplicitConversionFound(from, to) =>
+              List(new ImplicitConversionExpandingProposal(s"$from => $to", pos))
+            case ImplicitArgFound(from, to) =>
+              List(new ImplicitArgumentExpandingProposal(s"$from => $to", pos))
+            case _ =>
+              Nil
           }
       }
     }
