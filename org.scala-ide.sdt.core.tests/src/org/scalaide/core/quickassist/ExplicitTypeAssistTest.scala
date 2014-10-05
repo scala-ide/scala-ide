@@ -21,7 +21,7 @@ object ExplicitTypeAssistTest extends QuickAssistTest {
 class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   import ExplicitTypeAssistTest._
 
-  val quickAssist = ExplicitReturnType
+  val quickAssist = new ExplicitReturnType
 
   def createSource(packageName: String, unitName: String)(contents: String) = createSourceFile(packageName, unitName)(contents)
 

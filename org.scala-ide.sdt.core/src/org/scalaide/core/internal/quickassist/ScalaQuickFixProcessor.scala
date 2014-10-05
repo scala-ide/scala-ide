@@ -3,7 +3,6 @@ package org.scalaide.core.internal.quickassist
 import scala.tools.refactoring.implementations.AddToClass
 import scala.tools.refactoring.implementations.AddToClosest
 import scala.tools.refactoring.implementations.AddToObject
-
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
@@ -25,6 +24,7 @@ import org.scalaide.core.quickassist.QuickAssist
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.core.internal.quickassist.expand.ExpandingProposalBase
 
 /**
  * Contains quick fixes that can only be applied to compiler errors. If there

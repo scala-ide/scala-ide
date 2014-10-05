@@ -23,7 +23,7 @@ object ImplAbstractMemberTest extends QuickAssistTest {
 class ImplAbstractMemberTest extends QuickAssistTestHelper {
   import ImplAbstractMemberTest._
 
-  val quickAssist = ImplAbstractMembers
+  val quickAssist = new ImplAbstractMembers
 
   def createSource(packageName: String, unitName: String)(contents: String) = createSourceFile(packageName, unitName)(contents)
 
@@ -40,7 +40,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
 
     try {
       val Seq(pos) = SDTTestUtils.positionsOf(contents.toCharArray(), "^")
-      val proposals = quickAssist.suggestsFor(unit, pos)
+      val proposals = quickAssist.compute(InvocationContext(unit, pos, 0, Nil))
       Assert.assertTrue("Abstract member not found", proposals.nonEmpty)
 
       val abstractNum = proposals.filter(_.isInstanceOf[AbstractMemberProposal]).size

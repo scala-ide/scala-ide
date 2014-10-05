@@ -1,26 +1,27 @@
 package org.scalaide.core.internal.quickassist.abstractimpl
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.refactoring.implementations.AddToClosest
 import scala.reflect.internal.util.SourceFile
-import scala.collection.immutable
+import scala.tools.refactoring.implementations.AddToClosest
 
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.core.quickassist.QuickAssist
 
-object ImplAbstractMembers {
-  def suggestsFor(ssf: ScalaSourceFile, offset: Int): immutable.Seq[IJavaCompletionProposal] =
-    implAbstractMember(ssf, offset)
+class ImplAbstractMembers extends QuickAssist {
+  override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
+    implAbstractMember(ctx.sourceFile, ctx.selectionStart)
 
-  def implAbstractMember(ssf: ScalaSourceFile, offset: Int): List[IJavaCompletionProposal] = {
+  def implAbstractMember(ssf: ScalaSourceFile, offset: Int): Seq[BasicCompletionProposal] = {
     ssf.withSourceFile { (srcFile, compiler) =>
       import compiler._
 
-      def implAbstractProposals(tree: ImplDef): List[IJavaCompletionProposal] =
+      def implAbstractProposals(tree: ImplDef) =
         compiler.asyncExec {
           val tp = tree.symbol.tpe
           (tp.members filter { m =>
-            // TODO: find the way to get abstract methods simplier
+            // TODO: find the way to get abstract methods simpler
             m.isMethod && m.isIncompleteIn(tree.symbol) && m.isDeferred && !m.isSetter && (m.owner != tree.symbol)
           } map {
             sym =>

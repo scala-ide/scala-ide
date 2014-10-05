@@ -1,10 +1,10 @@
-package org.scalaide.core.internal.quickassist
+package org.scalaide.core.internal.quickassist.expand
 
-import org.scalaide.core.completion.RelevanceValues
-import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
+import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 
 class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
   extends BasicCompletionProposal(relevance = RelevanceValues.ExpandingProposalBase, displayString = displayString + msg) {

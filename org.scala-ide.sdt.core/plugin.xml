@@ -1155,7 +1155,76 @@
            id="org.scalaide.core.quickassist"
            name="Scala Quick Assist">
      </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to add abstract members"
+           id="org.scalaide.core.quickassist.ImplAbstractMembers"
+           name="Scala Quick Assist - Implement Abstract Members">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to add the return type"
+           id="org.scalaide.core.quickassist.ExplicitReturnType"
+           name="Scala Quick Assist - Explicit Return Type">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to extract expressions"
+           id="org.scalaide.core.quickassist.ExtractExpressions"
+           name="Scala Quick Assist - Extract Expressions">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to inline local expressions"
+           id="org.scalaide.core.quickassist.InlineLocal"
+           name="Scala Quick Assist - Inline Local">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to expand case class bindings in pattern matches"
+           id="org.scalaide.core.quickassist.ExpandCaseClassBinding"
+           name="Scala Quick Assist - Expand Case Class Binding">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to expand implicit conversion and arguments"
+           id="org.scalaide.core.quickassist.ExpandImplicits"
+           name="Scala Quick Assist - Expand Implicits">
+     </command>
   </extension>
+ <extension
+       point="org.scala-ide.sdt.core.quickAssists">
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType"
+          id="org.scalaide.core.quickassist.ExplicitReturnType">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.abstractimpl.ImplAbstractMembers"
+          id="org.scalaide.core.quickassist.ImplAbstractMembers">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.extract.ExtractExpressions"
+          id="org.scalaide.core.quickassist.ExtractExpressions">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.inline.InlineLocal"
+          id="org.scalaide.core.quickassist.InlineLocal">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.expand.ExpandCaseClassBinding"
+          id="org.scalaide.core.quickassist.ExpandCaseClassBinding">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.expand.ExpandImplicits"
+          id="org.scalaide.core.quickassist.ExpandImplicits">
+    </quickAssist>
+ </extension>
 
    <extension point="org.eclipse.ui.contexts">
      <context name="Editing Scala Source"

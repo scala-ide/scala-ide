@@ -1,21 +1,22 @@
 package org.scalaide.core.internal.quickassist.explicit
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import scala.collection.immutable
 import scala.reflect.internal.Chars
+import scala.tools.nsc.ast.parser.Tokens
+
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.Token
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.nsc.ast.parser.Tokens
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.core.quickassist.QuickAssist
 
 /** A quick fix that adds an explicit return type to a given val or def
  */
-object ExplicitReturnType {
-  def suggestsFor(ssf: ScalaSourceFile, offset: Int): immutable.Seq[IJavaCompletionProposal] = {
-    addReturnType(ssf, offset).toList
-  }
+class ExplicitReturnType extends QuickAssist {
+  override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
+    addReturnType(ctx.sourceFile, ctx.selectionStart).toSeq
 
-  private def addReturnType(ssf: ScalaSourceFile, offset: Int): Option[IJavaCompletionProposal] = {
+  private def addReturnType(ssf: ScalaSourceFile, offset: Int): Option[BasicCompletionProposal] = {
 
     ssf.withSourceFile { (sourceFile, compiler) =>
       import compiler.{ ValDef, EmptyTree, TypeTree, DefDef, ValOrDefDef }
@@ -38,7 +39,7 @@ object ExplicitReturnType {
         }
       }
 
-      def expandProposal(vd: ValOrDefDef): Option[IJavaCompletionProposal] =
+      def expandProposal(vd: ValOrDefDef) =
         compiler.asyncExec(vd.tpt.toString).getOption() flatMap { tpe =>
           val insertion = findInsertionPoint(vd)
           // safety check: don't modify anything outside the original tree range
