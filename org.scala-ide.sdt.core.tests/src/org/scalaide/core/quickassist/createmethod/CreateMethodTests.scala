@@ -1,10 +1,10 @@
 package org.scalaide.core.quickassist.createmethod
 
 import org.junit.Test
-import org.scalaide.core.quickassist.QuickFixesTests
+import org.scalaide.core.quickassist.UiQuickAssistTests
 
 class CreateMethodTests {
-  import QuickFixesTests._
+  import UiQuickAssistTests._
 
     @Test def createMethod() {
     withQuickFixes("createmethod/CreateMethod.scala")(

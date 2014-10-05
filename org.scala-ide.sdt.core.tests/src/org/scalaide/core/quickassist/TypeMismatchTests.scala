@@ -3,9 +3,9 @@ package org.scalaide.core.quickassist
 import org.junit.Test
 
 class TypeMismatchTests {
-  import QuickFixesTests._
+  import UiQuickAssistTests._
 
-  val stringPattern = "Transform expression: %s => %s"
+  val stringPattern: String = "Transform expression: %s => %s"
 
   @Test
   def basicTypeMismatchQuickFixes() {

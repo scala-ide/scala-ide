@@ -3,7 +3,7 @@ package org.scalaide.core.quickassist
 import org.junit.Test
 
 class CreateClassTests {
-  import QuickFixesTests._
+  import UiQuickAssistTests._
 
   @Test
   def createClassQuickFixes() {

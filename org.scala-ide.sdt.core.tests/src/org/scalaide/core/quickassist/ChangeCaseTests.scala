@@ -3,7 +3,7 @@ package org.scalaide.core.quickassist
 import org.junit.Test
 
 class ChangeCaseTests {
-  import QuickFixesTests._
+  import UiQuickAssistTests._
 
   @Test def changeCase() {
     withManyQuickFixesPerLine("changecase/ChangeCase.scala")(
