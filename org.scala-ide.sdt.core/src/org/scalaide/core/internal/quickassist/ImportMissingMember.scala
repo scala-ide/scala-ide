@@ -15,7 +15,7 @@ class ImportMissingMember extends QuickAssist {
      * - "not found : Xxxx" (in case of new Xxxx.eee)
      */
     def suggestImportType(missingType: String) = {
-      val typeNames = searchForTypes(ctx.sourceFile.getJavaProject(), missingType)
+      val typeNames = searchForTypes(ctx.icu.scalaProject.javaProject, missingType)
       typeNames map (name => new ImportCompletionProposal(name.getFullyQualifiedName))
     }
 

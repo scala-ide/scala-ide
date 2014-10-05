@@ -1,23 +1,22 @@
 package org.scalaide.core.internal.quickassist
 
-import org.eclipse.jdt.internal.ui.JavaPluginImages
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.swt.graphics.Image
-import org.eclipse.swt.graphics.Point
-import org.eclipse.text.edits.ReplaceEdit
-import org.scalaide.core.internal.quickassist.createmethod.{ ParameterList, ReturnType, TypeParameterList }
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.eclipse.EditorUtils
-import scala.tools.refactoring.implementations.{ AddMethod, AddField, AddMethodTarget }
 import scala.reflect.internal.util.SourceFile
-import tools.nsc.interactive.Global
+import scala.tools.nsc.interactive.Global
 import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.implementations.AddField
+import scala.tools.refactoring.implementations.AddMethod
+import scala.tools.refactoring.implementations.AddMethodTarget
+
+import org.eclipse.jface.text.IDocument
+import org.eclipse.text.edits.ReplaceEdit
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.quickassist.createmethod.ParameterList
+import org.scalaide.core.internal.quickassist.createmethod.ReturnType
+import org.scalaide.core.internal.quickassist.createmethod.TypeParameterList
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.util.eclipse.EditorUtils
 
 abstract class AddValOrDefProposal extends BasicCompletionProposal(
     relevance = 90,
@@ -26,19 +25,17 @@ abstract class AddValOrDefProposal extends BasicCompletionProposal(
   protected val returnType: ReturnType
   protected val target: AddMethodTarget
 
-  protected val targetSourceFile: Option[ScalaSourceFile]
+  protected val targetSourceFile: Option[InteractiveCompilationUnit]
   protected val className: Option[String]
   protected val defName: String
 
   override def apply(document: IDocument): Unit = {
     for {
-      scalaSourceFile <- targetSourceFile
+      icu <- targetSourceFile
       //we must open the editor before doing the refactoring on the compilation unit:
-      theDocument <- EditorUtils.findOrOpen(scalaSourceFile.workspaceFile)
+      theDocument <- EditorUtils.findOrOpen(icu.workspaceFile)
     } {
-      val scu = scalaSourceFile.getCompilationUnit.asInstanceOf[ScalaCompilationUnit]
-
-      val changes = scu.withSourceFile { (sf, compiler) =>
+      val changes = icu.withSourceFile { (sf, compiler) =>
         compiler.asyncExec(addRefactoring(sf, compiler)).getOrElse(Nil)()
       } getOrElse Nil
 

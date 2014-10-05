@@ -4,8 +4,8 @@ import scala.reflect.internal.Chars
 import scala.tools.nsc.ast.parser.Tokens
 
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.Token
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
@@ -14,11 +14,11 @@ import org.scalaide.core.quickassist.QuickAssist
  */
 class ExplicitReturnType extends QuickAssist {
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
-    addReturnType(ctx.sourceFile, ctx.selectionStart).toSeq
+    addReturnType(ctx.icu, ctx.selectionStart).toSeq
 
-  private def addReturnType(ssf: ScalaSourceFile, offset: Int): Option[BasicCompletionProposal] = {
+  private def addReturnType(icu: InteractiveCompilationUnit, offset: Int): Option[BasicCompletionProposal] = {
 
-    ssf.withSourceFile { (sourceFile, compiler) =>
+    icu.withSourceFile { (sourceFile, compiler) =>
       import compiler.{ ValDef, EmptyTree, TypeTree, DefDef, ValOrDefDef }
 
       /** Find the tokens leading to tree `rhs` and return the position before `=`,

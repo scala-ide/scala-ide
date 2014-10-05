@@ -4,17 +4,17 @@ import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.implementations.AddToClosest
 
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
 
 class ImplAbstractMembers extends QuickAssist {
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
-    implAbstractMember(ctx.sourceFile, ctx.selectionStart)
+    implAbstractMember(ctx.icu, ctx.selectionStart)
 
-  def implAbstractMember(ssf: ScalaSourceFile, offset: Int): Seq[BasicCompletionProposal] = {
-    ssf.withSourceFile { (srcFile, compiler) =>
+  def implAbstractMember(icu: InteractiveCompilationUnit, offset: Int): Seq[BasicCompletionProposal] = {
+    icu.withSourceFile { (srcFile, compiler) =>
       import compiler._
 
       def implAbstractProposals(tree: ImplDef) =
@@ -25,7 +25,7 @@ class ImplAbstractMembers extends QuickAssist {
             m.isMethod && m.isIncompleteIn(tree.symbol) && m.isDeferred && !m.isSetter && (m.owner != tree.symbol)
           } map {
             sym =>
-              AbstractMemberProposal(compiler)(sym.asMethod, tree)(Option(ssf), AddToClosest(offset))
+              AbstractMemberProposal(compiler)(sym.asMethod, tree)(Option(icu), AddToClosest(offset))
           }).toList.sortBy(_.defName)
         }.getOrElse(Nil)()
 

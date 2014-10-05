@@ -1,5 +1,6 @@
 package org.scalaide.core.internal.quickassist
 
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.texteditor.ITextEditor
@@ -12,7 +13,7 @@ import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlighting
 class FixTypeMismatch extends QuickAssist {
 
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
-    val editor = JavaUI.openInEditor(ctx.sourceFile)
+    val editor = JavaUI.openInEditor(ctx.icu.asInstanceOf[ICompilationUnit])
     ctx.problemLocations flatMap { location =>
       val doc = editor.asInstanceOf[ITextEditor].getDocumentProvider.getDocument(editor.getEditorInput)
       suggestTypeMismatchFix(doc, location.annotation.getText, location.offset, location.length)

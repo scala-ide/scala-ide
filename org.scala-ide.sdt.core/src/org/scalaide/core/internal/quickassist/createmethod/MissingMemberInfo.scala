@@ -1,26 +1,19 @@
 package org.scalaide.core.internal.quickassist
 package createmethod
 
+import org.eclipse.jdt.core.IJavaElement
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.scalariform.ArgPosition
 import org.scalaide.util.internal.scalariform.MethodCallInfo
 import org.scalaide.util.internal.scalariform.ScalariformUtils
-import scala.tools.nsc.{interactive => compiler}
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.core.search.SearchEngine
-import org.eclipse.jdt.core.search.TypeNameMatch
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
-import org.eclipse.jface.text.Position
-import scalariform.parser.AstNode
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import scalariform.parser._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 class MissingMemberInfo(
-    scu: ScalaCompilationUnit,
+    icu: InteractiveCompilationUnit,
     val fullyQualifiedName: String,
     val member: String,
     offset: Int,
@@ -33,7 +26,7 @@ class MissingMemberInfo(
   private def classNameFromFullyQualifiedName(theType: String) = theType.drop(theType.lastIndexOf('.') + 1)
 
   private def targetElementFromCompiler: Option[IJavaElement] = {
-    val allPossibleTargets = scu.withSourceFile { (srcFile, compiler) =>
+    val allPossibleTargets = icu.withSourceFile { (srcFile, compiler) =>
       val cpos = compiler.rangePos(srcFile, offset, offset, offset)
       val membersInScope = compiler.askScopeCompletion(cpos)
 
@@ -41,7 +34,7 @@ class MissingMemberInfo(
         compiler.asyncExec {
           val elements = members.collect {
             case compiler.ScopeMember(sym, tpe, true, _) if !sym.isConstructor && sym.decodedName.equalsIgnoreCase( className) =>
-              compiler.getJavaElement(tpe.typeSymbol, scu.getJavaProject).map(_.getParent)
+              compiler.getJavaElement(tpe.typeSymbol, icu.scalaProject.javaProject).map(_.getParent)
           }
           elements.flatten.toSet[IJavaElement]
         } getOption()
@@ -56,7 +49,7 @@ class MissingMemberInfo(
 
   private def targetElementFromSearch: Option[IJavaElement] = {
     logger.debug(s"Trying to search for $className to find the fully qualified class $fullyQualifiedName")
-    val matchesClassName = searchForTypes(scu.getJavaProject, className)
+    val matchesClassName = searchForTypes(icu.scalaProject.javaProject, className)
     logger.debug(s"Result for className got results: ${matchesClassName}, ${matchesClassName.map(_.getFullyQualifiedName)}")
 
     val bestMatch = matchesClassName match {
@@ -72,9 +65,9 @@ class MissingMemberInfo(
 }
 
 object MissingMemberInfo {
-  def inferFromEnclosingMethod(scu: ScalaCompilationUnit, source: AstNode, offset: Int): (ParameterList, ReturnType) = {
+  def inferFromEnclosingMethod(icu: InteractiveCompilationUnit, source: AstNode, offset: Int): (ParameterList, ReturnType) = {
     def getParamsAndReturnType(offset: Int, length: Int, argPosition: ArgPosition): Option[(ParameterList, ReturnType)] = {
-      val optopt = scu.withSourceFile { (srcFile, compiler) =>
+      val optopt = icu.withSourceFile { (srcFile, compiler) =>
         import compiler.{ log => _, _ }
 
         def getParameter(paramss: List[List[Symbol]]) = {

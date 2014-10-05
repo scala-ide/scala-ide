@@ -10,17 +10,18 @@ import org.scalaide.util.internal.scalariform.ScalariformUtils
 import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], override val defName: String,
-  override val target: AddMethodTarget, sourceFile: ScalaSourceFile, offset: Int, length: Int) extends AddValOrDefProposal with AddMethodProposal {
+  override val target: AddMethodTarget, icu: InteractiveCompilationUnit, offset: Int, length: Int) extends AddValOrDefProposal with AddMethodProposal {
 
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 
-  private val sourceAst = ScalariformParser.safeParse(sourceFile.getSource()).map(_._1)
+  private val sourceAst = ScalariformParser.safeParse(icu.lastSourceMap().scalaSource.mkString).map(_._1)
   private val methodNameOffset = offset + length - defName.length
 
   private def typeAtRange(start: Int, end: Int): String = {
-    sourceFile.withSourceFile { (srcFile, compiler) =>
+    icu.withSourceFile { (srcFile, compiler) =>
       compiler.asyncExec {
         val length = end - start
         val context = compiler.doLocateContext(new RangePosition(srcFile, start, start, start + length-1))
@@ -37,12 +38,12 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], ove
 
   protected val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
     case Some(otherClass) =>
-      val info = new MissingMemberInfo(sourceFile, otherClass, defName, offset, sourceAst.get)
+      val info = new MissingMemberInfo(icu, otherClass, defName, offset, sourceAst.get)
       val targetSourceFile = info.targetElement.collect { case scalaSource: ScalaSourceFile => scalaSource }
       (targetSourceFile, Some(info.className), true)
     case None => {
       val className = sourceAst.map(ScalariformUtils.enclosingClassForMethodInvocation(_, methodNameOffset)).flatten
-      (Some(sourceFile), className, false)
+      (Some(icu), className, false)
     }
   }
 
@@ -50,7 +51,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], ove
     case Some(ast) => {
       val paramsAfterMethod = ScalariformUtils.getParameters(ast, methodNameOffset, typeAtRange)
       paramsAfterMethod match {
-        case Nil => MissingMemberInfo.inferFromEnclosingMethod(sourceFile, ast, offset)
+        case Nil => MissingMemberInfo.inferFromEnclosingMethod(icu, ast, offset)
         case list => (list, None)
       }
     }

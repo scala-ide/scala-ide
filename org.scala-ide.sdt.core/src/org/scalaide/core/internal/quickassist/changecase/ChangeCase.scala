@@ -11,9 +11,9 @@ class ChangeCase extends QuickAssist {
     ctx.problemLocations flatMap { location =>
       location.annotation.getText match {
         case ValueNotAMember(value, className) =>
-          ChangeCaseProposal.createProposals(ctx.sourceFile, location.offset, location.length, value)
+          ChangeCaseProposal.createProposals(ctx.icu, location.offset, location.length, value)
         case ValueNotFoundError(member) =>
-          ChangeCaseProposal.createProposalsWithCompletion(ctx.sourceFile, location.offset, location.length, member)
+          ChangeCaseProposal.createProposalsWithCompletion(ctx.icu, location.offset, location.length, member)
         case _ =>
           Nil
       }

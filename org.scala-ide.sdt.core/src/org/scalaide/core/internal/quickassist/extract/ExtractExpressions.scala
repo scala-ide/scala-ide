@@ -8,8 +8,8 @@ import scala.tools.refactoring.implementations.extraction.ExtractCode
 
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.completion.RelevanceValues
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
@@ -20,12 +20,12 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 
 class ExtractExpressions extends QuickAssist {
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
-    quickAssistProposals(ctx.sourceFile, ctx.selectionStart, ctx.selectionStart+ctx.selectionLength)
+    quickAssistProposals(ctx.icu, ctx.selectionStart, ctx.selectionStart+ctx.selectionLength)
 
-  private def quickAssistProposals(cu: ScalaCompilationUnit, selectionStart: Int, selectionEnd: Int): Seq[ExtractionProposal] = {
+  private def quickAssistProposals(icu: InteractiveCompilationUnit, selectionStart: Int, selectionEnd: Int): Seq[ExtractionProposal] = {
     val proposals = new ArrayBuffer[ExtractionProposal]
 
-    cu.withSourceFile { (file, compiler) =>
+    icu.withSourceFile { (file, compiler) =>
       val refactoring = createRefactoring(compiler, file, selectionStart, selectionEnd)
       var relevance = RelevanceValues.ProposalRefactoringHandlerAdapter - 1
 

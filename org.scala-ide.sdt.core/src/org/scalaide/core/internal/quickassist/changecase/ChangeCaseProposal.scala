@@ -2,11 +2,10 @@ package org.scalaide.core.internal.quickassist.changecase
 
 import scala.reflect.internal.util.RangePosition
 
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.completion.RelevanceValues
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages
 
@@ -28,11 +27,9 @@ case class ChangeCaseProposal(originalName: String, newName: String, offset: Int
 object ChangeCaseProposal {
   import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
-  def createProposals(cu: ICompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
-    val scu = cu.asInstanceOf[ScalaCompilationUnit]
-
+  def createProposals(icu: InteractiveCompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
     def membersAtRange(start: Int, end: Int): List[String] = {
-      val memberNames = scu.withSourceFile { (srcFile, compiler) =>
+      val memberNames = icu.withSourceFile { (srcFile, compiler) =>
         compiler asyncExec {
           val length = end - start
 
@@ -59,11 +56,9 @@ object ChangeCaseProposal {
     makeProposals(memberNames, wrongName, offset, length)
   }
 
-  def createProposalsWithCompletion(cu: ICompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
-    val scu = cu.asInstanceOf[ScalaCompilationUnit]
-
+  def createProposalsWithCompletion(icu: InteractiveCompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
     def membersAtPosition(offset: Int): List[String] = {
-      val memberNames = scu.withSourceFile { (srcFile, compiler) =>
+      val memberNames = icu.withSourceFile { (srcFile, compiler) =>
         compiler.asyncExec {
           val completed = compiler.askScopeCompletion(new RangePosition(srcFile, offset, offset, offset))
           completed.getOrElse(Nil)().map(_.sym.nameString).distinct

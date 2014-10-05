@@ -1,7 +1,7 @@
 package org.scalaide.core.quickassist
 
 import org.eclipse.jface.text.source.Annotation
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 
 /**
  * Represents the quick assist feature of the Scala editor. A quick assist is a
@@ -26,7 +26,7 @@ trait QuickAssist {
  * Contains various information that is available at the time when quick assists
  * are invoked.
  *
- * @param sourceFile
+ * @param icu
  *        Represents the source file on which the editor, where quick assists
  *        are called on, operates on.
  * @param selectionStart
@@ -40,7 +40,7 @@ trait QuickAssist {
  *        [[AssistLocation]].
  */
 final case class InvocationContext(
-  sourceFile: ScalaSourceFile,
+  icu: InteractiveCompilationUnit,
   selectionStart: Int,
   selectionLength: Int,
   problemLocations: Seq[AssistLocation]

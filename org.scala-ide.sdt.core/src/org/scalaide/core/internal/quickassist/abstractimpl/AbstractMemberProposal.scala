@@ -1,24 +1,23 @@
 package org.scalaide.core.internal.quickassist.abstractimpl
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.tools.refactoring.implementations.AddToClosest
-import org.scalaide.core.internal.quickassist.createmethod.{ ParameterList, ReturnType, TypeParameterList }
-import scala.tools.refactoring.implementations.AddMethodTarget
-import org.scalaide.util.eclipse.EditorUtils
-import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.internal.quickassist.{AddMethodProposal, AddValOrDefProposal}
-import org.scalaide.core.internal.quickassist.AddFieldProposal
-import scala.collection.immutable
 import scala.tools.nsc.interactive.Global
+import scala.tools.refactoring.implementations.AddMethodTarget
+
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.quickassist.AddFieldProposal
+import org.scalaide.core.internal.quickassist.AddMethodProposal
+import org.scalaide.core.internal.quickassist.AddValOrDefProposal
+import org.scalaide.core.internal.quickassist.createmethod.ParameterList
+import org.scalaide.core.internal.quickassist.createmethod.ReturnType
+import org.scalaide.core.internal.quickassist.createmethod.TypeParameterList
 
 object AbstractMemberProposal {
   def apply(global: Global)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
-    tsf: Option[ScalaSourceFile], addMethodTarget: AddMethodTarget) = {
+    icu: Option[InteractiveCompilationUnit], addMethodTarget: AddMethodTarget) = {
 
     new {
       override val compiler: global.type = global
-      override val targetSourceFile: Option[ScalaSourceFile] = tsf
+      override val targetSourceFile = icu
       override val abstractMethod = abstrMethod
       override val implDef = impl
       override val target = addMethodTarget
@@ -30,10 +29,8 @@ trait AbstractMemberProposal extends AddValOrDefProposal with AddMethodProposal 
   protected val compiler: Global
   import compiler._
 
-  override val targetSourceFile: Option[ScalaSourceFile]
   protected val abstractMethod: MethodSymbol
   protected val implDef: ImplDef
-  override protected val target: AddMethodTarget
 
   private def initValOrDef: (TypeParameterList, ParameterList, ReturnType, Boolean, Boolean) = {
     def processType(tp: Type) =
