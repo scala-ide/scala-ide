@@ -2,33 +2,28 @@ package org.scalaide.core.internal.quickassist
 
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.Position
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.internal.quickassist.expand.ExpandingProposalBase
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
-import org.scalaide.util.eclipse.EditorUtils
 
 class FixTypeMismatch extends QuickAssist {
 
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
     val editor = JavaUI.openInEditor(ctx.sourceFile)
-    val assists = for {
-      location <- ctx.problemLocations
-      (ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, location.getOffset)
-      doc = (editor.asInstanceOf[ITextEditor]).getDocumentProvider().getDocument(editor.getEditorInput())
-    } yield suggestTypeMismatchFix(doc, ann.getText, pos)
-
-    assists.flatten
+    ctx.problemLocations flatMap { location =>
+      val doc = editor.asInstanceOf[ITextEditor].getDocumentProvider.getDocument(editor.getEditorInput)
+      suggestTypeMismatchFix(doc, location.annotation.getText, location.offset, location.length)
+    }
   }
 
-  private def suggestTypeMismatchFix(document: IDocument, problemMessage: String, location: Position): Seq[BasicCompletionProposal] = {
+  private def suggestTypeMismatchFix(document: IDocument, problemMessage: String, offset: Int, length: Int) = {
     // get the annotation string
-    val annotationString = document.get(location.getOffset, location.getLength)
+    val annotationString = document.get(offset, length)
     // match problem message
-    return problemMessage match {
+    problemMessage match {
       // extract found and required type
       case TypeMismatchError(foundType, requiredType) =>
         // utilize type mismatch computer to find quick fixes
@@ -40,7 +35,7 @@ class FixTypeMismatch extends QuickAssist {
             // make markers message in form: "... =>replacement"
             val markersMessage = annotationString + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
             // construct a proposal with the appropriate location
-            new ExpandingProposalBase(markersMessage, "Transform expression: ", location)
+            new ExpandingProposalBase(markersMessage, "Transform expression: ", offset, length)
         }
       // no match found for the problem message
       case _ => Nil

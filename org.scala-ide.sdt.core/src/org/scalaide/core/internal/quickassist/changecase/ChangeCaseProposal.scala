@@ -4,7 +4,6 @@ import scala.reflect.internal.util.RangePosition
 
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.Position
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -15,21 +14,21 @@ import org.scalaide.ui.ScalaImages
  * Find another member with the same spelling but different capitalization.
  * Eg "asdf".subString would offer to change it to .substring instead.
  */
-case class ChangeCaseProposal(originalName: String, newName: String, pos: Position) extends BasicCompletionProposal(
+case class ChangeCaseProposal(originalName: String, newName: String, offset: Int, length: Int) extends BasicCompletionProposal(
   relevance = RelevanceValues.ChangeCaseProposal,
   displayString = s"Change to '${newName}'",
   image = ScalaImages.CORRECTION_RENAME.createImage()) {
 
   override def apply(document: IDocument): Unit = {
-    val offset = pos.offset + pos.length - originalName.length
-    document.replace(offset, originalName.length, newName)
+    val o = offset + length - originalName.length
+    document.replace(o, originalName.length, newName)
   }
 }
 
 object ChangeCaseProposal {
   import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
-  def createProposals(cu: ICompilationUnit, pos: Position, wrongName: String): List[ChangeCaseProposal] = {
+  def createProposals(cu: ICompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     def membersAtRange(start: Int, end: Int): List[String] = {
@@ -56,11 +55,11 @@ object ChangeCaseProposal {
       memberNames.flatten.getOrElse(Nil)
     }
 
-    val memberNames = membersAtRange(pos.offset, pos.offset + pos.length - wrongName.length - 1)
-    makeProposals(memberNames, wrongName, pos)
+    val memberNames = membersAtRange(offset, offset + length - wrongName.length - 1)
+    makeProposals(memberNames, wrongName, offset, length)
   }
 
-  def createProposalsWithCompletion(cu: ICompilationUnit, pos: Position, wrongName: String): List[ChangeCaseProposal] = {
+  def createProposalsWithCompletion(cu: ICompilationUnit, offset: Int, length: Int, wrongName: String): List[ChangeCaseProposal] = {
     val scu = cu.asInstanceOf[ScalaCompilationUnit]
 
     def membersAtPosition(offset: Int): List[String] = {
@@ -73,13 +72,13 @@ object ChangeCaseProposal {
       memberNames.flatten.getOrElse(Nil)
     }
 
-    val memberNames = membersAtPosition(pos.offset)
-    makeProposals(memberNames, wrongName, pos)
+    val memberNames = membersAtPosition(offset)
+    makeProposals(memberNames, wrongName, offset, length)
   }
 
-  private def makeProposals(memberNames: List[String], wrongName: String, pos: Position): List[ChangeCaseProposal] = {
+  private def makeProposals(memberNames: List[String], wrongName: String, offset: Int, length: Int): List[ChangeCaseProposal] = {
     val matchingMembers = memberNames.filter(_.equalsIgnoreCase(wrongName))
-    for (newName <- matchingMembers) yield ChangeCaseProposal(wrongName, newName, pos)
+    for (newName <- matchingMembers) yield ChangeCaseProposal(wrongName, newName, offset, length)
   }
 
 }

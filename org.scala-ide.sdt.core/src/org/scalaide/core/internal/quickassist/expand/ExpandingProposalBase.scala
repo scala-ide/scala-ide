@@ -1,12 +1,11 @@
 package org.scalaide.core.internal.quickassist.expand
 
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.Position
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 
-class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
+class ExpandingProposalBase(msg: String, displayString: String, offset: Int, length: Int)
   extends BasicCompletionProposal(relevance = RelevanceValues.ExpandingProposalBase, displayString = displayString + msg) {
 
   /**
@@ -18,7 +17,7 @@ class ExpandingProposalBase(msg: String, displayString: String, pos: Position)
     // We extract the replacement string from the marker's message.
     val ReplacementExtractor = s"(?s).*${ImplicitHighlightingPresenter.DisplayStringSeparator}(.*)".r
     val ReplacementExtractor(replacement) = msg
-    document.replace(pos.getOffset(), pos.getLength(), replacement)
+    document.replace(offset, length, replacement)
   }
 
 }

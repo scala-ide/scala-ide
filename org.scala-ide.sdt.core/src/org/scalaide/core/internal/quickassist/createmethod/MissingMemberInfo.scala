@@ -20,10 +20,10 @@ import scalariform.parser.AstNode
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class MissingMemberInfo(
-    compilationUnit: ICompilationUnit,
+    scu: ScalaCompilationUnit,
     val fullyQualifiedName: String,
     val member: String,
-    pos: Position,
+    offset: Int,
     source: AstNode)
       extends HasLogger {
 
@@ -33,10 +33,8 @@ class MissingMemberInfo(
   private def classNameFromFullyQualifiedName(theType: String) = theType.drop(theType.lastIndexOf('.') + 1)
 
   private def targetElementFromCompiler: Option[IJavaElement] = {
-    val start = pos.offset
-    val scu = compilationUnit.asInstanceOf[ScalaCompilationUnit]
     val allPossibleTargets = scu.withSourceFile { (srcFile, compiler) =>
-      val cpos = compiler.rangePos(srcFile, start, start, start)
+      val cpos = compiler.rangePos(srcFile, offset, offset, offset)
       val membersInScope = compiler.askScopeCompletion(cpos)
 
       for (members <- membersInScope.getOption()) yield {
@@ -58,7 +56,7 @@ class MissingMemberInfo(
 
   private def targetElementFromSearch: Option[IJavaElement] = {
     logger.debug(s"Trying to search for $className to find the fully qualified class $fullyQualifiedName")
-    val matchesClassName = searchForTypes(compilationUnit.getJavaProject, className)
+    val matchesClassName = searchForTypes(scu.getJavaProject, className)
     logger.debug(s"Result for className got results: ${matchesClassName}, ${matchesClassName.map(_.getFullyQualifiedName)}")
 
     val bestMatch = matchesClassName match {

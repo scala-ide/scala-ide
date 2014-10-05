@@ -3,9 +3,7 @@ package org.scalaide.core.internal.quickassist.createmethod
 import scala.reflect.internal.util.RangePosition
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.Position
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils
@@ -13,17 +11,16 @@ import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
-case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], defName: String,
-  target: AddMethodTarget, compilationUnit: ICompilationUnit, pos: Position) extends AddValOrDefProposal with AddMethodProposal {
+case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], override val defName: String,
+  override val target: AddMethodTarget, sourceFile: ScalaSourceFile, offset: Int, length: Int) extends AddValOrDefProposal with AddMethodProposal {
 
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 
-  private val sourceFile = compilationUnit.asInstanceOf[ScalaSourceFile]
   private val sourceAst = ScalariformParser.safeParse(sourceFile.getSource()).map(_._1)
-  private val methodNameOffset = pos.offset + pos.length - defName.length
+  private val methodNameOffset = offset + length - defName.length
 
   private def typeAtRange(start: Int, end: Int): String = {
-    compilationUnit.asInstanceOf[ScalaCompilationUnit].withSourceFile { (srcFile, compiler) =>
+    sourceFile.withSourceFile { (srcFile, compiler) =>
       compiler.asyncExec {
         val length = end - start
         val context = compiler.doLocateContext(new RangePosition(srcFile, start, start, start + length-1))
@@ -40,7 +37,7 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], def
 
   protected val (targetSourceFile, className, targetIsOtherClass) = fullyQualifiedEnclosingType match {
     case Some(otherClass) =>
-      val info = new MissingMemberInfo(compilationUnit, otherClass, defName, pos, sourceAst.get)
+      val info = new MissingMemberInfo(sourceFile, otherClass, defName, offset, sourceAst.get)
       val targetSourceFile = info.targetElement.collect { case scalaSource: ScalaSourceFile => scalaSource }
       (targetSourceFile, Some(info.className), true)
     case None => {
@@ -51,10 +48,9 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], def
 
   private val (rawParameters: ParameterList, rawReturnType: ReturnType) = sourceAst match {
     case Some(ast) => {
-      val scu = compilationUnit.asInstanceOf[ScalaCompilationUnit]
       val paramsAfterMethod = ScalariformUtils.getParameters(ast, methodNameOffset, typeAtRange)
       paramsAfterMethod match {
-        case Nil => MissingMemberInfo.inferFromEnclosingMethod(scu, ast, pos.offset)
+        case Nil => MissingMemberInfo.inferFromEnclosingMethod(sourceFile, ast, offset)
         case list => (list, None)
       }
     }
@@ -63,8 +59,8 @@ case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], def
   private val parametersWithSimpleName = for (parameterList <- rawParameters)
     yield for ((name, tpe) <- parameterList) yield
       (name, tpe.substring(tpe.lastIndexOf('.') + 1))
-  protected val parameters = ParameterListUniquifier.uniquifyParameterNames(parametersWithSimpleName)
-  protected val returnType: ReturnType = if (UnaryMethodNames.contains(defName)) className else rawReturnType
+  override protected val parameters = ParameterListUniquifier.uniquifyParameterNames(parametersWithSimpleName)
+  override protected val returnType: ReturnType = if (UnaryMethodNames.contains(defName)) className else rawReturnType
 
   /*
    * if they write "unknown = 3" or "other.unknown = 3", we will be in here since

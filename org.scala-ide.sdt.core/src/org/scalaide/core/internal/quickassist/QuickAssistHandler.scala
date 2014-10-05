@@ -3,7 +3,6 @@ package org.scalaide.core.internal.quickassist
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jdt.internal.ui.javaeditor.IJavaAnnotation
-import org.eclipse.jdt.internal.ui.text.correction.ProblemLocation
 import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
@@ -12,10 +11,12 @@ import org.eclipse.jface.text.quickassist.IQuickAssistProcessor
 import org.eclipse.jface.text.quickassist.QuickAssistAssistant
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.ui.IEditorInput
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.quickassist.AssistLocation
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.ui.editor.ScalaEditorAnnotation
 import org.scalaide.util.eclipse.EditorUtils
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 
 /**
  * Referenced in the plugins.xml. This handler gets called when an user asks for
@@ -81,11 +82,11 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
       val model = JavaUI.getDocumentProvider.getAnnotationModel(input)
       val iter = model.getAnnotationIterator.asScala
 
-      (iter foldLeft IndexedSeq[ProblemLocation]()) {
-        case (ps, a: Annotation with IJavaAnnotation) =>
+      (iter foldLeft IndexedSeq[AssistLocation]()) {
+        case (ps, a: Annotation) if a.isInstanceOf[ScalaEditorAnnotation] || a.isInstanceOf[IJavaAnnotation] =>
           val pos = model.getPosition(a)
           if (isInside(ctx.getOffset, pos.offset, pos.offset+pos.length))
-            ps :+ new ProblemLocation(pos.offset, pos.length, a)
+            ps :+ AssistLocation(pos.offset, pos.length, a)
           else
             ps
         case (ps, _) =>
