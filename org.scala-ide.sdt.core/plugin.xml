@@ -1197,6 +1197,41 @@
            id="org.scalaide.core.quickassist.ExpandImplicits"
            name="Scala Quick Assist - Expand Implicits">
      </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to import a missing member"
+           id="org.scalaide.core.quickassist.ImportMissingMember"
+           name="Scala Quick Assist - Import Missing Member">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to create a class from a missing type error"
+           id="org.scalaide.core.quickassist.CreateClass"
+           name="Scala Quick Assist - Create Class">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to fix a type mismatch error"
+           id="org.scalaide.core.quickassist.FixTypeMismatch"
+           name="Scala Quick Assist - Fix Type Mismatch">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to create a method from a value not found error"
+           id="org.scalaide.core.quickassist.CreateMethod"
+           name="Scala Quick Assist - Create Method">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to change the case of an identifier"
+           id="org.scalaide.core.quickassist.ChangeCase"
+           name="Scala Quick Assist - Change Case">
+     </command>
   </extension>
  <extension
        point="org.scala-ide.sdt.core.quickAssists">
@@ -1223,6 +1258,26 @@
     <quickAssist
           class="org.scalaide.core.internal.quickassist.expand.ExpandImplicits"
           id="org.scalaide.core.quickassist.ExpandImplicits">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.ImportMissingMember"
+          id="org.scalaide.core.quickassist.ImportMissingMember">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.CreateClass"
+          id="org.scalaide.core.quickassist.CreateClass">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.FixTypeMismatch"
+          id="org.scalaide.core.quickassist.FixTypeMismatch">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.createmethod.CreateMethod"
+          id="org.scalaide.core.quickassist.CreateMethod">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.changecase.ChangeCase"
+          id="org.scalaide.core.quickassist.ChangeCase">
     </quickAssist>
  </extension>
 

@@ -1,24 +1,20 @@
-package org.scalaide.core.internal.quickassist
+package org.scalaide.core.internal.quickassist.changecase
 
 import scala.reflect.internal.util.RangePosition
-import org.scalaide.ui.ScalaImages
-import org.scalaide.core.completion.RelevanceValues
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
-import scala.concurrent.Await
-import org.scalaide.core.compiler.IScalaPresentationCompiler
-import scala.util.Try
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits._
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.ui.ScalaImages
 
 /*
  * Find another member with the same spelling but different capitalization.
  * Eg "asdf".subString would offer to change it to .substring instead.
  */
-
 case class ChangeCaseProposal(originalName: String, newName: String, pos: Position) extends BasicCompletionProposal(
   relevance = RelevanceValues.ChangeCaseProposal,
   displayString = s"Change to '${newName}'",

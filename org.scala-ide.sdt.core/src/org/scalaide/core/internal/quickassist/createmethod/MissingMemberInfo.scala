@@ -1,4 +1,5 @@
-package org.scalaide.core.internal.quickassist.createmethod
+package org.scalaide.core.internal.quickassist
+package createmethod
 
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
@@ -16,7 +17,6 @@ import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jface.text.Position
 import scalariform.parser.AstNode
-import org.scalaide.core.internal.quickassist.ScalaQuickFixProcessor
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class MissingMemberInfo(
@@ -27,7 +27,7 @@ class MissingMemberInfo(
     source: AstNode)
       extends HasLogger {
 
-  val className = classNameFromFullyQualifiedName(fullyQualifiedName)
+  val className: String = classNameFromFullyQualifiedName(fullyQualifiedName)
   lazy val targetElement: Option[IJavaElement] = targetElementFromCompiler.orElse(targetElementFromSearch)
 
   private def classNameFromFullyQualifiedName(theType: String) = theType.drop(theType.lastIndexOf('.') + 1)
@@ -57,8 +57,6 @@ class MissingMemberInfo(
   }
 
   private def targetElementFromSearch: Option[IJavaElement] = {
-    import ScalaQuickFixProcessor._
-
     logger.debug(s"Trying to search for $className to find the fully qualified class $fullyQualifiedName")
     val matchesClassName = searchForTypes(compilationUnit.getJavaProject, className)
     logger.debug(s"Result for className got results: ${matchesClassName}, ${matchesClassName.map(_.getFullyQualifiedName)}")
