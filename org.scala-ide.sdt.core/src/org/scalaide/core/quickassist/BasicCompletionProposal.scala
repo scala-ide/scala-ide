@@ -7,16 +7,18 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 
 /**
- * Models an entry in the completion proposal.
+ * Models an entry in the quick assist proposal.
  *
  * @param relevance
- *        Denotes at which position in among all available entries this entry occurs.
- *        A higher value means a better position. For a better overview on the current
- *        ordering, this value should be stored in [[org.scalaide.core.completion.RelevanceValues]].
+ *        Denotes at which position in among all available entries this entry
+ *        occurs. A higher value means a better position. The ordering of quick
+ *        assists provided by Scala IDE can be found in
+ *        [[org.scalaide.core.completion.RelevanceValues]].
  * @param displayString
  *        A text of explanation shown in the completion proposal.
  * @param image
- *        An image shown beside the [displayString]. If this is null no image is shown.
+ *        An image shown beside the `displayString`. If this is `null` no image
+ *        is shown.
  */
 abstract class BasicCompletionProposal(relevance: Int, displayString: String, image: Image = null) extends IJavaCompletionProposal {
   override def getRelevance(): Int = relevance
