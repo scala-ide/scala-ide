@@ -442,21 +442,21 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       docFun)
   }
 
-  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject): Option[IHyperlink] = {
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink] = {
     asyncExec {
       findDeclaration(sym, javaProject) map {
         case (f, pos) =>
-          val label1 = sym.kindString + " " + sym.fullName
           new ScalaHyperlink(openableOrUnit = f,
               pos = f.lastSourceMap().originalPos(pos),
               len = sym.name.decodedName.length,
-              label = label1,
+              label = label(sym),
               text = name,
               wordRegion = region)
       }
     }.getOrElse(None)()
   }
 
+  private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
 
   override def inform(msg: String): Unit =
     logger.debug("[%s]: %s".format(name, msg))

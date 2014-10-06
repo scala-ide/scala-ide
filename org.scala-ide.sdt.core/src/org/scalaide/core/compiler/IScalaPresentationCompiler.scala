@@ -286,8 +286,10 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    * @param name        The primary information to be displayed, if more than one hyperlink is available
    * @param region      The region to be underlined in the editor
    * @param javaProject The java project where to search for the definition of this symbol
+   * @param label       A way to compute the attached hyperlink label. Normally this can be ignored and use the default label,
+   *                    consisting of the symbol kind and full name.
    */
-  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject): Option[IHyperlink]
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink]
 }
 
 object IScalaPresentationCompiler extends HasLogger {
