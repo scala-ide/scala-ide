@@ -114,7 +114,7 @@ class ScalaHoverImpl extends ITextHover with ITextHoverExtension with ITextHover
         import RegionUtils.RichProblem
         import HTMLPrinter._
 
-        val scalaRegion = new Region(icu.lastSourceMap().scalaPos(region.getOffset), region.getLength)
+        val scalaRegion = new Region(icu.sourceMap(viewer.getDocument.get.toCharArray).scalaPos(region.getOffset), region.getLength)
 
         def typeInfo(t: Tree): Option[String] = (for (sym <- Option(t.symbol); tpe <- Option(t.tpe)) yield compiler.headerForSymbol(sym, tpe)).flatten
 
