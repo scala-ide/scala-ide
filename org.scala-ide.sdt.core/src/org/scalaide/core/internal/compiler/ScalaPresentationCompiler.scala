@@ -55,6 +55,8 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.scalaide.core.internal.hyperlink.ScalaHyperlink
+import org.eclipse.jface.text.Region
+import org.scalaide.util.eclipse.RegionUtils
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -443,14 +445,16 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   }
 
   def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink] = {
+    import org.scalaide.util.eclipse.RegionUtils._
+
     asyncExec {
       findDeclaration(sym, javaProject) map {
         case (f, pos) =>
           val symbolLen = sym.name.decodedName.length
-          val offset = f.lastSourceMap().originalPos(pos)
-          val length = Math.max(0, f.lastSourceMap().originalPos(pos + symbolLen) - offset)
+          val targetRegion = (new Region(pos, symbolLen)).map(f.lastSourceMap.originalPos)
+          val length = Math.max(0, targetRegion.getLength)
           new ScalaHyperlink(openableOrUnit = f,
-              pos = offset,
+              pos = targetRegion.getOffset,
               len = length,
               label = label(sym),
               text = name,
