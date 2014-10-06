@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.editor
 
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 

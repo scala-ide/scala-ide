@@ -26,8 +26,8 @@ import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.ui.internal.editor.ISourceViewerEditor
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.ISourceViewerEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
 /**

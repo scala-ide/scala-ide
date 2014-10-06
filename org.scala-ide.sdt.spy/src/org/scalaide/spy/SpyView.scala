@@ -16,7 +16,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.eclipse.ui.texteditor.ITextEditor
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._

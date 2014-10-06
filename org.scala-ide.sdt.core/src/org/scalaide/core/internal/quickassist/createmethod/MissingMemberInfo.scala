@@ -89,10 +89,10 @@ object MissingMemberInfo {
         }
 
         val pos = compiler.rangePos(srcFile, offset, offset, offset + length)
-        val typed = compiler.askTypeAt(pos)
+        val typed = compiler.askTypeAt(pos).getOption()
         compiler.asyncExec {
           for {
-            t <- typed.getOption()
+            t <- typed
             tpe <- Option(t.tpe)
             parameter <- getParameter(tpe.paramss)
             paramType = parameter.tpe

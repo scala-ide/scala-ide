@@ -27,19 +27,19 @@ import scala.tools.nsc.interactive.CompilerControl
 import scala.tools.nsc.symtab.Flags
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.eclipse.core.filebuffers.FileBuffers
 import org.scalaide.core.extensions.SourceFileProviderRegistry
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jface.text.Region
+import org.scalaide.ui.editor.hover.IScalaHover
 
-object ScalaHover extends HasLogger {
+object ScalaHoverImpl extends HasLogger {
   /** could return null, but prefer to return empty (see API of ITextHover). */
   private val NoHoverInfo = ""
 
-  /**
-   * Formats different error messages in a way that they look best in the editor
-   * hover.
+  /** Formats different error messages in a way that they look best in the editor
+   *  hover.
    */
   private object msgFormatter extends (String => String) with HtmlHover {
 
@@ -52,50 +52,11 @@ object ScalaHover extends HasLogger {
         convertContentToHtml(str)
     }
   }
-
-  /**
-   * The Id that is used as a key for the preference store to retrieve the
-   * configured font style to be used by the hover.
-   */
-  final val HoverFontId = "org.scalaide.ui.font.hover"
-
-  /**
-   * The Id that is used as a key for the preference store to retrieve the
-   * stored CSS file.
-   */
-  final val ScalaHoverStyleSheetId = "org.scalaide.ui.config.scalaHoverCss"
-
-  /**
-   * This Id is used as a key for the preference store to retrieve the content
-   * of the default CSS file. This file is already stored in the IDE bundle
-   * and can be found with [[ScalaHoverStyleSheetPath]] but it is nonetheless
-   * necessary to store this file because it may change in a newer version of
-   * the IDE. To detect such a change we need to be able to compare the content
-   * of the CSS file.
-   */
-  final val DefaultScalaHoverStyleSheetId = "org.scalaide.ui.config.defaultScalaHoverCss"
-
-  /** The path to the default CSS file */
-  final val ScalaHoverStyleSheetPath = "/resources/scala-hover.css"
-
-  /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
-  def ScalaHoverStyleSheet: String =
-    IScalaPlugin().getPreferenceStore().getString(ScalaHoverStyleSheetId)
-
-  /** The content of the CSS file [[ScalaHoverStyleSheetPath]]. */
-  def DefaultScalaHoverStyleSheet: String = {
-    OSGiUtils.fileContentFromBundle(SdtConstants.PluginId, ScalaHoverStyleSheetPath) match {
-      case util.Success(css) =>
-        css
-      case util.Failure(f) =>
-        logger.warn(s"CSS file '$ScalaHoverStyleSheetPath' could not be accessed.", f)
-        ""
-    }
-  }
 }
 
-class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExtension2 with HtmlHover {
-  import ScalaHover._
+class ScalaHoverImpl extends ITextHover with ITextHoverExtension with ITextHoverExtension2 with HtmlHover {
+  import ScalaHoverImpl._
+  import IScalaHover._
 
   private var icuEditor: Option[InteractiveCompilationUnitEditor] = None
 
@@ -153,38 +114,7 @@ class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExte
         import RegionUtils.RichProblem
         import HTMLPrinter._
 
-        val scalaRegion = new Region(icu.lastSourceMap().scalaPos(region.getOffset), region.getLength)
-        val docComment = {
-          val thisComment = {
-            import compiler._
-            val wordPos = scalaRegion.toRangePos(src)
-            val pos = { val pTree = locateTree(wordPos); if (pTree.hasSymbolField) pTree.pos else wordPos }
-            val tree = askTypeAt(pos).getOption()
-            val askedOpt = asyncExec {
-
-              def pre(tsym: Symbol, t: Tree): Type = t match {
-                case Apply(fun, _) => pre(tsym, fun)
-                case Select(qual, _) => qual.tpe
-                case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
-                case _ => NoType
-              }
-              for (
-                t <- tree;
-                tsym <- Option(t.symbol);
-                pt <- Option(pre(tsym, t))
-              ) yield {
-                val site = pt.typeSymbol
-                val sym = if (tsym.isCaseApplyOrUnapply) site else tsym
-                val header = headerForSymbol(sym, pt)
-                (sym, site, header)
-              }
-            }.getOption().flatten
-
-            for ((sym, site, header) <- askedOpt) yield parsedDocComment(sym, site, icu.scalaProject.javaProject).flatMap { (comment) => (new ScalaDocHtmlProducer).getBrowserInput(compiler, icu.scalaProject.javaProject)(comment, sym, header.getOrElse(""))
-            }
-          }
-          thisComment.flatten
-        }
+        val scalaRegion = new Region(icu.sourceMap(viewer.getDocument.get.toCharArray).scalaPos(region.getOffset), region.getLength)
 
         def typeInfo(t: Tree): Option[String] = (for (sym <- Option(t.symbol); tpe <- Option(t.tpe)) yield compiler.headerForSymbol(sym, tpe)).flatten
 
@@ -263,6 +193,46 @@ class ScalaHover extends ITextHover with ITextHoverExtension with ITextHoverExte
             res = retrieveMarkerMessages
           }
           res
+        }
+
+        // time consuming, so this is lazy. Might not need to be forced when there are compilation errors.
+        // It's important (for performance reasons) that this code runs *after* retrieving errors. At the end
+        // of a scaladoc request the presentation compiler needs to unload any temporary compilation units
+        // needed during this request. That leads to a fresh run, and a full type-checking of all loaded
+        // sources, so asking for errors right after will generally be slow.
+        lazy val docComment = {
+          val thisComment = {
+            import compiler._
+            val wordPos = scalaRegion.toRangePos(src)
+            val pos = { val pTree = locateTree(wordPos); if (pTree.hasSymbolField) pTree.pos else wordPos }
+            val tree = askTypeAt(pos).getOption()
+            val askedOpt = asyncExec {
+
+              def pre(tsym: Symbol, t: Tree): Type = t match {
+                case Apply(fun, _) => pre(tsym, fun)
+                case Select(qual, _) => qual.tpe
+                case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
+                case _ => NoType
+              }
+              for (
+                t <- tree;
+                tsym <- Option(t.symbol);
+                pt <- Option(pre(tsym, t))
+              ) yield {
+                val site = pt.typeSymbol
+                val sym = if (tsym.isCaseApplyOrUnapply) site else tsym
+                val header = headerForSymbol(sym, pt)
+                (sym, site, header)
+              }
+            }.getOption().flatten
+
+            for {
+              (sym, site, header) <- askedOpt
+              comment <- parsedDocComment(sym, site, icu.scalaProject.javaProject)
+            } yield
+              (new ScalaDocHtmlProducer).getBrowserInput(compiler)(comment, sym, header.getOrElse(""))
+          }
+          thisComment.flatten
         }
 
         if (problemsInRange.nonEmpty)
