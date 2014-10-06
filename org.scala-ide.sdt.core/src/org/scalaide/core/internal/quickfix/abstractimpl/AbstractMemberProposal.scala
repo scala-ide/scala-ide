@@ -11,9 +11,10 @@ import org.scalaide.core.internal.quickfix.{AddMethodProposal, AddValOrDefPropos
 import org.scalaide.core.internal.quickfix.AddFieldProposal
 import scala.collection.immutable
 import scala.tools.nsc.interactive.Global
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 object AbstractMemberProposal {
-  def apply(global: Global)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
+  def apply(global: ScalaPresentationCompiler)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
     tsf: Option[ScalaSourceFile], addMethodTarget: AddMethodTarget) = {
 
     new {
@@ -27,7 +28,7 @@ object AbstractMemberProposal {
 }
 
 trait AbstractMemberProposal extends AddMethodProposal with AddFieldProposal with AddValOrDefProposal {
-  protected val compiler: Global
+  protected val compiler: ScalaPresentationCompiler
   import compiler._
 
   val targetSourceFile: Option[ScalaSourceFile]
@@ -40,7 +41,7 @@ trait AbstractMemberProposal extends AddMethodProposal with AddFieldProposal wit
       (if (tp.isError) None
       else if (tp.toString == "Null") Some("AnyRef")
       // TODO: add sprinter to remove redundant type prefix
-      else Option(tp.toString())) getOrElse ("Any")
+      else Option(compiler.declPrinter.showType(tp))) getOrElse ("Any")
 
     val paramss: ParameterList = abstractMethod.paramss map {
       _.zipWithIndex.map { param =>

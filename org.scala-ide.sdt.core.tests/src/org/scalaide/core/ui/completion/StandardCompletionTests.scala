@@ -42,7 +42,7 @@ class StandardCompletionTests {
     object X {
       (new A).foo([[i]])^
     }
-  """ after Completion("foo(Int): Int")
+  """ after Completion("foo(i: Int): Int")
 
   @Test
   def completeMethodWithMultipleParameterLists() = """
@@ -59,7 +59,7 @@ class StandardCompletionTests {
     object X {
       (new A).foo([[i]])([[j]])^
     }
-  """ after Completion("foo(Int)(Int): Int")
+  """ after Completion("foo(i: Int)(j: Int): Int")
 
   @Test
   def doNotInsertImplicitParameterList() = """
@@ -76,7 +76,7 @@ class StandardCompletionTests {
     object X {
       (new A).foobar([[i]], [[j]])([[ident]])^
     }
-  """ after Completion("foobar(Int, Int)(Int)(Int): Int", expectedNumberOfCompletions = 1)
+  """ after Completion("foobar(i: Int, j: Int)(ident: Int)(l: Int): Int", expectedNumberOfCompletions = 1)
 
   @Test
   def completeImportedMembers() = """
@@ -97,7 +97,7 @@ class StandardCompletionTests {
       import a._
       foo([[i]])^
     }
-  """ after Completion("foo(Int): Int")
+  """ after Completion("foo(i: Int): Int")
 
   @Test
   def completeMethodWithEmptyParamList() = """
@@ -151,7 +151,7 @@ class StandardCompletionTests {
       m(1) forall { [[x]] => [[???]] }^
       println()
     }
-  """ after Completion("forall(Char => Boolean): Boolean")
+  """ after Completion("forall(p: Char => Boolean): Boolean")
 
   @Test
   def completeJavaType() = """
@@ -215,10 +215,10 @@ class StandardCompletionTests {
     class Test1 {
       new C().t1000654_a([[s]])^
     }
-  """ after Completion("t1000654_a(String): Int",
+  """ after Completion("t1000654_a(s: String): Int",
       expectedCompletions = Seq(
-          "t1000654_a(Int): Int",
-          "t1000654_a(String): Int"))
+          "t1000654_a(i: Int): Int",
+          "t1000654_a(s: String): Int"))
 
   @Test
   def completeCaseClassMember() = """
@@ -260,7 +260,7 @@ class StandardCompletionTests {
       import Ticket1001125.doNothingWith^
     }
   """ after Completion(
-      "doNothingWith(Any): Unit",
+      "doNothingWith(that: Any): Unit",
       expectedNumberOfCompletions = 1)
 
   @Test
@@ -305,7 +305,7 @@ class StandardCompletionTests {
       this.withResource { [[x]] => [[???]] }^
     }
   """ after Completion(
-      "withResource[T](T => Unit): Unit",
+      "withResource[T](f: T => Unit): Unit",
       expectedNumberOfCompletions = 1)
 
   @Test
@@ -320,7 +320,7 @@ class StandardCompletionTests {
       this.lzyEval { () => [[???]] }^
     }
   """ after Completion(
-      "lzyEval(() => Any): Unit",
+      "lzyEval(f: () => Any): Unit",
       expectedNumberOfCompletions = 1)
 
   @Test
@@ -335,7 +335,7 @@ class StandardCompletionTests {
       this.cbn([[f]])^
     }
   """ after Completion(
-      "cbn(=> Any): Unit",
+      "cbn(f: => Any): Unit",
       expectedNumberOfCompletions = 1)
 
   @Test
@@ -354,7 +354,7 @@ class StandardCompletionTests {
         this.withResource([[f]])^
       }
     """ after Completion(
-          "withResource[T](T => Unit): Unit",
+          "withResource[T](f: T => Unit): Unit",
           expectedNumberOfCompletions = 1)
     }
   }
@@ -375,7 +375,7 @@ class StandardCompletionTests {
         this withResource { [[x]] => [[???]] }^
       }
     """ after Completion(
-          "withResource[T](T => Unit): Unit",
+          "withResource[T](f: T => Unit): Unit",
           expectedNumberOfCompletions = 1)
     }
   }

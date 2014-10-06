@@ -39,7 +39,7 @@ object ExplicitReturnType {
       }
 
       def expandProposal(vd: ValOrDefDef): Option[IJavaCompletionProposal] =
-        compiler.asyncExec(vd.tpt.toString).getOption() flatMap { tpe =>
+        compiler.asyncExec(compiler.declPrinter.showType(vd.tpt.tpe)).getOption() flatMap { tpe =>
           val insertion = findInsertionPoint(vd)
           // safety check: don't modify anything outside the original tree range
           if (vd.pos.start <= insertion && insertion <= vd.pos.end) {
