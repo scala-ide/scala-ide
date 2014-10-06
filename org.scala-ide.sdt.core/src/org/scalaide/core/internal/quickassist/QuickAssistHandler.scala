@@ -84,9 +84,22 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
 
       (iter foldLeft IndexedSeq[AssistLocation]()) {
         case (ps, a: Annotation) if a.isInstanceOf[ScalaEditorAnnotation] || a.isInstanceOf[IJavaAnnotation] =>
-          val pos = model.getPosition(a)
-          if (isInside(ctx.getOffset, pos.offset, pos.offset+pos.length))
-            ps :+ AssistLocation(pos.offset, pos.length, a)
+          val (start, end) = {
+            val p = model.getPosition(a)
+            (p.offset, p.offset+p.length)
+          }
+
+          def isOffsetInsidePos(offset: Int): Boolean =
+            offset == start || offset == end || (offset > start && offset < end)
+
+          def isPosInsideRange(rStart: Int, rEnd: Int): Boolean =
+            start >= rStart && end <= rEnd
+
+          def posNotYetFound =
+            ps.forall(a => !isPosInsideRange(a.offset, a.offset+a.length))
+
+          if (isOffsetInsidePos(ctx.getOffset) && posNotYetFound)
+            ps :+ AssistLocation(start, end-start, a)
           else
             ps
         case (ps, _) =>
@@ -118,9 +131,5 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
 
   override def canAssist(ctx: IQuickAssistInvocationContext): Boolean = true
   override def canFix(a: Annotation): Boolean = true
-
   override def getErrorMessage(): String = null
-
-  private def isInside(offset: Int, start: Int, end: Int): Boolean =
-    offset == start || offset == end || (offset > start && offset < end)
 }
