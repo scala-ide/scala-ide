@@ -98,20 +98,19 @@ class ScalaDocHtmlProducer extends HtmlHover {
     headerHtml ++ mainHtml
   }
 
-     def getBrowserInput(compiler: IScalaPresentationCompiler, javaProject: IJavaProject)(comment: Comment, sym: compiler.Symbol, header: String): Option[BrowserInput] = {
-      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
-      import compiler._
-      val rawOutput = asyncExec {
-        htmlContents(header, comment)
-      }.getOption()
-      val htmlOutput = rawOutput map {(comm) => createHtmlOutput {(sb) => sb append comm }}
-      val javaElement = getJavaElement(sym, javaProject)
-      htmlOutput.map { (output) =>
-        new BrowserInformationControlInput(null) {
-          override def getHtml: String = output.toString
-          override def getInputElement: Object = javaElement
-          override def getInputName: String = javaElement.map(_.getElementName()).getOrElse("")
-        }
+  def getBrowserInput(compiler: IScalaPresentationCompiler)(comment: Comment, sym: compiler.Symbol, header: String): Option[BrowserInput] = {
+    import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+    import compiler._
+    val rawOutput = asyncExec {
+      htmlContents(header, comment)
+    }.getOption()
+    val htmlOutput = rawOutput map { (comm) => createHtmlOutput { (sb) => sb append comm } }
+    htmlOutput.map { (output) =>
+      new BrowserInformationControlInput(null) {
+        override def getHtml: String = output.toString
+        override def getInputElement: Object = sym
+        override def getInputName: String = sym.nameString
       }
     }
+  }
 }

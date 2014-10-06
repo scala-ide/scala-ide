@@ -9,8 +9,8 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
+import org.scalaide.util.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 

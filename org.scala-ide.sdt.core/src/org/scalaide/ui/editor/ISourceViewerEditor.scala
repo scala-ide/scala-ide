@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.editor
 
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.ITextEditor

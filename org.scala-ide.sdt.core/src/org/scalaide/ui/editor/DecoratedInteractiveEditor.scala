@@ -1,8 +1,7 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.editor
 
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
-import org.eclipse.jface.text.source.IAnnotationModelExtension
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import scala.collection.breakOut
 import org.eclipse.jdt.core.compiler.IProblem
