@@ -452,10 +452,8 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
         case (f, pos) =>
           val symbolLen = sym.name.decodedName.length
           val targetRegion = (new Region(pos, symbolLen)).map(f.lastSourceMap.originalPos)
-          val length = Math.max(0, targetRegion.getLength)
           new ScalaHyperlink(openableOrUnit = f,
-              pos = targetRegion.getOffset,
-              len = length,
+              region = targetRegion,
               label = label(sym),
               text = name,
               wordRegion = region)

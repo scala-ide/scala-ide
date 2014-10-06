@@ -10,7 +10,7 @@ import org.eclipse.jface.text.IRegion
 /** An implementation of `IHyperlink` for Scala editors.
  *
  */
-class ScalaHyperlink(openableOrUnit: AnyRef, pos: Int, len: Int, label: String, text: String, wordRegion: IRegion) extends IHyperlink {
+class ScalaHyperlink(openableOrUnit: AnyRef, region: IRegion, label: String, text: String, wordRegion: IRegion) extends IHyperlink {
 
   override def getHyperlinkRegion = wordRegion
 
@@ -26,7 +26,7 @@ class ScalaHyperlink(openableOrUnit: AnyRef, pos: Int, len: Int, label: String, 
       case _ => null
     }
     part match {
-      case editor: ITextEditor => editor.selectAndReveal(pos, len)
+      case editor: ITextEditor => editor.selectAndReveal(region.getOffset, region.getLength)
       case _ =>
     }
   }

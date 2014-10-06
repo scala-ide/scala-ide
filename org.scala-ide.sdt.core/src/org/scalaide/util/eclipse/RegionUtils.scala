@@ -60,12 +60,14 @@ object RegionUtils {
 
     /** Return a new Region with `f` applied to both start and end offsets.
      *
-     *  Equivalent to `new Region(f(start), f(end))`.
+     *  Equivalent to `new Region(f(start), f(end))`, but won't return negative
+     *  lengths. If `f(end)` returns an offset less than `start`, it will round it
+     *  up at `start`.
      */
     def map(f: Int => Int): IRegion = {
       val newOffset = f(region.getOffset)
       val newLen = f(region.getOffset + region.getLength) - newOffset
-      new Region(newOffset, newLen)
+      new Region(newOffset, Math.max(0, newLen))
     }
 
     /** Translate this region by applying `f` to the offset, and keeping the length

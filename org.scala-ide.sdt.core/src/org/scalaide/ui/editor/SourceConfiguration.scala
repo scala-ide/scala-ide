@@ -46,6 +46,6 @@ object SourceConfiguration {
    * @param text           The name of the hyperlink, to be shown in a menu if there's more than one hyperlink
    * @param wordRegion     The region to underline in the start editor
    */
-  def scalaHyperlink(openableOrUnit: AnyRef, pos: Int, len: Int, label: String, text: String, wordRegion: IRegion): IHyperlink =
-    new ScalaHyperlink(openableOrUnit, pos, len, label, text, wordRegion)
+  def scalaHyperlink(openableOrUnit: AnyRef, region: IRegion, label: String, text: String, wordRegion: IRegion): IHyperlink =
+    new ScalaHyperlink(openableOrUnit, region, label, text, wordRegion)
 }
