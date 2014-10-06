@@ -73,7 +73,7 @@ class ScalaDocHtmlProducer extends HtmlHover {
     val headerHtml =
       if (header.isEmpty) NodeSeq.Empty
       else
-        <h3>{ header }</h3>
+        <h4>{ header }</h4>
 
     val mainHtml = List(
       bodyToHtml(comment.body),

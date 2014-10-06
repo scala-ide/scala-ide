@@ -14,9 +14,10 @@ class ImplAbstractMembers extends QuickAssist {
     implAbstractMember(ctx.icu, ctx.selectionStart)
 
   def implAbstractMember(icu: InteractiveCompilationUnit, offset: Int): Seq[BasicCompletionProposal] = {
-    icu.withSourceFile { (srcFile, compiler) =>
+    icu.scalaProject.presentationCompiler { compiler =>
       import compiler._
 
+      val srcFile = icu.lastSourceMap().sourceFile
       def implAbstractProposals(tree: ImplDef) =
         compiler.asyncExec {
           val tp = tree.symbol.tpe

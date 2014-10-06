@@ -4,6 +4,7 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.refactoring.implementations.AddMethodTarget
 
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.quickassist.AddFieldProposal
 import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
@@ -12,7 +13,7 @@ import org.scalaide.core.internal.quickassist.createmethod.ReturnType
 import org.scalaide.core.internal.quickassist.createmethod.TypeParameterList
 
 object AbstractMemberProposal {
-  def apply(global: Global)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
+  def apply(global: IScalaPresentationCompiler)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
     icu: Option[InteractiveCompilationUnit], addMethodTarget: AddMethodTarget) = {
 
     new {
@@ -26,7 +27,7 @@ object AbstractMemberProposal {
 }
 
 trait AbstractMemberProposal extends AddValOrDefProposal with AddMethodProposal with AddFieldProposal {
-  protected val compiler: Global
+  protected val compiler: IScalaPresentationCompiler
   import compiler._
 
   protected val abstractMethod: MethodSymbol
@@ -37,7 +38,7 @@ trait AbstractMemberProposal extends AddValOrDefProposal with AddMethodProposal 
       (if (tp.isError) None
       else if (tp.toString == "Null") Some("AnyRef")
       // TODO: add sprinter to remove redundant type prefix
-      else Option(tp.toString())) getOrElse ("Any")
+      else Option(compiler.declPrinter.showType(tp))) getOrElse ("Any")
 
     val paramss: ParameterList = abstractMethod.paramss map {
       _.zipWithIndex.map { param =>

@@ -99,6 +99,7 @@ class ScalaJavaMapperTest {
       }
     }
   }
+
   /** Retrieve the `target` type from the given source and pass it to the type test.
    *
    *  The `src` is supposed to contain one abstract val called `target`, whose type
