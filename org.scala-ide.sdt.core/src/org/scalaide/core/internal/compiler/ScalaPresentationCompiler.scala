@@ -258,12 +258,19 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  compiler, it will be from now on.
    */
   def askReload(scu: InteractiveCompilationUnit, source: SourceFile): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(List(source), res) }
+    withResponse[Unit] { res => askReload(List(source), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.lastSourceMap().sourceFile), res) }
+    withResponse[Unit] { res => askReload(units.map(_.lastSourceMap().sourceFile), res) }
+  }
+
+  /** Make sure we remove the doc comments we accumulated so far. */
+  override def askReload(sources: List[SourceFile], response: Response[Unit]) = {
+    logger.info(s"Clearing doc comments (${cookedDocComments.size} entries)")
+    clearDocComments();
+    super.askReload(sources, response)
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
