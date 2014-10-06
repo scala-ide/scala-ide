@@ -76,7 +76,7 @@ class StandardCompletionTests {
     object X {
       (new A).foobar([[i]], [[j]])([[ident]])^
     }
-  """ after Completion("foobar(i: Int,j: Int)(ident: Int)(l: Int): Int", expectedNumberOfCompletions = 1)
+  """ after Completion("foobar(i: Int, j: Int)(ident: Int)(l: Int): Int", expectedNumberOfCompletions = 1)
 
   @Test
   def completeImportedMembers() = """

@@ -58,7 +58,7 @@ abstract class DeclarationPrinter extends HasLogger {
       else tp match {
         case PolyType(tparams, res)    => tp.typeParams.map(defString(_, flagMask)()).mkString("[", ", ", "]") + infoString(res)
         case NullaryMethodType(res)    => infoString(res)
-        case MethodType(params, res)   => params.map(s => defString(s, flagMask)()).mkString("(", ",", ")") + infoString(res)
+        case MethodType(params, res)   => params.map(s => defString(s, flagMask)()).mkString("(", ", ", ")") + infoString(res)
         case _ if isStructuralThisType => ": " + sym.owner.name
         case _                         => ": " + showType(tp)
       }
