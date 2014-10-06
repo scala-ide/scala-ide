@@ -83,8 +83,6 @@ Export-Package:
  org.scalaide.core.compiler,
  org.scalaide.core.completion,
  org.scalaide.core.extensions,
- org.scalaide.core.hyperlink,
- org.scalaide.core.hyperlink.detector,
  org.scalaide.core.internal.builder,
  org.scalaide.core.internal.builder.zinc,
  org.scalaide.core.internal.compiler,
