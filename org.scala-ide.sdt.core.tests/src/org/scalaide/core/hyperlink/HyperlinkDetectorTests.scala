@@ -3,7 +3,6 @@ package hyperlink
 
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
-import org.scalaide.util.internal.ScalaWordFinder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -11,7 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer
+import org.scalaide.core.internal.hyperlink.ScalaDeclarationHyperlinkComputer
 import org.junit.BeforeClass
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester {

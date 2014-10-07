@@ -13,12 +13,12 @@ import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.Problem
 import scala.tools.nsc.io.AbstractFile
+import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.reporters.Reporter
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.completion.CompletionContext
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
 import org.scalaide.core.internal.jdt.model.ScalaJavaMapper
 import org.scalaide.core.internal.jdt.search.ScalaMatchLocator
@@ -31,7 +31,6 @@ import scala.tools.nsc.util.FailedInterrupt
 import scala.tools.nsc.symtab.Flags
 import org.scalaide.core.completion.CompletionProposal
 import org.eclipse.jdt.core.IMethod
-import scala.tools.nsc.io.VirtualFile
 import scala.tools.nsc.interactive.MissingResponse
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.extensions.SourceFileProviderRegistry
@@ -40,7 +39,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.internal.core.util.Util
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scalariform.lexer.{ScalaLexer, ScalaLexerException}
 import scala.reflect.internal.util.RangePosition
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
@@ -51,6 +50,13 @@ import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 import scala.util.Try
+import scala.reflect.internal.util.NoPosition
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import org.scalaide.core.internal.hyperlink.ScalaHyperlink
+import org.eclipse.jface.text.Region
+import org.scalaide.util.eclipse.RegionUtils
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -107,13 +113,13 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    * Refresh rounds can be triggered by the reconciler, but also interactive requests
    * (e.g. completion)
    */
-  private val scheduledUnits = new scala.collection.mutable.HashMap[InteractiveCompilationUnit,Array[Char]]
+  private val scheduledUnits = new scala.collection.mutable.HashMap[InteractiveCompilationUnit, SourceFile]
 
   /**
    * Add a compilation unit (CU) to the set of CUs to be Reloaded at the next refresh round.
    */
-  def scheduleReload(icu : InteractiveCompilationUnit, contents:Array[Char]) : Unit = {
-    scheduledUnits.synchronized { scheduledUnits += ((icu, contents)) }
+  def scheduleReload(icu : InteractiveCompilationUnit, srcFile: SourceFile) : Unit = {
+    scheduledUnits.synchronized { scheduledUnits += ((icu, srcFile)) }
   }
 
   /**
@@ -123,16 +129,17 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   def flushScheduledReloads(): Response[Unit] = {
     val res = new Response[Unit]
     scheduledUnits.synchronized {
-      val reloadees = scheduledUnits.filter{(scu:(InteractiveCompilationUnit, Array[Char])) => compilationUnits.contains(scu._1)}.toList
+      val reloadees = scheduledUnits.filter{(scu:(InteractiveCompilationUnit, SourceFile)) => compilationUnits.contains(scu._1)}.toList
 
       if (reloadees.isEmpty) res.set(())
       else {
-        val reloadFiles = reloadees map { case (s, c) => s.sourceFile(c) }
+        val reloadFiles = reloadees map { case (_, srcFile) => srcFile }
         askReload(reloadFiles, res)
-        res.get
+        logger.info(s"Flushed ${reloadees.mkString("", ",", "")}")
       }
       scheduledUnits.clear()
     }
+    res.get
     res
   }
 
@@ -180,7 +187,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     withResponse[Tree](askStructure(keepLoaded)(sourceFile, _))
   }
 
-  def problemsOf(file: AbstractFile): List[IProblem] = {
+  def problemsOf(file: AbstractFile): List[ScalaCompilationProblem] = {
     unitOfFile get file match {
       case Some(unit) =>
         askLoadedTyped(unit.source, false).get
@@ -192,7 +199,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     }
   }
 
-  def problemsOf(scu: InteractiveCompilationUnit): List[IProblem] = problemsOf(scu.file)
+  def problemsOf(scu: InteractiveCompilationUnit): List[ScalaCompilationProblem] = problemsOf(scu.file)
 
   @deprecated("Use loadedType instead.", "4.0.0")
   def body(sourceFile: SourceFile, keepLoaded: Boolean = false): Either[Tree, Throwable] = loadedType(sourceFile, keepLoaded)
@@ -203,7 +210,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     askLoadedTyped(sourceFile, keepLoaded).get
   }
 
-  /** Perform `op' on the compiler thread. This method returns a `Response` that may
+  /** Perform `op` on the compiler thread. This method returns a `Response` that may
    *  never complete (there is no default timeout). In very rare cases, the current presentation compiler
    *  might restart and miss to complete a pending request. Clients should always specify
    *  a timeout value when awaiting on a future returned by this method.
@@ -250,30 +257,37 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  If the file has not been 'reloaded' first, it does nothing.
    */
   def askToDoFirst(scu: InteractiveCompilationUnit) {
-    askToDoFirst(scu.sourceFile())
+    askToDoFirst(scu.lastSourceMap().sourceFile)
   }
 
   /** Reload the given compilation unit. If the unit is not tracked by the presentation
    *  compiler, it will be from now on.
    */
-  def askReload(scu: InteractiveCompilationUnit, content: Array[Char]): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(List(scu.sourceFile(content)), res) }
+  def askReload(scu: InteractiveCompilationUnit, source: SourceFile): Response[Unit] = {
+    withResponse[Unit] { res => askReload(List(source), res) }
   }
 
   /** Atomically load a list of units in the current presentation compiler. */
   def askReload(units: List[InteractiveCompilationUnit]): Response[Unit] = {
-    withResponse[Unit] { res => clearDocComments(); askReload(units.map(_.sourceFile), res) }
+    withResponse[Unit] { res => askReload(units.map(_.lastSourceMap().sourceFile), res) }
+  }
+
+  /** Make sure we remove the doc comments we accumulated so far. */
+  override def askReload(sources: List[SourceFile], response: Response[Unit]) = {
+    logger.info(s"Clearing doc comments (${cookedDocComments.size} entries)")
+    clearDocComments();
+    super.askReload(sources, response)
   }
 
   def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
     logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
-      askFilesDeleted(units.map(_.sourceFile()).toList)
+      askFilesDeleted(units.map(_.lastSourceMap().sourceFile).toList)
   }
 
   def discardCompilationUnit(scu: InteractiveCompilationUnit): Unit = {
-    logger.info("discarding " + scu.sourceFile.path)
-    asyncExec { removeUnitOf(scu.sourceFile) }.getOption()
+    logger.info("discarding " + scu.file.path)
+    asyncExec { removeUnitOf(scu.lastSourceMap().sourceFile) }.getOption()
   }
 
   /** Tell the presentation compiler to refresh the given files,
@@ -329,8 +343,8 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
-    inherited: Boolean, viaView: Symbol, context: CompletionContext, project: IScalaProject): CompletionProposal = {
+  def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
+    inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
     /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
      *  source. This function adds the back-ticks to a given identifier, if necessary.
@@ -371,10 +385,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
 
     val signature =
       if (sym.isMethod) {
-        name +
-          (if (!sym.typeParams.isEmpty) sym.typeParams.map { _.name }.mkString("[", ",", "]") else "") +
-          tpe.paramss.map(_.map(_.tpe.toString).mkString("(", ", ", ")")).mkString +
-          ": " + tpe.finalResultType.toString
+        declPrinter.defString(sym, flagMask = 0L, showKind = false)(tpe)
       } else name
     val container = sym.owner.enclClass.fullName
 
@@ -391,7 +402,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       || sym.owner == definitions.ObjectClass) {
       relevance -= 40
     }
-    val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
+    val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
     relevance -= casePenalty
 
     val namesAndTypes = for {
@@ -414,7 +425,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     val docFun = () => {
       val comment = parsedDocComment(sym, sym.enclClass, project.javaProject)
       val header = headerForSymbol(sym, tpe)
-      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this, project.javaProject)(comment.get, sym, header.getOrElse("")) else None
+      if (comment.isDefined) (new ScalaDocHtmlProducer).getBrowserInput(this)(comment.get, sym, header.getOrElse("")) else None
     }
 
     CompletionProposal(
@@ -432,6 +443,25 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       false,
       docFun)
   }
+
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink] = {
+    import org.scalaide.util.eclipse.RegionUtils._
+
+    asyncExec {
+      findDeclaration(sym, javaProject) map {
+        case (f, pos) =>
+          val symbolLen = sym.name.decodedName.length
+          val targetRegion = (new Region(pos, symbolLen)).map(f.lastSourceMap.originalPos)
+          new ScalaHyperlink(openableOrUnit = f,
+              region = targetRegion,
+              label = label(sym),
+              text = name,
+              wordRegion = region)
+      }
+    }.getOrElse(None)()
+  }
+
+  private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
 
   override def inform(msg: String): Unit =
     logger.debug("[%s]: %s".format(name, msg))
@@ -452,7 +482,7 @@ object ScalaPresentationCompiler {
         case INFO.id    => ProblemSeverities.Ignore
       }
 
-    def eclipseProblem(prob: Problem): Option[IProblem] = {
+    def eclipseProblem(prob: Problem): Option[ScalaCompilationProblem] = {
       import prob._
       if (pos.isDefined) {
         val source = pos.source
@@ -464,22 +494,20 @@ object ScalaPresentationCompiler {
             wordPos map ((p) => new RangePosition(pos.source, pos.point, pos.point, pos.point + p))
           }
 
-        reducedPos flatMap { reducedPos ⇒
+        reducedPos flatMap { reducedPos =>
           val fileName =
             source.file match {
               case EclipseFile(file) =>
-                Some(file.getFullPath().toString.toCharArray)
+                Some(file.getFullPath().toString)
               case vf: VirtualFile =>
-                Some(vf.path.toCharArray)
+                Some(vf.path)
               case _ =>
                 None
             }
-          fileName.map(new DefaultProblem(
+          fileName.map(ScalaCompilationProblem(
             _,
-            formatMessage(msg),
-            0,
-            new Array[String](0),
             nscSeverityToEclipse(severityLevel),
+            formatMessage(msg),
             reducedPos.start,
             math.max(reducedPos.start, reducedPos.end - 1),
             reducedPos.line,

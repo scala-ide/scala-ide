@@ -18,7 +18,7 @@ import org.junit.Ignore
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils.prepareJob
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.IJobChangeEvent
 import org.eclipse.core.runtime.jobs.JobChangeAdapter
@@ -585,7 +585,7 @@ class ClasspathTests {
     // By using the project as a scheduling rule, we are forced to wait until the classpath marker job has
     // finished. Otherwise, there's a race condition between the classpath validator job (that removes old
     // markers and adds new ones) and this thread, that might read between the delete and the add
-    def countMarkersJob() = EclipseUtils.prepareJob("CheckMarkersJob", scalaProject.underlying) { monitor =>
+    def countMarkersJob() = prepareJob("CheckMarkersJob", scalaProject.underlying) { monitor =>
       // count the markers on the project
       var nbOfWarningMarker = 0
       var nbOfErrorMarker = 0

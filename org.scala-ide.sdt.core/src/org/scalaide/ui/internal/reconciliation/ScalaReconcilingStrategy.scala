@@ -9,8 +9,8 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils._
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
+import org.scalaide.util.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 
@@ -45,8 +45,7 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
 
   override def reconcile(partition: IRegion) {
     listeningEditor.foreach(_.aboutToBeReconciled())
-    icUnit.scalaProject.presentationCompiler(_.flushScheduledReloads())
-    val errors = icUnit.reconcile(document.get)
+    val errors = icUnit.forceReconcile()
 
     // Some features, such as quick fixes, are dependent upon getting an ICompilationUnit there
     val cu: Option[ICompilationUnit] = icUnit.asInstanceOfOpt[ICompilationUnit]

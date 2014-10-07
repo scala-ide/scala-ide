@@ -11,10 +11,10 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.ui.IFileEditorInput
-import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.core.internal.quickfix.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.quickfix.BasicCompletionProposal
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.util.internal.eclipse.TextEditUtils
 

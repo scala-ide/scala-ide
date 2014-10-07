@@ -3,7 +3,7 @@ package org.scalaide.core.completion
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
@@ -31,26 +31,28 @@ class CompletionTests {
   private def withCompletions(path2source: String)(body: (Int, OffsetPosition, List[CompletionProposal]) => Unit) {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
+    val src = unit.lastSourceMap().sourceFile
+
     // first, 'open' the file by telling the compiler to load it
     unit.scalaProject.presentationCompiler.internal { compiler =>
-      val src = unit.sourceFile
       compiler.askReload(List(unit)).get
 
       compiler.askLoadedTyped(src, false).get
+    }
 
-      val contents = unit.getContents
-      // mind that the space in the marker is very important (the presentation compiler
-      // seems to get lost when the position where completion is asked
-      val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
-      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
-      val content = unit.getContents.mkString
+    val contents = unit.getContents
+    // mind that the space in the marker is very important (the presentation compiler
+    // seems to get lost when the position where completion is asked
+    val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+    assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
+    val content = unit.getContents.mkString
 
-      val completion = new ScalaCompletions
-      for (i <- 0 until positions.size) {
-        val pos = positions(i)
+    val completion = new ScalaCompletions
+    for (i <- 0 until positions.size) {
+      val pos = positions(i)
 
-        val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
-        val wordRegion = ScalaWordFinder.findWord(content, position.point)
+      val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
+      val wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 
@@ -70,10 +72,9 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
-        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
-        body(i, position, sortedCompletions)
-      }
+      val completions = completion.findCompletions(wordRegion, pos + 1, unit)
+      val sortedCompletions = completions.sortBy(completion => -(completion.relevance))
+      body(i, position, sortedCompletions)
     }
   }
 
@@ -163,7 +164,7 @@ class CompletionTests {
 
   @Test
   def t1001218() {
-    val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
+    val oraclePos8_14 = List("println(): Unit", "println(x: Any): Unit")
     val oraclePos10_12 = List("foo(): Int")
     val oraclePos12_12 = List("foo(): Int")
     val oraclePos18_10 = List("foo(): Int")
@@ -176,10 +177,10 @@ class CompletionTests {
 
   @Test
   def t1001272() {
-    val oraclePos16_18 = List("A(): t1001272.A", "A(Int): t1001272.A")
-    val oraclePos17_18 = List("B(): t1001272.B")
-    val oraclePos18_20 = List("E(Int): t1001272.D.E")
-    val oraclePos19_26 = List("InnerA(Int): t1001272.Test.a.InnerA")
+    val oraclePos16_18 = List("A(): A", "A(a: Int): A")
+    val oraclePos17_18 = List("B(): B")
+    val oraclePos18_20 = List("E(i: Int): D.E")
+    val oraclePos19_26 = List("InnerA(i: Int): a.InnerA")
 
     val unit = scalaCompilationUnit("t1001272/A.scala")
     reload(unit)
@@ -196,7 +197,7 @@ class CompletionTests {
         assertTrue("The completion should return doNothingWith", completions.exists(
           _ match {
             case c:CompletionProposal =>
-              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+              c.kind == MemberKind.Def && c.context == CompletionContext.ImportContext && c.completion == "doNothingWith"
             case _ =>
               false
           }))

@@ -31,8 +31,7 @@ import org.eclipse.ui.editors.text.TextEditor
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
@@ -81,6 +80,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     private def formatPreviewText: String = ScalaFormatter.format(previewText, getPreferences(overlayStore))
 
     protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor) {
+      import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+
       val checkBox = new Button(parent, SWT.CHECK | SWT.WRAP)
       checkBox.setText(text)
       checkBox.setToolTipText(preference.description + " (" + preference.key + ")")
@@ -100,6 +102,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]) {
+      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+      import org.scalaide.util.eclipse.SWTUtils.RichControl
+
       val IntegerPreference(min, max) = preference.preferenceType
       val label = new Label(parent, SWT.LEFT)
       label.setText(text)
@@ -147,7 +152,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def createPreviewer(parent: Composite): Control = {
-      val previewer = ScalaPreviewerFactory.createPreviewer(parent, getPreferenceStore, formatPreviewText)
+      val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, getPreferenceStore, formatPreviewText)
       previewDocument = previewer.getDocument
       val control = previewer.getControl
       allEnableDisableControls += control
@@ -228,6 +233,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   }
 
   def createContents(parent: Composite): Control = {
+    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+    import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 

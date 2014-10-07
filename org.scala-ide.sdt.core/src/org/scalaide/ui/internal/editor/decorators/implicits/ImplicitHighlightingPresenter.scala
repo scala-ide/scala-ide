@@ -14,8 +14,6 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.scalaide.core.hyperlink.Hyperlink
-import org.scalaide.core.hyperlink.HyperlinkFactory
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
 import org.scalaide.core.compiler.IScalaPresentationCompiler
@@ -46,10 +44,6 @@ object ImplicitHighlightingPresenter {
     import compiler.ApplyImplicitView
     import compiler.ApplyToImplicitArgs
 
-    object ImplicitHyperlinkFactory extends HyperlinkFactory {
-      protected val global: compiler.type = compiler
-    }
-
     def mkPosition(pos: compiler.Position, txt: String): Position = {
       val start = pos.start
       val end = if (pluginStore.getBoolean(ImplicitsPreferencePage.P_FIRST_LINE_ONLY)) {
@@ -67,7 +61,7 @@ object ImplicitHighlightingPresenter {
       val region = new Region(pos.offset, pos.getLength)
       val sname = scu.withSourceFile((_, compiler) => compiler.asyncExec{t.fun.symbol.name}.getOption()).flatten
       val annotation = new ImplicitConversionAnnotation(
-          () => ImplicitHyperlinkFactory.create(Hyperlink.withText("Open Implicit"), scu.scalaProject.javaProject, t.symbol, region),
+          () => compiler.mkHyperlink(t.symbol, name = "Open Implicit", region, scu.scalaProject.javaProject),
           s"Implicit conversion found: `$txt`$DisplayStringSeparator`${sname.getOrElse("")}($txt): ${t.tpe}`")
 
       (annotation, pos)

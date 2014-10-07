@@ -5,8 +5,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.util.Chars._
 import org.scalaide.core.internal.formatter.FormatterPreferences
-import org.scalaide.util.internal.eclipse.EclipseUtils._
-import org.scalaide.util.internal.Utils._
+import org.scalaide.util.Utils
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.IScalaPlugin
 import scalariform.formatter.ScalaFormatter
@@ -91,7 +90,7 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
   }
 
   override def performFinish: Boolean = page.getSelectedPackage forall
-      {(pkg) => tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)}
+      {(pkg) => Utils.tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)}
 
 
   private def openInEditor(file: IFile) = {
@@ -119,12 +118,15 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     launchConfig.doSave()
   }
 
+  import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
+  import org.scalaide.util.eclipse.EclipseUtils
+
   private def getCurrentEditorAsSelection: Option[IStructuredSelection] =
     for {
       workbenchWindow <- Option(getWorkbench.getActiveWorkbenchWindow)
       page <- Option(workbenchWindow.getActivePage)
       editor <- Option(page.getActiveEditor)
-      resource <- editor.getEditorInput.adaptToSafe[IResource]
+      resource <- editor.getEditorInput.adaptToOpt[IResource]
     } yield new StructuredSelection(resource)
 
   private def getPackageFragments(selection: IStructuredSelection): List[IPackageFragment] =
@@ -133,18 +135,20 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
         List(packageFragment)
       case _ =>
         (for {
-          resource <- computeSelectedResources(selection)
+          resource <- EclipseUtils.computeSelectedResources(selection)
           if resource.getProject.isOpen
           packageFragment <- getPackageFragments(resource.getProject)
         } yield packageFragment).distinct
     }
 
-  private def getPackageFragments(project: IProject): List[IPackageFragment] =
+  private def getPackageFragments(project: IProject): List[IPackageFragment] = {
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
     for {
       packageFragmentRoot <- JavaCore.create(project).getAllPackageFragmentRoots.toList
       if packageFragmentRoot.getKind == IPackageFragmentRoot.K_SOURCE
       child <- packageFragmentRoot.getChildren
       packageFragment <- child.asInstanceOfOpt[IPackageFragment]
     } yield packageFragment
+  }
 
 }

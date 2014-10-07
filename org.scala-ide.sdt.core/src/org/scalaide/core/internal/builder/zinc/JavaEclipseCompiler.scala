@@ -4,7 +4,7 @@ import java.io.File
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder

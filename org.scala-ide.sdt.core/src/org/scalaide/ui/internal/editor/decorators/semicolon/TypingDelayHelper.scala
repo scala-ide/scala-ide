@@ -3,7 +3,7 @@ package org.scalaide.ui.internal.editor.decorators.semicolon
 import java.util.Date
 import java.util.concurrent.locks.ReentrantLock
 
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.util.internal.ThreadUtils.withLock
 
 object TypingDelayHelper {

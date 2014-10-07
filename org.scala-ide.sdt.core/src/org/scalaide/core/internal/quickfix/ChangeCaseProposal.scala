@@ -2,7 +2,7 @@ package org.scalaide.core.internal.quickfix
 
 import scala.reflect.internal.util.RangePosition
 import org.scalaide.ui.ScalaImages
-import org.scalaide.core.completion.RelevanceValues
+import org.scalaide.core.internal.quickfix.RelevanceValues
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jface.text.IDocument
@@ -11,7 +11,6 @@ import scala.concurrent.Await
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.util.Try
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits._
 
 /*
  * Find another member with the same spelling but different capitalization.

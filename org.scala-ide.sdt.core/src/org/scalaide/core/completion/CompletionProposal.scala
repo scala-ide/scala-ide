@@ -4,33 +4,12 @@ import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jface.internal.text.html.BrowserInput
-
-object HasArgs extends Enumeration {
-  val NoArgs, EmptyArgs, NonEmptyArgs = Value
-
-  /** Given a list of method's parameters it tells if the method
-   * arguments should be adorned with parenthesis. */
-  def from(params: List[List[_]]) = params match {
-    case Nil => NoArgs
-    case Nil :: Nil => EmptyArgs
-    case _ => NonEmptyArgs
-  }
-}
-
-/** Context related to the invocation of the Completion.
- *  Can be extended with more context as needed in future
- *
- *  @param contextType The type of completion - e.g. Import, method apply
- *  */
-case class CompletionContext(
-  contextType: CompletionContext.ContextType
-)
 
 object CompletionContext {
   trait ContextType
@@ -54,7 +33,7 @@ object CompletionContext {
  */
 case class CompletionProposal(
   kind: MemberKind.Value,
-  context: CompletionContext,
+  context: CompletionContext.ContextType,
   startPos: Int,             // position where the 'completion' string should be inserted
   completion: String,        // the string to be inserted in the document
   display: String,           // the display string in the completion list
@@ -72,7 +51,7 @@ case class CompletionProposal(
    *
    *  @note This field is lazy to avoid unnecessary computation.
    */
-  lazy val explicitParamNames = getParamNames()
+  private lazy val explicitParamNames = getParamNames()
 
   /** Return the tooltip displayed once a completion has been activated. */
   def tooltip: String = {
@@ -90,7 +69,7 @@ case class CompletionProposal(
    *
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
-  def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
+  private def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
     if ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist)
       completion
     else
@@ -114,8 +93,7 @@ case class CompletionProposal(
    *      a dummy function `() => ???` is placed instead of the parameter name
    */
   private lazy val completionData = {
-    import CompletionContext._
-    if (context.contextType == ImportContext
+    if (context == CompletionContext.ImportContext
         || (isJava && explicitParamNames == List(Nil) && completion.startsWith("get")))
       CompletionData(completion, IndexedSeq.empty)
     else {
@@ -138,7 +116,7 @@ case class CompletionProposal(
   }
 
   private val shouldInsertLambda =
-    (context.contextType == CompletionContext.InfixMethodContext
+    (context == CompletionContext.InfixMethodContext
         || ScalaPlugin().getPreferenceStore.getBoolean(EditorPreferencePage.P_ENABLE_HOF_COMPLETION))
 
   /** Match a simple function of form {{{A => B}}}
@@ -195,7 +173,7 @@ case class CompletionProposal(
    * Because this is a heuristic it will only work in some cases, but hopefully in
    * the most important ones.
    */
-  def doParamsProbablyExist(d: IDocument, offset: Int): Boolean = {
+  private def doParamsProbablyExist(d: IDocument, offset: Int): Boolean = {
     def terminatesExprProbably(c: Char) =
       c.toString matches "[a-zA-Z_;)},.\n]"
 
@@ -242,7 +220,7 @@ case class CompletionProposal(
         }
 
       val applyLinkedMode =
-        (context.contextType != CompletionContext.ImportContext
+        (context != CompletionContext.ImportContext
         && (!overwrite || !paramsProbablyExists)
         && explicitParamNames.flatten.nonEmpty)
 

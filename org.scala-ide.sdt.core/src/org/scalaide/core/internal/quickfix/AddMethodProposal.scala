@@ -10,7 +10,7 @@ import org.eclipse.text.edits.ReplaceEdit
 import org.scalaide.core.internal.quickfix.createmethod.{ ParameterList, ReturnType, TypeParameterList }
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import scala.tools.refactoring.implementations.{ AddMethod, AddField, AddMethodTarget }
 import scala.reflect.internal.util.SourceFile
 import tools.nsc.interactive.Global

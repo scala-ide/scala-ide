@@ -6,7 +6,7 @@ import testsetup.SDTTestUtils
 import org.scalaide.core.IScalaProject
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.core.resources.ResourcesPlugin
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.Path

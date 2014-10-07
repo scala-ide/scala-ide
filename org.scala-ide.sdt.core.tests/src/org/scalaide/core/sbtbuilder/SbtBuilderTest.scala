@@ -23,7 +23,7 @@ import scala.tools.nsc.Settings
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
@@ -152,9 +152,9 @@ class SbtBuilderTest {
     for (p <- problems)
       Assert.assertTrue("Error marker length is zero", (p.getAttribute(IMarker.CHAR_END, 0) - p.getAttribute(IMarker.CHAR_START, 0) > 0))
 
-    val sf = fooClientCU.sourceFile
+    val sf = fooClientCU.lastSourceMap().sourceFile
     fooClientCU.scalaProject.presentationCompiler { comp =>
-      comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
+      comp.askReload(fooClientCU, sf).get // synchronize with the good compiler
     }
 
     val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()

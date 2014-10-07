@@ -1,10 +1,8 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -50,13 +48,13 @@ import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
-import org.scalaide.ui.internal.editor.hover.ScalaHover
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.util.internal.Utils
-import org.scalaide.util.internal.eclipse.AnnotationUtils._
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.EditorUtils
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.Utils
+import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.ui.DisplayThread
+import org.scalaide.ui.editor.hover.IScalaHover
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
@@ -76,7 +74,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
   }
   private lazy val tpePresenter = {
-    val infoPresenter = new InformationPresenter(new FocusedControlCreator(ScalaHover.HoverFontId))
+    val infoPresenter = new InformationPresenter(new FocusedControlCreator(IScalaHover.HoverFontId))
     infoPresenter.install(getSourceViewer)
     infoPresenter.setInformationProvider(actions.TypeOfExpressionProvider, IDocument.DEFAULT_CONTENT_TYPE)
     infoPresenter

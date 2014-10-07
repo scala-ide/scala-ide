@@ -13,7 +13,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert
 import org.junit.Test
 import scala.language.reflectiveCalls
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {

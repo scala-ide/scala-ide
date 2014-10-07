@@ -7,7 +7,7 @@ import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.core.runtime.Platform

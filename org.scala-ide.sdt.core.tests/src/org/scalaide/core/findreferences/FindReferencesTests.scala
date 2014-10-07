@@ -2,7 +2,7 @@ package org.scalaide.core
 package findreferences
 
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model._
 import org.scalaide.logging.HasLogger
 import testsetup.FileUtils

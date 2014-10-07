@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.util.control.Exception
 import org.eclipse.core.runtime.CoreException
+import org.scalaide.core.compiler.ScalaCompilationProblem
 
 
 class ScalaSourceFileProvider extends SourceFileProvider {
@@ -81,13 +82,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
    *  the loaded files managed by the presentation compiler.
    */
   override def initialReconcile(): Response[Unit] = {
-    val reloaded = scalaProject.presentationCompiler { compiler =>
-      compiler.askReload(this, getContents)
-    } getOrElse {
-      val dummy = new Response[Unit]
-      dummy.set(())
-      dummy
-    }
+    val reloaded = super.initialReconcile()
 
     this.reconcile(
         ICompilationUnit.NO_AST,
@@ -98,10 +93,10 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     reloaded
   }
 
-  /* getProblems should be reserved for a Java context, @see getProblems */
-  override def reconcile(newContents: String): List[IProblem] ={
+  /* getProblems should be reserved for a Java context, @see `getProblems` */
+  override def forceReconcile(): List[ScalaCompilationProblem] ={
     ReconciliationParticipantsExtensionPoint.runBefore(this, new NullProgressMonitor, workingCopyOwner)
-    val probs = currentProblems
+    val probs = super.forceReconcile()
     ReconciliationParticipantsExtensionPoint.runAfter(this, new NullProgressMonitor, workingCopyOwner)
     probs
   }
@@ -145,10 +140,6 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     if (probs.isEmpty) null else probs.toArray
   }
 
-  override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
-    compiler.problemsOf(this)
-  } getOrElse Nil
-
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 
   override def getContents() : Array[Char] = {
@@ -166,7 +157,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Ask the compiler to reload {{{this}}} source. */
-  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, getContents) }
+  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, lastSourceMap().sourceFile) }
 
   /** Ask the compiler to discard {{{this}}} source. */
   final def discard(): Unit = scalaProject.presentationCompiler { _.discardCompilationUnit(this) }

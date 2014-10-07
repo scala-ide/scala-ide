@@ -25,7 +25,7 @@ import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
@@ -115,9 +115,10 @@ abstract class BaseSemanticAction(
     scu.scalaProject.presentationCompiler.internal { compiler =>
 
       def findAnnotations(): Map[Annotation, JFacePosition] = {
-        val response = compiler.askLoadedTyped(scu.sourceFile, false)
+        val sourceFile = scu.lastSourceMap().sourceFile
+        val response = compiler.askLoadedTyped(sourceFile, false)
         response.get(200) match {
-          case Some(Left(_)) => findAll(compiler, scu, scu.sourceFile)
+          case Some(Left(_)) => findAll(compiler, scu, sourceFile)
           case Some(Right(exc)) =>
             logger.error(exc); Map.empty
           case None => logger.warn("Timeout while waiting for `askLoadedTyped` during semantic highlighting."); Map.empty
@@ -155,7 +156,7 @@ abstract class BaseSemanticAction(
   }
 
   private def refresh() = {
-    import org.scalaide.util.internal.Utils._
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences

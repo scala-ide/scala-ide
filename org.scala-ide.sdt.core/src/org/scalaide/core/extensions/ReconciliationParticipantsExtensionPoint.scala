@@ -6,7 +6,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 
 /**
  * The implementation for the org.scala-ide.sdt.core.reconciliationParticipants

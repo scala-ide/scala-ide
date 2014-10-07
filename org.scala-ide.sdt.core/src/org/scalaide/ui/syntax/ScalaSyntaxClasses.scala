@@ -2,6 +2,7 @@ package org.scalaide.ui.syntax
 
 import scalariform.lexer.Tokens._
 import scalariform.lexer._
+import ScalaSyntaxClass.Category
 
 object ScalaSyntaxClasses {
 
@@ -50,14 +51,12 @@ object ScalaSyntaxClasses {
   val TRAIT = ScalaSyntaxClass("Trait", "syntaxColouring.semantic.trait", canBeDisabled = true)
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
-  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColour = false, canBeDisabled = true)
+  val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColor = false, canBeDisabled = true)
 
   val DYNAMIC_SELECT = ScalaSyntaxClass("Call of selectDynamic", "syntaxColouring.semantic.selectDynamic", canBeDisabled = true)
   val DYNAMIC_UPDATE = ScalaSyntaxClass("Call of updateDynamic", "syntaxColouring.semantic.updateDynamic", canBeDisabled = true)
   val DYNAMIC_APPLY = ScalaSyntaxClass("Call of applyDynamic", "syntaxColouring.semantic.applyDynamic", canBeDisabled = true)
   val DYNAMIC_APPLY_NAMED = ScalaSyntaxClass("Call of applyDynamicNamed", "syntaxColouring.semantic.applyDynamicNamed", canBeDisabled = true)
-
-  case class Category(name: String, children: List[ScalaSyntaxClass])
 
   val scalaSyntacticCategory = Category("Syntactic", List(
     BRACKET, KEYWORD, RETURN, MULTI_LINE_STRING, OPERATOR, DEFAULT, STRING, CHARACTER, NUMBER_LITERAL, ESCAPE_SEQUENCE, SYMBOL))
@@ -78,16 +77,6 @@ object ScalaSyntaxClasses {
     XML_TAG_NAME, XML_PI))
 
   val categories = List(scalaSyntacticCategory, scalaSemanticCategory, dynamicCategory, commentsCategory, xmlCategory)
-
-  val ALL_SYNTAX_CLASSES = categories.flatMap(_.children)
-
-  val ENABLED_SUFFIX = ".enabled"
-  val FOREGROUND_COLOUR_SUFFIX = ".colour"
-  val BACKGROUND_COLOUR_SUFFIX = ".backgroundColour"
-  val BACKGROUND_COLOUR_ENABLED_SUFFIX = ".backgroundColourEnabled"
-  val BOLD_SUFFIX = ".bold"
-  val ITALIC_SUFFIX = ".italic"
-  val UNDERLINE_SUFFIX = ".underline"
 
   val ENABLE_SEMANTIC_HIGHLIGHTING = "syntaxColouring.semantic.enabled"
 

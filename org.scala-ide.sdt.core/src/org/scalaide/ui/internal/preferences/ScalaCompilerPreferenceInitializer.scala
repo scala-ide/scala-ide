@@ -4,7 +4,7 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
 import scala.tools.nsc.Settings
 import org.scalaide.util.internal.SettingConverterUtil._
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler

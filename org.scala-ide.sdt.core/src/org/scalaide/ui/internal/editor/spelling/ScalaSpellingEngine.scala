@@ -17,7 +17,7 @@ import org.eclipse.jface.text.TextUtilities
 import org.eclipse.ui.texteditor.spelling.ISpellingEngine
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
 import org.eclipse.ui.texteditor.spelling.SpellingContext
-import org.scalaide.core.internal.lexical.ScalaPartitions._
+import org.scalaide.core.lexical.ScalaPartitions._
 
 /**
  * Checks Scala files for spelling mistakes.

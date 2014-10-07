@@ -1,6 +1,5 @@
 package org.scalaide.core.compiler
 
-import org.scalaide.core.IScalaProject
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
 
@@ -19,7 +18,11 @@ trait IPresentationCompilerProxy {
     apply(f)
   }
 
-  /** Executes the passed `op` on the presentation compiler.
+  /** Executes `op` on the current presentation compiler instance.
+   *
+   *  @note This method gives access to the compiler module and its types. It will '''not'''
+   *        run `op` on the PC ''thread''. See `IScalaPresentationCompiler.asyncExec` for
+   *        details about the PC thread.
    *
    *  @return `None` if `op` returns `null`, `Some(value)` otherwise.
    */

@@ -7,7 +7,7 @@ import org.scalaide.util.internal.SbtUtils.m2o
 import org.eclipse.core.resources.IMarker
 import xsbti.{ Position, Severity }
 import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker

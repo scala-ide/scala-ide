@@ -1,8 +1,9 @@
 package org.scalaide.core.internal.jdt.model
 
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
-trait ScalaAnnotationHelper extends IScalaPresentationCompiler {
+trait ScalaAnnotationHelper extends IScalaPresentationCompiler { self: ScalaPresentationCompiler =>
 
   protected[internal] def hasTransientAnn(sym: Symbol) = sym.hasAnnotation(definitions.TransientAttr)
   protected[internal] def hasVolatileAnn(sym: Symbol) = sym.hasAnnotation(definitions.VolatileAttr)

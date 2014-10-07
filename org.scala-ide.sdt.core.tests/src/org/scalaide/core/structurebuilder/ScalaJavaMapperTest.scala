@@ -99,6 +99,7 @@ class ScalaJavaMapperTest {
       }
     }
   }
+
   /** Retrieve the `target` type from the given source and pass it to the type test.
    *
    *  The `src` is supposed to contain one abstract val called `target`, whose type
@@ -111,7 +112,7 @@ class ScalaJavaMapperTest {
     changeContentOfFile(unit.getResource().asInstanceOf[IFile], src)
 
     unit.withSourceFile { (srcFile, compiler) =>
-      compiler.askReload(unit, src.toCharArray())
+      compiler.askReload(unit, srcFile)
       val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>
           loadedType.collect {

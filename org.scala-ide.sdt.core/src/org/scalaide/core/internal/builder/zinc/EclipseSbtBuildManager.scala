@@ -17,7 +17,7 @@ import xsbti.F0
 import sbt.Process
 import sbt.ClasspathOptions
 import org.scalaide.core.resources.EclipseResource
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.eclipse.core.resources.IResource
 import org.scalaide.logging.HasLogger
@@ -176,7 +176,6 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
    * Create problem markers for the given source info.
    */
   private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
-    import SbtUtils.m2o
     for (problem <- sourceInfo.reportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }

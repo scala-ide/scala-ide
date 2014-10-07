@@ -11,9 +11,9 @@ import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.eclipse.EclipseUtils.RichWorkbench
+import org.scalaide.util.eclipse.EclipseUtils.RichWorkbench
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 
 /**
  * The purpose of this class is to keep user defined preferences when they are

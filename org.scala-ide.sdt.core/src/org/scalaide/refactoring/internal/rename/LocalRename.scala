@@ -7,7 +7,7 @@ import scala.tools.refactoring.implementations
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * Supports renaming of identifiers inside a single file using Eclipse's

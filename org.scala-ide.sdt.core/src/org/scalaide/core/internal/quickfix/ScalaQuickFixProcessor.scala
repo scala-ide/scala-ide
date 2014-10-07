@@ -2,7 +2,7 @@ package org.scalaide.core.internal.quickfix
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.internal.quickfix.createmethod.CreateMethodProposal
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import scala.tools.refactoring.implementations.AddToClass

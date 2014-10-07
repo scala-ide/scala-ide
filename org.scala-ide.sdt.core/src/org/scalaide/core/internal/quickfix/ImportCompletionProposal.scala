@@ -10,9 +10,8 @@ import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class ImportCompletionProposal(val importName: String) extends IJavaCompletionProposal with HasLogger {

@@ -44,6 +44,8 @@ import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.internal.eclipse.TextSelectionTest
+import org.scalaide.util.eclipse.RegionUtilsTest
+import org.scalaide.core.pc.DeclarationPrinterTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -91,6 +93,8 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[DirectoryScalaInstallationTest],
     classOf[CompletionTestSuite],
     classOf[WizardTests],
-    classOf[TextSelectionTest]
+    classOf[TextSelectionTest],
+    classOf[RegionUtilsTest],
+    classOf[DeclarationPrinterTest]
 ))
 class TestsSuite

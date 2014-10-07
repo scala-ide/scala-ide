@@ -5,13 +5,12 @@ import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import testsetup.TestProjectSetup
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
-import org.scalaide.util.internal.eclipse.RegionUtils
+import org.scalaide.util.eclipse.RegionUtils
 import org.scalaide.core.testsetup.SDTTestUtils
 
 class AbstractSymbolClassifierTest {

@@ -5,9 +5,9 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 
 object WordFinder {
-  /**
-    * Computed the region of the word enclosed by the passed `offset` in the `document`.
-    * If the `offset` is surrounded by whitespaces, an empty region is returned.
+  /** Returns the region of the word enclosing the given offset in the document.
+    * A word is defined as a set of characters surrounded by whitespace characters.
+    * If the offset is immediately surrounded by whitespace characters, an empty region is returned.
     *
     * @param document The document that will be used to find the word
     * @param offset   The caret position in the `document`

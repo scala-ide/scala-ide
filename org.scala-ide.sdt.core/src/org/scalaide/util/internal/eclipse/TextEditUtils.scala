@@ -15,6 +15,8 @@ import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.text.edits.TextEdit
 import org.eclipse.text.edits.UndoEdit
 import org.eclipse.ui.texteditor.ITextEditor
+import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.eclipse.RegionUtils
 
 object TextEditUtils {
 
@@ -89,7 +91,7 @@ object TextEditUtils {
       saveAfter: Boolean = true): Unit = {
 
     applyChangesToFile(document, textSelection, file, changes, saveAfter) foreach { selection =>
-      EditorUtils.doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
+      org.scalaide.util.eclipse.EditorUtils.doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
     }
   }
 
