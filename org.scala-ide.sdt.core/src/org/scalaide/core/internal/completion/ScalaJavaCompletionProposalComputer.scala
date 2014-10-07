@@ -10,7 +10,7 @@ import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
 import org.eclipse.jface.text.Document
 import org.scalaide.ui.ScalaImages
-import org.scalaide.ui.internal.completion.ScalaCompletionProposal
+import org.scalaide.ui.completion.ScalaCompletionProposal
 import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.ASTVisitor
@@ -127,7 +127,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
           val prop = compiler.mkCompletionProposal(prefix, start, sym = sym,
             tpe = sym.info, inherited = true, viaView = NoSymbol, CompletionContext.DefaultContext, prj)
-          new ScalaCompletionProposal(prop)
+          ScalaCompletionProposal(prop)
         }
       }.getOrElse(Nil)()
     } getOrElse (Nil)

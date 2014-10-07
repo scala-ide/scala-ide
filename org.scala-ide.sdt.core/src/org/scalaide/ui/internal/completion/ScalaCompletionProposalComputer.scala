@@ -22,6 +22,7 @@ import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.ScalaWordFinder
+import org.scalaide.ui.completion.ScalaCompletionProposal
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
   override def sessionStarted() {}
@@ -57,6 +58,6 @@ class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaComplet
 
     import collection.JavaConverters._
 
-    res.map(new ScalaCompletionProposal(_): ICompletionProposal).asJava
+    res.map(ScalaCompletionProposal(_): ICompletionProposal).asJava
   }
 }
