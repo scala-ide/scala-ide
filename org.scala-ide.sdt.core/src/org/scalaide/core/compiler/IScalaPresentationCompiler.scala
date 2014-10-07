@@ -259,6 +259,9 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *  extracting all the information needed from compiler Symbols and Types to present a completion
    *  option to the user.
    *
+   *  @note The resulting type does not have any path-dependent types coming from the
+   *        compiler instance.
+   *
    *  @param prefix    The prefix typed by the user at the point where he asked for completion
    *  @param start     The position where the completion should be inserted (usually the beginning of `prefix`)
    *  @param sym       The symbol corresponding to this completion proposal
@@ -281,6 +284,9 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
     project: IScalaProject): CompletionProposal
 
   /** Create a hyperlink to the given symbol. This is an exit point from the compiler cake.
+   *
+   *  @note The resulting type does not have any path-dependent types coming from the
+   *        compiler instance.
    *
    * @param sym         The symbol definition to which the hyperlink should go
    * @param name        The primary information to be displayed, if more than one hyperlink is available

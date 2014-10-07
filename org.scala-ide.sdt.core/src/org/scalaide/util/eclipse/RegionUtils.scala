@@ -60,9 +60,9 @@ object RegionUtils {
 
     /** Return a new Region with `f` applied to both start and end offsets.
      *
-     *  Equivalent to `new Region(f(start), f(end))`, but won't return negative
-     *  lengths. If `f(end)` returns an offset less than `start`, it will round it
-     *  up at `start`.
+     *  @return A new region with `f(start)` as the starting point, and `f(start + offset)`
+     *          as the end point, except if the length would be negative. In that case, the
+     *          region is rounded up to a zero-length region.
      */
     def map(f: Int => Int): IRegion = {
       val newOffset = f(region.getOffset)
