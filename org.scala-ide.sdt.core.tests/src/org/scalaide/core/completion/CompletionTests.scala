@@ -31,26 +31,28 @@ class CompletionTests {
   private def withCompletions(path2source: String)(body: (Int, OffsetPosition, List[CompletionProposal]) => Unit) {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
+    val src = unit.lastSourceMap().sourceFile
+
     // first, 'open' the file by telling the compiler to load it
     unit.scalaProject.presentationCompiler.internal { compiler =>
-      val src = unit.lastSourceMap().sourceFile
       compiler.askReload(List(unit)).get
 
       compiler.askLoadedTyped(src, false).get
+    }
 
-      val contents = unit.getContents
-      // mind that the space in the marker is very important (the presentation compiler
-      // seems to get lost when the position where completion is asked
-      val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
-      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
-      val content = unit.getContents.mkString
+    val contents = unit.getContents
+    // mind that the space in the marker is very important (the presentation compiler
+    // seems to get lost when the position where completion is asked
+    val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+    assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
+    val content = unit.getContents.mkString
 
-      val completion = new ScalaCompletions
-      for (i <- 0 until positions.size) {
-        val pos = positions(i)
+    val completion = new ScalaCompletions
+    for (i <- 0 until positions.size) {
+      val pos = positions(i)
 
-        val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
-        val wordRegion = ScalaWordFinder.findWord(content, position.point)
+      val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
+      val wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 
@@ -70,10 +72,9 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
-        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
-        body(i, position, sortedCompletions)
-      }
+      val completions = completion.findCompletions(wordRegion, pos + 1, unit)
+      val sortedCompletions = completions.sortBy(completion => -(completion.relevance))
+      body(i, position, sortedCompletions)
     }
   }
 
@@ -196,7 +197,7 @@ class CompletionTests {
         assertTrue("The completion should return doNothingWith", completions.exists(
           _ match {
             case c:CompletionProposal =>
-              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+              c.kind == MemberKind.Def && c.context == CompletionContext.ImportContext && c.completion == "doNothingWith"
             case _ =>
               false
           }))

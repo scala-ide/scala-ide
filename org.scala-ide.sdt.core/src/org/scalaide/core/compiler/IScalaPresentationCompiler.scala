@@ -274,13 +274,13 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *
    *  @see CompletionProposal
    */
-  def mkCompletionProposal(prefix: Array[Char],
+  def mkCompletionProposal(prefix: String,
     start: Int,
     sym: Symbol,
     tpe: Type,
     inherited: Boolean,
     viaView: Symbol,
-    context: CompletionContext,
+    context: CompletionContext.ContextType,
     project: IScalaProject): CompletionProposal
 
   /** Create a hyperlink to the given symbol. This is an exit point from the compiler cake.

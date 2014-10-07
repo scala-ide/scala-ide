@@ -343,8 +343,8 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
-    inherited: Boolean, viaView: Symbol, context: CompletionContext, project: IScalaProject): CompletionProposal = {
+  def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
+    inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
     /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
      *  source. This function adds the back-ticks to a given identifier, if necessary.
@@ -402,7 +402,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       || sym.owner == definitions.ObjectClass) {
       relevance -= 40
     }
-    val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
+    val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
     relevance -= casePenalty
 
     val namesAndTypes = for {
