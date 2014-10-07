@@ -334,8 +334,8 @@ object IScalaPresentationCompiler extends HasLogger {
                   // This can happen if you ask long queries of the
                   // PC, triggering long sleep() sessions on caller
                   // side.
-                  case i: InterruptedException => logger.debug("InterruptedException in ask:\n" + i)
-                  case e                       => eclipseLog.error("Error during askOption", e)
+                  case i: InterruptedException => logger.debug("InterruptedException in asyncExec", i) // no need to call `interrupt`, `Response` already did it.
+                  case e                       => eclipseLog.error("Error during asyncExec (FailedInterrupt)", e)
                 }
                 None
 
@@ -343,8 +343,13 @@ object IScalaPresentationCompiler extends HasLogger {
                 logger.info("MissingResponse in ask. Called from: ", m)
                 None
 
+              case Right(ie: InterruptedException) =>
+                logger.error("Ignoring InterruptException")
+                Thread.currentThread().interrupt()
+                None
+
               case Right(e: Throwable) =>
-                eclipseLog.error("Error during askOption", e)
+                eclipseLog.error("Throwable during asyncExec", e)
                 None
 
               case Left(v) => Some(v)
