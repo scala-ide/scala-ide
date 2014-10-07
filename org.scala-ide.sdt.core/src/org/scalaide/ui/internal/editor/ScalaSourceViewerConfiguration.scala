@@ -28,7 +28,6 @@ import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.reconciler.IReconciler
-import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.DefaultAnnotationHover
@@ -63,6 +62,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.scalaide.core.lexical.ScalaCodeScanners
 import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.ui.editor.hover.IScalaHover
+import org.scalaide.ui.internal.reconciliation.ScalaReconciler
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -212,7 +212,7 @@ class ScalaSourceViewerConfiguration(
               ScalaPlugin().scalaSourceFileContentType,
               EditorsUI.getPreferenceStore())))
 
-      val reconciler = new MonoReconciler(s, /* isIncremental */ false)
+      val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
       reconciler.install(sourceViewer)
       reconciler.setProgressMonitor(new NullProgressMonitor())

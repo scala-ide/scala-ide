@@ -149,6 +149,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
     case Shutdown => stop()
     case Start    => start()
     case Activity => noteActivity()
+    case Restart  => () // a `Start` will follow the moment the PC actually started
   }
 }
 
