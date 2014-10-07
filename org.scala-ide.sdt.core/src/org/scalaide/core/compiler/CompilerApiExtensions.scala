@@ -8,7 +8,7 @@ import scala.tools.nsc.interactive.Global
 
 /** Additional compiler APIs. It should eventually migrate in the presentation compiler.
  */
-trait CompilerApiExtensions extends Global {
+trait CompilerApiExtensions extends Global { self =>
 
   /** Locate the smallest tree that encloses position.
    *
@@ -96,6 +96,17 @@ trait CompilerApiExtensions extends Global {
 
       tmp.toSeq
     }
+  }
+
+  /** A printer for Scala types and symbols that uses simple names
+   *  (instead of fully-qualified names)
+   *
+   *  @note We don't give an explicit type because the refinement type is necessary to
+   *        satisfy the compiler and records the fact that `declPrinter.compiler == this`,
+   *        so `this.Type =:= declPrinter.compiler.Type`
+   */
+  val declPrinter = new DeclarationPrinter {
+    final val compiler: self.type = CompilerApiExtensions.this
   }
 }
 

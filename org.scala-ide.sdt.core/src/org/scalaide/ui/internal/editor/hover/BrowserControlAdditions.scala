@@ -6,6 +6,8 @@ import org.eclipse.swt.graphics.GC
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.scalaide.logging.HasLogger
+import org.scalaide.ui.editor.hover.IScalaHover
+import org.eclipse.swt.graphics.Point
 
 /**
  * Contains additional logic that should be added to instances of
@@ -15,16 +17,16 @@ trait BrowserControlAdditions extends BrowserInformationControl with HasLogger {
 
   private var control: Control = _
 
-  override def createContent(parent: Composite) = {
+  override def createContent(parent: Composite): Unit = {
     super.createContent(parent)
 
     control = parent.getChildren().head
   }
 
   /** Take size hint of super implementation but add additional width. */
-  override def computeSizeHint() = {
+  override def computeSizeHint(): Point = {
     val gc = new GC(control)
-    gc.setFont(JFaceResources.getFontRegistry().get(ScalaHover.HoverFontId))
+    gc.setFont(JFaceResources.getFontRegistry().get(IScalaHover.HoverFontId))
     val averageCharWidth = gc.getFontMetrics().getAverageCharWidth()
     gc.dispose()
 

@@ -1,7 +1,7 @@
 package org.scalaide.core.internal.extensions
 
 import org.scalaide.core.extensions.SemanticHighlightingParticipant
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * Gives access to the semanticHighlightingParticipants extension point. The

@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
 import scala.collection.mutable.ListBuffer
-import org.scalaide.util.internal.eclipse.SWTUtils.CheckBox
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.ColorFieldEditor
@@ -79,6 +78,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     g
   }
 
+  import org.scalaide.util.eclipse.SWTUtils.CheckBox
   private def checkBox(preference: String, labelText: String, parent: Composite): CheckBox = {
     val b = new CheckBox(store, preference, labelText, parent)
     preferencesToSave += { () => b.store() }

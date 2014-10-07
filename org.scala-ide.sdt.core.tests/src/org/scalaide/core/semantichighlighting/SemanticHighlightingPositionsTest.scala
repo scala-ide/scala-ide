@@ -5,9 +5,8 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.util.internal.eclipse.EmptyRegion
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.util.CurrentThread
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
@@ -156,7 +155,7 @@ class SemanticHighlightingPositionsTest {
       document.replace(offset, length, newText) // triggers the IUpdatePosition listener
       unit.getBuffer().replace(offset, length, newText) // needed by the semantic highlighting reconciler
       // compiler needs to reload the content of the unit (this is usually done by the reconciler, but the test does not rely on it)
-      project.presentationCompiler { _.askReload(unit, unit.getContents) }
+      project.presentationCompiler { _.askReload(unit, unit.sourceMap(unit.getContents()).sourceFile) }
     }
 
     // perform edit

@@ -2,12 +2,13 @@ package org.scalaide.ui.internal.editor.hover
 
 import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.eclipse.jface.resource.JFaceResources
+import org.scalaide.ui.editor.hover.IScalaHover
 
 /**
  * Contains convenience functions for HTML based hovers.
  */
 trait HtmlHover {
-  import ScalaHover._
+  import IScalaHover._
   import HTMLPrinter._
 
   def createHtmlOutput(f: StringBuffer => Unit): String = {

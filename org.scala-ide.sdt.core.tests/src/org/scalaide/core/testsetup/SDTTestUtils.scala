@@ -17,8 +17,8 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.scalaide.util.internal.eclipse.OSGiUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex

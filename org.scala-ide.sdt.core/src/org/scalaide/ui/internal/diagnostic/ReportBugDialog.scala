@@ -19,6 +19,7 @@ import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.ScalaPlugin
 
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
@@ -43,6 +44,10 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
 
     val messageField = new Text(group1, SWT.READ_ONLY | SWT.MULTI | SWT.BORDER)
     messageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
+
+    val cacheEntries = ScalaPlugin().classLoaderStore.entries
+    val entries = cacheEntries.map(e => s"Compiler v. ${e._1.version.unparse}(${e._1.compiler.classJar})")
+
     messageField.setText(
         s"""|Scala IDE version:
             |        ${IScalaPlugin().getBundle.getVersion}
@@ -52,6 +57,8 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
             |        ${platformInstallation.version.unparse}
             |Eclipse version:
             |        ${Platform.getBundle("org.eclipse.platform").getVersion}
+            |Class loader store: ${cacheEntries.size} entries
+            |        ${entries.mkString("\n\t")}
             |""".stripMargin)
 
     val group2 = new Group(control, SWT.SHADOW_NONE)

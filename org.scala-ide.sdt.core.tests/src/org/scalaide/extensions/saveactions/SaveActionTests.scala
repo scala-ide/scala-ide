@@ -12,7 +12,7 @@ import org.scalaide.core.text.Document
 import org.scalaide.core.text.TextChange
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.extensions.SaveAction
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.text.Change
 
 abstract class SaveActionTests extends TextEditTests {
@@ -34,15 +34,15 @@ abstract class DocumentSaveActionTests extends SaveActionTests {
 
   private var udoc: EDocument = _
 
-  override def runTest(source: String, operation: Operation) = {
+  override def runTest(source: String, operation: Operation): Unit = {
     udoc = new EDocument(source)
     operation.execute()
   }
 
-  override def source = udoc.get()
+  override def source: String = udoc.get()
 
   case object SaveEvent extends Operation {
-    override def execute() = {
+    override def execute: Unit = {
       val changes = saveAction(new TextDocument(udoc)).perform()
       applyChanges(udoc, changes)
     }
@@ -55,21 +55,21 @@ abstract class CompilerSaveActionTests extends SaveActionTests with CompilerSupp
 
   private var udoc: EDocument = _
 
-  override def runTest(source: String, operation: Operation) = {
+  override def runTest(source: String, operation: Operation): Unit = {
     udoc = new EDocument(source)
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       operation.execute()
     }
   }
 
-  override def source = udoc.get()
+  override def source: String = udoc.get()
 
   case object SaveEvent extends Operation {
-    override def execute() = withCompiler { compiler =>
+    override def execute: Unit = withCompiler { compiler =>
       import compiler._
 
       val unit = mkScalaCompilationUnit(udoc.get())
-      val sf = unit.sourceFile()
+      val sf = unit.lastSourceMap().sourceFile
       val r = askLoadedTyped(sf, false)
 
       r.get match {

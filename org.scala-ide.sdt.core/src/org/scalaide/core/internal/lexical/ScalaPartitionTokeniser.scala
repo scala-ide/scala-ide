@@ -7,43 +7,17 @@ import scala.annotation.switch
 import scala.annotation.tailrec
 import scala.collection.mutable.Stack
 import scala.collection.mutable.ListBuffer
-import org.scalaide.core.internal.lexical.ScalaPartitions._
+import org.scalaide.core.lexical.ScalaPartitions._
 import scala.xml.parsing.TokenTests
-
-/**
- * The start index as well as the end index denotes the position BEFORE the
- * first sign of the range. This means that for an arbitrary string the following
- * is true:
- *
- * string: Hello World!
- * start : 0
- * end   : 11
- * length: end - start + 1 = 12
- *
- * If a range spans the whole content (as in the example above) the start index
- * is always 0 whereas the end index is always equal to the length of the input
- * minus 1.
- */
-case class ScalaPartitionRegion(contentType: String, start: Int, end: Int) extends ITypedRegion {
-  lazy val length = end - start + 1
-  def containsPosition(offset: Int) = offset >= start && offset <= end
-  def getType = contentType
-  def getOffset = start
-  def getLength = length
-
-  def containsRange(offset: Int, length: Int) = containsPosition(offset) && containsPosition(offset + length)
-
-  def shift(n: Int) = copy(start = start + n, end = end + n)
-}
 
 object ScalaPartitionTokeniser {
 
-  def tokenise(text: String): List[ScalaPartitionRegion] = {
-    val tokens = new ListBuffer[ScalaPartitionRegion]
+  def tokenise(text: String): List[ITypedRegion] = {
+    val tokens = new ListBuffer[ITypedRegion]
     val tokeniser = new ScalaPartitionTokeniser(text)
     while (tokeniser.tokensRemain) {
       val nextToken = tokeniser.nextToken()
-      if (nextToken.length > 0)
+      if (nextToken.getLength > 0)
         tokens += nextToken
     }
     tokens.toList
@@ -51,6 +25,8 @@ object ScalaPartitionTokeniser {
 
 }
 
+/** @see org.scalaide.core.lexical.ScalaCodePartitioner
+ */
 class ScalaPartitionTokeniser(text: String) extends TokenTests {
   import ScalaDocumentPartitioner.EOF
 
@@ -80,7 +56,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
   def tokensRemain = pos < length
 
-  def nextToken(): ScalaPartitionRegion = {
+  def nextToken(): ITypedRegion = {
     require(tokensRemain)
 
     modeStack.head match {
@@ -103,10 +79,10 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
 
     val contentType = contentTypeOpt.get
     val tokenStart = previousTokenEnd + 1
-    val tokenEnd = pos - 1
+    val tokenLength = pos - tokenStart
     previousTokenEnd = pos - 1
     contentTypeOpt = None
-    ScalaPartitionRegion(contentType, tokenStart, tokenEnd)
+    new TypedRegion(tokenStart, tokenLength, contentType)
   }
 
   private def getScalaToken() {

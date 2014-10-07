@@ -46,6 +46,8 @@ import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.core.text.TextTestSuite
 import org.scalaide.extensions.saveactions.SaveActionTestSuite
 import org.scalaide.extensions.autoedits.AutoEditTestSuite
+import org.scalaide.util.eclipse.RegionUtilsTest
+import org.scalaide.core.pc.DeclarationPrinterTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -95,6 +97,8 @@ import org.scalaide.extensions.autoedits.AutoEditTestSuite
     classOf[WizardTests],
     classOf[TextTestSuite],
     classOf[SaveActionTestSuite],
-    classOf[AutoEditTestSuite]
+    classOf[AutoEditTestSuite],
+    classOf[RegionUtilsTest],
+    classOf[DeclarationPrinterTest]
 ))
 class TestsSuite

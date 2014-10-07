@@ -12,7 +12,7 @@ import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.Replace
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 
 object ApplyTemplateSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[ApplyTemplate],

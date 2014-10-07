@@ -14,7 +14,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.wizards.FileCreatorMapping
 import org.scalaide.ui.internal.wizards.ScalaWizardElement
 import org.scalaide.util.internal.ReflectAccess
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * Performs tasks that need to extend the Eclipse based registries. Normally the

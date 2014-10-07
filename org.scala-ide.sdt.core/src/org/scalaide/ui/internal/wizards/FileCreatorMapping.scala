@@ -2,7 +2,7 @@ package org.scalaide.ui.internal.wizards
 
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.wizards.FileCreator
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 object FileCreatorMapping extends HasLogger {
 

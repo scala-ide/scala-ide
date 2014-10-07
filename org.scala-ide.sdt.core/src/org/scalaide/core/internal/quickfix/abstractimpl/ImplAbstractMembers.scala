@@ -6,7 +6,6 @@ import scala.tools.refactoring.implementations.AddToClosest
 import scala.reflect.internal.util.SourceFile
 import scala.collection.immutable
 
-import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object ImplAbstractMembers {
@@ -14,9 +13,10 @@ object ImplAbstractMembers {
     implAbstractMember(ssf, offset)
 
   def implAbstractMember(ssf: ScalaSourceFile, offset: Int): List[IJavaCompletionProposal] = {
-    ssf.withSourceFile { (srcFile, compiler) =>
+    ssf.scalaProject.presentationCompiler.internal { compiler =>
       import compiler._
 
+      val srcFile = ssf.lastSourceMap().sourceFile
       def implAbstractProposals(tree: ImplDef): List[IJavaCompletionProposal] =
         compiler.asyncExec {
           val tp = tree.symbol.tpe

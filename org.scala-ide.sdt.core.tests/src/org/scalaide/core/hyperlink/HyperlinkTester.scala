@@ -2,7 +2,7 @@ package org.scalaide.core
 package hyperlink
 
 import testsetup.TestProjectSetup
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer

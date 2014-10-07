@@ -24,8 +24,8 @@ import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.FutureUtils.TimeoutFuture
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions {
@@ -34,7 +34,7 @@ object SaveActionExtensions {
    * The ID which is used as key in the preference store to identify the actual
    * timeout value for save actions.
    */
-  final val SaveActionTimeoutId = "org.scalaide.extensions.SaveAction.Timeout"
+  final val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
 
   /**
    * The time a save action gets until the IDE waits no longer on its result.
@@ -165,7 +165,7 @@ trait SaveActionExtensions extends HasLogger {
 
   private def applyChanges(saveActionId: String, changes: Seq[Change], udoc: IDocument) = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
-      val sf = ssf.sourceFile()
+      val sf = ssf.lastSourceMap().sourceFile
       val len = udoc.getLength()
       val edits = changes map {
         case tc @ TextChange(start, end, text) =>

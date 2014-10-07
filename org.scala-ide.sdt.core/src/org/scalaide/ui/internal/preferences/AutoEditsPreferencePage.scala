@@ -25,7 +25,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.ui.internal.editor.AutoEditExtensions
 import org.scalaide.util.internal.Commons
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {

@@ -11,7 +11,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 object Nature {
 

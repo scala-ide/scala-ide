@@ -4,7 +4,7 @@ import org.junit.ComparisonFailure
 import org.scalaide.core.completion.ScalaCompletions
 import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 
 /**
  * This provides a test suite for the code completion functionality.
@@ -44,7 +44,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
 
     override def execute() = withCompiler { compiler =>
       val unit = mkScalaCompilationUnit(doc.get())
-      val src = unit.sourceFile()
+      val src = unit.lastSourceMap().sourceFile
       val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
 
       def findCompletion(rawCompletion: String) =

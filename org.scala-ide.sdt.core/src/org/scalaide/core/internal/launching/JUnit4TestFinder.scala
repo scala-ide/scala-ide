@@ -209,9 +209,7 @@ object JUnit4TestFinder {
 
   def findTestClasses(scu: ScalaSourceFile): List[IType] = scu.withSourceFile { (source, comp) =>
     import comp.ClassDef
-    import comp.Response
-    import comp.Tree
-    import org.scalaide.util.internal.Utils._
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
     val trees = comp.askParsedEntered(source, keepLoaded = false).getOrElse(comp.EmptyTree)()
 

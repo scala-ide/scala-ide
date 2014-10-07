@@ -17,7 +17,7 @@ import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 trait ExtractionExecutor extends RefactoringExecutor {

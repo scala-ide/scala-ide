@@ -8,7 +8,8 @@ import org.junit.ComparisonFailure
 import org.junit.Ignore
 import org.junit.Test
 import scalariform.ScalaVersions
-import org.scalaide.core.internal.lexical.ScalaCodeTokenizer
+import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased
+import org.scalaide.core.lexical.ScalaCodeTokenizer.Token
 
 class ScalaCodeScannerTest {
 
@@ -34,12 +35,10 @@ class ScalaCodeScannerTest {
    * and the last element is its length.
    */
   def tokenize(str: String, offset: Int, length: Int): Seq[(ScalaSyntaxClass, Int, Int)] = {
-    val scanner = new ScalaCodeTokenizer {
-      val scalaVersion = ScalaVersions.DEFAULT
-    }
+    val scanner = new ScalaCodeTokenizerScalariformBased(ScalaVersions.DEFAULT)
 
     val token = scanner.tokenize(str.slice(offset, length), offset) map {
-      case scanner.Range(start, length, syntaxClass) =>
+      case Token(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
     token.toList
@@ -85,9 +84,9 @@ class ScalaCodeScannerTest {
     val str = "return"
     val offset = 3 // arbitrary non-zero number
 
-    val scanner = new ScalaCodeTokenizer { val scalaVersion = ScalaVersions.DEFAULT }
+    val scanner = new ScalaCodeTokenizerScalariformBased(ScalaVersions.DEFAULT)
     val token = scanner.tokenize(str, offset) map {
-      case scanner.Range(start, length, syntaxClass) =>
+      case Token(start, length, syntaxClass) =>
         (syntaxClass, start, length)
     }
 

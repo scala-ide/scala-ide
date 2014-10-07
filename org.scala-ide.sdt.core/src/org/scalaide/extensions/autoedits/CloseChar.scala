@@ -3,7 +3,7 @@ package autoedits
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.IDocument
-import org.scalaide.core.internal.lexical.ScalaPartitions
+import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.core.text.Add
 
 object CloseCharSetting extends AutoEditSetting(

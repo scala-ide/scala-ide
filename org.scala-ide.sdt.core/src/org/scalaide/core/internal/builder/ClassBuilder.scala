@@ -2,7 +2,6 @@ package org.scalaide.core.internal.builder
 
 import org.scalaide.core.internal.jdt.builder.GeneralScalaJavaBuilder
 import org.scalaide.core.internal.jdt.builder.ScalaJavaBuilderUtils
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaModelManager

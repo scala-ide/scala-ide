@@ -28,7 +28,7 @@ import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
 import org.scalaide.extensions.autoedits._
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 object AutoEditExtensions {
 

@@ -22,7 +22,7 @@ import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.BooleanSettingWithDefault
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>

@@ -4,7 +4,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * This is the abstract driver of a refactoring execution: it is the

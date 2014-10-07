@@ -8,11 +8,12 @@ import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.compiler.InternalCompilerServices
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 /** Implementation of a internal compiler services dealing with mapping Scala types and symbols
  *  to internal JDT counterparts.
  */
-trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelper with HasLogger {
+trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelper with HasLogger { self: ScalaPresentationCompiler =>
 
   /** Return the Java Element corresponding to the given Scala Symbol, looking in the
    *  given project list

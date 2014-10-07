@@ -14,7 +14,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.Position
 import org.scalaide.core.internal.decorators.semantichighlighting.PositionsTracker
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolClassification
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.util.internal.ui.UIThread
 
 /** This class is responsible of coordinating the correct initialization of the different components

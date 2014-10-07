@@ -10,7 +10,6 @@ import org.junit.ComparisonFailure
 import org.junit.Test
 import org.mockito.Mockito._
 import org.scalaide.core.internal.lexical.ScaladocTokenScanner
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 class ScaladocTokenScannerTest {
 
@@ -86,7 +85,7 @@ class ScaladocTokenScannerTest {
     val doc = {
       val rawInput = str.filterNot(_ == '^')
       val doc = new Document(rawInput)
-      val partitioner = new ScalaDocumentPartitioner
+      val partitioner = ScalaCodePartitioner.documentPartitioner()
 
       doc.setDocumentPartitioner(partitioner)
       partitioner.connect(doc)

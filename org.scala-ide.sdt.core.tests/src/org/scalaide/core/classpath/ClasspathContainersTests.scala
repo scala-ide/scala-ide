@@ -12,7 +12,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
 import org.eclipse.core.runtime.NullProgressMonitor
