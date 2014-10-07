@@ -11,7 +11,6 @@ import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils
 import org.scalaide.core.internal.quickfix.AddMethodProposal
 import org.scalaide.core.internal.quickfix.AddValOrDefProposal
-import org.scalaide.core.compiler.IScalaPresentationCompiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], defName: String,

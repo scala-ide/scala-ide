@@ -27,7 +27,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor

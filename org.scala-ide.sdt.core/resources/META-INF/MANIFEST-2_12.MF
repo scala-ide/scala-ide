@@ -107,6 +107,7 @@ Export-Package:
  org.scalaide.core.internal.quickfix.createmethod,
  org.scalaide.core.internal.quickfix.explicit,
  org.scalaide.core.internal.repl,
+ org.scalaide.core.lexical,
  org.scalaide.core.resources,
  org.scalaide.logging,
  org.scalaide.refactoring.internal,
@@ -119,6 +120,8 @@ Export-Package:
  org.scalaide.refactoring.internal.ui,
  org.scalaide.ui,
  org.scalaide.ui.editor,
+ org.scalaide.ui.editor.extensionpoints,
+ org.scalaide.ui.editor.hover,
  org.scalaide.ui.internal,
  org.scalaide.ui.internal.actions,
  org.scalaide.ui.internal.actions.hyperlinks,
@@ -143,11 +146,15 @@ Export-Package:
  org.scalaide.ui.internal.templates,
  org.scalaide.ui.internal.wizards,
  org.scalaide.ui.syntax,
+ org.scalaide.ui.syntax.preferences,
  org.scalaide.ui.wizards,
+ org.scalaide.util,
+ org.scalaide.util.eclipse,
  org.scalaide.util.internal,
  org.scalaide.util.internal.eclipse,
  org.scalaide.util.internal.scalariform,
- org.scalaide.util.internal.ui
+ org.scalaide.util.internal.ui,
+ org.scalaide.util.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,

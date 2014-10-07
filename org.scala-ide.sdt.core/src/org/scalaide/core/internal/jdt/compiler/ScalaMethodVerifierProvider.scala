@@ -10,7 +10,7 @@ import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.ScalaPlugin

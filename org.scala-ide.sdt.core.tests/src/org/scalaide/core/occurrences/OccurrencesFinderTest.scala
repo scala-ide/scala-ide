@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.Ignore
 import org.eclipse.jface.text.Region
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.tools.nsc.interactive.Response
 
 object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking")

@@ -8,5 +8,5 @@ trait UIThread {
   def syncExec(f: => Unit): Unit
 
   /** Retrieve the UI Thread instance */
-  def get: Thread
+  private [scalaide] def get: Thread
 }

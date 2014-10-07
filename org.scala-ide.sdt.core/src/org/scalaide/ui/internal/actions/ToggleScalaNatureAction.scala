@@ -6,7 +6,7 @@ import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
 import org.scalaide.core.internal.project.ScalaLibraryPluginDependencyUtils
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 object ToggleScalaNatureAction {
   val PDE_PLUGIN_NATURE = "org.eclipse.pde.PluginNature" /* == org.eclipse.pde.internal.core.natures.PDE.PLUGIN_NATURE */

@@ -6,8 +6,10 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.scalaide.logging.HasLogger
+import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
+import org.eclipse.core.runtime.IProgressMonitor
 
-class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) extends IReconcilingStrategy with HasLogger {
+class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
   private var document: Option[IDocument] = None
 
   override def setDocument(doc: IDocument) {
@@ -22,8 +24,14 @@ class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDoc
 
   override def reconcile(partition: IRegion) {
     for (doc <- document) {
-      val errors = sourceEditor.getInteractiveCompilationUnit.reconcile(doc.get)
+      val errors = sourceEditor.getInteractiveCompilationUnit.forceReconcile()
       sourceEditor.updateErrorAnnotations(errors)
     }
   }
+
+  override def initialReconcile(): Unit = {
+    sourceEditor.getInteractiveCompilationUnit().initialReconcile()
+  }
+
+  override def setProgressMonitor(pm: IProgressMonitor): Unit = {}
 }

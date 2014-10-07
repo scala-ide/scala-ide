@@ -13,6 +13,7 @@ import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.IRegion
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.text.edits.UndoEdit
+import org.scalaide.util.eclipse.FileUtils
 
 object TextEditUtils {
 
@@ -87,7 +88,7 @@ object TextEditUtils {
       saveAfter: Boolean = true): Unit = {
 
     applyChangesToFile(document, textSelection, file, changes, saveAfter) foreach { selection =>
-      EditorUtils.doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
+      org.scalaide.util.eclipse.EditorUtils.doWithCurrentEditor { _.selectAndReveal(selection.getOffset(), selection.getLength()) }
     }
   }
 

@@ -2,7 +2,6 @@ package org.scalaide.core.internal.quickfix
 
 import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
-import org.scalaide.util.internal.Utils
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Position
 

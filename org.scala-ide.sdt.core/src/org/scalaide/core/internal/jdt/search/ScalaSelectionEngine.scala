@@ -18,7 +18,7 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
@@ -34,12 +34,12 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
   def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    val src = icu.sourceFile()
+    val src = icu.lastSourceMap().sourceFile
     icu.scalaProject.presentationCompiler { compiler =>
 
       import compiler.{ log => _, _ }
 
-      val source = icu.getContents
+      val source = icu.lastSourceMap().scalaSource
       val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =

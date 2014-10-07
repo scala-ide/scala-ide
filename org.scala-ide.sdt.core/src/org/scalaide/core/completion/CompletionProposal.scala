@@ -4,7 +4,7 @@ import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin

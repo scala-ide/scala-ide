@@ -5,15 +5,17 @@ import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import scala.collection.mutable.ListBuffer
 import scala.math.max
 import scala.math.min
+import org.scalaide.core.lexical.ScalaCodePartitioner
 
 class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentPartitioner with IDocumentPartitionerExtension with IDocumentPartitionerExtension2 {
 
   import ScalaDocumentPartitioner._
+  import org.scalaide.util.eclipse.RegionUtils.RichTypedRegion
 
-  private var partitionRegions: List[ScalaPartitionRegion] = Nil
+  private var partitionRegions: List[ITypedRegion] = Nil
 
   def connect(document: IDocument) {
-    partitionRegions = ScalaPartitionTokeniser.tokenise(document.get)
+    partitionRegions = ScalaCodePartitioner.partition(document.get)
   }
 
   def disconnect() {
@@ -26,7 +28,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 
   def documentChanged2(event: DocumentEvent): IRegion = {
     val oldPartitions = partitionRegions
-    val newPartitions = ScalaPartitionTokeniser.tokenise(event.getDocument.get)
+    val newPartitions = ScalaCodePartitioner.partition(event.getDocument.get)
     partitionRegions = newPartitions
     if (conservative)
       new Region(0, event.getDocument.getLength)
@@ -34,7 +36,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
       calculateDirtyRegion(oldPartitions, newPartitions, event.getOffset, event.getLength, event.getText)
   }
 
-  private def calculateDirtyRegion(oldPartitions: List[ScalaPartitionRegion], newPartitions: List[ScalaPartitionRegion], offset: Int, length: Int, text: String): IRegion =
+  private def calculateDirtyRegion(oldPartitions: List[ITypedRegion], newPartitions: List[ITypedRegion], offset: Int, length: Int, text: String): IRegion =
     if (newPartitions.isEmpty)
       new Region(0, 0)
     else if (oldPartitions == newPartitions)
@@ -43,7 +45,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
       // Scan outside-in from both the beginning and the end of the document to match up undisturbed partitions:
       val unchangedLeadingRegionCount = commonPrefixLength(oldPartitions, newPartitions)
       val adjustedOldPartitions =
-        for (region <- oldPartitions if region.start > offset + length - 1)
+        for (region <- oldPartitions if region.getOffset > offset + length - 1)
           yield region.shift(text.length - length)
       val unchangedTrailingRegionCount = commonPrefixLength(adjustedOldPartitions.reverse, newPartitions.reverse)
       val dirtyOldPartitionCount = oldPartitions.size - unchangedTrailingRegionCount - unchangedLeadingRegionCount
@@ -51,7 +53,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 
       // A very common case is changing the size of a single partition, which we want to optimise:
       val singleDirtyPartitionWithUnchangedContentType = dirtyOldPartitionCount == 1 && dirtyNewPartitionCount == 1 &&
-        oldPartitions(unchangedLeadingRegionCount).contentType == newPartitions(unchangedLeadingRegionCount).contentType
+        oldPartitions(unchangedLeadingRegionCount).getType == newPartitions(unchangedLeadingRegionCount).getType
       if (singleDirtyPartitionWithUnchangedContentType)
         null
       else if (dirtyNewPartitionCount == 0) // i.e. a deletion of partitions
@@ -60,7 +62,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
         // Otherwise just the dirty region:
         val firstDirtyPartition = newPartitions(unchangedLeadingRegionCount)
         val lastDirtyPartition = newPartitions(unchangedLeadingRegionCount + dirtyNewPartitionCount - 1)
-        new Region(firstDirtyPartition.start, lastDirtyPartition.end - firstDirtyPartition.start + 1)
+        new Region(firstDirtyPartition.getOffset, lastDirtyPartition.getOffset + lastDirtyPartition.getLength - firstDirtyPartition.getOffset)
       }
     }
 
@@ -68,34 +70,26 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 
   def getLegalContentTypes = LEGAL_CONTENT_TYPES
 
-  def getContentType(offset: Int) = getToken(offset) map { _.contentType } getOrElse DEFAULT_CONTENT_TYPE
+  def getContentType(offset: Int) = getToken(offset) map { _.getType } getOrElse DEFAULT_CONTENT_TYPE
 
-  private def getToken(offset: Int) = partitionRegions.find(_.containsPosition(offset))
+  private def getToken(offset: Int) = partitionRegions.find(_.containsPositionExclusive(offset))
 
   def computePartitioning(offset: Int, length: Int): Array[ITypedRegion] = {
     val regions = new ListBuffer[ITypedRegion]
     var searchingForStart = true
     for (partitionRegion <- partitionRegions)
       if (searchingForStart) {
-        if (partitionRegion containsPosition offset) {
+        if (partitionRegion containsPositionExclusive offset) {
           searchingForStart = false
-          regions += cropRegion(partitionRegion, offset, length)
+          regions += partitionRegion.crop(offset, length)
         }
       } else {
-        if (partitionRegion.start > offset + length - 1)
+        if (partitionRegion.getOffset > offset + length - 1)
           return regions.toArray
         else
-          regions += cropRegion(partitionRegion, offset, length)
+          regions += partitionRegion.crop(offset, length)
       }
     regions.toArray
-  }
-
-  private def cropRegion(region: ScalaPartitionRegion, offset: Int, length: Int): ScalaPartitionRegion = {
-    val ScalaPartitionRegion(_, start, end) = region
-    if (start > offset + length - 1 || end < offset)
-      region
-    else
-      region.copy(start = max(start, offset), end = min(end, offset + length - 1))
   }
 
   def getPartition(offset: Int): ITypedRegion = getToken(offset) getOrElse new TypedRegion(offset, 0, NO_PARTITION_AT_ALL)
@@ -121,7 +115,7 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 object ScalaDocumentPartitioner {
 
   import org.eclipse.jdt.ui.text.IJavaPartitions._
-  import org.scalaide.core.internal.lexical.ScalaPartitions._
+  import org.scalaide.core.lexical.ScalaPartitions._
 
   private val LEGAL_CONTENT_TYPES = Array[String](
     DEFAULT_CONTENT_TYPE,

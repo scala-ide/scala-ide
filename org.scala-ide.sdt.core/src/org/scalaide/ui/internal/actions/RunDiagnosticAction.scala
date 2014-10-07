@@ -5,12 +5,12 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.IWorkbenchWindow
-import org.scalaide.util.internal.Utils
+import org.scalaide.util.Utils
 import org.scalaide.core.internal.logging.LogManager
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.scalaide.ui.internal.diagnostic
-import org.scalaide.util.internal.eclipse.SWTUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowActionDelegate {
   private var parentWindow: IWorkbenchWindow = null

@@ -4,7 +4,6 @@ import org.junit.Assert._
 import org.junit.Test
 import org.junit.Before
 import org.eclipse.jface.text._
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 class ScalaDocumentPartitionerTest {
 
@@ -37,7 +36,7 @@ class ScalaDocumentPartitionerTest {
   private def expectedNoRegion: IRegion = null
 
   private def check(source: String, replacement: Replacement, expectedRegion: IRegion) {
-    val partitioner = new ScalaDocumentPartitioner
+    val partitioner = ScalaCodePartitioner.documentPartitioner()
     val actualRegion = changedPartitionsRegion(partitioner, source, replacement)
     assertEquals(expectedRegion, actualRegion)
   }

@@ -8,7 +8,7 @@ import org.eclipse.ui.texteditor.spelling.ISpellingEngine
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
 import org.eclipse.ui.texteditor.spelling.SpellingContext
 import org.eclipse.ui.texteditor.spelling.{SpellingService => ESpellingService}
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * The purpose of the super class is to find a spelling engine in a given

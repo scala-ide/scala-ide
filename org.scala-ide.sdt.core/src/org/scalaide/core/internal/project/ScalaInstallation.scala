@@ -12,12 +12,12 @@ import org.osgi.framework.Bundle
 import org.osgi.framework.Version
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import xsbti.compile.ScalaInstance
 import java.net.URLClassLoader
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.collection.mutable.Set
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.runtime.IStatus

@@ -4,11 +4,9 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
 import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.util.internal.eclipse.RegionUtils
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>
-  import RegionUtils._
   import global._
 
   def posToSym(pos: Position): Option[Symbol] = {
@@ -16,11 +14,14 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
     if (t.hasSymbolField) safeSymbol(t).headOption.map(_._1) else None
   }
 
-  private lazy val forValSymbols: Set[Symbol] = for {
-    region <- syntacticInfo.forVals
-    pos = region.toRangePos(sourceFile)
-    symbol <- posToSym(pos)
-  } yield symbol
+  private lazy val forValSymbols: Set[Symbol] = {
+    import org.scalaide.util.eclipse.RegionUtils.RichRegion
+    for {
+      region <- syntacticInfo.forVals
+      pos = region.toRangePos(sourceFile)
+      symbol <- posToSym(pos)
+    } yield symbol
+  }
 
   private def classifyTerm(sym: Symbol): SymbolType = {
 

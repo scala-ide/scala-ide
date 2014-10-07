@@ -2,10 +2,10 @@ package org.scalaide.core.internal.logging
 
 import java.util.concurrent.atomic.AtomicReference
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import scala.util.control.ControlThrowable
 import org.eclipse.core.runtime.ILog
 import org.eclipse.core.runtime.IStatus

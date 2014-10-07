@@ -8,7 +8,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
 
 trait AbstractPopupAction extends IObjectActionDelegate {
   private var selectionOption: Option[ISelection] = None
@@ -27,7 +27,7 @@ trait AbstractPopupAction extends IObjectActionDelegate {
 
   private def selectionObjectToProject(selectionElement: Object): Option[IProject] = selectionElement match {
     case project: IProject => Some(project)
-    case adaptable: IAdaptable => adaptable.adaptToSafe[IProject]
+    case adaptable: IAdaptable => adaptable.adaptToOpt[IProject]
     case _ => None
   }
 

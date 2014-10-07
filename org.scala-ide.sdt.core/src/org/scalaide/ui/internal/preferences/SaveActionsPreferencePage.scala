@@ -25,7 +25,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.ui.internal.editor.SaveActionExtensions
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
@@ -178,7 +178,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 
   private def createPreviewer(parent: Composite)(f: IDocument => Unit): Control = {
-    val previewer = ScalaPreviewerFactory.createPreviewer(parent, prefStore, "")
+    val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, prefStore, "")
     f(previewer.getDocument())
     previewer.getControl
   }
@@ -197,7 +197,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
 
 object SaveActionsPreferenceInitializer {
   /** Default timeout value in milliseconds */
-  final val SaveActionDefaultTimeout = 200
+  final val SaveActionDefaultTimeout: Int = 200
 }
 
 /** This class is referenced through plugin.xml */

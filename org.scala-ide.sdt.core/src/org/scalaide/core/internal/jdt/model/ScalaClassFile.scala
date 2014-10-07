@@ -1,12 +1,10 @@
 package org.scalaide.core.internal.jdt.model
 
 import java.util.{ HashMap => JHashMap }
-
 import org.scalaide.ui.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
-
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
@@ -20,6 +18,8 @@ import org.eclipse.jdt.internal.core.ClassFile
 import org.eclipse.jdt.internal.core.JavaModelStatus
 import org.eclipse.jdt.internal.core.PackageFragment
 import org.eclipse.jdt.internal.core.util.Util
+import org.scalaide.core.compiler.ISourceMap
+import org.scalaide.core.compiler.ScalaCompilationProblem
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)
   extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {
@@ -30,7 +30,8 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     if (e == this) null else e
   }
 
-  def reconcile(contents: String): List[IProblem] = Nil
+  /** We don't need to reconcile for a classfile. */
+  override def scheduleReconcile(contents: Array[Char]): Unit = ()
 
   /** Return the corresponding element in the source-based JDT elements.
    *
@@ -130,7 +131,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
-  def currentProblems: List[IProblem] = Nil
+  override def currentProblems: List[ScalaCompilationProblem] = Nil
 
   def closeBuffer0() = super.closeBuffer()
   def closing0(info : AnyRef) = super.closing(info)

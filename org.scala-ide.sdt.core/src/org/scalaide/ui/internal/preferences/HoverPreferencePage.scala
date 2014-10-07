@@ -15,8 +15,8 @@ import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.ui.internal.editor.hover.ScalaHover
-import org.scalaide.util.internal.eclipse.SWTUtils._
+import org.scalaide.ui.editor.hover.IScalaHover._
+import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
@@ -25,6 +25,8 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
   private var cssArea: Text = _
 
   override def createContents(parent: Composite): Control = {
+    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
 
@@ -39,7 +41,7 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
     cssArea = new Text(base, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL)
     cssArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true))
-    cssArea.setText(prefStore.getString(ScalaHover.ScalaHoverStyleSheetId))
+    cssArea.setText(prefStore.getString(ScalaHoverStyleSheetId))
     base
   }
 
@@ -47,13 +49,13 @@ class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
   override def performOk(): Boolean = {
     val css = cssArea.getText()
-    prefStore.setValue(ScalaHover.ScalaHoverStyleSheetId, css)
+    prefStore.setValue(ScalaHoverStyleSheetId, css)
     super.performOk()
   }
 
   override def performDefaults(): Unit = {
     super.performDefaults()
-    cssArea.setText(ScalaHover.DefaultScalaHoverStyleSheet)
+    cssArea.setText(DefaultScalaHoverStyleSheet)
   }
 
 }
@@ -63,19 +65,19 @@ class HoverPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
     val p = IScalaPlugin().getPreferenceStore()
-    val oldCss = p.getString(ScalaHover.DefaultScalaHoverStyleSheetId)
-    val newCss = ScalaHover.DefaultScalaHoverStyleSheet
-    val usedCss = p.getString(ScalaHover.ScalaHoverStyleSheetId)
+    val oldCss = p.getString(DefaultScalaHoverStyleSheetId)
+    val newCss = DefaultScalaHoverStyleSheet
+    val usedCss = p.getString(ScalaHoverStyleSheetId)
 
     // This can only happen the very first time a workspace is created
     if (oldCss.isEmpty()) {
-      p.setValue(ScalaHover.DefaultScalaHoverStyleSheetId, newCss)
-      p.setValue(ScalaHover.ScalaHoverStyleSheetId, newCss)
+      p.setValue(DefaultScalaHoverStyleSheetId, newCss)
+      p.setValue(ScalaHoverStyleSheetId, newCss)
     }
     // This happens every time the CSS file of the bundle is updated
     else if (oldCss != newCss) {
-      p.setValue(ScalaHover.DefaultScalaHoverStyleSheetId, newCss)
-      p.setValue(ScalaHover.ScalaHoverStyleSheetId, if (oldCss == usedCss) newCss else s"""|/*
+      p.setValue(DefaultScalaHoverStyleSheetId, newCss)
+      p.setValue(ScalaHoverStyleSheetId, if (oldCss == usedCss) newCss else s"""|/*
           |==================================================================
           |ATTENTION:
           |

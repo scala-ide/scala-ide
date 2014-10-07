@@ -83,8 +83,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
     def defString(sym: Symbol, tpe: Type): String = {
       // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
       val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info
-      compose(List(sym.flagString(Flags.ExplicitFlags), sym.keyString, sym.varianceString + sym.nameString +
-        sym.infoString(tpeinfo)))
+      declPrinter.defString(sym)(tpeinfo)
     }
 
     if (sym.isClass || sym.isModule) sym.fullNameString else {

@@ -1,104 +1,125 @@
 package org.scalaide.ui.syntax
 
-import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedPreferenceStore
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.TextAttribute
 import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.graphics.RGB
+import org.scalaide.util.eclipse.EclipseUtils.RichPreferenceStore
 
-case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false, hasForegroundColour: Boolean = true) {
+import org.scalaide.util.ui.DisplayThread
 
-  import ScalaSyntaxClasses._
+/** Represent a class of element in the Scala syntax coloring support.
+ *  [[ScalaSyntaxClasses]] contains the list of classes of element recognized by the IDE.
+ */
+case class ScalaSyntaxClass(displayName: String, baseName: String, canBeDisabled: Boolean = false, hasForegroundColor: Boolean = true) {
 
+  import ScalaSyntaxClass._
+
+  /** The preference key for enabling syntax coloring for this class.
+   */
   def enabledKey = baseName + ENABLED_SUFFIX
-  def foregroundColourKey = baseName + FOREGROUND_COLOUR_SUFFIX
-  def backgroundColourKey = baseName + BACKGROUND_COLOUR_SUFFIX
-  def backgroundColourEnabledKey = baseName + BACKGROUND_COLOUR_ENABLED_SUFFIX
+
+  /** The preference key for the foreground color for this class.
+   */
+  def foregroundColorKey = baseName + FOREGROUND_COLOUR_SUFFIX
+
+  /** The preference key for the background color for this class.
+   */
+  def backgroundColorKey = baseName + BACKGROUND_COLOUR_SUFFIX
+
+  /** The preference key for enabling background coloring for this class.
+   */
+  def backgroundColorEnabledKey = baseName + BACKGROUND_COLOUR_ENABLED_SUFFIX
+
+  /** The preference key for enabling the bold modifier for this class.
+   */
   def boldKey = baseName + BOLD_SUFFIX
+
+  /** The preference key for enabling the italic modifier for this class.
+   */
   def italicKey = baseName + ITALIC_SUFFIX
+
+  /** The preference key for enabling the underline modifier for this class.
+   */
   def underlineKey = baseName + UNDERLINE_SUFFIX
 
-  /** Secondary constructor for backward compatibility with 3.x.
-   *  TODO remove once 3.x compatibility is discarded
+  /** Returns the [[TextAttribute]] for this class, according to the given
+   *  preference store.
+   *
+   *  @param preferenceStore the preference store to extract the configuration from.
    */
-  def this(_displayName: String, _baseName: String, _canBeDisabled: Boolean) =
-    this(_displayName, _baseName, _canBeDisabled, true)
-
   def getTextAttribute(preferenceStore: IPreferenceStore): TextAttribute = {
-    val styleInfo = getStyleInfo(preferenceStore)
-    val style: Int = fullStyle(styleInfo)
-    new TextAttribute(styleInfo.foregroundOpt.orNull, styleInfo.backgroundOpt.orNull, style)
+    new TextAttribute(getForegroundColor(preferenceStore), getBackgroundColor(preferenceStore), computeStyle(preferenceStore))
   }
 
-  def getStyleRange(preferenceStore: IPreferenceStore): StyleRange = {
-    val styleRange = new StyleRange
-    populateStyleRange(styleRange, preferenceStore)
-    styleRange
-  }
+  /** Returns the `true` if syntax highlighting is enabled for this class, according to the given
+   *  preference store.
+   *
+   *  @param preferenceStore the preference store to extract the configuration from.
+   */
+  def enabled(preferenceStore: IPreferenceStore): Boolean =
+    preferenceStore getBoolean enabledKey
 
-  def populateStyleRange(styleRange: StyleRange, preferenceStore: IPreferenceStore): Unit =
-    if (preferenceStore.getBoolean(enabledKey)) {
-      val StyleInfo(_, foregroundColour, backgroundColourOpt, bold, italic, underline) = getStyleInfo(preferenceStore)
-      val style = basicStyle(bold, italic)
-      styleRange.fontStyle = style
-      styleRange.foreground = foregroundColour.orNull
-      styleRange.background = backgroundColourOpt.orNull
-      styleRange.underline = underline
-      styleRange.underlineColor = styleRange.foreground
-    }
-
-  case class StyleInfo(enabled: Boolean, foregroundOpt: Option[Color], backgroundOpt: Option[Color], bold: Boolean, italic: Boolean, underline: Boolean)
-
-  def getStyleInfo(preferenceStore: IPreferenceStore): StyleInfo = {
-    val colourManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
-
-    val foregroundColorPref = preferenceStore getColor foregroundColourKey
-    var foregroundColorOpt: Option[Color] = None
-    var backgroundOpt: Option[Color] = None
-
-    // FIXME: Blocking on the UI thread is bad. I'm pretty sure we can avoid this, but some refactoring is in needed. Basically, the
-    //        different SyntaxClasses should be created by the editor right after checking if semantic highlighting is enabled, that
-    //        way you know you are running inside the UI Thread. Re #1001489.
-    DisplayThread.syncExec {
-      if (hasForegroundColour)
-        foregroundColorOpt = Option(colourManager.getColor(foregroundColorPref))
-      if (preferenceStore getBoolean backgroundColourEnabledKey)
-        backgroundOpt = Option(colourManager.getColor(preferenceStore getColor backgroundColourKey))
-    }
-
-    StyleInfo(
-      preferenceStore getBoolean enabledKey,
-      foregroundColorOpt,
-      backgroundOpt,
-      preferenceStore getBoolean boldKey,
-      preferenceStore getBoolean italicKey,
-      preferenceStore getBoolean underlineKey)
-  }
-
-  private def basicStyle(bold: Boolean, italic: Boolean): Int = {
+  /** Returns the style flags for this class, according to the given
+   *  preference store.
+   */
+  private def computeStyle(preferenceStore: IPreferenceStore): Int = {
     var style = SWT.NORMAL
-    if (bold) style |= SWT.BOLD
-    if (italic) style |= SWT.ITALIC
+    if (preferenceStore getBoolean boldKey) style |= SWT.BOLD
+    if (preferenceStore getBoolean italicKey) style |= SWT.ITALIC
+    if (preferenceStore getBoolean underlineKey) style |= TextAttribute.UNDERLINE
     style
   }
 
-  private def fullStyle(styleInfo: StyleInfo): Int = {
-    val StyleInfo(_, _, _, bold, italic, underline) = styleInfo
-    var style = basicStyle(bold, italic)
-    if (underline) style |= TextAttribute.UNDERLINE
-    style
+  /** Returns the foreground color for this class, or `null` if foreground color should not be applied (Eclipse API convention).
+   */
+  private def getForegroundColor(preferenceStore: IPreferenceStore): Color = {
+    if (hasForegroundColor) {
+      getColor(preferenceStore getColor foregroundColorKey)
+    } else {
+      null // Eclipse API convention
+    }
+  }
+
+  /** Returns the background color for this class, or `null` if foreground color should not be applied (Eclipse API convention).
+   */
+  private def getBackgroundColor(preferenceStore: IPreferenceStore): Color = {
+    if (preferenceStore getBoolean backgroundColorEnabledKey) {
+      getColor(preferenceStore getColor backgroundColorKey)
+    } else {
+      null // Eclipse API convention
+    }
+  }
+
+  /** Returns a platform [[Color]], for the given color descriptor.
+   *  It requires a synchronous call on the UI thread to create the color instance.
+   */
+  private def getColor(colorDesc: RGB): Color = {
+    val colorManager = JavaPlugin.getDefault.getJavaTextTools.getColorManager
+    var color: Color = null
+    DisplayThread.syncExec {
+      color = colorManager.getColor(colorDesc)
+    }
+    color
   }
 
 }
 
 object ScalaSyntaxClass {
-  def unapply(a: AnyRef): Option[(String, String, Boolean)] = a match {
-    case syntaxClass: ScalaSyntaxClass =>
-      Some((syntaxClass.displayName, syntaxClass.baseName, syntaxClass.canBeDisabled))
-    case _ =>
-      None
-  }
+
+  private val ENABLED_SUFFIX = ".enabled"
+  private val FOREGROUND_COLOUR_SUFFIX = ".colour"
+  private val BACKGROUND_COLOUR_SUFFIX = ".backgroundColour"
+  private val BACKGROUND_COLOUR_ENABLED_SUFFIX = ".backgroundColourEnabled"
+  private val BOLD_SUFFIX = ".bold"
+  private val ITALIC_SUFFIX = ".italic"
+  private val UNDERLINE_SUFFIX = ".underline"
+
+  /** Syntax category, to order syntax classes.
+   *  Used when displaying the classes in the preference pages.
+   */
+  case class Category(name: String, children: List[ScalaSyntaxClass])
+
 }

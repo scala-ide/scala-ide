@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Text
 import scala.tools.nsc.Settings
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry
 import org.eclipse.jface.fieldassist.ControlDecoration
 import org.eclipse.swt.events.VerifyEvent
@@ -59,11 +59,11 @@ import scala.collection.mutable.Publisher
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.preference.FieldEditor
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import java.util.concurrent.atomic.AtomicBoolean
 import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 
 trait ScalaPluginPreferencePage extends HasLogger {
@@ -120,7 +120,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
 class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
   with ScalaPluginPreferencePage
   with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
-  import org.scalaide.util.internal.eclipse.SWTUtils._
+
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
   // has changed from the saved value
 
@@ -173,6 +173,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   var dslWidget: Option[DesiredInstallationWidget] = None
 
   def save(): Unit = {
+    import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+
     val project = getConcernedProject()
     val scalaProject = project flatMap (ScalaPlugin().asScalaProject(_))
     scalaProject foreach (p => preferenceStore0.removePropertyChangeListener(p.compilerSettingsListener))
@@ -394,7 +396,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   /** This widget should only be used on project property pages. */
-  class UseProjectSettingsWidget(parent:Composite) extends SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent)
+  class UseProjectSettingsWidget(parent:Composite) extends org.scalaide.util.eclipse.SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent)
   with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]]{
     import SettingConverterUtil._
 
@@ -481,7 +483,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     override def fireValueChanged(property: String, oldValue: Object, newValue: Object) {
-      import org.scalaide.util.internal.Utils._
+      import org.scalaide.util.Utils.WithAsInstanceOfOpt
       if (property == FieldEditor.VALUE) {
         val oldVal = oldValue.asInstanceOfOpt[String]
         val newVal = newValue.asInstanceOfOpt[String]
@@ -503,7 +505,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget(parent:Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent)
   with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
-    import org.scalaide.util.internal.eclipse.SWTUtils._
+    import org.scalaide.util.eclipse.SWTUtils.fnToModifyListener
     setPreferenceStore(preferenceStore0)
     load()
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}

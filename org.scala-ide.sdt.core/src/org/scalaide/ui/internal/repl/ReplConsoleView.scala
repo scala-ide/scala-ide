@@ -40,7 +40,7 @@ import org.eclipse.ui.part.ViewPart
 import org.scalaide.core.internal.repl.EclipseRepl.Exec
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
-import org.scalaide.util.internal.ui.DisplayThread
+import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import scala.collection.mutable.Subscriber
 import scala.collection.mutable.Publisher
