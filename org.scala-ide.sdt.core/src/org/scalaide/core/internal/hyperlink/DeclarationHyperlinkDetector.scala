@@ -1,10 +1,8 @@
-package org.scalaide.core.hyperlink.detector
+package org.scalaide.core.internal.hyperlink
 
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlink
 import org.eclipse.jdt.ui.actions.OpenAction
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.util.ScalaWordFinder
@@ -12,10 +10,9 @@ import org.scalaide.core.internal.jdt.search.ScalaSelectionEngine
 import org.scalaide.core.internal.jdt.search.ScalaSelectionRequestor
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
+import org.scalaide.util.eclipse.RegionUtils._
 
 class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger {
 
@@ -30,7 +27,7 @@ class DeclarationHyperlinkDetector extends BaseHyperlinkDetector with HasLogger 
   }
 
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion): List[IHyperlink] = {
-    findHyperlinks(textEditor, icu, wordRegion, wordRegion)
+    findHyperlinks(textEditor, icu, wordRegion, wordRegion.translate(icu.lastSourceMap().scalaPos))
   }
 
   protected def findHyperlinks(textEditor: ITextEditor, icu: InteractiveCompilationUnit, wordRegion: IRegion, mappedRegion: IRegion): List[IHyperlink] = {
@@ -74,7 +71,7 @@ object DeclarationHyperlinkDetector {
 
 /** Helper object to locate Java elements based on a region */
 object JavaSelectionEngine extends HasLogger {
- protected[hyperlink] def getJavaElements(icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
+ protected[core] def getJavaElements(icu: InteractiveCompilationUnit, openable: Openable, mappedRegion: IRegion): List[IJavaElement] = {
     try {
       val environment = icu.scalaProject.newSearchableEnvironment()
       val requestor = new ScalaSelectionRequestor(environment.nameLookup, openable)

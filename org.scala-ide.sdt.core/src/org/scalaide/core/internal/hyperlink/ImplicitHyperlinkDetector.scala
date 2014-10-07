@@ -1,13 +1,15 @@
-package org.scalaide.core.hyperlink.detector
+package org.scalaide.core.internal.hyperlink
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitConversionAnnotation
+import org.scalaide.util.eclipse.EditorUtils
 
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 
-  override protected[detector] def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
+  override protected[internal] def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
     findHyperlinkToImplicit(currentSelection.getOffset, textEditor)
 
   /**

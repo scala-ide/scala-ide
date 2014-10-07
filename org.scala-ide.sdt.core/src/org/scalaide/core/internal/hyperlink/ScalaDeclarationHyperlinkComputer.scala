@@ -1,11 +1,9 @@
-package org.scalaide.core.hyperlink.detector
+package org.scalaide.core.internal.hyperlink
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.scalaide.logging.HasLogger
-import org.scalaide.core.hyperlink._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class ScalaDeclarationHyperlinkComputer extends HasLogger {
@@ -17,10 +15,6 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
     logger.info("detectHyperlinks: wordRegion = " + mappedRegion)
 
     icu.withSourceFile({ (sourceFile, compiler) =>
-      object DeclarationHyperlinkFactory extends HyperlinkFactory {
-        protected val global: compiler.type = compiler
-      }
-
       if (mappedRegion == null || mappedRegion.getLength == 0)
         None
       else {
@@ -64,7 +58,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         symsOpt map { syms =>
           syms flatMap { sym =>
-             DeclarationHyperlinkFactory.create(Hyperlink.withText("Open Declaration (%s)".format(sym.toString)), icu.scalaProject.javaProject, sym, wordRegion)
+             compiler.mkHyperlink(sym, s"Open Declaration (${sym.toString})", wordRegion, icu.scalaProject.javaProject)
           }
         }
       }

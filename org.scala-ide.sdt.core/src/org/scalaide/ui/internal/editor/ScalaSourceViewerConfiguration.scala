@@ -41,9 +41,7 @@ import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.hyperlink._
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -240,10 +238,11 @@ class ScalaSourceViewerConfiguration(
     }.getOrElse(new DefaultTextHover(sv))
 
   override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
-    val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
-    val detector = new CompositeHyperlinkDetector(strategies)
-    if (editor != null) detector.setContext(editor)
-    Array(detector, new URLHyperlinkDetector())
+    val detectors = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector(), new URLHyperlinkDetector())
+    if (editor != null)
+      detectors.foreach { d => d.setContext(editor) }
+
+    detectors.toArray
   }
 
   private def getTypeRoot: Option[ITypeRoot] = Option(editor) map { editor =>
