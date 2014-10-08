@@ -65,7 +65,7 @@ object ISourceMap {
  *
  *  All methods may throw `IndexOutOfBoundsException` if the given input is invalid.
  */
-trait IPositionInformation {
+trait IPositionInformation extends (Int => Int) {
   /** Map the given offset to the target offset. */
   def apply(offset: Int): Int
 

@@ -7,7 +7,6 @@ import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EditorUtils

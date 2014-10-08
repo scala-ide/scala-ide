@@ -11,9 +11,7 @@ import org.eclipse.swt.graphics.Point
  *
  * @param relevance
  *        Denotes at which position in among all available entries this entry
- *        occurs. A higher value means a better position. The ordering of quick
- *        assists provided by Scala IDE can be found in
- *        [[org.scalaide.core.completion.RelevanceValues]].
+ *        occurs. A higher value means a better position.
  * @param displayString
  *        A text of explanation shown in the completion proposal.
  * @param image

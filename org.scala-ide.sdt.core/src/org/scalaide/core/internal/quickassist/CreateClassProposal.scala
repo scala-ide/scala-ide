@@ -6,7 +6,6 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.jface.window.Window
 import org.eclipse.jface.wizard.WizardDialog
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.wizards.NewFileWizardAdapter
 import org.scalaide.core.quickassist.BasicCompletionProposal

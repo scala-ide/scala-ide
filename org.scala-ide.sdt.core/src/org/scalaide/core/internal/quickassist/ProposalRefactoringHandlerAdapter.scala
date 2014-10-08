@@ -2,7 +2,6 @@ package org.scalaide.core.internal.quickassist
 
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IDocument
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.rename.Rename

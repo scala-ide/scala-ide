@@ -1,7 +1,7 @@
-package org.scalaide.core.internal.quickassist.expand
+package org.scalaide.core.internal.quickassist
+package expand
 
 import org.eclipse.jface.text.IDocument
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 

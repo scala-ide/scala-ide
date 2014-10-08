@@ -1,4 +1,5 @@
-package org.scalaide.core.internal.quickassist.extract
+package org.scalaide.core.internal.quickassist
+package extract
 
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.internal.util.SourceFile
@@ -9,7 +10,6 @@ import scala.tools.refactoring.implementations.extraction.ExtractCode
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.completion.RelevanceValues
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist

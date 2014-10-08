@@ -1,8 +1,8 @@
 package org.scalaide.ui.internal.actions.hyperlinks
 
 import org.scalaide.ui.internal.editor.ScalaSourceFileEditor
-import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.BaseHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.ImplicitHyperlinkDetector
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.ui.handlers.HandlerUtil

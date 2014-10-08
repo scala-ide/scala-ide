@@ -7,7 +7,7 @@
       plugin="org.scala-ide.sdt.core">
 
    <description url="http://scala-ide.org/">
-     The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
+      The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -63,6 +63,10 @@ SUCH DAMAGE.
 
    <includes
          id="org.scala-ide.sbt.feature"
+         version="0.0.0"/>
+
+   <includes
+         id="org.scala-ide.scala211.feature"
          version="0.0.0"/>
 
    <requires>
