@@ -19,6 +19,7 @@ import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.eclipse.ui.IWorkbench
 import org.scalaide.core.SdtConstants
+import org.scalaide.util.eclipse.EclipseUtils
 
 object NewApplicationWizard {
 
@@ -89,9 +90,11 @@ class NewApplicationWizard extends BasicNewResourceWizard with HasLogger {
     true
   }
 
-  override def performFinish: Boolean = page.getSelectedPackage forall
-      {(pkg) => Utils.tryExecute(createApplication(page.getApplicationName, pkg)).getOrElse(false)}
-
+  override def performFinish: Boolean = page.getSelectedPackage forall { pkg =>
+    EclipseUtils.withSafeRunner("Couldn't create file.") {
+      createApplication(page.getApplicationName, pkg)
+    }.getOrElse(false)
+  }
 
   private def openInEditor(file: IFile) = {
     selectAndReveal(file)

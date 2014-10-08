@@ -17,6 +17,7 @@ import scala.concurrent.Promise
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.eclipse.EclipseUtils
 
 object ClasspathErrorPromptStatusHandler {
 
@@ -30,7 +31,7 @@ object ClasspathErrorPromptStatusHandler {
 
 class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
 
-  def doHandleStatus(status: IStatus, source: Object) = {
+  override def doHandleStatus(status: IStatus, source: Object) = {
     val (scalaProject, continuation)  = source match {
       case (p: ScalaProject, c: Promise[() => Unit]) => (Some(p), Some(c))
       case (_, c: Promise[()=> Unit]) => (None, Some(c))
@@ -65,7 +66,12 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
         1)
       dialog.open()
       val buttonId = dialog.getReturnCode()
-      if (buttonId == IDialogConstants.OK_ID) continuation.get trySuccess {() => Utils.tryExecute(project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")) }
+      if (buttonId == IDialogConstants.OK_ID)
+        continuation.get trySuccess { () =>
+          EclipseUtils.withSafeRunner("Error occurred while trying to set source level.") {
+            project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")
+          }
+        }
       else continuation.get trySuccess { () => }
     } else continuation map { _ failure (new IllegalArgumentException) }
   }

@@ -6,7 +6,6 @@
 package org.scalaide.ui.internal.editor.decorators
 
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.IPainter
@@ -65,9 +64,9 @@ abstract class BaseSemanticAction(
   private val propertiesOpt = preferencePageId.map(id => new Properties(id))
 
   protected val annotationAccess = new IAnnotationAccess {
-    def getType(annotation: Annotation) = annotation.getType
-    def isMultiLine(annotation: Annotation) = true
-    def isTemporary(annotation: Annotation) = true
+    override def getType(annotation: Annotation) = annotation.getType
+    override def isMultiLine(annotation: Annotation) = true
+    override def isTemporary(annotation: Annotation) = true
   }
 
   protected def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
@@ -136,7 +135,7 @@ abstract class BaseSemanticAction(
   }
 
   private val _listener = new IPropertyChangeListener {
-    def propertyChange(event: PropertyChangeEvent) {
+    override def propertyChange(event: PropertyChangeEvent) {
       propertiesOpt.foreach { properties =>
         val changed = event.getProperty() match {
           case properties.bold | properties.italic | P_COLOR => true
@@ -156,13 +155,11 @@ abstract class BaseSemanticAction(
   }
 
   private def refresh() = {
-    import org.scalaide.util.Utils.WithAsInstanceOfOpt
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
-      compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
-      scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
+      scu <- IScalaPlugin().scalaCompilationUnit(editorInput)
     } apply(scu)
   }
 

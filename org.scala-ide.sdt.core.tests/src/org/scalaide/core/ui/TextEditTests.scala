@@ -1,20 +1,14 @@
 package org.scalaide.core.ui
 
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension3
-import org.junit.AfterClass
 import org.junit.ComparisonFailure
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.CompilerSupportTests
 import org.scalaide.core.lexical.ScalaCodePartitioner
-import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.eclipse.EclipseUtils
-import org.junit.AfterClass
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * This class provides basic test behavior for all text changing operations that
@@ -56,6 +50,31 @@ abstract class TextEditTests {
      * by the test suite.
      */
     def execute(): Unit
+
+    /**
+     * This function can handle Eclipse' linked mode model. To depict such a
+     * model in the test simply surround the identifiers that should be
+     * considered by the linked model with [[ and ]]. The cursor is always
+     * represented by a ^.
+     *
+     * This function needs to be called by a concrete operation to add the [[
+     * and ]] markers to `doc`. `cursorPos` is the position of the cursor where
+     * the ^ marker should be added to `doc`. This function updates the cursor
+     * position if necessary and returns its updated value. `groups` are pairs
+     * of `(offset, length)` which span the area that should be surrounded
+     * by the [[ and ]] markers.
+     */
+    def applyLinkedModel(doc: IDocument, cursorPos: Int, positionGroups: Seq[(Int, Int)]): Int = {
+      val groups = positionGroups.sortBy(-_._1)
+      val cursorOffset = groups.takeWhile(_._1 < cursorPos).size*4
+
+      groups foreach {
+        case (offset, length) =>
+          doc.replace(offset+length, 0, "]]")
+          doc.replace(offset, 0, "[[")
+      }
+      cursorPos+cursorOffset
+    }
   }
 
   /** This method allows subclasses to provide their own test setup. */
@@ -124,47 +143,12 @@ trait EclipseDocumentSupport {
     doc.get()
 }
 
-trait CompilerSupport extends EclipseDocumentSupport {
+trait CompilerSupport extends EclipseDocumentSupport with CompilerSupportTests {
   this: TextEditTests =>
-
-  /** Can be overwritten in a subclass if desired. */
-  val projectName: String = getClass().getSimpleName()
-
-  private val project: IScalaProject = {
-    SDTTestUtils.createProjectInWorkspace(projectName)
-  }
 
   override def runTest(source: String, operation: Operation): Unit = {
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       super.runTest(source, operation)
-    }
-  }
-
-  def withCompiler(f: IScalaPresentationCompiler => Unit): Unit =
-    project.presentationCompiler { compiler =>
-      f(compiler)
-    }
-
-  /**
-   * Creates a compilation unit whose underlying source file physically exists
-   * in the test project of the test workspace. The file is placed in a unique
-   * package name to prevent name clashes between generated files.
-   *
-   * The newly generated file is made available to the Eclipse platform and the
-   * Scala compiler to allow the usage of the full non GUI feature set of the IDE.
-   */
-  final def mkCompilationUnit(source: String): ICompilationUnit = {
-    val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
-    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source)
-  }
-
-  final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =
-    mkCompilationUnit(source).asInstanceOf[ScalaCompilationUnit]
-
-  @AfterClass
-  final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
-      project.underlying.delete(/* force */ true, new NullProgressMonitor)
     }
   }
 }

@@ -8,7 +8,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy
-import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.internal.text.html.BrowserInformationControl
@@ -282,23 +281,19 @@ class ScalaSourceViewerConfiguration(
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
           new MultiLineStringAutoIndentStrategy(partitioning, prefStore),
           new MultiLineStringAutoEditStrategy(partitioning, prefStore),
           tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
           new StringAutoEditStrategy(partitioning, prefStore),
           tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
           new AutoIndentStrategy(prefStore),
-          new BracketAutoEditStrategy(prefStore),
           new LiteralAutoEditStrategy(prefStore),
           tabsToSpacesConverter)
 

@@ -11,7 +11,7 @@ import org.scalaide.ui.internal.preferences.EditorPreferencePage
  */
 class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+  override def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
 
     val isAutoEscapeSignEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_SIGN)
@@ -21,19 +21,6 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     def ch(i: Int, c: Char) = {
       val o = command.offset + i
       o >= 0 && o < document.getLength && document.getChar(o) == c
-    }
-
-    def addClosingLiteral() {
-      def isIdentStart = {
-        val o = command.offset
-        o < document.getLength() && Character.isJavaIdentifierStart(document.getChar(o))
-      }
-      if (ch(-1, '"') || ch(-1, ''') || ch(0, '"') || ch(0, ''') || ch(-2, ''') || isIdentStart) {
-        return
-      }
-      command.caretOffset = command.offset + 1
-      command.text += command.text
-      command.shiftsCaret = false
     }
 
     def removeLiteral() {
@@ -103,7 +90,6 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
 
     def customizeChar() {
       command.text match {
-        case "\"" | "'"                           => addClosingLiteral()
         case "" if isEmptyLiteral                 => deleteEmptyLiteral()
         case "" if isAutoRemoveEscapedSignEnabled => removeLiteral()
         case _                                    =>

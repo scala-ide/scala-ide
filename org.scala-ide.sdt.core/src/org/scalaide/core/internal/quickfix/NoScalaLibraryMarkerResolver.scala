@@ -1,17 +1,19 @@
 package org.scalaide.core.internal.quickfix
 
-import org.eclipse.ui.IMarkerResolutionGenerator
-import org.eclipse.ui.IMarkerResolution
 import org.eclipse.core.resources.IMarker
+import org.eclipse.ui.IMarkerResolution
+import org.eclipse.ui.IMarkerResolutionGenerator
 import org.scalaide.core.internal.project.Nature
-import org.scalaide.util.Utils
+import org.scalaide.util.eclipse.EclipseUtils
 
 class NoScalaLibraryMarkerResolver extends IMarkerResolutionGenerator {
-  def getResolutions(marker: IMarker): Array[IMarkerResolution] = {
+  override def getResolutions(marker: IMarker): Array[IMarkerResolution] = {
     val addScalaLibrary = new IMarkerResolution() {
-      def getLabel: String = "Add Scala Library to Classpath"
-      def run(marker: IMarker): Unit = {
-        Utils.tryExecute(Nature.addScalaLibAndSave(marker.getResource.getProject))
+      override def getLabel: String = "Add Scala Library to Classpath"
+      override def run(marker: IMarker): Unit = {
+        EclipseUtils.withSafeRunner("Error occurred while adding Scala library to classpath") {
+          Nature.addScalaLibAndSave(marker.getResource.getProject)
+        }
       }
     }
 

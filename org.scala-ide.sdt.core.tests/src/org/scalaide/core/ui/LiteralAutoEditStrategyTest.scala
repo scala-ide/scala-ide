@@ -7,17 +7,12 @@ import org.scalaide.ui.internal.preferences.EditorPreferencePage._
 
 class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
 
-  val strategy = new LiteralAutoEditStrategy(prefStore)
+  override val strategy = new LiteralAutoEditStrategy(prefStore)
 
   @Before
   def startUp() {
     enable(P_ENABLE_AUTO_ESCAPE_SIGN, true)
     enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, true)
-  }
-
-  @Test
-  def auto_close_string_literal() {
-    test(input = "^", expectedOutput = "\"^\"", operation = Add("\""))
   }
 
   @Test
@@ -32,21 +27,6 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def no_auto_close_on_existing_string_literal_before_caret() {
-    test(input = "\"^", expectedOutput = "\"\"^", operation = Add("\""))
-  }
-
-  @Test
-  def no_auto_close_on_existing_string_literal_after_caret() {
-    test(input = "^\"", expectedOutput = "\"^\"", operation = Add("\""))
-  }
-
-  @Test
-  def auto_close_character_literal() {
-    test(input = "^", expectedOutput = "'^'", operation = Add("'"))
-  }
-
-  @Test
   def remove_character_pair() {
     test(input = """ '^' """, expectedOutput = """ ^ """, operation = Remove("'"))
   }
@@ -55,16 +35,6 @@ class LiteralAutoEditStrategyTest extends AutoEditStrategyTests {
   def remove_character_pair_with_auto_remove_escaped_sign_disabled() {
     enable(P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN, false)
     test(input = """ '^' """, expectedOutput = """ ^ """, operation = Remove("'"))
-  }
-
-  @Test
-  def no_auto_close_on_existing_char_literal_before_caret() {
-    test(input = "'^", expectedOutput = "''^", operation = Add("'"))
-  }
-
-  @Test
-  def no_auto_close_on_existing_char_literal_after_caret() {
-    test(input = "^'", expectedOutput = "'^'", operation = Add("'"))
   }
 
   // the following tests belong to existing character literals,
