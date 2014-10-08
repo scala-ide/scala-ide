@@ -4,6 +4,8 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.text.IDocumentPartitioner
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.jface.util.PropertyChangeEvent
 
 /** Configuration for a previewer, like the one used in syntax coloring preferences page.
  *  It returns the configuration for the source viewer, and the document partitioners to use.
@@ -20,10 +22,13 @@ trait PreviewerFactoryConfiguration {
    */
   def getConfiguration(preferenceStore: IPreferenceStore): PreviewerConfiguration
 
-  /** Returns the document partitioniers to use in the previewer.
+  /** Returns the document partitioners to use in the previewer.
    */
   def getDocumentPartitioners(): Map[String, IDocumentPartitioner]
 
+  /** Perform additional styling in response to a property change.
+   */
+  def additionalStyling(viewer: ISourceViewer, store: IPreferenceStore): Unit = {}
 }
 
 object PreviewerFactoryConfiguration {

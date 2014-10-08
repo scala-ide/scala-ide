@@ -43,6 +43,7 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     previewViewer.setDocument(document)
 
     chainedPreferenceStore.addPropertyChangeListener(this)
+    factoryConfiguration.additionalStyling(previewViewer,  chainedPreferenceStore)
     previewViewer
   }
 
@@ -68,6 +69,7 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     configuration.propertyChange(event)
     // refreshes the highlighting
     previewViewer.invalidateTextPresentation()
-  }
 
+    factoryConfiguration.additionalStyling(previewViewer, chainedPreferenceStore)
+  }
 }
