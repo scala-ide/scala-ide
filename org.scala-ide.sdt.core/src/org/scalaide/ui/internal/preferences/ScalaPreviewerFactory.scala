@@ -12,7 +12,7 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Highlight
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Preferences
 import org.eclipse.jface.util.PropertyChangeEvent
 
-class ScalaPreviewerConfiguration extends PreviewerFactoryConfiguration {
+class StandardPreviewerFactoryConfiguration extends PreviewerFactoryConfiguration {
 
   def getConfiguration(preferenceStore: org.eclipse.jface.preference.IPreferenceStore): PreviewerFactoryConfiguration.PreviewerConfiguration = {
     new ScalaSourceViewerConfiguration(preferenceStore, preferenceStore, null)
@@ -22,9 +22,9 @@ class ScalaPreviewerConfiguration extends PreviewerFactoryConfiguration {
     Map((IJavaPartitions.JAVA_PARTITIONING, ScalaCodePartitioner.documentPartitioner(conservative = true)))
 }
 
-object ScalaPreviewerFactoryConfiguration extends ScalaPreviewerConfiguration
+object ScalaPreviewerFactoryConfiguration extends StandardPreviewerFactoryConfiguration
 
-object SemanticPreviewerFactoryConfiguration extends ScalaPreviewerConfiguration {
+object SemanticPreviewerFactoryConfiguration extends StandardPreviewerFactoryConfiguration {
   override def additionalStyling(viewer: ISourceViewer, store: IPreferenceStore) {
     val textWidgetOpt = Option(viewer.getTextWidget)
     for {
