@@ -57,6 +57,11 @@ SUCH DAMAGE.
       <update label="Scala IDE for Eclipse update site" url="http://download.scala-ide.org/update-current"/>
    </url>
 
+   <includes
+      id="org.scala-ide.scala211.source.feature"
+      version="0.0.0"
+      optional="true"/>
+
    <plugin
          id="org.scala-lang.scala-library"
          download-size="0"
