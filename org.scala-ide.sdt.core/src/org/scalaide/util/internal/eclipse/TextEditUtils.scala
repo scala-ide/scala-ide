@@ -142,6 +142,16 @@ object TextEditUtils {
 
         def offsetInIntersection = rLen-(selStart-rStart)
 
+        /**
+         * In an overlapping region we either have to expand or shrink the
+         * selection. Furthermore, the selection needs only to be adjusted for
+         * changes that happen before its position whereas the changes
+         * afterwards don't affect its position. In case the selection
+         * intersects with a changed region there is only a subset of the
+         * whole region needed for which the selection needs to be moved
+         * forwards or backwards. This subset is described by
+         * `overlapToPreserve`.
+         */
         def adjustOffset(overlapToPreserve: Int) = {
           val lenAfterSelection = edit.getChildren().collect {
             case e if e.start > selStart =>
@@ -158,11 +168,12 @@ object TextEditUtils {
         }
 
         // ^ = selStart/selEnd, [ = rStart, ] = rEnd
-        // case 1: ^  ^ [  ], ^ [  ]
-        if (selStart < rStart && selEnd < rStart)
-          (adjustOffset(offsetInIntersection), 0)
+        // Don't need to be handled here:
+        // - case 1: ^  ^ [  ], ^ [  ]
+        // - case 6: [  ] ^  ^, [  ] ^
+
         // case 2: ^ [ ^ ]
-        else if (selStart < rStart && selEnd < rEnd)
+        if (selStart < rStart && selEnd < rEnd)
           (adjustOffset(0), selLen-(selEnd-rStart))
         // case 3: ^ [  ] ^
         else if (selStart < rStart && selEnd > rEnd) {
@@ -176,11 +187,8 @@ object TextEditUtils {
         else if (selStart < rEnd && selEnd < rEnd)
           (adjustOffset(offsetInIntersection), 0)
         // case 5: [ ^ ] ^
-        else if (selStart < rEnd && selEnd > rEnd)
-          (adjustOffset(offsetInIntersection), selLen-(rEnd-selStart))
-        // case 6: [  ] ^  ^, [  ] ^
         else
-          (adjustOffset(offsetInIntersection), 0)
+          (adjustOffset(offsetInIntersection), selLen-(rEnd-selStart))
       }
 
       new TextSelection(document, newOffset, newLen)
