@@ -29,6 +29,7 @@ import org.scalaide.util.internal.SettingConverterUtil
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.project.ScalaProject
 
 object ClasspathTests extends TestProjectSetup("classpath") {
 
@@ -71,7 +72,7 @@ class ClasspathTests {
         if classpathEntry.getPath().toPortableString() != "org.scala-ide.sdt.launching.SCALA_CONTAINER")
       yield classpathEntry
 
-  val projectStore = project.projectSpecificStorage
+  val projectStore = internalProject.projectSpecificStorage
 
   private def enableProjectSpecificSettings() = {
     projectStore.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)

@@ -33,7 +33,7 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.SDTTestUtils
 
 object DesiredScalaInstallationTests {
-  private var projects: List[ScalaProject] = List()
+  private var projects: List[IScalaProject] = List()
 
     @AfterClass
   final def deleteProject(): Unit = {
@@ -59,7 +59,7 @@ class DesiredScalaInstallationTests {
   def anotherBundle(dsi : LabeledScalaInstallation): Option[LabeledScalaInstallation] = ScalaInstallation.availableBundledInstallations.find { si => si != dsi }
 
   def createProject(): ScalaProject = {
-    val project = SDTTestUtils.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
+    val project = SDTTestUtils.internalCreateProjectInWorkspace(s"compiler-settings${projects.size}", true)
     projects = project :: projects
     project
   }
