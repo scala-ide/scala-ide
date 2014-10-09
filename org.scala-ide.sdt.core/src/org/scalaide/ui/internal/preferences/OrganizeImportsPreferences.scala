@@ -27,15 +27,13 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.util.Utils
+import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.core.resources.ProjectScope
 import org.scalaide.core.SdtConstants
-
-
 
 class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPreferencePage {
   import OrganizeImportsPreferences._
@@ -80,8 +78,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
     fieldEditor
   }
 
-  def createContents(parent: Composite): Control = {
-    import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
+  override def createContents(parent: Composite): Control = {
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 
@@ -116,26 +113,26 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       horizontalLine.setLayoutData(new CC().spanX(2).grow.wrap)
     }
 
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { (parent =>
       new ListEditor(groupsKey, "Define the sorting order of import statements.", parent) {
 
         allEnableDisableControls += getListControl(parent)
         allEnableDisableControls += getButtonBoxControl(parent)
 
-        def createList(items: Array[String]) = items.mkString("$")
+        override def createList(items: Array[String]) = items.mkString("$")
 
-        def parseString(stringList: String) = stringList.split("\\$")
+        override def parseString(stringList: String) = stringList.split("\\$")
 
-        def getNewInputObject(): String = {
+        override def getNewInputObject(): String = {
 
-          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a package name:", "", new IInputValidator { def isValid(text: String) = null });
+          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a package name:", "", new IInputValidator { override def isValid(text: String) = null });
           if (dlg.open() == Window.OK) {
             dlg.getValue()
           } else {
             null
           }
         }
-      }
+      })
     }
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
@@ -150,7 +147,7 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
       }
     }
 
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { (parent =>
       new ListEditor(wildcardsKey, "Always use wilcard imports when importing from these packages and objects:", parent) {
 
         getDownButton.setVisible(false)
@@ -159,20 +156,20 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
         allEnableDisableControls += getListControl(parent)
         allEnableDisableControls += getButtonBoxControl(parent)
 
-        def createList(items: Array[String]) = items.mkString("$")
+        override def createList(items: Array[String]) = items.mkString("$")
 
-        def parseString(stringList: String) = stringList.split("\\$")
+        override def parseString(stringList: String) = stringList.split("\\$")
 
-        def getNewInputObject(): String = {
+        override def getNewInputObject(): String = {
 
-          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a fully qualified package or type name:", "", new IInputValidator { def isValid(text: String) = null });
+          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a fully qualified package or type name:", "", new IInputValidator { override def isValid(text: String) = null });
           if (dlg.open() == Window.OK) {
             dlg.getValue()
           } else {
             null
           }
         }
-      }
+      })
     }
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
@@ -248,14 +245,11 @@ object OrganizeImportsPreferences extends Enumeration {
 class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitializer {
 
   /** Actually initializes preferences */
-  def initializeDefaultPreferences() : Unit = {
-
-    Utils.tryExecute {
-      val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
-      node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
-      node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
-      node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")
-      node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)
-    }
+  override def initializeDefaultPreferences(): Unit = {
+    val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
+    node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
+    node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
+    node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")
+    node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)
   }
 }

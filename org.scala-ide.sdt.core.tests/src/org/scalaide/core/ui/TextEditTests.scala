@@ -1,20 +1,13 @@
 package org.scalaide.core.ui
 
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocumentExtension3
-import org.junit.AfterClass
 import org.junit.ComparisonFailure
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.CompilerSupportTests
 import org.scalaide.core.lexical.ScalaCodePartitioner
-import org.scalaide.core.IScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.eclipse.EclipseUtils
-import org.junit.AfterClass
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * This class provides basic test behavior for all text changing operations that
@@ -124,47 +117,12 @@ trait EclipseDocumentSupport {
     doc.get()
 }
 
-trait CompilerSupport extends EclipseDocumentSupport {
+trait CompilerSupport extends EclipseDocumentSupport with CompilerSupportTests {
   this: TextEditTests =>
-
-  /** Can be overwritten in a subclass if desired. */
-  val projectName: String = getClass().getSimpleName()
-
-  private val project: IScalaProject = {
-    SDTTestUtils.createProjectInWorkspace(projectName)
-  }
 
   override def runTest(source: String, operation: Operation): Unit = {
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       super.runTest(source, operation)
-    }
-  }
-
-  def withCompiler(f: IScalaPresentationCompiler => Unit): Unit =
-    project.presentationCompiler { compiler =>
-      f(compiler)
-    }
-
-  /**
-   * Creates a compilation unit whose underlying source file physically exists
-   * in the test project of the test workspace. The file is placed in a unique
-   * package name to prevent name clashes between generated files.
-   *
-   * The newly generated file is made available to the Eclipse platform and the
-   * Scala compiler to allow the usage of the full non GUI feature set of the IDE.
-   */
-  final def mkCompilationUnit(source: String): ICompilationUnit = {
-    val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
-    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source)
-  }
-
-  final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =
-    mkCompilationUnit(source).asInstanceOf[ScalaCompilationUnit]
-
-  @AfterClass
-  final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace()) { _ =>
-      project.underlying.delete(/* force */ true, new NullProgressMonitor)
     }
   }
 }

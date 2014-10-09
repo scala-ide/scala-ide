@@ -7,7 +7,6 @@ import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
 
 /** This trait represents a possibly translated Scala source. In the default case,
  *  the original and Scala sources and positions are the same.

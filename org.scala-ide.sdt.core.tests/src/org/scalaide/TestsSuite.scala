@@ -43,6 +43,8 @@ import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.classpath.DesiredScalaInstallationTests
 import org.scalaide.ui.wizards.WizardTests
+import org.scalaide.core.text.TextTestSuite
+import org.scalaide.extensions.saveactions.SaveActionTestSuite
 import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.core.pc.DeclarationPrinterTest
@@ -93,6 +95,8 @@ import org.scalaide.core.pc.DeclarationPrinterTest
     classOf[DirectoryScalaInstallationTest],
     classOf[CompletionTestSuite],
     classOf[WizardTests],
+    classOf[TextTestSuite],
+    classOf[SaveActionTestSuite],
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
     classOf[DeclarationPrinterTest]

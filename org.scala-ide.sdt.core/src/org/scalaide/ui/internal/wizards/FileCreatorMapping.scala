@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.wizards
 
-import org.eclipse.core.runtime.CoreException
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.wizards.FileCreator
 import org.scalaide.util.eclipse.EclipseUtils
@@ -16,18 +15,16 @@ object FileCreatorMapping extends HasLogger {
   def mappings: Seq[FileCreatorMapping] = {
     val elems = EclipseUtils.configElementsForExtension(FileCreatorId)
 
-    try
-      elems.filterNot(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator").map(e => FileCreatorMapping(
-        e.getAttribute("id"),
-        e.getAttribute("name"),
-        e.getAttribute("templateId"),
-        Option(e.getAttribute("icon")).getOrElse(""),
-        e.getContributor().getName()
-      )(e.createExecutableExtension("class").asInstanceOf[FileCreator]))
-    catch {
-      case e: CoreException =>
-        eclipseLog.error(s"Error while trying to retrieve information from extension '$FileCreatorId'", e)
-        Seq()
+    elems.filterNot(_.getAttribute("id") == "org.scalaide.ui.wizards.scalaCreator") flatMap { e =>
+      EclipseUtils.withSafeRunner(s"Error while trying to retrieve information from extension '$FileCreatorId'") {
+        FileCreatorMapping(
+          e.getAttribute("id"),
+          e.getAttribute("name"),
+          e.getAttribute("templateId"),
+          Option(e.getAttribute("icon")).getOrElse(""),
+          e.getContributor().getName()
+        )(e.createExecutableExtension("class").asInstanceOf[FileCreator])
+      }
     }
   }
 }
@@ -50,10 +47,8 @@ case class FileCreatorMapping
    * result of the function.
    */
   def withInstance[A](f: FileCreator => A): Option[A] = {
-    var a = null.asInstanceOf[A]
-    EclipseUtils.withSafeRunner {
-      a = f(unsafeInstanceAccess)
+    EclipseUtils.withSafeRunner(s"An error occured while executing file creator '$name'.") {
+      f(unsafeInstanceAccess)
     }
-    Option(a)
   }
 }

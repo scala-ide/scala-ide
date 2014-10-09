@@ -10,8 +10,8 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime
 import org.eclipse.core.runtime.Path
-import org.scalaide.util.Utils
 import org.scalaide.core.SdtConstants
+import org.scalaide.util.eclipse.EclipseUtils
 
 object Nature {
 
@@ -57,7 +57,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(JavaCore.BUILDER_ID), SdtConstants.BuilderId)
 
-    Utils.tryExecute {
+    EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath.") {
       Nature.addScalaLibAndSave(getProject)
     }
   }
@@ -68,7 +68,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(SdtConstants.BuilderId), JavaCore.BUILDER_ID)
 
-    Utils.tryExecute {
+    EclipseUtils.withSafeRunner("Error occurred while trying to remove Scala library from classpath.") {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
@@ -76,7 +76,7 @@ class Nature extends IProjectNature {
   }
 
   private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    Utils.tryExecute {
+    EclipseUtils.withSafeRunner(s"Error occurred while trying to update builder of project '$project'.") {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

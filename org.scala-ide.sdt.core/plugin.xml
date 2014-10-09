@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-   <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension-point id="sourcefileprovider" name="Source file Providers" schema="schema/sourceFileProviders.exsd"/>
    <extension-point id="scalaHoverDebugOverride" name="Scala Hover Debug Override" schema="schema/scalaHoverDebugOverride.exsd"/>
    <extension-point id="fileCreator" name="File Creator" schema="schema/fileCreator.exsd"/>
+   <extension-point id="semanticHighlightingParticipants" name="Semantic Highlighting Participants" schema="schema/semanticHighlightingParticipants.exsd"/>
    <extension-point id="quickAssists" name="Quick Assists" schema="schema/quickAssists.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
@@ -134,6 +134,12 @@
             class="org.scalaide.ui.internal.preferences.HoverPreferencePage"
             id="org.scalaide.ui.preferences.editor.hover"
             name="Hover">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.SaveActionsPreferencePage"
+            id="org.scalaide.ui.preferences.editor.saveactions"
+            name="Save Actions">
       </page>
    </extension>
 
@@ -873,6 +879,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.HoverPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
      </initializer>
   </extension>
 
@@ -1711,14 +1720,6 @@
     </javaCompletionProposalComputer>
  </extension>
  <extension
-       point="org.scala-ide.sdt.core.reconciliationParticipants">
-    <participant
-          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.ImplicitHighlighter"
-          id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
-          name="Semantic Highlighting">
-    </participant>
- </extension>
- <extension
        point="org.eclipse.ltk.core.refactoring.moveParticipants">
     <moveParticipant
           class="org.scalaide.refactoring.internal.move.ScalaMoveParticipant"
@@ -1838,5 +1839,11 @@
           The font used for all Scala hovers.
        </description>
     </fontDefinition>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.semanticHighlightingParticipants">
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingParticipant">
+    </participant>
  </extension>
 </plugin>

@@ -3,7 +3,6 @@ package org.scalaide.core.internal.quickassist
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.jdt.internal.ui.javaeditor.IJavaAnnotation
-import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.eclipse.jface.text.quickassist.IQuickAssistInvocationContext
@@ -11,7 +10,8 @@ import org.eclipse.jface.text.quickassist.IQuickAssistProcessor
 import org.eclipse.jface.text.quickassist.QuickAssistAssistant
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.ui.IEditorInput
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.quickassist.AssistLocation
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
@@ -79,7 +79,7 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
   override def computeQuickAssistProposals(ctx: IQuickAssistInvocationContext): Array[ICompletionProposal] = {
     def problems = {
       import collection.JavaConverters._
-      val model = JavaUI.getDocumentProvider.getAnnotationModel(input)
+      val model = ScalaPlugin().documentProvider.getAnnotationModel(input)
       val iter = model.getAnnotationIterator.asScala
 
       (iter foldLeft IndexedSeq[AssistLocation]()) {
@@ -107,25 +107,24 @@ final class QuickAssistProcessor(input: IEditorInput, id: String) extends IQuick
       }
     }
 
+    val ssf = IScalaPlugin().scalaCompilationUnit(input)
     val assists =
       if (id == DefaultId)
         QuickAssists
       else
         QuickAssists.find(_.id == id).toSeq
 
-    JavaUI.getWorkingCopyManager.getWorkingCopy(input) match {
-      case ssf: ScalaSourceFile if assists.nonEmpty =>
-        val ictx = InvocationContext(ssf, ctx.getOffset, ctx.getLength, problems)
-        val proposals = assists flatMap (_ withInstance (_ compute ictx))
-        val sorted = proposals.flatten.sortBy(-_.getRelevance())
+    if (assists.isEmpty || ssf.isEmpty)
+      Array(NoProposals)
+    else {
+      val ictx = InvocationContext(ssf.get, ctx.getOffset, ctx.getLength, problems)
+      val proposals = assists flatMap (_ withInstance (_ compute ictx))
+      val sorted = proposals.flatten.sortBy(-_.getRelevance())
 
-        if (sorted.isEmpty)
-          Array(NoProposals)
-        else
-          sorted.toArray
-
-      case _ =>
+      if (sorted.isEmpty)
         Array(NoProposals)
+      else
+        sorted.toArray
     }
   }
 

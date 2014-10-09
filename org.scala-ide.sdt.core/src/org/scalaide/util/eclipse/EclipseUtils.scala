@@ -200,13 +200,6 @@ object EclipseUtils extends HasLogger {
   def configElementsForExtension(id: String): Array[IConfigurationElement] =
     Platform.getExtensionRegistry().getConfigurationElementsFor(id)
 
-  /** Executes a given function in a safe runner that catches potential occurring
-   *  exceptions and logs them if this is the case.
-   */
-  @deprecated("use the overloaded alternative", "4.0")
-  def withSafeRunner(f: => Unit): Unit =
-    withSafeRunner("")(f)
-
   /**
    * Executes a given function `f` in a safe runner that catches potential
    * occuring exceptions and logs them together with `errorMsg` if this is the
@@ -219,6 +212,7 @@ object EclipseUtils extends HasLogger {
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
         eclipseLog.error(errorMsg, e)
+
       override def run() = res = f
     })
     Option(res)

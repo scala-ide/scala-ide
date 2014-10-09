@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.SelectionHistory
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectHistoryAction
 import org.eclipse.jdt.internal.ui.javaeditor.selectionactions.StructureSelectionAction
@@ -35,8 +36,10 @@ import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
+import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
@@ -44,7 +47,7 @@ import org.scalaide.refactoring.internal.RefactoringMenu
 import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
 import org.scalaide.ui.internal.actions
-import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
+import org.scalaide.ui.internal.editor.autoedits._
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
@@ -73,6 +76,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       }
     }
   }
+
   private lazy val tpePresenter = {
     val infoPresenter = new InformationPresenter(new FocusedControlCreator(IScalaHover.HoverFontId))
     infoPresenter.install(getSourceViewer)
@@ -80,7 +84,40 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     infoPresenter
   }
 
+  /**
+   * Contains references to all extensions provided by the extension point
+   * `org.scala-ide.sdt.core.semanticHighlightingParticipants`.
+   *
+   * These extensions are mainly provided by users, therefore any accesss need
+   * to be wrapped in a safe runner.
+   */
+  private lazy val semanticHighlightingParticipants = new IJavaReconcilingListener {
+
+    def nameOf[A](a: A) = a.getClass().getName()
+
+    val exts = getSourceViewer() match {
+      case jsv: JavaSourceViewer => SemanticHighlightingParticipants.extensions flatMap { ext =>
+        EclipseUtils.withSafeRunner(s"Error occurred while creating semantic action of '${nameOf(ext)}'.") {
+          ext.participant(jsv)
+        }
+      }
+    }
+
+    override def aboutToBeReconciled() = ()
+    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
+      self.getInteractiveCompilationUnit() match {
+        case scu: ScalaCompilationUnit => exts foreach { ext =>
+          EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'.") {
+            ext(scu)
+          }
+        }
+        case _ =>
+      }
+    }
+  }
+
   setPartName("Scala Editor")
+  setDocumentProvider(ScalaPlugin().documentProvider)
 
   override protected def createActions() {
     super.createActions()
@@ -188,9 +225,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
 
     EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
-      val fileName = getInteractiveCompilationUnit.file.name
-      Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
-        performOccurrencesUpdate(selection, lastModified)
+      Option(getInteractiveCompilationUnit) foreach { cu =>
+        val fileName = cu.file.name
+        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
+          performOccurrencesUpdate(selection, lastModified)
+        }
       }
       Status.OK_STATUS
     }
@@ -288,6 +327,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     super.createPartControl(parent)
     occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     RefactoringMenu.fillQuickMenu(this)
+    reconcilingListeners.addReconcileListener(semanticHighlightingParticipants)
 
     getSourceViewer match {
       case sourceViewer: ITextViewerExtension =>
