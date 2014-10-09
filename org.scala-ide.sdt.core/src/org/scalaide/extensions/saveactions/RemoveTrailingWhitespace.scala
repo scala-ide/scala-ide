@@ -2,6 +2,7 @@ package org.scalaide.extensions
 package saveactions
 
 import org.scalaide.core.text.Remove
+import org.scalaide.util.eclipse.RegionUtils._
 
 object RemoveTrailingWhitespaceSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[RemoveTrailingWhitespace],
@@ -22,7 +23,7 @@ trait RemoveTrailingWhitespace extends SaveAction with DocumentSupport {
 
   override def perform() = {
     document.lines flatMap { line =>
-      val trimmed = line.trimRight
+      val trimmed = line.trimRight(document)
 
       if (trimmed.length != line.length)
         Seq(Remove(trimmed.end, line.end))

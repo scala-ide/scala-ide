@@ -13,6 +13,7 @@ import scala.annotation.tailrec
 import org.eclipse.jface.text.ITypedRegion
 import java.lang.Math.max
 import java.lang.Math.min
+import org.scalaide.core.text.Document
 
 /** Utility methods and extension classes around [[org.eclipse.jface.text.IRegion]]
  */
@@ -86,6 +87,34 @@ object RegionUtils {
      */
     def translate(f: Int => Int): IRegion = {
       new Region(f(region.getOffset), region.getLength)
+    }
+
+    def text(doc: Document): String =
+      doc.textRange(region.start, region.end)
+
+    def trim(doc: Document): IRegion =
+      region.trimLeft(doc).trimRight(doc)
+
+    def trimLeft(doc: Document): IRegion = {
+      val s = text(doc)
+      val len = region.length
+
+      var i = 0
+      while (i < len && Character.isWhitespace(s.charAt(i)))
+        i += 1
+
+      regionOf(region.start+i, region.end)
+    }
+
+    def trimRight(doc: Document): IRegion = {
+      val s = text(doc)
+      val len = region.length
+
+      var i = len-1
+      while (i >= 0 && Character.isWhitespace(s.charAt(i)))
+        i -= 1
+
+      regionOf(region.start, region.start+i+1)
     }
   }
 

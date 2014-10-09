@@ -1,16 +1,15 @@
 package org.scalaide.core.internal.text
 
 import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
 import org.scalaide.core.text.Document
 import org.scalaide.core.text.InternalDocument
 
 class TextDocument(private val doc: IDocument) extends Document with InternalDocument {
 
   override def apply(i: Int): Char =
-    if (i >= 0 && i < length)
-      doc.getChar(i)
-    else
-      throw new IndexOutOfBoundsException
+    doc.getChar(i)
 
   override def length: Int =
     doc.getLength()
@@ -19,10 +18,7 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
     doc.get()
 
   override def textRange(start: Int, end: Int): String =
-    if (isValidRange(start, end))
-      doc.get(start, end-start)
-    else
-      throw new IndexOutOfBoundsException
+    doc.get(start, end-start)
 
   override def textRangeOpt(start: Int, end: Int): Option[String] =
     if (isValidRange(start, end))
@@ -30,25 +26,20 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
     else
       None
 
-  override def lines: Seq[Range] =
+  override def lines: Seq[IRegion] =
     0 until lineCount map lineInformation
 
   override def lineCount: Int =
     doc.getNumberOfLines()
 
-  override def lineInformation(lineNumber: Int): Range = {
-    val l = doc.getLineInformation(lineNumber)
-    Range(l.getOffset(), l.getOffset()+l.getLength())
-  }
+  override def lineInformation(lineNumber: Int): IRegion =
+    doc.getLineInformation(lineNumber)
 
   override def replace(start: Int, end: Int, text: String): Unit =
     doc.replace(start, end-start, text)
 
   override def head: Char =
-    if (!isEmpty)
-      doc.getChar(0)
-    else
-      throw new IndexOutOfBoundsException
+    doc.getChar(0)
 
   override def headOpt: Option[Char] =
     if (!isEmpty)
@@ -57,10 +48,7 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
       None
 
   override def tail: String =
-    if (!isEmpty)
-      doc.get(1, length-1)
-    else
-      throw new IndexOutOfBoundsException
+    doc.get(1, length-1)
 
   override def tailOpt: Option[String] =
     if (!isEmpty)
@@ -69,10 +57,7 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
       None
 
   override def init: String =
-    if (!isEmpty)
-      doc.get(0, length-1)
-    else
-      throw new IndexOutOfBoundsException
+    doc.get(0, length-1)
 
   override def initOpt: Option[String] =
     if (!isEmpty)
@@ -81,10 +66,7 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
       None
 
   override def last: Char =
-    if (!isEmpty)
-      doc.getChar(length-1)
-    else
-      throw new IndexOutOfBoundsException
+    doc.getChar(length-1)
 
   override def lastOpt: Option[Char] =
     if (!isEmpty)

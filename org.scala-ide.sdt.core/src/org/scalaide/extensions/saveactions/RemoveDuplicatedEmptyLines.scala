@@ -2,6 +2,7 @@ package org.scalaide.extensions
 package saveactions
 
 import org.scalaide.core.text.Remove
+import org.scalaide.util.eclipse.RegionUtils._
 
 object RemoveDuplicatedEmptyLinesSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[RemoveDuplicatedEmptyLines],
@@ -22,7 +23,7 @@ trait RemoveDuplicatedEmptyLines extends SaveAction with DocumentSupport {
 
   override def perform() = {
     val emptyLines = document.lines.zipWithIndex.filter {
-      case (l, _) => l.trimRight.length == 0
+      case (r, _) => r.trimRight(document).length == 0
     }
 
     val removedLines = emptyLines.sliding(2) flatMap {

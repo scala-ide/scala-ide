@@ -47,9 +47,7 @@ object SaveActionExtensions {
     RemoveTrailingWhitespaceSetting,
     AddNewLineAtEndOfFileSetting,
     AutoFormattingSetting,
-    AddMissingOverrideSetting,
-    RemoveDuplicatedEmptyLinesSetting,
-    AddReturnTypeToPublicSymbolsSetting
+    RemoveDuplicatedEmptyLinesSetting
   )
 
   /**
@@ -103,7 +101,6 @@ trait SaveActionExtensions extends HasLogger {
    */
   private def applySaveActions(udoc: IDocument): Unit = {
     applyDocumentExtensions(udoc)
-    applyCompilerExtensions(udoc)
   }
 
   /**

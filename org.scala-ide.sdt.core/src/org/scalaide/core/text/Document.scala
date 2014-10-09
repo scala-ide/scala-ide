@@ -1,5 +1,7 @@
 package org.scalaide.core.text
 
+import org.eclipse.jface.text.IRegion
+
 trait Document {
 
   doc =>
@@ -14,11 +16,11 @@ trait Document {
 
   def textRangeOpt(start: Int, end: Int): Option[String]
 
-  def lines: Seq[Range]
+  def lines: Seq[IRegion]
 
   def lineCount: Int
 
-  def lineInformation(lineNumber: Int): Range
+  def lineInformation(lineNumber: Int): IRegion
 
   def head: Char
 
@@ -35,36 +37,6 @@ trait Document {
   def last: Char
 
   def lastOpt: Option[Char]
-
-  case class Range(start: Int, end: Int) {
-    def length: Int = end-start
-    def text: String = doc.textRange(start, end)
-
-    def trim: Range =
-      trimLeft.trimRight
-
-    def trimLeft: Range = {
-      val s = text
-      val len = length
-
-      var i = 0
-      while (i < len && Character.isWhitespace(s.charAt(i)))
-        i += 1
-
-      Range(start+i, end)
-    }
-
-    def trimRight: Range = {
-      val s = text
-      val len = length
-
-      var i = len-1
-      while (i >= 0 && Character.isWhitespace(s.charAt(i)))
-        i -= 1
-
-      Range(start, start+i+1)
-    }
-  }
 }
 
 private[core] trait InternalDocument extends Document {
