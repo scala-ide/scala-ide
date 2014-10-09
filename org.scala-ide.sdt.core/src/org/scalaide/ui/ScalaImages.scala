@@ -1,6 +1,8 @@
 package org.scalaide.ui
 
+import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jface.resource.ImageDescriptor
+import org.eclipse.swt.graphics.Image
 import org.scalaide.util.eclipse.OSGiUtils
 
 object ScalaImages {
@@ -32,4 +34,5 @@ object ScalaImages {
   val NEW_CLASS: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/etool16/newclass_wiz.gif")
   val CORRECTION_RENAME: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/correction_rename.gif")
 
+  val ADD_METHOD_PROPOSAL: Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
 }

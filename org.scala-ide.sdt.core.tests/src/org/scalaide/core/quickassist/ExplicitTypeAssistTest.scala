@@ -6,7 +6,7 @@ import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
-import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
+import org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType
 import scala.util.control.Exception
 
 object ExplicitTypeAssistTest extends QuickAssistTest {
@@ -21,7 +21,7 @@ object ExplicitTypeAssistTest extends QuickAssistTest {
 class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   import ExplicitTypeAssistTest._
 
-  val quickAssist = ExplicitReturnType
+  val quickAssist = new ExplicitReturnType
 
   def createSource(packageName: String, unitName: String)(contents: String) = createSourceFile(packageName, unitName)(contents)
 

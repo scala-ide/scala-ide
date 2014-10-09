@@ -30,22 +30,22 @@ trait QuickAssistTest {
 
 trait QuickAssistTestHelper {
 
-  val quickAssist: { def suggestsFor(ssf: ScalaSourceFile, offset: Int): immutable.Seq[IJavaCompletionProposal] }
+  val quickAssist: QuickAssist
 
   def createSource(packageName: String, unitName: String)(contents: String): ScalaSourceFile
 
-  def runQuickAssistWith(contents: String)(f: Option[IJavaCompletionProposal] => Unit) = {
+  def runQuickAssistWith(contents: String)(f: Option[IJavaCompletionProposal] => Unit): Unit = {
     val unit = createSource("test", "Test.scala")(contents.filterNot(_ == '^'))
 
     try {
       val Seq(pos) = SDTTestUtils.positionsOf(contents.toCharArray(), "^")
       // get all corrections for the problem
-      f(quickAssist.suggestsFor(unit, pos).headOption)
+      f(quickAssist.compute(InvocationContext(unit, pos, 0, Nil)).headOption)
     } finally
       unit.delete(true, null)
   }
 
-  def noAssistsFor(contents: String) = {
+  def noAssistsFor(contents: String): Unit = {
     runQuickAssistWith(contents) { p =>
       Assert.assertTrue(s"Unexpected abstract member $p", p.isEmpty)
     }
