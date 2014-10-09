@@ -64,9 +64,9 @@ class ScalaQuickAssistProcessor extends IQuickAssistProcessor with HasLogger {
 }
 
 object ScalaQuickAssistProcessor {
-  private final val ImplicitConversionFound = "(?s)Implicit conversions found: (.*)".r
+  private final val ImplicitConversionFound = "(?s)Implicit conversion found: (.*?):.*?".r
 
-  private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*)".r
+  private final val ImplicitArgFound = "(?s)Implicit arguments found: (.*?)".r
 
   val availableAssists = Seq(
     ExpandCaseClassBindingProposal,
