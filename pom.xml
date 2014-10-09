@@ -86,7 +86,7 @@
     <version.suffix>Select a Scala profile</version.suffix>
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <sbt.version>0.13.2</sbt.version>
+    <sbt.version>0.13.6</sbt.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
@@ -133,7 +133,7 @@
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
         <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
-        <sbt.version>0.13.6-SNAPSHOT</sbt.version>
+        <sbt.version>0.13.7-SNAPSHOT</sbt.version>
 
       </properties>
     </profile>
