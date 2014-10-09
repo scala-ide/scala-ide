@@ -45,10 +45,10 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
     override def execute() = {
       val unit = mkScalaCompilationUnit(doc.get())
 
-      val src = unit.lastSourceMap().sourceFile
+      val src = unit.sourceMap(doc.get.toCharArray()).sourceFile
 
       // first, 'open' the file by telling the compiler to load it
-      unit.scalaProject.presentationCompiler.internal { compiler =>
+      unit.scalaProject.presentationCompiler { compiler =>
         compiler.askReload(List(unit)).get
 
         compiler.askLoadedTyped(src, false).get
@@ -100,6 +100,9 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
             }
         }
       }
+
+      // unload given unit, otherwise the compiler will keep type-checking it together with the other tests
+      unit.scalaProject.presentationCompiler(_.discardCompilationUnit(unit))
     }
   }
 }

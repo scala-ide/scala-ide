@@ -16,6 +16,7 @@ import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.eclipse.jface.text.TextUtilities
 import java.util.HashMap
 import org.scalaide.ui.syntax.preferences.PreviewerFactoryConfiguration
+import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 
 /** Factory for previewers used in syntax coloring preference pages and other places. It takes source viewer configuration
  *  and document partitioners through the `factoringConfiguration` parameter.
@@ -28,7 +29,8 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
 
   def createPreviewer(parent: Composite, preferenceStore: IPreferenceStore, initialText: String): SourceViewer = {
     chainedPreferenceStore = new ChainedPreferenceStore(Array(preferenceStore, EditorsUI.getPreferenceStore))
-    previewViewer = new ProjectionViewer(parent, null, null, false, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER)
+    // need a Java one in order to correctly manage background colors
+    previewViewer = new JavaSourceViewer(parent, null, null, false, SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER, chainedPreferenceStore)
     configuration = factoryConfiguration.getConfiguration(chainedPreferenceStore)
     val font = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
     previewViewer.getTextWidget.setFont(font)
@@ -43,6 +45,7 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     previewViewer.setDocument(document)
 
     chainedPreferenceStore.addPropertyChangeListener(this)
+    factoryConfiguration.additionalStyling(previewViewer,  chainedPreferenceStore)
     previewViewer
   }
 
@@ -68,6 +71,7 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     configuration.propertyChange(event)
     // refreshes the highlighting
     previewViewer.invalidateTextPresentation()
-  }
 
+    factoryConfiguration.additionalStyling(previewViewer, chainedPreferenceStore)
+  }
 }

@@ -58,7 +58,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
 
   setPreferenceStore(preferenceStore)
   protected val overlayStore = makeOverlayPreferenceStore
-  private var previewerFactory = new PreviewerFactory(previewerFactoryConfiguration)
+  private val previewerFactory = new PreviewerFactory(previewerFactoryConfiguration)
 
   private var foregroundColorEditorLabel: Label = _
   private var syntaxForegroundColorEditor: ColorSelector = _
@@ -110,6 +110,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
 
   override def dispose() {
     overlayStore.stop()
+    previewerFactory.disposePreviewer()
     super.dispose()
   }
 
