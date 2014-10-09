@@ -5,7 +5,7 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.ui.internal.completion.ScalaCompletionProposal
+import org.scalaide.ui.completion.ScalaCompletionProposal
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
 import org.eclipse.ui.IWorkbenchPage
 import org.eclipse.ui.PlatformUI
@@ -45,7 +45,7 @@ class ScalaJavaCompletionTests {
       import scala.collection.JavaConversions._
 
       // extract the data and sort
-      val resultCompletion = proposals.map(p => p.asInstanceOf[ScalaCompletionProposal].getDisplayString).sorted
+      val resultCompletion = proposals.map(p => p.getDisplayString).sorted
 
       // check the completions
       assertEquals("Wrong set of completions for " + i, expectedCompletions(i), resultCompletion)

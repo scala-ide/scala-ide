@@ -28,7 +28,6 @@ import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.eclipse.jface.text.hyperlink.URLHyperlinkDetector
 import org.eclipse.jface.text.information.InformationPresenter
 import org.eclipse.jface.text.reconciler.IReconciler
-import org.eclipse.jface.text.reconciler.MonoReconciler
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.DefaultAnnotationHover
@@ -41,9 +40,7 @@ import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.editors.text.EditorsUI
 import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.hyperlink.detector.CompositeHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.ImplicitHyperlinkDetector
+import org.scalaide.core.internal.hyperlink._
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -65,6 +62,7 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.scalaide.core.lexical.ScalaCodeScanners
 import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.ui.editor.hover.IScalaHover
+import org.scalaide.ui.internal.reconciliation.ScalaReconciler
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -214,7 +212,7 @@ class ScalaSourceViewerConfiguration(
               ScalaPlugin().scalaSourceFileContentType,
               EditorsUI.getPreferenceStore())))
 
-      val reconciler = new MonoReconciler(s, /* isIncremental */ false)
+      val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
       reconciler.install(sourceViewer)
       reconciler.setProgressMonitor(new NullProgressMonitor())
@@ -240,10 +238,11 @@ class ScalaSourceViewerConfiguration(
     }.getOrElse(new DefaultTextHover(sv))
 
   override def getHyperlinkDetectors(sv: ISourceViewer): Array[IHyperlinkDetector] = {
-    val strategies = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector())
-    val detector = new CompositeHyperlinkDetector(strategies)
-    if (editor != null) detector.setContext(editor)
-    Array(detector, new URLHyperlinkDetector())
+    val detectors = List(DeclarationHyperlinkDetector(), ImplicitHyperlinkDetector(), new URLHyperlinkDetector())
+    if (editor != null)
+      detectors.foreach { d => d.setContext(editor) }
+
+    detectors.toArray
   }
 
   private def getTypeRoot: Option[ITypeRoot] = Option(editor) map { editor =>

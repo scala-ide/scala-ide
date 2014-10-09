@@ -1,4 +1,4 @@
-package org.scalaide.core.hyperlink.detector
+package org.scalaide.core.internal.hyperlink
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextViewer
@@ -14,6 +14,7 @@ import scala.concurrent.duration._
 import java.util.concurrent.TimeoutException
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
+import org.eclipse.ui.texteditor.ITextEditor
 
 abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasLogger {
   val TIMEOUT = if (IScalaPlugin().noTimeoutMode) Duration.Inf else 500.millis
@@ -54,10 +55,6 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasL
       }
     }
   }
-
-  // FIXME: Why is this needed? Why not just increase visibility of `runDetectionStrategy` itself?
-  private[detector] def friendRunDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink] =
-    runDetectionStrategy(scu, textEditor, currentSelection)
 
   protected def runDetectionStrategy(scu: InteractiveCompilationUnit, textEditor: ITextEditor, currentSelection: IRegion): List[IHyperlink]
 }

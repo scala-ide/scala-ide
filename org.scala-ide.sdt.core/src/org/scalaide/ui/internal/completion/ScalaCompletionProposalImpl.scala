@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.completion
 
-import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
@@ -10,7 +9,6 @@ import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IInformationControlCreator
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextPresentationListener
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.ITextViewerExtension2
@@ -27,20 +25,16 @@ import org.eclipse.jface.text.contentassist.IContextInformation
 import org.eclipse.jface.text.link._
 import org.eclipse.jface.text.link.LinkedModeUI.ExitFlags
 import org.eclipse.jface.text.link.LinkedModeUI.IExitPolicy
-import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jface.viewers.StyledString
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
 import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.graphics.Color
-import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.completion.CompletionContext
 import org.scalaide.core.completion.CompletionProposal
-import org.scalaide.core.completion.MemberKind
-import org.scalaide.core.completion.prefixMatches
-import org.scalaide.ui.ScalaImages
+import org.scalaide.util.internal.Commons
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
@@ -48,17 +42,22 @@ import org.scalaide.ui.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.hover.HoverControlCreator
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.editor.hover.IScalaHover
+import org.scalaide.core.completion.MemberKind
+import org.scalaide.ui.ScalaImages
+import org.eclipse.jface.text.contentassist.ICompletionProposal
+import org.scalaide.ui.completion.ScalaCompletionProposal
 
-/** A UI class for displaying completion proposals.
+/** A completion proposal for the Eclipse completion framework. It wraps a [[CompletionProposal]] returned
+ *  by the presentation compiler, and implements the methods needed by the platform.
  *
- *  It adds parenthesis at the end of a proposal if it has parameters, and places the caret
- *  between them.
+ *  Use [[org.scalaide.core.completion.ScalaCompletionProposal.apply]] to create an instance of this class.
  */
-class ScalaCompletionProposal(proposal: CompletionProposal)
+class ScalaCompletionProposalImpl(proposal: CompletionProposal)
     extends IJavaCompletionProposal with ICompletionProposalExtension with ICompletionProposalExtension2
     with ICompletionProposalExtension3 with ICompletionProposalExtension5 with ICompletionProposalExtension6 {
 
   import proposal._
+  import ScalaCompletionProposalImpl._
   import ScalaCompletionProposal._
 
   private var viewer: ITextViewer = _
@@ -83,14 +82,14 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 
   /** Position after the opening parenthesis of this proposal */
-  val startOfArgumentList = startPos + completion.length + 1
+  private val startOfArgumentList = startPos + completion.length + 1
 
   override def getRelevance = relevance
   override def getImage = image
 
   /** The information that is displayed in a small hover window above the completion, showing parameter names and types. */
   override def getContextInformation(): IContextInformation =
-    if (context.contextType != CompletionContext.ImportContext && tooltip.length > 0)
+    if (context != CompletionContext.ImportContext && tooltip.length > 0)
       new ScalaContextInformation(display, tooltip, image, startOfArgumentList)
     else null
 
@@ -120,7 +119,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
-    val showOnlyTooltips = context.contextType == CompletionContext.NewContext || context.contextType == CompletionContext.ApplyContext
+    val showOnlyTooltips = context == CompletionContext.NewContext || context == CompletionContext.ApplyContext
 
     if (!showOnlyTooltips) {
       val overwrite = !insertCompletion ^ ((stateMask & SWT.CTRL) != 0)
@@ -146,7 +145,7 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   override def getContextInformationPosition = startOfArgumentList
 
   override def isValidFor(d: IDocument, pos: Int) =
-    prefixMatches(completion.toArray, d.get.substring(startPos, pos).toArray)
+    Commons.prefixMatches(completion, d.get.substring(startPos, pos))
 
   /** Highlight the part of the text that would be overwritten by the current selection
    */
@@ -262,13 +261,12 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
 
     val widgetCaret = text.getCaretOffset()
 
-    var modelCaret = 0
-    viewer match {
+    val modelCaret = viewer match {
       case viewer2: ITextViewerExtension5 =>
-        modelCaret = viewer2.widgetOffset2ModelOffset(widgetCaret)
+        viewer2.widgetOffset2ModelOffset(widgetCaret)
       case _ =>
         val visibleRegion = viewer.getVisibleRegion()
-        modelCaret = widgetCaret + visibleRegion.getOffset()
+        widgetCaret + visibleRegion.getOffset()
     }
 
     if (modelCaret > startPos + completion.length)
@@ -291,23 +289,8 @@ class ScalaCompletionProposal(proposal: CompletionProposal)
   }
 }
 
-object ScalaCompletionProposal {
-  import ScalaImages._
-  val defImage = PUBLIC_DEF.createImage()
-  val classImage = SCALA_CLASS.createImage()
-  val traitImage = SCALA_TRAIT.createImage()
-  val objectImage = SCALA_OBJECT.createImage()
-  val packageObjectImage = SCALA_PACKAGE_OBJECT.createImage()
-  val typeImage = SCALA_TYPE.createImage()
-  val valImage = PUBLIC_VAL.createImage()
-
-  val javaInterfaceImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_INTERFACE)
-  val javaClassImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_CLASS)
-  val packageImage = JavaPluginImages.get(JavaPluginImages.IMG_OBJS_PACKAGE)
-
-  def apply(proposal: CompletionProposal) = new ScalaCompletionProposal(proposal)
-
-  def insertCompletion(): Boolean = {
+object ScalaCompletionProposalImpl {
+  private def insertCompletion(): Boolean = {
     val preference = JavaPlugin.getDefault().getPreferenceStore()
     preference.getBoolean(PreferenceConstants.CODEASSIST_INSERT_COMPLETION)
   }
@@ -319,7 +302,7 @@ object ScalaCompletionProposal {
     textTools.getColorManager().getColor(rgb)
   }
 
-  def getForegroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_FOREGROUND)
+  private def getForegroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_FOREGROUND)
 
-  def getBackgroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_BACKGROUND)
+  private def getBackgroundColor(): Color = colorFor(PreferenceConstants.CODEASSIST_REPLACEMENT_BACKGROUND)
 }
