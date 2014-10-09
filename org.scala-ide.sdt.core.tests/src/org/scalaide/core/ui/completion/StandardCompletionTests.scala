@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.AfterClass
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.core.FlakyTest
 
 object StandardCompletionTests extends CompletionTests
 class StandardCompletionTests {
@@ -264,7 +265,7 @@ class StandardCompletionTests {
       expectedNumberOfCompletions = 1)
 
   @Test
-  def noEmptyParensForJavaGetter() = """
+  def noEmptyParensForJavaGetter() = FlakyTest.retry("noEmptyParensForJavaGetter") { """
     object Test {
       val a = "test string"
       a.getB^
@@ -277,6 +278,7 @@ class StandardCompletionTests {
   """ after Completion(
       "getBytes(): Array[Byte]",
       expectedNumberOfCompletions = 4)
+  }
 
   @Test
   def emptyParensForJavaNonGetter() = """
