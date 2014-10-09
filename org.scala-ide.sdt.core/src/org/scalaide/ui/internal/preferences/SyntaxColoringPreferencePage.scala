@@ -11,6 +11,9 @@ import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
 import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
 import org.scalaide.util.ui.SWTUtils.gridData
+import org.scalaide.core.internal.decorators.semantichighlighting.Position
+import scalariform.lexer.ScalaLexer
+import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 
 /** Syntax Coloring preference page for the Scala editors.
  */
@@ -19,7 +22,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
   scalaSyntacticCategory,
   IScalaPlugin().getPreferenceStore,
   SyntaxColoringPreferencePage.PreviewText,
-  ScalaPreviewerFactoryConfiguration) {
+  SemanticPreviewerFactoryConfiguration) {
 
   import org.scalaide.util.ui.SWTUtils._
 
@@ -123,4 +126,42 @@ object SyntaxColoringPreferencePage {
         |}
         |""").stripMargin
 
+  case class ColoringInfo(symbolType: SymbolTypes.SymbolType, deprecated: Boolean = false, inInterpolatedString: Boolean = false)
+
+  import SymbolTypes._
+  private val identifierToSyntaxClass: Map[String, ColoringInfo] = Map(
+    "foo" -> ColoringInfo(Package),
+    "bar" -> ColoringInfo(Package),
+    "baz" -> ColoringInfo(Package),
+    "Annotation" -> ColoringInfo(Annotation),
+    "Class" -> ColoringInfo(Class),
+    "CaseClass" -> ColoringInfo(CaseClass),
+    "CaseObject" -> ColoringInfo(CaseObject),
+    "Trait" -> ColoringInfo(Trait),
+    "Int" -> ColoringInfo(Class),
+    "method" -> ColoringInfo(Method),
+    "param" -> ColoringInfo(Param),
+    "lazyLocalVal" -> ColoringInfo(LazyLocalVal),
+    "localVal" -> ColoringInfo(LocalVal),
+    "localVar" -> ColoringInfo(LocalVar),
+    "lazyTemplateVal" -> ColoringInfo(LazyTemplateVal),
+    "templateVal" -> ColoringInfo(TemplateVal),
+    "templateVar" -> ColoringInfo(TemplateVar),
+    "T" -> ColoringInfo(TypeParameter),
+    "Type" -> ColoringInfo(Type),
+    "Object" -> ColoringInfo(Object),
+    "sym" -> ColoringInfo(LocalVal),
+    "deprecated" -> ColoringInfo(Annotation),
+    "deprecatedMethod" -> ColoringInfo(Method, deprecated = true),
+    "str" -> ColoringInfo(TemplateVal),
+    "p\u0430ram" -> ColoringInfo(Param, inInterpolatedString = true),
+    "templateV\u0430l" -> ColoringInfo(TemplateVal, inInterpolatedString = true),
+    "templateV\u0430r" -> ColoringInfo(TemplateVar, inInterpolatedString = true))
+
+  val semanticLocations: List[Position] =
+    for {
+      token <- ScalaLexer.rawTokenise(PreviewText, forgiveErrors = true)
+      if token.tokenType.isId
+      ColoringInfo(symbolType, deprecated, inStringInterpolation) <- identifierToSyntaxClass get token.text
+    } yield new Position(token.offset, token.length, symbolType, deprecated, inStringInterpolation)
 }
