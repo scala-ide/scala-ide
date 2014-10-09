@@ -3,8 +3,11 @@ package org.scalaide.util.eclipse
 import scala.reflect.internal.util.RangePosition
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.Region
+import org.eclipse.text.edits.TextEdit
 import org.eclipse.jface.text.TypedRegion
 import scala.annotation.tailrec
 import org.eclipse.jface.text.ITypedRegion
@@ -28,6 +31,10 @@ object RegionUtils {
      */
     def toRegion: IRegion =
       new Region(problem.getSourceStart(), problem.getSourceEnd() - problem.getSourceStart())
+
+    def length: Int = problem.getSourceEnd() - problem.getSourceStart()
+    def start: Int = problem.getSourceStart()
+    def end: Int = problem.getSourceEnd()
   }
 
   /** Enrich [[org.eclipse.jface.text.IRegion]].
@@ -58,6 +65,10 @@ object RegionUtils {
       new RangePosition(sourceFile, offset, offset, offset + region.getLength())
     }
 
+    def length: Int = region.getLength()
+    def start: Int = region.getOffset()
+    def end: Int = start+length
+
     /** Return a new Region with `f` applied to both start and end offsets.
      *
      *  @return A new region with `f(start)` as the starting point, and `f(start + offset)`
@@ -76,6 +87,22 @@ object RegionUtils {
     def translate(f: Int => Int): IRegion = {
       new Region(f(region.getOffset), region.getLength)
     }
+  }
+
+  implicit class RichSelection(private val sel: ITextSelection) extends AnyVal {
+    def length: Int = sel.getLength()
+    def start: Int = sel.getOffset()
+    def end: Int = start+length
+  }
+
+  implicit class RichTextEdit(private val edit: TextEdit) extends AnyVal {
+    def length: Int = edit.getLength()
+    def start: Int = edit.getOffset()
+    def end: Int = start+length
+  }
+
+  implicit class RichDocument(private val doc: IDocument) extends AnyVal {
+    def length: Int = doc.getLength()
   }
 
   /** Enrich [[org.eclipse.jface.text.ITypedRegion]].
@@ -304,4 +331,3 @@ object RegionUtils {
     merge_aux(aList, bList, Nil).reverse
   }
 }
-
