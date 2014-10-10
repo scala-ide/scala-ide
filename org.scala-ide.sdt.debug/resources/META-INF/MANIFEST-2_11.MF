@@ -78,6 +78,7 @@ Export-Package:
  org.scalaide.debug.internal.breakpoints,
  org.scalaide.debug.internal.classfile,
  org.scalaide.debug.internal.command,
+ org.scalaide.debug.internal.editor,
  org.scalaide.debug.internal.launching,
  org.scalaide.debug.internal.model,
  org.scalaide.debug.internal.preferences
