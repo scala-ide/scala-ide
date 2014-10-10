@@ -33,7 +33,6 @@ import scala.util.control.Exception
 import org.eclipse.core.runtime.CoreException
 import org.scalaide.core.compiler.ScalaCompilationProblem
 
-
 class ScalaSourceFileProvider extends SourceFileProvider {
   override def createFrom(path: IPath): Option[InteractiveCompilationUnit] =
     ScalaSourceFile.createFromPath(path.toString)
@@ -113,8 +112,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     reconcileFlags : Int,
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    openWhenClosed(info, true, monitor)
+
+    // don't rerun this expensive operation unless necessary
+    if (!isConsistent()) {
+      val info = createElementInfo.asInstanceOf[OpenableElementInfo]
+      openWhenClosed(info, true, monitor)
+    }
     null
   }
 
