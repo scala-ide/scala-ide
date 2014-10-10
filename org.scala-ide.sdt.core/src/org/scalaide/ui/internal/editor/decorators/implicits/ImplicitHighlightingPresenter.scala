@@ -59,11 +59,13 @@ object ImplicitHighlightingPresenter {
       val txt = new String(sourceFile.content, t.pos.start, math.max(0, t.pos.end - t.pos.start)).trim()
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
-      val sname = scu.withSourceFile((_, compiler) => compiler.asyncExec{t.fun.symbol.name}.getOption()).flatten
-      val annotation = new ImplicitConversionAnnotation(
-          () => compiler.mkHyperlink(t.symbol, name = "Open Implicit", region, scu.scalaProject.javaProject),
-          s"Implicit conversion found: `$txt`$DisplayStringSeparator`${sname.getOrElse("")}($txt): ${t.tpe}`")
+      val msg = compiler.asyncExec{
+        val sname = t.fun.symbol.nameString
+        s"Implicit conversion found: `$txt`$DisplayStringSeparator`$sname($txt): ${t.tpe}`"
+      }.getOption()
 
+      val annotation = new ImplicitConversionAnnotation(
+          () => compiler.mkHyperlink(t.symbol, name = "Open Implicit", region, scu.scalaProject.javaProject), msg.getOrElse(""))
       (annotation, pos)
     }
 

@@ -7,8 +7,8 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.junit.AfterClass
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.IScalaProject
 
 /**
  * Common functionality to be used in tests that need to interop with the
@@ -24,7 +24,7 @@ trait CompilerSupportTests {
   /** Can be overwritten in a subclass if desired. */
   val projectName: String = getClass().getSimpleName()
 
-  private val project: ScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
+  private val project: IScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
 
   final def withCompiler(f: IScalaPresentationCompiler => Unit): Unit =
     project.presentationCompiler { compiler =>
