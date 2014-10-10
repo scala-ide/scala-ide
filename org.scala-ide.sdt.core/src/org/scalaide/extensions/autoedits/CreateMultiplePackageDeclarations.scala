@@ -1,8 +1,10 @@
 package org.scalaide.extensions
 package autoedits
 
+import org.eclipse.jface.text.IRegion
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Replace
+import org.scalaide.util.eclipse.RegionUtils._
 
 object CreateMultiplePackageDeclarationsSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CreateMultiplePackageDeclarations],
@@ -33,11 +35,11 @@ trait CreateMultiplePackageDeclarations extends AutoEdit {
     }
   }
 
-  private def pkgName(offset: Int, line: document.Range): Option[String] = {
+  private def pkgName(offset: Int, line: IRegion): Option[String] = {
     val caretPos = offset-line.start
     val PackageDetector = """package\s+\w+\.(?:\w+\.)*\^(\w+)""".r
 
-    new StringBuilder(line.text).insert(caretPos, '^').toString() match {
+    new StringBuilder(line.text(document)).insert(caretPos, '^').toString() match {
       case PackageDetector(s) => Some(s)
       case _                  => None
     }

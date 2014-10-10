@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.editor
 
-import scala.concurrent._, ExecutionContext.Implicits.global
+import scala.concurrent._
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{TextChange => RTextChange}
@@ -11,6 +12,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
@@ -23,9 +25,9 @@ import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions._
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions {
@@ -50,10 +52,13 @@ object SaveActionExtensions {
     TabToSpaceConverterSetting -> TabToSpaceConverterCreator.create _
   )
 
-  private val compilerSaveActions = Seq(
-    AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
-    AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
+  private val compilerSaveActions = Seq[(SaveActionSetting, CompilerSupportCreator)](
   )
+
+  private type CompilerSupportCreator = (
+      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
+      SourceFile, Int, Int
+    ) => SaveAction with CompilerSupport
 
   /**
    * The settings for all existing save actions.
@@ -87,8 +92,12 @@ trait SaveActionExtensions extends HasLogger {
    * Applies all save actions to the contents of the given document.
    */
   private def applySaveActions(udoc: IDocument): Unit = {
+    val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(udoc)
+    undoManager.beginCompoundChange()
+
     applyDocumentExtensions(udoc)
-    applyCompilerExtensions(udoc)
+
+    undoManager.endCompoundChange()
   }
 
   /**
@@ -177,11 +186,6 @@ trait SaveActionExtensions extends HasLogger {
       None
     }
   }
-
-  private type CompilerSupportCreator = (
-      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
-      SourceFile, Int, Int
-    ) => SaveAction with CompilerSupport
 
   private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction with CompilerSupport] = {
     EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>

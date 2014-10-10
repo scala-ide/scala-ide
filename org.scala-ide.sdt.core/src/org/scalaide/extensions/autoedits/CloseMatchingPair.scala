@@ -1,6 +1,9 @@
 package org.scalaide.extensions
 package autoedits
 
+import org.eclipse.jface.text.IRegion
+import org.scalaide.util.eclipse.RegionUtils._
+
 /** Functionality for all auto edits that should handle matching pairs. */
 trait CloseMatchingPair extends AutoEdit {
 
@@ -24,7 +27,7 @@ trait CloseMatchingPair extends AutoEdit {
 
     if (lineAfterCaret.isEmpty) true
     else {
-      val line = lineInfo.text.toSeq
+      val line = lineInfo.text(document).toSeq
       val lineBeforeCaret = document.textRange(lineInfo.start, offset).toSeq
 
       val total = line.count(_ == closing) - line.count(_ == opening)

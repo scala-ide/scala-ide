@@ -19,6 +19,8 @@ import org.scalaide.core.internal.compiler.InternalCompilerServices
 import org.scalaide.core.IScalaProject
 import scala.tools.nsc.doc.base.comment.Comment
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.hyperlink.IHyperlink
 
 /** This interface provides access to Scala Presentation compiler services. Even though methods are inherited from
  *  `scala.tools.nsc.interactive.Global`, prefer the convenience methods offered in this trait.
@@ -257,6 +259,9 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *  extracting all the information needed from compiler Symbols and Types to present a completion
    *  option to the user.
    *
+   *  @note The resulting type does not have any path-dependent types coming from the
+   *        compiler instance.
+   *
    *  @param prefix    The prefix typed by the user at the point where he asked for completion
    *  @param start     The position where the completion should be inserted (usually the beginning of `prefix`)
    *  @param sym       The symbol corresponding to this completion proposal
@@ -269,14 +274,28 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *
    *  @see CompletionProposal
    */
-  def mkCompletionProposal(prefix: Array[Char],
+  def mkCompletionProposal(prefix: String,
     start: Int,
     sym: Symbol,
     tpe: Type,
     inherited: Boolean,
     viaView: Symbol,
-    context: CompletionContext,
+    context: CompletionContext.ContextType,
     project: IScalaProject): CompletionProposal
+
+  /** Create a hyperlink to the given symbol. This is an exit point from the compiler cake.
+   *
+   *  @note The resulting type does not have any path-dependent types coming from the
+   *        compiler instance.
+   *
+   * @param sym         The symbol definition to which the hyperlink should go
+   * @param name        The primary information to be displayed, if more than one hyperlink is available
+   * @param region      The region to be underlined in the editor
+   * @param javaProject The java project where to search for the definition of this symbol
+   * @param label       A way to compute the attached hyperlink label. Normally this can be ignored and use the default label,
+   *                    consisting of the symbol kind and full name.
+   */
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink]
 }
 
 object IScalaPresentationCompiler extends HasLogger {
@@ -334,8 +353,8 @@ object IScalaPresentationCompiler extends HasLogger {
                   // This can happen if you ask long queries of the
                   // PC, triggering long sleep() sessions on caller
                   // side.
-                  case i: InterruptedException => logger.debug("InterruptedException in ask:\n" + i)
-                  case e                       => eclipseLog.error("Error during askOption", e)
+                  case i: InterruptedException => logger.debug("InterruptedException in asyncExec", i) // no need to call `interrupt`, `Response` already did it.
+                  case e                       => eclipseLog.error("Error during asyncExec (FailedInterrupt)", e)
                 }
                 None
 
@@ -343,8 +362,13 @@ object IScalaPresentationCompiler extends HasLogger {
                 logger.info("MissingResponse in ask. Called from: ", m)
                 None
 
+              case Right(ie: InterruptedException) =>
+                logger.error("Ignoring InterruptException")
+                Thread.currentThread().interrupt()
+                None
+
               case Right(e: Throwable) =>
-                eclipseLog.error("Error during askOption", e)
+                eclipseLog.error("Throwable during asyncExec", e)
                 None
 
               case Left(v) => Some(v)

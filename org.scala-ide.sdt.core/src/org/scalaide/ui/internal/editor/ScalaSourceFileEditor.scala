@@ -245,9 +245,11 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
 
     EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
-      val fileName = getInteractiveCompilationUnit.file.name
-      Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
-        performOccurrencesUpdate(selection, lastModified)
+      Option(getInteractiveCompilationUnit) foreach { cu =>
+        val fileName = cu.file.name
+        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
+          performOccurrencesUpdate(selection, lastModified)
+        }
       }
       Status.OK_STATUS
     }

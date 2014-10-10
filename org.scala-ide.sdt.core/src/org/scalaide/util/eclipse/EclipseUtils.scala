@@ -97,9 +97,9 @@ object EclipseUtils extends HasLogger {
    *  @param wspace the workspace
    *  @param monitor the progress monitor (defaults to `null` for no progress monitor).
    */
-  def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit) = {
+  def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit): Unit = {
     wspace.run(new IWorkspaceRunnable {
-      def run(monitor: IProgressMonitor) {
+      override def run(monitor: IProgressMonitor) {
         f(monitor)
       }
     }, monitor)
@@ -222,6 +222,6 @@ object EclipseUtils extends HasLogger {
    *
    *  @see `org.eclipse.core.resources.IWorkspace.getRoot`
    */
-  def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
+  def workspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
 }

@@ -2,6 +2,7 @@ package org.scalaide.extensions
 package autoedits
 
 import org.scalaide.core.text.Add
+import org.scalaide.util.eclipse.RegionUtils._
 
 object CloseBracketSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseBracket],

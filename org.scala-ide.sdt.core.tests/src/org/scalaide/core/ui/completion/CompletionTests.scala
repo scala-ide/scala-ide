@@ -42,10 +42,19 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       expectedNumberOfCompletions: Int = -1)
         extends Operation {
 
-    override def execute() = withCompiler { compiler =>
+    override def execute() = {
       val unit = mkScalaCompilationUnit(doc.get())
-      val src = unit.lastSourceMap().sourceFile
-      val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset))(caretOffset, unit)(src, compiler)
+
+      val src = unit.sourceMap(doc.get.toCharArray()).sourceFile
+
+      // first, 'open' the file by telling the compiler to load it
+      unit.scalaProject.presentationCompiler { compiler =>
+        compiler.askReload(List(unit)).get
+
+        compiler.askLoadedTyped(src, false).get
+      }
+
+      val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset), caretOffset, unit)
 
       def findCompletion(rawCompletion: String) =
         if (!rawCompletion.contains("-"))
@@ -83,6 +92,9 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
                 applyLinkedModel(doc, cursorPos, completion.linkedModeGroups)
         }
       }
+
+      // unload given unit, otherwise the compiler will keep type-checking it together with the other tests
+      unit.scalaProject.presentationCompiler(_.discardCompilationUnit(unit))
     }
   }
 }

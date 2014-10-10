@@ -31,17 +31,19 @@ class MultiScalaVersionTest {
 
   @Test // Build using the previous version of the Scala library
   def previousVersionBuildSucceeds() {
-    val Seq(proj) = createProjects("prev-version-build")
+    val Seq(proj) = internalCreateProjects("prev-version-build")
     val p = proj
-    p.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+    val projectSpecificStorage = p.projectSpecificStorage
+
+    projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
 
     for (installation <- findPreviousScalaInstallation()) {
       val choice = ScalaInstallationChoice(installation)
-      p.projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
+      projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
       Assert.assertEquals(s"Expected to see the desired choice, found ${p.desiredinstallationChoice()}", choice, p.desiredinstallationChoice())
       setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
-      p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
+      projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
 
       p.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
       val (_, errors) = getErrorMessages(p.underlying).filter(_._1 == IMarker.SEVERITY_ERROR).unzip

@@ -1,19 +1,22 @@
 package org.scalaide.util.internal.eclipse
 
-import org.eclipse.core.resources.IFile
-import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.ltk.core.refactoring.TextFileChange
-import scala.tools.refactoring.common.TextChange
-import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jface.text.IDocument
 import scala.reflect.io.AbstractFile
-import org.eclipse.text.edits.RangeMarker
-import org.eclipse.jface.text.TextSelection
+import scala.tools.refactoring.common.TextChange
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.TextSelection
+import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.text.edits.MultiTextEdit
+import org.eclipse.text.edits.RangeMarker
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.TextEdit
 import org.eclipse.text.edits.UndoEdit
+import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.eclipse.RegionUtils
 
 object TextEditUtils {
 
@@ -93,45 +96,106 @@ object TextEditUtils {
   }
 
   /**
-   * Non UI logic that applies a `MultiTextEdit` and therefore the underlying document.
-   * Returns a new text selection that describes the selection after the edit is applied.
+   * Non UI logic that applies a `edit` to the underlying `document`.
+   * `textSelection` is the selection that should be preserved by this method.
+   *
+   * Returns a new text selection that describes the selection after the edit is
+   * applied.
    */
   def applyMultiTextEdit(document: IDocument, textSelection: ITextSelection, edit: MultiTextEdit): ITextSelection = {
-    def selectionIsInManipulatedRegion(region: IRegion): Boolean = {
-      val regionStart = region.getOffset
-      val regionEnd = regionStart + region.getLength()
-      val selectionStart = textSelection.getOffset()
-      val selectionEnd = selectionStart + textSelection.getLength()
+    import RegionUtils._
+    val selStart = textSelection.start
+    val selLen = textSelection.length
+    val selEnd = textSelection.end
 
-      selectionStart >= regionStart && selectionEnd <= regionEnd
+    /**
+     * Checks if the selection overlaps with `region`.
+     */
+    def selectionOverlapsRegion(region: IRegion): Boolean = {
+      val rStart = region.start
+      val rEnd = region.end
+
+      !(selStart < rStart && selEnd < rStart || selStart > rEnd && selEnd > rEnd)
     }
 
-    val selectionCannotBeRetained = edit.getChildren map (_.getRegion) exists selectionIsInManipulatedRegion
-
-    if (selectionCannotBeRetained) {
-      // the selection overlaps the selected region, so we are on
-      // our own in trying to the preserve the user's selection.
-      if (edit.getOffset > textSelection.getOffset) {
-        edit.apply(document)
-        // if the edit starts after the start of the selection,
-        // we just keep the current selection
-        new TextSelection(document, textSelection.getOffset, textSelection.getLength)
-      } else {
-        // if the edit starts before the selection, we keep the
-        // selection relative to the end of the document.
-        val originalLength = document.getLength
-        edit.apply(document)
-        val modifiedLength = document.getLength
-        new TextSelection(document, textSelection.getOffset + (modifiedLength - originalLength), textSelection.getLength())
-      }
-
-    } else {
-      // Otherwise, we can track the selection and restore it after the refactoring.
-      val currentPosition = new RangeMarker(textSelection.getOffset, textSelection.getLength)
+    /**
+     * Handles the case that the selection does not overlap with one of the
+     * regions.
+     */
+    def handleNonOverlap = {
+      val currentPosition = new RangeMarker(selStart, selLen)
       edit.addChild(currentPosition)
       edit.apply(document)
-      new TextSelection(document, currentPosition.getOffset, currentPosition.getLength)
+      new TextSelection(document, currentPosition.start, currentPosition.length)
     }
+
+    /**
+     * Handles the case that the selection overlaps with some of the regions. We
+     * have to preserve the selection manually and can't rely on the behavior of
+     * `MultiTextEdit`.
+     */
+    def handleOverlap(overlappingEdit: TextEdit) = {
+      val (newOffset, newLen) = {
+        val rStart = overlappingEdit.start
+        val rLen = overlappingEdit.length
+        val rEnd = overlappingEdit.end
+
+        def offsetInIntersection = rLen-(selStart-rStart)
+
+        /**
+         * In an overlapping region we either have to expand or shrink the
+         * selection. Furthermore, the selection needs only to be adjusted for
+         * changes that happen before its position whereas the changes
+         * afterwards don't affect its position. In case the selection
+         * intersects with a changed region there is only a subset of the
+         * whole region needed for which the selection needs to be moved
+         * forwards or backwards. This subset is described by
+         * `overlapToPreserve`.
+         */
+        def adjustOffset(overlapToPreserve: Int) = {
+          val lenAfterSelection = edit.getChildren().collect {
+            case e if e.start > selStart =>
+              e match {
+                case e: ReplaceEdit => e.length-e.getText().length
+                case e => e.length
+              }
+          }.sum
+
+          val originalLength = document.length
+          edit.apply(document)
+          val modifiedLength = document.length-originalLength
+          selStart+modifiedLength+lenAfterSelection+overlapToPreserve
+        }
+
+        // ^ = selStart/selEnd, [ = rStart, ] = rEnd
+        // Don't need to be handled here:
+        // - case 1: ^  ^ [  ], ^ [  ]
+        // - case 6: [  ] ^  ^, [  ] ^
+
+        // case 2: ^ [ ^ ]
+        if (selStart < rStart && selEnd < rEnd)
+          (adjustOffset(0), selLen-(selEnd-rStart))
+        // case 3: ^ [  ] ^
+        else if (selStart < rStart && selEnd > rEnd) {
+          val sub = overlappingEdit match {
+            case e: ReplaceEdit => e.length-e.getText().length
+            case e => e.length
+          }
+          (adjustOffset(0), selLen-sub)
+        }
+        // case 4: [^  ^], [ ^ ]
+        else if (selStart < rEnd && selEnd < rEnd)
+          (adjustOffset(offsetInIntersection), 0)
+        // case 5: [ ^ ] ^
+        else
+          (adjustOffset(offsetInIntersection), selLen-(rEnd-selStart))
+      }
+
+      new TextSelection(document, newOffset, newLen)
+    }
+
+    val overlappingEdit = edit.getChildren().find(e => selectionOverlapsRegion(e.getRegion()))
+    overlappingEdit map handleOverlap getOrElse handleNonOverlap
   }
 
 }

@@ -13,6 +13,7 @@ import org.scalaide.core.text.Replace
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.eclipse.RegionUtils._
 
 object ApplyTemplateSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[ApplyTemplate],
@@ -87,7 +88,7 @@ trait ApplyTemplate extends AutoEdit {
   def mkTemplateBuffer(template: Template, offset: Int): TemplateBuffer = {
     val line = document.lineInformationOfOffset(offset)
     // we add current line to get its indentation
-    val doc = new Document(line.text)
+    val doc = new Document(line.text(document))
     val relOffset = offset-line.start
     val ctx = mkTemplateContext(doc, relOffset)
     ctx.evaluate(template)

@@ -51,6 +51,12 @@ import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
 import scala.util.Try
 import scala.reflect.internal.util.NoPosition
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import org.scalaide.core.internal.hyperlink.ScalaHyperlink
+import org.eclipse.jface.text.Region
+import org.scalaide.util.eclipse.RegionUtils
 
 class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /*
@@ -129,7 +135,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       else {
         val reloadFiles = reloadees map { case (_, srcFile) => srcFile }
         askReload(reloadFiles, res)
-        logger.info(s"Flushed ${reloadees.mkString("", ",", "")}")
+        logger.info(s"Flushed ${reloadFiles.mkString("", ",", "")}")
       }
       scheduledUnits.clear()
     }
@@ -337,8 +343,8 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *  TODO We should have a more refined strategy based on the context (inside an import, case
    *       pattern, 'new' call, etc.)
    */
-  def mkCompletionProposal(prefix: Array[Char], start: Int, sym: Symbol, tpe: Type,
-    inherited: Boolean, viaView: Symbol, context: CompletionContext, project: IScalaProject): CompletionProposal = {
+  def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
+    inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
     /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
      *  source. This function adds the back-ticks to a given identifier, if necessary.
@@ -396,7 +402,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       || sym.owner == definitions.ObjectClass) {
       relevance -= 40
     }
-    val casePenalty = if (name.take(prefix.length) != prefix.mkString) 50 else 0
+    val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
     relevance -= casePenalty
 
     val namesAndTypes = for {
@@ -437,6 +443,25 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       false,
       docFun)
   }
+
+  def mkHyperlink(sym: Symbol, name: String, region: IRegion, javaProject: IJavaProject, label: Symbol => String = defaultHyperlinkLabel _): Option[IHyperlink] = {
+    import org.scalaide.util.eclipse.RegionUtils._
+
+    asyncExec {
+      findDeclaration(sym, javaProject) map {
+        case (f, pos) =>
+          val symbolLen = sym.name.decodedName.length
+          val targetRegion = (new Region(pos, symbolLen)).map(f.lastSourceMap.originalPos)
+          new ScalaHyperlink(openableOrUnit = f,
+              region = targetRegion,
+              label = label(sym),
+              text = name,
+              wordRegion = region)
+      }
+    }.getOrElse(None)()
+  }
+
+  private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
 
   override def inform(msg: String): Unit =
     logger.debug("[%s]: %s".format(name, msg))

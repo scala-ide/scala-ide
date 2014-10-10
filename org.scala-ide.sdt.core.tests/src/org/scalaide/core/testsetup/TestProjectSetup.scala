@@ -1,7 +1,6 @@
 package org.scalaide.core.testsetup
 
 import scala.tools.nsc.interactive.Response
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
@@ -16,6 +15,7 @@ import org.mockito.Mockito.when
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaProject
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
@@ -31,8 +31,10 @@ import org.scalaide.core.internal.project.ScalaProject
  *
  */
 class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
+  private[core] lazy val internalProject: ScalaProject = SDTTestUtils.internalSetupProject(projectName, bundleName)
+
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
-  override lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
+  override lazy val project: IScalaProject = internalProject
 
   /** The package root corresponding to /src inside the project. */
   lazy val srcPackageRoot: IPackageFragmentRoot = {

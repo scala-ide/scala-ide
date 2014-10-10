@@ -3,13 +3,17 @@ package org.scalaide.util.eclipse
 import scala.reflect.internal.util.RangePosition
 import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.Region
+import org.eclipse.text.edits.TextEdit
 import org.eclipse.jface.text.TypedRegion
 import scala.annotation.tailrec
 import org.eclipse.jface.text.ITypedRegion
 import java.lang.Math.max
 import java.lang.Math.min
+import org.scalaide.core.text.Document
 
 /** Utility methods and extension classes around [[org.eclipse.jface.text.IRegion]]
  */
@@ -28,6 +32,10 @@ object RegionUtils {
      */
     def toRegion: IRegion =
       new Region(problem.getSourceStart(), problem.getSourceEnd() - problem.getSourceStart())
+
+    def length: Int = problem.getSourceEnd() - problem.getSourceStart()
+    def start: Int = problem.getSourceStart()
+    def end: Int = problem.getSourceEnd()
   }
 
   /** Enrich [[org.eclipse.jface.text.IRegion]].
@@ -57,6 +65,73 @@ object RegionUtils {
       val offset = region.getOffset()
       new RangePosition(sourceFile, offset, offset, offset + region.getLength())
     }
+
+    def length: Int = region.getLength()
+    def start: Int = region.getOffset()
+    def end: Int = start+length
+
+    /** Return a new Region with `f` applied to both start and end offsets.
+     *
+     *  @return A new region with `f(start)` as the starting point, and `f(start + offset)`
+     *          as the end point, except if the length would be negative. In that case, the
+     *          region is rounded up to a zero-length region.
+     */
+    def map(f: Int => Int): IRegion = {
+      val newOffset = f(region.getOffset)
+      val newLen = f(region.getOffset + region.getLength) - newOffset
+      new Region(newOffset, Math.max(0, newLen))
+    }
+
+    /** Translate this region by applying `f` to the offset, and keeping the length
+     *  unchanged.
+     */
+    def translate(f: Int => Int): IRegion = {
+      new Region(f(region.getOffset), region.getLength)
+    }
+
+    def text(doc: Document): String =
+      doc.textRange(region.start, region.end)
+
+    def trim(doc: Document): IRegion =
+      region.trimLeft(doc).trimRight(doc)
+
+    def trimLeft(doc: Document): IRegion = {
+      val s = text(doc)
+      val len = region.length
+
+      var i = 0
+      while (i < len && Character.isWhitespace(s.charAt(i)))
+        i += 1
+
+      regionOf(region.start+i, region.end)
+    }
+
+    def trimRight(doc: Document): IRegion = {
+      val s = text(doc)
+      val len = region.length
+
+      var i = len-1
+      while (i >= 0 && Character.isWhitespace(s.charAt(i)))
+        i -= 1
+
+      regionOf(region.start, region.start+i+1)
+    }
+  }
+
+  implicit class RichSelection(private val sel: ITextSelection) extends AnyVal {
+    def length: Int = sel.getLength()
+    def start: Int = sel.getOffset()
+    def end: Int = start+length
+  }
+
+  implicit class RichTextEdit(private val edit: TextEdit) extends AnyVal {
+    def length: Int = edit.getLength()
+    def start: Int = edit.getOffset()
+    def end: Int = start+length
+  }
+
+  implicit class RichDocument(private val doc: IDocument) extends AnyVal {
+    def length: Int = doc.getLength()
   }
 
   /** Enrich [[org.eclipse.jface.text.ITypedRegion]].
@@ -285,4 +360,3 @@ object RegionUtils {
     merge_aux(aList, bList, Nil).reverse
   }
 }
-

@@ -5,12 +5,12 @@ import testsetup.TestProjectSetup
 import org.scalaide.util.ScalaWordFinder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer
+import org.scalaide.core.internal.hyperlink.ScalaDeclarationHyperlinkComputer
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.jface.text.IRegion
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.JavaSelectionEngine
+import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.JavaSelectionEngine
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType

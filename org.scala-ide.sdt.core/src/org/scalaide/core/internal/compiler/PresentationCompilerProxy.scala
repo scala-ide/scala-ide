@@ -53,7 +53,10 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
   @volatile private var restartNextTime = false
 
   /** Ask to restart the presentation compiler before processing the next request. */
-  def askRestart(): Unit = { restartNextTime = true }
+  def askRestart(): Unit = {
+    restartNextTime = true
+    publish(Restart)
+  }
 
   override def apply[U](op: IScalaPresentationCompiler => U): Option[U] =
     internal(op)
@@ -183,3 +186,9 @@ case object Shutdown extends PresentationCompilerActivity
 
 /** The presentation compiler is about to start. */
 case object Start    extends PresentationCompilerActivity
+
+/** The presentation compiler will restart on the next request. A `Start` event will follow,
+ *  once the PC has really started.
+ */
+case object Restart  extends PresentationCompilerActivity
+
