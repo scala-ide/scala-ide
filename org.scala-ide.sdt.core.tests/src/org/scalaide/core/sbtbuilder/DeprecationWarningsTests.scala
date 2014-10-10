@@ -15,12 +15,13 @@ import org.junit.Test
 import scala.language.reflectiveCalls
 import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
+import org.scalaide.core.internal.project.ScalaProject
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
 
   def initSettings() {
     // enable deprecation warnings for this project
-    val storage = deprecationWarningsProject.project.projectSpecificStorage.asInstanceOf[PropertyStore]
+    val storage = deprecationWarningsProject.internalProject.projectSpecificStorage.asInstanceOf[PropertyStore]
     storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
     storage.setValue("deprecation", true)
     storage.setValue("nameHashing", true)

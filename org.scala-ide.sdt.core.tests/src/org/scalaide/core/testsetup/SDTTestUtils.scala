@@ -29,14 +29,14 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.collection.mutable.ArrayBuffer
 import org.eclipse.jdt.launching.JavaRuntime
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.project.ScalaProject
 
 /** Utility functions for setting up test projects.
  *
@@ -69,7 +69,10 @@ object SDTTestUtils extends HasLogger {
   /** Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
-  def setupProject(name: String, bundleName: String): ScalaProject = {
+  def setupProject(name: String, bundleName: String): IScalaProject =
+    internalSetupProject(name, bundleName)
+
+  private [core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
@@ -234,14 +237,17 @@ object SDTTestUtils extends HasLogger {
     cu
   }
 
-  def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*): Unit = {
+  def addToClasspath(prj: IScalaProject, entries: IClasspathEntry*): Unit = {
     val existing = prj.javaProject.getRawClasspath
     prj.javaProject.setRawClasspath(existing ++ entries, null)
   }
 
   /** Create Scala projects, equiped with the Scala nature, Scala library container and a '/src' folder. */
-  def createProjects(names: String*): Seq[ScalaProject] =
+  def createProjects(names: String*): Seq[IScalaProject] =
     names map (n => createProjectInWorkspace(n, true))
+
+  private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
+    names map (n => internalCreateProjectInWorkspace(n, true))
 
   def deleteProjects(projects: IScalaProject*): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
@@ -276,7 +282,7 @@ object SDTTestUtils extends HasLogger {
    * }
    * }}}
    */
-  def testWithCompiler[A](testProjectName: String)(f: ScalaPresentationCompiler => A): Unit = {
+  def testWithCompiler[A](testProjectName: String)(f: IScalaPresentationCompiler => A): Unit = {
     var projectSetup: TestProjectSetup = null
 
     try {
@@ -285,12 +291,18 @@ object SDTTestUtils extends HasLogger {
       projectSetup = new TestProjectSetup(testProjectName) {
         override lazy val project = scalaProject
       }
-      projectSetup.project.presentationCompiler.internal { c => f(c) }
+      projectSetup.project.presentationCompiler { c => f(c) }
     }
     finally deleteProjects(projectSetup.project)
   }
 
-  def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): ScalaProject = {
+  /** Create a project in the current workspace. If `withSourceRoot` is true,
+   *  it creates a source folder called `src`.
+   */
+  def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): IScalaProject =
+    internalCreateProjectInWorkspace(projectName, withSourceRoot)
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): ScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
     val workspaceRoot = workspace.getRoot()
     val project = workspaceRoot.getProject(projectName)

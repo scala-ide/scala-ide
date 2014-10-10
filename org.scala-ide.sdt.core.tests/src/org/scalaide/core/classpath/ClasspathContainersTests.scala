@@ -9,7 +9,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.eclipse.EclipseUtils
@@ -19,9 +18,10 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.internal.project.ScalaProject
 
 object ClasspathContainersTests {
-  private var projects: List[ScalaProject] = List()
+  private var projects: List[IScalaProject] = List()
 
   @AfterClass
   final def deleteProject(): Unit = {
@@ -36,7 +36,7 @@ class ClasspathContainersTests {
   def getLibraryContainer(project: IScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
 
   def createProject(): ScalaProject = {
-    val project = SDTTestUtils.createProjectInWorkspace(s"compiler-settings${projects.size}", true)
+    val project = SDTTestUtils.internalCreateProjectInWorkspace(s"compiler-settings${projects.size}", true)
     projects = project :: projects
     project
   }
