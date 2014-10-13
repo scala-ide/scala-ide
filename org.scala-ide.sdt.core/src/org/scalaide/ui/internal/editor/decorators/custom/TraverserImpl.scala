@@ -5,13 +5,14 @@
  */
 package org.scalaide.ui.internal.editor.decorators.custom
 
+import scala.reflect.NameTransformer
 import scala.reflect.internal.util.SourceFile
+
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
 import org.scalaide.core.compiler.{ IScalaPresentationCompiler => SPC }
-import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.logging.HasLogger
 
 /**
  * Base trait for traverser implementations.
@@ -29,6 +30,22 @@ private[custom] trait TraverserImpl extends HasLogger {
    * it takes a Tree and returns position and message of annotation that should be added there.
    */
   def apply(tree: SPC#Tree): Option[(SPC#Position, String)]
+
+  private val ErrorPattern = "<(.*): error>".r
+
+  /** Sometimes name of Select.qualifier looks like this: '<correctName: error>' and this method extracts correctName from this */
+  private def extractName(name: String): String = name match {
+    case ErrorPattern(correctName) => correctName
+    case _ => name
+  }
+
+  protected final def createMessage(select: compiler.Select): String =
+    compiler.asyncExec {
+      val prefix = select.qualifier.toString.reverse.takeWhile(_ != '.').reverse
+      // decode '$plus$equals' to '+=' etc
+      val name = NameTransformer.decode(select.name.toString)
+      traverserDef.message(TraverserDef.Select(extractName(prefix), name))
+    }.getOption().getOrElse("<PC timeout - could not load message>")
 }
 
 object TraverserImpl extends HasLogger {
@@ -89,7 +106,8 @@ final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, c
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkType(obj) && !select.symbol.isConstructor => Some((obj.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkType(obj) && !select.symbol.isConstructor =>
+        Some((obj.pos, createMessage(select)))
       case _ => None
     }
   }
@@ -120,7 +138,8 @@ final case class MethodTraverserImpl(traverserDef: MethodTraverserDef, compiler:
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkMethod(obj, method) && !select.symbol.isConstructor => Some((select.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkMethod(obj, method) && !select.symbol.isConstructor =>
+        Some((select.pos, createMessage(select)))
       case _ => None
     }
   }
@@ -152,7 +171,8 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor => Some((select.pos, traverserDef.message))
+      case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor =>
+        Some((select.pos, createMessage(select)))
       case _ => None
     }
   }
