@@ -140,7 +140,8 @@ class JdiContext protected (protected val expressionClassLoader: ClassLoader, de
   with JdiClassLoader
   with Seeker
   with Proxyfier
-  with Stringifier {
+  with Stringifier
+  with HashCode {
 
   /** JVM underlying current thread. */
   protected def jvm: VirtualMachine = currentThread().virtualMachine()

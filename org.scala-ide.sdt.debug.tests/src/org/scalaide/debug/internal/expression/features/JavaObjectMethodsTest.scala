@@ -35,11 +35,11 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
     eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
   }
 
-  @Ignore("TODO - add support for Object.hashCode")
   @Test
-  def hasCode(): Unit = {
-    eval("libClass.hashCode", 123, Java.boxed.Integer)
-  }
+  def hashCodeWithoutParens(): Unit = eval("int.hashCode", int, Java.boxed.Integer)
+
+  @Test
+  def hashCodeWithParens(): Unit = eval("int.hashCode()", int, Java.boxed.Integer)
 
 }
 

@@ -117,6 +117,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     MockTypes(toolbox, typesContext),
     MockLiteralsAndConstants(toolbox, typesContext),
     MockToString(toolbox),
+    MockHashCode(toolbox),
     MockObjects(toolbox, typesContext),
     MockNewOperator(toolbox),
     MockConditionalExpressions(toolbox),

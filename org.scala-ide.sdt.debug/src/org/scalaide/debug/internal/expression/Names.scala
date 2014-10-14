@@ -268,6 +268,9 @@ object Names {
     /** Name of stringify method, used in reflective compilation. */
     val stringifyMethodName = "stringify"
 
+    /** Name of generateHashCode method, used in reflective compilation. */
+    val hashCodeMethodName = "generateHashCode"
+
     /** Name of context val on tolevel function for expression. */
     val contextParamName = "__context"
 

@@ -254,6 +254,7 @@ final class TypesContext() {
 
   /** Excludes functions that should not be stubbed */
   private def shouldBeStubbed(function: MethodStub): Boolean = function match {
+    case MethodStub("hashCode", _, _, Seq(Seq())) => false
     case MethodStub("toString", _, Some("java.lang.String"), Seq(Seq())) => false
     case MethodStub(Scala.constructorMethodName | Scala.notEqualsMethodName | Scala.equalsMethodName, _, _, _) => false
 
