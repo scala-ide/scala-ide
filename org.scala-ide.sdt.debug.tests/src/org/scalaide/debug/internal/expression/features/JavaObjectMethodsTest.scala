@@ -3,12 +3,12 @@
  */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.Test
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.TestValues
 import org.junit.Ignore
+import org.junit.Test
+import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.TestValues
 
 class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
 
@@ -35,7 +35,7 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
     eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
   }
 
-  @Ignore
+  @Ignore("TODO - add support for Object.hashCode")
   @Test
   def hasCode(): Unit = {
     eval("libClass.hashCode", 123, Java.boxed.Integer)

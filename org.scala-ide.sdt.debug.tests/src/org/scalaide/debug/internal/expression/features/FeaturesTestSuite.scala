@@ -25,6 +25,7 @@ import org.junit.runners.Suite
     classOf[TypedLambdasTest],
     classOf[ObjectsTest],
     classOf[JavaObjectMethodsTest],
+    classOf[JavaStaticMethodsTest],
     classOf[MultipleParametersListTest],
     classOf[ValAccessTest],
     classOf[VarsTest],
