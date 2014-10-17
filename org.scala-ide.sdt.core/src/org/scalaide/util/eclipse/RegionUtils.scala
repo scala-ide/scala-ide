@@ -50,14 +50,20 @@ object RegionUtils {
       !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
 
     /** Returns the section of the given array described by this region.
+     *
+     *  @note The region is trimmed by the bounds of `s`. It will return the empty
+     *        string if `start` is outside the bounds of `s`.
      */
     def of(s: Array[Char]): String =
-      new String(s).substring(region.getOffset, region.getOffset + region.getLength)
+      s.slice(region.getOffset, region.getOffset + region.getLength).mkString
 
     /** Returns the section of the given string described by this region.
+     *
+     *  @note The region is trimmed by the bounds of `s`. It will return the empty
+     *        string if `start` is outside the bounds of `s`.
      */
     def of(s: String): String =
-      s.substring(region.getOffset, region.getOffset + region.getLength)
+      s.slice(region.getOffset, region.getOffset + region.getLength)
 
     /** Creates a [[scala.reflect.internal.util.RangePosition]] of this region.
      */
