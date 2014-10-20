@@ -156,7 +156,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
+    val computedClasspaths = new mutable.LinkedHashMap[IJavaProject, Boolean]
+
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
+      val computedClasspath = computedClasspaths.get(project)
+      if (computedClasspath.isEmpty || (computedClasspath.get && !exportedOnly)) {
       val cpes = project.getResolvedClasspath(true)
 
       for (
@@ -190,6 +194,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
         case _ =>
           logger.warn("Classpath computation encountered unknown entry: " + cpe)
+      }
+        computedClasspaths.put(project, exportedOnly)
       }
     }
     computeClasspath(javaProject, false)
