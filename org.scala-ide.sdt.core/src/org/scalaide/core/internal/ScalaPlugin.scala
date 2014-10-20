@@ -136,6 +136,11 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   override def stop(context: BundleContext) = {
     ResourcesPlugin.getWorkspace.removeResourceChangeListener(this)
+    for {
+      iProject <- ResourcesPlugin.getWorkspace.getRoot.getProjects
+      if iProject.isOpen
+      scalaProject <- asScalaProject(iProject)
+    } scalaProject.projectSpecificStorage.save()
     super.stop(context)
     ScalaPlugin.plugin = null
   }
@@ -206,12 +211,22 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     }
     (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
+        // This is obtained at project opening or closing, meaning the 'openness' state changed
         if (delta.getFlags == IResourceDelta.OPEN){
           val resource = delta.getResource().asInstanceOfOpt[IProject]
           resource foreach {(r) =>
             // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
             // setting the Installation triggers a recursive check
-            asScalaProject(r) foreach (_.checkClasspath(true))
+            asScalaProject(r) foreach { (p) =>
+              try {
+                // It's important to save this /before/ checking classpath : classpath
+                // checks create their own preference modifications under some conditions.
+                // Doing them concurrently can wreak havoc.
+                p.projectSpecificStorage.save()
+              } finally {
+                p.checkClasspath(true)
+              }
+            }
           }
           false
         } else
