@@ -31,7 +31,7 @@ class StructureBuilderTest {
   def compilationUnitsStructure(frag: IPackageFragment): String = {
     val buf = new StringBuilder
     frag.open(null)
-    frag.getCompilationUnits.foreach { cu =>
+    frag.getCompilationUnits.sortBy(_.getElementName).foreach { cu =>
       cu.open(null)
       buf.append(cu)
       buf.append('\n')

@@ -2,10 +2,10 @@ package org.scalaide.core.structurebuilder
 
 object AbstractMembersTestOracle extends BaseTestOracle {
   override protected lazy val oracle = """
-FooImpl.scala [in abstract_members [in src [in simple-structure-builder]]]
+Foo.scala [in abstract_members [in src [in simple-structure-builder]]]
   package abstract_members
-  class FooImpl
-    FooImpl()
+  class Foo
+    Foo()
     java.lang.Object obj1
     java.lang.Object obj1()
     java.lang.Object obj2
@@ -13,10 +13,10 @@ FooImpl.scala [in abstract_members [in src [in simple-structure-builder]]]
     void obj2_$eq(java.lang.Object)
     abstract_members.Foo obj3()
     java.lang.String obj4(java.lang.String)
-Foo.scala [in abstract_members [in src [in simple-structure-builder]]]
+FooImpl.scala [in abstract_members [in src [in simple-structure-builder]]]
   package abstract_members
-  class Foo
-    Foo()
+  class FooImpl
+    FooImpl()
     java.lang.Object obj1
     java.lang.Object obj1()
     java.lang.Object obj2
