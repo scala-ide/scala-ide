@@ -16,10 +16,12 @@ import scala.language.reflectiveCalls
 import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.testsetup.SDTTestProject
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
 
   def initSettings() {
+    SDTTestUtils.enableAutoBuild(false)
     // enable deprecation warnings for this project
     val storage = deprecationWarningsProject.internalProject.projectSpecificStorage.asInstanceOf[PropertyStore]
     storage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
