@@ -176,7 +176,7 @@ object TextEditUtils {
         if (selStart < rStart && selEnd < rEnd)
           (adjustOffset(0), selLen-(selEnd-rStart))
         // case 3: ^ [  ] ^
-        else if (selStart < rStart && selEnd > rEnd) {
+        else if (selStart < rStart && selEnd >= rEnd) {
           val sub = overlappingEdit match {
             case e: ReplaceEdit => e.length-e.getText().length
             case e => e.length
