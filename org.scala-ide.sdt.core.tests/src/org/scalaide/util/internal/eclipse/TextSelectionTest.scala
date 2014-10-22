@@ -456,6 +456,17 @@ class TextSelectionTest {
     |""".stripMargin after Seq("")
 
   @Test
+  def remove_with_selection_case_3_at_end_of_selection() = """|
+    |class X {
+    |  ^def f = 0[   ]^
+    |}
+    |""".stripMargin becomes """|
+    |class X {
+    |  ^def f = 0^
+    |}
+    |""".stripMargin after Seq("")
+
+  @Test
   def remove_with_selection_case_4() = """|
     |class X {
     |  [def ^g =^ 0]
