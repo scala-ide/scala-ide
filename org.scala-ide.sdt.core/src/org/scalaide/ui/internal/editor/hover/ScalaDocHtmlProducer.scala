@@ -84,6 +84,7 @@ class ScalaDocHtmlProducer extends HtmlHover {
       bodiesToHtml("Type Parameters", comment.typeParams.toList.sortBy(_._1).map {
         case (name, body) => Body(Paragraph(Bold(Text(name))) :: body.blocks.toList)
       }),
+      bodiesToHtml("Returns", comment.result.toList),
       bodiesToHtml("Version", comment.version.toList),
       bodiesToHtml("Since", comment.since.toList),
       bodiesToHtml("Note", comment.note),

@@ -66,6 +66,14 @@ class PresentationCompilerDocTest {
     doTest(open("inherit-2.scala"), expect, List(scalaCompilationUnit("inherit-1.scala")))
   }
 
+  @Test
+  def returnValueDoc() {
+    val expect: Comment => Boolean = { cmt =>
+      existsText(cmt.result, "some value")
+    }
+    doTest(open("return.scala"), expect)
+  }
+
 /**
  * @parameter preload compilation units expected to be loaded by the PC before the test
  * @parameter unit the compilation unit containing the position mark
