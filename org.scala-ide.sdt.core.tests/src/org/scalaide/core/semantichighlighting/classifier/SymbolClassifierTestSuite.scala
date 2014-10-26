@@ -5,6 +5,7 @@ import org.junit.runners.Suite
 
 @RunWith(value = classOf[Suite])
 @Suite.SuiteClasses(value = Array(
+  classOf[RegionParserTest],
   classOf[AnnotationTest],
   classOf[CaseClassTest],
   classOf[CaseObjectTest],
