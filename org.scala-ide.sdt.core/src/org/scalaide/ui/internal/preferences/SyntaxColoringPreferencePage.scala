@@ -104,7 +104,7 @@ object SyntaxColoringPreferencePage {
         |  lazy val lazyTemplateVal = 42
         |  val templateVal = 42
         |  var templateVar = 24
-        |  def method(param: Int): Int = {
+        |  def method(param: Int, byNameParam: => Int): Int = {
         |    // Single-line comment
         |    /* Multi-line comment */
         |    lazy val lazyLocalVal = 42
@@ -117,7 +117,7 @@ object SyntaxColoringPreferencePage {
         |        PCDATA
         |      </tag>
         |    val sym = 'symbol
-        |    return 42
+        |    return byNamePar\u0430m
         |  }
         |  @deprecated def deprecatedMethod(param: Int) = ???
         |  templateVar = deprecatedMethod(12)
@@ -156,7 +156,10 @@ object SyntaxColoringPreferencePage {
     "str" -> ColoringInfo(TemplateVal),
     "p\u0430ram" -> ColoringInfo(Param, inInterpolatedString = true),
     "templateV\u0430l" -> ColoringInfo(TemplateVal, inInterpolatedString = true),
-    "templateV\u0430r" -> ColoringInfo(TemplateVar, inInterpolatedString = true))
+    "templateV\u0430r" -> ColoringInfo(TemplateVar, inInterpolatedString = true),
+    "byNameParam" -> ColoringInfo(Param),
+    "byNamePar\u0430m" -> ColoringInfo(CallByNameParameter)
+    )
 
   val semanticLocations: List[Position] =
     for {

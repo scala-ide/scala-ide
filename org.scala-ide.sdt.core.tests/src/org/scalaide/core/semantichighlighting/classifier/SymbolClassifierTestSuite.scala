@@ -25,5 +25,6 @@ import org.junit.runners.Suite
   classOf[TraitTest],
   classOf[TypeParameterTest],
   classOf[TypeTest],
-  classOf[DynamicTest]))
+  classOf[DynamicTest],
+  classOf[CallByNameParameterTest]))
 class SymbolClassifierTestSuite

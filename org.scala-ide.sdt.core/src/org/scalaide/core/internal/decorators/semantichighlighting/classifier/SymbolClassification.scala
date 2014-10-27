@@ -78,10 +78,22 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: ISc
         }
       }
 
+      def handleCallByNameParamSpecialCase(symType: SymbolType, t: Tree): SymbolType =
+        // we only want call-by-name parameters to be treated special where they are called, not where they are defined
+        if (symType == CallByNameParameter && t.isDef)
+          Param
+        else
+          symType
+
+      def getRefinedSymbolType(sym: Symbol, t: Tree): SymbolType =  {
+        val symType = getSymbolType(sym)
+        handleCallByNameParamSpecialCase(symType, t)
+      }
+
       def findSymbolInfo(t: Tree): List[SymbolInfo] =
         safeSymbol(t) collect {
           case (sym, pos) if canSymbolBeReferencedInSource(sym) =>
-            getSymbolInfo(getSymbolType(sym), sym, getOccurrenceRegion(sym)(pos))
+            getSymbolInfo(getRefinedSymbolType(sym, t), sym, getOccurrenceRegion(sym)(pos))
         }
 
       var symbolInfos = IndexedSeq.empty[SymbolInfo]

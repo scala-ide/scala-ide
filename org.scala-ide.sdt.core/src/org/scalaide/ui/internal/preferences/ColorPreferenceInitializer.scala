@@ -77,6 +77,7 @@ class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClass(TYPE, new RGB(50, 147, 153), italic = true, enabled = false)
     setDefaultsForSyntaxClass(TYPE_PARAMETER, new RGB(23, 0, 129), underline = true, enabled = false)
     setDefaultsForSyntaxClass(IDENTIFIER_IN_INTERPOLATED_STRING, new RGB(0, 0, 0), underline = true, enabled = false)
+    setDefaultsForSyntaxClass(CALL_BY_NAME_PARAMETER, new RGB(0, 0, 0), italic = true, enabled = false)
 
     // Dynamic calls
     setDefaultsForSyntaxClass(DYNAMIC_SELECT, new RGB(192, 0, 0), enabled = false)
