@@ -72,7 +72,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
           val removed0 = new HashSet[IFile]
 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-            override def visit(delta : IResourceDelta) = {
+            def visit(delta : IResourceDelta) = {
               delta.getResource match {
                 case file : IFile if FileUtils.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
@@ -115,7 +115,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
       }
     }
 
-    val subMonitor = SubMonitor.convert(new BuildMonitor(monitor, this), 100).newChild(100, SubMonitor.SUPPRESS_NONE)
+    val subMonitor = SubMonitor.convert(monitor, 100).newChild(100, SubMonitor.SUPPRESS_NONE)
     subMonitor.beginTask("Running Scala Builder on " + project.underlying.getName, 100)
 
     val projectsInError = project.transitiveDependencies.filter(p => IScalaPlugin().getScalaProject(p).buildManager.hasErrors)
