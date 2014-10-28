@@ -158,18 +158,19 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     val computedClasspaths = mutable.HashSet[IJavaProject]()
 
-    def computeClasspath(project: IJavaProject): Unit = {
-      if (!computedClasspaths.contains(project)) {
+    def computeClasspath(project: IJavaProject, followedPath: List[IJavaProject]): Unit = {
+      // have we seen he project, or does is it part of a cyclic dependency
+      if (!computedClasspaths.contains(project) && !followedPath.contains(project)) {
       val cpes = project.getResolvedClasspath(true)
 
       for (
-        cpe <- cpes if project == javaProject || cpe.isExported ||
-          cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+        // we take only exported dependencies on classPath, except for the initial project for which we take all
+        cpe <- cpes if project == javaProject || cpe.isExported || cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       ) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT =>
           val depProject = EclipseUtils.workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
-            computeClasspath(JavaCore.create(depProject))
+            computeClasspath(JavaCore.create(depProject), project :: followedPath)
           }
         case IClasspathEntry.CPE_LIBRARY =>
           if (cpe.getPath != null) {
@@ -197,7 +198,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
         computedClasspaths += project
       }
     }
-    computeClasspath(javaProject)
+    computeClasspath(javaProject, List())
     path.toList
   }
 
