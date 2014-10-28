@@ -120,7 +120,8 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     val projectsInError = project.transitiveDependencies.filter(p => IScalaPlugin().getScalaProject(p).buildManager.hasErrors)
     if (stopBuildOnErrors && projectsInError.nonEmpty) {
-      logger.info("Skipped dependent project %s build because of upstream compilation errors in %s".format(project.underlying.getName, projectsInError))
+      project.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
+      BuildProblemMarker.create(project.underlying, s"Project not built due to errors in dependent project(s) ${projectsInError.map(_.getName).mkString(", ")}")
     } else {
       logger.info("Building project " + project)
       project.build(addedOrUpdated, removed, subMonitor)
