@@ -1,52 +1,47 @@
 package org.scalaide.core.internal.project
 
-import scala.collection.mutable
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.resources.IMarker
-import org.eclipse.jdt.core.IJarEntryResource
-import java.util.Properties
-import org.eclipse.core.resources.IProject
-import org.eclipse.jdt.core.IJavaModelMarker
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.IPath
-import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.jdt.launching.JavaRuntime
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IStorage
-import java.io.IOException
-import org.eclipse.core.resources.IFolder
-import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.core.runtime.Path
-import scala.util.control.Exception._
-import org.eclipse.jdt.core.JavaModelException
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.ScalaPlugin
 import java.io.File
-import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.resources.MarkerFactory
-import org.scalaide.util.eclipse.EclipseUtils
-import org.osgi.framework.Version
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import java.io.IOException
+import java.util.Properties
+
+import scala.collection.mutable
 import scala.tools.nsc.settings.ScalaVersion
-import org.eclipse.jface.util.StatusHandler
-import org.eclipse.debug.core.DebugPlugin
-import scala.collection.immutable.HashMap
 import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
+import scala.util.control.Exception.failAsValue
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IStorage
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Status
+import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJarEntryResource
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.internal.core.JavaModelManager
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.launching.JavaRuntime
 import org.scalaide.core.IScalaClasspath
 import org.scalaide.core.ScalaInstallationChange
-import org.eclipse.jface.preference.IPersistentPreferenceStore
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.internal.CompilerUtils.isBinaryPrevious
+import org.scalaide.util.internal.CompilerUtils.previousShortString
+import org.scalaide.util.internal.SettingConverterUtil
 
-/** The Scala classpath broken down in the JDK, Scala library and user library.
+/**
+ * The Scala classpath broken down in the JDK, Scala library and user library.
  *
  *  The Scala compiler needs these entries to be separated for proper setup.
  *
@@ -71,7 +66,8 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
 
   private def toPath(ps: Seq[IPath]): Seq[File] = ps map (_.toFile.getAbsoluteFile)
 
-  /** Return the full classpath of this project.
+  /**
+   * Return the full classpath of this project.
    *
    *  It puts the JDK and the Scala library in front of the user classpath.
    */
@@ -79,7 +75,8 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
-/** A Scala library definition.
+/**
+ * A Scala library definition.
  *
  *  @param location  The file-system absolute path to the root of the Scala library
  *  @param version   An option version, retrieved from library.properties, if present
@@ -88,7 +85,8 @@ case class ScalaClasspath(val jdkPaths: Seq[IPath], // JDK classpath
  */
 private case class ScalaLibrary(location: IPath, version: Option[ScalaVersion], isProject: Boolean)
 
-/** Extractor which returns the Scala version of a jar,
+/**
+ * Extractor which returns the Scala version of a jar,
  */
 private object VersionInFile {
 
@@ -108,7 +106,8 @@ private object VersionInFile {
   }
 }
 
-/** Scala project classpath management. This class is responsible for breaking down the classpath in
+/**
+ * Scala project classpath management. This class is responsible for breaking down the classpath in
  *  JDK entries, Scala library entries, and user entries. It also validates the classpath and
  *  manages the classpath error markers for the given Scala project.
  */
@@ -145,7 +144,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       }).flatten
   }
 
-  /** Return the fully resolved classpath of this project, including the
+  /**
+   * Return the fully resolved classpath of this project, including the
    *  Scala library and the JDK entries, in the *project-defined order*.
    *
    *  The Scala compiler needs the JDK and Scala library on the bootclasspath,
@@ -156,40 +156,46 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
+    val computedClasspaths = new mutable.LinkedHashMap[IJavaProject, Boolean]
+
     def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
-      val cpes = project.getResolvedClasspath(true)
+      val computedClasspath = computedClasspaths.get(project)
+      if (computedClasspath.isEmpty || (computedClasspath.get && !exportedOnly)) {
+        val cpes = project.getResolvedClasspath(true)
 
-      for (
-        cpe <- cpes if !exportedOnly || cpe.isExported ||
-          cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
-      ) cpe.getEntryKind match {
-        case IClasspathEntry.CPE_PROJECT =>
-          val depProject = EclipseUtils.workspaceRoot.getProject(cpe.getPath.lastSegment)
-          if (JavaProject.hasJavaNature(depProject)) {
-            computeClasspath(JavaCore.create(depProject), true)
-          }
-        case IClasspathEntry.CPE_LIBRARY =>
-          if (cpe.getPath != null) {
-            val absPath = EclipseUtils.workspaceRoot.findMember(cpe.getPath)
-            if (absPath != null)
-              path += absPath.getLocation
-            else {
-              path += cpe.getPath
+        for (
+          cpe <- cpes if !exportedOnly || cpe.isExported ||
+            cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
+        ) cpe.getEntryKind match {
+          case IClasspathEntry.CPE_PROJECT =>
+            val depProject = EclipseUtils.workspaceRoot.getProject(cpe.getPath.lastSegment)
+            if (JavaProject.hasJavaNature(depProject)) {
+              computeClasspath(JavaCore.create(depProject), true)
             }
-          } else
-            logger.error("Classpath computation encountered a null path for " + cpe, null)
-        case IClasspathEntry.CPE_SOURCE =>
-          val cpeOutput = cpe.getOutputLocation
-          val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
+          case IClasspathEntry.CPE_LIBRARY =>
+            if (cpe.getPath != null) {
+              val absPath = EclipseUtils.workspaceRoot.findMember(cpe.getPath)
+              if (absPath != null)
+                path += absPath.getLocation
+              else {
+                path += cpe.getPath
+              }
+            } else
+              logger.error("Classpath computation encountered a null path for " + cpe, null)
+          case IClasspathEntry.CPE_SOURCE =>
+            val cpeOutput = cpe.getOutputLocation
+            val outputLocation = if (cpeOutput != null) cpeOutput else project.getOutputLocation
 
-          if (outputLocation != null) {
-            val absPath = EclipseUtils.workspaceRoot.findMember(outputLocation)
-            if (absPath != null)
-              path += absPath.getLocation
-          }
+            if (outputLocation != null) {
+              val absPath = EclipseUtils.workspaceRoot.findMember(outputLocation)
+              if (absPath != null)
+                path += absPath.getLocation
+            }
 
-        case _ =>
-          logger.warn("Classpath computation encountered unknown entry: " + cpe)
+          case _ =>
+            logger.warn("Classpath computation encountered unknown entry: " + cpe)
+        }
+        computedClasspaths.put(project, exportedOnly)
       }
     }
     computeClasspath(javaProject, false)
@@ -204,7 +210,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
   private def isCheckingClasspath(): Boolean = java.lang.Thread.holdsLock(classpathCheckLock)
 
-  /** Return <code>true</code> if the classpath is deemed valid.
+  /**
+   * Return <code>true</code> if the classpath is deemed valid.
    *  Check the classpath if it has not been checked yet.
    */
   def isClasspathValid(): Boolean = {
@@ -215,17 +222,18 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
   }
 
-  /** Check if the classpath is valid for scala.
+  /**
+   * Check if the classpath is valid for scala.
    *  It is said valid if it contains one and only scala library jar, with a version compatible
    *  with the one from the scala-ide plug-in
    *  @param queue Do not trust an ongoing check to deal with the classPath
    */
   def classpathHasChanged(queue: Boolean = true) = {
-    if (queue || !isCheckingClasspath()){
+    if (queue || !isCheckingClasspath()) {
       classpathCheckLock.synchronized {
         // mark as in progress
         classpathHasBeenChecked = false
-            checkClasspath()
+        checkClasspath()
         if (classpathValid) {
           // no point in resetting compilers on an invalid classpath,
           // it would not work anyway. But we need to reset them if the classpath
@@ -244,7 +252,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
   }
 
-  /** Return all package fragments on the classpath that might be a Scala library, with their version.
+  /**
+   * Return all package fragments on the classpath that might be a Scala library, with their version.
    *
    *  A package fragment is considered a Scala library if it defines `scala.Predef`.
    *
@@ -278,7 +287,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
           val foundIt: Boolean = resource match {
             case folder: IFolder => folder.findMember(pathToPredef) ne null
-            case file: IFile     => isZipFileScalaLib(file.getFullPath)
+            case file: IFile => isZipFileScalaLib(file.getFullPath)
             case _ =>
               val file = fragmentRoot.getPath.toFile
               file.exists && {
@@ -351,7 +360,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {
       case ScalaLibrary(_, Some(version), false) => !ScalaPlugin().isCompatibleVersion(version, this)
-      case _                               => false
+      case _ => false
     }
 
     val scalaVersion = ScalaPlugin().scalaVersion.unparse
@@ -389,8 +398,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
                 Status.OK_STATUS
               }
               (IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
-            }
-            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
+            } // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
             else (IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
           }
           case Some(v) => {
@@ -410,12 +418,13 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   }
 
   private def moreThanOneLibraryError(libs: Seq[IPath], compatible: Boolean): String = {
-    val first =  "More than one scala library found in the build path (%s).".format(libs.mkString(", "))
+    val first = "More than one scala library found in the build path (%s).".format(libs.mkString(", "))
     if (compatible) first + "This is not an optimal configuration, try to limit to one Scala library in the build path."
     else first + "At least one has an incompatible version. Please update the project build path so it contains only one compatible scala library."
   }
 
-  /** Return the version number contained in library.properties if it exists.
+  /**
+   * Return the version number contained in library.properties if it exists.
    */
   private def getVersionNumber(fragmentRoot: IPackageFragmentRoot): Option[ScalaVersion] = {
     def getVersion(resource: IStorage): Option[ScalaVersion] = try {
@@ -438,7 +447,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     None
   }
 
-  /** Manage the possible classpath error/warning reported on the project.
+  /**
+   * Manage the possible classpath error/warning reported on the project.
    */
   private def updateClasspathMarkers(errors: Seq[(Int, String, String)]) {
     // set the state
@@ -476,16 +486,16 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       entry.lastSegment() match {
         case VersionInFile(version) =>
           if (!ScalaPlugin().isCompatibleVersion(version, this)) {
-            badEntries += ((entry,version))
+            badEntries += ((entry, version))
             val msg = s"${entry.lastSegment()} of ${this.underlying.getName()} build path is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
             errors += ((IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId))
           }
         case _ =>
-          // ignore libraries that aren't cross compiled/are compatible
+        // ignore libraries that aren't cross compiled/are compatible
       }
     }
     errors.toSeq
   }
 
-  private class cpMarkerFactory(key:String) extends MarkerFactory(key)
+  private class cpMarkerFactory(key: String) extends MarkerFactory(key)
 }
