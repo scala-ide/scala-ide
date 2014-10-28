@@ -156,21 +156,20 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def javaClasspath: Seq[IPath] = {
     val path = new mutable.LinkedHashSet[IPath]
 
-    val computedClasspaths = new mutable.LinkedHashMap[IJavaProject, Boolean]
+    val computedClasspaths = mutable.HashSet[IJavaProject]()
 
-    def computeClasspath(project: IJavaProject, exportedOnly: Boolean): Unit = {
-      val computedClasspath = computedClasspaths.get(project)
-      if (computedClasspath.isEmpty || (computedClasspath.get && !exportedOnly)) {
+    def computeClasspath(project: IJavaProject): Unit = {
+      if (!computedClasspaths.contains(project)) {
       val cpes = project.getResolvedClasspath(true)
 
       for (
-        cpe <- cpes if !exportedOnly || cpe.isExported ||
+        cpe <- cpes if project == javaProject || cpe.isExported ||
           cpe.getEntryKind == IClasspathEntry.CPE_SOURCE
       ) cpe.getEntryKind match {
         case IClasspathEntry.CPE_PROJECT =>
           val depProject = EclipseUtils.workspaceRoot.getProject(cpe.getPath.lastSegment)
           if (JavaProject.hasJavaNature(depProject)) {
-            computeClasspath(JavaCore.create(depProject), true)
+            computeClasspath(JavaCore.create(depProject))
           }
         case IClasspathEntry.CPE_LIBRARY =>
           if (cpe.getPath != null) {
@@ -195,10 +194,10 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
         case _ =>
           logger.warn("Classpath computation encountered unknown entry: " + cpe)
       }
-        computedClasspaths.put(project, exportedOnly)
+        computedClasspaths += project
       }
     }
-    computeClasspath(javaProject, false)
+    computeClasspath(javaProject)
     path.toList
   }
 
