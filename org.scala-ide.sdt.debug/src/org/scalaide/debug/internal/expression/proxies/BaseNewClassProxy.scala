@@ -8,7 +8,7 @@ import com.sun.jdi.ObjectReference
 
 /**
  * Runtime representation of newly loaded class
- * Underlaying is created on first use of it (should we remove this lazines?)
+ * Underlying is created on first use of it (should we remove this laziness?)
  */
 trait BaseNewClassProxy extends JdiProxy {
 

@@ -14,7 +14,7 @@ import Names.Scala
  * Describes method signature for stub creation.
  *
  * @param name name of the method
- * @param thisType type of 'this' from scala point of view (eg. RichInt instead of int)
+ * @param thisType type of 'this' from Scala point of view (e.g. RichInt instead of int)
  * @param returnType fully qualified name of return type
  * @param paramTypes types of function parameters
  * @param implicitParamTypes types of function implicit parameters
@@ -24,7 +24,7 @@ case class MethodStub(name: String,
   returnType: Option[String],
   paramTypes: Seq[Seq[String]] = Seq.empty) {
 
-  require(returnType != Some("scala.Array"), "Cannot set return type to 'Array' witout generic parameter.")
+  require(returnType != Some("scala.Array"), "Cannot set return type to 'Array' without a generic parameter.")
 
   /** All types that are used inside this function */
   final def allTypes: Seq[String] = returnType.toSeq ++ paramTypes.flatten
@@ -86,7 +86,7 @@ final class StubCodeGenerator(typesContext: TypesContext) {
     returnType == Debugger.proxyName ||
       returnType == Debugger.proxyFullName
 
-  /** Generates function body - basicly context.invokeMethod call */
+  /** Generates function body - basically context.invokeMethod call */
   private def generateCall(stubName: String,
     stubRealThisType: String,
     stubType: String,

@@ -43,7 +43,7 @@ trait UnboundValuesSupport {
   }
 
   /**
-   * Keeps track of bound and unbound variables (name and type if is acessible)
+   * Keeps track of bound and unbound variables (name and type if is accessible)
    */
   private class VariableManager(extractType: Tree => Option[String]) {
 
@@ -154,7 +154,7 @@ trait UnboundValuesSupport {
       tree match {
         // all identifiers
         case Assign(Ident(termName), value) =>
-          // supressing value extraction from lhs
+          // suppressing value extraction from lhs
           super.traverse(value)
 
         case Ident(name: TermName) if !scopeManager.insideImport =>

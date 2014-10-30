@@ -67,6 +67,12 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
     eval("3.14159", "3.14159", Java.boxed.Double)
     eval("1.0e100", "1.0E100", Java.boxed.Double)
     eval(".1", "0.1", Java.boxed.Double)
+
+    eval("1.0d", "1.0", Java.boxed.Double)
+    eval("1e30d", "1.0E30", Java.boxed.Double)
+    eval("3.14159d", "3.14159", Java.boxed.Double)
+    eval("1.0e100d", "1.0E100", Java.boxed.Double)
+    eval(".1d", "0.1", Java.boxed.Double)
   }
 
   @Test

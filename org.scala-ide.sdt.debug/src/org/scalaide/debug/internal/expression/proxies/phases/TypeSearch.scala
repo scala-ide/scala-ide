@@ -104,7 +104,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
      * Traverses code and searches for:
      * - selects (val, functions, etc)
      * - typeApplies
-     * - applies (both normal and implcit args)
+     * - applies (both normal and implicit args)
      *
      * @param traverseFunction function to call on each leaf of function call (like argument or qualifier part of select)
      * @param tree tree to look for function
@@ -139,7 +139,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
       }
     }
 
-    /** Extracts type for value definition (eg. method argument) */
+    /** Extracts type for value definition (e.g. method argument) */
     private def extractValueType(tree: Tree): Unit = tree match {
       case ValDef(_, _, tpt, _) => typesContext.treeTypeName(tpt).foreach(typesContext.stubType)
       case any =>
@@ -155,7 +155,7 @@ case class TypeSearch(toolbox: ToolBox[universe.type], typesContext: TypesContex
     }
   }
 
-  /** Finds type and return orginal tree */
+  /** Finds type and return original tree */
   protected override def transformSingleTree(baseTree: universe.Tree, transformFurther: (universe.Tree) => universe.Tree): universe.Tree = {
     TypesTraverser.traverse(baseTree)
     baseTree

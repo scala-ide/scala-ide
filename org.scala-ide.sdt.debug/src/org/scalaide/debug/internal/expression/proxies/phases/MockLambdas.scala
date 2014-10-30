@@ -11,8 +11,8 @@ import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TypesContext
 
 /**
- * Resposible for extracting all functions creation from code and rewrite it to proxy
- * create new class for each function and compiles it
+ * Responsible for extracting all functions creation from code and rewriting it to proxy
+ * Creates new class for each function and compiles it
  * New function is named like '_randomString._randomString$CustomFunction2v4'
  */
 case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesContext)
@@ -25,7 +25,7 @@ case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesConte
 
   protected override def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
     case fun @ Function(params, body) if !isStartFunctionForExpression(params) =>
-      //search for witch FunctionXJdiProxy should be used
+      //search for FunctionXJdiProxy which should be used
       val parentType = typesContext.treeTypeName(fun).getOrElse(throw new RuntimeException("Function must have type!"))
       createAndCompileNewFunction(params, body, parentType)
 

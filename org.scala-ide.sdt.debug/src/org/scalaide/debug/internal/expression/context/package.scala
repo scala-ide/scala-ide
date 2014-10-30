@@ -5,7 +5,7 @@ package org.scalaide.debug.internal.expression
 
 /**
  * Contains [[org.scalaide.debug.internal.expression.context.JdiContext]], that represents context of
- * debbuged jvm (on some breakpoint). It allows one to create proxies for variables,
+ * debugged jvm (on some breakpoint). It allows one to create proxies for variables,
  * evaluate methods on debugged jvm and to inspect scope of debug for declared values and objects.
  *
  * For brevity, implementation is split into several files:

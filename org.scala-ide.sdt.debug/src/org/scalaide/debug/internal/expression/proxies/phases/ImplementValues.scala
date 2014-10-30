@@ -22,7 +22,7 @@ case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: u
    * Transforms a proxy mock definition into actual proxy creating code
    *
    * @param tree processed tree
-   * @param transformFurther function to transform tree furhter
+   * @param transformFurther function to transform tree further
    * @return transformed tree
    */
   final override def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = transformFurther(tree) match {
@@ -55,7 +55,7 @@ case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: u
   }
 
   /**
-   * check if impementation should be wrapped in given type and if yes wraps it
+   * Wraps an implementation if it's needed
    */
   private def wrapInType(typeName: String)(code: String): Tree = {
     val realCode = if (typeName == Debugger.proxyFullName) code

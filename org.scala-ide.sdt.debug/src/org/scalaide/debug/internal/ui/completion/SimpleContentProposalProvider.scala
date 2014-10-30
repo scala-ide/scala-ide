@@ -103,7 +103,7 @@ object SimpleContentProposalProvider extends HasLogger {
     try {
       getMembersForThisClassUsingReflection(currentThisClassName)
     } catch {
-      // cannot create class for name localy so use information available via JDI
+      // cannot create class for name locally so use information available via JDI
       case e: Throwable => getDistinctProposalsForThisViaJdi(thisReference, currentThisClassName)
     }
   }

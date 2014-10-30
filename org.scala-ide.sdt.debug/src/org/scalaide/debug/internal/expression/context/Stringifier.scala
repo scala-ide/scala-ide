@@ -71,7 +71,7 @@ trait Stringifier {
       if (haveTrailingWhitespace) "\"" + x + "\"" else x
     }
 
-    // workaround for crappy Eclipse implementation of getValues which throw exceptions on
+    // workaround for a poor Eclipse's implementation of getValues which throws exceptions in the case of
     // empty arrays instead of returning empty list
     def handleEmptyArray(arrayRef: ArrayReference): List[Value] =
       if (arrayRef.length() != 0) arrayRef.getValues().toList else Nil

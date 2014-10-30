@@ -7,7 +7,7 @@ import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.TypesContext
 
 /**
- * Implement all mock lambdas created durinf 'MockTypedLabdas' phase
+ * Implement all mock lambdas created during 'MockTypedLabdas' phase
  */
 case class ImplementTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer

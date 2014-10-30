@@ -11,9 +11,9 @@ import scala.reflect.runtime.universe._
 
 
 /**
- * Representing value that on combination with others can simulate logical scala this.
+ * Representing value that on combination with others can simulate logical Scala this.
  * @param referenceType
- * @param dependOn if this element depends on another (eg. is created as field from another)
+ * @param dependOn if this element depends on another (e.g. is created as field from another)
  * @creationCode code that initialize those value. It it not transformed so it must use contexts etc.
  */
 class ThisElement(val referenceType: ReferenceType, val dependOn: Option[ThisElement], val creationCode: Option[TermName] => String)
@@ -44,7 +44,7 @@ class ImportAllElement(dependsOn: ThisElement) extends ImportElement(Some(depend
  * val __this = context.proxyForField(__this1, "outer")
  * import __this1._
  * import __this._
- * @param thisHistory seqence of this values that will create this context
+ * @param thisHistory sequence of this values that will create this context
  * @param importHistory sequence of imports from this values
  */
 final case class ThisTransformation private(thisHistory: Seq[ThisElement], importHistory: Seq[ImportElement]) {

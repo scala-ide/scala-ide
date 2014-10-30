@@ -23,7 +23,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   //should we mock this lambda?
   private def allParamsTyped(params: Seq[ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
 
-  /** all val def and binds have type adnotation? */
+  /** all val def and binds have type annotation? */
   private def treeFullyTyped(tree: Tree): Boolean = tree match {
     case Bind(_, tpt) => !tpt.isEmpty
     case Apply(_, args) => args.forall(treeFullyTyped)
@@ -186,7 +186,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   }
 
 
-  /** Compile lambda, create new class form lambda and create mock that represent this lambda */
+  /** Compile lambda, create new class form lambda and create mock that represents this lambda */
   private def createStubedPartialFunction(function: Match): Tree = {
     val stubVarName = "__x"
 
@@ -204,7 +204,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
   }
 
-  /** Compile lambda, create new class form lambda and create mock that represent this lambda */
+  /** Compiles lambda, creates new class for it and creates mock that represents this lambda */
   private def createStubedFunction(function: Function): Tree = {
     val argsCount = function.vparams.size
     createAnyStubbedFunction(function.body, function.vparams,

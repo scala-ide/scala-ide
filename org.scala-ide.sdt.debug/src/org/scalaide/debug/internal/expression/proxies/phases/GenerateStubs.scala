@@ -29,17 +29,19 @@ class GenerateStubs(val toolbox: ToolBox[universe.type], newTypes: => String)
     case any => throw new IllegalArgumentException(s"Unsupported tree: $any")
   }
 
-  override def transform(tree: Tree): Tree =
-    if (!newTypes.isEmpty) {
+  override def transform(tree: Tree): Tree = {
+    val typesToCreate = newTypes
+    if (!typesToCreate.isEmpty) {
       val newTypesCode = try {
-        toolbox.parse(newTypes)
+        toolbox.parse(typesToCreate)
       } catch {
         case t: Throwable =>
-          logger.error("Could not parse:\n" + newTypes)
+          logger.error("Could not parse:\n" + typesToCreate)
           throw t
       }
       val newCodeLines = extractClassDefs(newTypesCode)
 
       Block(newCodeLines.toList, tree)
     } else tree
+  }
 }

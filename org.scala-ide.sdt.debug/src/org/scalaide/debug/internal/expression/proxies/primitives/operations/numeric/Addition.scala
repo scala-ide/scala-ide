@@ -28,10 +28,10 @@ trait FloatingPointAddition[Proxy <: NumberJdiProxy[_, Proxy]] {
 }
 
 object Addition {
-  /* Maybe it would be better to use val instead of def and to add context as parameter to each method create only
-   one instance of a helper. Honestly it was implemented in such a way but it was changed in meantime.
-   It's in general related to all helpers. From the other hand it's just an expression evaluator so in such
-   a small case impact on performance and memory consumption should be insignificant */
+  // Maybe it would be better to use val instead of def and to add the context as a parameter to each method
+  // (so we'd create only one instance of a helper). Honestly it was implemented in such a way but it was changed
+  // in the meantime. In general it's related to all helpers. On the other hand it's just an expression evaluator
+  // so in such a small case the impact on performance and memory consumption should be insignificant.
   private[operations] def operationHelper(ctx: JdiContext) = new NumericOperationHelper(ctx) {
     override protected def byteWithByteFun(a: Byte, b: Byte) = context.proxy(a + b)
     override protected def shortWithByteFun(a: Short, b: Byte) = context.proxy(a + b)

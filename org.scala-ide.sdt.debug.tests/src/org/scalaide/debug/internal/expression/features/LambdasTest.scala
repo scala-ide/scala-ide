@@ -30,7 +30,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
     eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.boxed.String)
 
   @Test
-  def higherOrderfunctionWithMultipleParameterLists(): Unit =
+  def higherOrderFunctionWithMultipleParameterLists(): Unit =
     eval("List(1, 2, 3).fold(0)(_ + _)", "6", Java.boxed.Integer)
 
   @Test

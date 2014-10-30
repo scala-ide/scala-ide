@@ -26,7 +26,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
   import toolbox.u._
 
   /**
-   * Traverse throught method call and returns arguments
+   * Traverse through method call and returns arguments
    */
   private def extractParameters(tree: Tree): List[List[Tree]] = tree match {
     case select: Select => Nil

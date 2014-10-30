@@ -102,7 +102,7 @@ object FunctionProxyArgumentTypeNotInferredException
   with ExpressionException
 
 /**
- * Raised when you nest lamba inside another lambda, which is currently not supported.
+ * Raised when you nest lambda inside another lambda, which is currently not supported.
  */
 object NestedLambdaException
   extends RuntimeException(ExpressionException.lambdaNestedInLambdaMessage)

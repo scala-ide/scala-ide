@@ -120,7 +120,7 @@ object JdiContext {
    * Used internally in generated stubs.
    */
   def toObject(className: String): String = Debugger.objNamePrefix + className
-
+  
   def apply(expressionClassLoader: ClassLoader, debugState: DebugState): JdiContext =
     new JdiContext(expressionClassLoader, debugState)
 
@@ -129,7 +129,7 @@ object JdiContext {
 /**
  * Represents context of debug.
  *
- * Allows for mirroring values and creaties proxies for them as well as invoking methods in context of debugged JVM.
+ * Allows for mirroring values and creates proxies for them as well as invoking methods in context of debugged JVM.
  *
  * @param currentThread Current thread in debug
  * @param debugState provides state of debug - current frame and thread

@@ -211,7 +211,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     lambdaProxy(newFunctionType, closureParamTrees)
   }
 
-  /** creates proxy for given lambda with given clousre arguments */
+  /** creates proxy for given lambda with given closure arguments */
   protected def lambdaProxy(newFunctionType: String, closureArgs: List[Tree]): Tree = {
     val constructorArgs = Ident(TermName(Debugger.contextParamName)) :: closureArgs
 

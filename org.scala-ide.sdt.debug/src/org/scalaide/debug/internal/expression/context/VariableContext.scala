@@ -28,19 +28,19 @@ trait VariableContext extends Any {
 
   /**
    * Get list of all synthetic variables for given expression.
-   *  They are eg. different version of this
+   *  They are e.g. different version of this
    */
   def syntheticVariables: Seq[TermName]
 
   /**
    * Get list of all synthetic imports for given expression.
-   *  They are eg. imports from this or outer fields
+   *  They are e.g. imports from this or outer fields
    */
   def syntheticImports: Seq[String]
 
   /**
    * Try to implement a value
-   *  When returning Some with string implementation for given value it alters defualt value impelementation
+   *  When returning Some with string implementation for given value it alters default value implementation
    *  @param name name of variable to implement
    */
   def implementValue(name: TermName): Option[String]

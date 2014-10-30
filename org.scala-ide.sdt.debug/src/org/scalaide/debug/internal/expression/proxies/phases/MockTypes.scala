@@ -13,8 +13,8 @@ import org.scalaide.debug.internal.expression.TypesContext
 /**
  * Finds all types that should be stubbed.
  * Firstly finds all types that must be stubbed and all methods used on those types
- * Than Mock all type occurences to stubs
- * This class use heavyly TypeContext
+ * Than Mock all type occurrences to stubs
+ * This class uses heavily TypeContext
  */
 case class MockTypes(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer {

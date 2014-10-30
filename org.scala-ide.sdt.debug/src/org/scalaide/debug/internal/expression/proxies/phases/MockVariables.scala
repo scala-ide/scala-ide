@@ -43,7 +43,7 @@ class MockVariables(val toolbox: ToolBox[universe.type],
       }
     }
 
-    /** break genetated expression into sequence of value definition */
+    /** breaks generated expression into sequence of definitions of values */
     private def breakValDefBlock(code: Tree): Seq[Tree] = code match {
       case valDef: ValDef => Seq(valDef)
       case block: Block => block.children

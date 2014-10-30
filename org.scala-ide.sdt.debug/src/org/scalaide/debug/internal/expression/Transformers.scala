@@ -16,8 +16,8 @@ import Names.Scala
 trait TransformationPhase {
 
   /**
-   * Tranforms current tree to new form.
-   * It is called only once per object livetime.
+   * Transforms current tree to new form.
+   * It is called only once per object lifetime.
    * Result of this method is passed to another TransformationPhase instance.
    * @param baseTree tree to transform
    */
@@ -45,7 +45,7 @@ abstract class AstTransformer
 
   /**
    * Basic method for transforming a tree
-   * for seting futher in tree it should call transformFurther but not transformSingleTree or transform method
+   * for setting further in tree it should call transformFurther but not transformSingleTree or transform method
    * @param baseTree tree to transform
    * @param transformFurther call it on tree node to recursively transform it further
    */
