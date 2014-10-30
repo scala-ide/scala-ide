@@ -84,7 +84,25 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
 
   override lazy val analyzer = new {
     val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
-  } with InteractiveScaladocAnalyzer with CommentPreservingTypers
+  } with InteractiveScaladocAnalyzer with CommentPreservingTypers {
+    // Copy pasted from the overriden method to change the line marked with the 'Modified' comment.
+    // Fixes https://www.assembla.com/spaces/scala-ide/tickets/1002325#/activity/ticket:
+    // TODO if this fix proves to eliminate the symptoms in the IDE, roll it back into the
+    //      compiler.
+    override def companionSymbolOf(original: Symbol, ctx: Context): Symbol = {
+      val owner = original.owner
+      // SI-7264 Force the info of owners, other than those with a type completer as its info.
+      //         The condition prevents cycles and allows the `orElse` case below to kick in.
+      if (!owner.rawInfo.isInstanceOf[TypeCompleter]) // Modified
+        owner.initialize
+      original.companionSymbol orElse {
+        ctx.lookup(original.name.companionName, owner).suchThat(sym =>
+          (original.isTerm || sym.hasModuleFlag) &&
+          (sym isCoDefinedWith original)
+        )
+      }
+    }
+  }
 
   override def forScaladoc = true
 
