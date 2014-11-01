@@ -223,9 +223,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val outputLocation = if (cpeOutput != null) cpeOutput else javaProject.getOutputLocation
 
       val wsroot = EclipseUtils.workspaceRoot
-      val binPath = wsroot.getFolder(outputLocation) // may not exist
 
-      (source.asInstanceOf[IContainer], binPath)
+      if (source.getProject.getFullPath == outputLocation)
+        (source.asInstanceOf[IContainer], source.asInstanceOf[IContainer])
+      else {
+        val binPath = wsroot.getFolder(outputLocation)
+        (source.asInstanceOf[IContainer], binPath)
+      }
     }
   }
 
