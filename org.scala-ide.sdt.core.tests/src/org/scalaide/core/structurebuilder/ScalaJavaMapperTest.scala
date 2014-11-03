@@ -22,7 +22,7 @@ class ScalaJavaMapperTest {
       new TypeTest {
         def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
-          Assert.assertEquals("wrong descriptor", "I", desc)
+          Assert.assertEquals(s"wrong descriptor of $tpe", "I", desc)
         }
       }
     }
@@ -34,7 +34,7 @@ class ScalaJavaMapperTest {
       new TypeTest {
         def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
-          Assert.assertEquals("wrong descriptor", "Lscala/collection/immutable/List;", desc)
+          Assert.assertEquals(s"wrong descriptor of $tpe", "Lscala/collection/immutable/List;", desc)
         }
       }
     }
@@ -46,7 +46,7 @@ class ScalaJavaMapperTest {
       new TypeTest {
         def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
-          Assert.assertEquals("wrong descriptor", "[[C", desc)
+          Assert.assertEquals(s"wrong descriptor of $tpe", "[[C", desc)
         }
       }
     }
@@ -58,7 +58,7 @@ class ScalaJavaMapperTest {
       new TypeTest {
         def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
-          Assert.assertEquals("wrong descriptor", "[Ljava/lang/Object;", desc)
+          Assert.assertEquals(s"wrong descriptor of $tpe", "[Ljava/lang/Object;", desc)
         }
       }
     }
@@ -70,7 +70,7 @@ class ScalaJavaMapperTest {
       new TypeTest {
         def apply(compiler: IScalaPresentationCompiler)(tpe: compiler.Type) {
           val desc = compiler.javaDescriptor(tpe)
-          Assert.assertEquals("wrong descriptor", "LTarget/Inner;", desc)
+          Assert.assertEquals(s"wrong descriptor of $tpe", "LTarget/Inner;", desc)
         }
       }
     }
@@ -111,7 +111,8 @@ class ScalaJavaMapperTest {
   def withTargetTree(src: String)(f: TypeTest) = {
     changeContentOfFile(unit.getResource().asInstanceOf[IFile], src)
 
-    unit.withSourceFile { (srcFile, compiler) =>
+    val srcFile = unit.sourceMap(src.toCharArray()).sourceFile
+    unit.scalaProject.presentationCompiler{ compiler =>
       compiler.askReload(unit, srcFile)
       val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>

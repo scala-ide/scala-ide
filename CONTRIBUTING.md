@@ -1,5 +1,10 @@
 # Contributing to Scala IDE
 
+## Where to start
+
+If you already have an idea about what you'd like to work on, great! [Open a ticket](https://www.assembla.com/spaces/scala-ide/tickets) if it doesn't exist already, and start coding! Otherwise, have a look at our
+[starter bugs](https://www.assembla.com/spaces/ae55a-oWSr36hpeJe5avMc/tickets/report/u1427663), where we try to list tickets that we feel would be relatively easy to fix, and provide great value for users.
+
 ## General Workflow
 
 This is the process for committing code into master. There are of course exceptions to these rules, for example minor changes to comments and documentation, fixing a broken build etc.
@@ -61,6 +66,7 @@ Example:
 
 ## Resources
 
+* [Assembla issue tracker](https://www.assembla.com/spaces/scala-ide/tickets)
 * [Website](http://scala-ide.org/)
 * [Contributor License Agreement](http://www.typesafe.com/contribute/cla)
 * [Issue Tracker](http://scala-ide-portfolio.assembla.com/spaces/scala-ide/support/tickets)

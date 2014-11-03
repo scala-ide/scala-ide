@@ -25,6 +25,7 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.part.FileEditorInput
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.ui.editor.ISourceViewerEditor
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
@@ -59,7 +60,8 @@ object EditorUtils {
    */
   def getAnnotationsAtOffset(part: org.eclipse.ui.IEditorPart, offset: Int): Iterator[(Annotation, Position)] = {
     import scala.collection.JavaConverters._
-    val model = JavaUI.getDocumentProvider.getAnnotationModel(part.getEditorInput)
+
+    val model = ScalaPlugin().documentProvider.getAnnotationModel(part.getEditorInput)
 
     val annotations = model match {
       case null => Iterator.empty
@@ -247,7 +249,7 @@ object EditorUtils {
       val page = window.getActivePage()
       val part = Option(page.findEditor(new FileEditorInput(file))).getOrElse(EditorUtility.openInEditor(file, true))
       page.bringToTop(part)
-      JavaUI.getDocumentProvider().getDocument(part.getEditorInput());
+      ScalaPlugin().documentProvider.getDocument(part.getEditorInput)
     }
   }
 }
