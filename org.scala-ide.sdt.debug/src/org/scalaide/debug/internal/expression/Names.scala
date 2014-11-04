@@ -213,36 +213,34 @@ object Names {
   }
 
   /**
-   * Names specific to debuger itself.
+   * Names specific to debugger itself.
    */
   object Debugger {
 
-    /** Prefix for object in generated stubs. */
-    val objNamePrefix = "$o_"
+    /** Prefix for object or type used for static call in generated stubs. */
+    val objectOrStaticCallTypeNamePrefix = "$o_"
 
     /** Type used to show for custom user-defined lambdas */
     val lambdaType = "<custom_lambda>"
 
     /** Matches names that starts with objNamePrefix and extracts name without prefix. */
-    object PrefixedObject {
+    object PrefixedObjectOrStaticCall {
       def unapply(name: String): Option[String] =
-        if (name.startsWith(objNamePrefix))
-          Some(name.drop(objNamePrefix.length))
-        else
-          None
+        if (name.startsWith(objectOrStaticCallTypeNamePrefix)) Some(name.drop(objectOrStaticCallTypeNamePrefix.length))
+        else None
     }
 
     /*  JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
-    val proxyObjectFullName = JdiContext.toObject(proxyFullName)
+    val proxyObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(proxyFullName)
 
     def ArrayJdiProxy(typeName: String) = s"ArrayJdiProxy[$typeName]"
 
     /* JdiContext in all variants */
     val contextName = classOf[JdiContext].getSimpleName
     val contextFullName = classOf[JdiContext].getName
-    val contextObjFullName = JdiContext.toObject(contextFullName)
+    val contextObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(contextFullName)
 
     /** Name of placeholder method, used in reflective compilation. */
     val placeholderName = "placeholder"
@@ -263,7 +261,7 @@ object Names {
     val valueProxyMethodName = "valueProxy"
 
     /** Name of proxy method, used in reflective compilation. */
-    val objectProxyMethodName = "objectProxy"
+    val objectOrStaticCallProxyMethodName = "objectOrStaticCallProxy"
 
     /** Name of stringify method, used in reflective compilation. */
     val stringifyMethodName = "stringify"
@@ -271,7 +269,7 @@ object Names {
     /** Name of generateHashCode method, used in reflective compilation. */
     val hashCodeMethodName = "generateHashCode"
 
-    /** Name of context val on tolevel function for expression. */
+    /** Name of context val on top level function for expression. */
     val contextParamName = "__context"
 
     /** Name of `this` stub. */

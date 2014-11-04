@@ -12,7 +12,7 @@ import org.scalaide.logging.HasLogger
 /**
  * @param newTypes code for stubs to generate
  */
-class GenerateStubs(val toolbox: ToolBox[universe.type], newTypes: => String)
+class GenerateStubs(val toolbox: ToolBox[universe.type], newTypes: () => String)
   extends TransformationPhase
   with HasLogger {
 
@@ -30,7 +30,7 @@ class GenerateStubs(val toolbox: ToolBox[universe.type], newTypes: => String)
   }
 
   override def transform(tree: Tree): Tree = {
-    val typesToCreate = newTypes
+    val typesToCreate = newTypes()
     if (!typesToCreate.isEmpty) {
       val newTypesCode = try {
         toolbox.parse(typesToCreate)

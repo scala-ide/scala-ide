@@ -3,7 +3,7 @@
  */
 package org.scalaide.debug.internal.expression.context
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
@@ -11,6 +11,8 @@ import org.scalaide.debug.internal.expression.Names.Scala
 
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassType
+import com.sun.jdi.InterfaceType
+import com.sun.jdi.InvocationException
 import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.StackFrame
@@ -18,7 +20,7 @@ import com.sun.jdi.Value
 import com.sun.jdi.VirtualMachine
 
 /**
- * Part of JdiContext responsible for looking classess, objects and methods by name.
+ * Part of JdiContext responsible for searching classes, objects and methods by name.
  */
 trait Seeker {
   self: JdiClassLoader =>
@@ -27,7 +29,7 @@ trait Seeker {
 
   /** real name of class - replace object name prefix and handles arrays */
   private def realClassName(name: String): String = name match {
-    case Debugger.PrefixedObject(realName) => realName
+    case Debugger.PrefixedObjectOrStaticCall(realName) => realName
     case Scala.Array(typeArg) => Java.primitives.Array(realClassName(scalaToJavaTypeName(typeArg)))
     case other => other
   }
@@ -57,26 +59,45 @@ trait Seeker {
     tryClassByName(name)
       .getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
 
-  private def tryClassByName(name: String): Option[ClassType] = {
-    def getClassType() = jvm.classesByName(realClassName(name)).headOption.map(_.asInstanceOf[ClassType])
+  final def tryClassByName(name: String): Option[ClassType] = {
+    val className = realClassName(name)
+    def getClassType() = jvm.classesByName(className).collectFirst {
+      case classType: ClassType => classType
+    }
 
     getClassType().orElse {
-      loadClass(realClassName(name))
+      loadClass(className)
       getClassType()
     }
   }
 
+  /** Looks up an interface for given name and returns jdi reference to it. */
+  final def interfaceByName(name: String, onNotFound: String => InterfaceType): InterfaceType = {
+    val interfaceName = realClassName(name)
+    jvm.classesByName(interfaceName).collectFirst {
+      case interfaceType: InterfaceType => interfaceType
+    } getOrElse onNotFound(interfaceName)
+  }
+
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
   final def objectByName(name: String): ObjectReference = {
-    val clazz = tryClassByName(name + "$")
+    val classType = tryClassByName(name + "$")
       .getOrElse(throw new ClassNotFoundException("Class not found: " + realClassName(name) + "$"))
-    val field = Option(clazz.fieldByName("MODULE$"))
+    val field = Option(classType.fieldByName("MODULE$"))
       .getOrElse(throw new NoSuchMethodError(s"No field named `MODULE$$` found in class $name"))
-    clazz.getValue(field).asInstanceOf[ObjectReference]
+    classType.getValue(field).asInstanceOf[ObjectReference]
   }
 
   private[expression] final def tryObjectByName(name: String): Option[ObjectReference] =
-    util.Try(objectByName(name)).toOption
+    try {
+      for {
+        classType <- tryClassByName(name + "$")
+        field <- Option(classType.fieldByName("MODULE$"))
+      } yield classType.getValue(field).asInstanceOf[ObjectReference]
+    } catch {
+      // thrown when trying to force loading nonexistent class
+      case _: InvocationException => None
+    }
 
   /** Helper for getting methods from given class name */
   protected final def methodOn(className: String, methodName: String): Method = {

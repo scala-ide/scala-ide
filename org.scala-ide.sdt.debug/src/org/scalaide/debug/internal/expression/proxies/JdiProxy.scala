@@ -4,17 +4,18 @@
 package org.scalaide.debug.internal.expression.proxies
 
 import scala.language.dynamics
-import scala.reflect.classTag
 import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
 
 /**
- * Base for all proxies using JDI. Extends `scala.Dynamic` to proxy all method calls to debugged jvm using
+ * The base for all proxies using JDI. Extends `scala.Dynamic` to proxy all method calls to debugged jvm using
  * [[org.scalaide.debug.internal.expression.proxies.JdiContext]].
  */
 trait JdiProxy extends Dynamic {
@@ -29,7 +30,7 @@ trait JdiProxy extends Dynamic {
   protected[expression] def __underlying: ObjectReference
 
   /** Type of underlying reference. */
-  protected[expression] def objectType = __underlying.referenceType
+  protected[expression] def referenceType: ReferenceType = __underlying.referenceType
 
   /** Applies mostly to primitives that are of Rich* class and should be boxed for some methods */
   protected def genericThisType: Option[String] = None
@@ -87,7 +88,7 @@ object JdiProxyCompanion {
     case proxy: Proxy => proxy
     case _ =>
       val className = classTag[Proxy].runtimeClass.getSimpleName
-      throw new IllegalArgumentException( s"Cannot create proxy of type: '$className' from: '$from'")
+      throw new IllegalArgumentException(s"Cannot create proxy of type: '$className' from: '$from'")
   }
 }
 
@@ -97,12 +98,24 @@ object JdiProxyCompanion {
 case class SimpleJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference) extends JdiProxy
 
 /**
- * Implementation of wrapper on JdiProxies. Stubs genereted during reflective compilation extends from it.
+ * Implementation of wrapper on JdiProxies. Stubs generated during reflective compilation extends from it.
  *
  * WARNING - this class is used in reflective compilation.
  * If you change it's name, package or behavior, make sure to change it also.
  */
 class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiProxy {
   override protected[expression] val proxyContext: JdiContext = __outer.proxyContext
-  override protected[expression] val __underlying: ObjectReference = __outer.__underlying
+  override protected[expression] def __underlying: ObjectReference = __outer.__underlying
+
+  /** Implementation of method application. */
+  override def applyDynamic(name: String)(args: Any*): JdiProxy = __outer.applyDynamic(name)(args: _*)
+
+  /** Implementation of field selection. */
+  override def selectDynamic(name: String): JdiProxy = __outer.selectDynamic(name)
+
+  /** Implementation of variable mutation. */
+  override def updateDynamic(name: String)(value: Any): Unit = __outer.updateDynamic(name)(value)
+
+  /** Forwards equality to debugged jvm */
+  override def ==(other: JdiProxy): BooleanJdiProxy = __outer.==(other)
 }

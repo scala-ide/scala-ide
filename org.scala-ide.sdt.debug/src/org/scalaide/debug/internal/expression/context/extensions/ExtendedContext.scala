@@ -8,7 +8,7 @@ import scala.reflect.runtime.universe.TermName
 import scala.reflect.runtime.universe.stringToTermName
 
 import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
-import org.scalaide.debug.internal.expression.Names.Debugger.objectProxyMethodName
+import org.scalaide.debug.internal.expression.Names.Debugger.objectOrStaticCallProxyMethodName
 import org.scalaide.debug.internal.expression.Names.Debugger.valueProxyMethodName
 import org.scalaide.logging.HasLogger
 
@@ -145,7 +145,7 @@ case class ExtendedContext(currentFrame: StackFrame)
     def transformationForParent(currentTransformation: ThisTransformation, objectReference: ReferenceType): ThisTransformation = {
       val objectName = objectReference.toString.dropRight(1) //remove $ at end
       import org.scalaide.debug.internal.expression.Names.Debugger._
-      val creationCode = s"""$contextParamName.$objectProxyMethodName("$objectName")"""
+      val creationCode = s"""$contextParamName.$objectOrStaticCallProxyMethodName("$objectName")"""
       val thisElement = new ThisElement(objectReference, None, _ => creationCode)
       val importElement = new ImportAllElement(thisElement)
 

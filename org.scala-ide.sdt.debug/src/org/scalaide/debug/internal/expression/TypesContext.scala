@@ -63,7 +63,7 @@ final class TypesContextState() {
  * Contains all information of types obtained during compilation of expression
  * During phrases it is filled with types and function that is called on that types.
  * It generates mapping for names - plain jvm names are translated to it proxy versions.
- * During the GenerateStub pharse type context is used to create stub classes.
+ * During the GenerateStub phase type context is used to create stub classes.
  *
  * WARNING - this class have mutable internal state
  */
@@ -71,7 +71,7 @@ final class TypesContext() {
 
   private val state: TypesContextState = new TypesContextState()
 
-  /** Classes to be loaded on debuged jvm. */
+  /** Classes to be loaded on debugged jvm. */
   def classesToLoad: Iterable[ClassData] = state.newCodeClasses.values
 
   /** Function stubs */
@@ -118,7 +118,7 @@ final class TypesContext() {
 
   /**
    * Transforms given type name to proxy type name.
-   * Works on nonstubbable types (eg. primitives).
+   * Works on nonstubbable types (e.g. primitives).
    * If type is stubbable adds this type to context.
    *
    * @param typeName name to get proxy type for
@@ -134,7 +134,7 @@ final class TypesContext() {
   /**
    * Creates a new type that will be loaded in debugged jvm.
    *
-   * @param proxyType type of proxy for new type eg. Function2JdiProxy
+   * @param proxyType type of proxy for new type e.g. Function2JdiProxy
    * @param className name of class in jvm - must be same as in compiled code
    * @param jvmCode code of compiled class
    * @param constructorArgsTypes
@@ -154,7 +154,7 @@ final class TypesContext() {
   }
 
   /** Generate code for all stubs in context */
-  def typesStubCode: String =
+  def typesStubCode(): String =
     stubs.keys
       .filter(couldBeStubbed)
       .map(generateSingleStub)
@@ -203,9 +203,9 @@ final class TypesContext() {
     def correctTypes(oldName: String): Option[String] = oldName match {
       case Scala.thisList => Some(Scala.list)
       case Scala.thisNil => Some(Scala.nil)
-      case any if isObject => Some(JdiContext.toObject(any))
+      case name if isObject => Some(JdiContext.toObjectOrStaticCall(name))
       case Scala.nothingType => None
-      case any => Some(any)
+      case name => Some(name)
     }
 
     rawType(tpe).flatMap(correctTypes)
@@ -235,7 +235,7 @@ final class TypesContext() {
     }
   }
 
-  /** Genereate stub name for given type - if not a special case just replace . with _ on full name */
+  /** Generates the stub name for a given type - if it's not a special case just replace . with _ on full name */
   private def stubName(orginalType: String): String = orginalType match {
     case Debugger.proxyFullName | Debugger.proxyName => Debugger.proxyName
     case Debugger.contextFullName | Debugger.contextName => Debugger.contextName
@@ -265,7 +265,7 @@ final class TypesContext() {
 
   import Names.Debugger._
 
-  /** Genrates code for an exisitng class (originally loaded in JVM) */
+  /** Generates code for an existing class (originally loaded in JVM) */
   private def generateStubForExistingClass(name: String): String = {
     val methods = stubs(name).map(stubCodeGenerator.apply).mkString("\n\t")
     s"""
@@ -314,12 +314,12 @@ final class TypesContext() {
     //JdiProxy in all forms
     Debugger.proxyName,
     Debugger.proxyFullName,
-    Debugger.proxyObjectFullName,
+    Debugger.proxyObjectOrStaticCallFullName,
 
     //JdiContext in all forms
     Debugger.contextName,
     Debugger.contextFullName,
-    Debugger.contextObjFullName) ++
+    Debugger.contextObjectOrStaticCallFullName) ++
     FunctionJdiProxy.functionNames ++
     FunctionJdiProxy.functionProxyNames
 

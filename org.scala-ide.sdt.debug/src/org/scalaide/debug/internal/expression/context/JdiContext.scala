@@ -119,8 +119,8 @@ object JdiContext {
    * Prefixes class name with object prefix.
    * Used internally in generated stubs.
    */
-  def toObject(className: String): String = Debugger.objNamePrefix + className
-  
+  def toObjectOrStaticCall(className: String): String = Debugger.objectOrStaticCallTypeNamePrefix + className
+
   def apply(expressionClassLoader: ClassLoader, debugState: DebugState): JdiContext =
     new JdiContext(expressionClassLoader, debugState)
 

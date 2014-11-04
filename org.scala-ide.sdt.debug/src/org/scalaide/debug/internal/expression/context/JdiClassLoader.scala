@@ -4,15 +4,15 @@
 package org.scalaide.debug.internal.expression.context
 
 import scala.collection.JavaConversions._
-
 import com.sun.jdi.ClassObjectReference
 import com.sun.jdi.ClassType
 import com.sun.jdi.ObjectReference
-
 import javax.xml.bind.DatatypeConverter
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.InvocationException
 
 /**
- * Part of JdiContext responsible for loading classes on debuged jvm.
+ * Part of JdiContext responsible for loading classes on debugged jvm.
  */
 trait JdiClassLoader {
   self: JdiContext =>
@@ -24,8 +24,8 @@ trait JdiClassLoader {
   final def loadClass(name: String): Unit = {
     val classObj = jvm.classesByName("java.lang.Class").head.asInstanceOf[ClassType]
     val byName = classObj.methodsByName("forName").head
-    classObj.invokeMethod(currentThread, byName, List(jvm.mirrorOf(name)),
-      ObjectReference.INVOKE_SINGLE_THREADED).asInstanceOf[ObjectReference]
+    val classMirror = jvm.mirrorOf(name)
+    classObj.invokeMethod(currentThread, byName, List(classMirror), ObjectReference.INVOKE_SINGLE_THREADED)
   }
 
   /**

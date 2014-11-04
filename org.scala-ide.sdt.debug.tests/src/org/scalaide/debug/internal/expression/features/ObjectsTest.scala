@@ -25,7 +25,6 @@ class ObjectsTest extends BaseIntegrationTest(ObjectsTest) {
   @Test
   def testMoreNestedObject(): Unit = eval("LibObject.LibNestedObject.LibMoreNestedObject.id", "3", Java.boxed.Integer)
 
-  @Ignore("TODO - O-5899 - add support for objects nested in classes")
   @Test
   def testNestedObjectWithVal(): Unit = eval("LibObject.nestedClass.LibMoreNestedObject.id", "4", Java.boxed.Integer)
 

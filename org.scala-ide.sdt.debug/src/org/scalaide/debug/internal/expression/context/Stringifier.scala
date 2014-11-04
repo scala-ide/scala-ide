@@ -25,7 +25,7 @@ import com.sun.jdi.Value
  * Part of JdiContext responsible for converting proxies to their string representations.
  */
 trait Stringifier {
-  self: MethodInvoker =>
+  self: JdiMethodInvoker =>
 
   /** Calls `toString` on given proxy, returns jdi String reference. */
   final def callToString(proxy: JdiProxy): StringReference =
@@ -71,7 +71,7 @@ trait Stringifier {
       if (haveTrailingWhitespace) "\"" + x + "\"" else x
     }
 
-    // workaround for a poor Eclipse's implementation of getValues which throws exceptions in the case of
+    // workaround for a crappy Eclipse's implementation of getValues which throws exceptions in the case of
     // empty arrays instead of returning empty list
     def handleEmptyArray(arrayRef: ArrayReference): List[Value] =
       if (arrayRef.length() != 0) arrayRef.getValues().toList else Nil

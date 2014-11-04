@@ -4,10 +4,11 @@
 package org.scalaide.debug.internal.expression.context
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
-import scala.reflect.classTag
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
 import scala.reflect.ClassTag
 import scala.reflect.NameTransformer
+import scala.reflect.classTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -18,6 +19,7 @@ import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxyWrapper
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
@@ -33,19 +35,25 @@ import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 
-/**
- * Implements methods from [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]], `invokeMethod` and `invokeUnboxed`.
- */
-private[context] trait JdiMethodInvoker
-  extends MethodInvoker {
+private[context] trait JdiMethodInvoker {
   self: JdiContext =>
 
   /**
-   * Implements method invocation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
+   * Invokes a method on a proxy. Wraps `invokeUnboxed` with a `valueProxy`.
    *
-   * Wraps `invokeUnboxed` with a `valueProxy`.
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
+   *
+   *
+   * @param proxy
+   * @param onRealType Scala type (not jvm implementation) of object laying under proxy (e.g. for 1.toDouble it will be RichInt)
+   *   if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
+   * @param methodName
+   * @param args list of list of arguments to pass to method
+   * @param implicits list of implicit arguments
+   * @return JdiProxy with a result of a method call
    */
-  override def invokeMethod[Result <: JdiProxy](on: JdiProxy,
+  def invokeMethod[Result <: JdiProxy](on: JdiProxy,
     onScalaType: Option[String],
     name: String,
     args: Seq[Seq[JdiProxy]] = Seq.empty,
@@ -53,16 +61,25 @@ private[context] trait JdiMethodInvoker
     valueProxy(invokeUnboxed[Value](on, onScalaType, name, args, implicits)).asInstanceOf[Result]
 
   /**
-   * Implements method invokation. See [[org.scalaide.debug.internal.expression.proxies.MethodInvoker]].
+   * Invokes a method on a proxy. Returns unboxed value.
    *
-   * Tries to call normal method, if it fails proceeds to vararg version and String contatenation.
+   * Tries to call normal method, if it fails proceeds to vararg version and String concatenation.
    * If all above fails, throws `java.lang.NoSuchMethodError`
+   *
+   * @param proxy
+   * @param onScalaType Scala type (not jvm implementation) of object laying under proxy (e.g. for 1.toDouble it will be RichInt)
+   *  if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
+   * @param methodName
+   * @param args list of list of arguments to pass to method
+   * @param implicits list of implicit arguments
+   * @return jdi unboxed Value with a result of a method call
    */
-  override final def invokeUnboxed[Result <: Value](proxy: JdiProxy, onRealType: Option[String], name: String, args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result = {
+  final def invokeUnboxed[Result <: Value](proxy: JdiProxy, onRealType: Option[String], name: String,
+    args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Result = {
     val methodArgs = args.flatten ++ implicits
 
-    def noSuchMethod: Nothing = throw new NoSuchMethodError(s"field of type ${proxy.objectType.name}" +
-      s" has no method named $name with arguments: ${methodArgs.map(_.objectType.name).mkString(", ")}")
+    def noSuchMethod: Nothing = throw new NoSuchMethodError(s"field of type ${proxy.referenceType.name}" +
+      s" has no method named $name with arguments: ${methodArgs.map(_.referenceType.name).mkString(", ")}")
 
     (tryInvokeUnboxed(proxy, onRealType, name, args, implicits) getOrElse noSuchMethod)
       .asInstanceOf[Result]
@@ -74,23 +91,65 @@ private[context] trait JdiMethodInvoker
     name: String,
     args: Seq[Seq[JdiProxy]] = Seq.empty, implicits: Seq[JdiProxy] = Seq.empty): Option[Value] = {
     val methodArgs = args.flatten ++ implicits
-    val standardMethod = StandardMethod(proxy, name, methodArgs)
-    val varArgMethod = VarArgsMethod(proxy, name, methodArgs)
-    val stringConcat = StringConcatenationMethod(proxy, name, methodArgs)
-    val anyValMethod = AnyValMethodCalls(proxy, name, methodArgs, onRealType)
 
-    standardMethod() orElse varArgMethod() orElse stringConcat() orElse anyValMethod()
+    proxy match {
+      case StaticCallClassJdiProxy(_, classType) => tryInvokeJavaStaticMethod(classType, name, methodArgs)
+      case _ => tryInvokeUnboxedForInstance(proxy, onRealType, name, methodArgs)
+    }
+  }
+
+  private def tryInvokeUnboxedForInstance(proxy: JdiProxy, onRealType: Option[String],
+    name: String,
+    methodArgs: Seq[JdiProxy]): Option[Value] = {
+    val standardMethod = StandardMethod(proxy, name, methodArgs)
+    def varArgMethod = VarArgsMethod(proxy, name, methodArgs)
+    def stringConcat = StringConcatenationMethod(proxy, name, methodArgs)
+    def anyValMethod = AnyValMethodCalls(proxy, name, methodArgs, onRealType)
+    def javaField = JavaFieldCalls(proxy, name, methodArgs)
+
+    standardMethod() orElse
+      varArgMethod() orElse
+      stringConcat() orElse
+      anyValMethod() orElse
+      javaField()
+  }
+
+  final def invokeJavaStaticMethod[Result <: JdiProxy](
+    classType: ClassType,
+    methodName: String,
+    methodArgs: Seq[JdiProxy]): Result =
+    tryInvokeJavaStaticMethod(classType, methodName, methodArgs)
+      .map(valueProxy(_)).getOrElse {
+        throw new NoSuchMethodError(s"class ${classType.name} has no static method named $name")
+      }.asInstanceOf[Result]
+
+  final def tryInvokeJavaStaticMethod(classType: ClassType, methodName: String, methodArgs: Seq[JdiProxy]): Option[Value] =
+    JavaStaticMethod(classType, methodName, methodArgs).apply()
+
+  final def getJavaStaticField[Result <: JdiProxy](referenceType: ReferenceType, fieldName: String): Result = {
+    val fieldAccessor = JavaStaticFieldGetter(referenceType, fieldName)
+    val value = fieldAccessor.getValue()
+    valueProxy(value).asInstanceOf[Result]
+  }
+
+  final def setJavaStaticField[Result <: JdiProxy](classType: ClassType, fieldName: String, newValue: Any): Unit = {
+    val fieldAccessor = JavaStaticFieldSetter(classType, fieldName)
+    fieldAccessor setValue newValue
   }
 
   /**
-   * Creates new instance of given class
+   * Creates new instance of given class.
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
+   *
    * @param className class for object to create
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments
    * @throws NoSuchMethodError when matching constructor is not found
    * @throws IllegalArgumentException when result is not of requested type
    */
-  override final def newInstance[Result <: JdiProxy: ClassTag](
+  final def newInstance[Result <: JdiProxy: ClassTag](
     className: String,
     args: Seq[Seq[JdiProxy]] = Seq.empty,
     implicits: Seq[JdiProxy] = Seq.empty): Result = {
@@ -98,7 +157,7 @@ private[context] trait JdiMethodInvoker
     val methodArgs = args.flatten ++ implicits
 
     def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className" +
-      s" has no constructor with arguments: ${methodArgs.map(_.objectType.name).mkString(", ")}")
+      s" has no constructor with arguments: ${methodArgs.map(_.referenceType.name).mkString(", ")}")
 
     tryNewInstance(className, methodArgs).collect {
       case result: Result => result
@@ -146,7 +205,7 @@ private[context] trait JdiMethodInvoker
 
         case (_, wrapper: JdiProxyWrapper, _) => conformsTo(wrapper.__outer, tpe)
 
-        case _ if tpe == proxy.objectType => true
+        case _ if tpe == proxy.referenceType => true
 
         case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) => primitive.name == boxed.primitiveName
 
@@ -189,8 +248,8 @@ private[context] trait JdiMethodInvoker
     // name of method
     val encoded: String
 
-    // object to search
-    def objectType: ReferenceType
+    // reference to search (could be object or ClassType in the case of Java static members)
+    def referenceType: ReferenceType
 
     // arguments of call
     val args: Seq[JdiProxy]
@@ -215,24 +274,24 @@ private[context] trait JdiMethodInvoker
     }
 
     //search for all methods
-    private def allMethods = objectType.methodsByName(encoded)
+    private def allMethods = referenceType.methodsByName(encoded)
 
     //found methods
     protected final def matching = allMethods.filter(methodMatch)
   }
 
-  private case class ArrayConstructorMethod(clazzName: String, args: Seq[JdiProxy]) {
+  private case class ArrayConstructorMethod(className: String, args: Seq[JdiProxy]) {
     def apply(): Option[Value] = args match {
       case List(proxy: IntJdiProxy) =>
-        val arrayType = JdiMethodInvoker.this.arrayClassByName(clazzName)
+        val arrayType = JdiMethodInvoker.this.arrayClassByName(className)
         Some(arrayType.newInstance(proxy.primitiveValue))
       case other => None
     }
   }
 
   // provides support for constructors
-  private case class ConstructorMethod(clazzName: String, args: Seq[JdiProxy]) extends BaseMethodOperation {
-    override def objectType: ClassType = classByName(clazzName)
+  private case class ConstructorMethod(className: String, args: Seq[JdiProxy]) extends BaseMethodOperation {
+    override def referenceType: ClassType = classByName(className)
 
     override val encoded: String = Scala.constructorMethodName
 
@@ -241,7 +300,7 @@ private[context] trait JdiMethodInvoker
         requestedMethod <- matching.headOption
         finalArgs = generateArguments(requestedMethod)
       } yield {
-        objectType.newInstance(currentThread, requestedMethod, finalArgs, ObjectReference.INVOKE_SINGLE_THREADED)
+        referenceType.newInstance(currentThread, requestedMethod, finalArgs, ObjectReference.INVOKE_SINGLE_THREADED)
       }
     }
   }
@@ -253,15 +312,83 @@ private[context] trait JdiMethodInvoker
 
     override val encoded: String = NameTransformer.encode(name)
 
-    override def objectType: ReferenceType = proxy.__underlying.referenceType()
+    override def referenceType: ReferenceType = proxy.referenceType
 
-    override def apply: Option[Value] =
+    override def apply(): Option[Value] =
       for {
         requestedMethod <- matching.headOption
         finalArgs = generateArguments(requestedMethod)
       } yield {
         proxy.__underlying.invokeMethod(currentThread, requestedMethod, finalArgs, ObjectReference.INVOKE_SINGLE_THREADED)
       }
+  }
+
+  /**
+   * Calls standard static Java methods in context of debug.
+   */
+  private case class JavaStaticMethod(referenceType: ClassType, methodName: String, args: Seq[JdiProxy]) extends BaseMethodOperation {
+
+    override val encoded: String = methodName
+
+    override def apply(): Option[Value] =
+      for {
+        requestedMethod <- matching.find(_.isStatic())
+        finalArgs = generateArguments(requestedMethod)
+      } yield referenceType.invokeMethod(currentThread, requestedMethod, finalArgs, ObjectReference.INVOKE_SINGLE_THREADED)
+  }
+
+  private trait WithJavaStaticField {
+    protected val referenceType: ReferenceType
+    protected val fieldName: String
+
+    protected val field = {
+      Option(referenceType.fieldByName(fieldName)).getOrElse {
+        throw new NoSuchFieldError(s"type ${referenceType.name} has no static field named $name")
+      }
+    }
+  }
+
+  private case class JavaStaticFieldGetter(referenceType: ReferenceType, fieldName: String) extends WithJavaStaticField {
+
+    def getValue(): Value = referenceType.getValue(field)
+  }
+
+  private case class JavaStaticFieldSetter(referenceType: ClassType, fieldName: String) extends WithJavaStaticField {
+
+    def setValue(newValue: Any): Unit = {
+      val newValueProxy = newValue.asInstanceOf[JdiProxy].__underlying
+      referenceType.setValue(field, newValueProxy)
+    }
+  }
+
+  /**
+   * Checks which calls can be potential access to Java field and tries to apply them.
+   */
+  private case class JavaFieldCalls(proxy: JdiProxy, name: String, methodArgs: Seq[JdiProxy]) {
+
+    def apply(): Option[Value] = methodArgs match {
+      case Seq() => tryGetValue()
+      case Seq(newValue) if name.endsWith("_=") =>
+        // this case is not tested because, when it really could be used, Toolbox throws exception earlier
+        val fieldName = name.dropRight(2) // drop _= at the end of Scala setter
+        trySetValue(fieldName, newValue.__underlying)
+      case _ => None
+    }
+
+    private def refType = proxy.__underlying.referenceType()
+
+    private def tryGetValue() = {
+      val field = Option(refType.fieldByName(name))
+      field map proxy.__underlying.getValue
+    }
+
+    private def trySetValue(fieldName: String, newValue: Value) = {
+      val field = Option(refType.fieldByName(fieldName))
+      field.map { f =>
+        proxy.__underlying.setValue(f, newValue)
+        jvm.mirrorOfVoid()
+      }
+    }
   }
 
   /**
@@ -323,7 +450,7 @@ private[context] trait JdiMethodInvoker
 
     override def apply(): Option[Value] = (name, args) match {
       case ("+" | "$plus", Seq(arg)) =>
-        (proxy.objectType.name, arg.objectType.name) match {
+        (proxy.referenceType.name, arg.referenceType.name) match {
           case (Java.boxed.String, _) => callConcatMethod(proxy, arg)
           case (_, Java.boxed.String) => callConcatMethod(stringify(proxy), arg)
           case _ => None

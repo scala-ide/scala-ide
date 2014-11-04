@@ -7,6 +7,7 @@ import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.junit.Test
+import org.scalaide.debug.internal.expression.TestValues.ValuesTestCase
 
 class AppObjectTest extends BaseIntegrationTest(AppObjectTest) {
 
@@ -23,4 +24,4 @@ class AppObjectTest extends BaseIntegrationTest(AppObjectTest) {
     eval("alaMethod(2)", "ala 2", Names.Java.boxed.String)
 }
 
-object AppObjectTest extends BaseIntegrationTestCompanion(lineNumber = 49)
+object AppObjectTest extends BaseIntegrationTestCompanion(lineNumber = ValuesTestCase.breakpointLineForAppObjectTest)

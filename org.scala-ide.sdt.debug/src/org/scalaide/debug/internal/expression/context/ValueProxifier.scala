@@ -47,7 +47,6 @@ object ValueProxifier {
 
   implicit val doubleProxifier = ValueProxifier(DoubleJdiProxy.fromPrimitive)
 
-  // Scala toolbox sometimes doesn't support it...
   implicit val floatProxifier = ValueProxifier(FloatJdiProxy.fromPrimitive)
 
   implicit val longProxifier = ValueProxifier(LongJdiProxy.fromPrimitive)

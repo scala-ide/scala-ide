@@ -81,7 +81,7 @@ class TypeSearchMockTest extends HasEvaluator {
   @Test
   def function_with_typeApply(): Unit =
     testOnList("list.sum") {
-      MethodStub("sum", listTypeScala, Some(intType), paramTypes = Seq(Seq(JdiContext.toObject("scala.math.Numeric.IntIsIntegral"))))
+      MethodStub("sum", listTypeScala, Some(intType), paramTypes = Seq(Seq(JdiContext.toObjectOrStaticCall("scala.math.Numeric.IntIsIntegral"))))
     }
 
   @Test
@@ -89,7 +89,7 @@ class TypeSearchMockTest extends HasEvaluator {
     val cbf = "scala.collection.generic.CanBuildFrom"
     testWithListCode("list.map(_ + 1)")(
       (listType, Set(MethodStub("map", listTypeScala, Some(listType), Seq(Seq("scala.Function1"), Seq(cbf))))),
-      (JdiContext.toObject(listType), Set(MethodStub("canBuildFrom", listType, Some(cbf), Nil))),
+      (JdiContext.toObjectOrStaticCall(listType), Set(MethodStub("canBuildFrom", listType, Some(cbf), Nil))),
       (intType -> Set(MethodStub("+", "scala.Int", Some(intType), Seq(Seq(intType))))))
   }
 }

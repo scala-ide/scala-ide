@@ -107,12 +107,12 @@ object TestValues {
 
     val demonThreadName = "lib-deamon"
     val mainThread = "main-thread"
-
   }
 
   object ValuesTestCase {
     val fileName = "Values"
-    val breakpointLine = 44
+    val breakpointLine = 45
+    val breakpointLineForAppObjectTest = 50
 
     val byte: Byte = 4
     val byte2: Byte = 3
@@ -133,6 +133,36 @@ object TestValues {
     val * = 1
     val long = 1l
     val long2 = 2l
+
+    object JavaLibClass {
+      val staticInt = 1
+      val staticString = "staticString"
+      val staticIntMethod = 700
+
+      val normalInt = 1
+      val normalString = "it's not static"
+      val asString = "JavaLibClass()"
+
+      object InnerStaticClass {
+        val staticString = "otherString"
+        val innerStaticDouble = 2.5 + staticInt;
+
+        object InnerStaticInStatic {
+          val staticInt = -4
+          def innerStaticStringMethod(prefix: String, someNumber: Int) = prefix + someNumber + "_otherSuffix"
+          def innerStaticIntMethod = 77
+        }
+
+        def innerStaticMethod(prefix: String) = staticStringMethod(prefix) + "_additionalSuffix"
+      }
+
+      def staticStringMethod(prefix: String) = prefix + "_suffix"
+    }
+
+    object JavaLibInterface {
+      val staticInt = 1
+      val staticString = "staticString"
+    }
   }
 
   object VarargsTestCase {

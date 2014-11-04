@@ -49,8 +49,8 @@ object ExpressionEvaluator {
  * @param projectClassLoader classloader for debugged project
  */
 abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader,
-                                   monitor: ProgressMonitor,
-                                   compilerOptions: Seq[String] = Seq.empty)
+  monitor: ProgressMonitor,
+  compilerOptions: Seq[String] = Seq.empty)
   extends HasLogger {
 
   import ExpressionEvaluator._
@@ -94,8 +94,10 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   /** Compiles a Tree to Expression */
   private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
     toolbox.compile(tree).apply() match {
-      case function: ExpressionFunc @unchecked => JdiExpression(function, newClasses)
-      case other => throw new IllegalArgumentException(s"Bad compilation result: '$other'")
+      case function: ExpressionFunc @unchecked =>
+        JdiExpression(function, newClasses)
+      case other =>
+        throw new IllegalArgumentException(s"Bad compilation result: '$other'")
     }
   }
 
@@ -118,7 +120,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     MockLiteralsAndConstants(toolbox, typesContext),
     MockToString(toolbox),
     MockHashCode(toolbox),
-    MockObjects(toolbox, typesContext),
+    MockObjectsAndStaticCalls(toolbox, typesContext),
     MockNewOperator(toolbox),
     MockConditionalExpressions(toolbox),
     new GenerateStubs(toolbox, typesContext.typesStubCode),
@@ -128,25 +130,33 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     new PackInFunction(toolbox))
 
   private def transform(code: universe.Tree, phases: Seq[TransformationPhase]): universe.Tree = {
-    phases.foldLeft(Vector(code)) {
-      case (trees, phase) =>
+    val (_, finalTree) = phases.foldLeft(Vector(("Initial code", code))) {
+      case (treesAfterPhases, phase) =>
         val phaseName = phase.getClass.getSimpleName
-        monitor.startNamedSubTask(s"Applying transformation phase: $phaseName")
+        monitor.startNamedSubTask(s"Applying transformation phase:")
         try {
-          val result = trees :+ phase.transform(trees.last)
+          val (_, previousTree) = treesAfterPhases.last
+          val current = (phaseName, phase.transform(previousTree))
+          val result = treesAfterPhases :+ current
           monitor.reportProgress(1)
           result
         } catch {
           case e: Throwable =>
-            val treeCode = trees.mkString("\n--- next phase ---\n")
+            val codeAfterPhases = stringifyTreesAfterPhases(treesAfterPhases)
             val message =
               s"""Applying phase: $phaseName failed
-               |Trees before transformation:
-               |$treeCode
+               |Trees before current transformation:
+               |$codeAfterPhases
                |""".stripMargin
             logger.error(message, e)
             throw e
         }
     }.last
+    finalTree
   }
+
+  private def stringifyTreesAfterPhases(treesAfterPhases: Seq[(String, universe.Tree)]): String =
+    treesAfterPhases.map {
+      case (phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
+    } mkString ("------------", "\n\n------------ ", "\n------------")
 }

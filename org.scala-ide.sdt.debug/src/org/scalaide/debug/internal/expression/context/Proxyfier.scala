@@ -3,12 +3,16 @@
  */
 package org.scalaide.debug.internal.expression.context
 
-import scala.collection.JavaConversions._
+import scala.annotation.implicitNotFound
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.seqAsJavaList
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
+import org.scalaide.debug.internal.expression.proxies.StaticCallInterfaceJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
@@ -43,13 +47,26 @@ private[context] trait Proxyfier {
   self: JdiContext =>
 
   /**
-   * Creates a proxy for a scala object with given name.
+   * Creates a proxy for a Scala object with given name.
    *
    * WARNING - this method is used in reflective compilation.
    * If you change it's name, package or behavior, make sure to change it also.
    */
-  def objectProxy(name: String): JdiProxy =
-    SimpleJdiProxy(this, objectByName(name))
+  def objectOrStaticCallProxy(name: String): JdiProxy =
+    tryObjectByName(name) match {
+      case Some(objRef) => SimpleJdiProxy(this, objRef)
+      case None => staticCallProxy(name)
+    }
+
+  private def staticCallProxy(name: String) =
+    tryClassByName(name) match {
+      case Some(classType) =>
+        StaticCallClassJdiProxy(this, classType)
+      case None =>
+        val interfaceType = interfaceByName(name,
+          onNotFound = realTypeName => throw new RuntimeException(s"Class, object or interface not found: $realTypeName"))
+        StaticCallInterfaceJdiProxy(this, interfaceType)
+    }
 
   /**
    * Creates a proxy for a value with given name.

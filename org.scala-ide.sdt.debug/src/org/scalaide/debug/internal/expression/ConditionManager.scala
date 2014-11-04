@@ -59,7 +59,7 @@ class ConditionManager {
 
     result.flatMap {
       case booleanProxy: BooleanJdiProxy => Success(booleanProxy.booleanValue)
-      case result => Failure(new NoBooleanJdiProxyException(result.objectType.name))
+      case result => Failure(new NoBooleanJdiProxyException(result.referenceType.name))
     }
   }
 }

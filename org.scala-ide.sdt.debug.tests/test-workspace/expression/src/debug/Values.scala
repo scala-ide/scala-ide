@@ -24,6 +24,7 @@ object Values extends App {
     val long = 1l
     val long2 = 2l
     val libClass = LibClass(1)
+    val javaLibClass = new JavaLibClass()
     val anyVal: LibAnyVal = 2
 
     val objectVal = Libs
