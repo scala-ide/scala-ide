@@ -1288,6 +1288,10 @@
           class="org.scalaide.core.internal.quickassist.changecase.ChangeCase"
           id="org.scalaide.core.quickassist.ChangeCase">
     </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.FixSpellingMistake"
+          id="org.scalaide.core.quickassist.FixSpellingMistake">
+    </quickAssist>
  </extension>
 
    <extension point="org.eclipse.ui.contexts">
