@@ -9,8 +9,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
-import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
-import org.scalaide.util.ui.SWTUtils.gridData
+import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.internal.decorators.semantichighlighting.Position
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
@@ -23,8 +22,6 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
   IScalaPlugin().getPreferenceStore,
   SyntaxColoringPreferencePage.PreviewText,
   SemanticPreviewerFactoryConfiguration) {
-
-  import org.scalaide.util.ui.SWTUtils._
 
   private var enableSemanticHighlightingCheckBox: Button = _
   private var extraAccuracyCheckBox: Button = _

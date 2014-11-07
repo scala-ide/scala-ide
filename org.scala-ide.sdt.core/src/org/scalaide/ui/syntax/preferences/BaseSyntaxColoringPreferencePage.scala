@@ -23,7 +23,6 @@ import org.scalaide.ui.syntax.ScalaSyntaxClass.Category
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.util.eclipse.EclipseUtils._
 import org.scalaide.util.eclipse.SWTUtils._
-import org.scalaide.util.ui.SWTUtils.gridData
 import org.scalaide.ui.internal.preferences.PreviewerFactory
 
 /** Base class to create a syntax coloring preference page.
@@ -53,8 +52,6 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
    *  resetting the UI according to the preferences defaults.
    */
   def additionalPerformDefaults() {}
-
-  import org.scalaide.util.ui.SWTUtils._
 
   setPreferenceStore(preferenceStore)
   protected val overlayStore = makeOverlayPreferenceStore
