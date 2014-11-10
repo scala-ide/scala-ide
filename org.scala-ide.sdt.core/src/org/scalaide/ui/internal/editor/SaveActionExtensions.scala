@@ -12,6 +12,7 @@ import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.saveparticipant.IPostSaveListener
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextSelection
 import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
@@ -22,6 +23,7 @@ import org.scalaide.core.internal.extensions.saveactions.AddReturnTypeToPublicSy
 import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveDuplicatedEmptyLinesCreator
 import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
@@ -81,6 +83,22 @@ trait SaveActionExtensions extends HasLogger {
   import SaveActionExtensions._
 
   /**
+   * It is necessary to store the selection and the source file where the
+   * selection is applied to in order to prevent unnecessary updates of the
+   * editor. This is important because updating the editor is a costly
+   * operation. The editor should only be updated once after all save actions
+   * are computed, but after each save action all computed changes have to be
+   * applied to the underlying source file in order to keep subsequent save
+   * actions up to date with all changes.
+   *
+   * All intermediate state is stored in this variable and in `lastSourceFile`.
+   */
+  private[this] var lastSelection: ITextSelection = _
+
+  /** See `lastSelection` for an explanation why this variable is needed. */
+  private[this] var lastSourceFile: ScalaSourceFile = _
+
+  /**
    * This provides a listener of an API that can be understood by JDT. We don't
    * really need it but as long as [[ScalaDocumentProvider]] is based on the
    * API of JDT we don't have the choice to not use it.
@@ -100,20 +118,38 @@ trait SaveActionExtensions extends HasLogger {
 
   /**
    * Applies all save actions to the contents of the given document.
+   *
+   * Throws [[IllegalStateException]] when save actions had to be aborted.
    */
   private def applySaveActions(udoc: IDocument): Unit = {
-    val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(udoc)
-    undoManager.beginCompoundChange()
+    def updateEditor() = EditorUtils.doWithCurrentEditor {
+      _.selectAndReveal(lastSelection.getOffset, lastSelection.getLength)
+    }
 
-    applyDocumentExtensions(udoc)
+    EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
+      lastSourceFile = ssf
+      lastSelection = sel
 
-    undoManager.endCompoundChange()
+      val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(udoc)
+      undoManager.beginCompoundChange()
+
+      try applyDocumentExtensions(udoc)
+      finally {
+        updateEditor()
+
+        undoManager.endCompoundChange()
+
+        lastSourceFile = null
+        lastSelection = null
+      }
+      None
+    }
   }
 
   /**
    * Applies all save actions that extends [[DocumentSupport]].
    */
-  private def applyDocumentExtensions(udoc: IDocument) = {
+  private def applyDocumentExtensions(udoc: IDocument): Unit = {
     for ((setting, ext) <- documentSaveActions if isEnabled(setting.id)) {
       val doc = new TextDocument(udoc)
       val instance = ext(doc)
@@ -126,7 +162,7 @@ trait SaveActionExtensions extends HasLogger {
   /**
    * Applies all save actions that extends [[CompilerSupport]].
    */
-  private def applyCompilerExtensions(udoc: IDocument) = {
+  private def applyCompilerExtensions(udoc: IDocument): Unit = {
     for ((setting, ext) <- compilerSaveActions if isEnabled(setting.id)) {
       createExtensionWithCompilerSupport(ext) foreach { instance =>
         performExtension(instance, udoc) {
@@ -149,7 +185,7 @@ trait SaveActionExtensions extends HasLogger {
    * get a sequence of changes. It is executes in a safe environment that
    * catches errors.
    */
-  private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]) = {
+  private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]): Unit = {
     val id = instance.setting.id
     val timeout = saveActionTimeout
 
@@ -182,18 +218,22 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private def applyChanges(saveActionId: String, changes: Seq[Change], udoc: IDocument) = {
-    EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
-      val sf = ssf.lastSourceMap().sourceFile
-      val len = udoc.getLength()
-      val edits = changes map {
-        case tc @ TextChange(start, end, text) =>
-          if (start < 0 || end > len || end < start || text == null)
-            throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
-          new RTextChange(sf, start, end, text)
-      }
-      TextEditUtils.applyChangesToFileWhileKeepingSelection(udoc, sel, ssf.file, edits.toList)
-      None
+  /**
+   * Executing this method has side effects. It applies all changes to `udoc`,
+   * the underlying file and it updates `lastSelection`.
+   */
+  private def applyChanges(saveActionId: String, changes: Seq[Change], udoc: IDocument): Unit = {
+    val sf = lastSourceFile.lastSourceMap().sourceFile
+    val len = udoc.getLength()
+    val edits = changes map {
+      case tc @ TextChange(start, end, text) =>
+        if (start < 0 || end > len || end < start || text == null)
+          throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
+        new RTextChange(sf, start, end, text)
+    }
+    TextEditUtils.applyChangesToFile(udoc, lastSelection, lastSourceFile.file, edits.toList) match {
+      case Some(sel) => lastSelection = sel
+      case _         => throw new IllegalStateException("Couldn't apply changes to underlying file. All remaining save actions have to be aborted.")
     }
   }
 
@@ -203,22 +243,20 @@ trait SaveActionExtensions extends HasLogger {
     ) => SaveAction with CompilerSupport
 
   private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction with CompilerSupport] = {
-    EditorUtils.withScalaSourceFileAndSelection { (ssf, sel) =>
-      ssf.withSourceFile { (sf, compiler) =>
-        import compiler._
+    lastSourceFile.withSourceFile { (sf, compiler) =>
+      import compiler._
 
-        val r = new Response[Tree]
-        askLoadedTyped(sf, r)
-        r.get match {
-          case Left(tree) =>
-            Some(creator(compiler, tree, sf, sel.getOffset(), sel.getOffset()+sel.getLength()))
-          case Right(e) =>
-            logger.error(
-                s"An error occurred while trying to get tree of file '${sf.file.name}'.", e)
-            None
-        }
-      }.flatten
-    }
+      val r = new Response[Tree]
+      askLoadedTyped(sf, r)
+      r.get match {
+        case Left(tree) =>
+          Some(creator(compiler, tree, sf, lastSelection.getOffset(), lastSelection.getOffset()+lastSelection.getLength()))
+        case Right(e) =>
+          logger.error(
+              s"An error occurred while trying to get tree of file '${sf.file.name}'.", e)
+          None
+      }
+    }.flatten
   }
 
   /** Checks if a save action given by its `id` is enabled. */
