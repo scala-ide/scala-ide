@@ -2,28 +2,6 @@ package org.scalaide.core.structurebuilder
 
 object TraitsTestOracle extends BaseTestOracle {
   override protected lazy val oracle = """
-T1.scala [in traits [in src [in simple-structure-builder]]]
-  package traits
-  interface T1
-    scala.Nothing notImplemented()
-    int x
-    int x()
-    long y
-    long y()
-    java.lang.Object t
-    java.lang.Object t()
-    scala.collection.immutable.List xs
-    scala.collection.immutable.List<java.lang.Object> xs()
-    scala.Nothing m(int, int)
-    scala.Nothing n(int, int, int)
-    java.lang.Object T
-    java.lang.Object U
-    java.lang.Object Z
-    class Inner
-      Inner()
-    class InnerWithGenericParams
-      scala.collection.immutable.List xs
-      InnerWithGenericParams(traits.T1, scala.collection.immutable.List<java.lang.Object>)
 C1.scala [in traits [in src [in simple-structure-builder]]]
   package traits
   import scala.annotation.*
@@ -76,5 +54,27 @@ C1.scala [in traits [in src [in simple-structure-builder]]]
         $anon()
         void run()
     int localMethod(int)
-    long localVals(int)"""
+    long localVals(int)
+T1.scala [in traits [in src [in simple-structure-builder]]]
+  package traits
+  interface T1
+    scala.Nothing notImplemented()
+    int x
+    int x()
+    long y
+    long y()
+    java.lang.Object t
+    java.lang.Object t()
+    scala.collection.immutable.List xs
+    scala.collection.immutable.List<java.lang.Object> xs()
+    scala.Nothing m(int, int)
+    scala.Nothing n(int, int, int)
+    java.lang.Object T
+    java.lang.Object U
+    java.lang.Object Z
+    class Inner
+      Inner()
+    class InnerWithGenericParams
+      scala.collection.immutable.List xs
+      InnerWithGenericParams(traits.T1, scala.collection.immutable.List<java.lang.Object>)"""
 }
