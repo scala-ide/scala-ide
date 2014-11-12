@@ -1,8 +1,12 @@
 package org.scalaide.ui.internal.wizards
 
+import org.eclipse.core.internal.resources.Folder
+import org.eclipse.core.internal.resources.Workspace
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.IDocument
@@ -26,21 +30,19 @@ import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.ide.IDE
-import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.ui.AutoCompletionOverlay
 import org.scalaide.util.internal.ui.Dialogs
-import org.scalaide.util.eclipse.OSGiUtils
 
 /**
  * Wizard of the Scala IDE to create new files. It can not only create new
@@ -164,12 +166,24 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   private def initComponents() = {
+    /*
+     * Creates an `IFolder` that represents the root of a given `IProject`.
+     *
+     * This operation seems not to be supported by the Eclipse API. In case one
+     * calls `p.getFolder("/")` an exception is thrown. The same exception occurs
+     * in case one tries to retrieve an `IFolder` with `workspace.getFolder(p.getFullPath)`.
+     */
+    def projectAsFolder(p: IProject) = util.Try {
+      val ctor = classOf[Folder].getDeclaredConstructor(classOf[IPath], classOf[Workspace])
+      ctor.setAccessible(true)
+      ctor.newInstance(p.getFullPath, ResourcesPlugin.getWorkspace).asInstanceOf[IFolder]
+    }
+
     for {
       r <- ProjectUtils.resourceOfSelection()
       creator <- fileCreatorMappings.find(_.id == fileCreatorId)
       path <- creator.withInstance(_.initialPath(r))
     } {
-
       val srcDirs = ProjectUtils.sourceDirs(r.getProject())
 
       if (srcDirs.nonEmpty) {
@@ -182,7 +196,13 @@ trait NewFileWizard extends AnyRef with HasLogger {
           else
             srcDirs.head
 
-        setFolderName(root.getFolder(srcDir))
+        if (srcDir != r.getProject.getFullPath)
+          setFolderName(root.getFolder(srcDir))
+        else
+          projectAsFolder(r.getProject) match {
+            case util.Success(f) => setFolderName(f)
+            case util.Failure(f) => logger.error("Couldn't create IFolder for a source folder that is also the project root folder.", f)
+          }
       }
 
       val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
