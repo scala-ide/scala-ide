@@ -3,7 +3,9 @@ package org.scalaide.util.eclipse
 import org.eclipse.jface.preference._
 import org.eclipse.jface.util._
 import org.eclipse.jface.viewers._
+import org.eclipse.swt.SWT
 import org.eclipse.swt.events._
+import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
 import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
@@ -164,5 +166,18 @@ object SWTUtils {
     def +=(f: SelectionEvent => Unit): Unit =
       getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
   }
+
+  /** Returns a [[GridData]] configuration, with the given properties.
+   *
+   *  The possible values for alignment are: [[SWT.BEGINNING]], [[SWT.CENTER]], [[SWT.END]], [[SWT.FILL]]
+   */
+  def gridData(
+    horizontalAlignment: Int = SWT.BEGINNING,
+    verticalAlignment: Int = SWT.CENTER,
+    grabExcessHorizontalSpace: Boolean = false,
+    grabExcessVerticalSpace: Boolean = false,
+    horizontalSpan: Int = 1,
+    verticalSpan: Int = 1): GridData =
+    new GridData(horizontalAlignment, verticalAlignment, grabExcessHorizontalSpace, grabExcessVerticalSpace, horizontalSpan, verticalSpan)
 
 }
