@@ -5,6 +5,8 @@ import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.logging.HasLogger
+import scala.reflect.internal.Flags
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>
   import global._
@@ -52,6 +54,8 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
       if (isLocalToBlock) {
         if (isVariable)
           LocalVar
+        else if (isByNameParam)
+          CallByNameParameter
         else if (isValueParameter && !forValSymbols.contains(sym))
           Param
         else if (isLazy)
@@ -68,7 +72,7 @@ private[classifier] trait SymbolTests { self: SymbolClassification =>
           // hasGetter     -> must be a TemplateVal
           // isThisSym     -> self ref are categorized as TemplateVal
           // isJavaDefined -> fields in Java do not have default getters, but we still want to categorize them as TemplateVal
-          Param
+          if(hasFlag(Flags.BYNAMEPARAM)) CallByNameParameter else Param
         else
           TemplateVal
       }
