@@ -48,6 +48,7 @@ import org.scalaide.extensions.saveactions.SaveActionTestSuite
 import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.core.pc.DeclarationPrinterTest
+import org.scalaide.core.compiler.NamePrinterTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -99,6 +100,7 @@ import org.scalaide.core.pc.DeclarationPrinterTest
     classOf[SaveActionTestSuite],
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
-    classOf[DeclarationPrinterTest]
+    classOf[DeclarationPrinterTest],
+    classOf[NamePrinterTest]
 ))
 class TestsSuite

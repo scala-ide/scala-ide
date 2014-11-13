@@ -58,6 +58,10 @@ import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.ui.DisplayThread
 import org.scalaide.ui.editor.hover.IScalaHover
+import org.eclipse.jdt.internal.ui.actions.CopyQualifiedNameAction
+import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds
+import org.eclipse.jdt.internal.ui.javaeditor.IJavaEditorActionConstants
+import org.scalaide.ui.internal.actions.ScalaCopyQualifiedNameAction
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
@@ -163,6 +167,12 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
+
+    installScalaAwareCopyQualifiedNameAction()
+  }
+
+  private def installScalaAwareCopyQualifiedNameAction() {
+    setAction(IJavaEditorActionConstants.COPY_QUALIFIED_NAME, new ScalaCopyQualifiedNameAction(this))
   }
 
   /**
