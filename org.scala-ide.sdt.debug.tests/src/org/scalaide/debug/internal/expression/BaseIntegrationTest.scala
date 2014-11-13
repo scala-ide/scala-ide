@@ -66,12 +66,13 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
  * @param fileName name of file to run during test
  * @param lineNumber line number in which breakpoint should be added
  */
-class BaseIntegrationTestCompanion(projectName: String = "expression",
-  fileName: String = ValuesTestCase.fileName,
-  lineNumber: Int = ValuesTestCase.breakpointLine)
+class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNumber: Int)
   extends CommonIntegrationTestCompanion(projectName) {
 
   var expressionEvaluator: JdiExpressionEvaluator = null
+
+  def this(testCaseSettings: IntegrationTestCaseSettings = ValuesTestCase) =
+    this(testCaseSettings.projectName, testCaseSettings.fileName, testCaseSettings.breakpointLine)
 
   protected def suspensionPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD
 
@@ -91,4 +92,10 @@ class BaseIntegrationTestCompanion(projectName: String = "expression",
     expressionEvaluator = initializeEvaluator(session)
   }
 
+}
+
+trait IntegrationTestCaseSettings {
+  val projectName: String
+  val fileName: String
+  val breakpointLine: Int
 }

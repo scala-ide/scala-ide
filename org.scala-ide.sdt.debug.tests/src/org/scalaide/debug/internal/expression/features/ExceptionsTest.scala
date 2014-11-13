@@ -16,6 +16,4 @@ class ExceptionsTest extends BaseIntegrationTest(ExceptionsTest) {
 
 }
 
-object ExceptionsTest extends BaseIntegrationTestCompanion(
-  fileName = ExceptionsTestCase.fileName,
-  lineNumber = ExceptionsTestCase.breakpointLine)
+object ExceptionsTest extends BaseIntegrationTestCompanion(ExceptionsTestCase)

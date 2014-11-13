@@ -8,6 +8,7 @@ import org.junit.Ignore
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.TestValues.FileImportsTestCase
 
 class ImportsTest extends BaseIntegrationTest(ImportsTest) {
 
@@ -31,12 +32,6 @@ class ImportsTest extends BaseIntegrationTest(ImportsTest) {
     eval("ImportedObject2.importedObject2", "importedObject2", Java.boxed.String)
     eval("new ImportedClass2.importedClass2", "importedClass2", Java.boxed.String)
   }
-
 }
 
-import org.scalaide.debug.internal.expression.TestValues.FileImports._
-
-object ImportsTest extends BaseIntegrationTestCompanion(
-  fileName = fileName,
-  lineNumber = breakpointLine
-)
+object ImportsTest extends BaseIntegrationTestCompanion(FileImportsTestCase)

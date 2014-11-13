@@ -51,6 +51,4 @@ class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(S
   }
 }
 
-object SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTestCompanion(
-  fileName = CodeCompletionTestCase.fileName,
-  lineNumber = CodeCompletionTestCase.breakpointLine)
+object SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTestCompanion(CodeCompletionTestCase)

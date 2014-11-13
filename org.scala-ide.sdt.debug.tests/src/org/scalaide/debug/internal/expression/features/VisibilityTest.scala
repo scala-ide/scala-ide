@@ -69,6 +69,4 @@ class VisibilityTest extends BaseIntegrationTest(VisibilityTest) {
 
 }
 
-object VisibilityTest extends BaseIntegrationTestCompanion(
-  fileName = VisibilityTestCase.fileName,
-  lineNumber = VisibilityTestCase.breakpointLine)
+object VisibilityTest extends BaseIntegrationTestCompanion(VisibilityTestCase)

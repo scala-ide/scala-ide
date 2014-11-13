@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.TestValues
 
 class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
 
@@ -25,4 +26,4 @@ class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
   }
 }
 
-object JavaEnumsTest extends BaseIntegrationTestCompanion
+object JavaEnumsTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)

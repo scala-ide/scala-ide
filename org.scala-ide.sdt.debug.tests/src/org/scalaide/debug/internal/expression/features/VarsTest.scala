@@ -75,6 +75,4 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
 
 }
 
-object VarsTest extends BaseIntegrationTestCompanion(
-  fileName = VariablesTestCase.fileName,
-  lineNumber = VariablesTestCase.breakpointLine)
+object VarsTest extends BaseIntegrationTestCompanion(VariablesTestCase)

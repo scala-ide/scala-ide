@@ -10,7 +10,8 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.any2String
-import org.scalaide.debug.internal.expression.TestValues.ValuesTestCase._
+import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
+import JavaTestCase._
 
 class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStaticFieldsAndMethodsTest) {
 
@@ -55,4 +56,4 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
   }
 }
 
-object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion
+object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase)

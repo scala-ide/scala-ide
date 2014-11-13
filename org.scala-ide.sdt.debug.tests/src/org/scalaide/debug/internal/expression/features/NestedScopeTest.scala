@@ -22,4 +22,4 @@ class NestedScopeTest extends BaseIntegrationTest(NestedScopeTest) {
   def testUnusedVariableIsNotVisibleInInnerScope(): Unit = eval("outerUnused", outerUnused, Java.boxed.Integer)
 }
 
-object NestedScopeTest extends BaseIntegrationTestCompanion("nested-scope", NestedTestCase.fileName, NestedTestCase.breakpointLine)
+object NestedScopeTest extends BaseIntegrationTestCompanion(NestedTestCase)

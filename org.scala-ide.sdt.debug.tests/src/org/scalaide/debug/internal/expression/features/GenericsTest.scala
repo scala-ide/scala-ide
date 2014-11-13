@@ -21,8 +21,6 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 
 }
 
-object GenericsTest extends BaseIntegrationTestCompanion(
-  fileName = TestValues.GenericsTestCase.fileName,
-  lineNumber = TestValues.GenericsTestCase.breakpointLine) {
+object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) {
   override def typeName = "debug.GenericClass"
 }

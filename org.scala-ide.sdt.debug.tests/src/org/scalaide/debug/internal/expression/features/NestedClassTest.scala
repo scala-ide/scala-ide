@@ -37,6 +37,4 @@ class NestedClassTest extends BaseIntegrationTest(NestedClassTest) {
 
 }
 
-object NestedClassTest extends BaseIntegrationTestCompanion(
-  fileName = TestValues.NestedClassesTestCase.fileName,
-  lineNumber = TestValues.NestedClassesTestCase.breakpointLine)
+object NestedClassTest extends BaseIntegrationTestCompanion(TestValues.NestedClassesTestCase)

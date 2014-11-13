@@ -22,6 +22,4 @@ class InnerMethodsTest extends BaseIntegrationTest(InnerMethodsTest) {
 
 }
 
-object InnerMethodsTest extends BaseIntegrationTestCompanion(
-  fileName = InnerMethodsTestCase.fileName,
-  lineNumber = InnerMethodsTestCase.breakpointLine)
+object InnerMethodsTest extends BaseIntegrationTestCompanion(InnerMethodsTestCase)

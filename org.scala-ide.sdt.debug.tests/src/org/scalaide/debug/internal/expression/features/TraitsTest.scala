@@ -32,9 +32,7 @@ class TraitsTest extends BaseIntegrationTest(TraitsTest) {
     eval("defInClass()", "defInClass", Names.Java.boxed.String)
 }
 
-object TraitsTest extends BaseIntegrationTestCompanion(
-  fileName = TestValues.TraitsTestCase.fileName,
-  lineNumber = TestValues.TraitsTestCase.breakpointLine) {
+object TraitsTest extends BaseIntegrationTestCompanion(TestValues.TraitsTestCase) {
 
   override def typeName = "debug.T"
 }

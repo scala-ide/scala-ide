@@ -8,12 +8,20 @@ package org.scalaide.debug.internal.expression
  */
 object TestValues {
 
-  object ArgumentsTestCase {
+  object AppObjectTestCase extends IntegrationTestCaseSettings {
+    val projectName = ValuesTestCase.projectName
+    val fileName = ValuesTestCase.fileName
+    val breakpointLine = 49
+  }
+
+  object ArgumentsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-arguments"
     val fileName = "Arguments"
     val breakpointLine = 11
   }
 
-  object ArraysTestCase {
+  object ArraysTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-arrays"
     val fileName = "Arrays"
     val breakpointLine = 25
 
@@ -36,103 +44,46 @@ object TestValues {
     val arrayIdentity = "arrayIdentity"
   }
 
-  object CodeCompletionTestCase {
+  object CodeCompletionTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-code-completion"
     val fileName = "CodeCompletion"
     val breakpointLine = 26
   }
 
-  object ExceptionsTestCase {
+  object ExceptionsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-exceptions"
     val fileName = "Exceptions"
     val breakpointLine = 12
   }
 
-  object FileImports {
+  object FileImportsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
     val fileName = "FileImports"
     val breakpointLine = 12
   }
 
-  object GenericsTestCase {
+  object GenericsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-generics"
     val fileName = "Generics"
     val breakpointLine = 9
   }
 
-  object ImplicitsTestCase {
+  object ImplicitsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
     val fileName = "Implicits"
     val breakpointLine = 15
   }
 
-  object InnerMethodsTestCase {
+  object InnerMethodsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-inner-methods"
     val fileName = "InnerMethods"
     val breakpointLine = 10
   }
 
-  object NestedClassesTestCase {
-    val fileName = "NestedClasses"
-    val breakpointLine = 25
-  }
-
-  object NestedTestCase {
-    val fileName = "Nested"
-    val breakpointLine = 15
-
-    val outerUsed = 1
-    val outerUnused = 2
-  }
-
-  object NewInstancesTestCase {
-    val fileName = "NewInstances"
+  object JavaTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-java"
+    val fileName = "Java"
     val breakpointLine = 8
-  }
-
-  object TraitsTestCase {
-    val fileName = "Traits"
-    val breakpointLine = 11
-  }
-
-  object ThisTestCase {
-    val fileName = "This"
-    val breakpointLine = 23
-
-    val traitParam = 1
-    val traitMethod = 1
-    val classParam = 2
-    val classMethod = 2
-    val objectParam = 3
-    val objectMethod = 3
-  }
-
-  object DifferentStackFramesTestCase {
-    val fileName = "DifferentStackFrames"
-    val breakpointLine = 9
-
-    val demonThreadName = "lib-deamon"
-    val mainThread = "main-thread"
-  }
-
-  object ValuesTestCase {
-    val fileName = "Values"
-    val breakpointLine = 45
-    val breakpointLineForAppObjectTest = 50
-
-    val byte: Byte = 4
-    val byte2: Byte = 3
-    val short: Short = 6
-    val short2: Short = 5
-    val int = 1
-    val int2 = 2
-    val double = 1.1
-    val double2 = 2.3
-    val float = 1.1f
-    val float2 = 0.7f
-    val char = 'c'
-    val char2 = 'd'
-    val boolean = false
-    val boolean2 = true
-    val string = "Ala"
-    val list = List(1, 2, 3)
-    val * = 1
-    val long = 1l
-    val long2 = 2l
 
     object JavaLibClass {
       val staticInt = 1
@@ -165,7 +116,83 @@ object TestValues {
     }
   }
 
-  object VarargsTestCase {
+  object NestedClassesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-nested-classes"
+    val fileName = "NestedClasses"
+    val breakpointLine = 25
+  }
+
+  object NestedTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-nested-scope"
+    val fileName = "Nested"
+    val breakpointLine = 15
+
+    val outerUsed = 1
+    val outerUnused = 2
+  }
+
+  object NewInstancesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "NewInstances"
+    val breakpointLine = 8
+  }
+
+  object TraitsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-traits"
+    val fileName = "Traits"
+    val breakpointLine = 11
+  }
+
+  object ThisTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-this"
+    val fileName = "This"
+    val breakpointLine = 23
+
+    val traitParam = 1
+    val traitMethod = 1
+    val classParam = 2
+    val classMethod = 2
+    val objectParam = 3
+    val objectMethod = 3
+  }
+
+  object DifferentStackFramesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-different-stack-frames"
+    val fileName = "DifferentStackFrames"
+    val breakpointLine = 9
+
+    val demonThreadName = "lib-deamon"
+    val mainThread = "main-thread"
+  }
+
+  object ValuesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "Values"
+    val breakpointLine = 44
+
+    val byte: Byte = 4
+    val byte2: Byte = 3
+    val short: Short = 6
+    val short2: Short = 5
+    val int = 1
+    val int2 = 2
+    val double = 1.1
+    val double2 = 2.3
+    val float = 1.1f
+    val float2 = 0.7f
+    val char = 'c'
+    val char2 = 'd'
+    val boolean = false
+    val boolean2 = true
+    val string = "Ala"
+    val list = List(1, 2, 3)
+    val * = 1
+    val long = 1l
+    val long2 = 2l
+  }
+
+  object VarargsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-varargs"
     val fileName = "Varargs"
     val breakpointLine = 43
 
@@ -180,12 +207,14 @@ object TestValues {
     val l4 = 4L
   }
 
-  object VariablesTestCase {
+  object VariablesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-variables"
     val fileName = "Variables"
     val breakpointLine = 17
   }
 
-  object VisibilityTestCase {
+  object VisibilityTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-visibility"
     val fileName = "Visibility"
     val breakpointLine = 23
 

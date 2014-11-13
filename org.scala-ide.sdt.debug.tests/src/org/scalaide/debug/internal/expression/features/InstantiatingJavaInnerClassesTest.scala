@@ -3,12 +3,13 @@
  */
 package org.scalaide.debug.internal.expression.features
 
+import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.TestValues
 import org.scalaide.debug.internal.expression.TestValues.any2String
-import org.junit.Ignore
 
 class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) {
 
@@ -59,4 +60,4 @@ class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(Instantiatin
 
 }
 
-object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion
+object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)

@@ -36,6 +36,4 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
     eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", "4", Java.boxed.Integer)
 }
 
-object NewKeywordTest extends BaseIntegrationTestCompanion(
-  fileName = NewInstancesTestCase.fileName,
-  lineNumber = NewInstancesTestCase.breakpointLine)
+object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase)

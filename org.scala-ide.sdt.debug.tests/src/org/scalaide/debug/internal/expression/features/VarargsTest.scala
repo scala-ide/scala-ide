@@ -76,6 +76,4 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
   def `fun2(Long, Int*) with 1`(): Unit = eval("fun2(l1, i2)", l1 + i2 + y * 5, Java.boxed.Long)
 }
 
-object VarargsTest extends BaseIntegrationTestCompanion(
-  fileName = VarargsTestCase.fileName,
-  lineNumber = VarargsTestCase.breakpointLine)
+object VarargsTest extends BaseIntegrationTestCompanion(VarargsTestCase)

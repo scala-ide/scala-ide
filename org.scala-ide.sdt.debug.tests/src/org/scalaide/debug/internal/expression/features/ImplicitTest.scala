@@ -56,6 +56,4 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
     eval("libClass.withImplicitDoubleParameter", "1.1", Java.boxed.Double)
 }
 
-object ImplicitTest extends BaseIntegrationTestCompanion(
-  fileName = ImplicitsTestCase.fileName,
-  lineNumber = ImplicitsTestCase.breakpointLine)
+object ImplicitTest extends BaseIntegrationTestCompanion(ImplicitsTestCase)

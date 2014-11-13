@@ -174,6 +174,4 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
     eval("nestedObjectArray(0)(2)", nestedObjectArray(0)(2), Java.boxed.String)
 }
 
-object ArrayTest extends BaseIntegrationTestCompanion(
-  fileName = ArraysTestCase.fileName,
-  lineNumber = ArraysTestCase.breakpointLine)
+object ArrayTest extends BaseIntegrationTestCompanion(ArraysTestCase)

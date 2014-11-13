@@ -66,8 +66,7 @@ class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesT
   }
 }
 
-object DifferentStackFramesTest extends BaseIntegrationTestCompanion(
-  fileName = DifferentStackFramesTestCase.fileName,
-  lineNumber = DifferentStackFramesTestCase.breakpointLine) {
+object DifferentStackFramesTest extends BaseIntegrationTestCompanion(DifferentStackFramesTestCase) {
+
   override protected val suspensionPolicy: Int = IJavaBreakpoint.SUSPEND_VM
 }

@@ -26,6 +26,4 @@ class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAcces
 
 }
 
-object MethodArgumentsAccessTest extends BaseIntegrationTestCompanion(
-  fileName = ArgumentsTestCase.fileName,
-  lineNumber = ArgumentsTestCase.breakpointLine)
+object MethodArgumentsAccessTest extends BaseIntegrationTestCompanion(ArgumentsTestCase)

@@ -58,6 +58,4 @@ class ThisTest extends BaseIntegrationTest(ThisTest) {
 
 }
 
-object ThisTest extends BaseIntegrationTestCompanion(
-  fileName = ThisTestCase.fileName,
-  lineNumber = ThisTestCase.breakpointLine)
+object ThisTest extends BaseIntegrationTestCompanion(ThisTestCase)
