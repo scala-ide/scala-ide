@@ -142,6 +142,8 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
     processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
   }
 
+  def refreshStackFrames(): Unit = companionActor ! RebindStackFrames
+
   private def processMethodInvocationResult(res: Option[Any]): Value = res match {
     case Some(Right(null)) =>
       null
@@ -224,6 +226,7 @@ private[model] object ScalaThreadActor {
   case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
   case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
   case object TerminatedFromScala
+  case object RebindStackFrames
 
   def apply(thread: ScalaThread): BaseDebuggerActor = {
     val actor = new ScalaThreadActor(thread)
@@ -253,6 +256,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       currentStep = step
       thread.resume(eventDetail)
       thread.threadRef.resume()
+    case RebindStackFrames => if (thread.isSuspended) thread.rebindScalaStackFrames()
     case InvokeMethod(objectReference, method, args) =>
       reply(
         if (!thread.isSuspended) {

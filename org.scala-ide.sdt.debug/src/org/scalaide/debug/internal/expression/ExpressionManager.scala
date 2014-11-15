@@ -81,8 +81,7 @@ trait ExpressionManager extends HasLogger {
       try {
         isInProgress = true
         block
-      }
-      finally {
+      } finally {
         isInProgress = false
       }
     }
@@ -127,7 +126,13 @@ trait ExpressionManager extends HasLogger {
         case Some(scalaThread) =>
           EvaluationStatus.monitor {
             val evaluator = new JdiExpressionEvaluator(scalaThread.getDebugTarget, monitor)
-            computeInEvaluator(evaluator)
+            val result = computeInEvaluator(evaluator)
+
+            // it turned out that evaluating an expression makes stack frames invalid what e.g. spoils the variables view
+            // that's why it's needed to rebind stack frames in Scala model's stack frames
+            scalaThread.refreshStackFrames()
+
+            result
           }
         case None => EvaluationFailure(debugNotRunning)
       }
