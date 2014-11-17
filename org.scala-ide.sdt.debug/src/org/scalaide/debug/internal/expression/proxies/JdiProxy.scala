@@ -20,6 +20,8 @@ import com.sun.jdi.ReferenceType
  */
 trait JdiProxy extends Dynamic {
 
+  protected def specialFunction(name: String, args: Seq[Any]): Option[JdiProxy] = None
+
   /**
    * Context in which debug is running.
    * See [[org.scalaide.debug.internal.expression.proxies.JdiContext]] for more information.
@@ -37,23 +39,59 @@ trait JdiProxy extends Dynamic {
 
   /** Implementation of method application. */
   def applyDynamic(name: String)(args: Any*): JdiProxy =
-    proxyContext.invokeMethod[JdiProxy](this, genericThisType, name, Seq(args.map(_.asInstanceOf[JdiProxy])))
+    specialFunction(name, args).getOrElse {
+      proxyContext.invokeMethod(this, genericThisType, name, args.map(_.asInstanceOf[JdiProxy]))
+    }
 
   /** Implementation of field selection. */
   def selectDynamic(name: String): JdiProxy =
-    proxyContext.invokeMethod[JdiProxy](this, genericThisType, name, Seq())
+    specialFunction(name, Seq()).getOrElse {
+      proxyContext.invokeMethod(this, genericThisType, name, Seq())
+    }
 
   /** Implementation of variable mutation. */
   def updateDynamic(name: String)(value: Any): Unit =
-    proxyContext.invokeMethod[JdiProxy](this, genericThisType, s"${name}_=", Seq(Seq(value.asInstanceOf[JdiProxy])))
+    proxyContext.invokeMethod(this, genericThisType, s"${name}_=", Seq(value.asInstanceOf[JdiProxy]))
 
   /** Forwards equality to debugged jvm */
-  def ==(other: JdiProxy): BooleanJdiProxy =
-    proxyContext.invokeMethod[BooleanJdiProxy](this, genericThisType, "equals", Seq(Seq(other)))
+  def ==(other: JdiProxy): JdiProxy =
+    proxyContext.invokeMethod(this, genericThisType, "equals", Seq(other))
 
   /** Forwards inequality to debugged jvm */
-  def !=(other: JdiProxy): BooleanJdiProxy =
-    !(this == other)
+  def !=(other: JdiProxy): JdiProxy =
+    proxyContext.proxy(!(this == other)._BooleanMirror) //TODO - faster operation!
+
+  def ->(a: JdiProxy): JdiProxy = {
+    val wrapped = proxyContext.newInstance("scala.Predef$ArrowAssoc", Seq(this))
+    proxyContext.invokeMethod(wrapped, None, "->", Seq(a))
+  }
+
+  def +(v: JdiProxy): JdiProxy =
+    v match {
+      case string: StringJdiProxy =>
+        proxyContext.tryInvokeUnboxed(this, None, "+", Seq(v)).map(proxyContext.valueProxy).getOrElse(
+          proxyContext.proxy(proxyContext.stringify(this) + proxyContext.stringify(this)))
+      case _ =>
+        proxyContext.invokeMethod(this, genericThisType, "+", Seq(v))
+
+    }
+
+  def _IntMirror: Int = ???
+
+  def _CharMirror: Char = ???
+
+  def _DoubleMirror: Double = ???
+
+  def _FloatMirror: Float = ???
+
+  def _ShortMirror: Short = ???
+
+  def _ByteMirror: Byte = ???
+
+  def _BooleanMirror: Boolean = ???
+
+  def _LongMirror: Long = ???
+
 }
 
 /**
@@ -105,6 +143,7 @@ case class SimpleJdiProxy(proxyContext: JdiContext, __underlying: ObjectReferenc
  */
 class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiProxy {
   override protected[expression] val proxyContext: JdiContext = __outer.proxyContext
+
   override protected[expression] def __underlying: ObjectReference = __outer.__underlying
 
   /** Implementation of method application. */
@@ -117,5 +156,5 @@ class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiPr
   override def updateDynamic(name: String)(value: Any): Unit = __outer.updateDynamic(name)(value)
 
   /** Forwards equality to debugged jvm */
-  override def ==(other: JdiProxy): BooleanJdiProxy = __outer.==(other)
+  override def ==(other: JdiProxy): JdiProxy = __outer.==(other)
 }

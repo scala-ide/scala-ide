@@ -12,7 +12,7 @@ import org.scalaide.debug.internal.expression.proxies.JdiProxy
 private[context] trait HashCode {
   self: JdiContext =>
 
-  final def generateHashCode(proxy: JdiProxy): IntJdiProxy =
-    this.invokeMethod[IntJdiProxy](proxy, None, "hashCode")
+  final def generateHashCode(proxy: JdiProxy): JdiProxy =
+    this.invokeMethod(proxy, None, "hashCode")
 
 }

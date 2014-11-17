@@ -9,11 +9,11 @@ import scala.io.Source
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.NestedLambdaException
-import org.scalaide.debug.internal.expression.TypesContext
+import org.scalaide.debug.internal.expression._
 import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.ClassListener
 import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.NewClassContext
-import org.scalaide.debug.internal.expression.FunctionProxyArgumentTypeNotInferredException
+import scala.Some
+import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.NewClassContext
 
 object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
@@ -55,9 +55,9 @@ object AnonymousFunctionSupport {
     private def findNewClassFile(newClassDir: String) = {
       new File(parentDirFile, newClassDir).listFiles()
         .filter(_.getName.contains("$" + className)) match {
-          case Array(classFile) => classFile
-          case _ => throw NestedLambdaException
-        }
+        case Array(classFile) => classFile
+        case _ => throw NestedLambdaException
+      }
     }
 
     private def newClassName(newClassDir: String, classFile: File) = {
@@ -88,17 +88,27 @@ object AnonymousFunctionSupport {
         newClassCode = newClassBytes(requiredClassFile))
     }
   }
+
 }
 
 trait AnonymousFunctionSupport extends UnboundValuesSupport {
+  self: AstTransformer =>
 
-  import toolbox.u.{ Try => _, _ }
+  import toolbox.u.{Try => _, _}
 
   /**
    * Unapply for placeholder function.
    * use it like case PlaceholderFunction(functionTypeName, functionReturnType, closureArguments)
    */
   protected object PlaceholderFunction {
+
+    private object LambdaType {
+      def unapply(on: Tree): Option[String] = on match {
+        case Literal(Constant(proxyType)) => Some(proxyType.toString)
+        case Apply(_, Seq(Apply(_, Seq(Literal(Constant(proxyType)))))) => Some(proxyType.toString)
+        case _ => None
+      }
+    }
 
     private def isPlaceholerFunction(fun: Tree): Boolean = {
       val treeString = fun.toString()
@@ -117,7 +127,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     }
 
     def unapply(tree: Tree): Option[(String, String, List[Tree])] = tree match {
-      case Apply(TypeApply(fun, List(proxyGenericType)), List(Literal(Constant(proxyType)), args)) if isPlaceholerFunction(fun) =>
+      case Apply(TypeApply(fun, List(proxyGenericType)), List(LambdaType(proxyType), args)) if isPlaceholerFunction(fun) =>
         val closureArgs = args match {
           case TypeApply(Select(_, _), _) => Nil //default empty list
           case Apply(_, args) => args
@@ -133,10 +143,9 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   // for function naming
   private var functionsCount = 0
 
-  // for new function name
-  private val newClassName = "CustomFunction"
 
   private val ContextParamName = TermName(Debugger.contextParamName)
+
   // we should exlude start function -> it must stay function cos it is not a part of original expression
   protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
     case List(ValDef(_, name, typeTree, _)) if name == ContextParamName => true
@@ -155,11 +164,11 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, typesContext.treeTypeName)
       .findUnboundValues().filterNot {
-        case (name, _) => vparamsName.contains(name)
-      }.map {
-        case (name, Some(valueType)) => name -> valueType
-        case (name, _) => name -> Debugger.proxyName
-      }
+      case (name, _) => vparamsName.contains(name)
+    }.map {
+      case (name, Some(valueType)) => name -> valueType
+      case (name, _) => name -> Debugger.proxyName
+    }
   }
 
   /**
@@ -176,8 +185,9 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     }
 
     val functionGenericTypes = (parametersTypes ++ Seq("Any")).mkString(", ")
-    val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType" }.mkString(",")
+    val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType"}.mkString(",")
     val arity = params.size
+    import Debugger.newClassName
     val classCode =
       s"""class $newClassName($constructorParams) extends Function$arity[$functionGenericTypes]{
          |  override def apply(v1: Any) = ???
@@ -197,25 +207,26 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   }
 
   // creates and compiles new function class
-  protected def createAndCompileNewFunction(params: List[ValDef], body: Tree, parentType: String): Tree = {
+  protected def createAndCompileNewFunction(params: List[ValDef], body: Tree): Tree = {
     val closuresParams = getClosureParamsNamesAndType(body, params)
     val NewClassContext(jvmClassName, classCode) = compileFunction(params, body, closuresParams)
 
-    val proxyClassName = s"${parentType}v$functionsCount"
+    val proxyClassName = s"FunctionNo$functionsCount"
     functionsCount += 1
     val newFunctionType =
-      typesContext.newType(proxyClassName, jvmClassName, parentType, classCode, closuresParams.values.toSeq)
+      typesContext.newType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
 
-    val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name) }(collection.breakOut)
+    val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name)}(collection.breakOut)
 
     lambdaProxy(newFunctionType, closureParamTrees)
   }
 
   /** creates proxy for given lambda with given closure arguments */
   protected def lambdaProxy(newFunctionType: String, closureArgs: List[Tree]): Tree = {
-    val constructorArgs = Ident(TermName(Debugger.contextParamName)) :: closureArgs
+    val constructorArgs =
+      toolbox.parse( s""" "$newFunctionType" """) :: Apply(SelectApplyMethod("Seq"), closureArgs) :: Nil
 
-    Apply(Select(Ident(TermName(newFunctionType)), TermName("apply")), constructorArgs)
+    Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Names.Debugger.newInstance)), constructorArgs)
   }
 
   /** Extract by name params for function as Seq of Boolean. This Seq might be shorter then param list - due to varargs */

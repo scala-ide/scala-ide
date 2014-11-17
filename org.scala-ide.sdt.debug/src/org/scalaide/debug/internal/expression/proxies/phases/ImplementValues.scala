@@ -50,17 +50,6 @@ case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: u
    */
   private def proxyImplementation(name: TermName, typeName: String): Tree = {
     import Debugger._
-    val code = valueCreationCode(name).getOrElse(s"""$contextParamName.$valueProxyMethodName("$name")""")
-    wrapInType(typeName)(code)
+    toolbox.parse(valueCreationCode(name).getOrElse(s"""$contextParamName.$valueProxyMethodName("$name")"""))
   }
-
-  /**
-   * Wraps an implementation if it's needed
-   */
-  private def wrapInType(typeName: String)(code: String): Tree = {
-    val realCode = if (typeName == Debugger.proxyFullName) code
-    else s"""$typeName($code)"""
-    toolbox.parse(realCode)
-  }
-
 }

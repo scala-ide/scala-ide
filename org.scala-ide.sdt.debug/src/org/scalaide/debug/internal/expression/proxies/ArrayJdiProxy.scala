@@ -16,24 +16,25 @@ import com.sun.jdi.ArrayReference
  */
 case class ArrayJdiProxy[ProxyType <: JdiProxy](proxyContext: JdiContext, __underlying: ArrayReference) extends JdiProxy {
 
-  /** The element at given index. */
-  final def apply(i: IntJdiProxy): ProxyType = proxyContext.valueProxy(__underlying.getValue(i.primitiveValue)).asInstanceOf[ProxyType]
+  override protected def specialFunction(name: String, args: Seq[Any]): Option[JdiProxy] = name match {
+    case "length" if args.isEmpty => Some(proxyContext.proxy(__underlying.length))
+    case "update" => args match {
+      case Seq(i: IntJdiProxy, value: BoxedJdiProxy[_, _]) =>
+        __underlying.setValue(i._IntMirror, value.primitive)
+        Some(UnitJdiProxy(proxyContext))
+      case Seq(i: IntJdiProxy, value: JdiProxy) =>
+        __underlying.setValue(i._IntMirror, value.__underlying)
+        Some(UnitJdiProxy(proxyContext))
+      case _ => None
+    }
+    case "apply" => args match {
+      case Seq(i: IntJdiProxy) =>
+        Some(proxyContext.valueProxy(__underlying.getValue(i._IntMirror)))
+      case _ => None
+    }
+    case _ => None
 
-  /** Update the element at given index. */
-  final def update(i: IntJdiProxy, value: JdiProxy): UnitJdiProxy = {
-    __underlying.setValue(i.primitiveValue, value.__underlying)
-    UnitJdiProxy(proxyContext)
   }
-
-  /** Update the element at given index. Overloaded for arrays of primitive types. */
-  final def update(i: IntJdiProxy, value: BoxedJdiProxy[_, _]): UnitJdiProxy = {
-    __underlying.setValue(i.primitiveValue, value.primitive)
-    UnitJdiProxy(proxyContext)
-  }
-
-  /** Length of underlying array. */
-  final def length: IntJdiProxy = proxyContext.proxy(__underlying.length)
-
 }
 
 object ArrayJdiProxy {

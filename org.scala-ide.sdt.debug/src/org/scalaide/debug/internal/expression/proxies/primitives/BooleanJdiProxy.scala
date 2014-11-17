@@ -5,22 +5,19 @@ package org.scalaide.debug.internal.expression.proxies.primitives
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.primitives.operations.BooleanComparison
-import org.scalaide.debug.internal.expression.proxies.primitives.operations.LogicalOperations
 
-import com.sun.jdi.BooleanValue
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.Value
+import com.sun.jdi.{IntegerValue, BooleanValue, ObjectReference, Value}
 
 /**
  * JdiProxy implementation for `bool`, `scala.Boolean` and `java.lang.Boolean`.
  */
 case class BooleanJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends BoxedJdiProxy[Boolean, BooleanJdiProxy](BooleanJdiProxy)
-  with LogicalOperations
-  with BooleanComparison {
+  extends BoxedJdiProxy[Boolean, BooleanJdiProxy](BooleanJdiProxy) {
 
-  final def booleanValue: Boolean = primitive.asInstanceOf[BooleanValue].value
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichBoolean")
+
+  override def _BooleanMirror: Boolean = primitive.asInstanceOf[BooleanValue].value()
+
 }
 
 object BooleanJdiProxy extends BoxedJdiProxyCompanion[Boolean, BooleanJdiProxy](Java.boxed.Boolean, Java.primitives.boolean) {

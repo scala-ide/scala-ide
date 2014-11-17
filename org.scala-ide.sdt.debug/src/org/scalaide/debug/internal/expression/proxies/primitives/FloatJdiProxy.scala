@@ -14,14 +14,11 @@ import com.sun.jdi.Value
  * JdiProxy implementation for `float`, `scala.Float`, `java.lang.Float`.
  */
 case class FloatJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends FloatingPointNumberJdiProxy[Float, FloatJdiProxy](FloatJdiProxy) {
+  extends BoxedJdiProxy[Float, FloatJdiProxy](FloatJdiProxy) {
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichFloat")
 
-  def unary_- : FloatJdiProxy = proxyContext.proxy(-primitiveValue)
-  def unary_+ : FloatJdiProxy = proxyContext.proxy(+primitiveValue)
-
-  protected def primitiveValue = this.primitive.asInstanceOf[FloatValue].value()
+  override def _FloatMirror: Float = this.primitive.asInstanceOf[FloatValue].value()
 }
 
 object FloatJdiProxy extends BoxedJdiProxyCompanion[Float, FloatJdiProxy](Java.boxed.Float, Java.primitives.float) {

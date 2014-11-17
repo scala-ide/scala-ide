@@ -14,17 +14,11 @@ import com.sun.jdi.Value
  * JdiProxy implementation for `long`, `java.lang.Long` and `scala.Long`.
  */
 case class LongJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends IntegerNumberJdiProxy[Long, LongJdiProxy](LongJdiProxy) {
+  extends BoxedJdiProxy[Long, LongJdiProxy](LongJdiProxy) {
 
-  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.LongChar")
+  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichLong")
 
-  def unary_- : LongJdiProxy = proxyContext.proxy(-primitiveValue)
-  def unary_+ : LongJdiProxy = proxyContext.proxy(+primitiveValue)
-
-  def unary_~ : LongJdiProxy = proxyContext.proxy(~primitiveValue)
-
-  protected override def primitiveValue = this.primitive.asInstanceOf[LongValue].value()
-
+  override def _LongMirror: Long = this.primitive.asInstanceOf[LongValue].value()
 }
 
 object LongJdiProxy extends BoxedJdiProxyCompanion[Long, LongJdiProxy](Java.boxed.Long, Java.primitives.long) {

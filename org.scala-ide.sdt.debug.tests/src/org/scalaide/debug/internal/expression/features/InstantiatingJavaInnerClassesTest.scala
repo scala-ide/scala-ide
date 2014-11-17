@@ -13,7 +13,7 @@ import org.scalaide.debug.internal.expression.TestValues.any2String
 
 class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) {
 
-  @Ignore("O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
+  @Ignore("TODO O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
   @Test
   def newInstanceOfInnerClass(): Unit = {
     eval("val inst = new JavaLibClass(); new inst.InnerClass(10)",
@@ -25,7 +25,7 @@ class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(Instantiatin
       "InnerGenericClass[Integer](10, 5)", "debug.JavaLibClass$InnerGenericClass")
   }
 
-  @Ignore("O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
+  @Ignore("TODO O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
   @Test
   def newInstanceOfInnerClassOfInnerClass(): Unit = {
     eval("val inst = new JavaLibClass(); val inst2 = new inst.InnerClass(0); new inst2.InnerInInner(5)",
@@ -39,7 +39,7 @@ class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(Instantiatin
       "InnerStaticGenericClass[String](7, foo)", "debug.JavaLibClass$InnerStaticGenericClass")
   }
 
-  @Ignore("O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
+  @Ignore("TODO O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
   @Test
   def newInstanceOfInnerClassOfInnerStaticClass(): Unit = {
     eval("val inst = new JavaLibClass.InnerStaticClass(0); new inst.InnerInStatic(11)",

@@ -12,14 +12,14 @@ import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.LongJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.ByteJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.ShortJdiProxy
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
+import org.scalaide.debug.internal.expression.proxies.{JdiProxy, StringJdiProxy}
 
 /**
  * Type class for providing primitive proxies.
  */
 @implicitNotFound("Proxying type $T is not supported.")
-sealed trait ValueProxifier[ValueType, ProxyType] {
-  def apply(value: ValueType, context: JdiContext): ProxyType
+sealed trait ValueProxifier[ValueType] {
+  def apply(value: ValueType, context: JdiContext): JdiProxy
 }
 
 /**
@@ -28,8 +28,8 @@ sealed trait ValueProxifier[ValueType, ProxyType] {
 object ValueProxifier {
 
   /** Helps with ValueProxifier creation */
-  private def apply[ValueType, ProxyType](f: (ValueType, JdiContext) => ProxyType) =
-    new ValueProxifier[ValueType, ProxyType] {
+  private def apply[ValueType](f: (ValueType, JdiContext) => JdiProxy) =
+    new ValueProxifier[ValueType] {
       def apply(value: ValueType, context: JdiContext) = f(value, context)
     }
 

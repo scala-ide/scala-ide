@@ -12,9 +12,17 @@ import com.sun.jdi.ObjectReference
  */
 case class StringJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference) extends JdiProxy {
 
-  final def +(proxy: JdiProxy): StringJdiProxy =
-    proxyContext.invokeMethod[StringJdiProxy](this, None, "+", Seq(Seq(proxy)))
 
+  override protected def specialFunction(name: String, args: Seq[Any]): Option[JdiProxy] = name match {
+    case "+" => args match {
+      case Seq(proxy: JdiProxy) =>
+        Some(proxyContext.invokeMethod(this, None, "+", Seq(proxy)))
+      case _ => None
+    }
+    case _ => None
+  }
+
+  def stringValue: String = __underlying.toString().drop(1).dropRight(1) // drop " at the beginning and end
 }
 
 object StringJdiProxy extends JdiProxyCompanion[StringJdiProxy, ObjectReference]

@@ -53,7 +53,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def classStaticMethodsIntegration(): Unit = {
-    eval("""JavaLibClass.staticStringMethod("foo") + 42 """, JavaLibClass.staticStringMethod("foo") + 42, Java.boxed.String)
+    eval("""JavaLibClass.staticStringMethod("foo").toString""", JavaLibClass.staticStringMethod("foo").toString, Java.boxed.String)
     eval("JavaLibClass.staticIntMethod - 42", JavaLibClass.staticIntMethod - 42, Java.boxed.Integer)
     eval("JavaLibClass.staticIntMethod + 42", JavaLibClass.staticIntMethod + 42, Java.boxed.Integer)
   }
@@ -127,8 +127,8 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def nestedClassStaticMethodsIntegration(): Unit = {
-    eval("""JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2) + false""",
-      JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2) + false,
+    eval("""JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2).toString""",
+      JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2).toString,
       Java.boxed.String)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2,

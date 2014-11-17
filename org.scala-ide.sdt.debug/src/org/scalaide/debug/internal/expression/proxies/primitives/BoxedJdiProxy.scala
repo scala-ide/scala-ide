@@ -14,6 +14,7 @@ import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
+import org.scalaide.debug.internal.expression.Names
 
 /**
  * Base for all boxed primitives proxies.
@@ -23,7 +24,8 @@ import com.sun.jdi.Value
  * @param companion companion object for this proxy
  */
 abstract class BoxedJdiProxy[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](companion: BoxedJdiProxyCompanion[Primitive, Proxy])
-  extends JdiProxy { self: Proxy =>
+  extends JdiProxy {
+  self: Proxy =>
 
   /** Underlying primitive value from this proxy. */
   final def primitive: Value = companion.primitive(this)
@@ -31,9 +33,6 @@ abstract class BoxedJdiProxy[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]
   /** Underlying primitive name. */
   final def primitiveName: String = companion.unboxedName
 
-  /** Implementation of string addition. */
-  def +(proxy: StringJdiProxy): StringJdiProxy =
-    proxyContext.invokeMethod[StringJdiProxy](this, None, "+", Seq(Seq(proxy)))
 }
 
 /**
@@ -60,7 +59,7 @@ abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitiv
   final def primitive(proxy: Proxy): Value = {
     val method = proxy.referenceType.methodsByName(unboxedName + "Value").head
 
-    proxy.proxyContext.invokeUnboxed[Value](proxy, None, method.name, Seq.empty, Seq.empty)
+    proxy.proxyContext.invokeUnboxed[Value](proxy, None, method.name)
   }
 
   /** Creates proxy from primitive using proxy context */

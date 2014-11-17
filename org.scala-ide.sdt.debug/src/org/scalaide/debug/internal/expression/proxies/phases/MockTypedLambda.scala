@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
-import org.scalaide.debug.internal.expression.proxies.FunctionJdiProxy
 
 import org.scalaide.debug.internal.expression._
 import org.scalaide.debug.internal.expression.Names.Debugger._
@@ -155,8 +154,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   /** Common code for stub creation. */
   private def createAnyStubbedFunction(body: Tree,
                                        vparams: List[ValDef],
-                                       stubName: String,
-                                       parentType: String): Tree = {
+                                       stubName: String): Tree = {
 
     val closuresTypes: Map[TermName, String] = closureTypesForTypedLambda(body, vparams)
 
@@ -169,11 +167,10 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
       typeCheckedFucntion.body,
       closuresTypes)
 
-    val proxyClassName = s"${parentType}v${functionsCount}_typed"
+    val proxyClassName = s"FunctionNo${functionsCount}_typed"
     functionsCount += 1
     val newFunctionType = typesContext.newType(proxyClassName,
       compiled.newClassName,
-      parentType,
       compiled.newClassCode,
       closuresTypes.values.toSeq)
 
@@ -199,8 +196,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
 
     createAnyStubbedFunction(body, params,
-      Names.Debugger.placeholderPartialFunctionName,
-      Names.Scala.partialFunctionType)
+      Names.Debugger.placeholderPartialFunctionName)
 
   }
 
@@ -208,8 +204,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   private def createStubedFunction(function: Function): Tree = {
     val argsCount = function.vparams.size
     createAnyStubbedFunction(function.body, function.vparams,
-      Names.Debugger.placeholderFunctionName + argsCount,
-      FunctionJdiProxy.functionProxy(argsCount)
+      Names.Debugger.placeholderFunctionName + argsCount
     )
   }
 

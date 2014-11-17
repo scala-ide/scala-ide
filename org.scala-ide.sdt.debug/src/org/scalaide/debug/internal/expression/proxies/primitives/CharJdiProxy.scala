@@ -14,16 +14,12 @@ import com.sun.jdi.Value
  * JdiProxy implementation for `char` and `scala.Char` and `java.lang.Character`.
  */
 case class CharJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends IntegerNumberJdiProxy[Char, CharJdiProxy](CharJdiProxy) {
+  extends BoxedJdiProxy[Char, CharJdiProxy](CharJdiProxy) {
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichChar")
 
-  def unary_- : IntJdiProxy = proxyContext.proxy(-primitiveValue)
-  def unary_+ : IntJdiProxy = proxyContext.proxy(+primitiveValue)
 
-  def unary_~ : IntJdiProxy = proxyContext.proxy(~primitiveValue)
-
-  protected override def primitiveValue = this.primitive.asInstanceOf[CharValue].value()
+  override def _CharMirror: Char = this.primitive.asInstanceOf[CharValue].value()
 }
 
 object CharJdiProxy extends BoxedJdiProxyCompanion[Char, CharJdiProxy](Java.boxed.Character, Java.primitives.char) {

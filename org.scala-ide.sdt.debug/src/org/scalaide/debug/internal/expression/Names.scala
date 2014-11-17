@@ -4,9 +4,25 @@
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
+import scala.runtime.RichBoolean
+import scala.runtime.RichByte
+import scala.runtime.RichChar
+import scala.runtime.RichDouble
+import scala.runtime.RichFloat
+import scala.runtime.RichInt
+import scala.runtime.RichLong
+import scala.runtime.RichShort
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.ByteJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.CharJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.DoubleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.FloatJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.LongJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.ShortJdiProxy
 
 /**
  * Names of types and methods used in expression evaluator.
@@ -72,6 +88,7 @@ object Names {
 
       val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Unit)
     }
+
   }
 
   /**
@@ -155,7 +172,9 @@ object Names {
 
       val Short = "scala.Short"
 
-      val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short)
+      val Unit = "scala.Unit"
+
+      val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short, Unit)
     }
 
     /**
@@ -182,34 +201,6 @@ object Names {
       val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short)
     }
 
-    object functions {
-
-      val PartialFunction = "scala.PartialFunction"
-
-      val Function0 = "scala.Function0"
-      val Function1 = "scala.Function1"
-      val Function2 = "scala.Function2"
-      val Function3 = "scala.Function3"
-      val Function4 = "scala.Function4"
-      val Function5 = "scala.Function5"
-      val Function6 = "scala.Function6"
-      val Function7 = "scala.Function7"
-      val Function8 = "scala.Function8"
-      val Function9 = "scala.Function9"
-      val Function10 = "scala.Function10"
-      val Function11 = "scala.Function11"
-      val Function12 = "scala.Function12"
-      val Function13 = "scala.Function13"
-      val Function14 = "scala.Function14"
-      val Function15 = "scala.Function15"
-      val Function16 = "scala.Function16"
-      val Function17 = "scala.Function17"
-      val Function18 = "scala.Function18"
-      val Function19 = "scala.Function19"
-      val Function20 = "scala.Function20"
-      val Function21 = "scala.Function21"
-      val Function22 = "scala.Function22"
-    }
   }
 
   /**
@@ -287,6 +278,15 @@ object Names {
     val newClassContextName = "newClassContext"
 
     val proxyContextName = "proxyContextParam"
+
+    val boxedProxiesNames = Seq(classOf[BooleanJdiProxy], classOf[ByteJdiProxy], classOf[CharJdiProxy],
+      classOf[DoubleJdiProxy], classOf[FloatJdiProxy], classOf[IntJdiProxy], classOf[LongJdiProxy], classOf[ShortJdiProxy])
+      .map(_.getSimpleName)
+
+
+    val booleanMirrorName = "_BooleanMirror"
+
+    val newClassName = "CustomFunction"
   }
 
 }

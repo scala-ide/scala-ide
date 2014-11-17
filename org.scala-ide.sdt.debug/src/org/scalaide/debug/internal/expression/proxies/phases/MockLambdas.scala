@@ -13,7 +13,7 @@ import org.scalaide.debug.internal.expression.TypesContext
 /**
  * Responsible for extracting all functions creation from code and rewriting it to proxy
  * Creates new class for each function and compiles it
- * New function is named like '_randomString._randomString$CustomFunction2v4'
+ * New function is named like '__randomString.__randomString$CustomFunction2v4'
  */
 case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer
@@ -26,8 +26,7 @@ case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesConte
   protected override def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
     case fun @ Function(params, body) if !isStartFunctionForExpression(params) =>
       //search for FunctionXJdiProxy which should be used
-      val parentType = typesContext.treeTypeName(fun).getOrElse(throw new RuntimeException("Function must have type!"))
-      createAndCompileNewFunction(params, body, parentType)
+      createAndCompileNewFunction(params, body)
 
     case apply @ Apply(func, args) =>
       val byNames = extractByNameParams(func)
@@ -37,7 +36,7 @@ case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesConte
           case (tree, false) =>
             transformSingleTree(tree, transformFurther)
           case (tree, true) =>
-            createAndCompileNewFunction(Nil, tree, Scala.functions.Function0)
+            createAndCompileNewFunction(Nil, tree)
         }
         Apply(transformSingleTree(func, transformFurther), newArgs)
       }

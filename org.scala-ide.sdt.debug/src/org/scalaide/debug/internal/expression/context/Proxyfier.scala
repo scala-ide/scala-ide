@@ -74,8 +74,8 @@ private[context] trait Proxyfier {
    *
    * @throws NoSuchFieldError if field is not found.
    *
-   * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   *                          WARNING - this method is used in reflective compilation.
+   *                          If you change it's name, package or behavior, make sure to change it also.
    */
   def valueProxy(name: String): JdiProxy = {
     val value = valueFromFrame(this.currentFrame(), name)
@@ -117,7 +117,7 @@ private[context] trait Proxyfier {
    * @param companion used for choosing right primitive type
    */
   final def fromPrimitiveValue[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](value: Value,
-    companion: BoxedJdiProxyCompanion[Primitive, Proxy]): Proxy = {
+                                                                                    companion: BoxedJdiProxyCompanion[Primitive, Proxy]): Proxy = {
 
     val boxedClass = this.classByName(companion.boxedName)
 
@@ -151,12 +151,19 @@ private[context] trait Proxyfier {
    * If you change it's name, package or behavior, make sure to change it also.
    *
    * @param value value to create proxy from
-   * @param proxifier type class instance
-   * @tparam ValueType type of value
-   * @tparam ProxyType type of proxy returned
    */
-  def proxy[ValueType, ProxyType](value: ValueType)(implicit proxifier: ValueProxifier[ValueType, ProxyType]): ProxyType =
-    proxifier(value, this)
+  def proxy(value: Any): JdiProxy = value match {
+    case v: Byte => ByteJdiProxy.fromPrimitive(v, this)
+    case v: Int => IntJdiProxy.fromPrimitive(v, this)
+    case v: Short => ShortJdiProxy.fromPrimitive(v, this)
+    case v: Char => CharJdiProxy.fromPrimitive(v, this)
+    case v: Double => DoubleJdiProxy.fromPrimitive(v, this)
+    case v: Float => FloatJdiProxy.fromPrimitive(v, this)
+    case v: Long => LongJdiProxy.fromPrimitive(v, this)
+    case v: Boolean => BooleanJdiProxy.fromPrimitive(v, this)
+    case v: String => StringJdiProxy(this, mirrorOf(v))
+
+  }
 
   /**
    * Mirrors given value in context of running debug.

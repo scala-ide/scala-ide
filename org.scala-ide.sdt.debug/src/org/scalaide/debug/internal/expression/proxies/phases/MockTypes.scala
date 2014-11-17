@@ -7,7 +7,6 @@ import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.MethodStub
 import org.scalaide.debug.internal.expression.TypesContext
 
 /**

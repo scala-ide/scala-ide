@@ -28,10 +28,10 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
   /**
    * Traverse through method call and returns arguments
    */
-  private def extractParameters(tree: Tree): List[List[Tree]] = tree match {
+  private def extractParameters(tree: Tree): List[Tree] = tree match {
     case select: Select => Nil
     case TypeApply(fun, _) => extractParameters(fun)
-    case Apply(fun, args) => args :: extractParameters(fun)
+    case Apply(fun, args) => extractParameters(fun) ++ args
     // TODO - better exception (and message)
     case _ => throw new RuntimeException(s"Bad part of call function tree: $tree")
   }
@@ -41,7 +41,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
    */
   private def proxiedNewCode(fun: Tree, args: List[Tree], classType: String): Tree = {
     // parameters lists for constructor
-    val params = (args +: extractParameters(fun)).reverse
+    val params = extractParameters(fun) ++ args
 
     // responsible for ""package.Class"" part of expression
     val classTypeCode: Tree = Literal(Constant(classType))
@@ -55,16 +55,12 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
       }
       // creating nested type applied tree is too cumbersome to do by hand
       import Debugger._
-      toolbox.parse(contextParamName + "." + newInstance + "[" + tpe + "]")
+      toolbox.parse(contextParamName + "." + newInstance) //TODO to AST
     }
 
-    // responsible for "Seq(a), Seq(a)" part of expression
-    val argumentSeqArgumentSeqs: List[Tree] = params.map {
-      list => Apply(SelectApplyMethod("Seq"), list)
-    }
 
     // responsible for "Seq(Seq(a), Seq(a))" part of expression
-    val argsCode = Apply(SelectApplyMethod("Seq"), argumentSeqArgumentSeqs)
+    val argsCode = Apply(SelectApplyMethod("Seq"), params)
 
     Apply(methodCall, List(classTypeCode, argsCode))
   }
@@ -76,7 +72,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
 
   /** Transformer */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
+    case newTree@Apply(fun, args) if isConstructor(fun.symbol) =>
       val classType = newTree.tpe match {
         case AstMatchers.ArrayRef(typeParam) => Scala.Array(typeParam.toString)
         case other => other.typeSymbol.fullName

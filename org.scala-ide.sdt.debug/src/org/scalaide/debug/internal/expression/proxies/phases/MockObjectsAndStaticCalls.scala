@@ -46,15 +46,11 @@ case class MockObjectsAndStaticCalls(toolbox: ToolBox[universe.type], typesConte
 
   /** generate and parse object/static call code */
   private def createProxy(select: Tree): Tree = {
-    val objectType = typesContext.treeTypeName(select).getOrElse(throw new RuntimeException("object must have type!"))
-
-    val stubClass = typesContext.stubType(objectType)
-
     val className = typesContext.jvmTypeForClass(select.tpe)
 
     // generates code like $o_ala_package_Ala_stub(__proxy.objectOrStaticCallProxy("ala.package.Ala"))
     import Debugger._
-    toolbox.parse(s"""$stubClass.apply($contextParamName.$objectOrStaticCallProxyMethodName("$className"))""")
+    toolbox.parse(s"""$contextParamName.$objectOrStaticCallProxyMethodName("$className")""")
   }
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {

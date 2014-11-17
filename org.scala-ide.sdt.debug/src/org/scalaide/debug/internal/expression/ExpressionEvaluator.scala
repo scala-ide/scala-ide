@@ -93,7 +93,12 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
 
   /** Compiles a Tree to Expression */
   private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
-    toolbox.compile(tree).apply() match {
+    (try {
+      toolbox.compile(tree)
+    } catch {
+      case e: UnsupportedOperationException =>
+        toolbox.compile(toolbox.parse(tree.toString()))
+    }).apply() match {
       case function: ExpressionFunc @unchecked =>
         JdiExpression(function, newClasses)
       case other =>
@@ -111,20 +116,22 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     MockThis(toolbox),
     MockTypedLambda(toolbox, typesContext),
     TypeCheck(toolbox),
+    DetectNothingTypedExpression(toolbox),
     RemoveImports(toolbox),
-    TypeSearch(toolbox, typesContext),
     // function should be first cos this transformer needs tree as clean as possible
     MockLambdas(toolbox, typesContext),
+    MockLiteralsAndConstants(toolbox, typesContext),
+    MockPrimitivesOperations(toolbox),
     ImplementTypedLambda(toolbox, typesContext),
     MockTypes(toolbox, typesContext),
-    MockLiteralsAndConstants(toolbox, typesContext),
     MockToString(toolbox),
     MockHashCode(toolbox),
     MockObjectsAndStaticCalls(toolbox, typesContext),
     MockNewOperator(toolbox),
-    MockConditionalExpressions(toolbox),
-    new GenerateStubs(toolbox, typesContext.typesStubCode),
+    FlattenFunctions(toolbox),
+    //new GenerateStubs(toolbox, typesContext.typesStubCode),
     ImplementValues(toolbox, context.implementValue),
+    CleanUpValDefs(toolbox),
     ResetTypeInformation(toolbox),
     new AddImports(toolbox, context.thisPackage),
     new PackInFunction(toolbox))

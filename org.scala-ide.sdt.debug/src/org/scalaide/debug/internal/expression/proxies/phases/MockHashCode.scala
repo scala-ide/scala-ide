@@ -21,7 +21,7 @@ case class MockHashCode(toolbox: ToolBox[universe.type])
   /** Matches `hashCode` method call. */
   private def isHashCode(name: Name): Boolean = name.toString == "hashCode"
 
-  /** Creates a proxy to replace `toString` call. */
+  /** Creates a proxy to replace `hashCode` call. */
   private def createProxy(proxy: Tree): Tree =
     Apply(
       SelectMethod(Debugger.contextParamName, Debugger.hashCodeMethodName),

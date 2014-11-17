@@ -24,7 +24,7 @@ trait TransformationPhase {
   def transform(baseTree: universe.Tree): universe.Tree
 }
 
-trait BeforeTypecheck{
+trait BeforeTypecheck {
   self: AstTransformer =>
   override protected def beforeTypecheck: Boolean = true
 }
@@ -61,11 +61,18 @@ abstract class AstTransformer
   private def isDynamicMethod(methodName: String) =
     Scala.dynamicTraitMethods.contains(methodName)
 
+  private def isContextMethod(on: Tree, name: String): Boolean = {
+    on.toString() == Names.Debugger.contextParamName && name == Names.Debugger.newInstance
+  }
+
   /** Transformer that skip all part of tree that is dynamic and it is not a part of original expression */
   private val transformer = new universe.Transformer {
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
-      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
+      //dynamic calls
+      case tree@universe.Apply(select@universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
         universe.Apply(universe.Select(transformSingleTree(on, tree => super.transform(tree)), name), args)
+      case tree@universe.Apply(select@universe.Select(on, name), args) if isContextMethod(on, name.toString) =>
+        tree
       case tree =>
         transformSingleTree(tree, super.transform)
     }

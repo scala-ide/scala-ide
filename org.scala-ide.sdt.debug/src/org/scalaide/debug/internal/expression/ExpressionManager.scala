@@ -67,7 +67,7 @@ trait ExpressionManager extends HasLogger {
     Option(ScalaDebugger.currentThread)
 
   /** For progress indication */
-  val numberOfPhases = 24
+  val numberOfPhases = 25
 
   /** Monitor used to check if there is any expression evaluation in progress */
   object EvaluationStatus {

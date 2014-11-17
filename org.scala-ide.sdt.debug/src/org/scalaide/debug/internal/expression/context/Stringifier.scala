@@ -6,13 +6,10 @@ package org.scalaide.debug.internal.expression.context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TypeNameMappings
-import org.scalaide.debug.internal.expression.proxies.AbstractFunctionJdiProxy
+import org.scalaide.debug.internal.expression.{Names, TypeNameMappings}
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
@@ -37,8 +34,8 @@ trait Stringifier {
    * WARNING - this method is used in reflective compilation.
    * If you change it's name, package or behavior, make sure to change it also.
    */
-  final def stringify(proxy: JdiProxy): StringJdiProxy =
-    this.invokeMethod[StringJdiProxy](proxy, None, "toString")
+  final def stringify(proxy: JdiProxy): JdiProxy =
+    this.invokeMethod(proxy, None, "toString")
 
   /**
    * String representation of given proxy. Contains value and type.
@@ -49,8 +46,6 @@ trait Stringifier {
     case _: UnitJdiProxy => formatString(Scala.unitLiteral, Scala.unitType)
 
     case nulledProxy if nulledProxy.__underlying == null => formatString(Scala.nullLiteral, Scala.nullType)
-
-    case fun: AbstractFunctionJdiProxy => formatString(callToString(fun).value, Debugger.lambdaType)
 
     case array: ArrayJdiProxy[_] => handleArray(array)
 
@@ -88,11 +83,25 @@ trait Stringifier {
     formatString(stringValue, typeString)
   }
 
-  private def handle(proxy: JdiProxy, withType: Boolean): String = {
-    val stringValue = callToString(proxy).value
+  private def typeOfProxy(proxy: JdiProxy): String = {
+    //__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5.__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5$CustomFunction$1
     val underlyingType = proxy.__underlying.referenceType.name
     val typeDecoded = NameTransformer.decode(underlyingType)
-    if (withType) formatString(stringValue, typeDecoded) else stringValue
+
+    val nameArray = typeDecoded.split("\\$")
+    if(nameArray.length > 3
+      && nameArray(0) == "__wrapper"
+      && nameArray(nameArray.length -2) == Names.Debugger.newClassName){
+      Names.Debugger.lambdaType
+    } else{
+      typeDecoded
+    }
+
+  }
+
+  private def handle(proxy: JdiProxy, withType: Boolean): String = {
+    val stringValue = callToString(proxy).value
+    if (withType) formatString(stringValue, typeOfProxy(proxy)) else stringValue
   }
 
 }
