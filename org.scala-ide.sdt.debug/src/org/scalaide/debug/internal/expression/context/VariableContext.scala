@@ -14,10 +14,12 @@ trait VariableContext extends Any {
 
   /**
    * Looks up a type of variable with a given name.
-   * Returns pure Scala type like `collection.immutable.List[Int]` or `collection.immutable.Nil.type`
+   * Returns (typeName, Option(genericType) where
+   * typeName is collection.immutable.List (class name without generics)
+   * genericType - generic signature of type from JDI
    * Returns `None` if variable is not defined in current scope.
    */
-  def typeOf(variableName: TermName): Option[String]
+  def typeOf(variableName: TermName): Option[(String, Option[String])]
 
   /**
    * Name of enclosing package.

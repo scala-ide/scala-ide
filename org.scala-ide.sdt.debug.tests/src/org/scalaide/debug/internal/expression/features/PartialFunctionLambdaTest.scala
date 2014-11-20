@@ -12,10 +12,9 @@ import org.scalaide.debug.internal.expression.Names.Scala
 
 class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambdaTest) {
 
-  @Ignore("TODO - O-5266 - add support for generic types")
   @Test
   def testPartialFunctionAndPrimitives(): Unit =
-    eval("list.filter { case a => a > 2 }", "List(2,3)", Java.boxed.String)
+    eval("list.filter { case a => a > 2 }", "List(3)", Scala.::)
 
   @Test
   def testPartialFunctionAndAnnotatedPrimitives(): Unit =

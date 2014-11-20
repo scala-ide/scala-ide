@@ -34,7 +34,7 @@ class AddImports(val toolbox: ToolBox[universe.type], thisPackage: => Option[Str
 
     // import from enclosing package (if one exists)
     val thisPackageImport = thisPackage.map(name => s"import $name._").getOrElse("")
-    val importsFromCurrentFile = Imports.forCurrentStackFrame.mkString("\n")
+    val importsFromCurrentFile = Imports.importsFromCurrentStackFrame.mkString("\n")
 
     val importCode = s"""
       | $thisPackageImport

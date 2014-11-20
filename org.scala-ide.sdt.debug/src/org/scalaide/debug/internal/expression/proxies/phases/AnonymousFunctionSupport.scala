@@ -178,7 +178,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
    * @param closuresParams map of (closureParamName, closureArgumentType) for this function
    */
   protected def compileFunction(params: List[ValDef], body: Tree, closuresParams: Map[TermName, String]): NewClassContext = {
-    val parametersTypes = params.map(_.tpt).flatMap(typesContext.treeTypeName)
+    val parametersTypes = params.map(_.tpt.tpe.toString) //TODO
 
     parametersTypes.foreach { elem =>
       if (elem == Debugger.proxyFullName) throw FunctionProxyArgumentTypeNotInferredException
@@ -224,7 +224,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   /** creates proxy for given lambda with given closure arguments */
   protected def lambdaProxy(newFunctionType: String, closureArgs: List[Tree]): Tree = {
     val constructorArgs =
-      toolbox.parse( s""" "$newFunctionType" """) :: Apply(SelectApplyMethod("Seq"), closureArgs) :: Nil
+      Literal(Constant(newFunctionType)):: Apply(SelectApplyMethod("Seq"), closureArgs) :: Nil
 
     Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Names.Debugger.newInstance)), constructorArgs)
   }

@@ -8,6 +8,7 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.TestValues
+import org.junit.Ignore
 
 class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 
@@ -18,6 +19,12 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
   @Test
   def testFieldOfGenericTypeFromMethod(): Unit =
     eval("b", "ala", Names.Java.boxed.String)
+  
+  @Ignore("TODO - O-7394 - add support for generic method and class parameters")
+  @Test
+  def testFieldOfGenericTypeFromMethodThatRequireExactType(): Unit =
+    eval("b.filter('a' ==)", "aa", Names.Java.boxed.String)
+
 
 }
 

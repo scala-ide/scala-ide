@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.expression.proxies.phases
 
 import org.scalaide.debug.internal.expression.AstTransformer
@@ -5,7 +8,7 @@ import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 
 /**
- * Author: Krzysztof Romanowski
+ * Flattens the functions parameters lists and remove types from functions
  */
 case class FlattenFunctions(toolbox: ToolBox[universe.type]) extends AstTransformer {
 
@@ -18,15 +21,18 @@ case class FlattenFunctions(toolbox: ToolBox[universe.type]) extends AstTransfor
       case select@Select(qualifier, name) if select.symbol.isMethod =>
         None -> transformFunction(select)
 
-      //implicit parameter lists
+      //flatten parameters lists
       case _@Apply(func, args) =>
-        val newArgs = args.map(transformFunction)
+        val newArgs = args.map(arg => transformSingleTree(arg, transformFunction))
         flattenFunction(transformFunction, func) match {
           case (None, transformed) =>
             Some(newArgs) -> transformed
           case (Some(nextArguments), transformed) =>
             Some(nextArguments ++ newArgs) -> transformed
         }
+        //remove types from fucntion (eg. fun[Ala](...) become fun(...)
+      case TypeApply(func, _) =>
+        None -> transformFunction(func)
 
       // not a method
       case any =>

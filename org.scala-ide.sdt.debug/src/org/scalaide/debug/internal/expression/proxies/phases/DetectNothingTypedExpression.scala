@@ -1,12 +1,12 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.expression.proxies.phases
 
 import org.scalaide.debug.internal.expression.{Names, NothingTypeInferredException, TransformationPhase}
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 
-/**
- * Author: Krzysztof Romanowski
- */
 case class DetectNothingTypedExpression(toolbox: ToolBox[universe.type]) extends TransformationPhase {
 
   import toolbox.u._

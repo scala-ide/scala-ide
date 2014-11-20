@@ -69,9 +69,9 @@ abstract class AstTransformer
   private val transformer = new universe.Transformer {
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
       //dynamic calls
-      case tree@universe.Apply(select@universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
+      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
         universe.Apply(universe.Select(transformSingleTree(on, tree => super.transform(tree)), name), args)
-      case tree@universe.Apply(select@universe.Select(on, name), args) if isContextMethod(on, name.toString) =>
+      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isContextMethod(on, name.toString) =>
         tree
       case tree =>
         transformSingleTree(tree, super.transform)

@@ -7,11 +7,12 @@ import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.{Names, TypeNameMappings}
+import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
+import org.scalaide.debug.internal.expression.TypeNameMappings
 
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
@@ -84,16 +85,16 @@ trait Stringifier {
   }
 
   private def typeOfProxy(proxy: JdiProxy): String = {
-    //__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5.__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5$CustomFunction$1
     val underlyingType = proxy.__underlying.referenceType.name
     val typeDecoded = NameTransformer.decode(underlyingType)
 
-    val nameArray = typeDecoded.split("\\$")
-    if(nameArray.length > 3
+    //example class name: __wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5.__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5$CustomFunction$1
+    val nameArray = typeDecoded.split('$')
+    if (nameArray.length > 3
       && nameArray(0) == "__wrapper"
-      && nameArray(nameArray.length -2) == Names.Debugger.newClassName){
+      && nameArray(nameArray.length - 2) == Names.Debugger.newClassName) {
       Names.Debugger.lambdaType
-    } else{
+    } else {
       typeDecoded
     }
 

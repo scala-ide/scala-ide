@@ -4,23 +4,21 @@
 package org.scalaide.debug.internal.expression.sources
 
 import scala.reflect.internal.util.SourceFile
-
-import org.eclipse.core.resources.IFile
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.logging.HasLogger
 
-object Imports extends HasLogger {
+object Imports extends HasLogger with PCIntegration {
 
-  /** Extract imports from scala file that apply for given line */
-  private case class ImportExtractor(
-    pc: IScalaPresentationCompiler,
-    toLineNumber: Int) {
 
-    private class ImportTraverser
+  private def noImports(reason: String): Seq[String] = {
+    logger.warn(s"No imports due to: $reason")
+    Nil
+  }
+
+  private case class ImportExtractor(pc: IScalaPresentationCompiler,
+                                     toLineNumber: Int) {
+
+    class ImportTraverser
       extends pc.Traverser
       with Function1[pc.Tree, Seq[String]] {
 
@@ -64,38 +62,21 @@ object Imports extends HasLogger {
       }
     }
 
-    def importForFile(sourceFile: SourceFile): Seq[String] =
-      pc.askParsedEntered(sourceFile, true).get(100) match {
-        case None => noImports("timeout")
-        case Some(Right(error)) => noImports(error.getMessage)
-        case Some(Left(tree)) => new ImportTraverser().apply(tree)
-      }
+    def importForFile(tree: pc.Tree): Seq[String] =
+      new ImportTraverser().apply(tree)
   }
 
-  private def noImports(reason: String): Seq[String] = {
-    logger.warn(s"No imports due to: $reason")
-    Nil
+  private def getImports(pc: IScalaPresentationCompiler, sourceFile: SourceFile, line: Int) = {
+    pc.askParsedEntered(sourceFile, true).get(100) match {
+      case None => noImports("timeout")
+      case Some(Right(error)) => noImports(error.getMessage)
+      case Some(Left(tree)) => 
+        val extractor = new ImportExtractor(pc, line)
+        extractor.importForFile(tree.asInstanceOf[extractor.pc.Tree])
+    }
   }
 
-  private def fromFile(file: IFile, line: Int): Seq[String] = {
-    val path = file.getFullPath.toOSString
-    val scalaProject = IScalaPlugin().getScalaProject(file.getProject)
-    ScalaSourceFile.createFromPath(path).map { scalaFile =>
-      scalaProject.presentationCompiler.apply { pc =>
-        new ImportExtractor(pc, line).importForFile(scalaFile.lastSourceMap().sourceFile)
-      }.getOrElse(noImports("presenation compiler is broken?"))
-    }.getOrElse(noImports("No such file"))
-  }
-
-  def forCurrentStackFrame: Seq[String] = {
-    val ssf = ScalaStackFrame(ScalaDebugger.currentThread, ScalaDebugger.currentFrame().get)
-    ScalaDebugger.currentThread.getDebugTarget.getLaunch
-      .getSourceLocator.getSourceElement(ssf) match {
-        case file: IFile =>
-          fromFile(file, ssf.getLineNumber())
-        case _ => noImports("Source file not found for: " + ssf.getSourcePath())
-      }
-  }
+  def importsFromCurrentStackFrame: Seq[String] = forCurrentStackFrame(getImports, noImports)
 }
 
 

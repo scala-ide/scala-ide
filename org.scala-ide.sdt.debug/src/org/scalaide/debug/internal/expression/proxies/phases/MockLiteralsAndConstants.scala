@@ -19,7 +19,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
  * All found ones are transformed to `__context.proxy(literal)`
  */
 case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer {
+  extends AstTransformer with PrimitivesCommons {
 
   import toolbox.u._
 
@@ -47,13 +47,7 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
         SelectApplyMethod(unitProxy),
         List(Ident(TermName(contextParamName))))
     } else {
-      val literalStub = typesContext.treeStubType(literal).get
-      Apply(
-        SelectApplyMethod(literalStub),
-        List(
-          Apply(
-            SelectMethod(contextParamName, proxyMethodName),
-            List(literal))))
+      packPrimitive(literal)
     }
   }
 
@@ -62,25 +56,9 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    * Generate code __context.proxy(Type.Constant)
    * where types are Float and Double and Constant are NegativeInfinity, PositiveInfinity and NaN
    */
-  private def literalConstantCode(literal: Literal): Tree = {
-    val literalStub = typesContext.treeStubType(literal).get
+  private def literalConstantCode(literal: Literal): Tree =
+    packPrimitive(literal)
 
-    def literalCodeFor(typeName: String): Tree =
-      SelectMethod(typeName, constantTransformMap(literal.toString))
-
-    val literalCode =
-      if (literalStub.contains("Float")) literalCodeFor("Float")
-      else literalCodeFor("Double")
-
-    import Debugger._
-
-    Apply(
-      SelectApplyMethod(literalStub),
-      List(
-        Apply(
-          SelectMethod(contextParamName, proxyMethodName),
-          List(literalCode))))
-  }
 
   /** See `AstTransformer.transformSingleTree`. */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {

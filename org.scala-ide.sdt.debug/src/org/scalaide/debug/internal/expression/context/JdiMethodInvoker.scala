@@ -54,9 +54,9 @@ private[context] trait JdiMethodInvoker {
    * @return JdiProxy with a result of a method call
    */
   def invokeMethod(on: JdiProxy,
-                   onScalaType: Option[String],
-                   name: String,
-                   args: Seq[JdiProxy] = Seq.empty): JdiProxy =
+    onScalaType: Option[String],
+    name: String,
+    args: Seq[JdiProxy] = Seq.empty): JdiProxy =
     valueProxy(invokeUnboxed[Value](on, onScalaType, name, args))
 
   /**
@@ -74,7 +74,7 @@ private[context] trait JdiMethodInvoker {
    * @return jdi unboxed Value with a result of a method call
    */
   final def invokeUnboxed[Result <: Value](proxy: JdiProxy, onRealType: Option[String], name: String,
-                                           args: Seq[JdiProxy] = Seq.empty): Result = {
+    args: Seq[JdiProxy] = Seq.empty): Result = {
 
     def noSuchMethod: Nothing = throw new NoSuchMethodError(s"field of type ${proxy.referenceType.name}" +
       s" has no method named $name with arguments: ${args.map(_.referenceType.name).mkString(", ")}")
@@ -85,9 +85,9 @@ private[context] trait JdiMethodInvoker {
 
   /** invokeUnboxed method that returns option instead of throwing an exception */
   private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
-                                           onRealType: Option[String],
-                                           name: String,
-                                           args: Seq[JdiProxy] = Seq.empty): Option[Value] = {
+    onRealType: Option[String],
+    name: String,
+    args: Seq[JdiProxy] = Seq.empty): Option[Value] = {
 
     proxy match {
       case StaticCallClassJdiProxy(_, classType) => tryInvokeJavaStaticMethod(classType, name, args)
@@ -96,8 +96,8 @@ private[context] trait JdiMethodInvoker {
   }
 
   private def tryInvokeUnboxedForInstance(proxy: JdiProxy, onRealType: Option[String],
-                                          name: String,
-                                          methodArgs: Seq[JdiProxy]): Option[Value] = {
+    name: String,
+    methodArgs: Seq[JdiProxy]): Option[Value] = {
     val standardMethod = StandardMethod(proxy, name, methodArgs)
     def varArgMethod = VarArgsMethod(proxy, name, methodArgs)
     def stringConcat = StringConcatenationMethod(proxy, name, methodArgs)
@@ -112,13 +112,13 @@ private[context] trait JdiMethodInvoker {
   }
 
   final def invokeJavaStaticMethod[Result <: JdiProxy](
-                                                        classType: ClassType,
-                                                        methodName: String,
-                                                        methodArgs: Seq[JdiProxy]): Result =
+    classType: ClassType,
+    methodName: String,
+    methodArgs: Seq[JdiProxy]): Result =
     tryInvokeJavaStaticMethod(classType, methodName, methodArgs)
       .map(valueProxy(_)).getOrElse {
-      throw new NoSuchMethodError(s"class ${classType.name} has no static method named $name")
-    }.asInstanceOf[Result]
+        throw new NoSuchMethodError(s"class ${classType.name} has no static method named $name")
+      }.asInstanceOf[Result]
 
   final def tryInvokeJavaStaticMethod(classType: ClassType, methodName: String, methodArgs: Seq[JdiProxy]): Option[Value] =
     JavaStaticMethod(classType, methodName, methodArgs).apply()
@@ -147,8 +147,8 @@ private[context] trait JdiMethodInvoker {
    * @throws IllegalArgumentException when result is not of requested type
    */
   final def newInstance(
-                         className: String,
-                         args: Seq[JdiProxy] = Seq.empty): JdiProxy = {
+    className: String,
+    args: Seq[JdiProxy] = Seq.empty): JdiProxy = {
 
     def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className" +
       s" has no constructor with arguments: ${args.map(_.referenceType.name).mkString(", ")}")
@@ -158,8 +158,8 @@ private[context] trait JdiMethodInvoker {
 
   /** newInstance method that returns None if matching constructor is not found */
   private def tryNewInstance(
-                              className: String,
-                              methodArgs: Seq[JdiProxy]): Option[JdiProxy] = {
+    className: String,
+    methodArgs: Seq[JdiProxy]): Option[JdiProxy] = {
 
     @tailrec def tryNext(name: String): Option[JdiProxy] = {
       val proxy = Try((name match {

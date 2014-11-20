@@ -283,7 +283,6 @@ object Names {
       classOf[DoubleJdiProxy], classOf[FloatJdiProxy], classOf[IntJdiProxy], classOf[LongJdiProxy], classOf[ShortJdiProxy])
       .map(_.getSimpleName)
 
-
     val booleanMirrorName = "_BooleanMirror"
 
     val newClassName = "CustomFunction"

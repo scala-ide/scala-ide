@@ -140,17 +140,10 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
     expectedResult = None)
 
   @Test
-  def testDisplayMessageForLambdaWithoutInferredType(): Unit = withExpressionManager(
-    code = "list.map(_ - 1)",
-    expectedError = Some(ExpressionException.functionProxyArgumentTypeNotInferredMessage),
-    expectedResult = None)
-
-  @Test
   def testDisplayMessageForLambdaWithoutInferredTypeInCondition(): Unit = evalConditionWithManager(
     code = "list.map(_ - 1)",
-    expectedError = Some(ExpressionException.functionProxyArgumentTypeNotInferredMessage),
+    expectedError = Some(ExpressionException.noBooleanJdiProxyExceptionMessage("scala.collection.immutable.$colon$colon")),
     expectedResult = None)
-
 
   @Test
   def testEqualsOnNonexistingField(): Unit = evalConditionWithManager(

@@ -14,7 +14,7 @@ import scala.reflect.NameTransformer
 
 // TODO location of this phase is currently almost random (okay, it has to be before untypecheck for sure etc.)
 case class MockPrimitivesOperations(toolbox: ToolBox[universe.type])
-  extends AstTransformer {
+  extends AstTransformer with PrimitivesCommons {
 
   import toolbox.u._
 
@@ -29,11 +29,20 @@ case class MockPrimitivesOperations(toolbox: ToolBox[universe.type])
     case other => transformFurther(other)
   }
 
+  object PoxifiedPrimitive{
+    def unapply(tree: Tree): Option[Literal] ={
+      tree match{
+        case Apply(contextFun, List(literal: Literal))
+          if contextFun.toString() == "__context.proxy" => Some(literal)
+        case literal: Literal => Some(literal)
+        case _ => None
+      }
+    }
+  }
+
   private def obtainPrimitive(on: Tree, transformFurther: Tree => Tree): Tree =
     on match {
-      case Apply(_, List(Apply(contextFun, List(literal: Literal))))
-        if contextFun.toString() == "__context.proxy" => literal
-      case literal: Literal => literal
+      case PoxifiedPrimitive(literal) => literal
       case _ => Select(transformSingleTree(on, transformFurther), TermName(mirrorMethodName(on)))
     }
 
@@ -41,8 +50,6 @@ case class MockPrimitivesOperations(toolbox: ToolBox[universe.type])
     s"_${on.tpe.typeSymbol.name.toString}Mirror"
   }
 
-  private def packPrimitive(primitiveTree: Tree) =
-    Apply(SelectMethod(Debugger.contextParamName, "proxy"), List(primitiveTree))
 
   private def repackTwoPrimitives(on: Tree, name: Name, arg: Tree, transformFurther: Tree => Tree): Tree = {
     val l = obtainPrimitive(on, transformFurther)
@@ -65,14 +72,10 @@ case class MockPrimitivesOperations(toolbox: ToolBox[universe.type])
     util.Try(if (tree.tpe.typeSymbol.toString.startsWith("object ")) "" else tree.tpe.typeSymbol.fullName) match {
       case Success(tp) =>
         Names.Scala.primitives.all.contains(tp)
-      case _ => tree match {
-        case Apply(Select(on, TermName("apply")), _) =>
-          isPrimitiveProxy(on)
-        case _ => false
-      }
+      case _ => isPrimitiveProxy(tree)
     }
 
-  private def isPrimitiveProxy(tree: Tree): Boolean = Names.Debugger.boxedProxiesNames.contains(tree.toString())
+  private def isPrimitiveProxy(tree: Tree): Boolean = PoxifiedPrimitive.unapply(tree).isDefined
 
   // TODO note: we could also change += like methods into combined = and +
 }

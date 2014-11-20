@@ -29,20 +29,17 @@ final class TypesContextState() {
 
   import universe.TermName
 
-
   /** Maps function names to it's stubs */
   private var _newCodeClasses: Map[String, ClassData] = Map.empty
 
   /** Holds all unbound variables */
   private var _unboundVariables: Set[TermName] = Set.empty
 
-
   /** Gets all newly generated class */
   def newCodeClasses: Map[String, ClassData] = _newCodeClasses
 
   /** Gets all unbound variables */
   def unboundVariables: Set[TermName] = _unboundVariables
-
 
   /** Adds new class to type state */
   def addNewClass(name: String, data: ClassData): Unit = _newCodeClasses += name -> data
@@ -85,38 +82,6 @@ final class TypesContext() {
     else typeName(tree.tpe, Option(tree.symbol).exists(_.isModule))
   }
 
-  /** New type name for given type */
-  final def treeStubType(tree: universe.Tree): Option[String] =
-    treeTypeName(tree).map(stubType)
-
-  /**
-   * Returns valid stub type name from context.
-   *
-   * If not present it is added.
-   * If not stubbable, `typeName` is returned.
-   *
-   * @param typeName name to get stub for
-   */
-  final def stubType(typeName: String): String = {
-    getProxyForType(typeName).getOrElse {
-      if (couldBeStubbed(typeName))
-        Names.Debugger.proxyName
-      else typeName
-    }
-  }
-
-  /**
-   * Transforms given type name to proxy type name.
-   * Works on nonstubbable types (e.g. primitives).
-   * If type is stubbable adds this type to context.
-   *
-   * @param typeName name to get proxy type for
-   */
-  def proxyTypeFor(typeName: String): String =
-    BoxedJdiProxy.primitiveToProxy(typeName) getOrElse
-      stubType(typeName)
-
-
   /**
    * Creates a new type that will be loaded in debugged jvm.
    *
@@ -127,9 +92,9 @@ final class TypesContext() {
    * @return new type jdi name
    */
   def newType(proxyType: String,
-              className: String,
-              jvmCode: Array[Byte],
-              constructorArgsTypes: Seq[String]): String = {
+    className: String,
+    jvmCode: Array[Byte],
+    constructorArgsTypes: Seq[String]): String = {
     state.addNewClass(proxyType, ClassData(className, jvmCode, constructorArgsTypes))
     className
   }
@@ -193,46 +158,4 @@ final class TypesContext() {
     }
   }
 
-  /** Generates the stub name for a given type - if it's not a special case just replace . with _ on full name */
-  private def stubName(orginalType: String): String = orginalType match {
-    case Debugger.proxyFullName | Debugger.proxyName => Debugger.proxyName
-    case Debugger.contextFullName | Debugger.contextName => Debugger.contextName
-    case other => other.replace(".", "_").replace("$$", "$_$")
-  }
-
-  private def getProxyForType(typeName: String): Option[String] = typeName match {
-    case Scala.Array(typeParam) =>
-      val typeParamProxy = getProxyForType(typeParam).getOrElse(Debugger.proxyName)
-      Some(Debugger.ArrayJdiProxy(typeParamProxy))
-    case _ => BoxedJdiProxy.primitiveToProxy(typeName)
-  }
-
-
-  import Names.Debugger._
-
-
-  /** All notstubbable classes */
-  private val notStubbable = Set(
-    Scala.nothingType,
-    Scala.unitType,
-    Scala.nullType,
-
-    Java.boxed.String,
-
-    //JdiProxy in all forms
-    Debugger.proxyName,
-    Debugger.proxyFullName,
-    Debugger.proxyObjectOrStaticCallFullName,
-
-    //JdiContext in all forms
-    Debugger.contextName,
-    Debugger.contextFullName,
-    Debugger.contextObjectOrStaticCallFullName)
-
-  /** Could class with given name be stubbed. */
-  private def couldBeStubbed(stub: String): Boolean = {
-    def isPrimitive(name: String) = Scala.primitives.all.contains(name)
-    def isArray(name: String) = Scala.Array.pattern.matcher(name).matches
-    !(notStubbable.contains(stub) || isPrimitive(stub) || isArray(stub))
-  }
 }

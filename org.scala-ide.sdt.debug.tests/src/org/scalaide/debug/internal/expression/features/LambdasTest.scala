@@ -37,15 +37,13 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def simpleLambdaWithWrittenTypes(): Unit =
     eval("list.map((_: Int) + 1)", "List(2, 3, 4)", Scala.::)
 
-  @Ignore("TODO - O-5266 - add support for generic types")
   @Test
   def `function and primitives: list.filter(_ >= 2) `(): Unit =
-    eval("list.filter(_ >= 2)", "List(2,3)", Java.boxed.String)
+    eval("list.filter(_ >= 2)", "List(2, 3)", Scala.::)
 
-  @Ignore("TODO - O-5266 - add support for generic types")
   @Test
-  def `function and primitives: list.filter(1 >) `(): Unit =
-    eval("list.filter(1 >)", "List(2,3)", Java.boxed.String)
+  def `function and primitives: list.filter(1 <) `(): Unit =
+    eval("list.filter(1 <)", "List(2, 3)", Scala.::)
 
   @Test
   def `libClass.perform(_ + 2) `(): Unit =
@@ -59,18 +57,17 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def `libClass.performTwice(libClass.incrementAndGet()) `(): Unit =
     eval(" libClass.performTwice(libClass.incrementAndGet()) ", "5", Java.boxed.Integer)
 
-  @Ignore("TODO - O-6455 support for generic lambda parameters")
   @Test
   def mappingOnFullType(): Unit = {
-    eval("multilist.map( (_: collection.immutable.List[Any]).toString)", "?", Scala.list)
-    eval("multilist.map( (list: collection.immutable.List[_]) => list.toString)", "?", Scala.list)
+    eval("multilist.map( (_: collection.immutable.List[Any]).toString)", "List(List(1), List(2, 3))", Scala.::)
+    eval("multilist.map( (list: collection.immutable.List[_]) => list.toString)", "List(List(1), List(2, 3))", Scala.::)
   }
 
   @Test
   def `libClass.performByName("ala".mkString) `(): Unit =
     eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.boxed.String)
 
-  @Ignore("TODO - O-5266 - add support for generic types")
+    @Ignore("")
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =
     eval(""" multilist.map(list => list.map(_ + 1)) """, "List(List(2), List(3, 4))", Scala.::)

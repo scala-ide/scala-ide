@@ -24,7 +24,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
   /** all val def and binds have type annotation? */
   private def treeFullyTyped(tree: Tree): Boolean = tree match {
-    case Bind(_, tpt) => !tpt.isEmpty
+    case Bind(_, tpt) => !tpt.isEmpty && tpt.toString() != "_"
     case Apply(_, args) => args.forall(treeFullyTyped)
     case _ => false
   }

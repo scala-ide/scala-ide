@@ -48,11 +48,6 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
 
     // responsible for "__context.newInstance" part of expression
     val methodCall = {
-      val tpe = classType match {
-        case Scala.Array(typeParam) => Debugger.ArrayJdiProxy(primitiveToProxy(typeParam))
-        case _ if Java.boxed.all contains classType => primitiveToProxy(classType)
-        case _ => Debugger.proxyName
-      }
       // creating nested type applied tree is too cumbersome to do by hand
       import Debugger._
       toolbox.parse(contextParamName + "." + newInstance) //TODO to AST
@@ -64,9 +59,6 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
 
     Apply(methodCall, List(classTypeCode, argsCode))
   }
-
-  private def primitiveToProxy(primitiveType: String): String =
-    BoxedJdiProxy.primitiveToProxy(primitiveType).getOrElse(Debugger.proxyName)
 
   private def isConstructor(symbol: Symbol) = symbol.name.toString == Scala.constructorMethodName
 

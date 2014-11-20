@@ -94,9 +94,9 @@ class DivisionTest extends BaseIntegrationTest(DivisionTest) {
 
   @Test
   def `division by 0.0`(): Unit = {
-    /*eval("int / 0.0", int / 0.0, Java.boxed.Double)
+    eval("int / 0.0", int / 0.0, Java.boxed.Double)
     eval("1 / 0.0", 1 / 0.0, Java.boxed.Double)
-    */eval("-int / 0.0", -int / 0.0, Java.boxed.Double)
+    eval("-int / 0.0", -int / 0.0, Java.boxed.Double)
     eval("-1 / 0.0", -1 / 0.0, Java.boxed.Double)
     eval("0 / 0.0", 0 / 0.0, Java.boxed.Double)
   }

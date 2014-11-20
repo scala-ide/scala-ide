@@ -74,12 +74,12 @@ abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitiv
 private[expression] object BoxedJdiProxy {
 
   /** Maps java and scala primitive type names to appropriate proxies. */
-  def primitiveToProxy(primitive: String): Option[String] = {
+  def primitiveToProxy(primitiveType: String): String = {
     val prefix =
-      if (primitive.head.isUpper && !primitive.startsWith("scala") && !primitive.startsWith("java.lang")) "scala."
+      if (primitiveType.head.isUpper && !primitiveType.startsWith("scala") && !primitiveType.startsWith("java.lang")) "scala."
       else ""
 
-    primitiveToProxyMap.get(prefix + primitive)
+    primitiveToProxyMap(prefix + primitiveType)
   }
 
   private val primitiveToProxyMap = Map(

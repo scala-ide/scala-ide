@@ -96,7 +96,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     (try {
       toolbox.compile(tree)
     } catch {
-      case e: UnsupportedOperationException =>
+      case e: UnsupportedOperationException => //Workaround for "No position error"
         toolbox.compile(toolbox.parse(tree.toString()))
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
@@ -120,16 +120,14 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     RemoveImports(toolbox),
     // function should be first cos this transformer needs tree as clean as possible
     MockLambdas(toolbox, typesContext),
+    ImplementTypedLambda(toolbox, typesContext),
     MockLiteralsAndConstants(toolbox, typesContext),
     MockPrimitivesOperations(toolbox),
-    ImplementTypedLambda(toolbox, typesContext),
-    MockTypes(toolbox, typesContext),
     MockToString(toolbox),
     MockHashCode(toolbox),
     MockObjectsAndStaticCalls(toolbox, typesContext),
     MockNewOperator(toolbox),
     FlattenFunctions(toolbox),
-    //new GenerateStubs(toolbox, typesContext.typesStubCode),
     ImplementValues(toolbox, context.implementValue),
     CleanUpValDefs(toolbox),
     ResetTypeInformation(toolbox),
