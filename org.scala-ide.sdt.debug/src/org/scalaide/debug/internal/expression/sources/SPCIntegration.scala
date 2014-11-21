@@ -3,15 +3,17 @@
  */
 package org.scalaide.debug.internal.expression.sources
 
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.debug.internal.model.ScalaStackFrame
-import org.scalaide.debug.internal.ScalaDebugger
+
 import org.eclipse.core.resources.IFile
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.debug.internal.ScalaDebugger
+import org.scalaide.debug.internal.model.ScalaStackFrame
 
-trait PCIntegration {
+/** provides logic for scala presentation compiler integration */
+trait SPCIntegration {
   type PCFunction[T] = (IScalaPresentationCompiler, SourceFile, Int) => T
 
   /**

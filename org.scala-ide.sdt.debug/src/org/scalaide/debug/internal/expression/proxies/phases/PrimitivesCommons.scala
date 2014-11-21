@@ -8,8 +8,8 @@ import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 import org.scalaide.debug.internal.expression.AstTransformer
 
-trait PrimitivesCommons extends AstTransformer {
-
+trait PrimitivesCommons {
+  self: AstTransformer =>
   import universe._
 
   /** creates code that pack primitive to proxy */

@@ -167,7 +167,8 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
       typeCheckedFucntion.body,
       closuresTypes)
 
-    val proxyClassName = s"FunctionNo${functionsCount}_typed"
+    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
+    val proxyClassName = s"$customLambdaPrefix${functionsCount}_typed"
     functionsCount += 1
     val newFunctionType = typesContext.newType(proxyClassName,
       compiled.newClassName,

@@ -67,7 +67,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def `libClass.performByName("ala".mkString) `(): Unit =
     eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.boxed.String)
 
-    @Ignore("")
+  @Ignore("TODO - O-7447 Support for nested lambdas")
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =
     eval(""" multilist.map(list => list.map(_ + 1)) """, "List(List(2), List(3, 4))", Scala.::)

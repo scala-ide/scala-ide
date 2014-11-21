@@ -30,7 +30,6 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
   def testLambdaWithExplicitTypeAndClosureThatRequiresReturnValue(): Unit =
     eval("list.map((_: Int) - int).head + 1", "1", Java.boxed.Integer)
 
-  @Ignore("TODO - O-6978 - This test fails on 2.11 with strange type mismatch")
   @Test
   def testTypedLambdaBeforeNormalLambda(): Unit =
     eval("list.map((_: Int).toString).map(_.size)", "List(1, 1, 1)", Scala.::)

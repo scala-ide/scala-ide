@@ -91,13 +91,19 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
+  private def recompileFromStrigifiedTree(tree: u.Tree): () => Any ={
+    toolbox.compile(toolbox.parse(tree.toString()))
+  }
+
   /** Compiles a Tree to Expression */
   private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
     (try {
       toolbox.compile(tree)
     } catch {
-      case e: UnsupportedOperationException => //Workaround for "No position error"
-        toolbox.compile(toolbox.parse(tree.toString()))
+      case e: UnsupportedOperationException =>
+        //Workaround for "No position error"
+        //Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
+        recompileFromStrigifiedTree(tree)
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
         JdiExpression(function, newClasses)

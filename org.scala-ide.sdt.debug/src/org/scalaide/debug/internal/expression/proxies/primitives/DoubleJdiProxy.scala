@@ -18,7 +18,7 @@ case class DoubleJdiProxy(proxyContext: JdiContext, __underlying: ObjectReferenc
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichDouble")
 
-  override def _DoubleMirror: Double = this.primitive.asInstanceOf[DoubleValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[DoubleValue].value().asInstanceOf[I]
 }
 
 object DoubleJdiProxy extends BoxedJdiProxyCompanion[Double, DoubleJdiProxy](Java.boxed.Double, Java.primitives.double) {

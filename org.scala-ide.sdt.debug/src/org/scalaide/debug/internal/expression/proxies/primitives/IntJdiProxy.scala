@@ -18,7 +18,7 @@ case class IntJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichInt")
 
-  override def _IntMirror: Int = primitive.asInstanceOf[IntegerValue].value()
+  override def __value[I] = primitive.asInstanceOf[IntegerValue].value().asInstanceOf[I]
 }
 
 object IntJdiProxy extends BoxedJdiProxyCompanion[Int, IntJdiProxy](Java.boxed.Integer, Java.primitives.int) {

@@ -18,8 +18,7 @@ case class ShortJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichShort")
 
-
-  override def _ShortMirror: Short = this.primitive.asInstanceOf[ShortValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[ShortValue].value().asInstanceOf[I]
 }
 
 object ShortJdiProxy extends BoxedJdiProxyCompanion[Short, ShortJdiProxy](Java.boxed.Short, Java.primitives.short) {

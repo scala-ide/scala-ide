@@ -84,20 +84,19 @@ trait Stringifier {
     formatString(stringValue, typeString)
   }
 
+  def isLambda(name: String): Boolean = {
+    //example class name: __wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5.__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5$CustomFunction$1
+    val nameArray = name.split('$')
+    def lenghtOk = nameArray.length > 3
+    def startsWithWrapper = nameArray(0) == "__wrapper"
+    def containsNewClassName = nameArray(nameArray.length - 2) == Names.Debugger.newClassName
+    lenghtOk && startsWithWrapper && containsNewClassName
+  }
+
   private def typeOfProxy(proxy: JdiProxy): String = {
     val underlyingType = proxy.__underlying.referenceType.name
     val typeDecoded = NameTransformer.decode(underlyingType)
-
-    //example class name: __wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5.__wrapper$1$c0fa68b3bc094e8387b36b16f8fde8b5$CustomFunction$1
-    val nameArray = typeDecoded.split('$')
-    if (nameArray.length > 3
-      && nameArray(0) == "__wrapper"
-      && nameArray(nameArray.length - 2) == Names.Debugger.newClassName) {
-      Names.Debugger.lambdaType
-    } else {
-      typeDecoded
-    }
-
+    if (isLambda(typeDecoded)) Names.Debugger.lambdaType else typeDecoded
   }
 
   private def handle(proxy: JdiProxy, withType: Boolean): String = {

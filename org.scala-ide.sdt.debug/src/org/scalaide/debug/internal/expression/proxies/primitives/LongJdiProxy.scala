@@ -18,7 +18,7 @@ case class LongJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichLong")
 
-  override def _LongMirror: Long = this.primitive.asInstanceOf[LongValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[LongValue].value().asInstanceOf[I]
 }
 
 object LongJdiProxy extends BoxedJdiProxyCompanion[Long, LongJdiProxy](Java.boxed.Long, Java.primitives.long) {

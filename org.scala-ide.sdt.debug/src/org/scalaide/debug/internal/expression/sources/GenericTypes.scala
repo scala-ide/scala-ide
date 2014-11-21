@@ -5,52 +5,63 @@ package org.scalaide.debug.internal.expression.sources
 
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
+import org.scalaide.logging.HasLogger
 
+/** provides access to types obtained from source code (via Presentation Compiler) for current frame */
+object GenericTypes extends SPCIntegration with HasLogger {
 
-object GenericTypes extends PCIntegration {
+  private def reportProblemWithMissingGenerics(reason: String): Option[Map[String, String]] = {
+    logger.info(s"No generic due to: $reason")
+    None
+  }
 
-  private def noGenrerics(reason: String): Option[Map[String, String]] = None //TODO logging
+  private val SPC_TIMEOUT_IN_MILLIS = 1000
 
-  private def getGenerics(pc: IScalaPresentationCompiler, sourceFile: SourceFile, line: Int): Option[Map[String, String]] = {
-    def memberEntry(member: pc.Member): (String, String) = {
+  private def getGenerics(spc: IScalaPresentationCompiler, sourceFile: SourceFile, line: Int): Option[Map[String, String]] = {
+    def memberEntry(member: spc.Member): (String, String) = {
       val name = member.sym.nameString
       val typeName = member.tpe.toLongString
 
       name -> typeName
     }
 
-    pc.askScopeCompletion(sourceFile.position(sourceFile.lineToOffset(line))).get(1000)
-    match {
+    def mapNamesToTypes(content: List[spc.Member]) = {
+      val values = content.filter {
+        member =>
+          val typeOk = !member.tpe.isError
+          val symbolOk = Set("var", "val", "").contains(member.sym.keyString)
+          typeOk && symbolOk
+      }
+      values.map(memberEntry).toMap
+    }
+
+    spc.askScopeCompletion(sourceFile.position(sourceFile.lineToOffset(line))).get(SPC_TIMEOUT_IN_MILLIS) match {
       case None =>
-        None //TODO logging
+        logger.warn(s"No source file or presentation compiler for: ${sourceFile.path} in line $line")
+        None
       case Some(Right(error)) =>
         println(error)
-        None //TODO logging
+        logger.error(s"During generics for: ${sourceFile.path} in line $line", error)
+        None
       case Some(Left(content)) =>
-        pc.asyncExec {
-          val values = content.filter {
-            member =>
-              val typeOk = !member.tpe.isError
-              val symbolOk = Set("var", "val", "").contains(member.sym.keyString)
-              typeOk && symbolOk
-          }
-          values.map(memberEntry).toMap
-        }.get(1000) match {
+        spc.asyncExec(mapNamesToTypes(content)).get(SPC_TIMEOUT_IN_MILLIS) match {
           case None =>
+            logger.warn(s"Cannot compute type information for: ${sourceFile.path} in line $line")
             None
           case Some(Right(error)) =>
-            println(error)
-            None //TODO logging
+            logger.error(s"During generics for: ${sourceFile.path} in line $line", error)
+            None
           case Some(Left(content)) =>
             Some(content)
         }
     }
   }
-
   /**
    * Finds generic from source code for current (from debugger point of view) file and line
+   * @return Returns Some(Map(valueName, valueType)) if sourcess are acessible and SPC can read types
+   *         None otherwise
    */
-  def genericTypeForValues: Option[Map[String, String]] = {
-    forCurrentStackFrame(getGenerics, noGenrerics)
+  def genericTypeForValues(): Option[Map[String, String]] = {
+    forCurrentStackFrame(getGenerics, reportProblemWithMissingGenerics)
   }
 }

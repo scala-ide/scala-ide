@@ -3,25 +3,27 @@
  */
 package org.scalaide.debug.internal.expression.proxies.phases
 
-import java.lang.reflect.{ParameterizedType, TypeVariable}
-
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
+import org.scalaide.debug.internal.expression.Names.Debugger.contextName
+import org.scalaide.debug.internal.expression.Names.Debugger.placeholderName
 import org.scalaide.debug.internal.expression.TransformationPhase
+import org.scalaide.debug.internal.expression.context.GenericVariableType
+import org.scalaide.debug.internal.expression.context.PlainVariableType
 import org.scalaide.debug.internal.expression.context.VariableContext
-import org.scalaide.logging.HasLogger
 import org.scalaide.debug.internal.expression.sources.GenericTypes
+import org.scalaide.logging.HasLogger
 
 class MockVariables(val toolbox: ToolBox[universe.type],
-                    projectClassLoader: ClassLoader,
-                    context: VariableContext,
-                    unboundVariables: => Set[universe.TermName])
+  projectClassLoader: ClassLoader,
+  context: VariableContext,
+  unboundVariables: => Set[universe.TermName])
   extends TransformationPhase
   with HasLogger {
 
-  import toolbox.u.{Try => _, _}
+  import toolbox.u.{ Try => _, _ }
 
   /**
    * Insert mock proxy code for unbound variables into given code tree
@@ -47,7 +49,7 @@ class MockVariables(val toolbox: ToolBox[universe.type],
     private def breakValDefBlock(code: Tree): Seq[Tree] = code match {
       case valDef: ValDef => Seq(valDef)
       case block: Block => block.children
-      case empty@universe.EmptyTree => Nil
+      case empty @ universe.EmptyTree => Nil
       case any => throw new IllegalArgumentException(s"Unsupported tree: $any")
     }
 
@@ -71,13 +73,15 @@ class MockVariables(val toolbox: ToolBox[universe.type],
     private def buildProxyDefinition(context: VariableContext)(name: TermName): Option[String] = {
       import Debugger._
 
-      lazy val fromSource = GenericTypes.genericTypeForValues.orElse(GenericTypes.genericTypeForValues)
+      //Try obtain generic arguments twice on failure (SPC is fragile)
+      lazy val fromSource = GenericTypes.genericTypeForValues()
+        .orElse(GenericTypes.genericTypeForValues())
 
       context.typeOf(name).map {
-        case (typeName, Some(genericSignature)) =>
+        case GenericVariableType(typeName, genericSignature) =>
           val typeFromSource = fromSource.flatMap(_.get(name.toString()))
           typeFromSource.getOrElse(generateProxiedGenericName(typeName, genericSignature))
-        case (typeName, None) =>
+        case PlainVariableType(typeName) =>
           typeName
       }.map(typeSig => s"""val $name: $typeSig = $contextName.$placeholderName""")
     }

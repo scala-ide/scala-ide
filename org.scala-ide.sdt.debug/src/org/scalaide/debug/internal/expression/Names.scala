@@ -279,13 +279,22 @@ object Names {
 
     val proxyContextName = "proxyContextParam"
 
-    val boxedProxiesNames = Seq(classOf[BooleanJdiProxy], classOf[ByteJdiProxy], classOf[CharJdiProxy],
-      classOf[DoubleJdiProxy], classOf[FloatJdiProxy], classOf[IntJdiProxy], classOf[LongJdiProxy], classOf[ShortJdiProxy])
+    val boxedProxiesNames = Seq(
+      classOf[BooleanJdiProxy],
+      classOf[ByteJdiProxy],
+      classOf[CharJdiProxy],
+      classOf[DoubleJdiProxy],
+      classOf[FloatJdiProxy],
+      classOf[IntJdiProxy],
+      classOf[LongJdiProxy],
+      classOf[ShortJdiProxy])
       .map(_.getSimpleName)
 
-    val booleanMirrorName = "_BooleanMirror"
+    val primitiveValueOfProxyMethodName = "__value"
 
     val newClassName = "CustomFunction"
+
+    val customLambdaPrefix = "FunctionNo"
   }
 
 }

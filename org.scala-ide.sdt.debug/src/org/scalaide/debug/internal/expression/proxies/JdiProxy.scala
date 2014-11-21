@@ -20,7 +20,11 @@ import com.sun.jdi.ReferenceType
  */
 trait JdiProxy extends Dynamic {
 
-  protected def specialFunction(name: String, args: Seq[Any]): Option[JdiProxy] = None
+  /**
+   * Method for calling special methods (that are not simply translated to the method invocation) like update on arrays
+   * @return Some(result) if special method is called, None otherwise
+   */
+  protected def callSpecialMethod(name: String, args: Seq[Any]): Option[JdiProxy] = None
 
   /**
    * Context in which debug is running.
@@ -39,13 +43,13 @@ trait JdiProxy extends Dynamic {
 
   /** Implementation of method application. */
   def applyDynamic(name: String)(args: Any*): JdiProxy =
-    specialFunction(name, args).getOrElse {
+    callSpecialMethod(name, args).getOrElse {
       proxyContext.invokeMethod(this, genericThisType, name, args.map(_.asInstanceOf[JdiProxy]))
     }
 
   /** Implementation of field selection. */
   def selectDynamic(name: String): JdiProxy =
-    specialFunction(name, Seq()).getOrElse {
+    callSpecialMethod(name, Seq()).getOrElse {
       proxyContext.invokeMethod(this, genericThisType, name, Seq())
     }
 
@@ -59,39 +63,24 @@ trait JdiProxy extends Dynamic {
 
   /** Forwards inequality to debugged jvm */
   def !=(other: JdiProxy): JdiProxy =
-    proxyContext.proxy(!(this == other)._BooleanMirror) //TODO - faster operation!
+    proxyContext.proxy(!(this == other).__value[Boolean])
 
+  //TODO O-7468 Add proper support for implicit conversion from Predef
   def ->(a: JdiProxy): JdiProxy = {
     val wrapped = proxyContext.newInstance("scala.Predef$ArrowAssoc", Seq(this))
     proxyContext.invokeMethod(wrapped, None, "->", Seq(a))
   }
 
+
+  /**
+   *  Method added to override standard "+" method that is defied for all objects and takes String as argument
+   *  (compiler does not convert '+' to apply dynamic - it only complains about argument that is JdiProxy not String)
+   */
   def +(v: JdiProxy): JdiProxy =
-    v match {
-      case string: StringJdiProxy =>
-        proxyContext.tryInvokeUnboxed(this, None, "+", Seq(v)).map(proxyContext.valueProxy).getOrElse(
-          proxyContext.proxy(proxyContext.stringify(this) + proxyContext.stringify(this)))
-      case _ =>
-        proxyContext.invokeMethod(this, genericThisType, "+", Seq(v))
+    proxyContext.invokeMethod(this, genericThisType, "+", Seq(v))
 
-    }
-
-  def _IntMirror: Int = ???
-
-  def _CharMirror: Char = ???
-
-  def _DoubleMirror: Double = ???
-
-  def _FloatMirror: Float = ???
-
-  def _ShortMirror: Short = ???
-
-  def _ByteMirror: Byte = ???
-
-  def _BooleanMirror: Boolean = ???
-
-  def _LongMirror: Long = ???
-
+  /** Obtain primitive value from proxy of given type - implemented only in primitives */
+  def __value[I]: I = throw new UnsupportedOperationException(s"$this is not a primitive.")
 }
 
 /**
@@ -120,7 +109,7 @@ object JdiProxyCompanion {
   /**
    * Private implementation for reducing code duplication in `JdiProxyCompanion` and `ArrayJdiProxy`.
    */
-  private[proxies] def unwrap[Proxy <: JdiProxy: ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
+  private[proxies] def unwrap[Proxy <: JdiProxy : ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
     case np: NullJdiProxy => apply(np.proxyContext, np.__underlying.asInstanceOf[Underlying])
     case wrapper: JdiProxyWrapper => unwrap(wrapper.__outer)(apply)
     case proxy: Proxy => proxy

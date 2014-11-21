@@ -3,7 +3,7 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -14,7 +14,6 @@ import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
-import org.scalaide.debug.internal.expression.Names
 
 /**
  * Base for all boxed primitives proxies.

@@ -88,13 +88,12 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
     eval("'\t'", "\t", Java.boxed.Character)
   }
 
-  @Ignore("TODO - O-4549 - add support for floats")
   @Test
   def testFloatLiterals(): Unit = {
     eval("1.0f", "1.0", Java.boxed.Float)
     eval("1e30f", "1.0E30", Java.boxed.Float)
     eval("3.14159f", "3.14159", Java.boxed.Float)
-    eval("1.0e100f", "1.0E100", Java.boxed.Float)
+    eval("1.0e10f", "1.0E10", Java.boxed.Float)
     eval(".1f", "0.1", Java.boxed.Float)
   }
 

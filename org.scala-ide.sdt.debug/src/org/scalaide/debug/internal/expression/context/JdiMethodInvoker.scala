@@ -45,12 +45,11 @@ private[context] trait JdiMethodInvoker {
    * If you change it's name, package or behavior, make sure to change it also.
    *
    *
-   * @param proxy
-   * @param onRealType Scala type (not jvm implementation) of object laying under proxy (e.g. for 1.toDouble it will be RichInt)
-   *                   if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
-   * @param methodName
-   * @param args list of list of arguments to pass to method
-   * @param implicits list of implicit arguments
+   * @param on
+   * @param onScalaType Scala type of object laying under proxy (e.g. for '1' in code '1.toDouble' it will be RichInt)
+   * if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
+   * @param name
+   * @param args list of list of arguments to pass to method (flattened)
    * @return JdiProxy with a result of a method call
    */
   def invokeMethod(on: JdiProxy,
@@ -66,12 +65,11 @@ private[context] trait JdiMethodInvoker {
    * If all above fails, throws `java.lang.NoSuchMethodError`
    *
    * @param proxy
-   * @param onScalaType Scala type (not jvm implementation) of object laying under proxy (e.g. for 1.toDouble it will be RichInt)
-   *                    if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
-   * @param methodName
-   * @param args list of list of arguments to pass to method
-   * @param implicits list of implicit arguments
-   * @return jdi unboxed Value with a result of a method call
+   * @param onRealType Scala type of object laying under proxy (e.g. for '1' in code '1.toDouble' it will be RichInt)
+   * if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
+   * @param name
+   * @param args list of list of arguments to pass to method (flattened)
+   * @return JdiProxy with a result of a method call
    */
   final def invokeUnboxed[Result <: Value](proxy: JdiProxy, onRealType: Option[String], name: String,
     args: Seq[JdiProxy] = Seq.empty): Result = {
@@ -273,7 +271,7 @@ private[context] trait JdiMethodInvoker {
     def apply(): Option[Value] = args match {
       case List(proxy: IntJdiProxy) =>
         val arrayType = JdiMethodInvoker.this.arrayClassByName(className)
-        Some(arrayType.newInstance(proxy._IntMirror))
+        Some(arrayType.newInstance(proxy.__value[Int]))
       case other => None
     }
   }

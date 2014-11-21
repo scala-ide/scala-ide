@@ -19,7 +19,7 @@ case class CharJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichChar")
 
 
-  override def _CharMirror: Char = this.primitive.asInstanceOf[CharValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[CharValue].value().asInstanceOf[I]
 }
 
 object CharJdiProxy extends BoxedJdiProxyCompanion[Char, CharJdiProxy](Java.boxed.Character, Java.primitives.char) {

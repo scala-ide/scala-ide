@@ -74,8 +74,8 @@ private[context] trait Proxyfier {
    *
    * @throws NoSuchFieldError if field is not found.
    *
-   *                          WARNING - this method is used in reflective compilation.
-   *                          If you change it's name, package or behavior, make sure to change it also.
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
    */
   def valueProxy(name: String): JdiProxy = {
     val value = valueFromFrame(this.currentFrame(), name)
@@ -117,7 +117,7 @@ private[context] trait Proxyfier {
    * @param companion used for choosing right primitive type
    */
   final def fromPrimitiveValue[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](value: Value,
-                                                                                    companion: BoxedJdiProxyCompanion[Primitive, Proxy]): Proxy = {
+    companion: BoxedJdiProxyCompanion[Primitive, Proxy]): Proxy = {
 
     val boxedClass = this.classByName(companion.boxedName)
 
@@ -162,7 +162,6 @@ private[context] trait Proxyfier {
     case v: Long => LongJdiProxy.fromPrimitive(v, this)
     case v: Boolean => BooleanJdiProxy.fromPrimitive(v, this)
     case v: String => StringJdiProxy(this, mirrorOf(v))
-
   }
 
   /**

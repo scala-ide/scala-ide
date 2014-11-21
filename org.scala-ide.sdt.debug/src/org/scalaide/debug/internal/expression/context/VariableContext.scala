@@ -3,7 +3,29 @@
  */
 package org.scalaide.debug.internal.expression.context
 
+import scala.Option
 import scala.reflect.runtime.universe.TermName
+
+sealed trait VariableType {
+  /** type like collection.immutable.List (class name without generics) */
+  def plainType: String
+}
+
+object VariableType {
+  def apply(plainType: String, genericType: Option[String]): VariableType =
+    genericType match {
+      case None => PlainVariableType(plainType)
+      case Some(genericType) => GenericVariableType(plainType, genericType)
+    }
+}
+/**
+ *
+ * @param plainType type like collection.immutable.List (class name without generics)
+ * @param genericType generic signature of type from JDI
+ */
+case class GenericVariableType(plainType: String, genericType: String) extends VariableType
+
+case class PlainVariableType(plainType: String) extends VariableType
 
 /**
  * Represents variables in context of suspended debugging.
@@ -14,12 +36,10 @@ trait VariableContext extends Any {
 
   /**
    * Looks up a type of variable with a given name.
-   * Returns (typeName, Option(genericType) where
-   * typeName is collection.immutable.List (class name without generics)
-   * genericType - generic signature of type from JDI
+   * Returns Some if there is variable in scope
    * Returns `None` if variable is not defined in current scope.
    */
-  def typeOf(variableName: TermName): Option[(String, Option[String])]
+  def typeOf(variableName: TermName): Option[VariableType]
 
   /**
    * Name of enclosing package.

@@ -23,7 +23,6 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("javaLibClass.normalNull", Scala.nullLiteral, Scala.nullType)
   }
 
-  @Ignore("TODO O-7263 Fails as it doesn't see methods of field's value - generating stubs doesn't support local operations on Java fields of type AnyVal")
   @Test
   def checkAdditionalOperationsOnRetrievedStaticFields(): Unit = {
     eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.boxed.Integer) // this one works because self is not AnyVal

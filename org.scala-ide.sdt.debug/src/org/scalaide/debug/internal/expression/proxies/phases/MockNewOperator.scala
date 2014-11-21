@@ -32,8 +32,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
     case select: Select => Nil
     case TypeApply(fun, _) => extractParameters(fun)
     case Apply(fun, args) => extractParameters(fun) ++ args
-    // TODO - better exception (and message)
-    case _ => throw new RuntimeException(s"Bad part of call function tree: $tree")
+    case _ => throw new IllegalStateException(s"Not supported or unrecognized $tree")
   }
 
   /**
@@ -50,9 +49,8 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
     val methodCall = {
       // creating nested type applied tree is too cumbersome to do by hand
       import Debugger._
-      toolbox.parse(contextParamName + "." + newInstance) //TODO to AST
+      Select(Ident(newTermName(contextParamName)), newTermName(newInstance))
     }
-
 
     // responsible for "Seq(Seq(a), Seq(a))" part of expression
     val argsCode = Apply(SelectApplyMethod("Seq"), params)
@@ -64,7 +62,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
 
   /** Transformer */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case newTree@Apply(fun, args) if isConstructor(fun.symbol) =>
+    case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
       val classType = newTree.tpe match {
         case AstMatchers.ArrayRef(typeParam) => Scala.Array(typeParam.toString)
         case other => other.typeSymbol.fullName

@@ -9,7 +9,6 @@ import org.scalaide.debug.internal.expression.context.JdiContext
 import com.sun.jdi.ByteValue
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
 /**
  * JdiProxy implementation for `byte` and `scala.Byte` and `java.lang.Byte`.
@@ -19,7 +18,7 @@ case class ByteJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichByte")
 
-  override def _ByteMirror: Byte = this.primitive.asInstanceOf[ByteValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[ByteValue].value().asInstanceOf[I]
 }
 
 object ByteJdiProxy extends BoxedJdiProxyCompanion[Byte, ByteJdiProxy](Java.boxed.Byte, Java.primitives.byte) {

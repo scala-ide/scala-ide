@@ -107,7 +107,6 @@ class DivisionTest extends BaseIntegrationTest(DivisionTest) {
     eval("0 / 0.0f", 0 / 0.0f, Java.boxed.Float)
   }
 
-  @Ignore("TODO - O-4549 - add support for float literals")
   @Test
   def `variable / 0.0f - `(): Unit = {
     eval("int / 0.0f", int / 0.0f, Java.boxed.Float)

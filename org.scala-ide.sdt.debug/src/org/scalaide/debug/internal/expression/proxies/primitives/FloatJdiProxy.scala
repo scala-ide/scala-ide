@@ -18,7 +18,7 @@ case class FloatJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichFloat")
 
-  override def _FloatMirror: Float = this.primitive.asInstanceOf[FloatValue].value()
+  override def __value[I] = this.primitive.asInstanceOf[FloatValue].value().asInstanceOf[I]
 }
 
 object FloatJdiProxy extends BoxedJdiProxyCompanion[Float, FloatJdiProxy](Java.boxed.Float, Java.primitives.float) {

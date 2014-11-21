@@ -8,12 +8,16 @@ import java.io.File
 import scala.io.Source
 import scala.util.Try
 
+import org.scalaide.debug.internal.expression.AstTransformer
+import org.scalaide.debug.internal.expression.FunctionProxyArgumentTypeNotInferredException
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression._
-import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.ClassListener
-import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.NewClassContext
-import scala.Some
-import org.scalaide.debug.internal.expression.proxies.phases.AnonymousFunctionSupport.NewClassContext
+import org.scalaide.debug.internal.expression.Names.Debugger.contextFullName
+import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
+import org.scalaide.debug.internal.expression.Names.Debugger.newClassName
+import org.scalaide.debug.internal.expression.Names.Debugger.placeholderFunctionName
+import org.scalaide.debug.internal.expression.Names.Debugger.placeholderPartialFunctionName
+import org.scalaide.debug.internal.expression.NestedLambdaException
+import org.scalaide.debug.internal.expression.TypesContext
 
 object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
@@ -55,9 +59,9 @@ object AnonymousFunctionSupport {
     private def findNewClassFile(newClassDir: String) = {
       new File(parentDirFile, newClassDir).listFiles()
         .filter(_.getName.contains("$" + className)) match {
-        case Array(classFile) => classFile
-        case _ => throw NestedLambdaException
-      }
+          case Array(classFile) => classFile
+          case _ => throw NestedLambdaException
+        }
     }
 
     private def newClassName(newClassDir: String, classFile: File) = {
@@ -76,7 +80,6 @@ object AnonymousFunctionSupport {
      *
      * This method is synchronized across all instances as it creates files in filesystem.
      *
-     * @param function function - during call there should be create new class
      * @return NewClassContext
      */
     def collectNewClassFiles: NewClassContext = ClassListenerLock.synchronized {
@@ -94,7 +97,10 @@ object AnonymousFunctionSupport {
 trait AnonymousFunctionSupport extends UnboundValuesSupport {
   self: AstTransformer =>
 
-  import toolbox.u.{Try => _, _}
+  import toolbox.u.{ Try => _, _ }
+
+  import AnonymousFunctionSupport.ClassListener
+  import AnonymousFunctionSupport.NewClassContext
 
   /**
    * Unapply for placeholder function.
@@ -143,7 +149,6 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   // for function naming
   private var functionsCount = 0
 
-
   private val ContextParamName = TermName(Debugger.contextParamName)
 
   // we should exlude start function -> it must stay function cos it is not a part of original expression
@@ -164,11 +169,11 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, typesContext.treeTypeName)
       .findUnboundValues().filterNot {
-      case (name, _) => vparamsName.contains(name)
-    }.map {
-      case (name, Some(valueType)) => name -> valueType
-      case (name, _) => name -> Debugger.proxyName
-    }
+        case (name, _) => vparamsName.contains(name)
+      }.map {
+        case (name, Some(valueType)) => name -> valueType
+        case (name, _) => name -> Debugger.proxyName
+      }
   }
 
   /**
@@ -178,14 +183,14 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
    * @param closuresParams map of (closureParamName, closureArgumentType) for this function
    */
   protected def compileFunction(params: List[ValDef], body: Tree, closuresParams: Map[TermName, String]): NewClassContext = {
-    val parametersTypes = params.map(_.tpt.tpe.toString) //TODO
+    val parametersTypes = params.map(_.tpt.tpe.toString)
 
     parametersTypes.foreach { elem =>
       if (elem == Debugger.proxyFullName) throw FunctionProxyArgumentTypeNotInferredException
     }
 
     val functionGenericTypes = (parametersTypes ++ Seq("Any")).mkString(", ")
-    val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType"}.mkString(",")
+    val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType" }.mkString(",")
     val arity = params.size
     import Debugger.newClassName
     val classCode =
@@ -211,12 +216,13 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val closuresParams = getClosureParamsNamesAndType(body, params)
     val NewClassContext(jvmClassName, classCode) = compileFunction(params, body, closuresParams)
 
-    val proxyClassName = s"FunctionNo$functionsCount"
+    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
+    val proxyClassName = s"$customLambdaPrefix$functionsCount"
     functionsCount += 1
     val newFunctionType =
       typesContext.newType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
 
-    val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name)}(collection.breakOut)
+    val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name) }(collection.breakOut)
 
     lambdaProxy(newFunctionType, closureParamTrees)
   }
@@ -224,9 +230,9 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   /** creates proxy for given lambda with given closure arguments */
   protected def lambdaProxy(newFunctionType: String, closureArgs: List[Tree]): Tree = {
     val constructorArgs =
-      Literal(Constant(newFunctionType)):: Apply(SelectApplyMethod("Seq"), closureArgs) :: Nil
+      Literal(Constant(newFunctionType)) :: Apply(SelectApplyMethod("Seq"), closureArgs) :: Nil
 
-    Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Names.Debugger.newInstance)), constructorArgs)
+    Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Debugger.newInstance)), constructorArgs)
   }
 
   /** Extract by name params for function as Seq of Boolean. This Seq might be shorter then param list - due to varargs */

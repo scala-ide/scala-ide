@@ -10,7 +10,10 @@ import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TypeNameMappings
 
-import com.sun.jdi.{ReferenceType, ObjectReference, Type, Value}
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.Type
+import com.sun.jdi.Value
 
 /**
  * Implementation of VariableContext based on ThreadReference.
@@ -36,19 +39,29 @@ private[context] trait JdiVariableContext
     }
   }
 
-  /** Type of given value, as String and information about generic type) */
-  def nameAndGenericName(typeName: Type): (String, Option[String]) = {
-    val isGeneric = typeName match {
-      case refType: ReferenceType => Option(refType.genericSignature())
-        .filter(_.startsWith("<")) // If there are any generic parameters generic looks like <A:...
-      case _ => None
+  /** Return VariableType for given type. */
+  def nameAndGenericName(typeName: Type): VariableType = {
+
+    if (typeName == null) PlainVariableType(Scala.nullType)
+    else {
+      val genericSignature = typeName match {
+        case refType: ReferenceType => Option(refType.genericSignature())
+          .filter(_.startsWith("<")) // If there are any generic parameters generic looks like <A:...
+        case _ => None
+      }
+      val primitivesMocked = TypeNameMappings.javaNameToScalaName(typeName.toString)
+
+      val scalaType = if (onClassPath(expressionClassLoader, primitivesMocked))
+        getScalaNameFromType(primitivesMocked)
+      else
+        Debugger.proxyName
+
+      VariableType(scalaType, genericSignature)
     }
-    if (typeName == null) Scala.nullType -> isGeneric
-    else TypeNameMappings.javaNameToScalaName(typeName.toString) -> isGeneric
   }
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
-  override def typeOf(variableName: TermName): Option[(String, Option[String])] = {
+  override def typeOf(variableName: TermName): Option[VariableType] = {
     import Debugger._
 
     // null-safe Value.type
@@ -57,16 +70,12 @@ private[context] trait JdiVariableContext
     val value = transformationContext.typeFor(variableName)
       .orElse(valueFromFrame(currentFrame(), variableName.toString).map(typeOfValue))
 
-    value.map(nameAndGenericName).map {
-      case (name, genName) =>
-        val realName = if (onClassPath(expressionClassLoader, name)) getScalaNameFromType(name) else proxyName
-        (realName, genName)
-    }
+    value.map(nameAndGenericName)
   }
 
   /** Changes all `$` and `_` to `.`, if type ends with `$` changes it to `.type` */
   private def escape(name: String): String = {
-    val replaced = name.replaceAll( """(\$|_)""", """\.""")
+    val replaced = name.replaceAll("""(\$|_)""", """\.""")
     if (replaced.endsWith(".")) replaced + "type" else replaced
   }
 
@@ -78,7 +87,6 @@ private[context] trait JdiVariableContext
     if (name.endsWith("$")) escape(name)
     else name
   }
-
 
   /** Reference to object referenced by `this` */
   private def thisObject: Option[ObjectReference] = Option(currentFrame.thisObject)

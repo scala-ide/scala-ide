@@ -7,16 +7,17 @@ import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 
-object Imports extends HasLogger with PCIntegration {
+object Imports extends HasLogger with SPCIntegration {
 
+   private val IMPORTS_TIMEOUT_IN_MILLIS = 100 //in millis
 
-  private def noImports(reason: String): Seq[String] = {
+  private def reportProblemWithObtainingImports(reason: String): Seq[String] = {
     logger.warn(s"No imports due to: $reason")
     Nil
   }
 
   private case class ImportExtractor(pc: IScalaPresentationCompiler,
-                                     toLineNumber: Int) {
+    toLineNumber: Int) {
 
     class ImportTraverser
       extends pc.Traverser
@@ -67,16 +68,16 @@ object Imports extends HasLogger with PCIntegration {
   }
 
   private def getImports(pc: IScalaPresentationCompiler, sourceFile: SourceFile, line: Int) = {
-    pc.askParsedEntered(sourceFile, true).get(100) match {
-      case None => noImports("timeout")
-      case Some(Right(error)) => noImports(error.getMessage)
-      case Some(Left(tree)) => 
+    pc.askParsedEntered(sourceFile, true).get(IMPORTS_TIMEOUT_IN_MILLIS) match {
+      case None => reportProblemWithObtainingImports("timeout")
+      case Some(Right(error)) => reportProblemWithObtainingImports(error.getMessage)
+      case Some(Left(tree)) =>
         val extractor = new ImportExtractor(pc, line)
         extractor.importForFile(tree.asInstanceOf[extractor.pc.Tree])
     }
   }
 
-  def importsFromCurrentStackFrame: Seq[String] = forCurrentStackFrame(getImports, noImports)
+  def importsFromCurrentStackFrame: Seq[String] = forCurrentStackFrame(getImports, reportProblemWithObtainingImports)
 }
 
 

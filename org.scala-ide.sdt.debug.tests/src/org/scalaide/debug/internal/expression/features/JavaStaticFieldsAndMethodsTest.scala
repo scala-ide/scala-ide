@@ -43,7 +43,6 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
     eval("JavaLibClass.staticGenericMethod('g')", 'g', Java.boxed.Character)
   }
 
-  @Ignore("TODO O-7263 Fails as it doesn't see methods of field's value - generating stubs doesn't support local operations on Java fields of type AnyVal")
   @Test
   def classStaticFieldsIntegration(): Unit = {
     eval("JavaLibClass.staticInt - 2.0", JavaLibClass.staticInt - 2.0, Java.boxed.Double)
