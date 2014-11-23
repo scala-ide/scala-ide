@@ -55,6 +55,36 @@ class NamePrinterTest {
     testQnameWith("GenericMethod.scala", "GenericMethod.generic[T](obj: T)")
   }
 
+  @Test
+  def testQnameWithTopLevelImport() {
+    testQnameWith("TopLevelImport.scala", "scala.collection.mutable")
+  }
+
+  @Test
+  def testQnameWithNestedImport() {
+    testQnameWith("NestedImport.scala", "NestedImport")
+  }
+
+  @Test
+  def testQnameWithMultiImportOnPackage() {
+    testQnameWith("MultiImportOnPackage.scala", "scala.collection.mutable")
+  }
+
+  @Test
+  def testQnameWithMultiImportOnType() {
+    testQnameWith("MultiImportOnType.scala", "scala.collection.mutable")
+  }
+
+  @Test
+  def testQnameWithRenamingImportOnOrigName() {
+    testQnameWith("RenamingImportOnOrigName.scala", "scala.collection.mutable")
+  }
+
+  @Test
+  def testQnameWithRenamingImportOnNewName() {
+    testQnameWith("RenamingImportOnNewName.scala", "scala.collection.mutable")
+  }
+
   private def testQnameWith(input: String, expected: Option[String]) {
     val cu = scalaCompilationUnit(input)
     val offset = verifyOffset(cu.getSource.indexOf("/**/") - 1)
