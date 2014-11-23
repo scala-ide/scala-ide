@@ -28,12 +28,28 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       case compiler.Select(qalifier, name) =>
         typeInfo(compiler)(qalifier).map(_ + "." + name.toString)
       case defDef: compiler.DefDef =>
-       Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(compiler)(defDef.vparamss))
+        Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(compiler)(defDef.vparamss))
       case classDef: compiler.ClassDef =>
-       Some(classDef.symbol.fullName + tparamsStr(classDef.tparams))
+        Some(classDef.symbol.fullName + tparamsStr(classDef.tparams))
+      case compiler.Import(tree, selectors) => importDefStr(compiler)(tree, selectors)
       case compiler.Ident(name: compiler.TypeName) => Some(shortName(name))
       case _ =>
         Option(t.symbol).map(symbolName(_))
+    }
+  }
+
+  private def importDefStr(compiler: IScalaPresentationCompiler)(tree: compiler.Tree, selectors: List[compiler.ImportSelector]) = {
+    def isRelevant(selector: compiler.ImportSelector) = {
+      selector.name != compiler.nme.WILDCARD &&
+      selector.name == selector.rename
+    }
+
+    typeInfo(compiler)(tree).map { prefix =>
+      val suffix = selectors match {
+        case List(selector) if isRelevant(selector) => "." + selector.name.toString
+        case _ => ""
+      }
+      prefix + suffix
     }
   }
 
