@@ -32,12 +32,12 @@ class NamePrinterTest {
 
   @Test
   def testQnameWithMethod() {
-    testQnameWith("Method.scala", "a.pkg.Klasse.method(i: scala.Int)")
+    testQnameWith("Method.scala", "a.pkg.Klasse.method(i: Int)")
   }
 
   @Test
   def testQnameWithCurriedMethod() {
-    testQnameWith("CurriedMethod.scala", "Good.curry(i: scala.Int)(l1: scala.Long, l2: scala.Long)(s1: java.lang.String, s2: java.lang.String, s3: java.lang.String)")
+    testQnameWith("CurriedMethod.scala", "Good.curry(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String)")
   }
 
   @Test
