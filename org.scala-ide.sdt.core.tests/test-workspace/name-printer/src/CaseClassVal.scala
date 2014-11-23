@@ -1,0 +1,1 @@
+case class CaseClassVal(valium/**/: AnyRef)
