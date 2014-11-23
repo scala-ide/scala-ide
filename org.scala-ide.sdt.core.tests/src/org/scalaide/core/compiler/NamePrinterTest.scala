@@ -85,6 +85,21 @@ class NamePrinterTest {
     testQnameWith("RenamingImportOnNewName.scala", "scala.collection.mutable")
   }
 
+  @Test
+  def testQnameWithCaseClassVal() {
+    testQnameWith("CaseClassVal.scala", "CaseClassVal.valium")
+  }
+
+  @Test
+  def testQnameWithTraitVar() {
+    testQnameWith("TraitVar.scala", "TraitVar.varrus")
+  }
+
+  @Test
+  def testQnameWithClassParameter() {
+    testQnameWith("ClassParameter.scala", "ClassParameter.paranormal")
+  }
+
   private def testQnameWith(input: String, expected: Option[String]) {
     val cu = scalaCompilationUnit(input)
     val offset = verifyOffset(cu.getSource.indexOf("/**/") - 1)
