@@ -75,18 +75,18 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
     if (vparamss.isEmpty) {
       ""
     } else {
-      vparamss.map(vparamsStr(compiler)(_)).mkString("")
+      vparamss.map(vparamsStr(_)).mkString("")
     }
   }
 
-  private def vparamsStr(compiler: IScalaPresentationCompiler)(vparams: List[compiler.ValDef]) = {
-    "(" + vparams.map(vparmStr(compiler)(_)).mkString(", ") + ")"
+  private def vparamsStr(vparams: List[Global#ValDef]) = {
+    "(" + vparams.map(vparmStr(_)).mkString(", ") + ")"
   }
 
-  private def vparmStr(compiler: IScalaPresentationCompiler)(valDef: compiler.ValDef) = {
+  private def vparmStr(valDef: Global#ValDef) = {
     val name = valDef.name
     val tpt = valDef.tpt
-    name.toString + ": " + typeInfo(compiler)(tpt).get
+    name.toString + ": " + shortName(tpt.symbol.name)
   }
 
   private def tparamsStr(tparams: List[Global#TypeDef]) = {
