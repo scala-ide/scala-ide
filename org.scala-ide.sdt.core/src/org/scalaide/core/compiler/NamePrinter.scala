@@ -10,6 +10,12 @@ import scala.tools.nsc.interactive.Global
  * For printing names in an InteractiveCompilationUnit.
  */
 class NamePrinter(cu: InteractiveCompilationUnit) {
+
+  /**
+   * Returns the fully qualified name of the symbol at the given offset if available.
+   *
+   * This method is used by "Copy Qualified Name" in the GUI.
+   */
   def qualifiedNameAt(offset: Int): Option[String] = {
     cu.withSourceFile { (src, compiler) =>
       import RegionUtils.RichRegion
@@ -25,8 +31,8 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
 
   private def typeInfo(compiler: IScalaPresentationCompiler)(t: compiler.Tree): Option[String] = {
     t match {
-      case compiler.Select(qalifier, name) =>
-        typeInfo(compiler)(qalifier).map(_ + "." + name.toString)
+      case compiler.Select(qualifier, name) =>
+        typeInfo(compiler)(qualifier).map(_ + "." + name.toString)
       case defDef: compiler.DefDef =>
         Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(compiler)(defDef.vparamss))
       case classDef: compiler.ClassDef =>
@@ -58,17 +64,6 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       shortName(symbol.name)
     else
       symbol.fullName
-  }
-
-  private def debugInfo(symbol: Global#Symbol) {
-    println(s"symbol.fullName: ${symbol.fullName}")
-    println(s"symbol.isAbstractType: ${symbol.isAbstractType}")
-    println(s"symbol.isTypeParameter: ${symbol.isTypeParameter}")
-    println(s"symbol.isAliasType: ${symbol.isAliasType}")
-    println(s"symbol.isHigherOrderTypeParameter: ${symbol.isHigherOrderTypeParameter}")
-    println(s"symbol.isFreeType: ${symbol.isFreeType}")
-    println(s"symbol.isType: ${symbol.isType}")
-    println(s"symbol.isParameter: ${symbol.isParameter}")
   }
 
   private def vparamssStr(compiler: IScalaPresentationCompiler)(vparamss: List[List[compiler.ValDef]]) = {
