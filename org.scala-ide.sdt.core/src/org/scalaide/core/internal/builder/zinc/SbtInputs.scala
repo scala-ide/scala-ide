@@ -52,7 +52,7 @@ class SbtInputs(installation: IScalaInstallation,
 
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
-      Maybe.just(Analysis.Empty)
+      Maybe.nothing[Analysis]()
     else
       allProjects.find(_.sourceOutputFolders.map(_._2.getLocation().toFile()).toSeq contains f) map (_.buildManager) match {
         case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
