@@ -1,10 +1,12 @@
 package org.scalaide.core.compiler
 
-import org.eclipse.jface.text.Region
-import org.scalaide.util.eclipse.RegionUtils
-import scala.reflect.api.Trees
-import org.scalaide.logging.HasLogger
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.MILLISECONDS
 import scala.tools.nsc.interactive.Global
+
+import org.eclipse.jface.text.Region
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 /**
  * For printing names in an InteractiveCompilationUnit.
@@ -18,8 +20,6 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
    */
   def qualifiedNameAt(offset: Int): Option[String] = {
     cu.withSourceFile { (src, compiler) =>
-      import RegionUtils.RichRegion
-      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 
       val scalaRegion = new Region(cu.sourceMap(cu.getContents()).scalaPos(offset), 1)
       compiler.askTypeAt(scalaRegion.toRangePos(src)).getOption() match {
@@ -30,6 +30,11 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
   }
 
   private def typeInfo(compiler: IScalaPresentationCompiler)(t: compiler.Tree): Option[String] = {
+    val resp = compiler.asyncExec(typeInfoImpl(compiler)(t))
+    resp.getOption().flatten
+  }
+
+  private def typeInfoImpl(compiler: IScalaPresentationCompiler)(t: compiler.Tree): Option[String] = {
     t match {
       case compiler.Select(qualifier, name) =>
         typeInfo(compiler)(qualifier).map(_ + "." + name.toString)

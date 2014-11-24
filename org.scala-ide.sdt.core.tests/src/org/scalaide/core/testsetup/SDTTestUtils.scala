@@ -232,8 +232,9 @@ object SDTTestUtils extends HasLogger {
     project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
 
   def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String): ICompilationUnit = {
-    val cu = pack.createCompilationUnit(name, sourceCode, false, null)
-    Thread.sleep(200)
+    val monitor = new BlockingProgressMonitor
+    val cu = pack.createCompilationUnit(name, sourceCode, false, monitor)
+    monitor.waitUntilDone()
     cu
   }
 
