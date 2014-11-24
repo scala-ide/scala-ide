@@ -1,1 +1,0 @@
-class TypeArg(list: List[String/**/])

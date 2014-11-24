@@ -1,1 +1,0 @@
-class ClassParameter(paranormal/**/: String)

@@ -1,109 +1,195 @@
 package org.scalaide.core.compiler
 
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.junit.Assert._
-import org.junit.Test
-import NamePrinterTest.scalaCompilationUnit
+import scala.annotation.elidable
+import scala.annotation.elidable.ASSERTION
 
-object NamePrinterTest extends TestProjectSetup("name-printer")
+import org.junit.Assert.assertEquals
+import org.junit.Ignore
+import org.junit.Test
+import org.scalaide.CompilerSupportTests
+
+import NamePrinterTest.mkScalaCompilationUnit
+
+object NamePrinterTest extends CompilerSupportTests
 
 class NamePrinterTest {
   import NamePrinterTest._
 
   @Test
   def testQnameWithTrivialClass() {
-    testQnameWith("TrivialClass.scala", "a.test.pgk.name.TestClass")
+    testQnameWith(
+      """|package a.test.pgk.name
+         |class TestClass/**/""",
+      "a.test.pgk.name.TestClass")
   }
 
   @Test
   def testQnameWithTrivialObject() {
-    testQnameWith("TrivialObject.scala", "a.TestObject")
+    testQnameWith(
+      """|package a
+         |object TestObject/**/""",
+      "a.TestObject")
   }
 
   @Test
   def testQnameWithTypeArg() {
-    testQnameWith("TypeArg.scala", "scala.Predef.String")
+    testQnameWith(
+      "class TypeArg(list: List[String/**/])",
+      "scala.Predef.String")
   }
 
   @Test
   def testQnameWithMethodArg() {
-    testQnameWith("MethodArg.scala", "scala.collection.mutable.Set")
+    testQnameWith(
+      """|import scala.collection.mutable
+         |
+         |class SomeClass {
+         |def someMethod(set: mutable.Set/**/) = None
+         |}""",
+      "scala.collection.mutable.Set")
   }
 
   @Test
   def testQnameWithMethod() {
-    testQnameWith("Method.scala", "a.pkg.Klasse.method(i: Int)")
+    testQnameWith(
+      """|package a.pkg
+         |
+         |class Klasse {
+         |  def method/**/(i: Int) = 0
+         |}""",
+      "a.pkg.Klasse.method(i: Int)")
   }
 
   @Test
   def testQnameWithCurriedMethod() {
-    testQnameWith("CurriedMethod.scala", "Good.curry(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String)")
+    testQnameWith(
+      """|class Good {
+         |def curry/**/(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String) = Unit()
+         |}""",
+      "Good.curry(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String)")
   }
 
   @Test
   def testQnameWithTrivialGenericTrait() {
-    testQnameWith("TrivialGenericTrait.scala", "TrivialGenericTrait[T]")
+    testQnameWith(
+      "trait TrivialGenericTrait/**/[T]",
+      "TrivialGenericTrait[T]")
   }
 
   @Test
   def testQnameWithTrivialTrait() {
-    testQnameWith("TrivialTrait.scala", "TrivialTrait")
+    testQnameWith(
+      "trait TrivialTrait/**/",
+      "TrivialTrait")
   }
 
   @Test
   def testQnameWithGenericMethod() {
-    testQnameWith("GenericMethod.scala", "GenericMethod.generic[T](obj: T)")
+    testQnameWith(
+      """|trait GenericMethod {
+         |def generic/**/[T <: AnyRef](obj: T): Unit
+         |}""",
+      "GenericMethod.generic[T](obj: T)")
   }
 
   @Test
   def testQnameWithTopLevelImport() {
-    testQnameWith("TopLevelImport.scala", "scala.collection.mutable")
+    testQnameWith(
+      """|import scala.collection.mutable/**/
+         |class TopLevelImport""",
+      "scala.collection.mutable")
   }
 
   @Test
   def testQnameWithNestedImport() {
-    testQnameWith("NestedImport.scala", "NestedImport")
+    testQnameWith(
+      """|object NestedImport
+         |class NestedImport {
+         |  import NestedImport._/**/
+         |}""",
+      "NestedImport")
   }
 
   @Test
   def testQnameWithMultiImportOnPackage() {
-    testQnameWith("MultiImportOnPackage.scala", "scala.collection.mutable")
+    testQnameWith(
+      """|import scala.collection.mutable/**/.{Set, Map, ListBuffer}
+         |class MultiImportOnPackage""",
+      "scala.collection.mutable")
   }
 
   @Test
   def testQnameWithMultiImportOnType() {
-    testQnameWith("MultiImportOnType.scala", "scala.collection.mutable")
+    testQnameWith(
+      """|import scala.collection.mutable.{Set, Map/**/, ListBuffer}
+         |class MultiImportOnType""",
+      "scala.collection.mutable")
   }
 
   @Test
   def testQnameWithRenamingImportOnOrigName() {
-    testQnameWith("RenamingImportOnOrigName.scala", "scala.collection.mutable")
+    testQnameWith(
+      """|import scala.collection.mutable.{Set/**/ => MySet}
+         |class RenamingImportOnOrigName""",
+      "scala.collection.mutable")
   }
 
   @Test
   def testQnameWithRenamingImportOnNewName() {
-    testQnameWith("RenamingImportOnNewName.scala", "scala.collection.mutable")
+    testQnameWith(
+      """|import scala.collection.mutable.{Set => MySet/**/}
+         |class RenamingImportOnNewName""",
+      "scala.collection.mutable")
   }
 
   @Test
   def testQnameWithCaseClassVal() {
-    testQnameWith("CaseClassVal.scala", "CaseClassVal.valium")
+    testQnameWith(
+      "case class CaseClassVal(valium/**/: AnyRef)",
+      "CaseClassVal.valium")
   }
 
   @Test
   def testQnameWithTraitVar() {
-    testQnameWith("TraitVar.scala", "TraitVar.varrus")
+    testQnameWith(
+      """|trait TraitVar {
+         |  var varrus/**/: Int
+         |}""",
+      "TraitVar.varrus")
   }
 
   @Test
   def testQnameWithClassParameter() {
-    testQnameWith("ClassParameter.scala", "ClassParameter.paranormal")
+    testQnameWith(
+      "class ClassParameter(paranormal/**/: String)",
+      "ClassParameter.paranormal")
+  }
+
+  @Ignore
+  @Test
+  def testQnameWithMethodParamOnDefinition() {
+    testQnameWith(
+      """|class MethodParamOnDefinition {
+         |  def method(param/**/: Int) = param
+         |}""",
+      "MethodParamOnDefinition.method(param: Int).param")
+  }
+
+  @Ignore
+  @Test
+  def testQnameWithMethodParamOnUse() {
+    testQnameWith(
+      """|class MethodParamOnUse {
+         |  def method(param: Int) = param/**/
+         |}""",
+      "MethodParamOnUse.method(param: Int).param")
   }
 
   private def testQnameWith(input: String, expected: Option[String]) {
-    val cu = scalaCompilationUnit(input)
-    val offset = verifyOffset(cu.getSource.indexOf("/**/") - 1)
-    val namePrinter = new NamePrinter(scalaCompilationUnit(input))
+    val source = input.stripMargin
+    val cu = mkScalaCompilationUnit(source)
+    val offset = verifyOffset(source.indexOf("/**/") - 1)
+    val namePrinter = new NamePrinter(cu)
     val res = namePrinter.qualifiedNameAt(offset)
     assertEquals(expected, res)
   }
