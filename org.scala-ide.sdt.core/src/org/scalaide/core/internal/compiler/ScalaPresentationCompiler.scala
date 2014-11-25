@@ -410,6 +410,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
     var relevance = 100
     if (!sym.isLocalToBlock) relevance -= 10 // non-local symbols are less relevant than local ones
+    if (!sym.hasGetter) relevance -= 5 // fields are more relevant than non-fields
     if (inherited) relevance -= 10
     if (viaView != NoSymbol) relevance -= 20
     if (sym.hasPackageFlag) relevance -= 30
@@ -420,6 +421,14 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
       || sym.owner == definitions.ObjectClass) {
       relevance -= 40
     }
+
+    // global symbols are less relevant than local symbols
+    sym.owner.enclosingPackage.fullName match {
+      case "java"  => relevance -= 15
+      case "scala" => relevance -= 10
+      case _ =>
+    }
+
     val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
     relevance -= casePenalty
 
