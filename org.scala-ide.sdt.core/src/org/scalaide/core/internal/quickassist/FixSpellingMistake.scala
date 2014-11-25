@@ -13,7 +13,9 @@ class FixSpellingMistake extends QuickAssist {
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] = {
     val jctx = new JavaInvocationContextAdapter(ctx)
     val p = new WordQuickFixProcessor()
-    p.getCorrections(jctx, jctx.javaProblemLocations).map(JavaProposalAdapter)
+    Option(p.getCorrections(jctx, jctx.javaProblemLocations)).map{cs =>
+      cs.map(JavaProposalAdapter): Seq[BasicCompletionProposal]
+    }.getOrElse(Seq())
   }
 
 }
