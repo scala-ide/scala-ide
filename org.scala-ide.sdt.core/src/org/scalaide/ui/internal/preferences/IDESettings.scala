@@ -55,7 +55,7 @@ object ScalaPluginSettings extends Settings {
     val default: Boolean)
     extends Setting(name, descr) {
     type T = Boolean
-    protected var v: Boolean = default
+    protected var v: Boolean = false
     override def value: Boolean = v
 
     def tryToSet(args: List[String]) = { value = true; Some(args) }
@@ -77,7 +77,7 @@ object ScalaPluginSettings extends Settings {
 
   }
 
-  implicit def booleanSettingOfDefault(b: BooleanSettingWithDefault): Settings#BooleanSetting = {
+    implicit def booleanSettingOfDefault(b: BooleanSettingWithDefault): Settings#BooleanSetting = {
     val v = b.value
     val s = BooleanSetting(b.name, b.helpDescription)
     if (v) s.tryToSet(Nil)
