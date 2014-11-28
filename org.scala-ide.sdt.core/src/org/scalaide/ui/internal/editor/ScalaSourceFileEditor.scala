@@ -375,7 +375,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   override def createSemanticHighlighter: TextPresentationHighlighter =
     TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, addReconcilingListener _, removeReconcilingListener _)
 
-  override def forceSemanticHighlightingOnInstallment: Boolean = false // relies on the Java reconciler to refresh the highlights
+  override def forceSemanticHighlightingOnInstallment: Boolean = true
 
   def addReconcilingListener(listener: IJavaReconcilingListener): Unit =
     reconcilingListeners.addReconcileListener(listener)
