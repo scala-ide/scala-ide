@@ -5,6 +5,7 @@ import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.util.eclipse.RegionUtils._
 
 class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPreferenceStore) extends AutoIndentStrategy(prefStore) {
 
@@ -19,20 +20,26 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
       TextUtilities.getPartition(doc, partitioning, offset, preferOpenPartitions)
 
     /**
+     * Checks if the region between `offset` and `offset+len` starts with three
+     * quotation marks.
+     */
+    def isTripleQuotes(offset: Int, len: Int) =
+      len >= 3 && doc.get(offset, 3) == "\"\"\""
+
+    /**
      * Finds the end of the string literal which is at `offset`. This function
      * is necessary because in case of a string interpolation we have to
      * traverse multiple partitions in order to get the end position.
      */
     def stringInterpolationEnd(offset: Int): Int =
-      if (offset >= doc.getLength)
-        doc.getLength
+      if (offset >= doc.length)
+        doc.length
       else {
         val p = partitionAt(offset, preferOpenPartitions = false)
-        val end = p.getOffset+p.getLength
-        if (doc.get(end-3, 3) == "\"\"\"")
-          end
+        if (isTripleQuotes(p.end-3, p.length))
+          p.end
         else
-          stringInterpolationEnd(end)
+          stringInterpolationEnd(p.end)
       }
 
     /**
@@ -45,41 +52,43 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
         0
       else {
         val p = partitionAt(offset, preferOpenPartitions = false)
-        if (p.getLength >= 3 && doc.get(p.getOffset, 3) == "\"\"\"")
-          p.getOffset
+        if (isTripleQuotes(p.start, p.length))
+          p.start
         else
-          stringInterpolationStart(p.getOffset-1)
+          stringInterpolationStart(p.start-1)
       }
 
+    /**
+     * Calculates the indentation and strip margin that should be inserted
+     * after a newline.
+     */
     def autoIndentAfterNewLine() = {
-      def isTripleQuotes(offset: Int, len: Int) =
-        len >= 3 && doc.get(offset, 3) == "\"\"\""
-
       val lineOfCursor = doc.getLineOfOffset(cmd.offset)
       val (start, end, isFirstLine) = {
         val p = partitionAt(cmd.offset, preferOpenPartitions = true)
-        val pEnd = p.getOffset+p.getLength
-        val start = stringInterpolationStart(p.getOffset)
+        val start = stringInterpolationStart(p.start)
 
         val isFirstLine =
-          if (isTripleQuotes(p.getOffset, p.getLength))
-            lineOfCursor == doc.getLineOfOffset(p.getOffset())
+          if (isTripleQuotes(p.start, p.length))
+            lineOfCursor == doc.getLineOfOffset(p.start)
           else
             lineOfCursor == doc.getLineOfOffset(start)
 
         val end =
-          if (doc.getChar(pEnd-1) == '$')
-            stringInterpolationEnd(pEnd)
+          if (doc.getChar(p.end-1) == '$')
+            stringInterpolationEnd(p.end)
           else
-            pEnd
+            p.end
 
         (start, end, isFirstLine)
       }
 
       def containsStripMargin(offset: Int) = {
-        val len = ".stripMargin".length()
-        if (offset + len >= doc.getLength()) false
-        else doc.get(offset, len) matches "[ .]stripMargin"
+        val len = ".stripMargin".length
+        if (offset+len >= doc.length)
+          false
+        else
+          doc.get(offset, len) matches "[ .]stripMargin"
       }
 
       def copyIndentOfPreviousLine(additionalIndent: String) = {
@@ -87,33 +96,40 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
         cmd.text = s"${cmd.text}$indent$additionalIndent"
       }
 
+      def mkIndent = {
+        val r = doc.getLineInformationOfOffset(cmd.offset)
+        val lineIndent =
+          if (isFirstLine)
+            indentOfLine(doc, lineOfCursor)
+          else
+            breakLine(doc, cmd.offset)._1
+        val indentCountToBar = start - r.start - lineIndent.length + 3
+
+        val innerIndent = {
+          val barOffset =
+            if (isFirstLine)
+              start+4
+            else
+              r.start + lineIndent.length() + 1
+          val wsEnd = findEndOfWhiteSpace(doc, barOffset, r.start + r.length)
+          doc.get(barOffset, wsEnd - barOffset)
+        }
+
+        s"${cmd.text}$lineIndent${" " * indentCountToBar}|$innerIndent"
+      }
+
       def handleFirstLine() = {
         def containsFirstLineStripMargin =
           doc.getChar(start + 3) == '|'
 
         def handleFirstStripMarginLine() = {
-          val r = doc.getLineInformationOfOffset(cmd.offset)
-          val lineIndent = indentOfLine(doc, lineOfCursor)
-
-          val indentCountToBar =
-            if (isTripleQuotes(start, end-start))
-              start - r.getOffset() - lineIndent.length + 3
-            else
-              0
-
-          val innerIndent = {
-            val barOffset = start + 4
-            val wsEnd = findEndOfWhiteSpace(doc, barOffset, r.getOffset() + r.getLength())
-            doc.get(barOffset, wsEnd - barOffset)
-          }
-
-          val indent = s"${cmd.text}$lineIndent${" " * indentCountToBar}|$innerIndent"
-          val isMultiLineStringClosed = end != doc.getLength()
+          val indent = mkIndent
+          val isMultiLineStringClosed = end != doc.length
 
           if (isMultiLineStringClosed) {
             if (!containsStripMargin(end))
               cmd.addCommand(end, 0, ".stripMargin", null)
-            cmd.caretOffset = cmd.offset + indent.length()
+            cmd.caretOffset = cmd.offset + indent.length
             cmd.shiftsCaret = false
           }
 
@@ -126,28 +142,8 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
           copyIndentOfPreviousLine("  ")
       }
 
-      def handleStripMarginLine() = {
-        val r = doc.getLineInformationOfOffset(cmd.offset)
-        val (lineIndent, rest, _) = breakLine(doc, cmd.offset)
-
-        val indentCountToBar =
-          if (isTripleQuotes(start, end-start))
-            start - r.getOffset() - lineIndent.length + 3
-          else
-            0
-
-        val innerIndent =
-          if (!rest.startsWith("|"))
-            ""
-          else {
-            val barOffset = r.getOffset() + lineIndent.length() + 1
-            val wsEnd = findEndOfWhiteSpace(doc, barOffset, r.getOffset() + r.getLength())
-            doc.get(barOffset, wsEnd - barOffset)
-          }
-        val indent = s"${cmd.text}$lineIndent${" " * indentCountToBar}|$innerIndent"
-
-        cmd.text = indent
-      }
+      def handleStripMarginLine() =
+        cmd.text = mkIndent
 
       if (isFirstLine)
         handleFirstLine
