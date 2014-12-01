@@ -1,7 +1,7 @@
 package org.scalaide.ui.internal.wizards
 
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.Document
@@ -26,21 +26,19 @@ import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.ide.IDE
-import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.ui.wizards.Invalid
 import org.scalaide.ui.wizards.Valid
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.eclipse.ProjectUtils
 import org.scalaide.util.internal.ui.AutoCompletionOverlay
 import org.scalaide.util.internal.ui.Dialogs
-import org.scalaide.util.eclipse.OSGiUtils
 
 /**
  * Wizard of the Scala IDE to create new files. It can not only create new
@@ -55,7 +53,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
   private var disposables = Seq[{def dispose(): Unit}]()
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
   private var file: IFile = _
-  private var selectedFolder: IFolder = _
+  private var selectedFolder: IContainer = _
   private val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
   private var completionOverlay: AutoCompletionOverlay = _
@@ -182,7 +180,10 @@ trait NewFileWizard extends AnyRef with HasLogger {
           else
             srcDirs.head
 
-        setFolderName(root.getFolder(srcDir))
+        if (srcDir != r.getProject.getFullPath)
+          setFolderName(root.getFolder(srcDir))
+        else
+          setFolderName(r.getProject)
       }
 
       val str = if (defaultTypeName.isEmpty) path else path + defaultTypeName
@@ -291,7 +292,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   /** Stores `folder` and shows it in the wizard. */
-  private def setFolderName(folder: IFolder): Unit = {
+  private def setFolderName(folder: IContainer): Unit = {
     selectedFolder = folder
     btProject.setText(selectedFolder.getFullPath().makeRelative().toString())
   }
