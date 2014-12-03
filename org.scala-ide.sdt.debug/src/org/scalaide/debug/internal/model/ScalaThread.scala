@@ -1,27 +1,28 @@
 package org.scalaide.debug.internal.model
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import org.scalaide.debug.internal.command.ScalaStepOver
-import org.scalaide.debug.internal.command.ScalaStep
+import com.sun.jdi.ClassType
+import com.sun.jdi.IncompatibleThreadStateException
+import com.sun.jdi.Method
+import com.sun.jdi.ObjectCollectedException
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ThreadReference
+import com.sun.jdi.Value
+import com.sun.jdi.VMCannotBeModifiedException
+import com.sun.jdi.VMDisconnectedException
+import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IBreakpoint
-import com.sun.jdi.ThreadReference
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.ObjectCollectedException
-import org.eclipse.debug.core.DebugEvent
-import com.sun.jdi.Value
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.Method
-import org.scalaide.debug.internal.command.ScalaStepInto
-import org.scalaide.debug.internal.command.ScalaStepReturn
+import org.eclipse.debug.core.model.IStackFrame
+import org.eclipse.jdt.internal.debug.core.model.JDIStackFrame
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.JDIUtil._
-import scala.actors.Future
-import com.sun.jdi.ClassType
-import com.sun.jdi.VMCannotBeModifiedException
-import org.eclipse.debug.core.model.IStackFrame
-import com.sun.jdi.IncompatibleThreadStateException
+import org.scalaide.debug.internal.command.ScalaStepOver
+import org.scalaide.debug.internal.command.ScalaStep
+import org.scalaide.debug.internal.command.ScalaStepInto
+import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.logging.HasLogger
+import scala.actors.Future
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 class ThreadNotSuspendedException extends Exception
 
@@ -50,9 +51,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def canStepReturn: Boolean = suspended // TODO: need real logic
   override def isStepping: Boolean = ???
 
-  override def stepInto(): Unit = {
-    wrapJDIException("Exception while performing `step into`") { ScalaStepInto(stackFrames.head).step() }
-  }
+  override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
   override def stepOver(): Unit = {
     wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
   }
@@ -87,6 +86,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   override def getPriority: Int = ???
   override def getStackFrames: Array[IStackFrame] = stackFrames.toArray
+  final def getScalaStackFrames: List[ScalaStackFrame] = stackFrames
   override def getTopStackFrame: IStackFrame = stackFrames.headOption.getOrElse(null)
   override def hasStackFrames: Boolean = !stackFrames.isEmpty
 
@@ -139,6 +139,38 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
     processMethodInvocationResult(syncSend(companionActor, InvokeStaticMethod(classType, method, args.toList)))
   }
+
+  private def stepIntoFrame(stackFrame: => ScalaStackFrame): Unit =
+    wrapJDIException("Exception while performing `step into`") { ScalaStepInto(stackFrame).step() }
+
+  /**
+   * It's not possible to drop the bottom stack frame. Moreover all dropped frames and also
+   * the one below the target frame can't be native.
+   */
+  private[model] def canDropToFrame(frame: ScalaStackFrame): Boolean = {
+    val frames = stackFrames
+    val indexOfFrame = frames.indexOf(frame)
+
+    val atLeastLastButOne = frames.size >= indexOfFrame + 2
+    def notNative = !frames.take(indexOfFrame + 2).exists(_.isNative)
+    canPopFrames && atLeastLastButOne && notNative
+  }
+
+  private[model] def canPopFrames: Boolean = isSuspended && target.canPopFrames
+
+  private[model] def dropToFrame(frame: ScalaStackFrame): Unit = companionActor ! DropToFrame(frame)
+
+  /**
+   * Removes all top stack frames starting from a given one and performs StepInto to reach the given frame again.
+   * FOR THE COMPANION ACTOR ONLY.
+   */
+  private[model] def dropToFrameInternal(frame: ScalaStackFrame): Unit =
+    if (canDropToFrame(frame)) {
+      val frames = stackFrames
+      val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
+      threadRef.popFrames(frame.stackFrame)
+      stepIntoFrame(startFrameForStepInto)
+    }
 
   private def processMethodInvocationResult(res: Option[Any]): Value = res match {
     case Some(Right(null)) =>
@@ -219,6 +251,7 @@ private[model] object ScalaThreadActor {
   case class ResumeFromScala(step: Option[ScalaStep], eventDetail: Int)
   case class InvokeMethod(objectReference: ObjectReference, method: Method, args: List[Value])
   case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
+  case class DropToFrame(frame: ScalaStackFrame)
   case object TerminatedFromScala
 
   def apply(thread: ScalaThread): BaseDebuggerActor = {
@@ -249,6 +282,7 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       currentStep = step
       thread.resume(eventDetail)
       thread.threadRef.resume()
+    case DropToFrame(frame) => thread.dropToFrameInternal(frame)
     case InvokeMethod(objectReference, method, args) =>
       reply(
         if (!thread.isSuspended) {

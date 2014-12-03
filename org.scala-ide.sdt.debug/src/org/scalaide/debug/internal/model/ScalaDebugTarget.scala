@@ -370,6 +370,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine, lau
    */
   private[model] def getScalaThreads: List[ScalaThread] = threads
 
+  private[model] def canPopFrames: Boolean = running && virtualMachine.canPopFrames()
+
 }
 
 private[model] object ScalaDebugTargetActor {
