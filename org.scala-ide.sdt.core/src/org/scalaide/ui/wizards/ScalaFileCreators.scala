@@ -1,10 +1,10 @@
 package org.scalaide.ui.wizards
 
-import org.eclipse.core.resources.IFolder
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
-import org.scalaide.util.internal.Commons
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
+import org.scalaide.util.internal.Commons
 
 class ClassCreator extends ScalaFileCreator
 
@@ -36,7 +36,7 @@ class PackageObjectCreator extends ScalaFileCreator {
       case Some(e) => Left(Invalid(e))
       case _       => Right { f =>
         val fileName = fullyQualifiedType.replace('.', '/') + "/package.scala"
-        if (f.getFile(fileName).exists())
+        if (f.getFile(new Path(fileName)).exists())
           Invalid("File already exists")
         else
           Valid
@@ -44,9 +44,9 @@ class PackageObjectCreator extends ScalaFileCreator {
     }
   }
 
-  override def create(folder: IFolder, name: String): IFile = {
+  override def create(folder: IContainer, name: String): IFile = {
     val filePath = name.replace('.', '/')
-    folder.getFile(s"$filePath/package.scala")
+    folder.getFile(new Path(s"$filePath/package.scala"))
   }
 }
 

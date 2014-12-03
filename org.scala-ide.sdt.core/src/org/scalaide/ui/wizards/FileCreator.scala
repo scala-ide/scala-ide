@@ -1,5 +1,6 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
@@ -26,15 +27,19 @@ case class Invalid(errorMsg: String) extends Validation {
 trait FileCreator {
 
   /**
-   * Returns all the varibles that need to be filled into the associated
-   * template. The Map contains the name of the varibles that are associated
+   * Returns all the variables that need to be filled into the associated
+   * template. The Map contains the name of the variables that are associated
    * with their actual values.
    *
    * This method is called when a new file needs to be created and therefore the
    * template needs to be filled with the variables. Hence, `folder` is the
    * selected folder and `name` the file name that are filled in the wizard.
    */
-  def templateVariables(folder: IFolder, name: String): Map[String, String]
+  def templateVariables(folder: IContainer, name: String): Map[String, String]
+
+  @deprecated("Use the overloaded variant instead", "4.0")
+  final def templateVariables(folder: IFolder, name: String): Map[String, String] =
+    templateVariables(folder: IContainer, name)
 
   /**
    * Finds out if the file name that is inserted into the wizard is valid and
@@ -52,7 +57,11 @@ trait FileCreator {
    * because their implementations don't have to validate them and therefore can
    * crash in unexpected ways.
    */
-  def validateName(folder: IFolder, name: String): Validation
+  def validateName(folder: IContainer, name: String): Validation
+
+  @deprecated("Use the overloaded variant instead", "4.0")
+  final def validateName(folder: IFolder, name: String): Validation =
+    validateName(folder: IContainer, name)
 
   /**
    * Creates the path that points to the location where the wizard should create
@@ -65,7 +74,11 @@ trait FileCreator {
    * This method is guaranteed to be called not before [[validateName]] returns
    * a valid state.
    */
-  def create(folder: IFolder, name: String): IFile
+  def create(folder: IContainer, name: String): IFile
+
+  @deprecated("Use the overloaded variant instead", "4.0")
+  final def create(folder: IFolder, name: String): IFile =
+    create(folder: IContainer, name)
 
   /**
    * Creates a path that is shown when a new file wizard is created. This should
@@ -82,7 +95,11 @@ trait FileCreator {
    * typed, therefore it needs to contain all the information an user expects to
    * see.
    */
-  def completionEntries(folder: IFolder, name: String): Seq[String]
+  def completionEntries(folder: IContainer, name: String): Seq[String]
+
+  @deprecated("Use the overloaded variant instead", "4.0")
+  final def completionEntries(folder: IFolder, name: String): Seq[String] =
+    completionEntries(folder: IContainer, name)
 
   /**
    * When the new file wizard is created this controls if in case of an invalid
