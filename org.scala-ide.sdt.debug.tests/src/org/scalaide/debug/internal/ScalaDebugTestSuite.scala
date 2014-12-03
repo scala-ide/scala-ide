@@ -15,6 +15,8 @@ import org.scalaide.debug.internal.model.ScalaDebugTargetTest
 import org.scalaide.debug.internal.model.DebugTargetTerminationTest
 import org.scalaide.debug.internal.model.MethodClassifierUnitTest
 import org.scalaide.debug.internal.model.ScalaDebugCacheTest
+import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderTest
+import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderIntegrationTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -38,6 +40,8 @@ import org.scalaide.debug.internal.model.ScalaDebugCacheTest
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
     classOf[StackFrameVariableOfTreeFinderTest],
+    classOf[SimpleContentProposalProviderTest],
+    classOf[SimpleContentProposalProviderIntegrationTest],
     classOf[ExpressionsTestSuite]
     ))
 class ScalaDebugTestSuite

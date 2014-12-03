@@ -40,7 +40,8 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override val getModelIdentifier: String = ScalaDebugPlugin.id
+  // `ScalaDebugPlugin.id` calls some osgi and does classloading and we do not want to do it in tree view.
+  override lazy val getModelIdentifier: String = ScalaDebugPlugin.id
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
