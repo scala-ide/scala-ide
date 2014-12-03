@@ -6,7 +6,7 @@ import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.BaseDebuggerActor._
 import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.scalaide.debug.internal.preferences.DebuggerPreferences
+import org.scalaide.debug.internal.preferences.DebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.Location
@@ -214,7 +214,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
       || typeName.startsWith("scala.collection")
       || typeName.startsWith("scala.runtime")
       || method.isBridge()
-      || MethodClassifier.values.exists { flag => prefStore.getBoolean(DebuggerPreferences.BASE_FILTER + flag.toString) && MethodClassifier.is(flag, method) }
+      || MethodClassifier.values.exists { flag => prefStore.getBoolean(DebuggerPreferencePage.BASE_FILTER + flag.toString) && MethodClassifier.is(flag, method) }
       || (typeName.contains("$$anonfun$")) && !getCachedAnonFunction(method.declaringType).exists(_ == method))
 
     val opaqueMethod = hidden || method.isConstructor()
