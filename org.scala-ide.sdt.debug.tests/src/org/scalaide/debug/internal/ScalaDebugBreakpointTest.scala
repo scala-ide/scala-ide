@@ -186,7 +186,7 @@ class ScalaDebugBreakpointTest {
 
   /** Test disabling and re-enabling a breakpoint does work (class prepare events are still handled)  */
   @Test
-  def breakpointsDisbaleDoesNotInterfereWithLoadedClassesWhenTwoBreakpointsWatchTheSameClasses() {
+  def disabledBreakpointsDoNotInterfereWithLoadedClassesWhenTwoBreakpointsWatchTheSameClasses() {
     session = initDebugSession("Breakpoints")
     // both breakpoints watch the same class prepare events (are in the same method, but in different closures)
     val bp21 = session.addLineBreakpoint(BP_TYPENAME, 21)

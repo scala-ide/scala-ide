@@ -1,32 +1,31 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal
 
-import org.scalaide.debug.internal.model.ScalaThread
-import org.scalaide.debug.internal.model.ScalaStackFrame
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.model.ScalaDebugElement
-import org.scalaide.debug.internal.model.ScalaValue
-import org.eclipse.core.resources.ResourcesPlugin
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import org.eclipse.core.resources.IFile
-import org.eclipse.debug.core.ILaunchManager
-import org.eclipse.debug.core.IDebugEventSetListener
-import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IBreakpoint
-import org.eclipse.jdt.debug.core.JDIDebugModel
-import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
-import org.hamcrest.CoreMatchers._
-import org.hamcrest.Matcher
-import org.junit.Assert._
-import org.eclipse.debug.core.model.DebugElement
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
-import org.scalaide.logging.HasLogger
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.IDebugEventSetListener
 import org.eclipse.debug.core.ILaunchConfiguration
-import org.scalaide.debug.internal.breakpoints.BreakpointSupport
-import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.debug.core.ILaunchManager
+import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
+import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
+import org.eclipse.jdt.debug.core.JDIDebugModel
+import org.eclipse.jface.viewers.StructuredSelection
+import org.hamcrest.CoreMatchers._
 import org.junit.Assert
-import org.eclipse.debug.ui.contexts.DebugContextEvent
+import org.junit.Assert._
+import org.scalaide.core.testsetup.SDTTestUtils.waitUntil
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.model.ScalaValue
+import org.scalaide.logging.HasLogger
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
@@ -37,9 +36,9 @@ object ScalaDebugTestSession {
   val Noop = () => ()
 
   def addDebugEventListener(f: PartialFunction[DebugEvent, Unit]): IDebugEventSetListener = {
-    val debugEventListener= new IDebugEventSetListener {
+    val debugEventListener = new IDebugEventSetListener {
       def handleDebugEvents(events: Array[DebugEvent]) {
-        events.foreach(f orElse {case _ =>})
+        events.foreach(f orElse { case _ => })
       }
     }
     DebugPlugin.getDefault.addDebugEventListener(debugEventListener)
@@ -56,7 +55,7 @@ object ScalaDebugTestSession {
     apply(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 }
 
-class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) extends HasLogger {
+class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) extends HasLogger {
   // 60s should be enough even for Jenkins builds running under high-load
   // (increased from 10s)
   val TIMEOUT = 60000
@@ -65,6 +64,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     type State = Value
     val ACTION_REQUESTED, NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
   }
+
   import State._
 
   val debugEventListener = ScalaDebugTestSession.addDebugEventListener {
@@ -102,7 +102,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     this.synchronized {
       currentStackFrame = stackFrame
       val selection = new StructuredSelection(stackFrame)
-      ScalaDebugger.updateCurrentThreadAndStackFrame(selection)
+      ScalaDebugger.updateCurrentThread(selection)
       state = SUSPENDED
       logger.info("SUSPENDED at: %s:%d".format(stackFrame.getMethodFullName, stackFrame.getLineNumber))
       this.notify
@@ -140,22 +140,16 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
   /**
    * Add a breakpoint at the specified location,
    * start or launch the session,
-   * and wait until the application is suspended
-   */
-  def runToLine(typeName: String, breakpointLine: Int) {
-    runToLine(typeName, breakpointLine, ScalaDebugTestSession.Noop)
-  }
-
-  /**
-   * Add a breakpoint at the specified location,
-   * start or launch the session,
    * perform the additional action,
    * and wait until the application is suspended
    */
-  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T): T = {
+  def runToLine[T](typeName: String,
+    breakpointLine: Int,
+    additionalAction: () => T = ScalaDebugTestSession.Noop,
+    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
-    val breakpoint = addLineBreakpoint(typeName, breakpointLine)
+    val breakpoint = addLineBreakpoint(typeName, breakpointLine, suspendPolicy)
 
     if (state eq NOT_LAUNCHED) {
       launch()
@@ -177,8 +171,11 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
   /**
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
-  def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
+  def addLineBreakpoint(typeName: String,
+    breakpointLine: Int,
+    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): IJavaLineBreakpoint = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
+    breakpoint.setSuspendPolicy(suspendPolicy)
     waitForBreakpointsToBeEnabled(breakpoint)
     breakpoint
   }
@@ -298,9 +295,11 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
       }
     }
   }
+
   def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*) {
     breakpoint.foreach(waitForBreakpointToBe(_, true))
   }
+
   def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*) {
     breakpoint.foreach(waitForBreakpointToBe(_, false))
   }
@@ -329,7 +328,8 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
 
   // access data in the current stackframe
 
-  /** Return the current value of a local variable.
+  /**
+   * Return the current value of a local variable.
    */
   def getLocalVariable(name: String): ScalaValue = {
     assertEquals("Bad state before getLocalVariable", SUSPENDED, state)

@@ -1,10 +1,11 @@
 package org.scalaide.core.internal.jdt.model
 
-import java.util.{ HashMap => JHashMap }
-import org.scalaide.ui.ScalaImages
+import java.util.{HashMap => JHashMap}
+
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
+
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
@@ -12,14 +13,13 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.compiler.CharOperation
-import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.BinaryType
 import org.eclipse.jdt.internal.core.ClassFile
 import org.eclipse.jdt.internal.core.JavaModelStatus
 import org.eclipse.jdt.internal.core.PackageFragment
 import org.eclipse.jdt.internal.core.util.Util
-import org.scalaide.core.compiler.ISourceMap
 import org.scalaide.core.compiler.ScalaCompilationProblem
+import org.scalaide.ui.ScalaImages
 
 class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)
   extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {
@@ -90,22 +90,24 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def getPackage(): PackageFragment = parent
 
   def getPackageName() : Array[Array[Char]] = {
-    if (getPackage == null)
-      CharOperation.NO_CHAR_CHAR
-    else
-      Util.toCharArrays(getPackage.names)
+    if (getPackage == null) CharOperation.NO_CHAR_CHAR
+    else Util.toCharArrays(getPackage.names)
   }
 
   lazy val allTypes: Seq[IType] = {
-    getChildren().toList flatMap { elem: IJavaElement =>
-      if (elem.getElementType() == IJavaElement.TYPE) elem.asInstanceOf[IType] +: elem.asInstanceOf[IType].getTypes()
-      else Seq[IType]()
+    (this +: getChildren().toList) flatMap {
+      case sourceFile: ScalaClassFile =>
+        Seq(sourceFile.getType())
+      case typeElement: IType =>
+        typeElement +: typeElement.getTypes
+      case _ =>
+        Seq[IType]()
     }
   }
 
   class ScalaBinaryType(name: String) extends BinaryType(this, name) {
     lazy val mirror = {
-      allTypes.find(t => t.exists && (t.getElementName == name))
+      allTypes.find(t => t.getElementName == name)
     }
     override def exists = mirror.isDefined
   }

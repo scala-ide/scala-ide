@@ -48,7 +48,7 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
     try {
       // connect and create the debug session
       val virtualMachine = connector.attach(arguments)
-      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate(launch))
+      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate = allowTerminate(launch))
       target.attached() // tell the debug target to initialize
     } catch {
       case e: TimeoutException =>
