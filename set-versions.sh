@@ -47,11 +47,12 @@ setVersion $1
 
 (cd org.scala-ide.build-toolchain && setVersion $1)
 (cd org.scala-ide.sdt.build && setVersion $1)
+(cd org.scala-ide.p2-toolchain && setVersion $1)
 
 cat <<EOF
 !!!!
 !!!! Don't forget to manually update versions in:
-!!!!     <parent> tag in org.scala-ide.sdt.build and build-toolchain
+!!!!     <parent> tag in org.scala-ide.sdt.build, build-toolchain and p2-toolchain
 !!!!     org.scala-ide.sdt.feature/resources/*.xml
 !!!!     org.scala-ide.sdt.source.feature/resources/*.xml
 !!!!
