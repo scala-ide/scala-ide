@@ -1,5 +1,7 @@
 package org.scalaide.debug.internal.breakpoints
 
+import scala.language.implicitConversions
+
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.core.resources.IMarker
 

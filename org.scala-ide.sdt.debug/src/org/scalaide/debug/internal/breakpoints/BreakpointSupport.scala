@@ -1,35 +1,44 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.breakpoints
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
+import scala.util.Failure
+import scala.util.Success
+
+import org.eclipse.core.resources.IMarkerDelta
+import org.eclipse.debug.core.DebugEvent
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.model.IBreakpoint
+import org.eclipse.jdt.debug.core.IJavaBreakpoint
+import org.eclipse.jdt.internal.debug.core.breakpoints.JavaBreakpoint
+import org.eclipse.jface.dialogs.MessageDialog
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.expression.ExpressionManager
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IBreakpoint
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.ui.DisplayThread
+
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
+import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
-import org.eclipse.core.resources.IMarkerDelta
-import RichBreakpoint._
-import scala.util.control.Exception
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.request.InvalidRequestStateException
-import com.sun.jdi.request.ClassPrepareRequest
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.request.InvalidRequestStateException
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.model.ScalaDebugCache
-import org.eclipse.debug.core.DebugPlugin
+
+import RichBreakpoint.richBreakpoint
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
   final val ATTR_TYPE_NAME = "org.eclipse.jdt.debug.core.typeName"
 
-  /** Create the breakpoint support actor.
+  /**
+   * Create the breakpoint support actor.
    *
    *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence
    *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
@@ -41,11 +50,12 @@ private[debug] object BreakpointSupport {
 }
 
 private object BreakpointSupportActor {
+
   // specific events
   case class Changed(delta: IMarkerDelta)
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
-    val typeName= breakpoint.typeName
+    val typeName = breakpoint.typeName
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
@@ -62,14 +72,26 @@ private object BreakpointSupportActor {
     val requests = new ListBuffer[EventRequest]
 
     debugTarget.cache.getLoadedNestedTypes(typeName).foreach {
-        createBreakpointRequest(breakpoint, debugTarget, _).foreach { requests append _ }
+      createBreakpointRequest(breakpoint, debugTarget, _).foreach {
+        requests append _
+      }
     }
 
     requests.toSeq
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
-    JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget)
+
+    val suspendPolicy = breakpoint match {
+      case javaBreakPoint: JavaBreakpoint if javaBreakPoint.getSuspendPolicy == IJavaBreakpoint.SUSPEND_THREAD =>
+        EventRequest.SUSPEND_EVENT_THREAD
+      case javaBreakPoint: JavaBreakpoint if javaBreakPoint.getSuspendPolicy == IJavaBreakpoint.SUSPEND_VM =>
+        EventRequest.SUSPEND_ALL
+      case _ => //default suspend only current thread
+        EventRequest.SUSPEND_EVENT_THREAD
+    }
+
+    JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget, suspendPolicy)
   }
 }
 
@@ -80,10 +102,11 @@ private object BreakpointSupportActor {
  *  - the platform, when a breakpoint is changed (for instance, disabled)
  */
 private class BreakpointSupportActor private (
-    breakpoint: IBreakpoint,
-    debugTarget: ScalaDebugTarget,
-    typeName: String,
-    breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+  breakpoint: IBreakpoint,
+  debugTarget: ScalaDebugTarget,
+  typeName: String,
+  breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
+
   import BreakpointSupportActor.Changed
   import BreakpointSupportActor.createBreakpointRequest
 
@@ -92,7 +115,7 @@ private class BreakpointSupportActor private (
 
   private val eventDispatcher = debugTarget.eventDispatcher
 
-  override def postStart(): Unit =  {
+  override def postStart(): Unit = {
     breakpointRequests.foreach(listenForBreakpointRequest)
     updateBreakpointRequestState(isEnabled)
   }
@@ -105,7 +128,7 @@ private class BreakpointSupportActor private (
     eventDispatcher.setActorFor(this, request)
 
   private def updateBreakpointRequestState(enabled: Boolean): Unit = {
-    breakpointRequests.foreach (_.setEnabled(enabled))
+    breakpointRequests.foreach(_.setEnabled(enabled))
     requestsEnabled = enabled
   }
 
@@ -116,9 +139,28 @@ private class BreakpointSupportActor private (
       classPrepared(event.referenceType)
       reply(false)
     case event: BreakpointEvent =>
-      // JDI event triggered when a breakpoint is hit
-      breakpointHit(event.location, event.thread)
-      reply(true)
+      ExpressionManager.shouldSuspendVM(event, breakpoint, debugTarget) match {
+        case Success(true) =>
+          // JDI event triggered when a breakpoint is hit
+          breakpointHit(event.location, event.thread)
+          reply(true)
+        case Success(false) =>
+          reply(false)
+        case Failure(e: VMDisconnectedException) =>
+          // Ok, end of debugging
+          reply(false)
+        case Failure(e) =>
+          DisplayThread.asyncExec {
+            MessageDialog.openError(
+              SWTUtils.getShell,
+              "Error",
+              s"Error in conditional breakpoint:\n${e.getMessage}"
+            )
+          }
+          // JDI event triggered when a breakpoint is hit
+          breakpointHit(event.location, event.thread)
+          reply(true)
+      }
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
@@ -143,17 +185,19 @@ private class BreakpointSupportActor private (
     }
   }
 
-  /** React to changes in the breakpoint marker and enable/disable VM breakpoint requests accordingly.
+  /**
+   * React to changes in the breakpoint marker and enable/disable VM breakpoint requests accordingly.
    *
    *  @note ClassPrepare events are always enabled, since the breakpoint at the specified line
    *        can be installed *only* after/when the class is loaded, and that might happen while this
    *        breakpoint is disabled.
    */
   private def changed(delta: IMarkerDelta) {
-    if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
+    if (isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
   }
 
-  /** Create the line breakpoint for the newly loaded class.
+  /**
+   * Create the line breakpoint for the newly loaded class.
    */
   private def classPrepared(referenceType: ReferenceType) {
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)

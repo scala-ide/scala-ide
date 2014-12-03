@@ -1121,7 +1121,7 @@
          name="Toggle Implicits Display"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
-         id="org.scalaide.core.handler.RunSelection"
+         id="org.scalaide.core.handler.RunSelectionInInterpreter"
          name="Send Selection to Scala Interpreter"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1353,7 +1353,7 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
-       commandId="org.scalaide.core.handler.RunSelection"
+       commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>
@@ -1454,10 +1454,10 @@
           class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
           commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
     </handler>
-    <handler
-          class="org.scalaide.ui.internal.actions.RunSelection"
-          commandId="org.scalaide.core.handler.RunSelection">
-    </handler>
+	<handler
+		class="org.scalaide.ui.internal.actions.RunSelectionInInterpreter"
+		commandId="org.scalaide.core.handler.RunSelectionInInterpreter">
+	</handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1493,7 +1493,7 @@
                 style="toggle">
           </command>
           <command
-                commandId="org.scalaide.core.handler.RunSelection"
+                commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
                 disabledIcon="icons/full/dtool16/run_interpreter.gif"
                 icon="icons/full/etool16/run_interpreter.gif"
                 label="Run Selection in Scala Interpreter"
