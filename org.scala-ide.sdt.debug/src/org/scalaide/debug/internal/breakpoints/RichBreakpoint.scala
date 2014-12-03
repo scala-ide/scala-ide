@@ -3,6 +3,8 @@ package org.scalaide.debug.internal.breakpoints
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.core.resources.IMarker
 
+import scala.language.implicitConversions
+
 /** A decorater class for platform breakpoints, as used from Scala. */
 class RichBreakpoint(bp: IBreakpoint) {
   /** Return the typename of this breakpoint, or the empty string if unknown. */

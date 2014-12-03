@@ -15,8 +15,8 @@ import scala.reflect.NameTransformer
 
 object ScalaStackFrame {
 
-  def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
-    new ScalaStackFrame(thread, stackFrame)
+  def apply(thread: ScalaThread, stackFrame: StackFrame, index: Int = /*top frame*/ 0 ): ScalaStackFrame = {
+    new ScalaStackFrame(thread, stackFrame, index)
   }
 
   // regexp for JNI signature
@@ -79,7 +79,7 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame)
+class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame, val index: Int)
   extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
 

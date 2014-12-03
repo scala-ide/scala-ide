@@ -24,6 +24,7 @@ import com.sun.jdi.request.InvalidRequestStateException
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.model.ScalaDebugCache
 import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.jdt.debug.core.IJavaBreakpoint
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -69,7 +70,16 @@ private object BreakpointSupportActor {
   }
 
   private def createBreakpointRequest(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget, referenceType: ReferenceType): Option[BreakpointRequest] = {
-    JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget)
+    val suspendPolicy = breakpoint match {
+      case javaBreakPoint: IJavaBreakpoint if javaBreakPoint.getSuspendPolicy == IJavaBreakpoint.SUSPEND_THREAD =>
+        EventRequest.SUSPEND_EVENT_THREAD
+      case javaBreakPoint: IJavaBreakpoint if javaBreakPoint.getSuspendPolicy == IJavaBreakpoint.SUSPEND_VM =>
+        EventRequest.SUSPEND_ALL
+      case _ => //default suspend only current thread
+        EventRequest.SUSPEND_EVENT_THREAD
+    }
+
+    JdiRequestFactory.createBreakpointRequest(referenceType, breakpoint.lineNumber, debugTarget, suspendPolicy)
   }
 }
 

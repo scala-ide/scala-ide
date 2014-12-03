@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.model
 
 import org.scalaide.debug.internal.JDIUtil
@@ -51,7 +54,7 @@ object JdiRequestFactory {
   /**
    * create a line breakpoint at the given line, if available
    */
-  def createBreakpointRequest(referenceType: ReferenceType, lineNumber: Int, debugTarget: ScalaDebugTarget): Option[BreakpointRequest] = {
+  def createBreakpointRequest(referenceType: ReferenceType, lineNumber: Int, debugTarget: ScalaDebugTarget, suspendPolicy: Int): Option[BreakpointRequest] = {
     val locations = JDIUtil.referenceTypeToLocations(referenceType)
     // TODO: is it possible to have the same line number in multiple locations? need test case
     // see #1001370
@@ -59,7 +62,7 @@ object JdiRequestFactory {
     line.map {
       l =>
         val breakpointRequest = debugTarget.virtualMachine.eventRequestManager.createBreakpointRequest(l)
-        breakpointRequest.setSuspendPolicy(EventRequest.SUSPEND_EVENT_THREAD)
+        breakpointRequest.setSuspendPolicy(suspendPolicy)
         breakpointRequest
     }
   }

@@ -40,7 +40,8 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val threadRef: ThreadReference) extends ScalaDebugElement(target) with IThread with HasLogger {
+abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
+  extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
 
@@ -63,7 +64,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
 
   override def canResume: Boolean = suspended // TODO: need real logic
   override def canSuspend: Boolean = !suspended // TODO: need real logic
-  override def isSuspended: Boolean = suspended // TODO: need real logic
+  override def isSuspended: Boolean = util.Try(threadRef.isSuspended).getOrElse(false)
 
   override def resume(): Unit = resumeFromScala(DebugEvent.CLIENT_REQUEST)
   override def suspend(): Unit = {
@@ -87,7 +88,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   override def getPriority: Int = ???
   override def getStackFrames: Array[IStackFrame] = stackFrames.toArray
   final def getScalaStackFrames: List[ScalaStackFrame] = stackFrames
-  override def getTopStackFrame: IStackFrame = stackFrames.headOption.getOrElse(null)
+  override def getTopStackFrame: ScalaStackFrame = stackFrames.headOption.getOrElse(null)
   override def hasStackFrames: Boolean = !stackFrames.isEmpty
 
   // ----
@@ -172,6 +173,8 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
       stepIntoFrame(startFrameForStepInto)
     }
 
+  def refreshStackFrames(): Unit = companionActor ! RebindStackFrames
+
   private def processMethodInvocationResult(res: Option[Any]): Value = res match {
     case Some(Right(null)) =>
       null
@@ -207,7 +210,9 @@ abstract class ScalaThread private (target: ScalaDebugTarget, private[model] val
   private[model] def suspend(eventDetail: Int) = {
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
-      stackFrames = threadRef.frames.asScala.map(ScalaStackFrame(this, _)).toList
+      stackFrames = threadRef.frames.asScala.zipWithIndex.map { case (frame, index) =>
+        ScalaStackFrame(this, frame, index)
+      }(collection.breakOut)
       suspended = true
       fireSuspendEvent(eventDetail)
     }
@@ -253,6 +258,7 @@ private[model] object ScalaThreadActor {
   case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
   case class DropToFrame(frame: ScalaStackFrame)
   case object TerminatedFromScala
+  case object RebindStackFrames
 
   def apply(thread: ScalaThread): BaseDebuggerActor = {
     val actor = new ScalaThreadActor(thread)
@@ -282,7 +288,10 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       currentStep = step
       thread.resume(eventDetail)
       thread.threadRef.resume()
-    case DropToFrame(frame) => thread.dropToFrameInternal(frame)
+    case DropToFrame(frame) =>
+      thread.dropToFrameInternal(frame)
+    case RebindStackFrames =>
+      if (thread.isSuspended) thread.rebindScalaStackFrames()
     case InvokeMethod(objectReference, method, args) =>
       reply(
         if (!thread.isSuspended) {
