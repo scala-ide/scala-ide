@@ -5,6 +5,7 @@ package org.scalaide.debug.internal.expression
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
+import org.scalaide.debug.internal.expression.conditional.ConditionalBreakpointsTest
 import org.scalaide.debug.internal.expression.features.FeaturesTestSuite
 import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
 import org.scalaide.debug.internal.expression.proxies.primitives.PrimitivesOperationsTestSuite
@@ -19,5 +20,6 @@ import org.scalaide.debug.internal.expression.proxies.primitives.PrimitivesOpera
     classOf[FeaturesTestSuite],
     classOf[PrimitivesOperationsTestSuite],
     classOf[DifferentStackFramesTest],
-    classOf[PhasesTestSuite]))
+    classOf[PhasesTestSuite],
+    classOf[ConditionalBreakpointsTest]))
 class ExpressionsTestSuite

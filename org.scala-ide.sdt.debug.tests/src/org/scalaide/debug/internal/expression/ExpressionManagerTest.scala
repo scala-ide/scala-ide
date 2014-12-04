@@ -38,6 +38,32 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
     assertEquals(expectedResult, result)
   }
 
+  /**
+   * Executes condition using [[org.scalaide.debug.internal.expression.ExpressionManager]] and checks result.
+   * Differs from `withExpressionManager` in calling `ExpressionManager.evaluateCondition` instead of `ExpressionManager.compute`.
+   *
+   * @param code to compile and run
+   * @param expectedResult `Some(<boolean that should be returned>)` or `None` if error should be returned
+   * @param expectedError `Some(<string that should exist in result>)` or `None` if correct result should be returned
+   */
+  private def evalConditionWithManager(code: String, expectedResult: Option[Boolean], expectedError: Option[String]): Unit = {
+    var result: Option[Boolean] = None
+
+    var error: String = null
+
+    val location = companion.session.currentStackFrame.stackFrame.location
+    val classPath = companion.session.debugTarget.classPath
+    val threadRef = companion.session.currentStackFrame.thread.threadRef
+
+    ExpressionManager.evaluateCondition(code, classPath, threadRef, location) match {
+      case Success(shouldStop) => result = Some(shouldStop)
+      case Failure(exception) => error = exception.getMessage
+    }
+
+    expectedError.foreach(expected => assertTrue(s"'$error' does not contain '$expected'", error.contains(expected)))
+    assertEquals(expectedResult, result)
+  }
+
   @Test
   def testDisplayNullResult(): Unit = withExpressionManager(
     code = "null",
@@ -78,7 +104,19 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
     expectedResult = None)
 
   @Test
+  def testDisplayInvalidConditionError(): Unit = evalConditionWithManager(
+    code = "1 === 2",
+    expectedError = Some(ExpressionException.reflectiveCompilationFailureMessage("")),
+    expectedResult = None)
+
+  @Test
   def testDisplayInvalidExpressionErrorWithTypeIssue(): Unit = withExpressionManager(
+    code = "List.alaString",
+    expectedError = Some(ExpressionException.reflectiveCompilationFailureMessage("")),
+    expectedResult = None)
+
+  @Test
+  def testDisplayInvalidConditionErrorWithTypeIssue(): Unit = evalConditionWithManager(
     code = "List.alaString",
     expectedError = Some(ExpressionException.reflectiveCompilationFailureMessage("")),
     expectedResult = None)
@@ -93,6 +131,24 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
   def testDisplayIllegalNothingTypeInferred(): Unit = withExpressionManager(
     code = "None.get",
     expectedError = Some(ExpressionException.nothingTypeInferredMessage),
+    expectedResult = None)
+
+  @Test
+  def testDisplayIllegalNothingTypeInferredInCondition(): Unit = evalConditionWithManager(
+    code = "None.get",
+    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
+    expectedResult = None)
+
+  @Test
+  def testDisplayMessageForLambdaWithoutInferredTypeInCondition(): Unit = evalConditionWithManager(
+    code = "list.map(_ - 1)",
+    expectedError = Some(ExpressionException.noBooleanJdiProxyExceptionMessage("scala.collection.immutable.$colon$colon")),
+    expectedResult = None)
+
+  @Test
+  def testEqualsOnNonexistingField(): Unit = evalConditionWithManager(
+    code = "uuula == 1",
+    expectedError = Some(ExpressionException.notExistingField("uuula")),
     expectedResult = None)
 
 }

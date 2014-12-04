@@ -142,14 +142,21 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
    * start or launch the session,
    * perform the additional action,
    * and wait until the application is suspended
+   *
+   * @param conditionContext condition context represents condition and expected condition evaluation result (works with single visit breakpoints as there's only one flag for expected result)
    */
   def runToLine[T](typeName: String,
     breakpointLine: Int,
     additionalAction: () => T = ScalaDebugTestSession.Noop,
+    conditionContext: Option[ConditionContext] = None,
     suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine, suspendPolicy)
+    conditionContext.foreach { c =>
+      breakpoint.setConditionEnabled(true)
+      breakpoint.setCondition(c.condition)
+    }
 
     if (state eq NOT_LAUNCHED) {
       launch()
@@ -163,9 +170,23 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     waitUntilSuspended
     removeBreakpoint(breakpoint)
 
-    assertEquals("Bad state after runToBreakpoint", SUSPENDED, state)
+    val expectedState = getExpectedState(conditionContext)
+    assertEquals(s"Bad state after runToBreakpoint(typeName = $typeName, line = $breakpointLine)", expectedState, state)
 
     actionResult
+  }
+
+  /**
+   * When breakpoint condition is set, but should evaluate to false `TERMINATED` state is expected, `SUSPENDED` otherwise
+   * @return expected state
+   */
+  private def getExpectedState(conditionContext: Option[ConditionContext]): State.Value = {
+    val shouldBeSuspended = conditionContext.forall(_.shouldSuspend)
+    if (shouldBeSuspended) {
+      SUSPENDED
+    } else {
+      TERMINATED
+    }
   }
 
   /**
