@@ -7,6 +7,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.scalaide.debug.internal.expression.features.FeaturesTestSuite
 import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitivesOperationsTestSuite
 
 /**
  * Junit test suite for the Scala debugger.
@@ -16,6 +17,7 @@ import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
   Array(
     classOf[ExpressionManagerTest],
     classOf[FeaturesTestSuite],
+    classOf[PrimitivesOperationsTestSuite],
     classOf[DifferentStackFramesTest],
     classOf[PhasesTestSuite]))
 class ExpressionsTestSuite
