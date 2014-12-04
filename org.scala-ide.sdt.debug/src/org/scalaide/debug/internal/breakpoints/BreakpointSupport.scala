@@ -1,30 +1,37 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.breakpoints
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
+import scala.util.Failure
+import scala.util.Success
+
+import org.eclipse.core.resources.IMarkerDelta
+import org.eclipse.debug.core.DebugEvent
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.model.IBreakpoint
+import org.eclipse.jdt.debug.core.IJavaBreakpoint
+import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
+import org.eclipse.jface.dialogs.MessageDialog
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.expression.ExpressionManager
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IBreakpoint
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.ui.DisplayThread
+
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
+import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
-import org.eclipse.core.resources.IMarkerDelta
-import RichBreakpoint._
-import scala.util.control.Exception
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.request.InvalidRequestStateException
-import com.sun.jdi.request.ClassPrepareRequest
-import com.sun.jdi.VMDisconnectedException
-import com.sun.jdi.request.InvalidRequestStateException
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.model.ScalaDebugCache
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.jdt.debug.core.IJavaBreakpoint
+
+import RichBreakpoint.richBreakpoint
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -125,10 +132,12 @@ private class BreakpointSupportActor private (
       // JDI event triggered when a class is loaded
       classPrepared(event.referenceType)
       reply(false)
-    case event: BreakpointEvent =>
-      // JDI event triggered when a breakpoint is hit
-      breakpointHit(event.location, event.thread)
-      reply(true)
+    case event: BreakpointEvent => breakpoint match {
+      case lineBreakpoint: JavaLineBreakpoint =>
+        handleBreakpointEvent(event, lineBreakpoint)
+      case other =>
+        Failure(new IllegalArgumentException(s"Unknown breakpoint type: $other"))
+    }
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
@@ -136,6 +145,43 @@ private class BreakpointSupportActor private (
       reply(None)
     case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
       reply(requestsEnabled)
+  }
+
+  private def handleBreakpointEvent(event: BreakpointEvent, lineBreakpoint: JavaLineBreakpoint): Unit = {
+    val condition = getCondition(lineBreakpoint)
+    val location = event.location()
+    val thread = event.thread()
+    ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
+      case Success(true) =>
+        // JDI event triggered when a breakpoint is hit
+        breakpointHit(event.location, event.thread)
+        reply(true)
+      case Success(false) =>
+        reply(false)
+      case Failure(e: VMDisconnectedException) =>
+        // Ok, end of debugging
+        reply(false)
+      case Failure(e) =>
+        DisplayThread.asyncExec {
+          MessageDialog.openError(
+            SWTUtils.getShell,
+            "Error",
+            s"Error in conditional breakpoint:\n${e.getMessage}")
+        }
+        // JDI event triggered when a breakpoint is hit
+        breakpointHit(event.location, event.thread)
+        reply(true)
+    }
+  }
+
+  /**
+   * Extracts condition from breakpoint.
+   * Treats `null` condition and whitespace-only condition as empty.
+   */
+  private def getCondition(lineBreakpoint: JavaLineBreakpoint): Option[String] = {
+    val condition = lineBreakpoint.getCondition
+    def isConditionNonEmpty = lineBreakpoint.hasCondition && condition != null && !condition.trim.isEmpty
+    if (isConditionNonEmpty) Some(condition) else None
   }
 
   /**

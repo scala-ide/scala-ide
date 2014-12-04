@@ -3,9 +3,6 @@
  */
 package org.scalaide.debug.internal.expression
 
-import java.io.PrintWriter
-import java.io.StringWriter
-
 import scala.tools.reflect.ToolBoxError
 import scala.util.Failure
 import scala.util.Success
@@ -85,10 +82,13 @@ trait ExpressionManager extends HasLogger {
   }
 
   /**
-   * Computes an expression and runs appropriate callback.
+   * Computes an expression.
+   *
    * @param exp expression to evaluate
+   * @param monitor progress monitor for user interface
+   * @return see [[org.scalaide.debug.internal.expression.ExpressionEvaluatorResult]]
    */
-  def compute(exp: String, monitor: ProgressMonitor = NullProgressMonitor): ExpressionEvaluatorResult = {
+  final def compute(exp: String, monitor: ProgressMonitor = NullProgressMonitor): ExpressionEvaluatorResult = {
     val debugNotRunning = "Expression evaluation works only when debug is running and jvm is suspended"
     val emptyCode = "Expression is empty"
 
@@ -134,6 +134,44 @@ trait ExpressionManager extends HasLogger {
           }
         case None => EvaluationFailure(debugNotRunning)
       }
+  }
+
+  /**
+   * Checks for given breakpoint if VM should be suspended.
+   *
+   * @param condition to evaluate
+   * @param location of condition in code
+   * @param thread on which to evaluate
+   * @param classPath of project which is debugged
+   * @return Success(should vm be suspended) or Failure(reason why evaluation failed)
+   */
+  final def shouldSuspendVM(condition: Option[String],
+    location: Location,
+    thread: ThreadReference,
+    classPath: Option[Seq[String]]): Try[Boolean] = condition match {
+    case Some(condition) =>
+      evaluateCondition(condition, classPath, thread, location)
+    case None =>
+      Success(!EvaluationStatus.isInProgress)
+  }
+
+  private[expression] def evaluateCondition(
+    condition: String,
+    classPath: Option[Seq[String]],
+    thread: ThreadReference,
+    location: Location): Try[Boolean] = {
+
+    val conditionDebugState = new DebugState {
+      override def currentThread() = thread
+
+      override def currentFrame() = thread.frame(0)
+    }
+
+    val evaluator = new JdiExpressionEvaluator(classPath, debugState = conditionDebugState)
+    val context = evaluator.createContext()
+    val result = new ConditionManager().checkCondition(condition, location)(
+      evaluator.compileExpression(context))(_.apply(context))
+    recoverFromErrors(result, context)
   }
 
   object NonexisitngFieldEqualError {
