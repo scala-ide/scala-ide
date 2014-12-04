@@ -29,8 +29,8 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
 
         val typed = askTypeAt(pos).getOption()
 
-        val symsOpt = compiler.asyncExec {
-          typed map {
+        val symsOpt: Option[List[(Symbol,String)]] = compiler.asyncExec {
+          val targetsOpt = typed map {
             case Import(expr, sels) =>
               if (expr.pos.includes(pos)) {
                 @annotation.tailrec
@@ -54,11 +54,16 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
             case st if st.symbol ne null                          => List(st.symbol)
             case _                                                => List()
           } map (_.filterNot{ sym => sym == NoSymbol || sym.hasPackageFlag || sym.isJavaDefined })
-        }.getOption().flatten
+
+          for {
+            targets <- targetsOpt.toList
+            target <- targets
+          } yield (target -> target.toString)
+        }.getOption()
 
         symsOpt map { syms =>
-          syms flatMap { sym =>
-             compiler.mkHyperlink(sym, s"Open Declaration (${sym.toString})", wordRegion, icu.scalaProject.javaProject)
+          syms flatMap {
+            case (sym, symName) => compiler.mkHyperlink(sym, s"Open Declaration (${symName})", wordRegion, icu.scalaProject.javaProject).toList
           }
         }
       }
