@@ -1,8 +1,10 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
+
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
@@ -40,28 +42,28 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
+import org.scalaide.core.internal.formatter.FormatterPreferences.RichFormatterPreference
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.refactoring.internal.RefactoringMenu
 import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
+import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.actions
-import org.scalaide.ui.internal.editor.autoedits._
+import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.Utils
-import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
 import org.scalaide.util.ui.DisplayThread
-import org.scalaide.ui.editor.hover.IScalaHover
-import org.eclipse.jdt.internal.ui.actions.CopyQualifiedNameAction
-import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds
-import org.eclipse.jdt.internal.ui.javaeditor.IJavaEditorActionConstants
-import org.scalaide.ui.internal.actions.ScalaCopyQualifiedNameAction
+
+import scalariform.formatter.preferences.IndentSpaces
+import scalariform.formatter.preferences.IndentWithTabs
 
 class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
@@ -167,12 +169,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
     openAction.setActionDefinitionId(IJavaEditorActionDefinitionIds.OPEN_EDITOR)
     setAction("OpenEditor", openAction)
-
-    installScalaAwareCopyQualifiedNameAction()
-  }
-
-  private def installScalaAwareCopyQualifiedNameAction() {
-    setAction(IJavaEditorActionConstants.COPY_QUALIFIED_NAME, new ScalaCopyQualifiedNameAction(this))
   }
 
   /**
