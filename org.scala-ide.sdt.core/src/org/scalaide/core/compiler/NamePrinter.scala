@@ -38,113 +38,106 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
     }.flatten
   }
 
-  private def qualifiedName(loc: Location, compiler: IScalaPresentationCompiler)(t: compiler.Tree): Option[String] = {
-    val resp = compiler.asyncExec(qualifiedNameImpl(loc, compiler)(t))
+  private def qualifiedName(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
+    val resp = comp.asyncExec(qualifiedNameImpl(loc, comp)(t))
     resp.getOption().flatten
   }
 
-  private def qualifiedNameImplOld(loc: Location, c: IScalaPresentationCompiler)(t: c.Tree): Option[String] = {
-    val declPrinter = new DeclarationNamePrinter {
-      val compiler: c.type = c
+  private def qualifiedNameImpl(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
+    def qualifiedNameImplPrefix(loc: Location, t: comp.Tree) = {
+      Option(comp.enclosingMethd(loc.src, loc.offset)) match {
+        case Some(encMethod) =>
+          if (t.pos == encMethod.pos) {
+            ""
+          } else {
+            qualifiedNameImpl(loc, comp)(encMethod).map(_ + ".").getOrElse("")
+          }
+        case _ => ""
+      }
     }
 
-    Option(t.symbol).map(declPrinter.defString(_, showKind = false)())
-  }
+    def importDefStr(loc: Location, tree: comp.Tree, selectors: List[comp.ImportSelector]) = {
+      def isRelevant(selector: comp.ImportSelector) = {
+        selector.name != comp.nme.WILDCARD &&
+          selector.name == selector.rename
+      }
 
-  private def qualifiedNameImpl(loc: Location, compiler: IScalaPresentationCompiler)(t: compiler.Tree): Option[String] = {
-    if (t.symbol.isInstanceOf[compiler.NoSymbol])
+      qualifiedName(loc: Location, comp)(tree).map { prefix =>
+        val suffix = selectors match {
+          case List(selector) if isRelevant(selector) => "." + selector.name.toString
+          case _ => ""
+        }
+        prefix + suffix
+      }
+    }
+
+    def symbolName(symbol: comp.Symbol) = {
+      if (symbol.isParameter)
+        shortName(symbol.name)
+      else
+        symbol.fullName
+    }
+
+    def vparamssStr(vparamss: List[List[comp.ValDef]]) = {
+      if (vparamss.isEmpty) {
+        ""
+      } else {
+        vparamss.map(vparamsStr(_)).mkString("")
+      }
+    }
+
+    def vparamsStr(vparams: List[comp.ValDef]) = {
+      "(" + vparams.map(vparmStr(_)).mkString(", ") + ")"
+    }
+
+    def vparmStr(valDef: comp.ValDef) = {
+      val name = valDef.name
+      val tpt = valDef.tpt
+
+      val declPrinter = new DeclarationNamePrinter {
+        val compiler: comp.type = comp
+      }
+
+      name.toString + ": " + declPrinter.showType(tpt.tpe)
+    }
+
+    def tparamsStr(tparams: List[comp.TypeDef]) = {
+      if (tparams.isEmpty) {
+        ""
+      } else {
+        "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
+      }
+    }
+
+    def tparamStr(tparam: comp.TypeDef) = {
+      shortName(tparam.name)
+    }
+
+    def shortName(name: comp.Name) = {
+      val fullName = name.toString
+      fullName.split(".").lastOption.getOrElse(fullName)
+    }
+
+    if (t.symbol.isInstanceOf[comp.NoSymbol])
       None
     else {
       val (name, qualify) = t match {
-        case compiler.Select(qualifier, name) =>
-          (qualifiedNameImpl(loc, compiler)(qualifier).map(_ + "." + name.toString), false)
-        case defDef: compiler.DefDef =>
-          (Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(compiler)(defDef.vparamss)), true)
-        case classDef: compiler.ClassDef =>
+        case comp.Select(qualifier, name) =>
+          (qualifiedNameImpl(loc, comp)(qualifier).map(_ + "." + name.toString), false)
+        case defDef: comp.DefDef =>
+          (Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
+        case classDef: comp.ClassDef =>
           (Some(classDef.symbol.fullName + tparamsStr(classDef.tparams)), false)
-        case valDef: compiler.ValDef => (Some(valDef.symbol.fullName), true)
-        case compiler.Import(tree, selectors) => (importDefStr(loc, compiler)(tree, selectors), false)
-        case compiler.Ident(name: compiler.TypeName) => (Some(shortName(name)), true)
+        case valDef: comp.ValDef => (Some(valDef.symbol.fullName), true)
+        case comp.Import(tree, selectors) => (importDefStr(loc, tree, selectors), false)
+        case comp.Ident(name: comp.TypeName) => (Some(shortName(name)), true)
         case _ =>
           (Option(t.symbol).map(symbolName(_)), true)
       }
 
-      val prefix = if (qualify) qualifiedNameImplPrefix(loc, compiler)(t) else ""
+      val prefix = if (qualify) qualifiedNameImplPrefix(loc, t) else ""
       name.map(prefix + _)
     }
   }
 
-  private def qualifiedNameImplPrefix(loc: Location, compiler: IScalaPresentationCompiler)(t: compiler.Tree) = {
-    Option(compiler.enclosingMethd(loc.src, loc.offset)) match {
-      case Some(encMethod) =>
-        if (t.pos == encMethod.pos) {
-          ""
-        } else {
-          qualifiedNameImpl(loc, compiler)(encMethod).map(_ + ".").getOrElse("")
-        }
-      case _ => ""
-    }
-  }
-
-  private def importDefStr(loc: Location, compiler: IScalaPresentationCompiler)(tree: compiler.Tree, selectors: List[compiler.ImportSelector]) = {
-    def isRelevant(selector: compiler.ImportSelector) = {
-      selector.name != compiler.nme.WILDCARD &&
-      selector.name == selector.rename
-    }
-
-    qualifiedName(loc: Location, compiler)(tree).map { prefix =>
-      val suffix = selectors match {
-        case List(selector) if isRelevant(selector) => "." + selector.name.toString
-        case _ => ""
-      }
-      prefix + suffix
-    }
-  }
-
-  private def symbolName(symbol: Global#Symbol) = {
-    if (symbol.isParameter)
-      shortName(symbol.name)
-    else
-      symbol.fullName
-  }
-
-  private def vparamssStr(compiler: IScalaPresentationCompiler)(vparamss: List[List[compiler.ValDef]]) = {
-    if (vparamss.isEmpty) {
-      ""
-    } else {
-      vparamss.map(vparamsStr(compiler)(_)).mkString("")
-    }
-  }
-
-  private def vparamsStr(compiler: IScalaPresentationCompiler)(vparams: List[compiler.ValDef]) = {
-    "(" + vparams.map(vparmStr(compiler)(_)).mkString(", ") + ")"
-  }
-
-  private def vparmStr(comp: IScalaPresentationCompiler)(valDef: comp.ValDef) = {
-    val name = valDef.name
-    val tpt = valDef.tpt
-
-    val declPrinter = new DeclarationNamePrinter {
-      val compiler: comp.type = comp
-    }
-
-    name.toString + ": " + declPrinter.showType(tpt.tpe)
-  }
-
-  private def tparamsStr(tparams: List[Global#TypeDef]) = {
-    if (tparams.isEmpty) {
-      ""
-    } else {
-      "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
-    }
-  }
-
-  private def tparamStr(tparam: Global#TypeDef) = {
-    shortName(tparam.name)
-  }
-
-  private def shortName(name: Global#Name) = {
-    val fullName = name.toString
-    fullName.split(".").lastOption.getOrElse(fullName)
-  }
 }
