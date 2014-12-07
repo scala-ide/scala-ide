@@ -118,6 +118,10 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       fullName.split(".").lastOption.getOrElse(fullName)
     }
 
+    def identStr(ident: comp.Ident) = {
+      ident.symbol.fullName
+    }
+
     if (t.symbol.isInstanceOf[comp.NoSymbol])
       None
     else {
@@ -130,7 +134,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
           (Some(classDef.symbol.fullName + tparamsStr(classDef.tparams)), false)
         case valDef: comp.ValDef => (Some(valDef.symbol.fullName), true)
         case comp.Import(tree, selectors) => (importDefStr(loc, tree, selectors), false)
-        case comp.Ident(name: comp.TypeName) => (Some(shortName(name)), true)
+        case ident @ comp.Ident(_: comp.TypeName) => (Some(identStr(ident)), false)
         case _ =>
           (Option(t.symbol).map(symbolName(_)), true)
       }
