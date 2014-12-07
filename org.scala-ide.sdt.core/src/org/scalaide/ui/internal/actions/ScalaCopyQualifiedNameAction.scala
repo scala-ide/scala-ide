@@ -2,7 +2,6 @@ package org.scalaide.ui.internal.actions
 
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.actions.CopyQualifiedNameAction
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWTError
 import org.eclipse.swt.dnd.Clipboard
@@ -15,7 +14,7 @@ import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 /**
  * A Scala-aware replacement for CopyQualifiedNameAction.
  */
-class ScalaCopyQualifiedNameAction(editor: CompilationUnitEditor with ScalaCompilationUnitEditor) extends CopyQualifiedNameAction(editor) {
+class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends CopyQualifiedNameAction(editor) {
 
   override def run() {
     val qname = {
