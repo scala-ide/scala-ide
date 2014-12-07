@@ -185,6 +185,24 @@ class NamePrinterTest {
       "MethodParamOnUse.method(param: Int).param")
   }
 
+  @Test
+  def testWithFunctionArgs() {
+    testQnameWith(
+        """|class FunctionArgs {
+           |  def method/**/(f: (Int, String) => Long): Long = f(42, "42")
+           |}""",
+         "FunctionArgs.method(f: (Int, String) => Long)")
+  }
+
+  @Test
+  def testWithByNameArg() {
+    testQnameWith(
+        """|class ByNameArg {
+           |  def method/**/(f: => Long): Long = f
+           |}""",
+         "ByNameArg.method(f: => Long)")
+  }
+
   private def testQnameWith(input: String, expected: Option[String]) {
     val source = input.stripMargin
     val cu = mkScalaCompilationUnit(source)
