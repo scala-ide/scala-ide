@@ -44,15 +44,24 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
   }
 
   private def qualifiedNameImpl(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
+    def enclosingMethod(currentTree: comp.Tree, loc: Location) = {
+      def isEnclosingMethod(t: comp.Tree) = {
+        if (t.isInstanceOf[comp.DefDef]) {
+          t.pos.properlyIncludes(currentTree.pos)
+        } else {
+          false
+        }
+      }
+
+      comp.askLoadedTyped(loc.src, true).getOption().map { fullTree =>
+        comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingMethod)
+      }
+    }
+
     def qualifiedNameImplPrefix(loc: Location, t: comp.Tree) = {
-      Option(comp.enclosingMethd(loc.src, loc.offset)) match {
-        case Some(encMethod) =>
-          if (t.pos == encMethod.pos) {
-            ""
-          } else {
-            qualifiedNameImpl(loc, comp)(encMethod).map(_ + ".").getOrElse("")
-          }
-        case _ => ""
+      enclosingMethod(t, loc) match {
+        case Some(comp.EmptyTree) | None => ""
+        case Some(encMethod) => qualifiedNameImpl(loc, comp)(encMethod).map(_ + ".").getOrElse("")
       }
     }
 
@@ -119,24 +128,51 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
     }
 
     def identStr(ident: comp.Ident) = {
-      ident.symbol.fullName
+      ident.name match {
+        case _: comp.TypeName => ident.symbol.fullName
+        case _ => ident.symbol.nameString
+      }
+    }
+
+    def valDefStr(valDef: comp.ValDef) = {
+      if (valDef.mods.isParamAccessor)
+        valDef.symbol.fullName
+      else
+        valDef.symbol.nameString
+    }
+
+    def classDefStr(classDef: comp.ClassDef) = {
+      val className = {
+        if (classDef.symbol.isLocalToBlock)
+          classDef.symbol.nameString
+        else
+          classDef.symbol.fullName
+      }
+      className + tparamsStr(classDef.tparams)
+    }
+
+    def defDefStr(defDef: comp.DefDef) = {
+      val symName = {
+        if (defDef.symbol.isLocalToBlock)
+          defDef.symbol.nameString
+        else
+          defDef.symbol.fullName
+      }
+
+      symName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)
     }
 
     if (t.symbol.isInstanceOf[comp.NoSymbol])
       None
     else {
       val (name, qualify) = t match {
-        case comp.Select(qualifier, name) =>
-          (qualifiedNameImpl(loc, comp)(qualifier).map(_ + "." + name.toString), false)
-        case defDef: comp.DefDef =>
-          (Some(defDef.symbol.fullName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
-        case classDef: comp.ClassDef =>
-          (Some(classDef.symbol.fullName + tparamsStr(classDef.tparams)), false)
-        case valDef: comp.ValDef => (Some(valDef.symbol.fullName), true)
+        case comp.Select(qualifier, name) => (Some(t.symbol.fullName), false)
+        case defDef: comp.DefDef => (Some(defDefStr(defDef)), true)
+        case classDef: comp.ClassDef => (Some(classDefStr(classDef)), true)
+        case valDef: comp.ValDef => (Some(valDefStr(valDef)), valDef.mods.isParameter)
         case comp.Import(tree, selectors) => (importDefStr(loc, tree, selectors), false)
-        case ident @ comp.Ident(_: comp.TypeName) => (Some(identStr(ident)), false)
-        case _ =>
-          (Option(t.symbol).map(symbolName(_)), true)
+        case ident: comp.Ident => (Some(identStr(ident)), true)
+        case _ => (Option(t.symbol).map(symbolName(_)), true)
       }
 
       val prefix = if (qualify) qualifiedNameImplPrefix(loc, t) else ""

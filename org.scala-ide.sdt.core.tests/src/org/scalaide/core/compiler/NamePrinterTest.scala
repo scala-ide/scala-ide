@@ -44,7 +44,7 @@ class NamePrinterTest {
       """|import scala.collection.mutable
          |
          |class SomeClass {
-         |def someMethod(set: mutable.Set/**/) = None
+         |def someMethod(set: mutable.Set/**/[Int]) = None
          |}""",
       "scala.collection.mutable.Set")
   }
@@ -165,7 +165,6 @@ class NamePrinterTest {
       "ClassParameter.paranormal")
   }
 
-  @Ignore
   @Test
   def testQnameWithMethodParamOnDefinition() {
     testQnameWith(
@@ -175,7 +174,6 @@ class NamePrinterTest {
       "MethodParamOnDefinition.method(param: Int).param")
   }
 
-  @Ignore
   @Test
   def testQnameWithMethodParamOnUse() {
     testQnameWith(
@@ -210,6 +208,34 @@ class NamePrinterTest {
          |class Parent
          |class Child extends Parent/**/""",
        "a.b.c.Parent")
+  }
+
+  @Test
+  def testWithNestedMethod() {
+    testQnameWith(
+      """|class NestedMethod {
+         |  def nest(p1: Int) = {
+         |    def fun(p: => Int) = {
+         |      val x = p*p1
+         |      x/**/
+         |    }
+         |    fun(33)
+         |  }
+         |}""",
+      "NestedMethod.nest(p1: Int).fun(p: => Int).x")
+  }
+
+  @Test
+  def testWithLocalClass() {
+    testQnameWith(
+      """|class LocalClass {
+         |  def fun(p1: Int) = {
+         |    class Local/**/
+         |    new Local.hashCode * p1
+         |  }
+         |}""",
+      "LocalClass.fun(p1: Int).Local")
+
   }
 
   private def testQnameWith(input: String, expected: Option[String]) {
