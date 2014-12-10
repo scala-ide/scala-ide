@@ -367,9 +367,6 @@ object IScalaPresentationCompiler extends HasLogger {
                 Thread.currentThread().interrupt()
                 None
 
-              case Right(ae: AssertionError)       =>
-                throw ae
-
               case Right(e: Throwable) =>
                 eclipseLog.error("Throwable during asyncExec", e)
                 None
