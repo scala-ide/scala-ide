@@ -326,7 +326,13 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
-              val pkgElemInfo = JavaElementFactory.createSourceRefElementInfo
+              val pkgElemInfo = new AnnotatableInfo() {
+                setNameSourceStart(p.pid.pos.start)
+                setNameSourceEnd(p.pid.pos.end - 1)
+                setSourceRangeStart(p.pos.start)
+                setSourceRangeEnd(p.pid.pos.end - 1)
+              }
+
               newElements0.put(pkgElem, pkgElemInfo)
             }
 
@@ -685,7 +691,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           res.toArray
         }
 
-
         val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
 
         val defElem =
@@ -889,7 +894,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       info.setSourceRangeStart0(start)
       info.setSourceRangeEnd0(end)
     }
-
 
     def traverse(tree: Tree) {
       val traverser = new TreeTraverser
