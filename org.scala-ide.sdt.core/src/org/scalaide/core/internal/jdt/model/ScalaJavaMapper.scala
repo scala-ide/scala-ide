@@ -145,16 +145,25 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
   def javaSimpleTypeName(s: Symbol): String = mapType(s, _.javaSimpleName.toString)
 
   override def javaTypeNameMono(tpe: Type): String = {
-    val base = javaTypeName(tpe.typeSymbol)
-    tpe.typeSymbol match {
+    // Correctly handle NullaryMethodType that sometimes may leak as a type of ValDefs
+    // Since .typeSymbol forwards to `resultType.typeSymbol` we might get into inconsistencies
+    // where tpe.typeArgs is Nil (for a nullary method type), but typeSymbol is Array, and therefore
+    // expects one type argument.
+    val tpe1 = tpe match {
+      case NullaryMethodType(resultType) => resultType
+      case _ => tpe
+    }
+    val base = javaTypeName(tpe1.typeSymbol)
+    tpe1.typeSymbol match {
       // only the Array class has type parameters. the Array object is non-parametric
       case definitions.ArrayClass =>
-        val paramTypes = tpe.normalize.typeArgs.map(javaTypeNameMono) // normalize is needed when you have `type BitSet = Array[Int]`
-        assert(paramTypes.size == 1, "Expected exactly one type parameter, found %d [%s]".format(paramTypes.size, tpe))
+        val paramTypes = tpe1.normalize.typeArgs.map(javaTypeNameMono) // normalize is needed when you have `type BitSet = Array[Int]`
+        if (paramTypes.size != 1)
+          logger.error(s"Expected exactly one type parameter, found ${paramTypes.size} [$tpe1]")
         paramTypes.head + "[]"
       case _ =>
-        if (tpe.typeParams.nonEmpty)
-          logger.debug("mapType(Type) is not expected to be used with a type that has type parameters. (passed type was %s)".format(tpe))
+        if (tpe1.typeParams.nonEmpty)
+          logger.error(s"javaTypeNameMono is not expected to be used with a type that has type parameters. (passed type was $tpe1)")
         base
     }
   }
