@@ -9,12 +9,13 @@ import org.scalaide.util.eclipse.RegionUtils._
 object SmartSemicolonInsertionSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[SmartSemicolonInsertion],
   name = "Smart semicolon insertion",
-  description =
-    """|Automatically inserts a typed semicolon at the correct position. This
-       | will move the semicolon and the cursor to the end of the line if no
-       | other semicolon already exists. If the automatic move is unwanted,
-       | one can press the backspace key to move the semicolon back to the
-       | previous location of the cursor.""".stripMargin.replaceAll("\n", "")
+  description = ExtensionSetting.formatDescription(
+    """|Automatically inserts a typed semicolon at the correct position. This \
+       |will move the semicolon and the cursor to the end of the line if no \
+       |other semicolon already exists. If the automatic move is unwanted, \
+       |one can press the backspace key to move the semicolon back to the \
+       |previous location of the cursor.
+       |""")
 )
 
 trait SmartSemicolonInsertion extends AutoEdit {

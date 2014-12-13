@@ -31,6 +31,33 @@ object ExtensionSetting {
 
   def simpleName[A : TypeTag]: String =
     typeOf[A].typeSymbol.name.toString()
+
+  /**
+   * This method is meant to be used for multi line string literals that contain
+   * the description for an [ExtensionSetting]. For readability the description
+   * may occur of the following form:
+   * {{{
+   * """|line 1, \
+   *    |line 1 extended
+   *    |line 2, \
+   *    |line 2 extended
+   *    |"""
+   * }}}
+   * Here, we don't want to have the strip margin as part of the string.
+   * Furthermore, we want to be able to express long lines without keeping them
+   * as a single line in the sources. For this case one can append  a '\' at the
+   * end of a line in the sources in order to get a single line in the resulting
+   * string. In the above example the result of this method is:
+   * {{{
+   * line 1, line 1 extended
+   * line 2, line 2 extended
+   * }}}
+   * It contains three lines, where the last line is empty.
+   */
+  def formatDescription(description: String): String = {
+    val lineSeparator = """\\(\n|\r|\r\n)"""
+    description.stripMargin.replaceAll(lineSeparator, "")
+  }
 }
 
 trait ExtensionSetting extends HasLogger {

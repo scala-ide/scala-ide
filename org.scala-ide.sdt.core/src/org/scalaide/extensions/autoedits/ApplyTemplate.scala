@@ -18,12 +18,12 @@ import org.scalaide.util.eclipse.RegionUtils._
 object ApplyTemplateSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[ApplyTemplate],
   name = "Insert template into editor whenever its name is written",
-  description =
+  description = ExtensionSetting.formatDescription(
     """|The Scala editor provides the functionality of "Templates", which can be \
        |used by selecting them in the code completion dialog after typing their \
        |name. However, this approach is slow and requires user interaction. This \
        |auto edit aims at making templates as easy to use as possible. When enabled, \
-       |it applies a template immediatelly after its name is typed and the tab key \
+       |it applies a template immediately after its name is typed and the tab key \
        |is pressed.
        |
        |For example, if there exists the template
@@ -33,14 +33,14 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |    }
        |
        |whose name is `match`, one can immediately insert the content of this \
-       |template into the open editor by simpley typing `match` and then pressing \
+       |template into the open editor by simply typing `match` and then pressing \
        |the tab key.
        |
        |The editor creates even creates a liked model, which allows to jump between \
        |the sections marked with ${}. If enter is pressed while the linked model \
        |is still active, the cursor jumps immediately to the section marked \
        |by ${cursor}.
-       |""".stripMargin.replaceAll("\\\\\n", ""),
+       |"""),
   partitions = Set(IDocument.DEFAULT_CONTENT_TYPE)
 )
 

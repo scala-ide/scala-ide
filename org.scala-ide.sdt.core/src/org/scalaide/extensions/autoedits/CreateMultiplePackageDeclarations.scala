@@ -8,17 +8,18 @@ import org.scalaide.util.eclipse.RegionUtils._
 
 object CreateMultiplePackageDeclarationsSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CreateMultiplePackageDeclarations],
-  name = "Create new package declaration on linebreak",
-  description = """|In case there exists the package declaration
-                   |
-                   |    package a.b.c.d.^e
-                   |
-                   |and the cursor is placed at the position of the ^ sign, one \
-                   |can press enter to get
-                   |
-                   |    package a.b.c.d
-                   |    package e^
-                   |""".stripMargin.replaceAll("\\\\\n", "")
+  name = "Create new package declaration on line break",
+  description = ExtensionSetting.formatDescription(
+    """|In case there exists the package declaration
+       |
+       |    package a.b.c.d.^e
+       |
+       |and the cursor is placed at the position of the ^ sign, one \
+       |can press enter to get
+       |
+       |    package a.b.c.d
+       |    package e^
+       |""")
 )
 
 trait CreateMultiplePackageDeclarations extends AutoEdit {
