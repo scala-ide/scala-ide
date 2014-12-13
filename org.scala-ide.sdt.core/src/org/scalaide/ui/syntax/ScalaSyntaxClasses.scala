@@ -52,6 +52,7 @@ object ScalaSyntaxClasses {
   val TYPE = ScalaSyntaxClass("Type", "syntaxColouring.semantic.type", canBeDisabled = true)
   val TYPE_PARAMETER = ScalaSyntaxClass("Type parameter", "syntaxColouring.semantic.typeParameter", canBeDisabled = true)
   val IDENTIFIER_IN_INTERPOLATED_STRING = ScalaSyntaxClass("Identifier in interpolated string", "syntaxColouring.semantic.identifierInInterpolatedString", hasForegroundColor = false, canBeDisabled = true)
+  val CALL_BY_NAME_PARAMETER = ScalaSyntaxClass("By-name parameter at call site", "syntaxColouring.semantic.byNameParameterAtCallSite", hasForegroundColor = true, canBeDisabled = true)
 
   val DYNAMIC_SELECT = ScalaSyntaxClass("Call of selectDynamic", "syntaxColouring.semantic.selectDynamic", canBeDisabled = true)
   val DYNAMIC_UPDATE = ScalaSyntaxClass("Call of updateDynamic", "syntaxColouring.semantic.updateDynamic", canBeDisabled = true)
@@ -64,7 +65,7 @@ object ScalaSyntaxClasses {
   val scalaSemanticCategory = Category("Semantic", List(
     ANNOTATION, CASE_CLASS, CASE_OBJECT, CLASS, LAZY_LOCAL_VAL, LAZY_TEMPLATE_VAL,
     LOCAL_VAL, LOCAL_VAR, METHOD, OBJECT, PACKAGE, PARAM, TEMPLATE_VAL, TEMPLATE_VAR,
-    TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING))
+    TRAIT, TYPE, TYPE_PARAMETER, IDENTIFIER_IN_INTERPOLATED_STRING, CALL_BY_NAME_PARAMETER))
 
   val dynamicCategory = Category("Dynamic", List(
     DYNAMIC_SELECT, DYNAMIC_UPDATE, DYNAMIC_APPLY, DYNAMIC_APPLY_NAMED))

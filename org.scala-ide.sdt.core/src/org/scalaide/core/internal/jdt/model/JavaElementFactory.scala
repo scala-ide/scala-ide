@@ -31,9 +31,6 @@ object JavaElementFactory extends ReflectionUtils {
       (sreiCtor0, pdCtor0)
     }
 
-  def createSourceRefElementInfo : JavaElementInfo =
-    sreiCtor.newInstance().asInstanceOf[JavaElementInfo]
-
   def createSourceType(parent : JavaElement, name : String) =
     stCtor.newInstance(parent, name).asInstanceOf[SourceType]
 

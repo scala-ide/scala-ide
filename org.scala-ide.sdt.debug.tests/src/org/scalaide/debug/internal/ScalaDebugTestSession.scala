@@ -135,6 +135,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
+  def currentStackFrames: Seq[ScalaStackFrame] = Option(currentStackFrame).map(_.thread.getScalaStackFrames).getOrElse(Nil)
 
   /**
    * Add a breakpoint at the specified location,
@@ -231,6 +232,17 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     waitUntilSuspended
 
     assertEquals("Bad state after resumeToCompletion", TERMINATED, state)
+  }
+
+  def dropToFrame(stackFrame: ScalaStackFrame) {
+    assertEquals("Bad state before dropToFrame", SUSPENDED, state)
+
+    setActionRequested
+    stackFrame.dropToFrame()
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after dropToFrame", SUSPENDED, state)
   }
 
   def terminate() {

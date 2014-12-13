@@ -1,16 +1,17 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.util.internal.Commons
 import org.scalaide.util.internal.eclipse.ProjectUtils
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
-import scalariform.lexer.ScalaLexer
-import org.scalaide.core.internal.project.ScalaProject
+import scalariform.lexer._
 
 object ScalaFileCreator {
   val VariableTypeName = "type_name"
@@ -27,9 +28,9 @@ trait ScalaFileCreator extends FileCreator {
   import ScalaFileCreator._
   import ProjectUtils._
 
-  private[wizards] type FileExistenceCheck = IFolder => Validation
+  private[wizards] type FileExistenceCheck = IContainer => Validation
 
-  override def templateVariables(folder: IFolder, name: String): Map[String, String] =
+  override def templateVariables(folder: IContainer, name: String): Map[String, String] =
     generateTemplateVariables(name)
 
   override def initialPath(res: IResource): String = {
@@ -40,7 +41,7 @@ trait ScalaFileCreator extends FileCreator {
         isDirectory = res.getType() == IResource.FOLDER)
   }
 
-  override def validateName(folder: IFolder, name: String): Validation = {
+  override def validateName(folder: IContainer, name: String): Validation = {
     if (!ScalaProject.isScalaProject(folder.getProject()))
       Invalid("Not a Scala project")
     else
@@ -50,12 +51,12 @@ trait ScalaFileCreator extends FileCreator {
       }
   }
 
-  override def create(folder: IFolder, name: String): IFile = {
+  override def create(folder: IContainer, name: String): IFile = {
     val filePath = name.replace('.', '/')
-    folder.getFile(s"$filePath.scala")
+    folder.getFile(new Path(s"$filePath.scala"))
   }
 
-  override def completionEntries(folder: IFolder, name: String): Seq[String] = {
+  override def completionEntries(folder: IContainer, name: String): Seq[String] = {
     val ret = projectAsJavaProject(folder.getProject()) map { jp =>
       val root = jp.findPackageFragmentRoot(folder.getFullPath())
       val pkgs = root.getChildren().map(_.getElementName())
@@ -123,9 +124,9 @@ trait ScalaFileCreator extends FileCreator {
     validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
   }
 
-  private[wizards] def checkTypeExists(folder: IFolder, fullyQualifiedType: String): Validation = {
+  private[wizards] def checkTypeExists(folder: IContainer, fullyQualifiedType: String): Validation = {
     val path = fullyQualifiedType.replace('.', '/')
-    if (folder.getFile(s"$path.scala").exists())
+    if (folder.getFile(new Path(s"$path.scala")).exists())
       Invalid("File already exists")
     else {
       val scalaProject = IScalaPlugin().asScalaProject(folder.getProject())

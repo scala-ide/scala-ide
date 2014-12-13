@@ -9,8 +9,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
-import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
-import org.scalaide.util.ui.SWTUtils.gridData
+import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.internal.decorators.semantichighlighting.Position
 import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
@@ -23,8 +22,6 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
   IScalaPlugin().getPreferenceStore,
   SyntaxColoringPreferencePage.PreviewText,
   SemanticPreviewerFactoryConfiguration) {
-
-  import org.scalaide.util.ui.SWTUtils._
 
   private var enableSemanticHighlightingCheckBox: Button = _
   private var extraAccuracyCheckBox: Button = _
@@ -104,7 +101,7 @@ object SyntaxColoringPreferencePage {
         |  lazy val lazyTemplateVal = 42
         |  val templateVal = 42
         |  var templateVar = 24
-        |  def method(param: Int): Int = {
+        |  def method(param: Int, byNameParam: => Int): Int = {
         |    // Single-line comment
         |    /* Multi-line comment */
         |    lazy val lazyLocalVal = 42
@@ -117,7 +114,7 @@ object SyntaxColoringPreferencePage {
         |        PCDATA
         |      </tag>
         |    val sym = 'symbol
-        |    return 42
+        |    return byNamePar\u0430m
         |  }
         |  @deprecated def deprecatedMethod(param: Int) = ???
         |  templateVar = deprecatedMethod(12)
@@ -156,7 +153,10 @@ object SyntaxColoringPreferencePage {
     "str" -> ColoringInfo(TemplateVal),
     "p\u0430ram" -> ColoringInfo(Param, inInterpolatedString = true),
     "templateV\u0430l" -> ColoringInfo(TemplateVal, inInterpolatedString = true),
-    "templateV\u0430r" -> ColoringInfo(TemplateVar, inInterpolatedString = true))
+    "templateV\u0430r" -> ColoringInfo(TemplateVar, inInterpolatedString = true),
+    "byNameParam" -> ColoringInfo(Param),
+    "byNamePar\u0430m" -> ColoringInfo(CallByNameParameter)
+    )
 
   val semanticLocations: List[Position] =
     for {

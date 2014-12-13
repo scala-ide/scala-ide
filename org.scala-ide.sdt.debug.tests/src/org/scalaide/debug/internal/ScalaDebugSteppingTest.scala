@@ -1,13 +1,14 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.junit.Test
-import org.junit.Before
-import org.junit.After
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.After
 import org.junit.AfterClass
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.Test
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.TestProjectSetup
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
@@ -601,5 +602,70 @@ class ScalaDebugSteppingTest {
     session.runToLine("stepping.MethodClassifiers", 69)
     session.stepInto
     session.checkStackFrame("stepping.MaxArgs$class", "manyArgs(Lstepping/MaxArgs;DDDDDDDDDDDDDDDDDDDDDD)D", 105)
+  }
+
+  @Test
+  def canDropToFrame() {
+    session = initDebugSession("SimpleStepping")
+
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+
+    session.currentStackFrames.dropRight(1).foreach { frame =>
+      assertTrue("Should be able to drop to frame", frame.canDropToFrame())
+    }
+
+    assertFalse("Shouldn't be able to drop to the last frame", session.currentStackFrames.last.canDropToFrame())
+
+    // just check also the top stack frame when we stop in other place than the beginning of a method
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 13)
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 13)
+
+    assertTrue("Should be able to drop to frame", session.currentStackFrames.head.canDropToFrame())
+  }
+
+  @Test
+  def dropToFrame() {
+
+    def checkNumberOfFrames(count: Int): Unit =
+      assertEquals("Wrong number of stack frames", count, session.currentStackFrames.size)
+
+    session = initDebugSession("SimpleStepping")
+
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 13)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 13)
+    checkNumberOfFrames(5)
+
+    // return to the beginning of current method
+    session dropToFrame session.currentStackFrame
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+    checkNumberOfFrames(5)
+
+    // drop to the same place
+    session dropToFrame session.currentStackFrame
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 12)
+    checkNumberOfFrames(5)
+
+    // step back - 2 levels
+    session dropToFrame session.currentStackFrames(2)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "mainTest()V", 17)
+    checkNumberOfFrames(3)
+
+    // check that an application will be resumed from the correct place
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "foo()V", 8)
+    session.runToLine(TYPENAME_SIMPLE_STEPPING, 13)
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "bar()V", 13)
+
+    // step back - 1 level
+    session dropToFrame session.currentStackFrames(1)
+
+    session.checkStackFrame(TYPENAME_SIMPLE_STEPPING, "foo()V", 8)
+    checkNumberOfFrames(4)
   }
 }

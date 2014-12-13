@@ -211,7 +211,7 @@ object EclipseUtils extends HasLogger {
     var res = null.asInstanceOf[A]
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
-        eclipseLog.error(errorMsg, e)
+        eclipseLog.error(s"$errorMsg. Check the previous stack trace for more information.")
 
       override def run() = res = f
     })

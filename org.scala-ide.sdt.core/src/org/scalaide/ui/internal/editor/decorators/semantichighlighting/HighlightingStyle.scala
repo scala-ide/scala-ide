@@ -59,6 +59,7 @@ object HighlightingStyle {
       case DynamicUpdate     => DYNAMIC_UPDATE
       case DynamicApply      => DYNAMIC_APPLY
       case DynamicApplyNamed => DYNAMIC_APPLY_NAMED
+      case CallByNameParameter => CALL_BY_NAME_PARAMETER
     }
   }
 }

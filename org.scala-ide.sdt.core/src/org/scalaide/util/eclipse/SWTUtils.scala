@@ -181,6 +181,7 @@ object SWTUtils {
     })
     t
   }
+
   /**
    * Creates a label, whose layout data interops with the grid layout.
    */
@@ -190,4 +191,18 @@ object SWTUtils {
     lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
     lb
   }
+
+  /** Returns a [[GridData]] configuration, with the given properties.
+   *
+   *  The possible values for alignment are: [[SWT.BEGINNING]], [[SWT.CENTER]], [[SWT.END]], [[SWT.FILL]]
+   */
+  def gridData(
+    horizontalAlignment: Int = SWT.BEGINNING,
+    verticalAlignment: Int = SWT.CENTER,
+    grabExcessHorizontalSpace: Boolean = false,
+    grabExcessVerticalSpace: Boolean = false,
+    horizontalSpan: Int = 1,
+    verticalSpan: Int = 1): GridData =
+    new GridData(horizontalAlignment, verticalAlignment, grabExcessHorizontalSpace, grabExcessVerticalSpace, horizontalSpan, verticalSpan)
+
 }

@@ -34,7 +34,7 @@ object RegionParser {
 
     while (curPos < text.length) {
       text.charAt(curPos) match {
-        case '\\' if text.charAt(curPos+1) == delimiter =>
+        case '\\' if curPos + 1 < text.length && text.charAt(curPos+1) == delimiter =>
           if (!sb.isEmpty)
             sb += delimiter
           offset += 1

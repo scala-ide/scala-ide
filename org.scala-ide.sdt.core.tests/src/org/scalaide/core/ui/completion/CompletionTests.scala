@@ -5,6 +5,7 @@ import org.scalaide.core.completion.ScalaCompletions
 import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.util.ScalaWordFinder
+import org.scalaide.core.completion.CompletionProposal
 
 /**
  * This provides a test suite for the code completion functionality.
@@ -34,12 +35,16 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
    * @param expectedNumberOfCompletions
    *        The number of completions that are expected to be found. A negative
    *        value means that this option is not considered by the test.
+   * @param respectOrderOfExpectedCompletions
+   *        If `true` then expected completions will be additionally checked to match
+   *        proposal order
    */
   case class Completion(
       completionToApply: String,
       enableOverwrite: Boolean = false,
       expectedCompletions: Seq[String] = Nil,
-      expectedNumberOfCompletions: Int = -1)
+      expectedNumberOfCompletions: Int = -1,
+      respectOrderOfExpectedCompletions: Boolean = false)
         extends Operation {
 
     override def execute() = {
@@ -54,23 +59,40 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
         compiler.askLoadedTyped(src, false).get
       }
 
-      val completions = new ScalaCompletions().findCompletions(ScalaWordFinder.findWord(doc, caretOffset), caretOffset, unit)
+      val completions = new ScalaCompletions()
+        .findCompletions(ScalaWordFinder.findWord(doc, caretOffset), caretOffset, unit)
+        .sorted(CompletionProposalOrdering).to[IndexedSeq]
 
-      def findCompletion(rawCompletion: String) =
+      def completionList = completions.map(_.display).mkString("\n")
+
+      def indexOfCompletion(rawCompletion: String) =
         if (!rawCompletion.contains("-"))
-          completions.find(_.display == rawCompletion)
+          completions.indexWhere(_.display == rawCompletion)
         else {
           val Array(completion, qualifier) = rawCompletion.split(" *- *")
-          completions.find(c => c.display == completion && c.displayDetail == qualifier)
+          completions.indexWhere(c => c.display == completion && c.displayDetail == qualifier)
+        }
+
+      def findCompletion(rawCompletion: String): Option[CompletionProposal] =
+        indexOfCompletion(rawCompletion) match {
+          case -1 => None
+          case index => Some(completions.apply(index))
         }
 
       val completion = findCompletion(completionToApply)
 
       val missingCompletions = expectedCompletions.filter(c => findCompletion(c).isEmpty)
       if (missingCompletions.nonEmpty)
-        throw new ComparisonFailure("There are expected completions that do not exist.", missingCompletions.mkString("\n"), "")
+        throw new ComparisonFailure("There are expected completions that do not exist.", missingCompletions.mkString("\n"), completionList)
 
-      def completionList = completions.sortBy(-_.relevance).map(_.display).mkString("\n")
+      if (expectedCompletions.nonEmpty && respectOrderOfExpectedCompletions) {
+        val indexes = expectedCompletions.map(c => indexOfCompletion(c))
+        val sorted = indexes.zip(indexes.tail).forall(i => i._2 - i._1 == 1)
+        if (!sorted)
+          throw new ComparisonFailure(s"The order of completition is wrong", expectedCompletions.mkString("\n"), completionList)
+        if (indexes.head != 0)
+          throw new ComparisonFailure(s"The completition list should start from", expectedCompletions.head, completionList)
+      }
 
       if (expectedNumberOfCompletions >= 0
           && completions.size != expectedNumberOfCompletions) {
@@ -97,4 +119,18 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       unit.scalaProject.presentationCompiler(_.discardCompilationUnit(unit))
     }
   }
+}
+
+/**
+ * This provides a default ordering for completion proposal. The implementation is
+ * based on CompletionProposalComparator that is used in JDT to sort completions
+ */
+private object CompletionProposalOrdering extends Ordering[CompletionProposal] {
+
+  def compare(a: CompletionProposal, b: CompletionProposal) =
+    b.relevance - a.relevance match {
+      case 0 => a.display.compareToIgnoreCase(b.display)
+      case diff => diff
+    }
+
 }

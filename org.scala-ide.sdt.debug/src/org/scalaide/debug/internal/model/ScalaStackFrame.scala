@@ -1,16 +1,17 @@
 package org.scalaide.debug.internal.model
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.reflect.NameTransformer
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.InvalidStackFrameException
+import com.sun.jdi.Method
+import com.sun.jdi.NativeMethodException
+import com.sun.jdi.StackFrame
+import org.eclipse.debug.core.model.IDropToFrame
 import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.AbsentInformationException
-import com.sun.jdi.Method
-import com.sun.jdi.StackFrame
-import com.sun.jdi.InvalidStackFrameException
-import com.sun.jdi.NativeMethodException
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.reflect.NameTransformer
 
 object ScalaStackFrame {
 
@@ -78,7 +79,8 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame) extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame {
+class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame)
+  extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
 
   // Members declared in org.eclipse.debug.core.model.IStackFrame
@@ -119,7 +121,14 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   override def resume(): Unit = thread.resume()
   override def suspend(): Unit = ???
 
+  // Members declared in org.eclipse.debug.core.model.IDropToFrame
+
+  override def canDropToFrame(): Boolean = thread.canDropToFrame(this)
+  override def dropToFrame(): Unit = thread.dropToFrame(this)
+
   // ---
+
+  def isNative = stackFrame.location().method().isNative()
 
   import org.scalaide.debug.internal.JDIUtil._
   import scala.util.control.Exception

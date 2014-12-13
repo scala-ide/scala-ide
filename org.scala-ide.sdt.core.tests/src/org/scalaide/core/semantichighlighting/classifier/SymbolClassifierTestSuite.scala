@@ -5,6 +5,7 @@ import org.junit.runners.Suite
 
 @RunWith(value = classOf[Suite])
 @Suite.SuiteClasses(value = Array(
+  classOf[RegionParserTest],
   classOf[AnnotationTest],
   classOf[CaseClassTest],
   classOf[CaseObjectTest],
@@ -24,5 +25,6 @@ import org.junit.runners.Suite
   classOf[TraitTest],
   classOf[TypeParameterTest],
   classOf[TypeTest],
-  classOf[DynamicTest]))
+  classOf[DynamicTest],
+  classOf[CallByNameParameterTest]))
 class SymbolClassifierTestSuite

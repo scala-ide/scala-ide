@@ -1,19 +1,20 @@
 package org.scalaide.ui.wizards
 
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.Path
 
 /**
  * File creator that can only create empty files.
  */
 class EmptyFileCreator extends FileCreator {
 
-  override def create(folder: IFolder, name: String): IFile =
-    folder.getFile(name)
+  override def create(folder: IContainer, name: String): IFile =
+    folder.getFile(new Path(name))
 
-  override def validateName(folder: IFolder, name: String): Validation =
-    if (folder.getFile(name).exists())
+  override def validateName(folder: IContainer, name: String): Validation =
+    if (folder.getFile(new Path(name)).exists())
       Invalid("File already exists")
     else
       Valid
@@ -21,10 +22,10 @@ class EmptyFileCreator extends FileCreator {
   override def initialPath(res: IResource): String =
     ""
 
-  override def completionEntries(folder: IFolder, name: String): Seq[String] =
+  override def completionEntries(folder: IContainer, name: String): Seq[String] =
     Seq()
 
-  override def templateVariables(folder: IFolder, name: String): Map[String, String] =
+  override def templateVariables(folder: IContainer, name: String): Map[String, String] =
     Map()
 
 }

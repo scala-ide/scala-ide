@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.sbt.feature"
       label="sbt ${sbt.version}"
-      version="4.0.0.qualifier"
+      version="4.1.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.sbt.full.library">
 

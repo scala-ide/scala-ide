@@ -1,5 +1,6 @@
 package org.scalaide.core.pc
 
+import org.scalaide.core.FlakyTest
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.doc.base.comment.Comment
 import scala.tools.nsc.interactive.Response
@@ -59,7 +60,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def inheritedTwoSourcesDoc() {
+  def inheritedTwoSourcesDoc() = FlakyTest.retry("inheritedTwoSourcesDoc", "") {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.todo, "implement me")
     }
