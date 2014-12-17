@@ -13,7 +13,7 @@ import org.scalaide.core.SdtConstants
 import org.junit.Assert
 
 @RunWith(classOf[JUnit4ClassRunner])
-class TestScalaTemplateContext {
+class ScalaTemplateContextTest {
 
   val CARET = "_|_"
   
