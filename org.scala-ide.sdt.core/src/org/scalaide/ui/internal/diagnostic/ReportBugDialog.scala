@@ -21,7 +21,6 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.ScalaPlugin
 
-
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
 
   /** Overwritten in order to set the title text. */
@@ -63,17 +62,14 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
 
     val group2 = new Group(control, SWT.SHADOW_NONE)
     group2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false))
-    // lay out the widgets on the same row
-    val rowLayout = new RowLayout(SWT.HORIZONTAL)
-    rowLayout.spacing = -3 // remove space between widgets
-    group2.setLayout(rowLayout)
+    group2.setLayout(new GridLayout(2, false))
 
     val logFileLink = new Link(group2, SWT.NONE)
     logFileLink.setText("<a>Check</a> the log")
     logFileLink.addListener(SWT.Selection, OpenExternalFile(LogManager.logFile))
 
     val reportBugLink = new Link(group2, SWT.NONE)
-    reportBugLink.setText(s""" and <a href="${SdtConstants.IssueTracker}">report a bug</a>.""")
+    reportBugLink.setText(s"""and <a href="${SdtConstants.IssueTracker}">report a bug</a>.""")
     reportBugLink.addListener(SWT.Selection, new LinkListener())
 
     control
