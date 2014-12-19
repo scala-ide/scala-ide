@@ -72,6 +72,15 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     reportBugLink.setText(s"""and <a href="${SdtConstants.IssueTracker}">report a bug</a>.""")
     reportBugLink.addListener(SWT.Selection, new LinkListener())
 
+    val sveltoLink = new Link(group2, SWT.NONE)
+    sveltoLink.setText(s"""Install <a href="${SdtConstants.SveltoHomepage}">svelto</a> to log thread dumps when the UI is unresponsive.""")
+    sveltoLink.addListener(SWT.Selection, new LinkListener)
+    sveltoLink.setLayoutData({
+      val g = new GridData
+      g.horizontalSpan = 2
+      g
+    })
+
     control
   }
 
