@@ -13,7 +13,7 @@ object CloseCurlyBraceSetting extends AutoEditSetting(
     " can detect that the closing brace is not necessary and therefore it leaves" +
     " it out. This may be the case if there are unmatched pairs of braces in the" +
     " current line. If the cursor is positioned directly before non white space," +
-    " the curly brace is never closed unless it is nested in another pair of braces."
+    " the curly brace is never closed unless it is nested in another pair of matching elements."
 )
 
 trait CloseCurlyBrace extends CloseMatchingPair {

@@ -57,4 +57,12 @@ class CloseBracketTest extends AutoEditTests {
   @Test
   def no_auto_closing_on_missing_opening() =
     "[^]]" becomes "[[^]]" after bracket
+
+  @Test
+  def auto_close_before_closing_paren() =
+    "def x(st: List^)" becomes "def x(st: List[[[]]]^)" after bracket
+
+  @Test
+  def auto_close_nested_bracket() =
+    "val l = List[(Int, List^)]" becomes "val l = List[(Int, List[[[]]]^)]" after bracket
 }

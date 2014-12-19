@@ -39,6 +39,10 @@ class CloseParenthesisTest extends AutoEditTests {
     "List(1) map ^(_+1)" becomes "List(1) map (^(_+1)" after paren
 
   @Test
+  def no_auto_close_before_non_white_space_in_parenthesis() =
+    "(^string)" becomes "((^string)" after paren
+
+  @Test
   def auto_closing_when_caret_before_white_space() =
     "List(1) map^ (_+1)" becomes "List(1) map([[]])^ (_+1)" after paren
 
