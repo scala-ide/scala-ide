@@ -49,7 +49,8 @@ object AutoEditExtensions {
     JumpOverClosingParenthesisSetting -> JumpOverClosingParenthesisCreator.create _,
     JumpOverClosingBracketSetting -> JumpOverClosingBracketCreator.create _,
     JumpOverClosingAngleBracketSetting -> JumpOverClosingAngleBracketCreator.create _,
-    CloseStringSetting → CloseStringCreator.create _
+    CloseStringSetting -> CloseStringCreator.create _,
+    CloseCharSetting -> CloseCharCreator.create _
   )
 
   /**
