@@ -44,7 +44,9 @@ object SdtConstants {
   final val ApplicationWizId = "org.scala-ide.sdt.core.wizards.newApplication"
   final val ProjectWizId = "org.scala-ide.sdt.core.wizards.newProject"
   final val NetProjectWizId = "org.scala-ide.sdt.core.wizards.newNetProject"
-  final val ScalaFileCreatorWidId = "org.scalaide.ui.wizards.scalaCreator"
+  final val ScalaFileCreatorWizId = "org.scalaide.ui.wizards.scalaCreator"
+  @deprecated("Use ScalaFileCreatorWizId instead", "4.0")
+  final val ScalaFileCreatorWidId = ScalaFileCreatorWizId
 
   // file extensions
   final val ScalaFileExtn = ".scala"
