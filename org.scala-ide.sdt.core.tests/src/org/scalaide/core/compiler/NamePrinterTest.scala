@@ -372,6 +372,24 @@ class NamePrinterTest {
       "AnotherDeeplyNestedName.A.wwith(b: String).And.K.C.new Using {...}.c().new Using {...}.e(f: Int).G.H")
   }
 
+  @Test
+  def testWithEncodedIdents() {
+    testWith(
+      """|class :: {
+         |  def +(i/**/: Int) = i + 44
+         |}""",
+      "::.+(i: Int).i")
+  }
+
+  @Test
+  def testWithLazyVal() {
+    testWith(
+      """|class WithLazyVal {
+         |  lazy val x/**/ = 333
+         |}""",
+      "WithLazyVal.x")
+  }
+
   private def testQnameWith(input: String, expected: Option[String]) {
     val source = input.stripMargin
     val cu = mkScalaCompilationUnit(source)
