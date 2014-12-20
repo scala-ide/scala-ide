@@ -79,7 +79,7 @@ class ScalaSourceViewerConfiguration(
   private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(scalaPreferenceStore, javaPreferenceStore)
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
-    scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+    combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 
   /**
    * Indent prefixes are all possible variations of strings of a given
@@ -96,8 +96,8 @@ class ScalaSourceViewerConfiguration(
    * fill a full indent depth.
    */
   override def getIndentPrefixes(sourceViewer: ISourceViewer, contentType: String): Array[String] = {
-    val spaceWidth = scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
-    val useTabs = scalaPreferenceStore.getBoolean(IndentWithTabs.eclipseKey)
+    val spaceWidth = combinedPrefStore.getInt(IndentSpaces.eclipseKey)
+    val useTabs = combinedPrefStore.getBoolean(IndentWithTabs.eclipseKey)
 
     val spacePrefix = " " * spaceWidth
     val prefixes = 0 until spaceWidth map (i => " " * i + "\t")
@@ -271,9 +271,7 @@ class ScalaSourceViewerConfiguration(
     def prefProvider = new JdtPreferenceProvider(getProject)
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
 
-    // TODO: why not using the defined scalaPrefStore, javaPrefStore or combinedPrefStore?
-    val prefStore = IScalaPlugin().getPreferenceStore()
-    val tabsToSpacesConverter = new TabsToSpacesConverter(prefStore)
+    val tabsToSpacesConverter = new TabsToSpacesConverter(combinedPrefStore)
 
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
@@ -281,26 +279,26 @@ class ScalaSourceViewerConfiguration(
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
-          new MultiLineStringAutoIndentStrategy(partitioning, prefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, prefStore),
+          new MultiLineStringAutoIndentStrategy(partitioning, combinedPrefStore),
+          new MultiLineStringAutoEditStrategy(partitioning, combinedPrefStore),
           tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
-          new StringAutoEditStrategy(partitioning, prefStore),
+          new StringAutoEditStrategy(partitioning, combinedPrefStore),
           tabsToSpacesConverter)
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(prefStore),
-          new LiteralAutoEditStrategy(prefStore),
+          new AutoIndentStrategy(combinedPrefStore),
+          new LiteralAutoEditStrategy(combinedPrefStore),
           tabsToSpacesConverter)
 
       case _ =>
         Array(
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(prefStore),
+          new AutoIndentStrategy(combinedPrefStore),
           tabsToSpacesConverter)
     }
   }
