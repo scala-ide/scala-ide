@@ -76,7 +76,7 @@ class ScalaSourceViewerConfiguration(
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
 
-  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(scalaPreferenceStore, javaPreferenceStore)
+  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
     combinedPrefStore.getInt(IndentSpaces.eclipseKey)

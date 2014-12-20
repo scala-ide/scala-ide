@@ -1,22 +1,24 @@
 package org.scalaide.core.lexical
 
+import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.text.IDocument
+import org.eclipse.ui.texteditor.ChainedPreferenceStore
 import org.scalaide.core.internal.lexical.ScalaCodeScanner
-import scalariform.ScalaVersion
-import org.scalaide.ui.syntax.ScalaSyntaxClass
+import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased
 import org.scalaide.core.internal.lexical.ScalaCommentScanner
 import org.scalaide.core.internal.lexical.ScaladocTokenScanner
 import org.scalaide.core.internal.lexical.SingleTokenScanner
 import org.scalaide.core.internal.lexical.StringTokenScanner
-import org.scalaide.core.internal.lexical.XmlCommentScanner
 import org.scalaide.core.internal.lexical.XmlCDATAScanner
+import org.scalaide.core.internal.lexical.XmlCommentScanner
 import org.scalaide.core.internal.lexical.XmlPIScanner
-import org.scalaide.ui.syntax.{ ScalaSyntaxClasses => SSC }
-import scalariform.ScalaVersions
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.scalaide.core.internal.lexical.XmlTagScanner
-import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased
+import org.scalaide.ui.syntax.ScalaSyntaxClass
+import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
+
+import scalariform.ScalaVersion
+import scalariform.ScalaVersions
 
 /** Entry point to the Scala code scanners.
  *
@@ -30,23 +32,28 @@ import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased
  */
 object ScalaCodeScanners {
 
+  @deprecated("Use the overloaded variant instead", "4.0")
+  def codeHighlightingScanners(scalaPreferenceStore: IPreferenceStore, javaPreferenceStore: IPreferenceStore): Map[String, AbstractScalaScanner] = {
+    codeHighlightingScanners(new ChainedPreferenceStore(Array(scalaPreferenceStore, javaPreferenceStore)))
+  }
+
   /** Returns a map of all code scanners for Scala code, associated to the partition id.
    */
-  def codeHighlightingScanners(scalaPreferenceStore: IPreferenceStore, javaPreferenceStore: IPreferenceStore): Map[String, AbstractScalaScanner] =
+  def codeHighlightingScanners(combinedPreferenceStore: IPreferenceStore): Map[String, AbstractScalaScanner] =
     Map(
-      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner(scalaPreferenceStore, ScalaVersions.DEFAULT),
-      IJavaPartitions.JAVA_DOC -> scaladocScanner(scalaPreferenceStore, javaPreferenceStore),
-      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner(scalaPreferenceStore),
-      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> scalaSingleLineCommentScanner(scalaPreferenceStore, javaPreferenceStore),
-      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> scalaMultiLineCommentScanner(scalaPreferenceStore, javaPreferenceStore),
-      IJavaPartitions.JAVA_STRING -> stringScanner(scalaPreferenceStore),
-      IJavaPartitions.JAVA_CHARACTER -> characterScanner(scalaPreferenceStore),
-      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner(scalaPreferenceStore),
-      ScalaPartitions.XML_TAG -> xmlTagScanner(scalaPreferenceStore),
-      ScalaPartitions.XML_COMMENT -> xmlCommentScanner(scalaPreferenceStore),
-      ScalaPartitions.XML_CDATA -> xmlCDATAScanner(scalaPreferenceStore),
-      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner(scalaPreferenceStore),
-      ScalaPartitions.XML_PI -> xmlPIScanner(scalaPreferenceStore))
+      IDocument.DEFAULT_CONTENT_TYPE -> scalaCodeScanner(combinedPreferenceStore, ScalaVersions.DEFAULT),
+      IJavaPartitions.JAVA_DOC -> scaladocScanner(combinedPreferenceStore),
+      ScalaPartitions.SCALADOC_CODE_BLOCK -> scaladocCodeBlockScanner(combinedPreferenceStore),
+      IJavaPartitions.JAVA_SINGLE_LINE_COMMENT -> scalaSingleLineCommentScanner(combinedPreferenceStore),
+      IJavaPartitions.JAVA_MULTI_LINE_COMMENT -> scalaMultiLineCommentScanner(combinedPreferenceStore),
+      IJavaPartitions.JAVA_STRING -> stringScanner(combinedPreferenceStore),
+      IJavaPartitions.JAVA_CHARACTER -> characterScanner(combinedPreferenceStore),
+      ScalaPartitions.SCALA_MULTI_LINE_STRING -> multiLineStringScanner(combinedPreferenceStore),
+      ScalaPartitions.XML_TAG -> xmlTagScanner(combinedPreferenceStore),
+      ScalaPartitions.XML_COMMENT -> xmlCommentScanner(combinedPreferenceStore),
+      ScalaPartitions.XML_CDATA -> xmlCDATAScanner(combinedPreferenceStore),
+      ScalaPartitions.XML_PCDATA -> xmlPCDATAScanner(combinedPreferenceStore),
+      ScalaPartitions.XML_PI -> xmlPIScanner(combinedPreferenceStore))
 
   /** Creates a code scanner which returns a single token for the configured region.
    */
@@ -67,18 +74,14 @@ object ScalaCodeScanners {
   def scalaCodeTokenizer(scalaVersion: ScalaVersion): ScalaCodeTokenizer =
     new ScalaCodeTokenizerScalariformBased(scalaVersion)
 
-  private def scalaSingleLineCommentScanner(
-    preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore): AbstractScalaScanner =
-    new ScalaCommentScanner(preferenceStore, javaPreferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
+  private def scalaSingleLineCommentScanner(preferenceStore: IPreferenceStore): AbstractScalaScanner =
+    new ScalaCommentScanner(preferenceStore, SSC.SINGLE_LINE_COMMENT, SSC.TASK_TAG)
 
-  private def scalaMultiLineCommentScanner(
-    preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore): AbstractScalaScanner =
-    new ScalaCommentScanner(preferenceStore, javaPreferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
+  private def scalaMultiLineCommentScanner(preferenceStore: IPreferenceStore): AbstractScalaScanner =
+    new ScalaCommentScanner(preferenceStore, SSC.MULTI_LINE_COMMENT, SSC.TASK_TAG)
 
-  private def scaladocScanner(preferenceStore: IPreferenceStore, javaPreferenceStore: IPreferenceStore): AbstractScalaScanner =
-    new ScaladocTokenScanner(preferenceStore, javaPreferenceStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
+  private def scaladocScanner(preferenceStore: IPreferenceStore): AbstractScalaScanner =
+    new ScaladocTokenScanner(preferenceStore, SSC.SCALADOC, SSC.SCALADOC_ANNOTATION, SSC.SCALADOC_MACRO, SSC.TASK_TAG)
 
   private def scaladocCodeBlockScanner(preferenceStore: IPreferenceStore): AbstractScalaScanner =
     new SingleTokenScanner(preferenceStore, SSC.SCALADOC_CODE_BLOCK)

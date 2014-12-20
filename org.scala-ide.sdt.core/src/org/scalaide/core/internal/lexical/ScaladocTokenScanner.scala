@@ -17,12 +17,11 @@ import org.eclipse.jface.text.rules.WordRule
  */
 class ScaladocTokenScanner(
     preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore,
     scaladocClass: ScalaSyntaxClass,
     annotationClass: ScalaSyntaxClass,
     macroClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
-      extends ScalaCommentScanner(preferenceStore, javaPreferenceStore, scaladocClass, taskTagClass) {
+      extends ScalaCommentScanner(preferenceStore, scaladocClass, taskTagClass) {
 
   private val annotationRule = new ScaladocWordRule(new AnnotationDetector, getToken(scaladocClass), getToken(annotationClass))
   private val macroRule = new ScaladocWordRule(new MacroDetector, getToken(scaladocClass), getToken(macroClass))
