@@ -17,8 +17,8 @@ trait ScalaInstallationChoiceUIProviders {
 
     override def getElements(input: Any): Array[Object] = {
       input match {
-        case l: List[IScalaInstallationChoice] =>
-          l.toArray
+        case l: List[_] =>
+          l.asInstanceOf[List[Object]].toArray
       }
     }
   }
