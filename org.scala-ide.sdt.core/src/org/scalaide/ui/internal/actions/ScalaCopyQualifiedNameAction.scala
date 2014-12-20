@@ -10,11 +10,16 @@ import org.eclipse.swt.dnd.TextTransfer
 import org.eclipse.swt.dnd.Transfer
 import org.scalaide.core.compiler.NamePrinter
 import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
+import org.eclipse.jdt.ui.actions.SelectionDispatchAction
+import org.eclipse.jdt.internal.ui.JavaPluginImages
+import org.eclipse.ui.PlatformUI
+import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
 
 /**
  * A Scala-aware replacement for CopyQualifiedNameAction.
  */
-class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends CopyQualifiedNameAction(editor) {
+class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends SelectionDispatchAction(editor.getSite) {
+  initGui()
 
   override def run() {
     val qname = {
@@ -27,11 +32,7 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends C
 
     if (qname.isDefined)
       copyToClipboard(qname.get)
-    else
-      callJavaImplementation()
   }
-
-  private def callJavaImplementation() = super.run()
 
   private def copyToClipboard(str: String) {
     val data: Array[Object] = Array(str)
@@ -52,6 +53,14 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends C
     } finally {
       clipboard.dispose()
     }
+  }
+
+  private def initGui() {
+    setText(ActionMessages.CopyQualifiedNameAction_ActionName);
+    setToolTipText(ActionMessages.CopyQualifiedNameAction_ToolTipText);
+    setDisabledImageDescriptor(JavaPluginImages.DESC_DLCL_COPY_QUALIFIED_NAME);
+    setImageDescriptor(JavaPluginImages.DESC_ELCL_COPY_QUALIFIED_NAME);
+    PlatformUI.getWorkbench().getHelpSystem().setHelp(this, IJavaHelpContextIds.COPY_QUALIFIED_NAME_ACTION);
   }
 
   private def compilationUnit = Option(editor.getInteractiveCompilationUnit())
