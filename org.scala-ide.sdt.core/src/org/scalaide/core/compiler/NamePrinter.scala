@@ -7,13 +7,13 @@ import org.eclipse.jface.text.Region
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 import org.scalaide.util.eclipse.RegionUtils.RichRegion
 import scala.reflect.internal.util.SourceFile
+import scala.reflect.internal.Definitions
+import scala.reflect.runtime.SymbolTable
+import scala.tools.nsc.symtab.SymbolTable
 
 private object NamePrinter {
   private case class Location(src: SourceFile, offset: Int)
-
-  private abstract class DeclarationNamePrinter extends DeclarationPrinter {
-    import compiler._
-  }
+  private val RxAnonOrRefinementString = """<(?:\$anon:|refinement of) (.+)>""".r
 }
 
 /**
@@ -44,40 +44,37 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
   }
 
   private def qualifiedNameImpl(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
-    def enclosingMethod(currentTree: comp.Tree, loc: Location) = {
-      def isEnclosingMethod(t: comp.Tree) = {
-        if (t.isInstanceOf[comp.DefDef]) {
+    def enclosingDefinition(currentTree: comp.Tree, loc: Location) = {
+      def isEnclosingDefinition(t: comp.Tree) = t match {
+        case _: comp.DefDef | _: comp.ClassDef | _: comp.ModuleDef | _: comp.PackageDef =>
           t.pos.properlyIncludes(currentTree.pos)
-        } else {
-          false
-        }
+        case _ => false
       }
 
       comp.askLoadedTyped(loc.src, true).getOption().map { fullTree =>
-        comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingMethod)
+        comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingDefinition)
       }
     }
 
     def qualifiedNameImplPrefix(loc: Location, t: comp.Tree) = {
-      enclosingMethod(t, loc) match {
+      enclosingDefinition(t, loc) match {
         case Some(comp.EmptyTree) | None => ""
-        case Some(encMethod) => qualifiedNameImpl(loc, comp)(encMethod).map(_ + ".").getOrElse("")
+        case Some(encDef) => qualifiedNameImpl(loc, comp)(encDef).map(_ + ".").getOrElse("")
       }
     }
 
-    def importDefStr(loc: Location, tree: comp.Tree, selectors: List[comp.ImportSelector]) = {
+    def handleImport(loc: Location, tree: comp.Tree, selectors: List[comp.ImportSelector]) = {
       def isRelevant(selector: comp.ImportSelector) = {
         selector.name != comp.nme.WILDCARD &&
           selector.name == selector.rename
       }
 
-      qualifiedName(loc: Location, comp)(tree).map { prefix =>
-        val suffix = selectors match {
-          case List(selector) if isRelevant(selector) => "." + selector.name.toString
-          case _ => ""
-        }
-        prefix + suffix
+      val suffix = selectors match {
+        case List(selector) if isRelevant(selector) => "." + selector.name.toString
+        case _ => ""
       }
+
+      (Option(tree.symbol).map(_.fullName + suffix), false)
     }
 
     def symbolName(symbol: comp.Symbol) = {
@@ -103,7 +100,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       val name = valDef.name
       val tpt = valDef.tpt
 
-      val declPrinter = new DeclarationNamePrinter {
+      val declPrinter = new DeclarationPrinter {
         val compiler: comp.type = comp
       }
 
@@ -127,51 +124,78 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       fullName.split(".").lastOption.getOrElse(fullName)
     }
 
-    def identStr(ident: comp.Ident) = {
+    def handleIdent(ident: comp.Ident) = {
       ident.name match {
-        case _: comp.TypeName => ident.symbol.fullName
-        case _ => ident.symbol.nameString
+        case typeName: comp.TypeName => (Some(ident.symbol.fullName), false)
+        case _ => (Some(ident.symbol.nameString), true)
       }
     }
 
-    def valDefStr(valDef: comp.ValDef) = {
-      if (valDef.mods.isParamAccessor)
-        valDef.symbol.fullName
+    def handleValDef(valDef: comp.ValDef) = {
+      (Some(valDef.symbol.nameString), true)
+    }
+
+    def handleClassDef(classDef: comp.ClassDef) = {
+      val (className, qualifiy) = classDef.symbol match {
+        case classSym: comp.ClassSymbol if (classSym.isAnonymousClass) =>
+          (anonClassSymStr(classSym), true)
+        case sym =>
+          (sym.nameString, true)
+      }
+
+      (Some(className + tparamsStr(classDef.tparams)), qualifiy)
+    }
+
+    def handledefDef(defDef: comp.DefDef) = {
+      val symName = defDef.symbol.nameString
+      (Some(symName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
+    }
+
+    def anonClassSymStr(classSym: comp.ClassSymbol) = {
+      // Using a regular expression to extract information from anonOrRefinementString is not
+      // ideal, but the only easy way I found to reuse the functionality already implemented
+      // by Definitions.parentsString.
+      val symStr = classSym.anonOrRefinementString match {
+        case RxAnonOrRefinementString(symStr) => symStr
+        case _ => classSym.toString
+      }
+      s"new $symStr {...}"
+    }
+
+    def handleSelect(select: comp.Select) = select.qualifier match {
+      case comp.Block(List(stat: comp.ClassDef), _) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
+        (Some(anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString), false)
+      case _ => (Some(t.symbol.fullName), false)
+    }
+
+    def handleModuleDef(moduleDef: comp.ModuleDef) = {
+      if (moduleDef.symbol.isPackageObject)
+        (Some(moduleDef.symbol.owner.fullName), false)
       else
-        valDef.symbol.nameString
+        (Some(moduleDef.symbol.name), true)
     }
 
-    def classDefStr(classDef: comp.ClassDef) = {
-      val className = {
-        if (classDef.symbol.isLocalToBlock)
-          classDef.symbol.nameString
-        else
-          classDef.symbol.fullName
-      }
-      className + tparamsStr(classDef.tparams)
-    }
-
-    def defDefStr(defDef: comp.DefDef) = {
-      val symName = {
-        if (defDef.symbol.isLocalToBlock)
-          defDef.symbol.nameString
-        else
-          defDef.symbol.fullName
+    def handlePackageDef(packageDef: comp.PackageDef) = {
+      val name = {
+        if (packageDef.symbol.isEmptyPackage) None
+        else Some(packageDef.symbol.fullName)
       }
 
-      symName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)
+      (name, false)
     }
 
     if (t.symbol.isInstanceOf[comp.NoSymbol])
       None
     else {
       val (name, qualify) = t match {
-        case comp.Select(qualifier, name) => (Some(t.symbol.fullName), false)
-        case defDef: comp.DefDef => (Some(defDefStr(defDef)), true)
-        case classDef: comp.ClassDef => (Some(classDefStr(classDef)), true)
-        case valDef: comp.ValDef => (Some(valDefStr(valDef)), valDef.mods.isParameter)
-        case comp.Import(tree, selectors) => (importDefStr(loc, tree, selectors), false)
-        case ident: comp.Ident => (Some(identStr(ident)), true)
+        case select: comp.Select => handleSelect(select)
+        case defDef: comp.DefDef => handledefDef(defDef)
+        case classDef: comp.ClassDef => handleClassDef(classDef)
+        case moduleDef: comp.ModuleDef => handleModuleDef(moduleDef)
+        case valDef: comp.ValDef => handleValDef(valDef)
+        case comp.Import(tree, selectors) => handleImport(loc, tree, selectors)
+        case ident: comp.Ident => handleIdent(ident)
+        case packageDef: comp.PackageDef => handlePackageDef(packageDef)
         case _ => (Option(t.symbol).map(symbolName(_)), true)
       }
 
@@ -179,5 +203,4 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       name.map(prefix + _)
     }
   }
-
 }

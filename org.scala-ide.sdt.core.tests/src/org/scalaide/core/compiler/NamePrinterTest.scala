@@ -16,31 +16,31 @@ class NamePrinterTest {
   import NamePrinterTest._
 
   @Test
-  def testQnameWithTrivialClass() {
-    testQnameWith(
+  def testWithTrivialClass() {
+    testWith(
       """|package a.test.pgk.name
          |class TestClass/**/""",
       "a.test.pgk.name.TestClass")
   }
 
   @Test
-  def testQnameWithTrivialObject() {
-    testQnameWith(
+  def testWithTrivialObject() {
+    testWith(
       """|package a
          |object TestObject/**/""",
       "a.TestObject")
   }
 
   @Test
-  def testQnameWithTypeArg() {
-    testQnameWith(
+  def testWithTypeArg() {
+    testWith(
       "class TypeArg(list: List[String/**/])",
       "scala.Predef.String")
   }
 
   @Test
-  def testQnameWithMethodArg() {
-    testQnameWith(
+  def testWithMethodArg() {
+    testWith(
       """|import scala.collection.mutable
          |
          |class SomeClass {
@@ -50,8 +50,8 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithMethod() {
-    testQnameWith(
+  def testWithMethod() {
+    testWith(
       """|package a.pkg
          |
          |class Klasse {
@@ -61,8 +61,8 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithCurriedMethod() {
-    testQnameWith(
+  def testWithCurriedMethod() {
+    testWith(
       """|class Good {
          |def curry/**/(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String) = Unit()
          |}""",
@@ -70,22 +70,22 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithTrivialGenericTrait() {
-    testQnameWith(
+  def testWithTrivialGenericTrait() {
+    testWith(
       "trait TrivialGenericTrait/**/[T]",
       "TrivialGenericTrait[T]")
   }
 
   @Test
-  def testQnameWithTrivialTrait() {
-    testQnameWith(
+  def testWithTrivialTrait() {
+    testWith(
       "trait TrivialTrait/**/",
       "TrivialTrait")
   }
 
   @Test
-  def testQnameWithGenericMethod() {
-    testQnameWith(
+  def testWithGenericMethod() {
+    testWith(
       """|trait GenericMethod {
          |def generic/**/[T <: AnyRef](obj: T): Unit
          |}""",
@@ -93,16 +93,16 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithTopLevelImport() {
-    testQnameWith(
+  def testWithTopLevelImport() {
+    testWith(
       """|import scala.collection.mutable/**/
          |class TopLevelImport""",
       "scala.collection.mutable")
   }
 
   @Test
-  def testQnameWithNestedImport() {
-    testQnameWith(
+  def testWithNestedImport() {
+    testWith(
       """|object NestedImport
          |class NestedImport {
          |  import NestedImport._/**/
@@ -111,47 +111,47 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithMultiImportOnPackage() {
-    testQnameWith(
+  def testWithMultiImportOnPackage() {
+    testWith(
       """|import scala.collection.mutable/**/.{Set, Map, ListBuffer}
          |class MultiImportOnPackage""",
       "scala.collection.mutable")
   }
 
   @Test
-  def testQnameWithMultiImportOnType() {
-    testQnameWith(
+  def testWithMultiImportOnType() {
+    testWith(
       """|import scala.collection.mutable.{Set, Map/**/, ListBuffer}
          |class MultiImportOnType""",
       "scala.collection.mutable")
   }
 
   @Test
-  def testQnameWithRenamingImportOnOrigName() {
-    testQnameWith(
+  def testWithRenamingImportOnOrigName() {
+    testWith(
       """|import scala.collection.mutable.{Set/**/ => MySet}
          |class RenamingImportOnOrigName""",
       "scala.collection.mutable")
   }
 
   @Test
-  def testQnameWithRenamingImportOnNewName() {
-    testQnameWith(
+  def testWithRenamingImportOnNewName() {
+    testWith(
       """|import scala.collection.mutable.{Set => MySet/**/}
          |class RenamingImportOnNewName""",
       "scala.collection.mutable")
   }
 
   @Test
-  def testQnameWithCaseClassVal() {
-    testQnameWith(
+  def testWithCaseClassVal() {
+    testWith(
       "case class CaseClassVal(valium/**/: AnyRef)",
       "CaseClassVal.valium")
   }
 
   @Test
-  def testQnameWithTraitVar() {
-    testQnameWith(
+  def testWithTraitVar() {
+    testWith(
       """|trait TraitVar {
          |  var varrus/**/: Int
          |}""",
@@ -159,15 +159,15 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithClassParameter() {
-    testQnameWith(
+  def testWithClassParameter() {
+    testWith(
       "class ClassParameter(paranormal/**/: String)",
       "ClassParameter.paranormal")
   }
 
   @Test
-  def testQnameWithMethodParamOnDefinition() {
-    testQnameWith(
+  def testWithMethodParamOnDefinition() {
+    testWith(
       """|class MethodParamOnDefinition {
          |  def method(param/**/: Int) = param
          |}""",
@@ -175,8 +175,8 @@ class NamePrinterTest {
   }
 
   @Test
-  def testQnameWithMethodParamOnUse() {
-    testQnameWith(
+  def testWithMethodParamOnUse() {
+    testWith(
       """|class MethodParamOnUse {
          |  def method(param: Int) = param/**/
          |}""",
@@ -185,7 +185,7 @@ class NamePrinterTest {
 
   @Test
   def testWithFunctionArgs() {
-    testQnameWith(
+    testWith(
       """|class FunctionArgs {
          |  def method/**/(f: (Int, String) => Long): Long = f(42, "42")
          |}""",
@@ -194,7 +194,7 @@ class NamePrinterTest {
 
   @Test
   def testWithByNameArg() {
-    testQnameWith(
+    testWith(
       """|class ByNameArg {
          |  def method/**/(f: => Long): Long = f
          |}""",
@@ -203,7 +203,7 @@ class NamePrinterTest {
 
   @Test
   def testWithParentClass() {
-    testQnameWith(
+    testWith(
       """|package a.b.c
          |class Parent
          |class Child extends Parent/**/""",
@@ -212,7 +212,7 @@ class NamePrinterTest {
 
   @Test
   def testWithNestedMethod() {
-    testQnameWith(
+    testWith(
       """|class NestedMethod {
          |  def nest(p1: Int) = {
          |    def fun(p: => Int) = {
@@ -227,7 +227,7 @@ class NamePrinterTest {
 
   @Test
   def testWithLocalClass() {
-    testQnameWith(
+    testWith(
       """|class LocalClass {
          |  def fun(p1: Int) = {
          |    class Local/**/
@@ -235,7 +235,141 @@ class NamePrinterTest {
          |  }
          |}""",
       "LocalClass.fun(p1: Int).Local")
+  }
 
+  @Test
+  def testWitnAnonClassOnDef() {
+    testWith(
+      """|class AnonClassOnDef {
+         |  def fun() {
+         |    new java.lang.Runnable() {
+         |      def run/**/() = Unit
+         |    }.run()
+         |  }
+         |}""",
+      "AnonClassOnDef.fun().new Runnable {...}.run()")
+  }
+
+  @Test
+  def testWitnAnonClassWithMultipleParents() {
+    testWith(
+      """|trait Trait1
+         |trait Trait2
+         |class AnonClassWithMultipleParents {
+         |  def fun() {
+         |    new java.lang.Runnable() with Trait1 with Trait2 {
+         |      def run/**/() = Unit
+         |    }.run()
+         |  }
+         |}""",
+      "AnonClassWithMultipleParents.fun().new Runnable with Trait1 with Trait2 {...}.run()")
+  }
+
+  @Test
+  def testWitnAnonClassOnCall() {
+    testWith(
+      """|class AnonClassOnCall {
+         |  def fun() {
+         |    new java.lang.Runnable() {
+         |      def run() = Unit
+         |    }.run/**/()
+         |  }
+         |}""",
+      "new Runnable {...}.run")
+  }
+
+  @Test
+  def testWitnDeeplyNestedName() {
+    testWith(
+      """|package deeply.nested
+         |class Ca {
+         |  object Ob {
+         |    val X = new AnyRef {
+         |      def x(a: Int): Int = {
+         |        class C {
+         |           def x = {
+         |              val x = 42
+         |              a*x/**/
+         |           }
+         |         }
+         |         (new C).x
+         |       }
+         |    }.x(3)
+         |  }
+         |}""",
+      "deeply.nested.Ca.Ob.new AnyRef {...}.x(a: Int).C.x.x")
+  }
+
+  @Test
+  def testWithLocalObject() {
+    testWith(
+      """|class WithLocalObject {
+         |  def fun(x: Int) = {
+         |    object Local/**/
+         |    Local.hashCode * x
+         |  }
+         |}""",
+      "WithLocalObject.fun(x: Int).Local")
+  }
+
+  @Test
+  def testWithPackageObject() {
+    testWith(
+      """|package test.pkg
+         |package object obj {
+            val Valdemar/**/ = "Gunthar"
+         |}""",
+      "test.pkg.obj.Valdemar")
+  }
+
+  /*
+   * Adding support for backticks might be more work than one might initially think.
+   */
+  @Test
+  @Ignore
+  def testWithBackticks() {
+    testWith(
+      """|package `package`
+         |class ` `
+         |object `object` {
+         |  class `class` {
+         |     def `with`(`val`: ` `) = {
+         |       val `var` = "var"
+         |       `var`/**/ hashCode
+              }
+         |  }
+         |}""",
+      "`package`.`object`.`class`.`with`(`val`: ` `).`var`")
+  }
+
+  @Test
+  def testWithAnotherDeeplyNestedName() {
+    testWith(
+      """|class Using(something: String)
+         |class AnotherDeeplyNestedName {
+         |  object A {
+         |   def wwith(b: String) {
+         |     class And {
+         |        class K {
+         |          object C {
+         |            new Using("") {
+         |              def c() {
+         |                new Using("") {
+         |                  def e(f: Int) {
+         |                    object G {
+         |                      val H/**/ = 3
+         |                    }
+         |                  }
+         |                }
+         |              }
+         |            }
+         |          }
+         |        }
+         |      }
+         |    }
+         |  }
+         |}""",
+      "AnotherDeeplyNestedName.A.wwith(b: String).And.K.C.new Using {...}.c().new Using {...}.e(f: Int).G.H")
   }
 
   private def testQnameWith(input: String, expected: Option[String]) {
@@ -252,7 +386,7 @@ class NamePrinterTest {
     offset
   }
 
-  private def testQnameWith(input: String, expected: String) {
+  private def testWith(input: String, expected: String) {
     testQnameWith(input, Option(expected))
   }
 
