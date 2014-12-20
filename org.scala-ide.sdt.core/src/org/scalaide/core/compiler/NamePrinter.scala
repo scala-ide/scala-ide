@@ -1,15 +1,10 @@
 package org.scalaide.core.compiler
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.MILLISECONDS
-import scala.tools.nsc.interactive.Global
+import scala.reflect.internal.util.SourceFile
+
 import org.eclipse.jface.text.Region
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 import org.scalaide.util.eclipse.RegionUtils.RichRegion
-import scala.reflect.internal.util.SourceFile
-import scala.reflect.internal.Definitions
-import scala.reflect.runtime.SymbolTable
-import scala.tools.nsc.symtab.SymbolTable
 
 private object NamePrinter {
   private case class Location(src: SourceFile, offset: Int)

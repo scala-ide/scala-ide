@@ -1,8 +1,5 @@
 package org.scalaide.core.compiler
 
-import scala.annotation.elidable
-import scala.annotation.elidable.ASSERTION
-
 import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test

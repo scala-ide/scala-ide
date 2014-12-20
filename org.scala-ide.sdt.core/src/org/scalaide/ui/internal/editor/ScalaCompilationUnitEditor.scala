@@ -1,5 +1,6 @@
 package org.scalaide.ui.internal.editor
 
+import org.eclipse.jdt.internal.ui.javaeditor.IJavaEditorActionConstants
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jface.text.source.SourceViewerConfiguration
@@ -8,7 +9,6 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.internal.actions.ScalaCopyQualifiedNameAction
 import org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuidePainter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting
@@ -16,7 +16,6 @@ import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPai
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
 import org.scalaide.util.ui.DisplayThread
-import org.eclipse.jdt.internal.ui.javaeditor.IJavaEditorActionConstants
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
 trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
