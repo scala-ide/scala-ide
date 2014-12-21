@@ -79,39 +79,41 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
         symbol.fullName
     }
 
+    def paramssStr(paramss: List[List[comp.Symbol]]) = {
+     if (paramss.isEmpty) ""
+     else paramss.map(paramsStr(_)).mkString("")
+    }
+
+    def paramsStr(params: List[comp.Symbol]) = {
+      "(" + params.map(paramStr(_)).mkString(", ") + ")"
+    }
+
+    def paramStr(param: comp.Symbol) = {
+      param.name + ": " + declPrinterTypeStr(param.tpe)
+    }
+
     def vparamssStr(vparamss: List[List[comp.ValDef]]) = {
-      if (vparamss.isEmpty) {
-        ""
-      } else {
-        vparamss.map(vparamsStr(_)).mkString("")
-      }
+      paramssStr(vparamss.map(_.map(_.symbol)))
     }
 
-    def vparamsStr(vparams: List[comp.ValDef]) = {
-      "(" + vparams.map(vparmStr(_)).mkString(", ") + ")"
+    def tparamsStrFromTypeDefs(tparams: List[comp.TypeDef]) = {
+      tparamsStrFromSyms(tparams.map(_.symbol))
     }
 
-    def vparmStr(valDef: comp.ValDef) = {
-      val name = valDef.name
-      val tpt = valDef.tpt
+    def tparamsStrFromSyms(tparams: List[comp.Symbol]) = {
+      if (tparams.isEmpty) ""
+      else "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
+    }
 
-      val declPrinter = new DeclarationPrinter {
+    def tparamStr(sym: comp.Symbol) = {
+      shortName(sym.name)
+    }
+
+
+    def declPrinterTypeStr(tpe: comp.Type) = {
+      new DeclarationPrinter {
         val compiler: comp.type = comp
-      }
-
-      name.toString + ": " + declPrinter.showType(tpt.tpe)
-    }
-
-    def tparamsStr(tparams: List[comp.TypeDef]) = {
-      if (tparams.isEmpty) {
-        ""
-      } else {
-        "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
-      }
-    }
-
-    def tparamStr(tparam: comp.TypeDef) = {
-      shortName(tparam.name)
+      }.showType(tpe)
     }
 
     def shortName(name: comp.Name) = {
@@ -138,12 +140,12 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
           (sym.nameString, true)
       }
 
-      (Some(className + tparamsStr(classDef.tparams)), qualifiy)
+      (Some(className + tparamsStrFromTypeDefs(classDef.tparams)), qualifiy)
     }
 
     def handledefDef(defDef: comp.DefDef) = {
       val symName = defDef.symbol.nameString
-      (Some(symName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
+      (Some(symName + tparamsStrFromTypeDefs(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
     }
 
     def anonClassSymStr(classSym: comp.ClassSymbol) = {
@@ -157,10 +159,16 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       s"new $symStr {...}"
     }
 
-    def handleSelect(select: comp.Select) = select.qualifier match {
-      case comp.Block(List(stat: comp.ClassDef), _) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
-        (Some(anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString), false)
-      case _ => (Some(t.symbol.fullName), false)
+    def handleSelect(select: comp.Select) = {
+      (Some(selectStr(select)), false)
+    }
+
+    def selectStr(select: comp.Select) = select match {
+      case comp.Select(comp.Block(List(stat: comp.ClassDef), _), name) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
+        anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString
+      case comp.Select(qualifier, name) =>
+        if (select.symbol.isConstructor) qualifier.tpe.toString
+        else select.symbol.fullName
     }
 
     def handleModuleDef(moduleDef: comp.ModuleDef) = {
@@ -179,6 +187,18 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       (name, false)
     }
 
+    def handleApply(apply: comp.Apply) = {
+      val symInfo = apply.symbol.info
+      val paramsStr = tparamsStrFromSyms(symInfo.typeParams) + paramssStr(symInfo.paramss)
+
+      val name = apply.fun match {
+        case select: comp.Select => selectStr(select)
+        case _ => apply.symbol.fullName
+      }
+
+      (Some(name + paramsStr), false)
+    }
+
     if (t.symbol.isInstanceOf[comp.NoSymbol])
       None
     else {
@@ -191,6 +211,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
         case comp.Import(tree, selectors) => handleImport(loc, tree, selectors)
         case ident: comp.Ident => handleIdent(ident)
         case packageDef: comp.PackageDef => handlePackageDef(packageDef)
+        case apply: comp.Apply => handleApply(apply)
         case _ => (Option(t.symbol).map(symbolName(_)), true)
       }
 
