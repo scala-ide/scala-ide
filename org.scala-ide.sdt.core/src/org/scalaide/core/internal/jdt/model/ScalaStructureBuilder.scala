@@ -845,6 +845,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
                 (tag, values)
               case NestedAnnotArg(annInfo) =>
                 (IMemberValuePair.K_ANNOTATION, addAnnotations(List(annInfo), null, owner))
+              case value =>
+                throw new IllegalArgumentException(s"can't retrieve member value from $value")
             }
           }
 
