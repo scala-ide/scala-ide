@@ -53,5 +53,6 @@ object SdtConstants {
   final val JavaFileExtn = ".java"
 
   final val IssueTracker = "https://www.assembla.com/spaces/scala-ide/support/tickets"
+  final val SveltoHomepage = "https://github.com/dragos/svelto"
 
 }
