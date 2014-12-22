@@ -14,6 +14,7 @@ import org.eclipse.jface.text.ITypedRegion
 import java.lang.Math.max
 import java.lang.Math.min
 import org.scalaide.core.text.Document
+import scala.collection.mutable.ListBuffer
 
 /** Utility methods and extension classes around [[org.eclipse.jface.text.IRegion]]
  */
@@ -234,7 +235,7 @@ object RegionUtils {
   def intersect(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
     checkInput(a, b)
 
-    subtractImpl(a, subtractImpl(a, b))
+    subtractImpl(a, subtractImpl(a, b, ListBuffer()), ListBuffer())
   }
 
   /** Subtracts a list of regions from another one. The returned list contains the sections of the regions of list `a`
@@ -248,7 +249,7 @@ object RegionUtils {
   def subtract(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
     checkInput(a, b)
 
-    subtractImpl(a, b)
+    subtractImpl(a, b, ListBuffer())
   }
 
   /** Merges two lists of regions.
@@ -288,10 +289,11 @@ object RegionUtils {
     }
   }
 
-  /** Implements the subtract method
-   *  Lists must be ordered and non-overlapping
+  /** Implements the subtract method. `a` and `b` must be ordered and
+   *  non-overlapping, `res` is the list that is returned.
    */
-  private def subtractImpl(a: List[TypedRegion], b: List[TypedRegion]): List[TypedRegion] = {
+  @annotation.tailrec
+  private def subtractImpl(a: List[TypedRegion], b: List[TypedRegion], res: ListBuffer[TypedRegion]): List[TypedRegion] = {
     (a, b) match {
       case (x :: xs, y :: ys) =>
         val xStart = x.getOffset()
@@ -299,16 +301,17 @@ object RegionUtils {
         val yStart = y.getOffset()
         val yEnd = yStart + y.getLength() - 1
         if (x.getLength() == 0) {
-          subtract(xs, b)
-        } else if (xEnd < yStart)
+          subtractImpl(xs, b, res)
+        } else if (xEnd < yStart) {
           //x: ___
           //y:      +++
-          x :: subtract(xs, b)
-        else if (yEnd < xStart)
+          res += x
+          subtractImpl(xs, b, res)
+        } else if (yEnd < xStart) {
           //x:      ___
           //y: +++
-          subtract(a, ys)
-        else if (x.containsRegion(y)) { // x contains y
+          subtractImpl(a, ys, res)
+        } else if (x.containsRegion(y)) { // x contains y
           //x:   -------
           //y:    +++++
           val newElem =
@@ -329,26 +332,33 @@ object RegionUtils {
               //x:  -------
               //y:      ++
               List(new TypedRegion(yEnd + 1, xEnd - yEnd, x.getType()))
-          newElem ::: subtract(producedElem ::: xs, ys)
+          res ++= newElem
+          subtractImpl(producedElem ::: xs, ys, res)
         } else if (y.containsRegion(x)) { // y contains x
           //x:    -----
           //y:   +++++++
-          subtract(xs, b)
+          subtractImpl(xs, b, res)
         } else if (x.containsPositionExclusive(yEnd)) {
           //x:  -------
           //y: ++++
           val producedElem = new TypedRegion(yEnd + 1, xEnd - yEnd, x.getType())
-          subtract(producedElem :: xs, ys)
+          subtractImpl(producedElem :: xs, ys, res)
         } else if (x.containsPositionExclusive(yStart)) {
           //x:  -------
           //y:      ++++++
           val newElem = new TypedRegion(xStart, yStart - xStart, x.getType())
-          newElem :: subtract(xs, b)
+          res += newElem
+          subtractImpl(xs, b, res)
         } else {
           throw new RuntimeException("Unhandled case! Impossible!")
         }
-      case (xl, Nil) => xl
-      case (Nil, _) => Nil
+
+      case (xl, Nil) =>
+        res ++= xl
+        res.toList
+
+      case (Nil, _) =>
+        res.toList
     }
   }
 
