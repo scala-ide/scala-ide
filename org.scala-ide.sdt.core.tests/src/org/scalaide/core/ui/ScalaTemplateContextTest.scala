@@ -16,25 +16,25 @@ import org.junit.Assert
 class ScalaTemplateContextTest {
 
   val CARET = "_|_"
-  
+
   def runTest( textSoFar: String, template : String, expectedResult : String ) : Unit = {
-    
+
     val document = new Document(textSoFar.replace(CARET, ""))
     val contextType = new ScalaTemplateContextType
     contextType.setId( SdtConstants.PluginId + ".templates" )
-    
+
     val context = new ScalaTemplateContext(contextType, document, textSoFar.indexOf(CARET), document.getLength)
-    
+
     val templateObject = new Template("Test Template", "", contextType.getId, template)
-    
+
     val buffer = context.evaluate(templateObject)
-    
+
     Assert.assertEquals( expectedResult, buffer.getString )
   }
-  
+
   @Test
   def basicTest() {
-    val textSoFar = 
+    val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
       "}"
@@ -42,10 +42,10 @@ class ScalaTemplateContextTest {
     val expectedResult = template
     runTest( textSoFar, template, expectedResult )
   }
-  
+
   @Test
   def testMultilineTemplateWithLinuxLineEndings() {
-    val textSoFar = 
+    val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
       "}"
@@ -53,10 +53,10 @@ class ScalaTemplateContextTest {
     val expectedResult = "/**\n   *\n   *\n   */"
     runTest( textSoFar, template, expectedResult )
   }
-  
+
   @Test
   def testMultilineTemplateWithCarriageReturnLineEndings() {
-    val textSoFar = 
+    val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
       "}"
@@ -64,10 +64,10 @@ class ScalaTemplateContextTest {
     val expectedResult = "/**\r   *\r   *\r   */"
     runTest( textSoFar, template, expectedResult )
   }
-  
+
   @Test
   def testMultilineTemplateWithWindowsLineEndings() {
-    val textSoFar = 
+    val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
       "}"
