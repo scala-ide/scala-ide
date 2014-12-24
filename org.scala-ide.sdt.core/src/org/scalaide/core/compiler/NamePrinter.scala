@@ -4,6 +4,7 @@ import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.jface.text.Region
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 private object NamePrinter {
@@ -14,7 +15,7 @@ private object NamePrinter {
 /**
  * For printing names in an InteractiveCompilationUnit.
  */
-class NamePrinter(cu: InteractiveCompilationUnit) {
+class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
   import NamePrinter._
 
   /**
@@ -24,11 +25,17 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
    */
   def qualifiedNameAt(offset: Int): Option[String] = {
     cu.withSourceFile { (src, compiler) =>
-
       val scalaRegion = new Region(cu.sourceMap(cu.getContents()).scalaPos(offset), 1)
-      compiler.askTypeAt(scalaRegion.toRangePos(src)).getOption() match {
-        case Some(tree) => qualifiedName(Location(src, offset), compiler)(tree)
-        case _ => None
+
+      val res = compiler.askTypeAt(scalaRegion.toRangePos(src)).get.left.map { tree =>
+        qualifiedName(Location(src, offset), compiler)(tree)
+      }
+
+      res match {
+        case Left(qname) => qname
+        case Right(th) =>
+          logger.error("Error loading qualfied name", th)
+          None
       }
     }.flatten
   }
