@@ -2,8 +2,42 @@ package org.scalaide.core.semantichighlighting.classifier
 
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
+import scala.annotation.tailrec
 
 object RegionParser {
+
+  /**
+   * This class represents a substring with an optional prefix and suffix.
+   */
+  case class EmbeddedSubstr(str: String, prefix: String = "", suffix: String = "") {
+    private[RegionParser] val searchString = prefix + str + suffix
+  }
+
+  object EmbeddedSubstr {
+    implicit def wrapAsEmbeddedSubstring(str: String) = EmbeddedSubstr(str)
+  }
+
+
+  /**
+   * Extracts the regions marked by the given substrings.
+   */
+  def substrRegions(test: String, substrs: EmbeddedSubstr*): Map[IRegion, EmbeddedSubstr] = {
+    @tailrec
+    def regions(substr: EmbeddedSubstr, fromIndex: Int = 0, acc: Seq[IRegion] = Seq()): Seq[IRegion] = {
+      val index = test.indexOf(substr.searchString, fromIndex)
+      if (index < 0) {
+        acc
+      } else {
+        val newAcc = acc :+ new Region(index + substr.prefix.length, substr.str.length)
+        regions(substr, index + substr.searchString.length, newAcc)
+      }
+
+    }
+
+    substrs.foldLeft(Map[IRegion, EmbeddedSubstr]()) { (acc, substr) =>
+      acc ++ regions(substr).map(_ -> substr)
+    }
+  }
 
   /**
    * Search for regions delimited with a sign. In the default case the
@@ -26,7 +60,7 @@ object RegionParser {
    * are handled as there were no escape sign. This means that the String `$a\$b$`
    * is treated as  `$a$b$`.
    */
-  def getRegions(text: String, delimiter: Char = '$'): Map[IRegion, String] = {
+  def delimitedRegions(text: String, delimiter: Char = '$'): Map[IRegion, String] = {
     val sb = new StringBuilder
     var curPos = 0
     var offset = 0

@@ -1,0 +1,44 @@
+package org.scalaide.ui.internal.preferences
+
+import org.eclipse.swt.widgets.Composite
+import org.eclipse.swt.widgets.Control
+import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.scalaide.core.IScalaPlugin
+
+class CallByNameParamCreationPreferencePage extends BasicFieldEditorPreferencePage("Configure highlighting for the creation of call-by-name parameters") {
+  import CallByNameParamCreationPreferencePage._
+
+  override def createContents(parent: Composite): Control = {
+    val control = super.createContents(parent).asInstanceOf[Composite]
+    PrefPageUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for call-by-name parameters on the $a preference page.")
+    control
+  }
+
+  override def createFieldEditors() {
+    addBooleanFieldEditors(
+      P_ACTIVE -> "Enabled",
+      P_BOLD -> "Bold",
+      P_ITALIC -> "Italic",
+      P_FIRST_LINE_ONLY -> "Only highlight the first line")
+  }
+}
+
+object CallByNameParamCreationPreferencePage {
+  val BASE = "scala.tools.eclipse.ui.preferences.callByNameParamCreation"
+  val P_ACTIVE = BASE + ".enabled"
+  val P_BOLD = BASE + ".text.bold"
+  val P_ITALIC = BASE + ".text.italic"
+  val P_FIRST_LINE_ONLY  = BASE + ".firstline.only"
+}
+
+class CallByNameParamCreationPreferenceInitializer extends AbstractPreferenceInitializer {
+  import CallByNameParamCreationPreferencePage._
+
+  override def initializeDefaultPreferences() {
+    val store = IScalaPlugin().getPreferenceStore
+    store.setDefault(P_ACTIVE, true)
+    store.setDefault(P_BOLD, false)
+    store.setDefault(P_ITALIC, false)
+    store.setDefault(P_FIRST_LINE_ONLY, true)
+  }
+}

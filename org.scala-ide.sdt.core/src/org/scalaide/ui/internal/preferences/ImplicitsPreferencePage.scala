@@ -14,36 +14,23 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.ui.dialogs.PreferencesUtil
 
-class ImplicitsPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
+class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the highlighting for implicit conversions and implicit parameters") {
   import ImplicitsPreferencePage._
-  import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
-
-  setPreferenceStore(IScalaPlugin().getPreferenceStore)
-  setDescription("""
-Set the highlighting for implicit conversions and implicit parameters.
-  """)
 
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
-    val link = new Link(control, SWT.NONE)
-    link.setText("""More options for highlighting for implicit conversions on the <a href="org.eclipse.ui.editors.preferencePages.Annotations">Text Editors/Annotations</a> preference page.""")
-    link.addSelectionListener { e: SelectionEvent =>
-      PreferencesUtil.createPreferenceDialogOn(parent.getShell, e.text, null, null)
-    }
-
+    PrefPageUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for implicit conversions on the $a preference page.")
     control
   }
 
   override def createFieldEditors() {
-    addField(new BooleanFieldEditor(P_ACTIVE, "Enabled", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_BOLD, "Bold", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ITALIC, "Italic", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_CONVERSIONS_ONLY, "Only highlight implicit conversions", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_FIRST_LINE_ONLY, "Only highlight the first line in an implicit conversion", getFieldEditorParent))
+    addBooleanFieldEditors(
+      P_ACTIVE -> "Enabled",
+      P_BOLD -> "Bold",
+      P_ITALIC -> "Italic",
+      P_CONVERSIONS_ONLY -> "Only highlight implicit conversions",
+      P_FIRST_LINE_ONLY -> "Only highlight the first line in an implicit conversion")
   }
-
-  def init(workbench: IWorkbench) {}
-
 }
 
 object ImplicitsPreferencePage {

@@ -33,7 +33,7 @@ class AbstractSymbolClassifierTest {
   }
 
   protected def checkSymbolInfoClassification(source: String, locationTemplate: String, regionTagToSymbolInfo: Map[String, SymbolInfo], delimiter: Char = '$') {
-    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate, delimiter)
+    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.delimitedRegions(locationTemplate, delimiter)
     val expectedRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
       expectedRegionToSymbolNameMap.mapValues(regionTagToSymbolInfo).toList sortBy regionOffset
     val actualRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
