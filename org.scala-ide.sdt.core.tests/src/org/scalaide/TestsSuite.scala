@@ -49,6 +49,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.core.pc.DeclarationPrinterTest
 import org.scalaide.core.compiler.NamePrinterTest
+import org.scalaide.core.ui.ScalaTemplateContextTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -101,6 +102,7 @@ import org.scalaide.core.compiler.NamePrinterTest
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
     classOf[DeclarationPrinterTest],
-    classOf[NamePrinterTest]
+    classOf[NamePrinterTest],
+    classOf[ScalaTemplateContextTest]
 ))
 class TestsSuite

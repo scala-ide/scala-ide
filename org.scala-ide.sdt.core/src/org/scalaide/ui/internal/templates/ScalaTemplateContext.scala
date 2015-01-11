@@ -23,14 +23,15 @@ class ScalaTemplateContext(contextType: TemplateContextType, document: IDocument
     val text = buffer.getString()
     val legalLineEnds = document.getLegalLineDelimiters()
 
-    val (breakOffsets, lineEnds) = (for (m <- legalLineEnds.mkString("|").r.findAllMatchIn(text).toList) yield {
+    val regexStr = legalLineEnds.sortBy( s => -s.length ).mkString("|")
+    val (breakOffsets, lineEnds) = (for (m <- regexStr.r.findAllMatchIn(text).toList) yield {
       (m.start, m.matched)
     }) unzip
 
     val actualLineEnd = lineEnds.headOption.getOrElse(document.getLineDelimiter(document.getLineOfOffset(offset)))
 
     // the template might use any legal line ending
-    val result = text.split(legalLineEnds.mkString("|")).mkString(actualLineEnd + indentation)
+    val result = text.split(regexStr).mkString(actualLineEnd + indentation)
 
     def newOffset(x: Int): Int = {
       x + breakOffsets.takeWhile(x >).size * indentation.length
