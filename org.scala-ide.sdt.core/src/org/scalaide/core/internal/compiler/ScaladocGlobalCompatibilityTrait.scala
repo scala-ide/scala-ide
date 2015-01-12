@@ -7,6 +7,18 @@ import scala.tools.nsc.symtab.BrowsingLoaders
 
 trait InteractiveScaladocAnalyzer extends interactive.InteractiveAnalyzer with ScaladocAnalyzer {
     val global : Global
+    import global._
+
+    /** Overridden to fix #1002367. */
+    override def newNamer(context: Context) = new Namer(context) with InteractiveNamer {
+      override def standardEnterSym(t: Tree): Context = t match {
+        case DocDef(_, defn) =>
+          super.standardEnterSym(defn)
+        case t =>
+          super.standardEnterSym(t)
+      }
+    }
+
     override def newTyper(context: Context) = new Typer(context) with InteractiveTyper with ScaladocTyper {
       override def canAdaptConstantTypeToLiteral = false
     }
