@@ -1,54 +1,44 @@
 package org.scalaide.core.internal.builder
 package zinc
 
-import scala.tools.nsc.Global
-import scala.tools.nsc.Settings
-import scala.collection.mutable
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IMarker
-import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.core.runtime.Path
 import java.io.File
-import xsbti.compile.CompileProgress
-import xsbti.Logger
-import xsbti.F0
-import sbt.Process
-import sbt.ClasspathOptions
-import org.scalaide.core.resources.EclipseResource
-import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.eclipse.core.resources.IResource
-import org.scalaide.logging.HasLogger
-import sbt.inc.AnalysisStore
-import sbt.inc.Analysis
-import sbt.inc.FileBasedStore
-import sbt.inc.Incremental
-import sbt.inc.IncOptions
-import sbt.compiler.IC
-import sbt.compiler.CompileFailed
-import org.eclipse.core.resources.IProject
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.internal.builder.EclipseBuildManager
-import xsbti.compile.Inputs
-import sbt.compiler.AnalyzingCompiler
-import sbt.compiler.AggressiveCompile
-import sbt.inc.IncOptions
-import xsbti.Maybe
-import org.scalaide.util.internal.SbtUtils.m2o
-import scala.tools.nsc.settings.ScalaVersion
-import org.scalaide.core.IScalaInstallation
-import scala.tools.nsc.settings.SpecificScalaVersion
-import scala.util.hashing.Hashing
-import sbt.inc.SourceInfo
-import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.util.internal.SbtUtils
-import org.scalaide.core.SdtConstants
 
-/** An Eclipse builder using the Sbt engine.
+import scala.collection.mutable
+import scala.tools.nsc.Settings
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.OperationCanceledException
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.SubMonitor
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.builder.BuildProblemMarker
+import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.internal.SbtUtils
+import org.scalaide.util.internal.SbtUtils.m2o
+
+import sbt.Logger.xlog2Log
+import sbt.compiler.AggressiveCompile
+import sbt.compiler.CompileFailed
+import sbt.compiler.IC
+import sbt.inc.Analysis
+import sbt.inc.IncOptions
+import sbt.inc.SourceInfo
+import xsbti.F0
+import xsbti.Logger
+import xsbti.compile.CompileProgress
+
+/**
+ * An Eclipse builder using the Sbt engine.
  *
  *  The classpath is handled by delegating to the underlying project. That means
  *  a valid Scala library has to exist on the classpath, but it's not limited to
@@ -94,6 +84,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
     try {
       update(toBuild, removed)
     } catch {
+      case oce: OperationCanceledException =>
+        throw oce
       case e: Throwable =>
         hasErrors = true
         BuildProblemMarker.create(project, e)
@@ -120,7 +112,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
       sources --= files
   }
 
-  /** The given files have been modified by the user. Recompile
+  /**
+   * The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
   private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]) {
@@ -191,7 +184,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   private[zinc] def latestAnalysis(incOptions: => IncOptions): Analysis =
     Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile, incOptions))
 
-  /** Inspired by IC.compile
+  /**
+   * Inspired by IC.compile
    *
    *  We need to duplicate IC.compile (by inlining insde this
    *  private method) because the Java interface it has as a
@@ -233,6 +227,9 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
     override def startUnit(phaseName: String, unitPath: String) {
       def unitIPath: IPath = Path.fromOSString(unitPath)
 
+      if (monitor.isCanceled)
+        throw new OperationCanceledException
+
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
       if (phaseName == "parser") {
         val file = FileUtils.resourceForPath(unitIPath, project.underlying.getFullPath)
@@ -254,7 +251,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
 
     override def advance(current: Int, total: Int): Boolean =
       if (monitor.isCanceled) {
-        false
+        throw new OperationCanceledException
       } else {
         if (savedTotal != total) {
           monitor.setWorkRemaining(total - lastWorked)
