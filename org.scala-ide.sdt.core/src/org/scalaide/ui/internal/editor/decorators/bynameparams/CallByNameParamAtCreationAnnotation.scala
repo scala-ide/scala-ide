@@ -7,7 +7,7 @@ object CallByNameParamAtCreationAnnotation {
   val ID = "scala.tools.eclipse.semantichighlighting.callByNameParam.creationAnnotation"
 }
 
-class CallByNameParamAtCreationAnnotation(text: String)
+final class CallByNameParamAtCreationAnnotation(text: String)
   extends Annotation(CallByNameParamAtCreationAnnotation.ID, false, text) with ScalaEditorAnnotation {
 
 }

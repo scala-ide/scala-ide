@@ -13,7 +13,7 @@ import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferencePage
 import org.scalaide.core.IScalaPlugin
 
-class CallByNameParamAtCreationPresenter(sourceViewer: ISourceViewer) extends
+final class CallByNameParamAtCreationPresenter(sourceViewer: ISourceViewer) extends
   BaseSemanticAction(sourceViewer, CallByNameParamAtCreationAnnotation.ID, Some("callByNameParamCreation")) {
 
   import CallByNameParamAtCreationPresenter._
