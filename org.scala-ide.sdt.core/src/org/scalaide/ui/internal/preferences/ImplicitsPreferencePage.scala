@@ -35,12 +35,11 @@ class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the hi
 }
 
 object ImplicitsPreferencePage {
-  val BASE = "scala.tools.eclipse.ui.preferences.implicit."
-  val P_ACTIVE = BASE + "enabled"
-  val P_BOLD = BASE + "text.bold"
-  val P_ITALIC = BASE + "text.italic"
-  val P_CONVERSIONS_ONLY = BASE + "conversions.only"
-  val P_FIRST_LINE_ONLY  = BASE + "firstline.only"
+  val P_ACTIVE = "scala.tools.eclipse.ui.preferences.implicit.enabled"
+  val P_BOLD = "scala.tools.eclipse.ui.preferences.implicit.text.bold"
+  val P_ITALIC = "scala.tools.eclipse.ui.preferences.implicit.text.italic"
+  val P_CONVERSIONS_ONLY = "scala.tools.eclipse.ui.preferences.implicit.conversions.only"
+  val P_FIRST_LINE_ONLY = "scala.tools.eclipse.ui.preferences.implicit.firstline.only"
 }
 
 class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {

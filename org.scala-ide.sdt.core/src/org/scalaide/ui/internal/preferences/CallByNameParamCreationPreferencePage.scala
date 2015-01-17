@@ -25,11 +25,10 @@ class CallByNameParamCreationPreferencePage extends BasicFieldEditorPreferencePa
 }
 
 object CallByNameParamCreationPreferencePage {
-  val BASE = "scala.tools.eclipse.ui.preferences.callByNameParamCreation"
-  val P_ACTIVE = BASE + ".enabled"
-  val P_BOLD = BASE + ".text.bold"
-  val P_ITALIC = BASE + ".text.italic"
-  val P_FIRST_LINE_ONLY  = BASE + ".firstline.only"
+  val P_ACTIVE = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.enabled"
+  val P_BOLD = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.bold"
+  val P_ITALIC = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.italic"
+  val P_FIRST_LINE_ONLY  = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.firstline.only"
 }
 
 class CallByNameParamCreationPreferenceInitializer extends AbstractPreferenceInitializer {
