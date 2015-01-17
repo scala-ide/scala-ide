@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor.decorators.bynameparams
 
 import scala.annotation.migration
-
 import org.eclipse.jface.text.Region
 import org.junit.Assert.assertEquals
 import org.junit.Assert._
@@ -9,18 +8,13 @@ import org.junit.Test
 import org.scalaide.CompilerSupportTests
 import org.scalaide.core.semantichighlighting.classifier.RegionParser
 import org.scalaide.core.semantichighlighting.classifier.RegionParser.EmbeddedSubstr
-import org.scalaide.core.semantichighlighting.classifier.RegionParser.EmbeddedSubstr.wrapAsEmbeddedSubstring
-
 import CallByNameParamAtCreationPresenterTest.mkScalaCompilationUnit
+import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationPresenter.Cfg
 
 object CallByNameParamAtCreationPresenterTest extends CompilerSupportTests
 
 class CallByNameParamAtCreationPresenterTest {
   import CallByNameParamAtCreationPresenterTest._
-
-  import RegionParser.EmbeddedSubstr
-  import RegionParser.EmbeddedSubstr.wrapAsEmbeddedSubstring
-  import CallByNameParamAtCreationPresenter.Cfg
 
   @Test
   def testWithStringArgument() {
