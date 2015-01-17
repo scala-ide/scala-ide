@@ -27,7 +27,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
 
   private def prefStoreCfg: Cfg = {
     val prefStore = IScalaPlugin().getPreferenceStore
-    Cfg(prefStore.getBoolean(CallByNameParamCreationPreferencePage.P_FIRST_LINE_ONLY))
+    Cfg(prefStore.getBoolean(CallByNameParamCreationPreferencePage.PFirstLineOnly))
   }
 
   /**

@@ -26,20 +26,20 @@ class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the hi
 
   override def createFieldEditors() {
     addBooleanFieldEditors(
-      P_ACTIVE -> "Enabled",
-      P_BOLD -> "Bold",
-      P_ITALIC -> "Italic",
-      P_CONVERSIONS_ONLY -> "Only highlight implicit conversions",
-      P_FIRST_LINE_ONLY -> "Only highlight the first line in an implicit conversion")
+      PActive -> "Enabled",
+      PBold -> "Bold",
+      PItalic -> "Italic",
+      PConversionsOnly -> "Only highlight implicit conversions",
+      PFirstLineOnly -> "Only highlight the first line in an implicit conversion")
   }
 }
 
 object ImplicitsPreferencePage {
-  val P_ACTIVE = "scala.tools.eclipse.ui.preferences.implicit.enabled"
-  val P_BOLD = "scala.tools.eclipse.ui.preferences.implicit.text.bold"
-  val P_ITALIC = "scala.tools.eclipse.ui.preferences.implicit.text.italic"
-  val P_CONVERSIONS_ONLY = "scala.tools.eclipse.ui.preferences.implicit.conversions.only"
-  val P_FIRST_LINE_ONLY = "scala.tools.eclipse.ui.preferences.implicit.firstline.only"
+  val PActive = "scala.tools.eclipse.ui.preferences.implicit.enabled"
+  val PBold = "scala.tools.eclipse.ui.preferences.implicit.text.bold"
+  val PItalic = "scala.tools.eclipse.ui.preferences.implicit.text.italic"
+  val PConversionsOnly = "scala.tools.eclipse.ui.preferences.implicit.conversions.only"
+  val PFirstLineOnly = "scala.tools.eclipse.ui.preferences.implicit.firstline.only"
 }
 
 class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
@@ -48,10 +48,10 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences() {
     val store = IScalaPlugin().getPreferenceStore
-    store.setDefault(P_ACTIVE, true)
-    store.setDefault(P_BOLD, false)
-    store.setDefault(P_ITALIC, false)
-    store.setDefault(P_CONVERSIONS_ONLY, true)
-    store.setDefault(P_FIRST_LINE_ONLY, true)
+    store.setDefault(PActive, true)
+    store.setDefault(PBold, false)
+    store.setDefault(PItalic, false)
+    store.setDefault(PConversionsOnly, true)
+    store.setDefault(PFirstLineOnly, true)
   }
 }

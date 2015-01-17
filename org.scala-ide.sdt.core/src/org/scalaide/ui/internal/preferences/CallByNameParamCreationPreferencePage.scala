@@ -17,18 +17,18 @@ class CallByNameParamCreationPreferencePage extends BasicFieldEditorPreferencePa
 
   override def createFieldEditors() {
     addBooleanFieldEditors(
-      P_ACTIVE -> "Enabled",
-      P_BOLD -> "Bold",
-      P_ITALIC -> "Italic",
-      P_FIRST_LINE_ONLY -> "Only highlight the first line")
+      PActive -> "Enabled",
+      PBold -> "Bold",
+      PItalic -> "Italic",
+      PFirstLineOnly -> "Only highlight the first line")
   }
 }
 
 object CallByNameParamCreationPreferencePage {
-  val P_ACTIVE = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.enabled"
-  val P_BOLD = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.bold"
-  val P_ITALIC = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.italic"
-  val P_FIRST_LINE_ONLY  = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.firstline.only"
+  val PActive = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.enabled"
+  val PBold = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.bold"
+  val PItalic = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.text.italic"
+  val PFirstLineOnly  = "scala.tools.eclipse.ui.preferences.callByNameParamCreation.firstline.only"
 }
 
 class CallByNameParamCreationPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -36,9 +36,9 @@ class CallByNameParamCreationPreferenceInitializer extends AbstractPreferenceIni
 
   override def initializeDefaultPreferences() {
     val store = IScalaPlugin().getPreferenceStore
-    store.setDefault(P_ACTIVE, true)
-    store.setDefault(P_BOLD, false)
-    store.setDefault(P_ITALIC, false)
-    store.setDefault(P_FIRST_LINE_ONLY, true)
+    store.setDefault(PActive, true)
+    store.setDefault(PBold, false)
+    store.setDefault(PItalic, false)
+    store.setDefault(PFirstLineOnly, true)
   }
 }
