@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor.decorators.params.byname
+package org.scalaide.ui.internal.editor.decorators.bynameparams
 
 import org.eclipse.jface.text.source.Annotation
 import org.scalaide.ui.editor.ScalaEditorAnnotation

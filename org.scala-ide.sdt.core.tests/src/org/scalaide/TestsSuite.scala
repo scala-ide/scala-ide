@@ -50,7 +50,7 @@ import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.core.pc.DeclarationPrinterTest
 import org.scalaide.core.compiler.NamePrinterTest
 import org.scalaide.core.ui.ScalaTemplateContextTest
-import org.scalaide.ui.internal.editor.decorators.params.byname.CallByNameParamAtCreationPresenterTest
+import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationPresenterTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(

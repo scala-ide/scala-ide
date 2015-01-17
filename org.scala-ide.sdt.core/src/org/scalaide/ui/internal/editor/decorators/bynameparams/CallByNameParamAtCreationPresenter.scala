@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor.decorators.params.byname
+package org.scalaide.ui.internal.editor.decorators.bynameparams
 
 import org.scalaide.core.extensions.SemanticHighlightingParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit

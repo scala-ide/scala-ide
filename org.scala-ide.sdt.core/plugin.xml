@@ -1904,7 +1904,7 @@
           class="org.scalaide.ui.internal.editor.decorators.custom.MutableCollectionCallHighlightingParticipant">
     </participant>
     <participant
-          class="org.scalaide.ui.internal.editor.decorators.params.byname.CallByNameParamAtCreationHighlightingParticipant">
+          class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
     </participant>
  </extension>
 </plugin>

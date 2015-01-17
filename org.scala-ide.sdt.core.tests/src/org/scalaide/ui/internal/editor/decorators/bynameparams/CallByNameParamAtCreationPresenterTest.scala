@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor.decorators.params.byname
+package org.scalaide.ui.internal.editor.decorators.bynameparams
 
 import scala.annotation.migration
 
