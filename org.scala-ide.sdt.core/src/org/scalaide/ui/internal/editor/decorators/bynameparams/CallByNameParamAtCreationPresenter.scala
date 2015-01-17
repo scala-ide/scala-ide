@@ -51,7 +51,9 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
         }
 
         def processArgs(funTpe: compiler.Type, args: List[compiler.Tree]): Map[Annotation, Position] = {
-          if (funTpe.params.size != args.size /* <- possible for faulty code */) {
+          if (funTpe.params.size != args.size) {
+            // This might happen for code that does not compile cleanly; run the Unit-Tests for this class with an appropriate breakpoint
+            // if you are interested in details.
             Map()
           } else {
             val byNameArgs = funTpe.params.zip(args).withFilter { case (param, _) =>

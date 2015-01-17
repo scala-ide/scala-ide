@@ -111,11 +111,11 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithCompilationErrorInArg() {
+  def testWithBrokenMethodCall() {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = Unit
-        alreadyDefined("" "ups")
+        notDefined("" "ups")
       }""")
   }
 
