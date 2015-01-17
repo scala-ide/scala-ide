@@ -6,6 +6,9 @@ import org.eclipse.ui.IWorkbench
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.BooleanFieldEditor
 
+/**
+ * Abstract base class for simple preference pages to avoid code duplication.
+ */
 abstract class BasicFieldEditorPreferencePage(description: String) extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
   setPreferenceStore(IScalaPlugin().getPreferenceStore)
   setDescription(description)

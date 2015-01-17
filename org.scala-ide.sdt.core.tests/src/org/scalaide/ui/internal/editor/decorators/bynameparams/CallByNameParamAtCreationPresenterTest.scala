@@ -146,7 +146,7 @@ class CallByNameParamAtCreationPresenterTest {
   private def testWith(source: String, cfg: Cfg, paramCreations: EmbeddedSubstr*) {
     val cu = mkScalaCompilationUnit(source)
     cu.withSourceFile { (sourceFile, compiler) =>
-      val res = CallByNameParamAtCreationPresenter.annotations(compiler, cu, sourceFile, cfg)
+      val res = CallByNameParamAtCreationPresenter.findByNameParamCreations(compiler, cu, sourceFile, cfg)
       val regions = res.values.map(pos => new Region(pos.offset, pos.length)).toSet
       val expectedRegions = RegionParser.substrRegions(source, paramCreations: _*).keySet
       assertEquals(expectedRegions, regions)

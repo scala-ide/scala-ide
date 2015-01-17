@@ -19,19 +19,24 @@ final class CallByNameParamAtCreationPresenter(sourceViewer: ISourceViewer) exte
   import CallByNameParamAtCreationPresenter._
 
   protected override def findAll(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile): Map[Annotation, Position] =
-    CallByNameParamAtCreationPresenter.annotations(compiler, scu, sourceFile, prefStoreCfg)
+    CallByNameParamAtCreationPresenter.findByNameParamCreations(compiler, scu, sourceFile, prefStoreCfg)
 }
 
 object CallByNameParamAtCreationPresenter extends HasLogger {
-  case class Cfg(firstLineOnly: Boolean)
+  final case class Cfg(firstLineOnly: Boolean)
 
   private def prefStoreCfg: Cfg = {
     val prefStore = IScalaPlugin().getPreferenceStore
     Cfg(prefStore.getBoolean(CallByNameParamCreationPreferencePage.P_FIRST_LINE_ONLY))
   }
 
-  def annotations(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile, cfg: Cfg): Map[Annotation, Position] = {
-    def annotations(tree: compiler.Tree) = {
+  /**
+   * Finds all places in the source where call-by-name parameters are created.
+   *
+   * See #1002340 for further information.
+   */
+  def findByNameParamCreations(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile, cfg: Cfg): Map[Annotation, Position] = {
+    def findByNameParamCreations(tree: compiler.Tree) = {
 
       object traverser extends compiler.Traverser {
         var result: Map[Annotation, Position] = Map()
@@ -55,7 +60,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
 
             (for (arg <- byNameArgs) yield {
               val txt = toText(arg)
-              (toAnnotation(arg, txt), toPositioin(arg, txt))
+              (toAnnotation(arg, txt), toPosition(arg, txt))
             }).toMap
           }
         }
@@ -68,7 +73,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
           new CallByNameParamAtCreationAnnotation(s"Call-by-name parameter creation: () => $txt")
         }
 
-        def toPositioin(arg: compiler.Tree, txt: String): Position = {
+        def toPosition(arg: compiler.Tree, txt: String): Position = {
           val start = arg.pos.start
           val length = {
             if (cfg.firstLineOnly) {
@@ -87,7 +92,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
     }
 
     compiler.askLoadedTyped(sourceFile, false).get match {
-      case Left(tree) => annotations(tree)
+      case Left(tree) => findByNameParamCreations(tree)
       case Right(th) =>
         logger.error("Error while searching for call-by-name parameter creations.", th)
         Map()
