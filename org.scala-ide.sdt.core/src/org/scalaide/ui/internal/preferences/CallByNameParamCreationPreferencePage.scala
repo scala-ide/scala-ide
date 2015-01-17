@@ -4,13 +4,14 @@ import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.util.eclipse.SWTUtils
 
 class CallByNameParamCreationPreferencePage extends BasicFieldEditorPreferencePage("Configure highlighting for the creation of call-by-name parameters") {
   import CallByNameParamCreationPreferencePage._
 
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
-    PrefPageUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for call-by-name parameters on the $a preference page.")
+    SWTUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for call-by-name parameters on the $a preference page.")
     control
   }
 

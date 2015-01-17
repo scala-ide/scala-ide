@@ -13,13 +13,14 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.ui.dialogs.PreferencesUtil
+import org.scalaide.util.eclipse.SWTUtils
 
 class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the highlighting for implicit conversions and implicit parameters") {
   import ImplicitsPreferencePage._
 
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
-    PrefPageUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for implicit conversions on the $a preference page.")
+    SWTUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for implicit conversions on the $a preference page.")
     control
   }
 

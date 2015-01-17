@@ -11,6 +11,7 @@ import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.IWorkbenchWindow
+import org.eclipse.ui.dialogs.PreferencesUtil
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
@@ -179,5 +180,18 @@ object SWTUtils {
     horizontalSpan: Int = 1,
     verticalSpan: Int = 1): GridData =
     new GridData(horizontalAlignment, verticalAlignment, grabExcessHorizontalSpace, grabExcessVerticalSpace, horizontalSpan, verticalSpan)
+
+  def mkLink(parent: Composite, anchor: String, style: Int = SWT.None)(anchorToLinkText: String => String) = {
+    val link = new Link(parent, style)
+    link.setText(anchorToLinkText(anchor))
+    link.addSelectionListener { e: SelectionEvent =>
+      PreferencesUtil.createPreferenceDialogOn(parent.getShell, e.text, null, null)
+    }
+    link
+  }
+
+  def mkLinkToAnnotationsPref(parent: Composite, style: Int = SWT.None)(anchorToLinkText: String => String) = {
+    mkLink(parent, """<a href="org.eclipse.ui.editors.preferencePages.Annotations">Text Editors/Annotations</a>""", style)(anchorToLinkText)
+  }
 
 }
