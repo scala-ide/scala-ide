@@ -27,11 +27,11 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>client</artifactId>
+                  <artifactId>client-2-11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-actor_2.10</artifactId>
+                  <artifactId>akka-actor_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
@@ -59,23 +59,23 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-json_2.10</artifactId>
+                  <artifactId>play-json_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-iteratees_2.10</artifactId>
+                  <artifactId>play-iteratees_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-functional_2.10</artifactId>
+                  <artifactId>play-functional_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-datacommons_2.10</artifactId>
+                  <artifactId>play-datacommons_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-stm</groupId>
-                  <artifactId>scala-stm_2.10</artifactId>
+                  <artifactId>scala-stm_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>joda-time</groupId>

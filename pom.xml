@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>plugin-profiles</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.8</version>
   </parent>
 
   <groupId>org.scala-ide</groupId>
@@ -19,28 +19,28 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-2ed540099de878afad149a1b86d395ab13f92f53</sbtrc.version>
-    <sbtrc.repo>http://download.scala-ide.org/sbt-integration/m2repo/</sbtrc.repo>
-    <akka.version>2.2.0</akka.version>
+    <sbtrc.version>1.0-4f04b935f4328833346698fd1d1a39841152b15c</sbtrc.version>
+    <sbtrc.repo>http://repo.typesafe.com/typesafe/releases</sbtrc.repo>
+    <akka.version>2.3.9</akka.version>
     <config.version>1.0.0</config.version>
-    <sbt.version>0.13.2-M2</sbt.version>
-    <sbtlaunch.version>0.13.2-M2</sbtlaunch.version>
-    <play-lib.version>2.2.1</play-lib.version>
+    <sbt.version>0.13.7-SNAPSHOT</sbt.version>
+    <sbtlaunch.version>0.13.7</sbtlaunch.version>
+    <play-lib.version>2.4.0-M2</play-lib.version>
     <scala-stm.version>0.7</scala-stm.version>
-    <joda-time.version>2.2</joda-time.version>
-    <jackson.version>2.2.2</jackson.version>
+    <joda-time.version>2.7</joda-time.version>
+    <jackson.version>2.5.0</jackson.version>
     <rxjava.version>0.17.0-RC7</rxjava.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>client</artifactId>
+      <artifactId>client-2-11</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_2.10</artifactId>
+      <artifactId>akka-actor_2.11</artifactId>
       <version>${akka.version}</version>
     </dependency>
     <dependency>
@@ -75,27 +75,27 @@
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-json_2.10</artifactId>
+      <artifactId>play-json_2.11</artifactId>
       <version>${play-lib.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-iteratees_2.10</artifactId>
+      <artifactId>play-iteratees_2.11</artifactId>
       <version>${play-lib.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-functional_2.10</artifactId>
+      <artifactId>play-functional_2.11</artifactId>
       <version>${play-lib.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.play</groupId>
-      <artifactId>play-datacommons_2.10</artifactId>
+      <artifactId>play-datacommons_2.11</artifactId>
       <version>${play-lib.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-stm</groupId>
-      <artifactId>scala-stm_2.10</artifactId>
+      <artifactId>scala-stm_2.11</artifactId>
       <version>${scala-stm.version}</version>
     </dependency>
     <dependency>
