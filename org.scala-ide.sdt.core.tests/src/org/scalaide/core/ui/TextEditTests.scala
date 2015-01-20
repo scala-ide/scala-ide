@@ -61,7 +61,7 @@ abstract class TextEditTests {
     def becomes(expectedOutput: String) = input -> expectedOutput
   }
   final implicit class TestExecutor(testData: (String, String)) {
-    def after(operation: Operation) = test(testData._1, testData._2, operation)
+    def after(operation: Operation, marker: Char = '$') = test(testData._1, testData._2, operation, marker)
   }
 
   /**
@@ -75,21 +75,21 @@ abstract class TextEditTests {
    * before the caret in the input string.
    *
    * Sometimes it can happen that the input or output must contain trailing
-   * white spaces. If this is the case then a $ sign must be set to the position
-   * after the expected number of white spaces.
+   * white spaces. If this is the case then the sign passed to `marker` must be
+   * set to the position after the expected number of white spaces.
    */
-  final def test(input: String, expectedOutput: String, operation: Operation): Unit = {
+  final def test(input: String, expectedOutput: String, operation: Operation, marker: Char = '$'): Unit = {
     require(input.count(_ == '^') == 1, "the cursor in the input isn't set correctly")
     require(expectedOutput.count(_ == '^') == 1, "the cursor in the expected output isn't set correctly")
 
-    val inputWithoutDollarSigns = input.filterNot(_ == '$')
+    val inputWithoutDollarSigns = input.filterNot(_ == marker)
     val caretOffset = inputWithoutDollarSigns.indexOf('^')
     val inputWithoutCursor = inputWithoutDollarSigns.filterNot(_ == '^')
 
     operation.caretOffset = caretOffset
     runTest(inputWithoutCursor, operation)
 
-    val expected = expectedOutput.replaceAll("\\$", "")
+    val expected = expectedOutput.filterNot(_ == marker)
     val actual = new StringBuilder(source).insert(operation.caretOffset, "^").toString()
 
     if (expected != actual) {
