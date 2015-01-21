@@ -463,6 +463,8 @@
       <type
             name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
       <type
+            name="scala.tools.eclipse.semantichighlighting.custom.mutableCollectionsCallAnnotation"/>
+      <type
             markerType="org.scalaide.refactoring.extractionScope"
             name="org.scalaide.refactoring.extractionScope"/>
    </extension>
@@ -488,6 +490,25 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
+     <specification
+         annotationType="scala.tools.eclipse.semantichighlighting.custom.mutableCollectionsCallAnnotation"
+         colorPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.color"
+         colorPreferenceValue="94,105,255"
+         contributesToHeader="false"
+         includeOnPreferencePage="true"
+         icon="icons/full/elcl16/mutable.gif"
+         label="Mutable collection calls"
+         overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.rulers.overview"
+         overviewRulerPreferenceValue="false"
+         presentationLayer="5"
+         symbolicIcon="info"
+         textPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.text"
+         textPreferenceValue="false"
+         textStylePreferenceKey="scala.tools.eclipse.ui.preferences.mutable.textStylePreference"
+         textStylePreferenceValue="SQUIGGLES"
+         verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.rulers.vertical"
+         verticalRulerPreferenceValue="false">
+	 </specification>
      <specification
           annotationType="org.scalaide.refactoring.extractionScope"
           colorPreferenceKey="extractionScope.color"
@@ -1857,6 +1878,9 @@
        point="org.scala-ide.sdt.core.semanticHighlightingParticipants">
     <participant
           class="org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingParticipant">
+    </participant>
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.custom.MutableCollectionCallHighlightingParticipant">
     </participant>
  </extension>
 </plugin>

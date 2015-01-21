@@ -33,8 +33,8 @@ trait ScalaInstallationUIProviders {
 
     override def getElements(input: Any): Array[Object] = {
       input match {
-        case l: List[IScalaInstallation] =>
-          l.toArray
+        case l: List[_] =>
+          l.asInstanceOf[List[Object]].toArray
       }
     }
   }

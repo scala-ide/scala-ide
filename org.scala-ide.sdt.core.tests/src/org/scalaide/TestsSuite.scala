@@ -49,6 +49,8 @@ import org.scalaide.extensions.autoedits.AutoEditTestSuite
 import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.core.pc.DeclarationPrinterTest
+import org.scalaide.core.compiler.NamePrinterTest
+import org.scalaide.core.ui.ScalaTemplateContextTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -101,6 +103,8 @@ import org.scalaide.core.pc.DeclarationPrinterTest
     classOf[AutoEditTestSuite],
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
-    classOf[DeclarationPrinterTest]
+    classOf[DeclarationPrinterTest],
+    classOf[NamePrinterTest],
+    classOf[ScalaTemplateContextTest]
 ))
 class TestsSuite

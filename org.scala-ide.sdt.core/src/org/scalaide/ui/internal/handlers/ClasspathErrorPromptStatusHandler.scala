@@ -33,8 +33,8 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
 
   override def doHandleStatus(status: IStatus, source: Object) = {
     val (scalaProject, continuation)  = source match {
-      case (p: ScalaProject, c: Promise[() => Unit]) => (Some(p), Some(c))
-      case (_, c: Promise[()=> Unit]) => (None, Some(c))
+      case (p: ScalaProject, c: Promise[_]) => (Some(p), Some(c.asInstanceOf[Promise[()=> Unit]]))
+      case (_, c: Promise[_]) => (None, Some(c.asInstanceOf[Promise[()=> Unit]]))
       case _ => (None, None)
     }
     val shell = SWTUtils.getShell
