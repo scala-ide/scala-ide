@@ -23,11 +23,9 @@ final class CallByNameParamAtCreationPresenter(sourceViewer: ISourceViewer) exte
 }
 
 object CallByNameParamAtCreationPresenter extends HasLogger {
-  final case class Cfg(firstLineOnly: Boolean)
-
-  private def prefStoreCfg: Cfg = {
+  private def prefStoreCfg: Boolean = {
     val prefStore = IScalaPlugin().getPreferenceStore
-    Cfg(prefStore.getBoolean(CallByNameParamCreationPreferencePage.PFirstLineOnly))
+    prefStore.getBoolean(CallByNameParamCreationPreferencePage.PFirstLineOnly)
   }
 
   /**
@@ -35,7 +33,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
    *
    * See #1002340 for further information.
    */
-  def findByNameParamCreations(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile, cfg: Cfg): Map[Annotation, Position] = {
+  def findByNameParamCreations(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile, firstLineOnly: Boolean = prefStoreCfg): Map[Annotation, Position] = {
     def findByNameParamCreations(tree: compiler.Tree) = {
 
       object traverser extends compiler.Traverser {
@@ -62,7 +60,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
 
             (for (arg <- byNameArgs) yield {
               val txt = toText(arg)
-              (toAnnotation(arg, txt), toPosition(arg, txt))
+              (toAnnotation(txt), toPosition(arg, txt))
             }).toMap
           }
         }
@@ -71,14 +69,14 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
           sourceFile.content.view(arg.pos.start, arg.pos.end).mkString("")
         }
 
-        def toAnnotation(arg: compiler.Tree, txt: String): Annotation = {
+        def toAnnotation(txt: String): Annotation = {
           new CallByNameParamAtCreationAnnotation(s"Call-by-name parameter creation: () => $txt")
         }
 
         def toPosition(arg: compiler.Tree, txt: String): Position = {
           val start = arg.pos.start
           val length = {
-            if (cfg.firstLineOnly) {
+            if (firstLineOnly) {
               val eol = txt.indexOf('\n')
               if (eol > -1) eol else txt.length
             } else {

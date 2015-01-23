@@ -9,7 +9,6 @@ import org.scalaide.CompilerSupportTests
 import org.scalaide.core.semantichighlighting.classifier.RegionParser
 import org.scalaide.core.semantichighlighting.classifier.RegionParser.EmbeddedSubstr
 import CallByNameParamAtCreationPresenterTest.mkScalaCompilationUnit
-import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationPresenter.Cfg
 
 object CallByNameParamAtCreationPresenterTest extends CompilerSupportTests
 
@@ -143,10 +142,10 @@ class CallByNameParamAtCreationPresenterTest {
       }""", """"a" +""")
   }
 
-  private def testWith(source: String, cfg: Cfg, paramCreations: EmbeddedSubstr*) {
+  private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*) {
     val cu = mkScalaCompilationUnit(source)
     cu.withSourceFile { (sourceFile, compiler) =>
-      val res = CallByNameParamAtCreationPresenter.findByNameParamCreations(compiler, cu, sourceFile, cfg)
+      val res = CallByNameParamAtCreationPresenter.findByNameParamCreations(compiler, cu, sourceFile, firstLineOnly)
       val regions = res.values.map(pos => new Region(pos.offset, pos.length)).toSet
       val expectedRegions = RegionParser.substrRegions(source, paramCreations: _*).keySet
       assertEquals(expectedRegions, regions)
@@ -160,10 +159,10 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   private def testWithSingleLineCfg(source: String, paramCreations: EmbeddedSubstr*) {
-    testWith(source, Cfg(firstLineOnly = true), paramCreations: _*)
+    testWith(source, true, paramCreations: _*)
   }
 
   private def testWithMultiLineCfg(source: String, paramCreations: EmbeddedSubstr*) {
-    testWith(source, Cfg(firstLineOnly = false), paramCreations: _*)
+    testWith(source, false, paramCreations: _*)
   }
 }
