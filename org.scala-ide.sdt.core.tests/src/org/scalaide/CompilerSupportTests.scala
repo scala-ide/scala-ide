@@ -9,6 +9,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.IScalaProject
+import java.util.UUID
 
 /**
  * Common functionality to be used in tests that need to interop with the
@@ -113,4 +114,23 @@ trait CompilerSupportTests {
   @AfterClass
   final def deleteProject(): Unit =
     SDTTestUtils.deleteProjects(project)
+
+  /**
+   * Generates a package name that is guaranteed to be unique.
+   */
+  final def uniquePackageName(): String = {
+    def longToName(l: Long) = {
+      java.lang.Long.toString(l, Character.MAX_RADIX).replace("-", "_")
+    }
+
+    val uid = UUID.randomUUID()
+    "uniquepkg" + longToName(uid.getLeastSignificantBits) + longToName(uid.getMostSignificantBits)
+  }
+
+  /**
+   * Adds a unique package declaration at the beginning of the given source.
+   */
+  final def addUniquePackageDeclaration(src: String): String = {
+    s"package ${uniquePackageName()}\n\n$src"
+  }
 }

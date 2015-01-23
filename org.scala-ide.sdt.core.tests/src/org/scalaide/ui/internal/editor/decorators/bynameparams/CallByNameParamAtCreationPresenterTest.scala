@@ -143,11 +143,13 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*) {
-    val cu = mkScalaCompilationUnit(source)
+    val sourceWithPkg = addUniquePackageDeclaration(source)
+
+    val cu = mkScalaCompilationUnit(sourceWithPkg)
     cu.withSourceFile { (sourceFile, compiler) =>
       val res = CallByNameParamAtCreationPresenter.findByNameParamCreations(compiler, cu, sourceFile, firstLineOnly)
       val regions = res.values.map(pos => new Region(pos.offset, pos.length)).toSet
-      val expectedRegions = RegionParser.substrRegions(source, paramCreations: _*).keySet
+      val expectedRegions = RegionParser.substrRegions(sourceWithPkg, paramCreations: _*).keySet
       assertEquals(expectedRegions, regions)
 
       assertEquals(Set(), res.keys.filterNot(_.isInstanceOf[CallByNameParamAtCreationAnnotation]))
