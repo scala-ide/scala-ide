@@ -303,7 +303,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
-        case COMPILATION_UNIT if isChanged && elem.getResource.getName.endsWith(ScalaFileExtn) =>
+        case COMPILATION_UNIT if isChanged && elem.getResource != null && elem.getResource.getName.endsWith(ScalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
           if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed
