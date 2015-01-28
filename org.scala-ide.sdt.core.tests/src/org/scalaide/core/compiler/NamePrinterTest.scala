@@ -480,7 +480,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithAxillaryCtor() {
+  def testWithAuxillaryCtor() {
     testWith(
       """|class WithAxillaryCtor(str: String) {
          |  def this(i: Int) = this(i.toString)
