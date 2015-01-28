@@ -33,12 +33,6 @@ trait CompilerSupportTests {
     }
 
   /**
-   * Generates a unique package name.
-   */
-  final def uniquePkgName(): String =
-    s"testpackage${System.nanoTime()}"
-
-  /**
    * Creates a Scala compilation unit whose underlying source file physically
    * exists in the test project of the test workspace. In order to prevent name
    * clashes, `source` is scanned for a package declaration, which is mapped to
@@ -118,7 +112,7 @@ trait CompilerSupportTests {
   /**
    * Generates a package name that is guaranteed to be unique.
    */
-  final def uniquePackageName(): String = {
+  final def uniquePkgName(): String = {
     def longToName(l: Long) = {
       java.lang.Long.toString(l, Character.MAX_RADIX).replace("-", "_")
     }
@@ -130,7 +124,7 @@ trait CompilerSupportTests {
   /**
    * Adds a unique package declaration at the beginning of the given source.
    */
-  final def addUniquePackageDeclaration(src: String): String = {
-    s"package ${uniquePackageName()}\n\n$src"
+  final def addUniquePkgDecl(src: String): String = {
+    s"package ${uniquePkgName()}\n\n$src"
   }
 }

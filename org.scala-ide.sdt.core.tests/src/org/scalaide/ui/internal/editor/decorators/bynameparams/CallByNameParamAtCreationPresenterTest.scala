@@ -143,7 +143,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*) {
-    val sourceWithPkg = addUniquePackageDeclaration(source)
+    val sourceWithPkg = addUniquePkgDecl(source)
 
     val cu = mkScalaCompilationUnit(sourceWithPkg)
     cu.withSourceFile { (sourceFile, compiler) =>
