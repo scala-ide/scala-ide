@@ -1,5 +1,7 @@
 # Scala IDE for Eclipse
 
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/scala-ide/scala-ide?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Scala IDE provides advanced editing and debugging support for the development of pure Scala and mixed Scala-Java applications inside Eclipse
 
 Scala IDE is Open Source and available under the [Scala License](https://github.com/scala-ide/scala-ide/blob/master/LICENSE).
