@@ -287,7 +287,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         case PACKAGE_FRAGMENT_ROOT =>
           val hasContentChanged = isRemoved || hasFlag(F_REMOVED_FROM_CLASSPATH | F_ADDED_TO_CLASSPATH | F_ARCHIVE_CONTENT_CHANGED)
           if (hasContentChanged) {
-            logger.info("package fragment root changed (resetting pres compiler): " + elem.getElementName())
+            logger.info("package fragment root changed (resetting presentation compiler): " + elem.getElementName())
             asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset += _)
           }
           !hasContentChanged
@@ -295,7 +295,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         case PACKAGE_FRAGMENT =>
           val hasContentChanged = isAdded || isRemoved
           if (hasContentChanged) {
-            logger.debug("package framgent added or removed" + elem.getElementName())
+            logger.debug("package fragment added or removed: " + elem.getElementName())
             asScalaProject(elem.getJavaProject().getProject).foreach(projectsToReset += _)
           }
           // stop recursion here, we need to reset the PC anyway
