@@ -69,9 +69,13 @@ trait ApplyTemplate extends AutoEdit {
     val tb = mkTemplateBuffer(template, start)
     val vars = tb.getVariables()
 
-    val positionGroups = vars filter (_.getType() != GlobalTemplateVariables.Cursor.NAME) map { v =>
+    val positionGroups = vars filter (_.getType() != GlobalTemplateVariables.Cursor.NAME) flatMap { v =>
       val len = v.getDefaultValue().length()
-      v.getOffsets().toList map (_+start -> len)
+      val ps = v.getOffsets().toList map (_+start -> len)
+      if (v.getType.isEmpty)
+        ps map (List(_))
+      else
+        List(ps)
     }
 
     val cursorPos = start + vars
