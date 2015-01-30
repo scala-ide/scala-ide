@@ -21,7 +21,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
 
   @Before
   def setPreferences() {
-    IScalaPlugin().getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
+    IScalaPlugin().getPreferenceStore.setValue(ImplicitsPreferencePage.PConversionsOnly, false)
   }
 
   @Test

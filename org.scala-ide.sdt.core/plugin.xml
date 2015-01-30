@@ -106,6 +106,12 @@
             name="Implicits">
       </page>
       <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferencePage"
+            id="org.scalaide.ui.preferences.editor.callByNameParamCreation"
+            name="Call-By-Name Parameter Creation">
+      </page>
+      <page
             category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.logging.LoggingPreferencePage"
             id="org.scalaide.ui.preferences.logging"
@@ -461,6 +467,8 @@
       <type
             markerType="org.scalaide.refactoring.extractionScope"
             name="org.scalaide.refactoring.extractionScope"/>
+
+      <type name="scala.tools.eclipse.semantichighlighting.callByNameParam.creationAnnotation"/>
    </extension>
 
    <extension
@@ -503,6 +511,25 @@
          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.rulers.vertical"
          verticalRulerPreferenceValue="false">
 	 </specification>
+     <specification
+          annotationType="scala.tools.eclipse.semantichighlighting.callByNameParam.creationAnnotation"
+          colorPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.color"
+          colorPreferenceValue="112,177,198"
+          contributesToHeader="false"
+          includeOnPreferencePage="true"
+          icon="icons/full/elcl16/create_call_by_name_param.png"
+          label="Create Scala By Name Param"
+          overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.textStylePreference"
+          textStylePreferenceValue="UNDERLINE"
+          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.rulers.vertical"
+          verticalRulerPreferenceValue="true">
+     </specification>
      <specification
           annotationType="org.scalaide.refactoring.extractionScope"
           colorPreferenceKey="extractionScope.color"
@@ -885,6 +912,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.ImplicitsPagePreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferenceInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.logging.LoggingPreferencePageInitializer">
@@ -1872,6 +1902,9 @@
     </participant>
     <participant
           class="org.scalaide.ui.internal.editor.decorators.custom.MutableCollectionCallHighlightingParticipant">
+    </participant>
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
     </participant>
  </extension>
 </plugin>
