@@ -21,7 +21,9 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
   /**
    * Returns the fully qualified name of the symbol at the given offset if available.
    *
-   * This method is used by "Copy Qualified Name" in the GUI.
+   * This method is used by "Copy Qualified Name" in the GUI. Please note that there is no formal
+   * specification of the names this feature should return. The behavior of the implementation is mostly modeled
+   * after the corresponding JDT feature.
    */
   def qualifiedNameAt(offset: Int): Option[String] = {
     cu.withSourceFile { (src, compiler) =>
