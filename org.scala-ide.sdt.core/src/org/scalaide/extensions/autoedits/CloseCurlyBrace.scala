@@ -24,7 +24,7 @@ trait CloseCurlyBrace extends CloseMatchingPair {
   override def setting = CloseCurlyBraceSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "{") =>
         if (autoClosingRequired(start))
           Some(Add(start, "{}") withLinkedModel (start+2, singleLinkedPos(start+1)))

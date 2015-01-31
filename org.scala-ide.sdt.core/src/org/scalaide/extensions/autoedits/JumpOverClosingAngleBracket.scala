@@ -17,7 +17,7 @@ trait JumpOverClosingAngleBracket extends AutoEdit {
   override def setting = JumpOverClosingAngleBracketSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, ">") =>
         lookupChar(0) {
           case '>' =>

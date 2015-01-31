@@ -17,7 +17,7 @@ trait JumpOverClosingCurlyBrace extends AutoEdit {
   override def setting = JumpOverClosingCurlyBraceSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "}") =>
         lookupChar(0) {
           case '}' =>

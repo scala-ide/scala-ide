@@ -49,7 +49,7 @@ trait ApplyTemplate extends AutoEdit {
   override def setting = ApplyTemplateSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "\t") =>
         val r = ScalaWordFinder.findWord(document.text, start)
 

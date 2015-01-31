@@ -25,21 +25,21 @@ trait SaveAction extends ScalaIdeExtension {
 }
 
 /**
- * Provides all information an users needs to know in order to understand what
+ * Provides all information an user needs to know in order to understand what
  * the corresponding save action is doing.
  *
- * Each save action needs to provide such a setting - it is used in the Scala >
- * Editor > Save Actions preference page of Eclipse and allows users to enable
+ * Each save action needs to provide such a setting - it is used in the "Scala >
+ * Editor > Save Actions" preference page of Eclipse and allows users to enable
  * or disable the save action.
  *
  * If no valid setting object can be found by the IDE, the save action will not
  * be made available to users.
  *
  * @param id
- *        A uniqe ID that identifies the save action. A good value is the fully
+ *        A unique ID that identifies the save action. A good value is the fully
  *        qualified name of the save action class. This ID is only for internal
  *        use in the IDE, users may never see it.
- * @parem name
+ * @param name
  *        A short descriptive name for the save action. It is displayed to
  *        users.
  * @param description

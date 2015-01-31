@@ -17,7 +17,7 @@ trait JumpOverClosingParenthesis extends AutoEdit {
   override def setting = JumpOverClosingParenthesisSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, ")") =>
         lookupChar(0) {
           case ')' =>

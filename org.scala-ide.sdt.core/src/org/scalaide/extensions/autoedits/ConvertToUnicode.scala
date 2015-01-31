@@ -17,16 +17,16 @@ trait ConvertToUnicode extends AutoEdit {
   override def setting = ConvertToUnicodeSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, text) if text.size == 1 && start > 0 =>
-        subrule(document(start-1)+text) {
+        subcheck(document(start-1)+text) {
           case "=>" => Replace(start-1, start, "⇒")
           case "->" => Replace(start-1, start, "→")
           case "<-" => Replace(start-1, start, "←")
         }
 
       case Add(start, text) =>
-        subrule(text) {
+        subcheck(text) {
           case "=>" => Add(start, "⇒") withCursorPos start+1
           case "->" => Add(start, "→") withCursorPos start+1
           case "<-" => Add(start, "←") withCursorPos start+1

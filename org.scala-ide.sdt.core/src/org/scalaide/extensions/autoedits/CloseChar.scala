@@ -21,10 +21,10 @@ object CloseCharSetting extends AutoEditSetting(
 
 trait CloseChar extends AutoEdit {
 
-  override def setting() = CloseCharSetting
+  override def setting = CloseCharSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "'") =>
         if (autoClosingRequired(start))
           Some(Add(start, "''") withLinkedModel (start+2, singleLinkedPos(start+1)))

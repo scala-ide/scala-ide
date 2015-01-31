@@ -43,7 +43,7 @@ trait SurroundBlock extends AutoEdit {
   def setting = SurroundBlockSetting
 
   def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "{") =>
         surroundLocation(start) map {
           case (pos, indentLen) =>

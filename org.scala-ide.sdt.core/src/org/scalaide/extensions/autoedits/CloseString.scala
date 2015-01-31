@@ -24,7 +24,7 @@ trait CloseString extends AutoEdit {
   override def setting = CloseStringSetting
 
   override def perform() = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "\"") =>
         if (autoClosingRequired(start))
           Some(Add(start, "\"\"") withLinkedModel (start+2, singleLinkedPos(start+1)))

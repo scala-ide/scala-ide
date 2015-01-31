@@ -2,6 +2,9 @@ package org.scalaide.extensions
 
 import org.scalaide.core.text.Document
 
+/**
+ * Can be mixed into a [[ScalaIdeExtension]] that operates on a [[Document]].
+ */
 trait DocumentSupport extends ScalaIdeExtension {
 
   /**

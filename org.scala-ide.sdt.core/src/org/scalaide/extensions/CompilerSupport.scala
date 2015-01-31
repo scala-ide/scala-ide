@@ -22,6 +22,10 @@ import org.scalaide.core.text.Change
 import org.scalaide.core.text.Replace
 import org.scalaide.core.text.TextChange
 
+/**
+ * Can be mixed into a [[ScalaIdeExtension]] that operates on the data
+ * structures of the compiler.
+ */
 trait CompilerSupport
     extends ScalaIdeExtension
     with Selections

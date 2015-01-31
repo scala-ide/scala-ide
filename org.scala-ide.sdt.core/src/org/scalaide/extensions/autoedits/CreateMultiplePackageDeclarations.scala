@@ -27,7 +27,7 @@ trait CreateMultiplePackageDeclarations extends AutoEdit {
   override def setting = CreateMultiplePackageDeclarationsSetting
 
   override def perform = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, "\n") =>
         val line = document.lineInformationOfOffset(start)
         pkgName(start, line) map { pkgName =>

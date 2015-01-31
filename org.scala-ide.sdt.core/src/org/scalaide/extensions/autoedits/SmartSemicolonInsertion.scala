@@ -23,7 +23,7 @@ trait SmartSemicolonInsertion extends AutoEdit {
   override def setting: AutoEditSetting = SmartSemicolonInsertionSetting
 
   override def perform: Option[Change] = {
-    rule(textChange) {
+    check(textChange) {
       case Add(start, ";") =>
         hanldleSmartInsert(';')(computeSemicolonInsertPosition)
     }

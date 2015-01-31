@@ -23,12 +23,30 @@ trait ScalaIdeExtension {
   def setting: ExtensionSetting
 }
 
+/**
+ * Contains definitions that are useful when one needs to work with the
+ * companion class.
+ */
 object ExtensionSetting {
   import reflect.runtime.universe._
 
+  /**
+   * Returns the fully qualified name of the argument. Example:
+   * {{{
+   * scala> ExtensionSetting.fullyQualifiedName[ExtensionSetting]
+   * res0: String = org.scalaide.extensions.ExtensionSetting
+   * }}}
+   */
   def fullyQualifiedName[A : TypeTag]: String =
     typeOf[A].typeSymbol.fullName
 
+  /**
+   * Returns the simple name of the argument. Example:
+   * {{{
+   * scala> ExtensionSetting.simpleName[ExtensionSetting]
+   * res1: String = ExtensionSetting
+   * }}}
+   */
   def simpleName[A : TypeTag]: String =
     typeOf[A].typeSymbol.name.toString()
 
@@ -60,10 +78,22 @@ object ExtensionSetting {
   }
 }
 
+/**
+ * Each [[ScalaIdeExtension]] needs the possibility to provide configuration
+ * values for the extension. Such configuration can be provided by this trait.
+ *
+ * In order to find out which setting instance is associated with which
+ * extension, [[id]] needs to return an unique value, which clearly identifies
+ * each setting instance.
+ *
+ * This trait needs to be extended by a subclass, that defines all the necessary
+ * configuration values. An instance of such a subclass needs to be returned by
+ * [[ScalaIdeExtension.setting]].
+ */
 trait ExtensionSetting extends HasLogger {
 
   /**
-   * A uniqe ID that identifies the save action. A good value is the fully
+   * An unique ID that identifies the save action. A good value is the fully
    * qualified name of the save action class. This ID is only for internal
    * use in the IDE, users may never see it.
    */
