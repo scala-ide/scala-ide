@@ -158,7 +158,7 @@ trait AutoEditExtensions extends HasLogger {
   private def mkEditorLinkedMode(model: LinkedModeModel, exitPosition: Int): EditorLinkedModeUI = {
     val ui = new EditorLinkedModeUI(model, sourceViewer)
 
-    ui.setCyclingMode(LinkedModeUI.CYCLE_ALWAYS)
+    ui.setCyclingMode(LinkedModeUI.CYCLE_WHEN_NO_PARENT)
     ui.setExitPosition(sourceViewer, exitPosition, 0, Integer.MAX_VALUE)
     ui
   }
