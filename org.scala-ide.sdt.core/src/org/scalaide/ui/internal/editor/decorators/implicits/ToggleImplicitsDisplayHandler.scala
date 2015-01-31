@@ -13,4 +13,4 @@ import org.scalaide.ui.internal.actions.AbstractToggleHandler
  *
  * @see scala.tools.eclipse.ui.AbstractToggleHandler
  */
-class ToggleImplicitsDisplayHandler extends AbstractToggleHandler("org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay", ImplicitsPreferencePage.P_ACTIVE)
+class ToggleImplicitsDisplayHandler extends AbstractToggleHandler("org.scala-ide.sdt.core.commands.ToggleImplicitsDisplay", ImplicitsPreferencePage.PActive)

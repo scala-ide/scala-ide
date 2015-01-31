@@ -46,7 +46,7 @@ object ImplicitHighlightingPresenter {
 
     def mkPosition(pos: compiler.Position, txt: String): Position = {
       val start = pos.start
-      val end = if (pluginStore.getBoolean(ImplicitsPreferencePage.P_FIRST_LINE_ONLY)) {
+      val end = if (pluginStore.getBoolean(ImplicitsPreferencePage.PFirstLineOnly)) {
         val eol = txt.indexOf('\n')
         if (eol > -1) eol else txt.length
       } else txt.length
@@ -95,7 +95,7 @@ object ImplicitHighlightingPresenter {
           case v: ApplyImplicitView =>
             val (annotation, pos) = mkImplicitConversionAnnotation(v)
             implicits += (annotation -> pos)
-          case v: ApplyToImplicitArgs if !pluginStore.getBoolean(ImplicitsPreferencePage.P_CONVERSIONS_ONLY) =>
+          case v: ApplyToImplicitArgs if !pluginStore.getBoolean(ImplicitsPreferencePage.PConversionsOnly) =>
             val (annotation, pos) = mkImplicitArgumentAnnotation(v)
             implicits += (annotation -> pos)
           case _ =>

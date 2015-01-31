@@ -62,16 +62,16 @@
     <!-- Scala 2.10.x -->
     <scala210.version>2.10.5-SNAPSHOT</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.5-SNAPSHOT</scala211.version>
+    <scala211.version>2.11.6-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
-    <scala211.scala-xml.version>1.0.2</scala211.scala-xml.version>
-    <scala211.scala-parser-combinators.version>1.0.1</scala211.scala-parser-combinators.version>
+    <scala211.scala-xml.version>1.0.3</scala211.scala-xml.version>
+    <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
     <!-- Scala 2.12.x -->
     <scala212.version>2.12.0-SNAPSHOT</scala212.version>
     <scala212.binary.version>2.11</scala212.binary.version>
-    <scala212.scala-xml.version>1.0.2</scala212.scala-xml.version>
-    <scala212.scala-parser-combinators.version>1.0.1</scala212.scala-parser-combinators.version>
+    <scala212.scala-xml.version>1.0.3</scala212.scala-xml.version>
+    <scala212.scala-parser-combinators.version>1.0.3</scala212.scala-parser-combinators.version>
     <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
