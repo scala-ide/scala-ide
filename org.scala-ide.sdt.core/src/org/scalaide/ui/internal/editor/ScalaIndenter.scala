@@ -780,6 +780,9 @@ class ScalaIndenter(
       case Symbols.TokenGREATERTHAN if scanner.previousToken(fPosition - 1, UNBOUND) == Symbols.TokenEQUAL  =>
           handleScopeIntroduction(offset + 1)
 
+      case Symbols.TokenOTHER if document.getChar(fPosition) == '⇒' =>
+        handleScopeIntroduction(offset + 1)
+
       case Symbols.TokenGREATERTHAN |
         Symbols.TokenRBRACKET |
         Symbols.TokenRBRACE =>
@@ -1262,6 +1265,10 @@ class ScalaIndenter(
 
       // a '=>', could be a case pattern or a closure
       case Symbols.TokenGREATERTHAN =>
+        fIndent = prefBracketIndent
+        return fPosition
+
+      case Symbols.TokenOTHER if document.getChar(fPosition) == '⇒' =>
         fIndent = prefBracketIndent
         return fPosition
 
