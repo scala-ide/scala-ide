@@ -51,7 +51,8 @@ object AutoEditExtensions {
     JumpOverClosingAngleBracketSetting -> JumpOverClosingAngleBracketCreator.create _,
     CloseStringSetting -> CloseStringCreator.create _,
     CloseCharSetting -> CloseCharCreator.create _,
-    SurroundBlockSetting -> SurroundBlockCreator.create _
+    SurroundBlockSetting -> SurroundBlockCreator.create _,
+    SurroundSelectionWithStringSetting → SurroundSelectionWithStringCreator.create _
   )
 
   /**
