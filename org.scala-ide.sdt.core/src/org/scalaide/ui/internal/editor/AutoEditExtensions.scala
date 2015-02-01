@@ -53,7 +53,8 @@ object AutoEditExtensions {
     CloseCharSetting -> CloseCharCreator.create _,
     SurroundBlockSetting -> SurroundBlockCreator.create _,
     SurroundSelectionWithStringSetting → SurroundSelectionWithStringCreator.create _,
-    SurroundSelectionWithParenthesesSetting → SurroundSelectionWithParenthesesCreator.create _
+    SurroundSelectionWithParenthesesSetting → SurroundSelectionWithParenthesesCreator.create _,
+    SurroundSelectionWithBracesSetting → SurroundSelectionWithBracesCreator.create _
   )
 
   /**
