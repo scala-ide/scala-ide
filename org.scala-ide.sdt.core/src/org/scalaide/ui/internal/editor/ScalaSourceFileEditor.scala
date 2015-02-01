@@ -64,7 +64,6 @@ import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.actions
-import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
@@ -372,11 +371,6 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     }
 
     removeBracketInserter()
-    getSourceViewer match {
-      case sourceViewer: ITextViewerExtension =>
-        sourceViewer.prependVerifyKeyListener(new SurroundSelectionStrategy(getSourceViewer))
-      case _ =>
-    }
   }
 
   override def handlePreferenceStoreChanged(event: PropertyChangeEvent) = {
