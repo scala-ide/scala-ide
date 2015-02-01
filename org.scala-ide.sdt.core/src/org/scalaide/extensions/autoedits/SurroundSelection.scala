@@ -23,6 +23,12 @@ object SurroundSelectionWithBracesSetting extends AutoEditSetting(
   description = "Automatically surrounds a selection with braces when an opening brace is typed."
 )
 
+object SurroundSelectionWithBracketsSetting extends AutoEditSetting(
+  id = ExtensionSetting.fullyQualifiedName[SurroundSelectionWithBrackets],
+  name = "Surround selection with [brackets]",
+  description = "Automatically surrounds a selection with brackets when an opening bracket is typed."
+)
+
 trait SurroundSelection extends AutoEdit {
 
   def opening: String
@@ -55,4 +61,10 @@ trait SurroundSelectionWithBraces extends SurroundSelection {
   override def opening = "{"
   override def closing = "}"
   override def setting = SurroundSelectionWithBracesSetting
+}
+
+trait SurroundSelectionWithBrackets extends SurroundSelection {
+  override def opening = "["
+  override def closing = "]"
+  override def setting = SurroundSelectionWithBracketsSetting
 }

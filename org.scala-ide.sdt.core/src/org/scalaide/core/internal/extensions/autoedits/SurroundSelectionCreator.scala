@@ -27,3 +27,11 @@ object SurroundSelectionWithBracesCreator {
       override val textChange = change
     }
 }
+
+object SurroundSelectionWithBracketsCreator {
+  def create(doc: Document, change: TextChange): SurroundSelectionWithBrackets =
+    new SurroundSelectionWithBrackets {
+      override val document = doc
+      override val textChange = change
+    }
+}
