@@ -48,14 +48,36 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
           super.traverse(tree)
         }
 
+        def isSynthetic(tree: compiler.Tree) = {
+          Option(tree.symbol).exists(_.isSynthetic)
+        }
+
+        def isByNameParam(param: compiler.Symbol) = {
+          param.isByNameParam || referencesByNameParam(param)
+        }
+
+        /*
+         * This should cover partially applied functions referencing by-name-params (see #1002381).
+         */
+        def referencesByNameParam(param: compiler.Symbol) = {
+          if (!param.hasRawInfo) {
+            false
+          } else {
+            param.rawInfo.typeSymbol match {
+              case cs: compiler.ClassSymbol => cs.name == compiler.tpnme.BYNAME_PARAM_CLASS_NAME
+              case _ => false
+            }
+          }
+        }
+
         def processArgs(funTpe: compiler.Type, args: List[compiler.Tree]): Map[Annotation, Position] = {
           if (funTpe.params.size != args.size) {
             // This might happen for code that does not compile cleanly; run the Unit-Tests for this class with an appropriate breakpoint
             // if you are interested in details.
             Map()
           } else {
-            val byNameArgs = funTpe.params.zip(args).withFilter { case (param, _) =>
-               param.isByNameParam
+            val byNameArgs = funTpe.params.zip(args).withFilter { case (param, arg) =>
+              isByNameParam(param) && !isSynthetic(arg)
             }.map(_._2)
 
             (for (arg <- byNameArgs) yield {

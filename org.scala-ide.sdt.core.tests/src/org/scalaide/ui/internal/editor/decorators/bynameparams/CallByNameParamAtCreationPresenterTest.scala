@@ -142,6 +142,42 @@ class CallByNameParamAtCreationPresenterTest {
       }""", """"a" +""")
   }
 
+  @Test
+  def testWithSimplePartiallyAppliedFunction() {
+    testWithSingleLineCfg("""
+      object X {
+        def f(i: => Int) = i
+        val g = f _
+        println(g(88))
+      }""", "88")
+  }
+
+  @Test
+  def testWithPartiallyAppliedFunctionFromBug1002381() {
+    testWithSingleLineCfg("""
+      object X extends App {
+        def f(a: Boolean)(i: => Int) = if (a) i else 0
+
+        val g = f(true) _
+        println(g({println(1); 5}))
+      }""", "{println(1); 5}")
+  }
+
+  @Test
+  def testWithMultiplePartiallyAppliedFunctions() {
+    testWithSingleLineCfg("""
+      object X {
+        def f(i1: Int)(i2: => Int)(i3: => Int) = i1 * i2 * i3
+        val g = f(0) _
+        val h = g(11)
+        val y = h(22)
+
+        f(0)(11)(22)
+        g(11)(22)
+        h(22)
+      }""", "11", "22")
+  }
+
   private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*) {
     val sourceWithPkg = addUniquePkgDecl(source)
 
