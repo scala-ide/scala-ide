@@ -29,25 +29,23 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
     cu.withSourceFile { (src, compiler) =>
       val scalaRegion = new Region(cu.sourceMap(cu.getContents()).scalaPos(offset), 1)
 
-      val res = compiler.askTypeAt(scalaRegion.toRangePos(src)).get.left.map { tree =>
-        qualifiedName(Location(src, offset), compiler)(tree)
-      }
+      for {
+        tree <-  handleCompilerResponse(compiler.askTypeAt(scalaRegion.toRangePos(src)).get)
+        fullTree <- handleCompilerResponse(compiler.askLoadedTyped(src, true).get)
+        qname <- handleCompilerResponse(compiler.asyncExec(qualifiedName(Location(src, offset), compiler)(fullTree, tree)).get)
+      } yield qname
 
-      res match {
-        case Left(qname) => qname
-        case Right(th) =>
-          logger.error("Error loading qualfied name", th)
-          None
-      }
-    }.flatten
+    }.flatten.flatten
   }
 
-  private def qualifiedName(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
-    val resp = comp.asyncExec(qualifiedNameImpl(loc, comp)(t))
-    resp.getOption().flatten
+  private def handleCompilerResponse[T](res: Either[T, Throwable]): Option[T] = res match {
+    case Left(t) => Option(t)
+    case Right(th) =>
+      logger.error("Error computing qualfied name", th)
+      None
   }
 
-  private def qualifiedNameImpl(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
+  private def qualifiedName(loc: Location, comp: IScalaPresentationCompiler)(fullTree: comp.Tree, t: comp.Tree): Option[String] = {
     def enclosingDefinition(currentTree: comp.Tree, loc: Location) = {
       def isEnclosingDefinition(t: comp.Tree) = t match {
         case _: comp.DefDef | _: comp.ClassDef | _: comp.ModuleDef | _: comp.PackageDef =>
@@ -55,15 +53,13 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
         case _ => false
       }
 
-      comp.askLoadedTyped(loc.src, true).getOption().map { fullTree =>
-        comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingDefinition)
-      }
+      comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingDefinition)
     }
 
     def qualifiedNameImplPrefix(loc: Location, t: comp.Tree) = {
       enclosingDefinition(t, loc) match {
-        case Some(comp.EmptyTree) | None => ""
-        case Some(encDef) => qualifiedNameImpl(loc, comp)(encDef).map(_ + ".").getOrElse("")
+        case comp.EmptyTree => ""
+        case encDef => qualifiedName(loc, comp)(fullTree, encDef).map(_ + ".").getOrElse("")
       }
     }
 
@@ -184,7 +180,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
       if (moduleDef.symbol.isPackageObject)
         (Some(moduleDef.symbol.owner.fullName), false)
       else
-        (Some(moduleDef.symbol.name), true)
+        (Some(moduleDef.symbol.name.toString), true)
     }
 
     def handlePackageDef(packageDef: comp.PackageDef) = {
