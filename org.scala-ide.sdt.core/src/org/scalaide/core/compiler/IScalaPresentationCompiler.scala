@@ -347,8 +347,8 @@ object IScalaPresentationCompiler extends HasLogger {
             result match {
               case Right(fi: FailedInterrupt) =>
                 fi.getCause() match {
-                  case e: Global#TypeError     => logger.info("TypeError in ask:\n" + e)
-                  case f: FreshRunReq          => logger.info("FreshRunReq in ask:\n" + f)
+                  case e: Global#TypeError     => logger.info("TypeError in ask:\n", e)
+                  case f: FreshRunReq          => logger.info("FreshRunReq in ask:\n", f)
                   case m: MissingResponse      => logger.info("MissingResponse in ask. Called from: ", m)
                   // This can happen if you ask long queries of the
                   // PC, triggering long sleep() sessions on caller
@@ -365,6 +365,10 @@ object IScalaPresentationCompiler extends HasLogger {
               case Right(ie: InterruptedException) =>
                 logger.error("Ignoring InterruptException")
                 Thread.currentThread().interrupt()
+                None
+
+              case Right(f: FreshRunReq)          =>
+                logger.info("FreshRunReq in ask:\n", f)
                 None
 
               case Right(e: Throwable) =>
