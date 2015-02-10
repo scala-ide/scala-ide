@@ -4,8 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.CompilerSupportTests
-
 import NamePrinterTest.mkScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 
 object NamePrinterTest extends CompilerSupportTests
 
@@ -504,11 +504,23 @@ class NamePrinterTest {
 
   private def testQnameWith(input: String, expected: Option[String]) {
     val source = input.stripMargin
-    val cu = mkScalaCompilationUnit(source)
+    val cu = prepareCompilationUnit(source)
     val offset = verifyOffset(source.indexOf("/**/") - 1)
     val namePrinter = new NamePrinter(cu)
     val res = namePrinter.qualifiedNameAt(offset)
     assertEquals(expected, res)
+  }
+
+  private def prepareCompilationUnit(source: String) = {
+    waitForReconcile(mkScalaCompilationUnit(source, true))
+  }
+
+  private def waitForReconcile(cu: ScalaCompilationUnit) = {
+    cu.initialReconcile().get match {
+      case Left(_) => ()
+      case Right(th) => throw th
+    }
+    cu
   }
 
   private def verifyOffset(offset: Int) = {
