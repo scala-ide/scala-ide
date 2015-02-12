@@ -116,7 +116,7 @@ class Presenter(
     }
 
     private def performSemanticHighlighting(monitor: IProgressMonitor): IStatus = {
-      editor.getInteractiveCompilationUnit.withSourceFile { (sourceFile, compiler) =>
+      Option(editor.getInteractiveCompilationUnit).flatMap(_.withSourceFile { (sourceFile, compiler) =>
         logger.debug("performing semantic highlighting on " + sourceFile.file.name)
         positionsTracker.startComputingNewPositions()
         val symbolInfos =
@@ -143,7 +143,7 @@ class Presenter(
           } else Status.OK_STATUS
         }
         else Status.OK_STATUS
-      } getOrElse (Status.OK_STATUS)
+      }) getOrElse (Status.OK_STATUS)
     }
 
     private def runPositionsUpdateInUiThread(newPositions: Array[Position], damagedRegion: IRegion): Unit =
