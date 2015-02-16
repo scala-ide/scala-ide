@@ -7,9 +7,11 @@ The initial goals are to enable importing vanilly SBT projects, driving the buil
 
 ## Using:
 
-Right now, to have it working, the sbt project should use sbt 0.13.2-M1, and right version of sbt-remote-control available (i.e. deployed locally).
+sbt-remote-control and plugin-profiles need to be deployed locally. Furthermore the classpath variables `M2_REPO` and `IVY2_REPO` need to exist.
 
-To deploy sbt-remote-control locally, clone the http://github.com/sbt/sbt-remote-control project, check out the right commit (the hash is part of the version number in the top `pom.xml`), and run `sbt deploy-local`.
+To deploy sbt-remote-control locally, clone the `https://github.com/sbt/sbt-remote-control` project, check out the right commit (the hash is part of the version number in the top `pom.xml`) and run `sbt publishM2`.
+
+To deploy plugin-profiles locally, clone the `https://github.com/sschaef/plugin-profiles` project, check out branch `update-to-luna` and run `mvn clean install`.
 
 ## Building:
 

@@ -30,6 +30,14 @@
                   <artifactId>client-all-2-11</artifactId>
                 </artifactItem>
                 <artifactItem>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-stream-experimental_2.11</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.reactivestreams</groupId>
+                  <artifactId>reactive-streams</artifactId>
+                </artifactItem>
+                <artifactItem>
                   <groupId>com.netflix.rxjava</groupId>
                   <artifactId>rxjava-core</artifactId>
                 </artifactItem>
