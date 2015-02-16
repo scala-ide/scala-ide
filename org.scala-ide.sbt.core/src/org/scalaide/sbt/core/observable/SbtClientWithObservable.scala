@@ -1,7 +1,6 @@
 package org.scalaide.sbt.core.observable
 
 import sbt.client.SbtClient
-import sbt.client.TaskResult
 import rx.lang.scala.Observable
 import sbt.protocol.MinimalBuildStructure
 import rx.lang.scala.Observer
@@ -19,24 +18,24 @@ import sbt.client.SettingKey
 import sbt.client.Interaction
 import scala.concurrent.ExecutionContext
 import sbt.protocol.Event
+import sbt.protocol.TaskResult
 
 /** SbtClient wrapper providing Observable based API
  */
 class SbtClientWithObservable(client: SbtClient) {
 
-	// Members declared in sbt.client.SbtClient
-	
+  // Members declared in sbt.client.SbtClient
+
 //  def possibleAutocompletions(partialCommand: String, detailLevel: Int): scala.concurrent.Future[Set[sbt.client.Completion]] = ???
 //  def close(): Unit = ???  // TODO: close all observables
 
   def lookupScopedKey(name: String): Future[Seq[ScopedKey]] = {
     client.lookupScopedKey(name)
   }
-  
-  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)]): Future[Unit] = {
+
+  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)]): Future[Long] = {
     client.requestExecution(commandOrTask, interaction)
   }
-
 
   //------------
 
@@ -52,8 +51,9 @@ class SbtClientWithObservable(client: SbtClient) {
 
     observable
   }
-  
-  def keyWatcher[T](key: TaskKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult[T])] = {
+
+  def keyWatcher[T](key: TaskKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult)] = {
+    /*
     val observable = Observable[(ScopedKey, TaskResult[T])] { subscriber =>
       val subscription = client.watch(key) { (scopedKey, result) =>
          subscriber.onNext((scopedKey, result))
@@ -63,9 +63,12 @@ class SbtClientWithObservable(client: SbtClient) {
       })
     }
     observable
+    */
+    ???
   }
 
-  def keyWatcher[T](key: SettingKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult[T])] = {
+  def keyWatcher[T](key: SettingKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult)] = {
+    /*
     val observable = Observable[(ScopedKey, TaskResult[T])] { subscriber =>
       val subscription = client.watch(key) { (scopedKey, result) =>
          subscriber.onNext((scopedKey, result))
@@ -75,8 +78,10 @@ class SbtClientWithObservable(client: SbtClient) {
       })
     }
     observable
+    */
+    ???
   }
-  
+
   def eventWatcher()(implicit context: ExecutionContext): Observable[Event] = {
     val observable = Observable[Event] { subscriber =>
       val subscription = client.handleEvents{ event =>
@@ -88,5 +93,5 @@ class SbtClientWithObservable(client: SbtClient) {
     }
     observable
   }
-  
+
 }

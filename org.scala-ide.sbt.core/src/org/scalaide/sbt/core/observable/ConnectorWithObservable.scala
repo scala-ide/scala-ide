@@ -11,6 +11,7 @@ import rx.lang.scala.Subscription
 class ConnectorWithObservable(connector: SbtConnector) {
 
   def sbtClientWatcher()(implicit context: ExecutionContext): Observable[SbtClient] = {
+    /*
     val observable = Observable[SbtClient] { subscriber =>
       val subscription = connector.onConnect {
         sbtClient =>
@@ -23,6 +24,8 @@ class ConnectorWithObservable(connector: SbtConnector) {
       }
     }
     observable
+    */
+    ???
   }
 
 }

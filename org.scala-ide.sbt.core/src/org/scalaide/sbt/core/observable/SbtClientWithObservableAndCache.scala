@@ -19,16 +19,16 @@ import scala.concurrent.ExecutionContext
 import sbt.client.Interaction
 
 /** SbtClient wrapper providing Observable and Future based API
- *  
+ *
  *  All Observables, except eventWatcher, will replay the lastest value upon connection.
  */
 class SbtClientWithObservableAndCache(client: SbtClient) {
 
   private val clientExt = new SbtClientWithObservable(client)
 
-  private val keyMap = collection.mutable.HashMap[ScopedKey, Observable[(ScopedKey, TaskResult[_])]]()
-  
-  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)]): Future[Unit] = {
+  private val keyMap = collection.mutable.HashMap[ScopedKey, Observable[(ScopedKey, TaskResult)]]()
+
+  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)]): Future[Long] = {
     client.requestExecution(commandOrTask, interaction)
   }
 
@@ -40,7 +40,7 @@ class SbtClientWithObservableAndCache(client: SbtClient) {
   }
 
   def buildValue: Future[MinimalBuildStructure] = ObservableExt.firstFuture(buildWatcher)
-  
+
   // TODO: to check, but I think this will lead to a call to SbtClient.handleEvents everytime a subscriber is connected to the observable
   lazy val eventWatcher: Observable[Event] = {
     // TODO: I don't like this import
@@ -48,13 +48,13 @@ class SbtClientWithObservableAndCache(client: SbtClient) {
     clientExt.eventWatcher()
   }
 
-  def keyWatcher[T](key: TaskKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult[T])] = {
+  def keyWatcher[T](key: TaskKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult)] = {
     // TODO: more fine grain synchronization (readwritelock ?)
     keyMap synchronized {
       keyMap.get(key.key) match {
         case Some(observable) =>
           // TODO: this doesn't check that the same ScopedKey was no used with a different T
-          observable.asInstanceOf[Observable[(ScopedKey, TaskResult[T])]]
+          observable.asInstanceOf[Observable[(ScopedKey, TaskResult)]]
         case None =>
           // using replay triggers the creation of the underlying watch only once, and cache the latest value.
           val observable = ObservableExt.replay(clientExt.keyWatcher(key), 1)
@@ -79,13 +79,13 @@ class SbtClientWithObservableAndCache(client: SbtClient) {
     future
   }
 
-  def keyWatcher[T](key: SettingKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult[T])] = {
+  def keyWatcher[T](key: SettingKey[T])(implicit context: ExecutionContext): Observable[(ScopedKey, TaskResult)] = {
     // TODO: more fine grain synchronization (readwritelock ?)
     keyMap synchronized {
       keyMap.get(key.key) match {
         case Some(observable) =>
           // TODO: this doesn't check that the same ScopedKey was no used with a different T
-          observable.asInstanceOf[Observable[(ScopedKey, TaskResult[T])]]
+          observable.asInstanceOf[Observable[(ScopedKey, TaskResult)]]
         case None =>
           // using replay triggers the creation of the underlying watch only once, and cache the latest value.
           val observable = ObservableExt.replay(clientExt.keyWatcher(key), 1)
@@ -111,13 +111,14 @@ class SbtClientWithObservableAndCache(client: SbtClient) {
    * Observer fufilling the promise with the first value received.
    * If onNext with a TaskSucces occurs first, the promise is completed successfully, in all other case, the promise is failed.
    */
-  class ScopedKeyResultObserver[T](promise: Promise[T]) extends Observer[(ScopedKey, TaskResult[T])]() {
-    override def onNext(value: (ScopedKey, TaskResult[T])) {
+  class ScopedKeyResultObserver[T](promise: Promise[T]) extends Observer[(ScopedKey, TaskResult)]() {
+    override def onNext(value: (ScopedKey, TaskResult)) {
       value._2 match {
         case TaskSuccess(value) =>
-          promise.trySuccess(value.value.get)
-        case TaskFailure(msg) =>
-          promise.tryFailure(new TaskFailureException(msg))
+          ???
+          //promise.trySuccess(value.value.get)
+        case TaskFailure(cause) =>
+          promise.tryFailure(new TaskFailureException(cause.stringValue))
       }
     }
     override def onError(error: Throwable) {

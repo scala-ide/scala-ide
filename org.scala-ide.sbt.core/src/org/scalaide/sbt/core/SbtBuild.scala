@@ -1,11 +1,9 @@
 package org.scalaide.sbt.core
 
 import java.io.File
-
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
 import org.scalaide.logging.HasLogger
@@ -13,18 +11,14 @@ import org.scalaide.sbt.core.observable.ConnectorWithObservable
 import org.scalaide.sbt.core.observable.ObservableExt
 import org.scalaide.sbt.core.observable.SbtClientWithObservableAndCache
 import org.scalaide.sbt.ui.console.ConsoleProvider
-
-import com.typesafe.sbtrc.client.AbstractSbtServerLocator
-import com.typesafe.sbtrc.client.SimpleConnector
-
 import rx.lang.scala.Observable
 import sbt.client.SbtClient
-import sbt.protocol.LogEvent
-import sbt.protocol.LogMessage
-import sbt.protocol.LogStdErr
 import sbt.protocol.LogStdOut
 import sbt.protocol.LogSuccess
 import sbt.protocol.ProjectReference
+import sbt.client.impl.SimpleConnector
+import sbt.client.impl.AbstractSbtServerLocator
+import sbt.client.SbtConnector
 
 object SbtBuild {
 
@@ -51,10 +45,11 @@ object SbtBuild {
   /** Create and initialize a SbtBuild instance for the given path.
    */
   private def apply(buildRoot: File): SbtBuild = {
-    val connector = new ConnectorWithObservable(new SimpleConnector(buildRoot, new IDEServerLocator))
+    val connector = new ConnectorWithObservable(SbtConnector(
+        "scala-ide-sbt-integration", "Scala IDE sbt integration", buildRoot))
     new SbtBuild(buildRoot, connector.sbtClientWatcher(), ConsoleProvider(buildRoot))
   }
-
+/*
   /** SbtServerLocator returning the bundled sbtLaunch.jar and sbt-server.properties. */
   private class IDEServerLocator extends AbstractSbtServerLocator {
 
@@ -63,7 +58,7 @@ object SbtBuild {
     override def sbtProperties(directory: java.io.File): java.net.URL = SbtRemotePlugin.plugin.sbtProperties
 
   }
-
+*/
 }
 
 /** Wrapper for the connection to the sbt-server for a sbt build.
@@ -73,8 +68,8 @@ class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient],
   val sbtClientObservable = ObservableExt.replay(sbtClient_.map{s => println("mapping sbtClient"); new SbtClientWithObservableAndCache(s)}, 1)
 
   def sbtClientFuture = ObservableExt.firstFuture(sbtClientObservable)
-  
-  sbtClientObservable.subscribe{ sbtClient => 
+/*
+  sbtClientObservable.subscribe{ sbtClient =>
     val out = console.newMessageStream()
     sbtClient.eventWatcher.subscribe {
       _ match {
@@ -86,7 +81,7 @@ class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient],
       }
     }
   }
-
+*/
   /** Triggers the compilation of the given project.
    */
   def compile(project: IProject) {
@@ -104,7 +99,7 @@ class SbtBuild private (val buildRoot: File, sbtClient_ : Observable[SbtClient],
       sbtClient <- sbtClientFuture
       build <- sbtClient.buildValue
     } yield {
-      build.projects.to[immutable.Seq]
+      build.projects.map(_.id)(collection.breakOut)
     }
   }
 
