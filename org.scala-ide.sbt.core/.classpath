@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry exported="true" kind="lib" path="target/lib/rxjava-core.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/akka-actor_2.11.jar" sourcepath="target/lib/akka-actor_2.11-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/akka-stream-experimental_2.11.jar" sourcepath="target/lib/akka-stream-experimental_2.11-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/reactive-streams.jar" sourcepath="target/lib/reactive-streams-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/rxjava-core.jar" sourcepath="/home/sschaef/.m2/repository/com/netflix/rxjava/rxjava-core/0.17.0-RC7/rxjava-core-0.17.0-RC7-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/rxjava-scala.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" output="target/classes" path="src"/>
-	<classpathentry kind="var" path="M2_REPO/com/typesafe/sbt/client-all-2-11/1.0-4f04b935f4328833346698fd1d1a39841152b15c/client-all-2-11-1.0-4f04b935f4328833346698fd1d1a39841152b15c.jar" sourcepath="/IVY2_REPO/local/com.typesafe.sbtrc/client-2-11/1.0-4f04b935f4328833346698fd1d1a39841152b15c/srcs/client-2-11-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/reactivestreams/reactive-streams/1.0.0.RC2/reactive-streams-1.0.0.RC2.jar" sourcepath="/M2_REPO/org/reactivestreams/reactive-streams/1.0.0.RC2/reactive-streams-1.0.0.RC2-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/typesafe/akka/akka-stream-experimental_2.11/1.0-M3/akka-stream-experimental_2.11-1.0-M3.jar" sourcepath="/M2_REPO/com/typesafe/akka/akka-stream-experimental_2.11/1.0-M3/akka-stream-experimental_2.11-1.0-M3-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/akka-osgi_2.11.jar" sourcepath="target/lib/akka-osgi_2.11-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/client-all-2-11.jar" sourcepath="target/lib/client-all-2-11-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

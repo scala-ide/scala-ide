@@ -21,6 +21,7 @@
   <properties>
     <sbtrc.version>1.0-4f04b935f4328833346698fd1d1a39841152b15c</sbtrc.version>
     <rxjava.version>0.17.0-RC7</rxjava.version>
+    <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
     <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
   </properties>
@@ -35,6 +36,16 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-stream-experimental_2.11</artifactId>
       <version>${akka.stream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.11</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-osgi_2.11</artifactId>
+      <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>org.reactivestreams</groupId>

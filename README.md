@@ -7,7 +7,7 @@ The initial goals are to enable importing vanilly SBT projects, driving the buil
 
 ## Using:
 
-sbt-remote-control and plugin-profiles need to be deployed locally. Furthermore the classpath variables `M2_REPO` and `IVY2_REPO` need to exist.
+sbt-remote-control and plugin-profiles need to be deployed locally.
 
 To deploy sbt-remote-control locally, clone the `https://github.com/sbt/sbt-remote-control` project, check out the right commit (the hash is part of the version number in the top `pom.xml`) and run `sbt publishM2`.
 
