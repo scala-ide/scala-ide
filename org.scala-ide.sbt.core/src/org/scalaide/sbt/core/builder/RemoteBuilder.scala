@@ -7,12 +7,13 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IProgressMonitor
 import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalaide.sbt.core.SbtBuild
+import org.scalaide.sbt.core.SbtRemotePlugin
 
 class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
 
   override def build(kind: Int, args: JMap[String, String], monitor: IProgressMonitor): Array[IProject] = {
     val project = getProject()
-    val build = SbtBuild.buildFor(project.getLocation().toFile())
+    val build = SbtBuild.buildFor(project.getLocation().toFile())(SbtRemotePlugin.system)
 
     build.compile(project)
 

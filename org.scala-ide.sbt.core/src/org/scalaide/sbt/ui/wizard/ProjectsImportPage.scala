@@ -2,7 +2,6 @@ package org.scalaide.sbt.ui.wizard
 
 import java.io.File
 import java.lang.reflect.InvocationTargetException
-
 import scala.collection._
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
@@ -10,7 +9,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.concurrent.duration._
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.CoreException
@@ -54,8 +52,8 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
 import org.scalaide.sbt.core.SbtBuild
 import org.scalaide.sbt.core.SbtProjectSupport
-
 import sbt.protocol.ProjectReference
+import org.scalaide.sbt.core.SbtRemotePlugin
 
 object ProjectsImportPage {
 
@@ -409,8 +407,8 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
 
       import scala.concurrent.ExecutionContext.Implicits.global
 
-      val build = SbtBuild.buildFor(directory)
-      val projects = SbtBuild.buildFor(directory).projects()
+      val build = SbtBuild.buildFor(directory)(SbtRemotePlugin.system)
+      val projects = build.projects()
       val projectRecords = projects.map {
         _.map(new ProjectRecord(build, _))
       }
