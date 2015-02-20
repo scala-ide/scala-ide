@@ -19,7 +19,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-4f04b935f4328833346698fd1d1a39841152b15c</sbtrc.version>
+    <sbtrc.version>0.3.2</sbtrc.version>
     <rxjava.version>0.17.0-RC7</rxjava.version>
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
