@@ -16,6 +16,7 @@ import org.eclipse.jdt.internal.core.ClasspathEntry
 import org.eclipse.jdt.ui.PreferenceConstants
 import sbt.Attributed
 import org.eclipse.jdt.core.IClasspathEntry
+import org.scalaide.sbt.util.SourceUtils._
 
 object SbtProjectSupport {
 
@@ -60,7 +61,7 @@ object SbtProjectSupport {
 
   private def createJavaProjectDescription(build: SbtBuild, projectName: String, builderName: String, workspace: IWorkspace): Future[IProjectDescription] = {
     for {
-      projectRoot <- build.getSettingValue[File](projectName, "baseDirectory")
+      projectRoot <- build.setting[File](projectName, "baseDirectory")
     } yield {
       val description = workspace.newProjectDescription(projectName)
 
@@ -76,17 +77,24 @@ object SbtProjectSupport {
   }
 
   private def configureClassPath(build: SbtBuild, projectName: String, project: IProject, monitor: IProgressMonitor): Future[Unit] = {
-    val compileSourceDirectoriesFuture = build.getSettingValue[Seq[File]](projectName, "sourceDirectories", Some("compile"))
-    val compileClassDirectioryFuture = build.getSettingValue[File](projectName, "classDirectory", Some("compile"))
-    val compileClasspathFuture = build.getSettingValue[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile"))
-    val testSourceDirectoriesFuture = build.getSettingValue[Seq[File]](projectName, "sourceDirectories", Some("test"))
-    val testClassDirectoryFuture = build.getSettingValue[File](projectName, "classDirectory", Some("test"))
-    val testClasspathFuture = build.getSettingValue[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test"))
+    val logger = build.system.log
+//    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
+    for (x ← srcDirs) {
+      logger.debug(s"srcDirs: $x")
+      println(s"xxx: $x")
+    }
+
+    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
+    val clsDirs = build.setting[File](projectName, "classDirectory", Some("compile"))
+    val classpath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile"))
+    val testSrcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("test"))
+    val testClsDirs = build.setting[File](projectName, "classDirectory", Some("test"))
+    val testClasspath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test"))
 
     for {
-      compileSourceDirectories <- compileSourceDirectoriesFuture
-      compileClassDirectory <- compileClassDirectioryFuture
-      compileClasspath <- compileClasspathFuture
+      compileSourceDirectories <- srcDirs
+      compileClassDirectory <- clsDirs
+      compileClasspath <- classpath
       testSourceDirectories <- testSourceDirectoriesFuture
       testClassDirectory <- testClassDirectoryFuture
       testClasspath <- testClasspathFuture

@@ -1,17 +1,15 @@
 package org.scalaide.sbt.core
 
 import java.io.File
-
 import scala.collection.immutable
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
 import org.scalaide.logging.HasLogger
 import org.scalaide.sbt.ui.console.ConsoleProvider
-
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
 import akka.stream.FlowMaterializer
@@ -20,6 +18,16 @@ import sbt.client.SbtClient
 import sbt.client.SbtConnector
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
+import sbt.client.SettingKey
+import sbt.client.SettingKey
+import sbt.protocol.ScopedKey
+import sbt.protocol.TaskResult
+import play.api.libs.json.Reads
+import sbt.protocol.TaskSuccess
+import scala.util.Try
+import org.reactivestreams.Publisher
+import org.reactivestreams.Subscription
+import org.reactivestreams.Subscriber
 
 object SbtBuild {
 
@@ -46,8 +54,10 @@ object SbtBuild {
   /** Create and initialize a SbtBuild instance for the given path.
    */
   private def apply(buildRoot: File)(implicit system: ActorSystem): SbtBuild = {
+    import system.dispatcher
     val connector = SbtConnector("scala-ide-sbt-integration", "Scala IDE sbt integration", buildRoot)
-    new SbtBuild(buildRoot, sbtClientWatcher(connector)(system.dispatcher), ConsoleProvider(buildRoot))
+    val client = sbtClientWatcher(connector).map(new RichSbtClient(_))
+    new SbtBuild(buildRoot, client, ConsoleProvider(buildRoot))
   }
 
   private def sbtClientWatcher(connector: SbtConnector)(implicit ctx: ExecutionContext): Future[SbtClient] = {
@@ -84,7 +94,9 @@ object SbtBuild {
   */
 }
 
-class RichSbtClient(val client: SbtClient) {
+class RichSbtClient(private val client: SbtClient) {
+
+  private val cachedKeys = mutable.HashMap[ScopedKey, Source[Try[(ScopedKey, Any)]]]()
 
   def buildWatcher()(implicit ctx: ExecutionContext): Future[MinimalBuildStructure] = {
     val p = Promise[MinimalBuildStructure]
@@ -92,29 +104,77 @@ class RichSbtClient(val client: SbtClient) {
     p.future
   }
 
-}
-
-object SourceUtils {
-  implicit class RichSource[A](src: Source[A]) {
-    def firstFuture(implicit materializer: FlowMaterializer): Future[A] = {
-      val p = Promise[A]
-      src.take(1).runForeach { elem ⇒
-        p.trySuccess(elem)
-      }
-      p.future
+  def settingValue[A : Reads](projectName: String, keyName: String, config: Option[String])(implicit sys: ActorSystem): Future[A] = {
+    import sys.dispatcher
+    client.lookupScopedKey(mkCommand(projectName, keyName, config)) flatMap { keys ⇒
+      valueOfKey(SettingKey(keys.head))
     }
   }
+
+  private type Out[A] = Try[(ScopedKey, A)]
+
+  private def watchKey[A : Reads](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+    Source(new Publisher[Out[A]] {
+      var requestedElems = 0L
+      var cancellation: sbt.client.Subscription = _
+      val subs = new Subscription {
+        def request(n: Long): Unit = {
+          requestedElems = n
+        }
+        def cancel(): Unit = {
+          cancellation.cancel()
+        }
+      }
+      override def subscribe(s: Subscriber[_ >: Out[A]]): Unit = {
+        def sendElem(elem: Out[A]) = {
+          requestedElems -= 1
+          s.onNext(elem)
+        }
+        s.onSubscribe(subs)
+        cancellation = client.lazyWatch(key) { (key, res) ⇒
+          val elem = res map (key → _)
+          if (requestedElems > 0)
+            sendElem(elem)
+          else
+            ??? // TODO handle case of no requested elems
+        }
+      }
+    })
+  }
+
+  private def keyWatcher[A : Reads](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+    cachedKeys synchronized {
+      val res = cachedKeys get key.key match {
+        case Some(f) ⇒
+          f
+        case _ ⇒
+          val f = watchKey(key)
+          cachedKeys update (key.key, f)
+          f
+      }
+      res.asInstanceOf[Source[Try[(ScopedKey, A)]]]
+    }
+  }
+
+  private def valueOfKey[A : Reads](key: SettingKey[A])(implicit sys: ActorSystem): Future[A] = {
+    import sys.dispatcher
+    implicit val materializer = ActorFlowMaterializer()
+    val p = Promise[A]
+    watchKey(key).take(1).runForeach(res ⇒ p.tryComplete(res.map(_._2)))
+    p.future
+  }
+
+  private def mkCommand(projectName: String, keyName: String, config: Option[String]): String =
+    s"$projectName/${config.map(c ⇒ s"$c:").mkString}$keyName"
+
 }
 
 final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)
 
-class SbtBuild private (val buildRoot: File, sbtClient: Future[SbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
+class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
-  import SourceUtils._
   implicit val materializer = ActorFlowMaterializer()
   import system.dispatcher
-
-  private def richSbtClient = sbtClient.map{s ⇒ println("mapping sbtClient"); new RichSbtClient(s)}
 
 /*
   sbtClientObservable.subscribe{ sbtClient =>
@@ -149,17 +209,20 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[SbtClient], conso
    * Returns the list of projects defined in this build.
    */
   def projects(): Future[immutable.Seq[ProjectReference]] = for {
-    f ← richSbtClient
+    f ← sbtClient
     build ← f.buildWatcher()
   } yield build.projects.map(_.id)(collection.breakOut)
+
+  def setting[A : Reads](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
+    sbtClient.flatMap(_.settingValue(projectName, keyName, config))
 
   /**
    * Returns a Future for the value of the given setting key.
    *
    * Assumes that the values can be serialize, so BuildValue.value.get is always valid.
    */
+  @deprecated("use setting instead")
   def getSettingValue[T](projectName: String, keyName: String, config: Option[String] = None)(implicit mf: Manifest[T]): Future[T] = {
-//    sbtClientFuture.flatMap(_.getSettingValue[T](projectName, keyName, config))
     ???
   }
 
