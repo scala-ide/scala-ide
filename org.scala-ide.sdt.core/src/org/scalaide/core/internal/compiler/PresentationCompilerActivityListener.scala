@@ -34,7 +34,6 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 
   private var closingEnabled = true
   private var maxIdlenessLengthMillis = 120000L
-  private var ignoreOpenEditors = false
 
   /**
    * Checks length of inactivity and shuts down presentation compiler when it's needed
@@ -77,7 +76,7 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
         try {
           if (!isTimeToBeKilled)
             scheduleNextCheck(remainingDelayToNextCheck)
-          else if (!ignoreOpenEditors && projectHasOpenEditors)
+          else if (projectHasOpenEditors)
             scheduleNextCheck(delay = maxIdlenessLengthMillis)
           else {
             logger.info(s"Presentation compiler for project $projectName will be shut down due to inactivity")
@@ -118,7 +117,6 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 
   // to make this class testable
   protected def readClosingEnabled = PresentationCompilerActivityListener.closingEnabled
-  protected def readIgnoreOpenEditors = PresentationCompilerActivityListener.shouldCloseRegardlessOfOpenEditors
   protected def readMaxIdlenessLengthMillis = PresentationCompilerActivityListener.currentMaxIdlenessLengthMillis
 
   private def updateKillerTask(): Unit = {
@@ -134,7 +132,6 @@ class PresentationCompilerActivityListener(projectName: String, projectHasOpenEd
 
   private def startKillerTask(): Unit = {
     maxIdlenessLengthMillis = readMaxIdlenessLengthMillis
-    ignoreOpenEditors = readIgnoreOpenEditors
     scheduleNextCheck(remainingDelayToNextCheck)
   }
 
@@ -162,6 +159,4 @@ object PresentationCompilerActivityListener {
   private def closingEnabled: Boolean = prefStore.getBoolean(ResourcesPreferences.PRES_COMP_CLOSE_UNUSED)
 
   private def currentMaxIdlenessLengthMillis: Long = prefStore.getInt(ResourcesPreferences.PRES_COMP_MAX_IDLENESS_LENGTH) * 1000L
-
-  private def shouldCloseRegardlessOfOpenEditors: Boolean = prefStore.getBoolean(ResourcesPreferences.PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS)
 }

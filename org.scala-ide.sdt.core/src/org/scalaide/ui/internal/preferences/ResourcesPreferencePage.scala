@@ -30,7 +30,6 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
   // these ones are disposed by parent class
   private var closingEnabledEditor: BooleanFieldEditor = null
   private var maxIdlenessLengthEditor: IntegerFieldEditor = null
-  private var ignoreOpenEditors: BooleanFieldEditor = null
 
   override def init(wb: IWorkbench): Unit = {}
 
@@ -60,8 +59,6 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
     }
     maxIdlenessLengthEditor.setValidRange(10, Integer.MAX_VALUE)
     addField(maxIdlenessLengthEditor)
-    ignoreOpenEditors = new BooleanFieldEditor(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, "Even when editors are open", presCompInnerGroup)
-    addField(ignoreOpenEditors)
   }
 
   override def initialize(): Unit = {
@@ -84,7 +81,6 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
 
   private def updateClosingPresentationCompilerEditors(enabled: Boolean): Unit = {
     maxIdlenessLengthEditor.setEnabled(enabled, presCompInnerGroup)
-    ignoreOpenEditors.setEnabled(enabled, presCompInnerGroup)
   }
 
   private def checkCurrentIdlenessLength(seconds: Int): Unit =
@@ -97,7 +93,6 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
   override def performOk(): Boolean = {
     val prefStore = getPreferenceStore()
     val presCompPrefsChanged = closingEnabledEditor.getBooleanValue() != prefStore.getBoolean(PRES_COMP_CLOSE_UNUSED) ||
-      ignoreOpenEditors.getBooleanValue() != prefStore.getBoolean(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS) ||
       maxIdlenessLengthEditor.getIntValue() != prefStore.getInt(PRES_COMP_MAX_IDLENESS_LENGTH)
 
     val result = super.performOk()
@@ -117,20 +112,6 @@ object ResourcesPreferences {
   val PRES_COMP_MAX_IDLENESS_LENGTH = "org.scala-ide.sdt.core.resources.presentationCompiler.maxIdlenessLength"
 
   /**
-   * Whether idle presentation compiler should be closed even if there are open editors for related project.
-   *
-   * If it's set to true, unused presentation compiler's thread will be stopped for sure. But if there are still some open editors,
-   * then memory could be not freed because of some still existing references.
-   * Such situation occurs quite often e.g. when ImplicitHighlightingPresenter is used (implicit highlighting is enabled).
-   * Looking at heap dump in profiler we can come to the conclusion that problem is here:
-   * ImplicitConversionAnnotation gets in constructor certain function using HyperlinkFactory (it holds SCP instance) which is used lazily.
-   * In addition in this case also ScalaProject could be not freed due to the same reason when closed.
-   *
-   * When working directly with SPC instances it's important to check, whether made changes don't disturb GC.
-   */
-  val PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS = "org.scala-ide.sdt.core.resources.presentationCompiler.closeRegardlessOfOpenEditors"
-
-  /**
    * Changes in preferences related to closing presentation compilers should be always taken into account together.
    * Unfortunately preferences are saved separately step by step and notification about the change of one of them is sent before new values
    * of another ones are stored in preference store. That's why we need some hack - to send one notification when new values of all
@@ -146,7 +127,6 @@ class ResourcesPreferencePageInitializer extends AbstractPreferenceInitializer {
     val store = IScalaPlugin().getPreferenceStore()
     store.setDefault(PRES_COMP_CLOSE_UNUSED, true)
     store.setDefault(PRES_COMP_MAX_IDLENESS_LENGTH, 120)
-    store.setDefault(PRES_COMP_CLOSE_REGARDLESS_OF_EDITORS, false)
     store.setDefault(PRES_COMP_PREFERENCES_CHANGE_MARKER, true)
   }
 }
