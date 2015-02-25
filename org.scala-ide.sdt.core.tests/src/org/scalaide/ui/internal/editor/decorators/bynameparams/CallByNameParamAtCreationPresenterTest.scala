@@ -9,6 +9,7 @@ import org.scalaide.CompilerSupportTests
 import org.scalaide.core.semantichighlighting.classifier.RegionParser
 import org.scalaide.core.semantichighlighting.classifier.RegionParser.EmbeddedSubstr
 import CallByNameParamAtCreationPresenterTest.mkScalaCompilationUnit
+import org.scalaide.core.FlakyTest
 
 object CallByNameParamAtCreationPresenterTest extends CompilerSupportTests
 
@@ -164,7 +165,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMultiplePartiallyAppliedFunctions() {
+  def testWithMultiplePartiallyAppliedFunctions() = FlakyTest.retry("testWithMultiplePartiallyAppliedFunctions", "") {
     testWithSingleLineCfg("""
       object X {
         def f(i1: Int)(i2: => Int)(i3: => Int) = i1 * i2 * i3
