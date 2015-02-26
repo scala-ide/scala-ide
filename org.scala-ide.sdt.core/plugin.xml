@@ -1034,6 +1034,13 @@
       description="Debug Scala JUnit Test"
       id="org.eclipse.shortcut.scala.junit.debug"
       name="Debug Scala JUnit Test" />
+    <command
+          categoryId="scala.tools.eclipse.category"
+          defaultHandler="org.scalaide.ui.internal.actions.RestartPresentationCompilerAction"
+          description="Restarts the Presentation Compiler of the Scala project that belongs to the active selection"
+          id="org.scala-ide.sdt.core.restartScalaPresentationCompiler"
+          name="Restart Scala Presentation Compiler">
+    </command>
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
