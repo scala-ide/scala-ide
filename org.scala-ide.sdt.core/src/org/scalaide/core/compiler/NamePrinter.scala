@@ -4,6 +4,7 @@ import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.jface.text.Region
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 private object NamePrinter {
@@ -14,31 +15,40 @@ private object NamePrinter {
 /**
  * For printing names in an InteractiveCompilationUnit.
  */
-class NamePrinter(cu: InteractiveCompilationUnit) {
+class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
   import NamePrinter._
 
   /**
    * Returns the fully qualified name of the symbol at the given offset if available.
    *
-   * This method is used by "Copy Qualified Name" in the GUI.
+   * This method is used by 'Copy Qualified Name' in the GUI. Please note that there is no formal
+   * specification of the names this feature should return. The behavior of the implementation is mostly modeled
+   * after the corresponding JDT feature.
+   *
+   * @note Important: This method assumes the `cu` is already loaded in the presentation compiler (for example,
+   *                  `cu.initialReconcile` was called on it). If the unit is not loaded, this might fail spuriously.
    */
   def qualifiedNameAt(offset: Int): Option[String] = {
     cu.withSourceFile { (src, compiler) =>
-
       val scalaRegion = new Region(cu.sourceMap(cu.getContents()).scalaPos(offset), 1)
-      compiler.askTypeAt(scalaRegion.toRangePos(src)).getOption() match {
-        case Some(tree) => qualifiedName(Location(src, offset), compiler)(tree)
-        case _ => None
-      }
-    }.flatten
+
+      for {
+        tree <-  handleCompilerResponse(compiler.askTypeAt(scalaRegion.toRangePos(src)).get)
+        fullTree <- handleCompilerResponse(compiler.askLoadedTyped(src, true).get)
+        qname <- handleCompilerResponse(compiler.asyncExec(qualifiedName(Location(src, offset), compiler)(fullTree, tree)).get)
+      } yield qname
+
+    }.flatten.flatten
   }
 
-  private def qualifiedName(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
-    val resp = comp.asyncExec(qualifiedNameImpl(loc, comp)(t))
-    resp.getOption().flatten
+  private def handleCompilerResponse[T](res: Either[T, Throwable]): Option[T] = res match {
+    case Left(t) => Option(t)
+    case Right(th) =>
+      logger.error("Error computing qualfied name", th)
+      None
   }
 
-  private def qualifiedNameImpl(loc: Location, comp: IScalaPresentationCompiler)(t: comp.Tree): Option[String] = {
+  private def qualifiedName(loc: Location, comp: IScalaPresentationCompiler)(fullTree: comp.Tree, t: comp.Tree): Option[String] = {
     def enclosingDefinition(currentTree: comp.Tree, loc: Location) = {
       def isEnclosingDefinition(t: comp.Tree) = t match {
         case _: comp.DefDef | _: comp.ClassDef | _: comp.ModuleDef | _: comp.PackageDef =>
@@ -46,15 +56,13 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
         case _ => false
       }
 
-      comp.askLoadedTyped(loc.src, true).getOption().map { fullTree =>
-        comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingDefinition)
-      }
+      comp.locateIn(fullTree, comp.rangePos(loc.src, loc.offset, loc.offset, loc.offset), isEnclosingDefinition)
     }
 
     def qualifiedNameImplPrefix(loc: Location, t: comp.Tree) = {
       enclosingDefinition(t, loc) match {
-        case Some(comp.EmptyTree) | None => ""
-        case Some(encDef) => qualifiedNameImpl(loc, comp)(encDef).map(_ + ".").getOrElse("")
+        case comp.EmptyTree => ""
+        case encDef => qualifiedName(loc, comp)(fullTree, encDef).map(_ + ".").getOrElse("")
       }
     }
 
@@ -79,39 +87,41 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
         symbol.fullName
     }
 
+    def paramssStr(paramss: List[List[comp.Symbol]]) = {
+     if (paramss.isEmpty) ""
+     else paramss.map(paramsStr(_)).mkString("")
+    }
+
+    def paramsStr(params: List[comp.Symbol]) = {
+      "(" + params.map(paramStr(_)).mkString(", ") + ")"
+    }
+
+    def paramStr(param: comp.Symbol) = {
+      param.name + ": " + declPrinterTypeStr(param.tpe)
+    }
+
     def vparamssStr(vparamss: List[List[comp.ValDef]]) = {
-      if (vparamss.isEmpty) {
-        ""
-      } else {
-        vparamss.map(vparamsStr(_)).mkString("")
-      }
+      paramssStr(vparamss.map(_.map(_.symbol)))
     }
 
-    def vparamsStr(vparams: List[comp.ValDef]) = {
-      "(" + vparams.map(vparmStr(_)).mkString(", ") + ")"
+    def tparamsStrFromTypeDefs(tparams: List[comp.TypeDef]) = {
+      tparamsStrFromSyms(tparams.map(_.symbol))
     }
 
-    def vparmStr(valDef: comp.ValDef) = {
-      val name = valDef.name
-      val tpt = valDef.tpt
+    def tparamsStrFromSyms(tparams: List[comp.Symbol]) = {
+      if (tparams.isEmpty) ""
+      else "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
+    }
 
-      val declPrinter = new DeclarationPrinter {
+    def tparamStr(sym: comp.Symbol) = {
+      shortName(sym.name)
+    }
+
+
+    def declPrinterTypeStr(tpe: comp.Type) = {
+      new DeclarationPrinter {
         val compiler: comp.type = comp
-      }
-
-      name.toString + ": " + declPrinter.showType(tpt.tpe)
-    }
-
-    def tparamsStr(tparams: List[comp.TypeDef]) = {
-      if (tparams.isEmpty) {
-        ""
-      } else {
-        "[" + tparams.map(tparamStr(_)).mkString(", ") + "]"
-      }
-    }
-
-    def tparamStr(tparam: comp.TypeDef) = {
-      shortName(tparam.name)
+      }.showType(tpe)
     }
 
     def shortName(name: comp.Name) = {
@@ -138,12 +148,12 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
           (sym.nameString, true)
       }
 
-      (Some(className + tparamsStr(classDef.tparams)), qualifiy)
+      (Some(className + tparamsStrFromTypeDefs(classDef.tparams)), qualifiy)
     }
 
     def handledefDef(defDef: comp.DefDef) = {
       val symName = defDef.symbol.nameString
-      (Some(symName + tparamsStr(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
+      (Some(symName + tparamsStrFromTypeDefs(defDef.tparams) + vparamssStr(defDef.vparamss)), true)
     }
 
     def anonClassSymStr(classSym: comp.ClassSymbol) = {
@@ -157,17 +167,23 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       s"new $symStr {...}"
     }
 
-    def handleSelect(select: comp.Select) = select.qualifier match {
-      case comp.Block(List(stat: comp.ClassDef), _) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
-        (Some(anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString), false)
-      case _ => (Some(t.symbol.fullName), false)
+    def handleSelect(select: comp.Select) = {
+      (Some(selectStr(select)), false)
+    }
+
+    def selectStr(select: comp.Select) = select match {
+      case comp.Select(comp.Block(List(stat: comp.ClassDef), _), name) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
+        anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString
+      case comp.Select(qualifier, name) =>
+        if (select.symbol.isConstructor) qualifier.tpe.toString
+        else select.symbol.fullName
     }
 
     def handleModuleDef(moduleDef: comp.ModuleDef) = {
       if (moduleDef.symbol.isPackageObject)
         (Some(moduleDef.symbol.owner.fullName), false)
       else
-        (Some(moduleDef.symbol.name), true)
+        (Some(moduleDef.symbol.name.toString), true)
     }
 
     def handlePackageDef(packageDef: comp.PackageDef) = {
@@ -177,6 +193,18 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
       }
 
       (name, false)
+    }
+
+    def handleApply(apply: comp.Apply) = {
+      val symInfo = apply.symbol.info
+      val paramsStr = tparamsStrFromSyms(symInfo.typeParams) + paramssStr(symInfo.paramss)
+
+      val name = apply.fun match {
+        case select: comp.Select => selectStr(select)
+        case _ => apply.symbol.fullName
+      }
+
+      (Some(name + paramsStr), false)
     }
 
     if (t.symbol.isInstanceOf[comp.NoSymbol])
@@ -191,6 +219,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) {
         case comp.Import(tree, selectors) => handleImport(loc, tree, selectors)
         case ident: comp.Ident => handleIdent(ident)
         case packageDef: comp.PackageDef => handlePackageDef(packageDef)
+        case apply: comp.Apply => handleApply(apply)
         case _ => (Option(t.symbol).map(symbolName(_)), true)
       }
 
