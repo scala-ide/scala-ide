@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="target/lib/scala-pickling_2.11.jar" sourcepath="target/lib/scala-pickling_2.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/akka-actor_2.11.jar" sourcepath="target/lib/akka-actor_2.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/akka-stream-experimental_2.11.jar" sourcepath="target/lib/akka-stream-experimental_2.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/reactive-streams.jar" sourcepath="target/lib/reactive-streams-sources.jar"/>

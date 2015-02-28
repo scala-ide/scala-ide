@@ -34,6 +34,15 @@
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-pickling_2.11</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-pickling_2.11</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
                   <artifactId>akka-actor_2.11</artifactId>
                 </artifactItem>

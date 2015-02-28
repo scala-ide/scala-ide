@@ -22,12 +22,12 @@ import sbt.client.SettingKey
 import sbt.client.SettingKey
 import sbt.protocol.ScopedKey
 import sbt.protocol.TaskResult
-import play.api.libs.json.Reads
 import sbt.protocol.TaskSuccess
 import scala.util.Try
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscription
 import org.reactivestreams.Subscriber
+import scala.pickling.Unpickler
 
 object SbtBuild {
 
@@ -104,7 +104,7 @@ class RichSbtClient(private val client: SbtClient) {
     p.future
   }
 
-  def settingValue[A : Reads](projectName: String, keyName: String, config: Option[String])(implicit sys: ActorSystem): Future[A] = {
+  def settingValue[A : Unpickler](projectName: String, keyName: String, config: Option[String])(implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
     client.lookupScopedKey(mkCommand(projectName, keyName, config)) flatMap { keys ⇒
       valueOfKey(SettingKey(keys.head))
@@ -113,7 +113,7 @@ class RichSbtClient(private val client: SbtClient) {
 
   private type Out[A] = Try[(ScopedKey, A)]
 
-  private def watchKey[A : Reads](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+  private def watchKey[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
     Source(new Publisher[Out[A]] {
       var requestedElems = 0L
       var cancellation: sbt.client.Subscription = _
@@ -142,7 +142,7 @@ class RichSbtClient(private val client: SbtClient) {
     })
   }
 
-  private def keyWatcher[A : Reads](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+  private def keyWatcher[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
     cachedKeys synchronized {
       val res = cachedKeys get key.key match {
         case Some(f) ⇒
@@ -156,7 +156,7 @@ class RichSbtClient(private val client: SbtClient) {
     }
   }
 
-  private def valueOfKey[A : Reads](key: SettingKey[A])(implicit sys: ActorSystem): Future[A] = {
+  private def valueOfKey[A : Unpickler](key: SettingKey[A])(implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
     implicit val materializer = ActorFlowMaterializer()
     val p = Promise[A]
@@ -213,7 +213,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
     build ← f.buildWatcher()
   } yield build.projects.map(_.id)(collection.breakOut)
 
-  def setting[A : Reads](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
+  def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
     sbtClient.flatMap(_.settingValue(projectName, keyName, config))
 
   /**

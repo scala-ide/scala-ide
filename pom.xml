@@ -19,7 +19,8 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>0.3.2</sbtrc.version>
+    <sbtrc.version>1.0-079360a45c31c4499a406b2c8eabc098631b849f</sbtrc.version>
+    <pickling.version>0.10.0</pickling.version>
     <rxjava.version>0.17.0-RC7</rxjava.version>
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
@@ -31,6 +32,11 @@
       <groupId>com.typesafe.sbt</groupId>
       <artifactId>client-all-2-11</artifactId>
       <version>${sbtrc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-pickling_2.11</artifactId>
+      <version>${pickling.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>

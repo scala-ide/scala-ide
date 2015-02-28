@@ -14,9 +14,10 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.core.ClasspathEntry
 import org.eclipse.jdt.ui.PreferenceConstants
-import sbt.Attributed
 import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.sbt.util.SourceUtils._
+import org.scalaide.sbt.util.PicklingUtils._
+import sbt.protocol.Attributed
 
 object SbtProjectSupport {
 
@@ -77,43 +78,38 @@ object SbtProjectSupport {
   }
 
   private def configureClassPath(build: SbtBuild, projectName: String, project: IProject, monitor: IProgressMonitor): Future[Unit] = {
-    val logger = build.system.log
-//    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
-    for (x ← srcDirs) {
-      logger.debug(s"srcDirs: $x")
-      println(s"xxx: $x")
-    }
+    //val logger = build.system.log
 
-    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
+    val srcDirs = build.setting[Seq[Attributed[File]]](projectName, "sourceDirectories", Some("compile")).map(_.map(_.data))
     val clsDirs = build.setting[File](projectName, "classDirectory", Some("compile"))
-    val classpath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile"))
-    val testSrcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("test"))
+    val classpath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile")).map(_.map(_.data))
+    val testSrcDirs = build.setting[Seq[Attributed[File]]](projectName, "sourceDirectories", Some("test")).map(_.map(_.data))
     val testClsDirs = build.setting[File](projectName, "classDirectory", Some("test"))
-    val testClasspath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test"))
+    val testClasspath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test")).map(_.map(_.data))
 
     for {
-      compileSourceDirectories <- srcDirs
-      compileClassDirectory <- clsDirs
-      compileClasspath <- classpath
-      testSourceDirectories <- testSourceDirectoriesFuture
-      testClassDirectory <- testClassDirectoryFuture
-      testClasspath <- testClasspathFuture
+      srcDir <- srcDirs
+      clsDir <- clsDirs
+      cp <- classpath
+      testSrcDir <- testSrcDirs
+      testClsDir <- testClsDirs
+      testCp <- testClasspath
     } yield {
       val javaProject = JavaCore.create(project)
 
-      val compileClassOutput = pathInProject(project, compileClassDirectory)
-      val sourcePaths = compileSourceDirectories.filter(_.exists).map { d =>
+      val compileClassOutput = pathInProject(project, clsDir)
+      val sourcePaths = srcDir.filter(_.exists).map { d =>
         JavaCore.newSourceEntry(pathInProject(project, d), ClasspathEntry.EXCLUDE_NONE, compileClassOutput)
       }
 
-      val testClassOutput = pathInProject(project, testClassDirectory)
-      val testSourcePaths = testSourceDirectories.filter(_.exists).map { d =>
+      val testClassOutput = pathInProject(project, testClsDir)
+      val testSourcePaths = testSrcDir.filter(_.exists).map { d =>
         JavaCore.newSourceEntry(pathInProject(project, d), ClasspathEntry.EXCLUDE_NONE, testClassOutput)
       }
 
-      val fullClasspath = (compileClasspath ++ testClasspath).distinct
+      val fullClasspath = (cp ++ testCp).distinct
 
-      val referencedJars = fullClasspath.flatMap(j => createEclipseClasspathEntry(j.data))
+      val referencedJars = fullClasspath.flatMap(createEclipseClasspathEntry)
 
       val classpath = sourcePaths ++ testSourcePaths ++ referencedJars ++ PreferenceConstants.getDefaultJRELibrary()
 
