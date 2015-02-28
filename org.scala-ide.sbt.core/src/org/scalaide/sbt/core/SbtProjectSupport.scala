@@ -80,10 +80,10 @@ object SbtProjectSupport {
   private def configureClassPath(build: SbtBuild, projectName: String, project: IProject, monitor: IProgressMonitor): Future[Unit] = {
     //val logger = build.system.log
 
-    val srcDirs = build.setting[Seq[Attributed[File]]](projectName, "sourceDirectories", Some("compile")).map(_.map(_.data))
+    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
     val clsDirs = build.setting[File](projectName, "classDirectory", Some("compile"))
     val classpath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile")).map(_.map(_.data))
-    val testSrcDirs = build.setting[Seq[Attributed[File]]](projectName, "sourceDirectories", Some("test")).map(_.map(_.data))
+    val testSrcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("test"))
     val testClsDirs = build.setting[File](projectName, "classDirectory", Some("test"))
     val testClasspath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test")).map(_.map(_.data))
 
