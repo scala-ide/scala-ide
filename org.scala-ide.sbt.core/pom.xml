@@ -88,6 +88,15 @@
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-parser-combinators_2.11</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-parser-combinators_2.11</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
                   <groupId>com.netflix.rxjava</groupId>
                   <artifactId>rxjava-core</artifactId>
                 </artifactItem>

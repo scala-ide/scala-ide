@@ -19,13 +19,14 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-079360a45c31c4499a406b2c8eabc098631b849f</sbtrc.version>
+    <sbtrc.version>1.0-672ab670f78705a0c38eb7ab25be0331b7f89f42</sbtrc.version>
     <pickling.version>0.10.0</pickling.version>
     <rxjava.version>0.17.0-RC7</rxjava.version>
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
     <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
     <config.version>1.2.1</config.version>
+    <parser.combinators.version>1.0.2</parser.combinators.version>
   </properties>
 
   <dependencies>
@@ -63,6 +64,11 @@
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
       <version>${config.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-parser-combinators_2.11</artifactId>
+      <version>${parser.combinators.version}</version>
     </dependency>
     <dependency>
       <groupId>com.netflix.rxjava</groupId>
