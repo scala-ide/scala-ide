@@ -25,6 +25,7 @@
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
     <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
+    <config.version>1.2.1</config.version>
   </properties>
 
   <dependencies>
@@ -57,6 +58,11 @@
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <version>${reactive.stream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>${config.version}</version>
     </dependency>
     <dependency>
       <groupId>com.netflix.rxjava</groupId>

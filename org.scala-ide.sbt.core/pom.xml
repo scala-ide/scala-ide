@@ -79,6 +79,15 @@
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
+                  <groupId>com.typesafe</groupId>
+                  <artifactId>config</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe</groupId>
+                  <artifactId>config</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
                   <groupId>com.netflix.rxjava</groupId>
                   <artifactId>rxjava-core</artifactId>
                 </artifactItem>
