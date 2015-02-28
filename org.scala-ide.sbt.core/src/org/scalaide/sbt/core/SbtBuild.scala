@@ -67,7 +67,7 @@ object SbtBuild {
       p.trySuccess(client)
     }
     def onError(reconnecting: Boolean, msg: String): Unit = {
-      if (reconnecting) ??? // TODO handle reconnecting case
+      if (reconnecting) println(s"reconnecting after error: $msg")
       else p.failure(new SbtClientConnectionFailure(msg))
     }
     connector.open(onConnect, onError)
