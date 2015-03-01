@@ -214,7 +214,6 @@ class ScalaSourceViewerConfiguration(
 
       val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
-      reconciler.install(sourceViewer)
       reconciler.setProgressMonitor(new NullProgressMonitor())
       reconciler
     }.orNull
