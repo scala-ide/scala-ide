@@ -131,7 +131,7 @@ class RichSbtClient(private val client: SbtClient) {
           s.onNext(elem)
         }
         s.onSubscribe(subs)
-        cancellation = client.lazyWatch(key) { (key, res) ⇒
+        cancellation = client.watch(key) { (key, res) ⇒
           val elem = res map (key → _)
           if (requestedElems > 0)
             sendElem(elem)
