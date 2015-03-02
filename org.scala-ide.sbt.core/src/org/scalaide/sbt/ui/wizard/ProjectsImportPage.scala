@@ -54,6 +54,7 @@ import org.scalaide.sbt.core.SbtBuild
 import org.scalaide.sbt.core.SbtProjectSupport
 import sbt.protocol.ProjectReference
 import org.scalaide.sbt.core.SbtRemotePlugin
+import org.scalaide.core.internal.ScalaPlugin
 
 object ProjectsImportPage {
 
@@ -405,14 +406,12 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
       val promise = Promise[Seq[ProjectReference]]
 
-      import scala.concurrent.ExecutionContext.Implicits.global
-
       val build = SbtBuild.buildFor(directory)(SbtRemotePlugin.system)
       val projects = build.projects()
       val projectRecords = projects.map {
         _.map(new ProjectRecord(build, _))
       }
-      Await.result(projectRecords, scala.concurrent.duration.Duration.Inf)
+      Await.result(projectRecords, Duration.Inf)
     } else {
       Seq.empty
     }
@@ -435,7 +434,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
           monitor.beginTask("", selected.length)
           if (monitor.isCanceled()) throw new OperationCanceledException()
           val createdProjects = selected.map(r => SbtProjectSupport.createWorkspaceProject(r.build, r.ref.name, "org.scala-ide.sbt.core.remoteBuilder", monitor))
-          Await.result(Future.sequence(createdProjects), 20.seconds)
+          Await.result(Future.sequence(createdProjects), if (ScalaPlugin().noTimeoutMode) Duration.Inf else 20.seconds)
           ResourcesPlugin.getWorkspace().save(true, monitor)
         } finally monitor.done()
       }
