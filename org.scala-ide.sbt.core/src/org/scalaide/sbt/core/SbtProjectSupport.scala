@@ -18,6 +18,7 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.scalaide.sbt.util.SourceUtils._
 import org.scalaide.sbt.util.PicklingUtils._
 import sbt.protocol.Attributed
+import org.scalaide.core.SdtConstants
 
 object SbtProjectSupport {
 
@@ -44,7 +45,7 @@ object SbtProjectSupport {
       // add the Scala nature
       progress.beginTask(s"$projectName: finalize configuration", 20)
       val description = project.getDescription()
-      description.setNatureIds(Array("org.scala-ide.sdt.core.scalanature", "org.eclipse.jdt.core.javanature"))
+      description.setNatureIds(Array(SdtConstants.NatureId, JavaCore.NATURE_ID))
       project.setDescription(description, IResource.FORCE, monitor)
       // sync all data back to the file system
       progress.beginTask(s"$projectName: sync data", 20)
@@ -67,7 +68,7 @@ object SbtProjectSupport {
       val description = workspace.newProjectDescription(projectName)
 
       description.setLocation(new Path(projectRoot.getAbsolutePath()))
-      description.setNatureIds(Array("org.eclipse.jdt.core.javanature"))
+      description.setNatureIds(Array(JavaCore.NATURE_ID))
 
       val newBuilderCommand = description.newCommand;
       newBuilderCommand.setBuilderName(builderName);
@@ -125,9 +126,9 @@ object SbtProjectSupport {
     val path = file.getAbsolutePath()
     path match {
       case ScalaLibraryRegex() =>
-        Some(JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_CONTAINER")))
+        Some(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
       case ScalaCompilerRegex() =>
-        Some(JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER")))
+        Some(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaCompilerContId)))
       case ScalaReflectRegex() =>
         None
       case _ =>
