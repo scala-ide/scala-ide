@@ -195,7 +195,8 @@ trait ExpressionManager extends HasLogger {
    * Recovers from errors after expression compilation and evaluation.
    * Provides nice, user-readable descriptions for all known problems.
    */
-  private def recoverFromErrors[A](result: Try[A], context: JdiContext): Try[A] = result.recoverWith {
+  // TODO consider moving this method somewhere else, it's now also used by tests. Probably to ExpressionException
+  private[expression] def recoverFromErrors[A](result: Try[A], context: JdiContext): Try[A] = result.recoverWith {
     case noInfo: com.sun.jdi.AbsentInformationException =>
       logger.error("Absent information exception", noInfo)
       Failure(NotAtBreakpointException)

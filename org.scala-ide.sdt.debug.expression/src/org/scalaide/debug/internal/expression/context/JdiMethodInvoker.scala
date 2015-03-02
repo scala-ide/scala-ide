@@ -261,10 +261,10 @@ private[context] trait JdiMethodInvoker {
     }
 
     //search for all methods
-    private def allMethods = referenceType.methodsByName(encoded)
+    private def allMethods: Seq[Method] = referenceType.methodsByName(encoded)
 
     //found methods
-    protected final def matching = allMethods.filter(methodMatch)
+    protected final def matching: Seq[Method] = allMethods.filter(methodMatch)
   }
 
   private case class ArrayConstructorMethod(className: String, args: Seq[JdiProxy]) {
