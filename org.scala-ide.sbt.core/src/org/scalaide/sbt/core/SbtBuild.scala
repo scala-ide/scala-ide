@@ -104,23 +104,6 @@ object SbtBuild extends AnyRef with HasLogger {
     p.future
   }
 
-  /*
-  def sbtClientWatcher(connector: SbtConnector)(implicit ctx: ExecutionContext): Source[SbtClient] = {
-    val p = new Publisher[SbtClient] {
-      override def subscribe(s: Subscriber[_ >: SbtClient]): Unit = {
-        def onConnect(client: SbtClient): Unit = {
-          s.onNext(client)
-          s.onComplete()
-        }
-        def onError(reconnecting: Boolean, msg: String): Unit = {
-          if (reconnecting) ??? else s.onError(new SbtClientConnectionFailure(msg))
-        }
-        connector.open(onConnect, onError)
-      }
-    }
-    Source(p)
-  }
-  */
 }
 
 class RichSbtClient(private val client: SbtClient) {
@@ -183,23 +166,7 @@ final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg
 
 class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
-  implicit val materializer = ActorFlowMaterializer()
   import system.dispatcher
-
-/*
-  sbtClientObservable.subscribe{ sbtClient =>
-    val out = console.newMessageStream()
-    sbtClient.eventWatcher.subscribe {
-      _ match {
-        case LogEvent(LogSuccess(msg)) => out.println(s"[success] $msg")
-        case LogEvent(LogMessage(level, msg)) => out.println(s"[$level] $msg")
-        case LogEvent(LogStdOut(msg)) => out.println(s"[stdout] $msg")
-        case LogEvent(LogStdErr(msg)) => out.println(s"[stderr] $msg")
-        case m => logger.debug("No event handler for " + m)
-      }
-    }
-  }
-*/
 
   /**
    * Triggers the compilation of the given project.
