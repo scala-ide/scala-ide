@@ -1,36 +1,39 @@
 package org.scalaide.sbt.core
 
 import java.io.File
+
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
+import scala.pickling.Unpickler
+import scala.util.Try
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
 import org.scalaide.logging.HasLogger
 import org.scalaide.sbt.ui.console.ConsoleProvider
+import org.scalaide.sbt.util.SbtUtils
+import org.scalaide.sbt.util.SourceUtils
+
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
-import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.Source
 import sbt.client.SbtClient
 import sbt.client.SbtConnector
+import sbt.client.SettingKey
+import sbt.protocol.LogEvent
+import sbt.protocol.LogMessage
+import sbt.protocol.LogStdErr
+import sbt.protocol.LogStdOut
+import sbt.protocol.LogSuccess
+import sbt.protocol.LogTrace
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
-import sbt.client.SettingKey
-import sbt.client.SettingKey
 import sbt.protocol.ScopedKey
-import sbt.protocol.TaskResult
-import sbt.protocol.TaskSuccess
-import scala.util.Try
-import org.reactivestreams.Publisher
-import org.reactivestreams.Subscription
-import org.reactivestreams.Subscriber
-import scala.pickling.Unpickler
-import org.scalaide.sbt.util.SourceUtils
 
-object SbtBuild {
+object SbtBuild extends AnyRef with HasLogger {
 
   /** cache from path to SbtBuild instance
    */
@@ -61,17 +64,42 @@ object SbtBuild {
     new SbtBuild(buildRoot, client, ConsoleProvider(buildRoot))
   }
 
-  private def sbtClientWatcher(connector: SbtConnector)(implicit ctx: ExecutionContext): Future[SbtClient] = {
+  private def sbtClientWatcher(connector: SbtConnector)(implicit system: ActorSystem): Future[SbtClient] = {
     val p = Promise[SbtClient]
 
     def onConnect(client: SbtClient): Unit = {
+      implicit val ctx = SbtUtils.RunOnSameThreadContext
+      implicit val materializer = ActorFlowMaterializer()
+
+      val src = SbtUtils.protocolEventWatcher[LogEvent](client)
+      src.runForeach (_.entry match {
+        // TODO remove all cases but the LogMessage ones - we don't really need to watch them
+        case LogSuccess(msg) ⇒
+          Console.out.println(s"stdout message from sbt-server retrieved: $msg")
+        case LogStdOut(msg) ⇒
+          Console.out.println(s"stdout message from sbt-server retrieved: $msg")
+        case LogStdErr(msg) ⇒
+          Console.err.println(s"stderr message from sbt-server retrieved: $msg")
+        case LogTrace(exceptionClassName, msg) ⇒
+          Console.err.println(s"stderr message of type $exceptionClassName from sbt-server retrieved: $msg")
+        case LogMessage(LogMessage.INFO, msg) ⇒
+          logger.info(msg)
+        case LogMessage(LogMessage.DEBUG, msg) ⇒
+          logger.debug(msg)
+        case LogMessage(LogMessage.ERROR, msg) ⇒
+          logger.error(msg)
+        case LogMessage(LogMessage.WARN, msg) ⇒
+          logger.warn(msg)
+        case _ ⇒
+      })
       p.trySuccess(client)
     }
-    def onError(reconnecting: Boolean, msg: String): Unit = {
-      if (reconnecting) println(s"reconnecting after error: $msg")
+
+    def onError(reconnecting: Boolean, msg: String): Unit =
+      if (reconnecting) logger.debug(s"reconnecting to sbt-server after error: $msg")
       else p.failure(new SbtClientConnectionFailure(msg))
-    }
-    connector.open(onConnect, onError)
+
+    connector.open(onConnect, onError)(system.dispatcher)
 
     p.future
   }

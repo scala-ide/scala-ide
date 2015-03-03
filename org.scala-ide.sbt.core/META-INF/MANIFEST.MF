@@ -41,6 +41,7 @@ Bundle-ClassPath: .,
 Bundle-Activator: org.scalaide.sbt.core.SbtRemotePlugin
 Import-Package: org.scalaide.core,
  org.scalaide.core.internal,
+ org.scalaide.core.internal.logging,
  org.scalaide.logging,
  org.scalaide.util.eclipse,
  scala.tools.eclipse.contribution.weaving.jdt
