@@ -16,7 +16,7 @@ object SourceUtils {
     def firstFuture(implicit materializer: FlowMaterializer): Future[A] = {
       val p = Promise[A]
       src.take(1).runForeach { elem ⇒
-        p.trySuccess(elem)
+        p.success(elem)
       }
       p.future
     }
