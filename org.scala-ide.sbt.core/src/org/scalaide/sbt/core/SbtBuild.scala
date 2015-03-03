@@ -20,6 +20,7 @@ import org.scalaide.sbt.util.SourceUtils
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.Source
+import sbt.client.Interaction
 import sbt.client.SbtClient
 import sbt.client.SbtConnector
 import sbt.client.SettingKey
@@ -130,6 +131,9 @@ class RichSbtClient(private val client: SbtClient) {
     }
   }
 
+  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
+    client.requestExecution(commandOrTask, interaction)
+
   private type Out[A] = Try[(ScopedKey, A)]
 
   private def watchKey[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
@@ -178,16 +182,8 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
   /**
    * Triggers the compilation of the given project.
    */
-  def compile(project: IProject) {
-    /*
-    for {
-      sbtClient <- sbtClientFuture
-    } {
-      sbtClient.requestExecution(s"${project.getName}/compile", None)
-    }
-    */
-    ???
-  }
+  def compile(project: IProject): Future[Long] =
+    sbtClient flatMap (_.requestExecution(s"${project.getName}/compile"))
 
   /**
    * Returns the list of projects defined in this build.
