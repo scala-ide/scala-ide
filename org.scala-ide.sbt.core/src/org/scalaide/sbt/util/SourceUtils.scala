@@ -1,11 +1,14 @@
 package org.scalaide.sbt.util
 
+import scala.concurrent.Future
+import scala.concurrent.Promise
+
+import org.reactivestreams.Publisher
+import org.reactivestreams.Subscriber
+import org.reactivestreams.Subscription
+
 import akka.stream.FlowMaterializer
 import akka.stream.scaladsl.Source
-import scala.concurrent.Promise
-import scala.concurrent.Future
-import java.io.File
-import sbt.Attributed
 
 object SourceUtils {
 
@@ -19,4 +22,21 @@ object SourceUtils {
     }
   }
 
+  /**
+   * Creates a `Source[A]` from an arbitrary event stream. The arriving events
+   * need to be sent to `subs`, which needs to return a function that allows the
+   * `Source` to cancel the event stream.
+   */
+  def fromEventStream[A](subs: Subscriber[_ >: A] ⇒ () ⇒ Unit): Source[A] = {
+    Source(new Publisher[A] {
+      var cancellation: () ⇒ Unit = _
+      override def subscribe(s: Subscriber[_ >: A]): Unit = {
+        s.onSubscribe(new Subscription {
+          def request(n: Long): Unit = ()
+          def cancel(): Unit = cancellation()
+        })
+        cancellation = subs(s)
+      }
+    })
+  }
 }

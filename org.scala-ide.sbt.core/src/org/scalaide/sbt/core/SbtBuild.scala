@@ -28,6 +28,7 @@ import org.reactivestreams.Publisher
 import org.reactivestreams.Subscription
 import org.reactivestreams.Subscriber
 import scala.pickling.Unpickler
+import org.scalaide.sbt.util.SourceUtils
 
 object SbtBuild {
 
@@ -114,32 +115,13 @@ class RichSbtClient(private val client: SbtClient) {
   private type Out[A] = Try[(ScopedKey, A)]
 
   private def watchKey[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
-    Source(new Publisher[Out[A]] {
-      var requestedElems = 0L
-      var cancellation: sbt.client.Subscription = _
-      val subs = new Subscription {
-        def request(n: Long): Unit = {
-          requestedElems = n
-        }
-        def cancel(): Unit = {
-          cancellation.cancel()
-        }
+    SourceUtils.fromEventStream[Out[A]] { subs ⇒
+      val cancellation = client.watch(key) { (key, res) ⇒
+        val elem = res map (key → _)
+        subs.onNext(elem)
       }
-      override def subscribe(s: Subscriber[_ >: Out[A]]): Unit = {
-        def sendElem(elem: Out[A]) = {
-          requestedElems -= 1
-          s.onNext(elem)
-        }
-        s.onSubscribe(subs)
-        cancellation = client.watch(key) { (key, res) ⇒
-          val elem = res map (key → _)
-          if (requestedElems > 0)
-            sendElem(elem)
-          else
-            ??? // TODO handle case of no requested elems
-        }
-      }
-    })
+      () ⇒ cancellation.cancel()
+    }
   }
 
   private def keyWatcher[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
