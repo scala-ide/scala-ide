@@ -40,17 +40,24 @@ object SbtBuild extends AnyRef with HasLogger {
   private var builds = immutable.Map[File, SbtBuild]()
   private val buildsLock = new Object
 
-  /** Returns the SbtBuild instance for the given path
+  /**
+   * Returns the SbtBuild instance for the given build root path.
+   *
+   * The passed build root is only considered as a valid sbt project when it
+   * contains the `project/build.properties` file.
    */
-  def buildFor(buildRoot: File)(implicit system: ActorSystem): SbtBuild = {
-    buildsLock.synchronized {
-      builds.get(buildRoot) match {
-        case Some(build) =>
-          build
-        case None =>
-          val build = SbtBuild(buildRoot)
-          builds += buildRoot -> build
-          build
+  def buildFor(buildRoot: File)(implicit system: ActorSystem): Option[SbtBuild] = {
+    def checkIfValid: Boolean = {
+      val properties = new File(s"${buildRoot.getAbsolutePath}/project/build.properties")
+      properties.exists() && properties.isFile()
+    }
+
+    if (!checkIfValid) None
+    else buildsLock.synchronized {
+      builds.get(buildRoot) orElse {
+        val build = SbtBuild(buildRoot)
+        builds += buildRoot -> build
+        Some(build)
       }
     }
   }

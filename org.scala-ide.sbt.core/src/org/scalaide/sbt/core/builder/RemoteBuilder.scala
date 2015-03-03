@@ -5,7 +5,6 @@ import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IProgressMonitor
-import scala.concurrent.ExecutionContext.Implicits.global
 import org.scalaide.sbt.core.SbtBuild
 import org.scalaide.sbt.core.SbtRemotePlugin
 
@@ -15,7 +14,7 @@ class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
     val project = getProject()
     val build = SbtBuild.buildFor(project.getLocation().toFile())(SbtRemotePlugin.system)
 
-    build.compile(project)
+    build foreach (_.compile(project))
 
     // TODO: get the compilation result (errors, ...)
     // TODO: refresh the output folders

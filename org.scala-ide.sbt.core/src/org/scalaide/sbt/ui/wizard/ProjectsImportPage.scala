@@ -404,14 +404,15 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectRecord] = {
     if (!monitor.isCanceled()) {
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
-      val promise = Promise[Seq[ProjectReference]]
 
-      val build = SbtBuild.buildFor(directory)(SbtRemotePlugin.system)
-      val projects = build.projects()
-      val projectRecords = projects.map {
-        _.map(new ProjectRecord(build, _))
+      val projectRecords = SbtBuild.buildFor(directory)(SbtRemotePlugin.system) map { build ⇒
+        val projects = build.projects()
+        val projectRecords = projects.map {
+          _.map(new ProjectRecord(build, _))
+        }
+        Await.result(projectRecords, Duration.Inf)
       }
-      Await.result(projectRecords, Duration.Inf)
+      projectRecords.getOrElse(Seq())
     } else {
       Seq.empty
     }
