@@ -258,7 +258,8 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       val element = event.getElement().asInstanceOf[ProjectRecord]
       if (element.hasConflicts)
         projectsList.setChecked(element, false)
-      model.selectedProjects = projectsList.getCheckedElements().asInstanceOf[Array[ProjectRecord]].to[Seq]
+      val checkedElems = projectsList.getCheckedElements()
+      model.selectedProjects = checkedElems.map(_.asInstanceOf[ProjectRecord])(collection.breakOut)
       setPageComplete(model.selectedProjects.nonEmpty)
     })
 
