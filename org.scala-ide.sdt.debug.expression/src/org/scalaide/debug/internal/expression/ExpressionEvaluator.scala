@@ -41,6 +41,38 @@ object ExpressionEvaluator {
     }
   }
 
+  private[expression] case class Context(
+    toolbox: ToolBox[universe.type],
+    context: VariableContext,
+    typesContext: TypesContext)
+
+  private[expression] def phases: Seq[Context => TransformationPhase] = Seq(
+    ctx => FailFast(ctx.toolbox),
+    ctx => SearchForUnboundVariables(ctx.toolbox, ctx.typesContext),
+    ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
+    ctx => new MockVariables(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
+    ctx => new AddImports(ctx.toolbox, ctx.context.thisPackage),
+    ctx => MockThis(ctx.toolbox),
+    ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext),
+    ctx => TypeCheck(ctx.toolbox),
+    ctx => DetectNothingTypedExpression(ctx.toolbox),
+    ctx => RemoveImports(ctx.toolbox),
+    // function should be first because this transformer needs tree as clean as possible
+    ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
+    ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
+    ctx => MockLiteralsAndConstants(ctx.toolbox, ctx.typesContext),
+    ctx => MockPrimitivesOperations(ctx.toolbox),
+    ctx => MockToString(ctx.toolbox),
+    ctx => MockHashCode(ctx.toolbox),
+    ctx => MockMethodsCalls(ctx.toolbox),
+    ctx => MockObjectsAndStaticCalls(ctx.toolbox, ctx.typesContext),
+    ctx => MockNewOperator(ctx.toolbox),
+    ctx => FlattenFunctions(ctx.toolbox),
+    ctx => ImplementValues(ctx.toolbox, ctx.context.implementValue),
+    ctx => CleanUpValDefs(ctx.toolbox),
+    ctx => ResetTypeInformation(ctx.toolbox),
+    ctx => new AddImports(ctx.toolbox, ctx.context.thisPackage),
+    ctx => new PackInFunction(ctx.toolbox))
 }
 
 /**
@@ -112,33 +144,10 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
-  // WARNING if you add/remove phase here, remember to update ExpressionManager.numberOfPhases with correct count
-  private def genPhases(context: VariableContext, typesContext: TypesContext): Seq[TransformationPhase] = Seq(
-    FailFast(toolbox),
-    SearchForUnboundVariables(toolbox, typesContext),
-    new MockAssignment(toolbox, typesContext.unboundVariables),
-    new MockVariables(toolbox, projectClassLoader, context, typesContext.unboundVariables),
-    new AddImports(toolbox, context.thisPackage),
-    MockThis(toolbox),
-    MockTypedLambda(toolbox, typesContext),
-    TypeCheck(toolbox),
-    DetectNothingTypedExpression(toolbox),
-    RemoveImports(toolbox),
-    // function should be first cos this transformer needs tree as clean as possible
-    MockLambdas(toolbox, typesContext),
-    ImplementTypedLambda(toolbox, typesContext),
-    MockLiteralsAndConstants(toolbox, typesContext),
-    MockPrimitivesOperations(toolbox),
-    MockToString(toolbox),
-    MockHashCode(toolbox),
-    MockObjectsAndStaticCalls(toolbox, typesContext),
-    MockNewOperator(toolbox),
-    FlattenFunctions(toolbox),
-    ImplementValues(toolbox, context.implementValue),
-    CleanUpValDefs(toolbox),
-    ResetTypeInformation(toolbox),
-    new AddImports(toolbox, context.thisPackage),
-    new PackInFunction(toolbox))
+  private def genPhases(context: VariableContext, typesContext: TypesContext) = {
+    val ctx = Context(toolbox, context, typesContext)
+    phases.map(_(ctx))
+  }
 
   private def transform(code: universe.Tree, phases: Seq[TransformationPhase]): universe.Tree = {
     val (_, finalTree) = phases.foldLeft(Vector(("Initial code", code))) {

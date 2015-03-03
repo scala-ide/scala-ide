@@ -225,6 +225,8 @@ object Names {
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
     val proxyObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(proxyFullName)
+    val proxySpecialMethods = Scala.dynamicTraitMethods ++ List("$eq$eq", "$bang$eq", "$plus", "apply", primitiveValueOfProxyMethodName)
+    val proxyGenericApplyMethodName = "applyWithGenericType"
 
     def ArrayJdiProxy(typeName: String) = s"ArrayJdiProxy[$typeName]"
 

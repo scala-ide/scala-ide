@@ -42,9 +42,12 @@ trait JdiProxy extends Dynamic {
   protected def genericThisType: Option[String] = None
 
   /** Implementation of method application. */
-  def applyDynamic(name: String)(args: Any*): JdiProxy =
+  def applyDynamic(name: String)(args: Any*): JdiProxy = applyWithGenericType(name, genericThisType, args: _*)
+
+  /** Implementation of method application. */
+  def applyWithGenericType(name: String, thisType: Option[String], args: Any*): JdiProxy =
     callSpecialMethod(name, args).getOrElse {
-      proxyContext.invokeMethod(this, genericThisType, name, args.map(_.asInstanceOf[JdiProxy]))
+      proxyContext.invokeMethod(this, thisType.orElse(genericThisType), name, args.map(_.asInstanceOf[JdiProxy]))
     }
 
   /** Implementation of field selection. */
@@ -64,13 +67,6 @@ trait JdiProxy extends Dynamic {
   /** Forwards inequality to debugged jvm */
   def !=(other: JdiProxy): JdiProxy =
     proxyContext.proxy(!(this == other).__value[Boolean])
-
-  //TODO O-7468 Add proper support for implicit conversion from Predef
-  def ->(a: JdiProxy): JdiProxy = {
-    val wrapped = proxyContext.newInstance("scala.Predef$ArrowAssoc", Seq(this))
-    proxyContext.invokeMethod(wrapped, None, "->", Seq(a))
-  }
-
 
   /**
    *  Method added to override standard "+" method that is defied for all objects and takes String as argument
