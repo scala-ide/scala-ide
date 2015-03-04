@@ -100,13 +100,13 @@ trait Seeker {
     }
 
   /** Helper for getting methods from given class name */
-  protected final def methodOn(className: String, methodName: String): Method = {
+  final def methodOn(className: String, methodName: String): Method = {
     val classRef = jvm.classesByName(className).head
     classRef.methodsByName(methodName).head
   }
 
   /** Helper for getting method (static) from ObjectReference */
-  protected final def methodOn(obj: ObjectReference, methodName: String): Method =
+  final def methodOn(obj: ObjectReference, methodName: String): Method =
     obj.referenceType().methodsByName(methodName).head
 
   /**

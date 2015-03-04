@@ -47,11 +47,19 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("""javaLibClass.normalStringToChange = "tesseract"; javaLibClass.normalStringToChange""", "tesseract", Java.boxed.String)
   }
 
+  // TODO this should be enabled or logged as an issue
   @Ignore("Fails when running whole test suite - java.lang.IndexOutOfBoundsException: 0 from scala.reflect.internal.Importers$StandardImporter.recreateOrRelink$1")
   @Test
   def invokeMethods(): Unit = {
     eval("javaLibClass.genericMethod(false)", false, Java.boxed.Boolean)
     eval("javaLibClass.genericMethod('a')", 'a', Java.boxed.Character)
+  }
+
+  @Ignore("TODO - support for varargs in Java methods")
+  @Test
+  def invokeVarArgsMethods(): Unit = {
+    eval("javaLibClass.varArgMethod(1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Integer))
+    eval("javaLibClass.genericVarArgMethod[Double](1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Double))
   }
 }
 

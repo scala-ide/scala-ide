@@ -39,8 +39,19 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def invokeStaticMethodsOfClass(): Unit = {
     eval("""JavaLibClass.staticStringMethod("foo")""", JavaLibClass.staticStringMethod("foo"), Java.boxed.String)
     eval("JavaLibClass.staticIntMethod", JavaLibClass.staticIntMethod, Java.boxed.Integer)
+  }
+
+  @Test
+  def invokeStaticGenericMethodsOfClass(): Unit = {
     eval("JavaLibClass.staticGenericMethod[Double](7.1)", 7.1, Java.boxed.Double)
     eval("JavaLibClass.staticGenericMethod('g')", 'g', Java.boxed.Character)
+  }
+
+  @Ignore("TODO - support for varargs in Java methods")
+  @Test
+  def invokeStaticVarArgsMethodsOfClass(): Unit = {
+    eval("JavaLibClass.staticVarArgMethod(1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Integer))
+    eval("JavaLibClass.staticGenericVarArgMethod[Double](1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Double))
   }
 
   @Test

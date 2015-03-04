@@ -54,7 +54,7 @@ class JdiExpressionEvaluator(
 
   /** Applies this evaluator to given expression */
   final def apply(expression: String): Try[JdiProxy] = {
-    logger.info(s"Compiling:\n$expression")
+    logger.info(s"Compiling:\n\t$expression")
     val context = createContext()
     for {
       compiledExpression <- compileExpression(context)(expression)

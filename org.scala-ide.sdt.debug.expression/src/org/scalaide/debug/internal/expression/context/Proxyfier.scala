@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
 import scala.annotation.implicitNotFound
 import scala.collection.JavaConversions.asScalaBuffer
@@ -127,8 +128,7 @@ private[context] trait Proxyfier {
       .head
 
     val boxedValue: ObjectReference =
-      boxedClass.invokeMethod(this.currentThread, boxingMethod, List(value),
-        ObjectReference.INVOKE_SINGLE_THREADED).asInstanceOf[ObjectReference]
+      boxedClass.invokeMethod(this.currentThread, boxingMethod, List(value)).asInstanceOf[ObjectReference]
 
     companion.apply(this, boxedValue)
   }
