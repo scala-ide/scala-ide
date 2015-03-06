@@ -165,10 +165,9 @@ class RichSbtClient(private val client: SbtClient) {
 
   private def valueOfKey[A : Unpickler](key: SettingKey[A])(implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
+    import SourceUtils._
     implicit val materializer = ActorFlowMaterializer()
-    val p = Promise[A]
-    watchKey(key).take(1).runForeach(res ⇒ p.tryComplete(res.map(_._2)))
-    p.future
+    watchKey(key).firstFuture.flatMap(elem ⇒ Future.fromTry(elem.map(_._2)))
   }
 
   private def mkCommand(projectName: String, keyName: String, config: Option[String]): String =
