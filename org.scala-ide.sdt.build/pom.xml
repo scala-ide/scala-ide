@@ -24,6 +24,8 @@
     <module>../org.scala-ide.sdt.spy</module>
     <module>../org.scala-ide.sdt.debug</module>
     <module>../org.scala-ide.sdt.debug.tests</module>
+    <module>../org.scala-ide.sdt.debug.expression</module>
+    <module>../org.scala-ide.sdt.debug.expression.tests</module>
     <module>../org.scala-ide.sdt.weaving.feature</module>
     <module>../org.scala-ide.sdt.feature</module>
     <module>../org.scala-ide.sdt.dev.feature</module>

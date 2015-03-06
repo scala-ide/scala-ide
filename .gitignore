@@ -9,3 +9,4 @@ org.scala-ide.sdt.source.feature/feature.xml
 .idea
 .metadata
 *~
+**/.settings/

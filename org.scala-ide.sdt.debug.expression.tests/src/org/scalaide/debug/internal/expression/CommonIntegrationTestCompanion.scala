@@ -15,7 +15,7 @@ import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.logging.HasLogger
 
 class CommonIntegrationTestCompanion(projectName: String)
-  extends TestProjectSetup(projectName, bundleName = "org.scala-ide.sdt.debug.tests")
+  extends TestProjectSetup(projectName, bundleName = "org.scala-ide.sdt.debug.expression.tests")
   with ScalaDebugRunningTest
   with HasLogger {
 

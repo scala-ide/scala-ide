@@ -16,7 +16,8 @@ import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.expression.ExpressionManager
+// TODO - plugin
+//import org.scalaide.debug.internal.expression.ExpressionManager
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.util.eclipse.SWTUtils
@@ -151,27 +152,28 @@ private class BreakpointSupportActor private (
     val condition = getCondition(lineBreakpoint)
     val location = event.location()
     val thread = event.thread()
-    ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
-      case Success(true) =>
-        // JDI event triggered when a breakpoint is hit
-        breakpointHit(event.location, event.thread)
+ // TODO - plugin
+//   ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
+//      case Success(true) =>
+//        // JDI event triggered when a breakpoint is hit
+        breakpointHit(location, thread)
         reply(true)
-      case Success(false) =>
-        reply(false)
-      case Failure(e: VMDisconnectedException) =>
-        // Ok, end of debugging
-        reply(false)
-      case Failure(e) =>
-        DisplayThread.asyncExec {
-          MessageDialog.openError(
-            SWTUtils.getShell,
-            "Error",
-            s"Error in conditional breakpoint:\n${e.getMessage}")
-        }
-        // JDI event triggered when a breakpoint is hit
-        breakpointHit(event.location, event.thread)
-        reply(true)
-    }
+//      case Success(false) =>
+//        reply(false)
+//      case Failure(e: VMDisconnectedException) =>
+//        // Ok, end of debugging
+//        reply(false)
+//      case Failure(e) =>
+//        DisplayThread.asyncExec {
+//          MessageDialog.openError(
+//            SWTUtils.getShell,
+//            "Error",
+//            s"Error in conditional breakpoint:\n${e.getMessage}")
+//        }
+//        // JDI event triggered when a breakpoint is hit
+//        breakpointHit(event.location, event.thread)
+//        reply(true)
+//    }
   }
 
   /**

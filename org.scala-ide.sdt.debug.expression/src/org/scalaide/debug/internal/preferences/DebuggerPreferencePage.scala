@@ -14,8 +14,7 @@ import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.model.MethodClassifier
-// TODO - plugin
-// import org.scalaide.debug.internal.ui.ExpressionEvaluatorViewLayoutType
+import org.scalaide.debug.internal.ui.ExpressionEvaluatorViewLayoutType
 
 class DebuggerPreferencePage extends FieldEditorPreferencePage(FieldEditorPreferencePage.GRID) with IWorkbenchPreferencePage {
   import DebuggerPreferencePage._
@@ -99,8 +98,7 @@ class DebugerPreferencesInitializer extends AbstractPreferenceInitializer {
     store.setDefault(EXP_EVAL_SHOW_STATIC_FIELDS_IN_TREE_VIEW, true)
     store.setDefault(EXP_EVAL_SHOW_SYNTHETIC_FIELDS_IN_TREE_VIEW, true)
     store.setDefault(EXP_EVAL_COLLECTION_AND_ARRAY_VALUES_GROUP_SIZE, 100)
-// TODO - plugin
-//    store.setDefault(EXP_EVAL_LAYOUT_TYPE, ExpressionEvaluatorViewLayoutType.CONSOLE_AND_TREE_HORIZONTALLY.id.toString())
+    store.setDefault(EXP_EVAL_LAYOUT_TYPE, ExpressionEvaluatorViewLayoutType.CONSOLE_AND_TREE_HORIZONTALLY.id.toString())
     store.setDefault(EXP_EVAL_SHOW_COLLECTIONS_LOGICAL_STRUCTURE, true)
   }
 }
