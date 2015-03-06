@@ -118,10 +118,13 @@ class RichSbtClient(private val client: SbtClient) {
 
   private val cachedKeys = mutable.HashMap[ScopedKey, Source[Try[(ScopedKey, Any)]]]()
 
-  def buildWatcher()(implicit ctx: ExecutionContext): Future[MinimalBuildStructure] = {
-    val p = Promise[MinimalBuildStructure]
-    client.watchBuild(b ⇒ p.trySuccess(b))
-    p.future
+  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
+    SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
+      val c = client.watchBuild { b ⇒
+        subs.onNext(b)
+      }
+      () ⇒ c.cancel()
+    }
   }
 
   def settingValue[A : Unpickler](projectName: String, keyName: String, config: Option[String])(implicit sys: ActorSystem): Future[A] = {
@@ -178,6 +181,8 @@ final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg
 class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
   import system.dispatcher
+  import SourceUtils._
+  implicit val materializer = ActorFlowMaterializer()
 
   /**
    * Triggers the compilation of the given project.
@@ -188,10 +193,8 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
   /**
    * Returns the list of projects defined in this build.
    */
-  def projects(): Future[immutable.Seq[ProjectReference]] = for {
-    f ← sbtClient
-    build ← f.buildWatcher()
-  } yield build.projects.map(_.id)(collection.breakOut)
+  def projects(): Future[immutable.Seq[ProjectReference]] =
+    sbtClient flatMap { _.watchBuild().firstFuture.map(_.projects.map(_.id)) }
 
   def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
     sbtClient.flatMap(_.settingValue(projectName, keyName, config))
