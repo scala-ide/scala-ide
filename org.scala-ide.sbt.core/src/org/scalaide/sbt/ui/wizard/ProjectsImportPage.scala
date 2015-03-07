@@ -3,7 +3,6 @@ package org.scalaide.sbt.ui.wizard
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import scala.collection._
-import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

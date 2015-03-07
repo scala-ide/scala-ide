@@ -2,7 +2,6 @@ package org.scalaide.sbt.core
 
 import java.io.File
 
-import scala.collection.immutable
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -36,9 +35,10 @@ import sbt.protocol.ScopedKey
 
 object SbtBuild extends AnyRef with HasLogger {
 
-  /** cache from path to SbtBuild instance
+  /**
+   * Caches connections to already running sbt server instances.
    */
-  private var builds = immutable.Map[File, SbtBuild]()
+  private var builds = Map[File, SbtBuild]()
   private val buildsLock = new Object
 
   /**
@@ -68,12 +68,12 @@ object SbtBuild extends AnyRef with HasLogger {
   private def apply(buildRoot: File)(implicit system: ActorSystem): SbtBuild = {
     import system.dispatcher
     val connector = SbtConnector("scala-ide-sbt-integration", "Scala IDE sbt integration", buildRoot)
-    val client = sbtClientWatcher(connector).map(new RichSbtClient(_))
+    val client = sbtClientWatcher(connector)
     new SbtBuild(buildRoot, client, ConsoleProvider(buildRoot))
   }
 
-  private def sbtClientWatcher(connector: SbtConnector)(implicit system: ActorSystem): Future[SbtClient] = {
-    val p = Promise[SbtClient]
+  private def sbtClientWatcher(connector: SbtConnector)(implicit system: ActorSystem): Future[RichSbtClient] = {
+    val p = Promise[RichSbtClient]
 
     def onConnect(client: SbtClient): Unit = {
       implicit val ctx = SbtUtils.RunOnSameThreadContext
@@ -100,7 +100,7 @@ object SbtBuild extends AnyRef with HasLogger {
           logger.warn(msg)
         case _ ⇒
       })
-      p.trySuccess(client)
+      p.success(new RichSbtClient(client))
     }
 
     def onError(reconnecting: Boolean, msg: String): Unit =
@@ -116,7 +116,9 @@ object SbtBuild extends AnyRef with HasLogger {
 
 class RichSbtClient(private val client: SbtClient) {
 
-  private val cachedKeys = mutable.HashMap[ScopedKey, Source[Try[(ScopedKey, Any)]]]()
+  private type Out[A] = Try[(ScopedKey, A)]
+
+  private val cachedKeys = mutable.HashMap[ScopedKey, Source[Out[Any]]]()
 
   def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
     SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
@@ -136,8 +138,6 @@ class RichSbtClient(private val client: SbtClient) {
 
   def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
     client.requestExecution(commandOrTask, interaction)
-
-  private type Out[A] = Try[(ScopedKey, A)]
 
   private def watchKey[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
     SourceUtils.fromEventStream[Out[A]] { subs ⇒
@@ -192,30 +192,13 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
   /**
    * Returns the list of projects defined in this build.
    */
-  def projects(): Future[immutable.Seq[ProjectReference]] =
+  def projects(): Future[Seq[ProjectReference]] =
     sbtClient flatMap { _.watchBuild().firstFuture.map(_.projects.map(_.id)) }
 
+  /**
+   * Returns a Future for the value of the given setting key. An Unpickler is
+   * required to deserialize the value from the wire.
+   */
   def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
     sbtClient.flatMap(_.settingValue(projectName, keyName, config))
-
-  /**
-   * Returns a Future for the value of the given setting key.
-   *
-   * Assumes that the values can be serialize, so BuildValue.value.get is always valid.
-   */
-  @deprecated("use setting instead")
-  def getSettingValue[T](projectName: String, keyName: String, config: Option[String] = None)(implicit mf: Manifest[T]): Future[T] = {
-    ???
-  }
-
-  /**
-   * Returns a Future for the value of the given task key.
-   *
-   * Assumes that the values can be serialize, so BuildValue.value.get is always valid.
-   */
-  def getTaskValue[T](projectName: String, keyName: String, config: Option[String] = None)(implicit mf: Manifest[T]): Future[T] = {
-//    sbtClientFuture.flatMap(_.getTaskValue(projectName, keyName, config))
-    ???
-  }
-
 }
