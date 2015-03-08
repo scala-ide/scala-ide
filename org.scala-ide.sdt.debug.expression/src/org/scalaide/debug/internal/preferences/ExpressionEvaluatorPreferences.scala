@@ -15,32 +15,32 @@ object ExpressionEvaluatorPreferences {
   private lazy val preferenceStore = ScalaExpressionEvaluatorPlugin().getPreferenceStore()
 
   def collectionAndArrayValuesGroupSize: Int =
-    preferenceStore.getInt(EXP_EVAL_COLLECTION_AND_ARRAY_VALUES_GROUP_SIZE)
+    preferenceStore.getInt(CollectionAndArrayValuesGroupSize)
 
   def layoutType: ExpressionEvaluatorViewLayoutType.Value =
-    ExpressionEvaluatorViewLayoutType(preferenceStore.getString(EXP_EVAL_LAYOUT_TYPE).toInt)
+    ExpressionEvaluatorViewLayoutType(preferenceStore.getString(LayoutType).toInt)
 
   def layoutType_=(layoutType: ExpressionEvaluatorViewLayoutType.Value): Unit =
-    preferenceStore.setValue(EXP_EVAL_LAYOUT_TYPE, layoutType.id.toString())
+    preferenceStore.setValue(LayoutType, layoutType.id.toString())
 
   def isCodeCompletionEnabled: Boolean =
-    preferenceStore.getBoolean(EXP_EVAL_ENABLE_CODE_COMPLETION)
+    preferenceStore.getBoolean(EnableCodeCompletion)
 
   def showLineNumbers: Boolean =
-    preferenceStore.getBoolean(EXP_EVAL_SHOW_LINE_NUMBERS)
+    preferenceStore.getBoolean(ShowLineNumbers)
 
   def showLineNumbers_=(enabled: Boolean): Unit =
-    preferenceStore.setValue(EXP_EVAL_SHOW_LINE_NUMBERS, enabled)
+    preferenceStore.setValue(ShowLineNumbers, enabled)
 
   def showStaticFieldsInTreeView: Boolean =
-    preferenceStore.getBoolean(EXP_EVAL_SHOW_STATIC_FIELDS_IN_TREE_VIEW)
+    preferenceStore.getBoolean(ShowStaticFieldsInTreeView)
 
   def showSyntheticFieldsInTreeView: Boolean =
-    preferenceStore.getBoolean(EXP_EVAL_SHOW_SYNTHETIC_FIELDS_IN_TREE_VIEW)
+    preferenceStore.getBoolean(ShowSyntheticFieldsInTreeView)
 
   def showCollectionsLogicalStructure: Boolean =
-    preferenceStore.getBoolean(EXP_EVAL_SHOW_COLLECTIONS_LOGICAL_STRUCTURE)
+    preferenceStore.getBoolean(ShowCollectionsLogicalStructure)
 
   def showCollectionsLogicalStructure_=(enabled: Boolean): Unit =
-    preferenceStore.setValue(EXP_EVAL_SHOW_COLLECTIONS_LOGICAL_STRUCTURE, enabled)
+    preferenceStore.setValue(ShowCollectionsLogicalStructure, enabled)
 }

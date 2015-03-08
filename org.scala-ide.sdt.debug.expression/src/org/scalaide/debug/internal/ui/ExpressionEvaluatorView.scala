@@ -50,11 +50,7 @@ class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
   // TODO - O-5696 - it would be nice to add support for undo and redo (ctrl+z / ctrl+y)
 
   import ExpressionEvaluatorView.ExpressionEvaluatorViewLayoutAction
-  import ExpressionEvaluatorViewLayoutType.ONLY_CONSOLE
-  import ExpressionEvaluatorViewLayoutType.CONSOLE_AND_TREE_HORIZONTALLY
-  import ExpressionEvaluatorViewLayoutType.CONSOLE_AND_TREE_VERTICALLY
-  import ExpressionEvaluatorViewLayoutType.INPUT_AND_TREE_HORIZONTALLY
-  import ExpressionEvaluatorViewLayoutType.INPUT_AND_TREE_VERTICALLY
+  import ExpressionEvaluatorViewLayoutType._
   import SWTUtils.noArgFnToModifyListener
 
   protected var currentLayoutType = ExpressionEvaluatorPreferences.layoutType
@@ -181,15 +177,15 @@ class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
   }
 
   private def updateTreePosition(layoutType: ExpressionEvaluatorViewLayoutType.Value): Unit = layoutType match {
-    case CONSOLE_AND_TREE_HORIZONTALLY | INPUT_AND_TREE_HORIZONTALLY => evaluatorPanel.setOrientation(SWT.HORIZONTAL)
+    case ConsoleAndTreeHorizontally | InputAndTreeHorizontally => evaluatorPanel.setOrientation(SWT.HORIZONTAL)
     case _ => evaluatorPanel.setOrientation(SWT.VERTICAL)
   }
 
   private def shouldShowConsoleOutput(layoutType: ExpressionEvaluatorViewLayoutType.Value) =
-    Seq(ONLY_CONSOLE, CONSOLE_AND_TREE_HORIZONTALLY, CONSOLE_AND_TREE_VERTICALLY).contains(layoutType)
+    Seq(OnlyConsole, ConsoleAndTreeHorizontally, ConsoleAndTreeVertically).contains(layoutType)
 
   private def shouldShowTree(layoutType: ExpressionEvaluatorViewLayoutType.Value) =
-    layoutType != ONLY_CONSOLE
+    layoutType != OnlyConsole
 
   protected def setInputText(text: String): Unit = {
     inputCommandField.hideHelpText()
@@ -281,23 +277,23 @@ class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
 
   /*--------------- actions related to layout available via actions bar menu ---------------*/
 
-  private object consoleViewLayoutAction extends ExpressionEvaluatorViewLayoutAction(ONLY_CONSOLE, updateAndRememberLayout) {
+  private object consoleViewLayoutAction extends ExpressionEvaluatorViewLayoutAction(OnlyConsole, updateAndRememberLayout) {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IInternalDebugUIConstants.IMG_ELCL_DETAIL_PANE_HIDE))
   }
 
-  private object consoleWithTreeViewHorizontalLayoutAction extends ExpressionEvaluatorViewLayoutAction(CONSOLE_AND_TREE_HORIZONTALLY, updateAndRememberLayout) {
+  private object consoleWithTreeViewHorizontalLayoutAction extends ExpressionEvaluatorViewLayoutAction(ConsoleAndTreeHorizontally, updateAndRememberLayout) {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IInternalDebugUIConstants.IMG_ELCL_DETAIL_PANE_RIGHT))
   }
 
-  private object consoleWithTreeViewVerticalLayoutAction extends ExpressionEvaluatorViewLayoutAction(CONSOLE_AND_TREE_VERTICALLY, updateAndRememberLayout) {
+  private object consoleWithTreeViewVerticalLayoutAction extends ExpressionEvaluatorViewLayoutAction(ConsoleAndTreeVertically, updateAndRememberLayout) {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IInternalDebugUIConstants.IMG_ELCL_DETAIL_PANE_UNDER))
   }
 
-  private object treeViewHorizontalLayoutAction extends ExpressionEvaluatorViewLayoutAction(INPUT_AND_TREE_HORIZONTALLY, updateAndRememberLayout) {
+  private object treeViewHorizontalLayoutAction extends ExpressionEvaluatorViewLayoutAction(InputAndTreeHorizontally, updateAndRememberLayout) {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IInternalDebugUIConstants.IMG_ELCL_DETAIL_PANE_RIGHT))
   }
 
-  private object treeViewVerticalLayoutAction extends ExpressionEvaluatorViewLayoutAction(INPUT_AND_TREE_VERTICALLY, updateAndRememberLayout) {
+  private object treeViewVerticalLayoutAction extends ExpressionEvaluatorViewLayoutAction(InputAndTreeVertically, updateAndRememberLayout) {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IInternalDebugUIConstants.IMG_ELCL_DETAIL_PANE_UNDER))
   }
 }
@@ -324,9 +320,9 @@ object ExpressionEvaluatorView {
 }
 
 object ExpressionEvaluatorViewLayoutType extends Enumeration {
-  val ONLY_CONSOLE = Value(1, "Console view")
-  val CONSOLE_AND_TREE_HORIZONTALLY = Value(2, "Console view and tree at the right")
-  val CONSOLE_AND_TREE_VERTICALLY = Value(3, "Console view and tree at the bottom")
-  val INPUT_AND_TREE_HORIZONTALLY = Value(4, "Input and tree at the right")
-  val INPUT_AND_TREE_VERTICALLY = Value(5, "Input and tree at the bottom")
+  val OnlyConsole = Value(1, "Console view")
+  val ConsoleAndTreeHorizontally = Value(2, "Console view and tree at the right")
+  val ConsoleAndTreeVertically = Value(3, "Console view and tree at the bottom")
+  val InputAndTreeHorizontally = Value(4, "Input and tree at the right")
+  val InputAndTreeVertically = Value(5, "Input and tree at the bottom")
 }

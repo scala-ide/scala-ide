@@ -22,15 +22,15 @@ class ExprEvalPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefer
   override def createFieldEditors(): Unit = {
     val c = getFieldEditorParent
     c.setLayout(new GridLayout(1, false))
-    addBooleanField(EXP_EVAL_ENABLE_CODE_COMPLETION, "Enable simple, experimental, temporary code completion", c)
+    addBooleanField(EnableCodeCompletion, "Enable simple, experimental, temporary code completion", c)
 
-    val collectionAndArrayValuesGroupSize = new IntegerFieldEditor(EXP_EVAL_COLLECTION_AND_ARRAY_VALUES_GROUP_SIZE,
+    val collectionAndArrayValuesGroupSize = new IntegerFieldEditor(CollectionAndArrayValuesGroupSize,
       "Number of collection elements shown in logical structure:", c)
     collectionAndArrayValuesGroupSize.setValidRange(1, Integer.MAX_VALUE)
     addField(collectionAndArrayValuesGroupSize)
 
-    addBooleanField(EXP_EVAL_SHOW_STATIC_FIELDS_IN_TREE_VIEW, "Show static fields in tree view", c)
-    addBooleanField(EXP_EVAL_SHOW_SYNTHETIC_FIELDS_IN_TREE_VIEW, "Show synthetic fields in tree view", c)
+    addBooleanField(ShowStaticFieldsInTreeView, "Show static fields in tree view", c)
+    addBooleanField(ShowSyntheticFieldsInTreeView, "Show synthetic fields in tree view", c)
   }
 
   override def init(workbench: IWorkbench): Unit = {}
@@ -44,15 +44,13 @@ class ExprEvalPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefer
 }
 
 object ExprEvalPreferencePage {
-  val BASE = "org.scala-ide.sdt.debug.expression."
-  val BASE_EXP_EVAL = BASE + "expEval."
-  val EXP_EVAL_ENABLE_CODE_COMPLETION = BASE_EXP_EVAL + "codeCompletion"
-  val EXP_EVAL_SHOW_LINE_NUMBERS = BASE_EXP_EVAL + "enableLineNumbersByDefault"
-  val EXP_EVAL_COLLECTION_AND_ARRAY_VALUES_GROUP_SIZE = BASE_EXP_EVAL + "arrayValuesGroupSize"
-  val EXP_EVAL_LAYOUT_TYPE = BASE_EXP_EVAL + "layoutType"
-  val EXP_EVAL_SHOW_STATIC_FIELDS_IN_TREE_VIEW = BASE_EXP_EVAL + "showStaticFieldsInTreeView"
-  val EXP_EVAL_SHOW_SYNTHETIC_FIELDS_IN_TREE_VIEW = BASE_EXP_EVAL + "showSyntheticFieldsInTreeView"
-  val EXP_EVAL_SHOW_COLLECTIONS_LOGICAL_STRUCTURE = BASE_EXP_EVAL + "showCollectionsLogicalStructureInTreeView"
+  val EnableCodeCompletion = "org.scala-ide.sdt.debug.expression.expEval.codeCompletion"
+  val ShowLineNumbers = "org.scala-ide.sdt.debug.expression.expEval.enableLineNumbersByDefault"
+  val CollectionAndArrayValuesGroupSize = "org.scala-ide.sdt.debug.expression.expEval.arrayValuesGroupSize"
+  val LayoutType = "org.scala-ide.sdt.debug.expression.expEval.layoutType"
+  val ShowStaticFieldsInTreeView = "org.scala-ide.sdt.debug.expression.expEval.showStaticFieldsInTreeView"
+  val ShowSyntheticFieldsInTreeView = "org.scala-ide.sdt.debug.expression.expEval.showSyntheticFieldsInTreeView"
+  val ShowCollectionsLogicalStructure = "org.scala-ide.sdt.debug.expression.expEval.showCollectionsLogicalStructureInTreeView"
 }
 
 class ExprEvalPreferencesInitializer extends AbstractPreferenceInitializer {
@@ -61,12 +59,12 @@ class ExprEvalPreferencesInitializer extends AbstractPreferenceInitializer {
   override def initializeDefaultPreferences(): Unit = {
     val store = ScalaExpressionEvaluatorPlugin().getPreferenceStore
 
-    store.setDefault(EXP_EVAL_ENABLE_CODE_COMPLETION, false)
-    store.setDefault(EXP_EVAL_SHOW_LINE_NUMBERS, false)
-    store.setDefault(EXP_EVAL_SHOW_STATIC_FIELDS_IN_TREE_VIEW, true)
-    store.setDefault(EXP_EVAL_SHOW_SYNTHETIC_FIELDS_IN_TREE_VIEW, true)
-    store.setDefault(EXP_EVAL_COLLECTION_AND_ARRAY_VALUES_GROUP_SIZE, 100)
-    store.setDefault(EXP_EVAL_LAYOUT_TYPE, ExpressionEvaluatorViewLayoutType.CONSOLE_AND_TREE_HORIZONTALLY.id.toString())
-    store.setDefault(EXP_EVAL_SHOW_COLLECTIONS_LOGICAL_STRUCTURE, true)
+    store.setDefault(EnableCodeCompletion, false)
+    store.setDefault(ShowLineNumbers, false)
+    store.setDefault(ShowStaticFieldsInTreeView, true)
+    store.setDefault(ShowSyntheticFieldsInTreeView, true)
+    store.setDefault(CollectionAndArrayValuesGroupSize, 100)
+    store.setDefault(LayoutType, ExpressionEvaluatorViewLayoutType.ConsoleAndTreeHorizontally.id.toString())
+    store.setDefault(ShowCollectionsLogicalStructure, true)
   }
 }
