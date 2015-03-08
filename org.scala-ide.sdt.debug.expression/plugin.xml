@@ -64,4 +64,19 @@
             </toolbar>
         </menuContribution>
     </extension>
+    <extension
+          point="org.eclipse.ui.preferencePages">
+       <page
+             category="org.scalaide.ui.preferences.debug"
+             class="org.scalaide.debug.internal.preferences.ExprEvalPreferencePage"
+             id="org.scalaide.ui.preferences.expression"
+             name="Expression Evaluator">
+       </page>
+    </extension>
+    <extension
+          point="org.eclipse.core.runtime.preferences">
+       <initializer
+             class="org.scalaide.debug.internal.preferences.ExprEvalPreferencesInitializer">
+       </initializer>
+    </extension>
 </plugin>
