@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="eventHandler" name="Event Handler" schema="schema/eventHandler.exsd"/>
    <extension
          point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
