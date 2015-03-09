@@ -6,10 +6,20 @@ package context
 
 import scala.annotation.tailrec
 import scala.util.Success
+import scala.util.Failure
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.context.invoker._
+import org.scalaide.debug.internal.expression.context.invoker.AnyValMethod
+import org.scalaide.debug.internal.expression.context.invoker.ArrayConstructor
+import org.scalaide.debug.internal.expression.context.invoker.JavaField
+import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldGetter
+import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldSetter
+import org.scalaide.debug.internal.expression.context.invoker.JavaStaticMethod
+import org.scalaide.debug.internal.expression.context.invoker.StandardConstructor
+import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
+import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
+import org.scalaide.debug.internal.expression.context.invoker.VarArgMethod
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
 
@@ -62,27 +72,31 @@ private[context] trait JdiMethodInvoker {
       throw new NoSuchMethodError(s"field of type $tpeName has no method named $name with arguments: $argsString")
     }
 
-    (tryInvokeUnboxed(proxy, onRealType, name, args) getOrElse noSuchMethod)
-      .asInstanceOf[Result]
+    (tryInvokeUnboxed(proxy, onRealType, name, args) getOrElse noSuchMethod).asInstanceOf[Result]
   }
 
   /** invokeUnboxed method that returns option instead of throwing an exception */
   private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
     onRealType: Option[String],
-    name: String,
+    methodName: String,
     methodArgs: Seq[JdiProxy] = Seq.empty): Option[Value] = {
 
     proxy match {
-      case StaticCallClassJdiProxy(_, classType) => tryInvokeJavaStaticMethod(classType, name, methodArgs)
+      case StaticCallClassJdiProxy(_, classType) =>
+        val javaStaticMethod = new JavaStaticMethod(classType, methodName, methodArgs, this)
+
+        javaStaticMethod()
+      // TODO - java static vararg method
       case _ =>
-        val standardMethod = new StandardMethod(proxy, name, methodArgs, this)
-        def varArgMethod = new VarArgMethod(proxy, name, methodArgs, this)
-        def stringConcat = new StringConcatenationMethod(proxy, name, methodArgs)
-        def anyValMethod = new AnyValMethod(proxy, name, methodArgs, onRealType, this, this)
-        def javaField = new JavaField(proxy, name, methodArgs, this)
+        val standardMethod = new StandardMethod(proxy, methodName, methodArgs, this)
+        def varArgMethod = new VarArgMethod(proxy, methodName, methodArgs, this)
+        def stringConcat = new StringConcatenationMethod(proxy, methodName, methodArgs)
+        def anyValMethod = new AnyValMethod(proxy, methodName, methodArgs, onRealType, this, this)
+        def javaField = new JavaField(proxy, methodName, methodArgs, this)
 
         standardMethod() orElse
           varArgMethod() orElse
+          // TODO - java vararg
           stringConcat() orElse
           anyValMethod() orElse
           javaField()
@@ -93,15 +107,15 @@ private[context] trait JdiMethodInvoker {
   final def invokeJavaStaticMethod[Result <: JdiProxy](
     classType: ClassType,
     methodName: String,
-    methodArgs: Seq[JdiProxy]): Result =
-    tryInvokeJavaStaticMethod(classType, methodName, methodArgs)
-      .map(valueProxy(_)).getOrElse {
+    methodArgs: Seq[JdiProxy]): Result = {
+    val javaStaticMethod = new JavaStaticMethod(classType, methodName, methodArgs, this)
+
+    javaStaticMethod()
+      .map(valueProxy)
+      .getOrElse {
         throw new NoSuchMethodError(s"class ${classType.name} has no static method named $methodName")
       }.asInstanceOf[Result]
-
-  /** TODO - document this, it's an API */
-  final def tryInvokeJavaStaticMethod(classType: ClassType, methodName: String, methodArgs: Seq[JdiProxy]): Option[Value] =
-    new JavaStaticMethod(classType, methodName, methodArgs, this).apply()
+  }
 
   /** TODO - document this, it's an API */
   final def getJavaStaticField[Result <: JdiProxy](referenceType: ReferenceType, fieldName: String): Result = {
@@ -143,16 +157,20 @@ private[context] trait JdiMethodInvoker {
     className: String,
     methodArgs: Seq[JdiProxy]): Option[JdiProxy] = {
 
-    @tailrec def tryNext(name: String): Option[JdiProxy] = {
-      val proxy = Try((name match {
-        case Scala.Array(typeParam) => new ArrayConstructor(name, methodArgs, this)()
-        case _ => new StandardConstructor(name, methodArgs, this).apply()
+    def standardConstructor(clsName: String) = new StandardConstructor(clsName, methodArgs, this)
+    // TODO vararg constructor
+    def arrayConstructor(clsName: String) = new ArrayConstructor(clsName, methodArgs, this)
+
+    @tailrec def tryNext(clsName: String): Option[JdiProxy] = {
+      val proxy = Try((clsName match {
+        case Scala.Array(typeParam) => arrayConstructor(clsName).apply()
+        case _ => standardConstructor(clsName).apply()
       }).map(valueProxy))
 
       proxy match {
         case Success(some: Some[_]) => some
-        case Success(none) if !name.contains('.') => none
-        case _ => tryNext(name.reverse.replaceFirst("\\.", "\\$").reverse)
+        case Success(none) if !clsName.contains('.') => none
+        case Failure(_) => tryNext(clsName.reverse.replaceFirst("\\.", "\\$").reverse)
       }
     }
 
