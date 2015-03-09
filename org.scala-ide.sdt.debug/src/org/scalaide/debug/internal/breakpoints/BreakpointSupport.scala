@@ -5,30 +5,25 @@ package org.scalaide.debug.internal.breakpoints
 
 import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
-import scala.util.Failure
-import scala.util.Success
 
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
-import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
-import org.eclipse.jface.dialogs.MessageDialog
+import org.scalaide.debug.BreakpointContext
+import org.scalaide.debug.DebugContext
 import org.scalaide.debug.internal.BaseDebuggerActor
-// TODO - plugin
-//import org.scalaide.debug.internal.expression.ExpressionManager
+import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.util.eclipse.SWTUtils
-import org.scalaide.util.ui.DisplayThread
 
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
-import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.ClassPrepareEvent
+import com.sun.jdi.event.Event
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
 
@@ -52,6 +47,13 @@ private[debug] object BreakpointSupport {
 private object BreakpointSupportActor {
   // specific events
   case class Changed(delta: IMarkerDelta)
+
+  val eventHandlerMappings = EventHandlerMapping.mappings
+
+  def handleEvent(event: Event, context: DebugContext): Option[_] = {
+    val handlerResults = eventHandlerMappings.iterator.flatMap(_.withInstance(_.handleEvent(event, context)))
+    handlerResults.find(_.isDefined).flatten
+  }
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
     val typeName= breakpoint.typeName
@@ -102,8 +104,7 @@ private class BreakpointSupportActor private (
     debugTarget: ScalaDebugTarget,
     typeName: String,
     breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
-  import BreakpointSupportActor.Changed
-  import BreakpointSupportActor.createBreakpointRequest
+  import BreakpointSupportActor._
 
   /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
   private var requestsEnabled = false
@@ -129,16 +130,22 @@ private class BreakpointSupportActor private (
 
   // Manage the events
   override protected def behavior: PartialFunction[Any, Unit] = {
-    case event: ClassPrepareEvent =>
-      // JDI event triggered when a class is loaded
-      classPrepared(event.referenceType)
-      reply(false)
-    case event: BreakpointEvent => breakpoint match {
-      case lineBreakpoint: JavaLineBreakpoint =>
-        handleBreakpointEvent(event, lineBreakpoint)
-      case other =>
-        Failure(new IllegalArgumentException(s"Unknown breakpoint type: $other"))
-    }
+    case event: Event =>
+      val context = BreakpointContext(breakpoint, debugTarget)
+      val res = handleEvent(event, context)
+
+      // TODO handle invalid result value; should always a boolean be returned?
+      if (res.isDefined) reply(res.get)
+      else event match {
+        case event: ClassPrepareEvent =>
+          // JDI event triggered when a class is loaded
+          classPrepared(event.referenceType)
+          reply(false)
+        case event: BreakpointEvent =>
+          // JDI event triggered when a breakpoint is hit
+          breakpointHit(event.location, event.thread)
+          reply(true)
+      }
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
@@ -146,44 +153,6 @@ private class BreakpointSupportActor private (
       reply(None)
     case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
       reply(requestsEnabled)
-  }
-
-  private def handleBreakpointEvent(event: BreakpointEvent, lineBreakpoint: JavaLineBreakpoint): Unit = {
-    val condition = getCondition(lineBreakpoint)
-    val location = event.location()
-    val thread = event.thread()
- // TODO - plugin
-//   ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
-//      case Success(true) =>
-//        // JDI event triggered when a breakpoint is hit
-        breakpointHit(location, thread)
-        reply(true)
-//      case Success(false) =>
-//        reply(false)
-//      case Failure(e: VMDisconnectedException) =>
-//        // Ok, end of debugging
-//        reply(false)
-//      case Failure(e) =>
-//        DisplayThread.asyncExec {
-//          MessageDialog.openError(
-//            SWTUtils.getShell,
-//            "Error",
-//            s"Error in conditional breakpoint:\n${e.getMessage}")
-//        }
-//        // JDI event triggered when a breakpoint is hit
-//        breakpointHit(event.location, event.thread)
-//        reply(true)
-//    }
-  }
-
-  /**
-   * Extracts condition from breakpoint.
-   * Treats `null` condition and whitespace-only condition as empty.
-   */
-  private def getCondition(lineBreakpoint: JavaLineBreakpoint): Option[String] = {
-    val condition = lineBreakpoint.getCondition
-    def isConditionNonEmpty = lineBreakpoint.hasCondition && condition != null && !condition.trim.isEmpty
-    if (isConditionNonEmpty) Some(condition) else None
   }
 
   /**

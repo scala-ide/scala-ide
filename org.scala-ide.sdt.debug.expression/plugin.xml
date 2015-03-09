@@ -79,4 +79,12 @@
              class="org.scalaide.debug.internal.preferences.ExprEvalPreferencesInitializer">
        </initializer>
     </extension>
+    <extension
+          point="org.scala-ide.sdt.debug.eventHandler">
+       <eventHandler
+             class="org.scalaide.debug.internal.ui.BreakpointEventHandler"
+             id="org.scala-ide.sdt.debug.expression.breakpointEventHandler"
+             name="Breakpoint Event Handler of Expression Evaluator">
+       </eventHandler>
+    </extension>
 </plugin>
