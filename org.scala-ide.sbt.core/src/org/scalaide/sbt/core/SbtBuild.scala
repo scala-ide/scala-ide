@@ -2,11 +2,9 @@ package org.scalaide.sbt.core
 
 import java.io.File
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.pickling.Unpickler
-import scala.util.Try
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
@@ -17,20 +15,15 @@ import org.scalaide.sbt.util.SourceUtils
 
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.Source
-import sbt.client.Interaction
 import sbt.client.SbtClient
 import sbt.client.SbtConnector
-import sbt.client.SettingKey
 import sbt.protocol.LogEvent
 import sbt.protocol.LogMessage
 import sbt.protocol.LogStdErr
 import sbt.protocol.LogStdOut
 import sbt.protocol.LogSuccess
 import sbt.protocol.LogTrace
-import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
-import sbt.protocol.ScopedKey
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -113,76 +106,6 @@ object SbtBuild extends AnyRef with HasLogger {
 
 }
 
-object KeyProvider {
-  import sbt.client._
-  trait KeyProvider[M[_]] {
-    def key[A](key: ScopedKey): M[A]
-    def watch[A : Unpickler](a: M[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription
-  }
-  implicit def TaskKeyKP(implicit client: SbtClient) = new KeyProvider[TaskKey] {
-    def key[A](key: ScopedKey) = TaskKey(key)
-    def watch[A : Unpickler](key: TaskKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
-      client.watch(key)(listener)
-  }
-  implicit def SettingKeyKP(implicit client: SbtClient) = new KeyProvider[SettingKey] {
-    def key[A](key: ScopedKey) = SettingKey(key)
-    def watch[A : Unpickler](key: SettingKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
-      client.watch(key)(listener)
-  }
-
-}
-
-class RichSbtClient(private[core] val client: SbtClient) {
-  import KeyProvider._
-
-  private type Out[A] = Try[(ScopedKey, A)]
-
-  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
-    SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
-      val c = client.watchBuild { b ⇒
-        subs.onNext(b)
-      }
-      () ⇒ c.cancel()
-    }
-  }
-
-  def keyValue
-      [A : Unpickler, KP[_] : KeyProvider]
-      (projectName: String, keyName: String, config: Option[String])
-      (implicit sys: ActorSystem): Future[A] = {
-    import sys.dispatcher
-    client.lookupScopedKey(mkCommand(projectName, keyName, config)) flatMap { keys ⇒
-      valueOfKey(implicitly[KeyProvider[KP]].key[A](keys.head))
-    }
-  }
-
-  def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
-    client.requestExecution(commandOrTask, interaction)
-
-  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
-    SourceUtils.fromEventStream[Out[A]] { subs ⇒
-      val cancellation = implicitly[KeyProvider[KP]].watch(key) { (key, res) ⇒
-        val elem = res map (key → _)
-        subs.onNext(elem)
-      }
-      () ⇒ cancellation.cancel()
-    }
-  }
-
-  private def valueOfKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit sys: ActorSystem): Future[A] = {
-    import sys.dispatcher
-    import SourceUtils._
-    implicit val materializer = ActorFlowMaterializer()
-    watchKey(key).firstFuture.flatMap(elem ⇒ Future.fromTry(elem.map(_._2)))
-  }
-
-  private def mkCommand(projectName: String, keyName: String, config: Option[String]): String =
-    s"$projectName/${config.map(c ⇒ s"$c:").mkString}$keyName"
-
-}
-
-final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)
-
 class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
   import system.dispatcher
@@ -221,3 +144,5 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
       c.keyValue(projectName, keyName, config)
     }
 }
+
+final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)
