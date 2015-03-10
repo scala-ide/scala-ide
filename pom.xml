@@ -81,16 +81,16 @@
 
   <repositories>
     <repository>
-      <id>sbtrc</id>
-      <name>repository with the sbtrc binaries</name>
+      <id>typesafe releases</id>
+      <name>typesafe releases</name>
       <url>http://repo.typesafe.com/typesafe/releases</url>
       <releases>
         <updatePolicy>always</updatePolicy>
       </releases>
     </repository>
     <repository>
-      <id>play</id>
-      <name>play repository</name>
+      <id>typesafe maven releases</id>
+      <name>typesafe maven releases</name>
       <url>http://private-repo.typesafe.com/typesafe/maven-releases</url>
     </repository>
   </repositories>
