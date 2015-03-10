@@ -29,8 +29,6 @@ Require-Bundle:
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/client-all-2-11.jar,
- target/lib/rxjava-core.jar,
- target/lib/rxjava-scala.jar,
  target/lib/akka-actor_2.11.jar,
  target/lib/akka-stream-experimental_2.11.jar,
  target/lib/reactive-streams.jar,

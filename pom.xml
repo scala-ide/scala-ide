@@ -21,7 +21,6 @@
   <properties>
     <sbtrc.version>1.0-672ab670f78705a0c38eb7ab25be0331b7f89f42</sbtrc.version>
     <pickling.version>0.10.0</pickling.version>
-    <rxjava.version>0.17.0-RC7</rxjava.version>
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
     <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
@@ -69,16 +68,6 @@
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-parser-combinators_2.11</artifactId>
       <version>${parser.combinators.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>${rxjava.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-scala</artifactId>
-      <version>${rxjava.version}</version>
     </dependency>
   </dependencies>
 

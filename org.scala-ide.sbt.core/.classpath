@@ -6,8 +6,6 @@
 	<classpathentry exported="true" kind="lib" path="target/lib/akka-actor_2.11.jar" sourcepath="target/lib/akka-actor_2.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/akka-stream-experimental_2.11.jar" sourcepath="target/lib/akka-stream-experimental_2.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/reactive-streams.jar" sourcepath="target/lib/reactive-streams-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="target/lib/rxjava-core.jar" sourcepath="/home/sschaef/.m2/repository/com/netflix/rxjava/rxjava-core/0.17.0-RC7/rxjava-core-0.17.0-RC7-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="target/lib/rxjava-scala.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" output="target/classes" path="src"/>

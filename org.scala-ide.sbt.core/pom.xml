@@ -96,14 +96,6 @@
                   <artifactId>scala-parser-combinators_2.11</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>com.netflix.rxjava</groupId>
-                  <artifactId>rxjava-core</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.netflix.rxjava</groupId>
-                  <artifactId>rxjava-scala</artifactId>
-                </artifactItem>
               </artifactItems>
               <stripVersion>true</stripVersion>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
