@@ -29,7 +29,7 @@
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
-    <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
+    <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
     <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
 
