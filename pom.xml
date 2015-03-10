@@ -73,7 +73,7 @@
 
   <modules>
     <module>org.scala-ide.sbt.core</module>
-    <!--module>org.scala-ide.sbt.core.tests</module-->
+    <module>org.scala-ide.sbt.core.tests</module>
     <module>org.scala-ide.sbt.feature</module>
     <module>org.scala-ide.sbt.source.feature</module>
     <module>org.scala-ide.sbt.update-site</module>
