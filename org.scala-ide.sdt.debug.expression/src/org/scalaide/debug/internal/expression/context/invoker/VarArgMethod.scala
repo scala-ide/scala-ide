@@ -61,12 +61,8 @@ trait ScalaVarArgSupport {
  * Calls vararg method on given `ObjectReference` in context of debug.
  */
 class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
-    extends BaseMethodInvoker
+    extends ScalaMethod(name, proxy)
     with ScalaVarArgSupport {
-
-  override val methodName: String = NameTransformer.encode(name)
-
-  override def referenceType: ReferenceType = proxy.referenceType
 
   override def apply(): Option[Value] = {
     val varargMethods = candidates.flatMap(matchesVarArgSig)

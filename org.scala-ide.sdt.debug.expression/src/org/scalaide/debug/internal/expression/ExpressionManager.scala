@@ -27,6 +27,9 @@ import com.sun.jdi.event.BreakpointEvent
  */
 trait ProgressMonitor {
 
+  /** Reports work is done */
+  def done(): Unit
+
   /** Reports some amount of work */
   def reportProgress(amount: Int): Unit
 
@@ -38,6 +41,7 @@ trait ProgressMonitor {
  * Implementation of ProgressMonitor that does nothing.
  */
 object NullProgressMonitor extends ProgressMonitor {
+  def done(): Unit = ()
   def reportProgress(amount: Int): Unit = ()
   def startNamedSubTask(name: String): Unit = ()
 }
@@ -170,7 +174,7 @@ trait ExpressionManager extends HasLogger {
     val evaluator = new JdiExpressionEvaluator(classPath, debugState = conditionDebugState)
     val context = evaluator.createContext()
     val result = new ConditionManager().checkCondition(condition, location)(
-      evaluator.compileExpression(context))(_.apply(context))
+      evaluator.compileExpression(context)(_).map(first))(_.apply(context))
     recoverFromErrors(result, context)
   }
 

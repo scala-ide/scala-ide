@@ -24,6 +24,7 @@ import org.scalaide.debug.internal.expression.context.invoker.VarArgConstructorM
 import org.scalaide.debug.internal.expression.context.invoker.VarArgMethod
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.ReferenceType
@@ -123,14 +124,19 @@ private[context] trait JdiMethodInvoker {
   /** TODO - document this, it's an API */
   final def getJavaStaticField[Result <: JdiProxy](referenceType: ReferenceType, fieldName: String): Result = {
     val fieldAccessor = new JavaStaticFieldGetter(referenceType, fieldName)
-    val value = fieldAccessor.getValue()
+    val value = fieldAccessor().getOrElse {
+      throw new NoSuchFieldError(s"type ${referenceType.name} has no static field named $fieldName")
+    }
     valueProxy(value).asInstanceOf[Result]
   }
 
   /** TODO - document this, it's an API */
-  final def setJavaStaticField(classType: ClassType, fieldName: String, newValue: Any): Unit = {
-    val fieldAccessor = new JavaStaticFieldSetter(classType, fieldName)
-    fieldAccessor setValue newValue
+  final def setJavaStaticField(classType: ClassType, fieldName: String, newValue: Any): UnitJdiProxy = {
+    val fieldAccessor = new JavaStaticFieldSetter(classType, fieldName, newValue.asInstanceOf[JdiProxy], this)
+    val value = fieldAccessor().getOrElse {
+      throw new NoSuchFieldError(s"type ${classType.name} has no static field named $fieldName")
+    }
+    valueProxy(value).asInstanceOf[UnitJdiProxy]
   }
 
   /**

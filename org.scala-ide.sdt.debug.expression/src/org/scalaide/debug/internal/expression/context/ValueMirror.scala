@@ -19,7 +19,7 @@ import com.sun.jdi.VoidValue
 /**
  * Type class for mirroring primitives and String on JVM in JdiContext.
  */
-@implicitNotFound("Mirroring type ${T} is not supported.")
+@implicitNotFound("Mirroring type ${ValueType} is not supported.")
 sealed trait ValueMirror[ValueType, ReturnType] {
   def mirrorOf(value: ValueType, jvm: VirtualMachine): ReturnType
 }

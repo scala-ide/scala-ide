@@ -7,6 +7,7 @@ package context.invoker
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
+import com.sun.jdi.Field
 import com.sun.jdi.Value
 
 /**
@@ -15,27 +16,37 @@ import com.sun.jdi.Value
 case class JavaField(proxy: JdiProxy, name: String, methodArgs: Seq[JdiProxy], context: JdiContext)
     extends MethodInvoker {
 
-  final def apply(): Option[Value] = methodArgs match {
-    case Seq() => tryGetValue()
-    case Seq(newValue) if name.endsWith("_=") =>
-      // this case is not tested because, when it really could be used, Toolbox throws exception earlier
-      val fieldName = name.dropRight(2) // drop _= at the end of Scala setter
-      trySetValue(fieldName, newValue.__underlying)
+  final def apply(): Option[Value] = (name, methodArgs) match {
+    case ScalaGetter(field) =>
+      Some(proxy.__underlying.getValue(field))
+    // this case is not tested because, when it really could be used, Toolbox throws exception earlier
+    case ScalaSetter(field, newValue) =>
+      proxy.__underlying.setValue(field, newValue)
+      Some(context.mirrorOf(()))
     case _ => None
   }
 
-  private def refType = proxy.__underlying.referenceType()
+  private def refType = proxy.referenceType
 
-  private def tryGetValue() = {
-    val field = Option(refType.fieldByName(name))
-    field map proxy.__underlying.getValue
-  }
-
-  private def trySetValue(fieldName: String, newValue: Value) = {
-    val field = Option(refType.fieldByName(fieldName))
-    field.map { f =>
-      proxy.__underlying.setValue(f, newValue)
-      context.mirrorOf(())
+  private object ScalaSetter {
+    def unapply(t: (String, Seq[JdiProxy])): Option[(Field, Value)] = {
+      val (methodName, newValues) = t
+      newValues match {
+        // drop _= at the end of Scala setter
+        case Seq(argProxy) if methodName.endsWith("_=") =>
+          val fieldName = methodName.dropRight(2)
+          Option(refType.fieldByName(fieldName)).map(
+            field => (field, getValue(field.`type`, argProxy)))
+        case _ => None
+      }
     }
   }
+
+  private object ScalaGetter {
+    def unapply(t: (String, Seq[JdiProxy])): Option[Field] = {
+      val (methodName, newValues) = t
+      if (newValues.isEmpty) Option(refType.fieldByName(methodName)) else None
+    }
+  }
+
 }

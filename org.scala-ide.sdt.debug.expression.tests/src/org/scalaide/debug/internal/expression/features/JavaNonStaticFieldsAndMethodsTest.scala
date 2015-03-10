@@ -40,8 +40,6 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("javaLibClass.normalString != 15", true, Java.boxed.Boolean)
   }
 
-  // see description in ModificationOfJavaStaticFieldsTest for error details
-  @Ignore("TODO O-7264 support for assignment to Java fields")
   @Test
   def changeValuesOfFields(): Unit = {
     eval("""javaLibClass.normalStringToChange = "tesseract"; javaLibClass.normalStringToChange""", "tesseract", Java.boxed.String)

@@ -49,11 +49,11 @@ trait MethodInvoker extends HasLogger {
 
       case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) => primitive.name == boxed.primitiveName
 
-      case (objectType, _, refType: ReferenceType) if objectType.name == "java.lang.Object" => true
+      case (objectType, _, refType: ReferenceType) if objectType.name == Names.Java.`object` => true
 
       case (refType: ClassType, _, classType: ClassType) => isSuperClassOf(refType)(classType)
 
-      case (interfaceType: InterfaceType, _, classType: ClassType) => classType.allInterfaces().contains(interfaceType)
+      case (interfaceType: InterfaceType, _, classType: ClassType) => classType.allInterfaces.contains(interfaceType)
 
       case _ => false
     }
@@ -81,21 +81,28 @@ trait MethodInvoker extends HasLogger {
       case Failure(otherError) => throw otherError
     }
   }
+
+  /** Gets underlying primitive from proxy or object if primitive is not needed. */
+  protected def getValue(ofType: Type, fromProxy: JdiProxy): Value = (ofType, fromProxy) match {
+    case (tpe, parent: JdiProxyWrapper) => getValue(tpe, parent.__outer)
+    case (_: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
+    case (_, proxy) => proxy.__underlying
+  }
 }
 
 /**
  * Base operation on standard methods.
  */
-abstract class BaseMethodInvoker extends MethodInvoker {
+trait BaseMethodInvoker extends MethodInvoker {
 
   // name of method
-  def methodName: String
+  protected def methodName: String
 
   // reference to search (could be object or ClassType in the case of Java static members)
-  def referenceType: ReferenceType
+  protected def referenceType: ReferenceType
 
   // arguments of call
-  val args: Seq[JdiProxy]
+  protected def args: Seq[JdiProxy]
 
   // method match for this call
   private def methodMatch(method: Method) =
@@ -109,14 +116,8 @@ abstract class BaseMethodInvoker extends MethodInvoker {
   /**
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
    */
-  protected final def generateArguments(method: Method): Seq[Value] = {
-    def mapSingleArgument(args: (Type, JdiProxy)): Value = args match {
-      case (tpe, parent: JdiProxyWrapper) => mapSingleArgument(tpe -> parent.__outer)
-      case (_: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
-      case (_, proxy) => proxy.__underlying
-    }
-    method.argumentTypes().zip(args).map(mapSingleArgument)
-  }
+  protected final def generateArguments(method: Method): Seq[Value] =
+    method.argumentTypes().zip(args).map((getValue _).tupled)
 
   // search for all visible methods
   protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)

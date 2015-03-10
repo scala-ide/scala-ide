@@ -89,6 +89,8 @@ object Names {
       val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Unit)
     }
 
+    val `object` = "java.lang.Object"
+
   }
 
   /**

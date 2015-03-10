@@ -67,8 +67,10 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
 
   /**
    * Main entry point for this class, compiles given expression in given context to `JdiExpression`.
+   *
+   * @return tuple (expression, tree) with compiled expression and tree used for compilation
    */
-  final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
+  final def compileExpression(context: VariableContext)(code: String): Try[(JdiExpression, u.Tree)] = Try {
     val parsed = parse(code)
 
     val typesContext = new TypesContext()
@@ -96,7 +98,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   }
 
   /** Compiles a Tree to Expression */
-  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
+  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): (JdiExpression, u.Tree) = {
     (try {
       toolbox.compile(tree)
     } catch {
@@ -106,7 +108,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
         recompileFromStrigifiedTree(tree)
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
-        JdiExpression(function, newClasses)
+        (JdiExpression(function, newClasses), tree)
       case other =>
         throw new IllegalArgumentException(s"Bad compilation result: '$other'")
     }

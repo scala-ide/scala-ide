@@ -81,6 +81,7 @@ class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
       override protected def run(monitor: IProgressMonitor): IStatus = {
         monitor.beginTask(s"Evaluating: '$text'", ExpressionManager.numberOfPhases + 2) // 1 for running
         val result = ExpressionManager.compute(text, new ProgressMonitor {
+          override def done(): Unit = monitor.done()
           override def reportProgress(amount: Int): Unit = monitor.worked(amount)
           override def startNamedSubTask(name: String): Unit = monitor.setTaskName(name)
         })

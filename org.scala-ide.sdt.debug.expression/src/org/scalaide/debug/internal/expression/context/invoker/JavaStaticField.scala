@@ -4,6 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
+import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
 import com.sun.jdi.ClassType
@@ -14,20 +15,22 @@ abstract class JavaStaticField {
   protected val referenceType: ReferenceType
   protected val fieldName: String
 
-  protected val field = {
-    Option(referenceType.fieldByName(fieldName)).getOrElse {
-      throw new NoSuchFieldError(s"type ${referenceType.name} has no static field named $fieldName")
-    }
-  }
+  protected val field = Option(referenceType.fieldByName(fieldName))
 }
 
-class JavaStaticFieldGetter(val referenceType: ReferenceType, val fieldName: String) extends JavaStaticField {
-  def getValue(): Value = referenceType.getValue(field)
+class JavaStaticFieldGetter(val referenceType: ReferenceType, val fieldName: String)
+    extends JavaStaticField
+    with MethodInvoker {
+
+  def apply(): Option[Value] = field.map(referenceType.getValue)
 }
 
-class JavaStaticFieldSetter(val referenceType: ClassType, val fieldName: String) extends JavaStaticField {
-  def setValue(newValue: Any): Unit = {
-    val newValueProxy = newValue.asInstanceOf[JdiProxy].__underlying
-    referenceType.setValue(field, newValueProxy)
+class JavaStaticFieldSetter(val referenceType: ClassType, val fieldName: String, newValue: JdiProxy, context: JdiContext)
+    extends JavaStaticField
+    with MethodInvoker {
+
+  def apply(): Option[Value] = field.map { f =>
+    context.mirrorOf(
+      referenceType.setValue(f, getValue(f.`type`, newValue)))
   }
 }

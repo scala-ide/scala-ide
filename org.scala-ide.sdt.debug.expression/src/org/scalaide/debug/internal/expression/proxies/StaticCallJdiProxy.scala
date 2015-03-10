@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.proxies
 import org.scalaide.debug.internal.expression.JavaStaticInvocationProblem
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.InterfaceType
@@ -38,7 +39,7 @@ case class StaticCallClassJdiProxy(proxyContext: JdiContext, override val refere
     proxyContext.invokeJavaStaticMethod[JdiProxy](referenceType, name, args.map(_.asInstanceOf[JdiProxy]))
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit =
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy =
     proxyContext.setJavaStaticField(referenceType, name, value.asInstanceOf[JdiProxy])
 }
 
@@ -49,6 +50,6 @@ case class StaticCallInterfaceJdiProxy(proxyContext: JdiContext, override val re
     throw JavaStaticInvocationProblem("Cannot invoke static method on interface as interfaces can't have static methods")
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit =
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy =
     throw JavaStaticInvocationProblem("Cannot modify static field of interface. All interface fields are final")
 }

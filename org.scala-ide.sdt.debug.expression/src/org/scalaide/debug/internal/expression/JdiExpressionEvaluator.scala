@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression
 import java.io.File
 
 import scala.reflect.internal.util.ScalaClassLoader.URLClassLoader
+import scala.util.Failure
 import scala.util.Try
 
 import org.scalaide.debug.internal.ScalaDebugger
@@ -50,20 +51,26 @@ class JdiExpressionEvaluator(
   classPath: Option[Seq[String]],
   monitor: ProgressMonitor = NullProgressMonitor,
   debugState: DebugState = GlobalDebugState)
-  extends ExpressionEvaluator(JdiExpressionEvaluator.classloaderForRun(classPath), monitor) {
+    extends ExpressionEvaluator(JdiExpressionEvaluator.classloaderForRun(classPath), monitor) {
 
   /** Applies this evaluator to given expression */
   final def apply(expression: String): Try[JdiProxy] = {
     logger.info(s"Compiling:\n\t$expression")
     val context = createContext()
     for {
-      compiledExpression <- compileExpression(context)(expression)
+      (compiledExpression, tree) <- compileExpression(context)(expression)
       // all errors are required
       res <- scala.util.control.Exception.allCatch.withTry {
         monitor.startNamedSubTask("Executing code")
         val result = compiledExpression.apply(context)
         monitor.reportProgress(1)
         result
+      } recoverWith {
+        case t: Throwable =>
+          // log tree which caused exception during evaluation
+          monitor.done()
+          logger.debug(s"Exception thrown from evaluated code. Compiled tree:\n$tree")
+          Failure(t)
       }
     } yield res
   }
