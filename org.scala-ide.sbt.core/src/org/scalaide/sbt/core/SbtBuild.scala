@@ -2,7 +2,6 @@ package org.scalaide.sbt.core
 
 import java.io.File
 
-import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
@@ -114,11 +113,29 @@ object SbtBuild extends AnyRef with HasLogger {
 
 }
 
-class RichSbtClient(private val client: SbtClient) {
+object KeyProvider {
+  import sbt.client._
+  trait KeyProvider[M[_]] {
+    def key[A](key: ScopedKey): M[A]
+    def watch[A : Unpickler](a: M[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription
+  }
+  implicit def TaskKeyKP(implicit client: SbtClient) = new KeyProvider[TaskKey] {
+    def key[A](key: ScopedKey) = TaskKey(key)
+    def watch[A : Unpickler](key: TaskKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
+      client.watch(key)(listener)
+  }
+  implicit def SettingKeyKP(implicit client: SbtClient) = new KeyProvider[SettingKey] {
+    def key[A](key: ScopedKey) = SettingKey(key)
+    def watch[A : Unpickler](key: SettingKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
+      client.watch(key)(listener)
+  }
+
+}
+
+class RichSbtClient(private[core] val client: SbtClient) {
+  import KeyProvider._
 
   private type Out[A] = Try[(ScopedKey, A)]
-
-  private val cachedKeys = mutable.HashMap[ScopedKey, Source[Out[Any]]]()
 
   def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
     SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
@@ -129,19 +146,22 @@ class RichSbtClient(private val client: SbtClient) {
     }
   }
 
-  def settingValue[A : Unpickler](projectName: String, keyName: String, config: Option[String])(implicit sys: ActorSystem): Future[A] = {
+  def keyValue
+      [A : Unpickler, KP[_] : KeyProvider]
+      (projectName: String, keyName: String, config: Option[String])
+      (implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
     client.lookupScopedKey(mkCommand(projectName, keyName, config)) flatMap { keys ⇒
-      valueOfKey(SettingKey(keys.head))
+      valueOfKey(implicitly[KeyProvider[KP]].key[A](keys.head))
     }
   }
 
   def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
     client.requestExecution(commandOrTask, interaction)
 
-  private def watchKey[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
     SourceUtils.fromEventStream[Out[A]] { subs ⇒
-      val cancellation = client.watch(key) { (key, res) ⇒
+      val cancellation = implicitly[KeyProvider[KP]].watch(key) { (key, res) ⇒
         val elem = res map (key → _)
         subs.onNext(elem)
       }
@@ -149,21 +169,7 @@ class RichSbtClient(private val client: SbtClient) {
     }
   }
 
-  private def keyWatcher[A : Unpickler](key: SettingKey[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
-    cachedKeys synchronized {
-      val res = cachedKeys get key.key match {
-        case Some(f) ⇒
-          f
-        case _ ⇒
-          val f = watchKey(key)
-          cachedKeys update (key.key, f)
-          f
-      }
-      res.asInstanceOf[Source[Try[(ScopedKey, A)]]]
-    }
-  }
-
-  private def valueOfKey[A : Unpickler](key: SettingKey[A])(implicit sys: ActorSystem): Future[A] = {
+  private def valueOfKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
     import SourceUtils._
     implicit val materializer = ActorFlowMaterializer()
@@ -200,5 +206,18 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
    * required to deserialize the value from the wire.
    */
   def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
-    sbtClient.flatMap(_.settingValue(projectName, keyName, config))
+    sbtClient flatMap { c ⇒
+      implicit val kp = KeyProvider.SettingKeyKP(c.client)
+      c.keyValue(projectName, keyName, config)
+    }
+
+  /**
+   * Returns a Future for the value of the given task key. An Unpickler is
+   * required to deserialize the value from the wire.
+   */
+  def task[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
+    sbtClient flatMap { c ⇒
+      implicit val kp = KeyProvider.TaskKeyKP(c.client)
+      c.keyValue(projectName, keyName, config)
+    }
 }
