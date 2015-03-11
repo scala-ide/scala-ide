@@ -174,7 +174,7 @@ trait ExpressionManager extends HasLogger {
     val evaluator = new JdiExpressionEvaluator(classPath, debugState = conditionDebugState)
     val context = evaluator.createContext()
     val result = new ConditionManager().checkCondition(condition, location)(
-      evaluator.compileExpression(context)(_).map(first))(_.apply(context))
+      evaluator.compileExpression(context))(_.apply(context))
     recoverFromErrors(result, context)
   }
 

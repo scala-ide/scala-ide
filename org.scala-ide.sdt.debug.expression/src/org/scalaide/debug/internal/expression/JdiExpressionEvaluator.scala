@@ -58,7 +58,7 @@ class JdiExpressionEvaluator(
     logger.info(s"Compiling:\n\t$expression")
     val context = createContext()
     for {
-      (compiledExpression, tree) <- compileExpression(context)(expression)
+      compiledExpression <- compileExpression(context)(expression)
       // all errors are required
       res <- scala.util.control.Exception.allCatch.withTry {
         monitor.startNamedSubTask("Executing code")
@@ -69,7 +69,7 @@ class JdiExpressionEvaluator(
         case t: Throwable =>
           // log tree which caused exception during evaluation
           monitor.done()
-          logger.debug(s"Exception thrown from evaluated code. Compiled tree:\n$tree")
+          logger.debug(s"Exception thrown from evaluated code. Compiled tree:\n${compiledExpression.code}")
           Failure(t)
       }
     } yield res

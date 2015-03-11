@@ -23,7 +23,7 @@ object ExpressionEvaluator {
    * @param compiledFunc expression code
    * @param newClasses new classes that must be loaded to debugged JVM
    */
-  case class JdiExpression(compiledFunc: ExpressionFunc, newClasses: Iterable[ClassData]) extends ExpressionFunc {
+  case class JdiExpression(compiledFunc: ExpressionFunc, newClasses: Iterable[ClassData], code: universe.Tree) extends ExpressionFunc {
     //class are loaded?
     private var classLoaded: Boolean = false
 
@@ -70,7 +70,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
    *
    * @return tuple (expression, tree) with compiled expression and tree used for compilation
    */
-  final def compileExpression(context: VariableContext)(code: String): Try[(JdiExpression, u.Tree)] = Try {
+  final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
     val parsed = parse(code)
 
     val typesContext = new TypesContext()
@@ -98,7 +98,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   }
 
   /** Compiles a Tree to Expression */
-  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): (JdiExpression, u.Tree) = {
+  private def compile(tree: u.Tree, newClasses: Iterable[ClassData]): JdiExpression = {
     (try {
       toolbox.compile(tree)
     } catch {
@@ -108,7 +108,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
         recompileFromStrigifiedTree(tree)
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
-        (JdiExpression(function, newClasses), tree)
+        JdiExpression(function, newClasses, tree)
       case other =>
         throw new IllegalArgumentException(s"Bad compilation result: '$other'")
     }
