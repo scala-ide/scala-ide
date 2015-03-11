@@ -80,6 +80,20 @@ object TestValues {
     val breakpointLine = 10
   }
 
+  object MethodsAsFunctions {
+
+    class MethodsAsFunctionsTestCaseBase(val breakpointLine: Int) extends IntegrationTestCaseSettings {
+      val projectName = "expr-eval-methods-as-functions"
+      val fileName = "MethodsAsFunctions"
+    }
+
+    object MethodsAsFunctionsInnerTraitTestCase extends MethodsAsFunctionsTestCaseBase(19)
+
+    object MethodsAsFunctionsInnerClassTestCase extends MethodsAsFunctionsTestCaseBase(23)
+
+    object MethodsAsFunctionsInnerObjectTestCase extends MethodsAsFunctionsTestCaseBase(27)
+  }
+
   object JavaTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-java"
     val fileName = "Java"
