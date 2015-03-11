@@ -145,7 +145,10 @@ final class TypesContext() {
         // for non-erased array types
         case methodSymbol: universe.MethodSymbol if methodSymbol.returnType.toString.startsWith("Array[") =>
           Some(methodSymbol.returnType.toString)
-        case other => Some(singleType.typeSymbol.fullName)
+        case other =>
+          val typeSignature = other.typeSignature.toString()
+          if (typeSignature.endsWith(".type")) Some(typeSignature)
+          else Some(singleType.typeSymbol.fullName)
       }
       case constantType: ConstantType => Some(constantType.typeSymbol.fullName)
       case thisType: ThisType => Some(thisType.typeSymbol.fullName)

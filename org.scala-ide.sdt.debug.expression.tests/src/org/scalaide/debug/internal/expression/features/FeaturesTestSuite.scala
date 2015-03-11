@@ -41,6 +41,7 @@ import org.junit.runners.Suite
     classOf[PartialFunctionLambdaTest],
     classOf[AnyValTest],
     classOf[InnerMethodsTest],
+    classOf[MethodsAsFunctionsTest],
     classOf[NamedParameterTest],
     classOf[AppObjectTest],
     classOf[NestedClassTest],
