@@ -5,10 +5,11 @@ package org.scalaide.debug.internal.expression
 package context.invoker
 
 import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.debug.internal.expression.context.JdiMethodInvoker
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+
 import com.sun.jdi.Value
-import org.scalaide.debug.internal.expression.context.JdiMethodInvoker
 
 /**
  * Custom handler for AnyVal calls

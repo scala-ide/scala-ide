@@ -4,9 +4,10 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
+
 import com.sun.jdi.Value
 
 class ArrayConstructor(className: String, args: Seq[JdiProxy], context: JdiContext) extends MethodInvoker {

@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
 import scala.collection.JavaConversions.asScalaBuffer
 
@@ -105,9 +106,12 @@ trait Seeker {
     classRef.methodsByName(methodName).head
   }
 
-  /** Helper for getting method (static) from ObjectReference */
-  final def methodOn(obj: ObjectReference, methodName: String): Method =
-    obj.referenceType().methodsByName(methodName).head
+  /** Helper for getting method from ObjectReference */
+  final def methodOn(obj: ObjectReference, methodName: String, arity: Int): Method = {
+    val methods = obj.referenceType().methodsByName(methodName)
+    methods.find(_.arity == arity).getOrElse(
+      throw new RuntimeException(s"Method: $methodName with arity: $arity not found on ${obj.`type`}"))
+  }
 
   /**
    * Extracts value from debug frame.

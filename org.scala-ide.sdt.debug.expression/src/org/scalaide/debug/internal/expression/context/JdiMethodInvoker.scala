@@ -15,13 +15,15 @@ import org.scalaide.debug.internal.expression.context.invoker.JavaField
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldGetter
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldSetter
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticMethod
+import org.scalaide.debug.internal.expression.context.invoker.JavaStaticVarArgMethod
 import org.scalaide.debug.internal.expression.context.invoker.JavaVarArgConstructorMethod
+import org.scalaide.debug.internal.expression.context.invoker.JavaVarArgMethod
 import org.scalaide.debug.internal.expression.context.invoker.MethodInvoker
+import org.scalaide.debug.internal.expression.context.invoker.ScalaVarArgMethod
 import org.scalaide.debug.internal.expression.context.invoker.StandardConstructorMethod
 import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
 import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
 import org.scalaide.debug.internal.expression.context.invoker.VarArgConstructorMethod
-import org.scalaide.debug.internal.expression.context.invoker.VarArgMethod
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
@@ -93,14 +95,15 @@ private[context] trait JdiMethodInvoker {
       // TODO - java static vararg method
       case _ =>
         val standardMethod = new StandardMethod(proxy, methodName, methodArgs, this)
-        def varArgMethod = new VarArgMethod(proxy, methodName, methodArgs, this)
+        def varArgMethod = new ScalaVarArgMethod(proxy, methodName, methodArgs, this)
+        def javaVarArgMethod = new JavaVarArgMethod(proxy, methodName, methodArgs, this)
         def stringConcat = new StringConcatenationMethod(proxy, methodName, methodArgs)
         def anyValMethod = new AnyValMethod(proxy, methodName, methodArgs, onRealType, this, this)
         def javaField = new JavaField(proxy, methodName, methodArgs, this)
 
         standardMethod() orElse
           varArgMethod() orElse
-          // TODO - java vararg
+          javaVarArgMethod() orElse
           stringConcat() orElse
           anyValMethod() orElse
           javaField()
@@ -113,20 +116,22 @@ private[context] trait JdiMethodInvoker {
     methodName: String,
     methodArgs: Seq[JdiProxy]): Result = {
     val javaStaticMethod = new JavaStaticMethod(classType, methodName, methodArgs, this)
+    def javaStaticVarArgMethod = new JavaStaticVarArgMethod(classType, methodName, methodArgs, this)
+    def noSuchMethod() = throw new NoSuchMethodError(s"class ${classType.name} has no static method named $methodName")
 
-    javaStaticMethod()
-      .map(valueProxy)
-      .getOrElse {
-        throw new NoSuchMethodError(s"class ${classType.name} has no static method named $methodName")
-      }.asInstanceOf[Result]
+    val value = javaStaticMethod() orElse
+      javaStaticVarArgMethod() getOrElse
+      noSuchMethod()
+
+    valueProxy(value).asInstanceOf[Result]
   }
 
   /** TODO - document this, it's an API */
   final def getJavaStaticField[Result <: JdiProxy](referenceType: ReferenceType, fieldName: String): Result = {
     val fieldAccessor = new JavaStaticFieldGetter(referenceType, fieldName)
-    val value = fieldAccessor().getOrElse {
-      throw new NoSuchFieldError(s"type ${referenceType.name} has no static field named $fieldName")
-    }
+    def noSuchMethod() = throw new NoSuchMethodError(s"type ${referenceType.name} has no static method named $fieldName")
+
+    val value = fieldAccessor() getOrElse noSuchMethod()
     valueProxy(value).asInstanceOf[Result]
   }
 
@@ -191,7 +196,7 @@ private[context] trait JdiMethodInvoker {
     }
 
     tryNext(className, standardConstructor) orElse
-      tryNext(className, varArgConstructor) //orElse
-      // tryNext(className, javaVarArgConstructor)
+      tryNext(className, varArgConstructor) orElse
+      tryNext(className, javaVarArgConstructor)
   }
 }

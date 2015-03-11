@@ -9,6 +9,9 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import org.scalaide.debug.internal.expression.Arity
+import org.scalaide.debug.internal.expression.Names
+import org.scalaide.debug.internal.expression.OnSide
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -41,7 +44,7 @@ trait MethodInvoker extends HasLogger {
     if (proxy.__underlying == null) tpe.isInstanceOf[ClassType]
     else (tpe, proxy, proxy.__underlying.referenceType) match {
 
-      case (arrayType: ArrayType, arrayProxy: ArrayJdiProxy[_], _) => true
+      case (arrayType: ArrayType, arrayProxy: ArrayJdiProxy[_], _) => arrayProxy.__underlying.`type` == arrayType
 
       case (_, wrapper: JdiProxyWrapper, _) => conformsTo(wrapper.__outer, tpe)
 
@@ -123,10 +126,22 @@ trait BaseMethodInvoker extends MethodInvoker {
   protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)
 
   // found methods
-  protected final def matching: Seq[Method] = allMethods.filter(methodMatch)
+  protected def matching: Seq[Method] = allMethods.filter(methodMatch)
+
+  // handles situation when you have multiple overloads
+  protected def handleMultipleOverloads(candidates: Seq[Method], invoker: Method => Value): Option[Value] = {
+    candidates match {
+      case Nil => None
+      case method +: Nil =>
+        Some(invoker(method))
+      case multiple =>
+        logger.warn(multipleOverloadsMessage(multiple))
+        Some(invoker(multiple.head))
+    }
+  }
 
   // message for multiple overloads of method def
-  protected final def multipleOverloadsMessage(methods: Seq[Method]): String = {
+  private final def multipleOverloadsMessage(methods: Seq[Method]): String = {
     val overloads = methods.map(prettyPrint).mkString("\t", "\n\t", "")
     s"Multiple overloaded methods found, using first one. This may not be correct. Possible overloads:\n$overloads"
   }

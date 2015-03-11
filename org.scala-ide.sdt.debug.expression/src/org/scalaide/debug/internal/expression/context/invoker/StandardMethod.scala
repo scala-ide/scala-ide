@@ -33,12 +33,6 @@ class StandardMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], con
     def invoke(method: Method): Value =
       proxy.__underlying.invokeMethod(context.currentThread(), method, generateArguments(method))
 
-    matching match {
-      case Nil => None
-      case single +: Nil => Some(invoke(single))
-      case multiple =>
-        logger.warn(multipleOverloadsMessage(multiple))
-        Some(invoke(multiple.head))
-    }
+    handleMultipleOverloads(matching, invoke)
   }
 }

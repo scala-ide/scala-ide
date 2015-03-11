@@ -11,7 +11,7 @@ import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.any2String
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
-import JavaTestCase._
+import org.scalaide.debug.internal.expression.TestValues.JavaTestCase._
 
 class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticFieldsAndMethodsTest) {
 
@@ -47,11 +47,10 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
     eval("JavaLibClass.staticGenericMethod('g')", 'g', Java.boxed.Character)
   }
 
-  @Ignore("TODO - support for varargs in Java methods")
   @Test
   def invokeStaticVarArgsMethodsOfClass(): Unit = {
-    eval("JavaLibClass.staticVarArgMethod(1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Integer))
-    eval("JavaLibClass.staticGenericVarArgMethod[Double](1, 2, 3)", "Array(1,2,3)", Scala.Array(Java.boxed.Double))
+    eval("JavaLibClass.staticVarArgMethod(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+    eval("JavaLibClass.staticGenericVarArgMethod[java.lang.Double](1, 2, 3)", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.`object`))
   }
 
   @Test

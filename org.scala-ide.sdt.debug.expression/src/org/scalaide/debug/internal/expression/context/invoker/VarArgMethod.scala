@@ -4,18 +4,17 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.reflect.NameTransformer
-
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
-import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.Type
 import com.sun.jdi.Value
 
-trait ScalaVarArgSupport {
+/**
+ * Basic support for invoking vararg methods.
+ * Provides a `packToVarArg` which converts sequence of JdiProxies to ObjectReference of a Seq.
+ */
+trait VarArgSupport {
   self: BaseMethodInvoker =>
 
   protected def context: JdiContext
@@ -25,61 +24,19 @@ trait ScalaVarArgSupport {
   private def seqObjectRef: ObjectReference = context.objectByName(seqName)
 
   private def emptyListRef: ObjectReference = {
-    def emptyMethod = context.methodOn(seqObjectRef, "empty")
+    def emptyMethod = context.methodOn(seqObjectRef, "empty", arity = 0)
     seqObjectRef.invokeMethod(context.currentThread(), emptyMethod, List[Value]()).asInstanceOf[ObjectReference]
   }
 
-  protected def packToVarArg(proxies: Seq[JdiProxy]): Value = {
+  protected def packToVarArg(proxies: Seq[JdiProxy]): ObjectReference = {
     def addMethod = context.methodOn(seqName, "$plus$colon")
-    def canBuildFrom = seqObjectRef.invokeMethod(context.currentThread(), context.methodOn(seqObjectRef, "canBuildFrom"), List[Value]())
+    def canBuildFromMethod = context.methodOn(seqObjectRef, "canBuildFrom", arity = 0)
+    def canBuildFrom = seqObjectRef.invokeMethod(context.currentThread(), canBuildFromMethod, List[Value]())
 
     proxies.foldRight(emptyListRef) {
       (proxy, current) =>
-        current.invokeMethod(context.currentThread(), addMethod, List(proxy.__underlying, canBuildFrom)).asInstanceOf[ObjectReference]
-    }
-  }
-
-  protected object PossiblyVarArg {
-    def unapply(types: Seq[Type]): Option[Seq[Type]] = types match {
-      case normal :+ vararg if vararg.name == seqName && checkTypes(normal) => Some(normal)
-      case _ => None
-    }
-  }
-
-  protected def matchesVarArgSig(method: Method): Option[(Method, Int)] =
-    argumentTypesLoaded(method, context) match {
-      case PossiblyVarArg(normal) => Some(method, normal.size)
-      case _ => None
-    }
-
-  // we have to add `1` as someone can call vararg without any arguments at all
-  protected def candidates = allMethods.filter(_.arity <= args.size + 1)
-
-}
-
-/**
- * Calls vararg method on given `ObjectReference` in context of debug.
- */
-class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
-    extends ScalaMethod(name, proxy)
-    with ScalaVarArgSupport {
-
-  override def apply(): Option[Value] = {
-    val varargMethods = candidates.flatMap(matchesVarArgSig)
-
-    def invoke(method: Method, normalSize: Int): Value = {
-      val standardArgs = generateArguments(method).take(normalSize)
-      val varArgs = packToVarArg(args.drop(normalSize))
-      proxy.__underlying.invokeMethod(context.currentThread(), method, standardArgs :+ varArgs)
-    }
-
-    varargMethods match {
-      case Nil => None
-      case (method, normalSize) +: Nil =>
-        Some(invoke(method, normalSize))
-      case multiple =>
-        logger.warn(multipleOverloadsMessage(multiple.map(first)))
-        Some((invoke _).tupled(multiple.head))
+        val args = List(proxy.__underlying, canBuildFrom)
+        current.invokeMethod(context.currentThread(), addMethod, args).asInstanceOf[ObjectReference]
     }
   }
 }

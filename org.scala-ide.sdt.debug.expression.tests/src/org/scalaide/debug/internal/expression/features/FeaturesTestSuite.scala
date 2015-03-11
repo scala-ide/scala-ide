@@ -12,7 +12,6 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
-    classOf[VarargsTest],
     classOf[GenericsTest],
     classOf[TraitsTest],
     classOf[ArrayTest],
@@ -38,6 +37,7 @@ import org.junit.runners.Suite
     classOf[LiteralsTest],
     classOf[NewKeywordTest],
     classOf[ImplicitTest],
+    classOf[VarargsTest],
     classOf[PartialFunctionLambdaTest],
     classOf[AnyValTest],
     classOf[InnerMethodsTest],
