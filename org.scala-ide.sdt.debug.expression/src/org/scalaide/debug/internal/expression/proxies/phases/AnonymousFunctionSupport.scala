@@ -18,7 +18,7 @@ object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
   def toolboxOptions = s"-d $tempDir"
 
-  case class NewClassContext(newClassName: String, newClassCode: Array[Byte])
+  case class NewClassContext(newClassName: String, newClassCode: Array[Byte], nested: Seq[NewClassContext])
 
   // tmp dir for compiled classes
   protected lazy val tempDir = {
@@ -51,12 +51,9 @@ object AnonymousFunctionSupport {
       }
     }
 
-    private def findNewClassFile(newClassDir: String) = {
+    private def findNewClassFile(newClassDir: String): Seq[File] = {
       new File(parentDirFile, newClassDir).listFiles()
-        .filter(_.getName.contains("$" + className)) match {
-          case Array(classFile) => classFile
-          case _ => throw NestedLambdaException
-        }
+        .filter(_.getName.contains("$" + className)).sortBy(_.getName.size) //nested functions names are always longer
     }
 
     private def newClassName(newClassDir: String, classFile: File) = {
@@ -79,11 +76,14 @@ object AnonymousFunctionSupport {
      */
     def collectNewClassFiles: NewClassContext = ClassListenerLock.synchronized {
       val newClassDir = findNewClassDirectory()
-      val requiredClassFile = findNewClassFile(newClassDir)
+      val requiredClassFile +: nested = findNewClassFile(newClassDir)
 
-      NewClassContext(
-        newClassName = newClassName(newClassDir, requiredClassFile),
-        newClassCode = newClassBytes(requiredClassFile))
+      def contextFromFile(file: File, nested: Seq[NewClassContext]) =
+        NewClassContext(
+          newClassName = newClassName(newClassDir, file),
+          newClassCode = newClassBytes(file), nested)
+
+      contextFromFile(requiredClassFile, nested.map(file => contextFromFile(file, Nil)))
     }
   }
 
@@ -164,13 +164,11 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, typesContext.treeTypeName)
       .findUnboundValues().filterNot {
-        case (name, _) => vparamsName.contains(name)
-      }.map {
-        case (name, Some(valueType)) =>
-          val isFunctionImport = valueType.contains("$$")
-          name -> (if (isFunctionImport) valueType else valueType.replace("$", "."))
-        case (name, _) => name -> Debugger.proxyName
-      }
+      case (name, _) => vparamsName.contains(name)
+    }.map {
+      case (name, Some(valueType)) => name -> valueType
+      case (name, _) => name -> Debugger.proxyName
+    }
   }
 
   /**
@@ -211,11 +209,15 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   // creates and compiles new function class
   protected def createAndCompileNewFunction(params: List[ValDef], body: Tree): Tree = {
     val closuresParams = getClosureParamsNamesAndType(body, params)
-    val NewClassContext(jvmClassName, classCode) = compileFunction(params, body, closuresParams)
+    val NewClassContext(jvmClassName, classCode, nested) = compileFunction(params, body, closuresParams)
 
     import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
     val proxyClassName = s"$customLambdaPrefix$functionsCount"
     functionsCount += 1
+
+    nested.foreach(nestedFunction => typesContext.newType(nestedFunction.newClassName,
+      nestedFunction.newClassName, nestedFunction.newClassCode, Nil))
+
     val newFunctionType =
       typesContext.newType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
 
