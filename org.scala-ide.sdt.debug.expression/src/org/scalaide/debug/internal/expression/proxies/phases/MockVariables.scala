@@ -15,7 +15,6 @@ import org.scalaide.debug.internal.expression.sources.GenericTypes
 import org.scalaide.logging.HasLogger
 
 class MockVariables(val toolbox: ToolBox[universe.type],
-  projectClassLoader: ClassLoader,
   context: VariableContext,
   unboundVariables: => Set[universe.TermName])
   extends TransformationPhase

@@ -42,19 +42,24 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
     eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
   }
 
+  @Test
+  def `ImplicitsValues3.ArrowAssocWithoutAnyVal`: Unit = {
+    eval("import ImplicitsValues3._; 1 --> 3", "(1,3)", "scala.Tuple2")
+    eval("import ImplicitsValues3._; (new ArrowAssocWithoutAnyVal(1))-->(2)", "(1,2)", "scala.Tuple2")
+  }
+
   // value from imports and local values
 
-  @Ignore("TODO - 0-5225 Add support for explicit implicits")
+  @Ignore("TODO - 0-5225 Add support for local implicits")
   @Test
   def `local val implicit: libClass.withImplicitIntParameter`(): Unit =
     eval("libClass.withImplicitIntParameter", "12", Java.boxed.Integer)
 
-  @Ignore("TODO - 0-5225 Add support for explicit implicits")
   @Test
   def `explicit import implicit: ibClass.withImplicitStringParameter`(): Unit =
     eval("libClass.withImplicitStringParameter", "ala", Java.boxed.String)
 
-  @Ignore("TODO - 0-5225 Add support for explicit implicits")
+  @Ignore("TODO - 0-5225 Add support for local implicits")
   @Test
   def `_ import implicit: libClass.withImplicitDoubleParameter`(): Unit =
     eval("libClass.withImplicitDoubleParameter", "1.1", Java.boxed.Double)
