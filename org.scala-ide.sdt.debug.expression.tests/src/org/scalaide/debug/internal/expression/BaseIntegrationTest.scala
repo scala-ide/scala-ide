@@ -57,7 +57,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
 
   protected def runInEclipse(code: String): JdiProxy = {
     val eval = companion.expressionEvaluator
-    ExpressionManager.recoverFromErrors(eval.apply(code), eval.createContext()) match {
+    ExpressionException.recoverFromErrors(eval.apply(code), eval.createContext(), logger) match {
       case Success(result) => result
       case Failure(exception) => throw exception
     }

@@ -9,18 +9,14 @@ import scala.util.Success
 import scala.util.Try
 
 import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.model.ScalaValue
 import org.scalaide.logging.HasLogger
 
-import com.sun.jdi.ClassNotLoadedException
-import com.sun.jdi.InvocationException
 import com.sun.jdi.Location
 import com.sun.jdi.ThreadReference
-import com.sun.jdi.event.BreakpointEvent
 
 /**
  * Simple progress indicator not to make expression evaluator depend on eclipse classes.
@@ -104,7 +100,7 @@ trait ExpressionManager extends HasLogger {
         outputText <- show(result)
       } yield (result, outputText)
 
-      recoverFromErrors(resultWithStringRep, evaluator.createContext()) match {
+      ExpressionException.recoverFromErrors(resultWithStringRep, evaluator.createContext(), logger) match {
         case Success((result, outputText)) =>
           Try(result.__underlying) match {
             case Success(underlying) =>
@@ -175,7 +171,7 @@ trait ExpressionManager extends HasLogger {
     val context = evaluator.createContext()
     val result = new ConditionManager().checkCondition(condition, location)(
       evaluator.compileExpression(context))(_.apply(context))
-    recoverFromErrors(result, context)
+    ExpressionException.recoverFromErrors(result, context, logger)
   }
 
   object NonexisitngFieldEqualError {
@@ -193,51 +189,5 @@ trait ExpressionManager extends HasLogger {
         case _ => None
       }
     }
-  }
-
-  /**
-   * Recovers from errors after expression compilation and evaluation.
-   * Provides nice, user-readable descriptions for all known problems.
-   */
-  // TODO consider moving this method somewhere else, it's now also used by tests. Probably to ExpressionException
-  private[expression] def recoverFromErrors[A](result: Try[A], context: JdiContext): Try[A] = result.recoverWith {
-    case noInfo: com.sun.jdi.AbsentInformationException =>
-      logger.error("Absent information exception", noInfo)
-      Failure(NotAtBreakpointException)
-    case notAtBreakPoint: com.sun.jdi.IncompatibleThreadStateException =>
-      logger.error("Incompatible thread state", notAtBreakPoint)
-      Failure(NotAtBreakpointException)
-    case ie: InvocationException =>
-      logger.error("JDI invocation exception", ie)
-      val underlying = context.valueProxy(ie.exception)
-      Failure(new MethodInvocationException(context.show(underlying, withType = false), ie))
-    case unsupportedFeature: UnsupportedFeature =>
-      logger.warn(s"Unsupported feature was used: ${unsupportedFeature.name}", unsupportedFeature)
-      Failure(unsupportedFeature)
-    // WARNING - this case catches ALL ExpressionExceptions, do not add it's subclasses below it
-    case expressionException: ExpressionException =>
-      logger.error("Exception during expression evaluation", expressionException)
-      Failure(expressionException)
-    case NonexisitngFieldEqualError(name) =>
-      Failure(MissingField(name))
-    case tb: ToolBoxError if tb.getMessage.contains("not found: type") =>
-      Failure(new ReflectiveCompilationFailedWithClassNotFound(tb.getMessage))
-    case tb: ToolBoxError =>
-      Failure(new ReflectiveCompilationFailure(tb.getMessage))
-    case nsme: NoSuchMethodError =>
-      Failure(new RuntimeException(nsme.getMessage, nsme))
-    case cnl: ClassNotLoadedException =>
-      logger.error(s"Class with name: ${cnl.className} was not loaded.", cnl)
-      handleUnknownException(cnl)
-    case e: Throwable =>
-      logger.error("Unknown exception during evaluation", e)
-      handleUnknownException(e)
-  }
-
-  /** Handles unknown exceptions with nice message for users */
-  private def handleUnknownException(e: Throwable) = {
-    val currentMessage = s"Exception message: ${e.getMessage}"
-    val newMessage = s"Exception was thrown during expression evaluation. To see more details check scala-ide error log.\n$currentMessage"
-    Failure(new RuntimeException(newMessage, e))
   }
 }
