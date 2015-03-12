@@ -35,14 +35,6 @@ import com.sun.jdi.Value
  */
 package object expression {
 
-  /**
-   * Used when you wan to do something side-effecting with result of function - like log it's result.
-   * This way one does not have to create a val, assign result to it, log and return.
-   */
-  implicit final class OnSide[A](private val a: A) extends AnyVal {
-    def onSide(f: A => Unit): A = { f(a); a }
-  }
-
   implicit final class Arity(private val method: Method) extends AnyVal {
     def arity: Int = method.argumentTypeNames.size
   }
@@ -71,24 +63,24 @@ package object expression {
    * def apply(xs: scala.collection.Seq): scala.collection.immutable.List (defined in: scala.collection.immutable.List$, line(s): [457])
    * }}}
    */
-  final def prettyPrint(method: Method): String = util.Try {
+  final def prettyPrint(method: Method): String = {
+    def err[A](f: => A) = util.Try(f).toOption.getOrElse("<no info>")
     def param(f: Method => Boolean, name: String): String = if (f(method)) name else ""
 
-    def args = util.Try {
-      method.arguments.map(arg => arg.name + ": " + arg.typeName).mkString("(", ",", ")")
-    }.toOption.getOrElse("(<no info>)")
+    val params = err(Seq(
+      param(_.isPrivate, "private"),
+      param(_.isProtected, "protected"),
+      param(_.isFinal, "final"),
+      param(_.isAbstract, "abstract")).mkString(" "))
 
-    param(_.isPrivate, "private ") +
-      param(_.isProtected, "protected ") +
-      param(_.isFinal, "final ") +
-      param(_.isAbstract, "abstract ") +
-      "def " +
-      method.name +
-      args +
-      ": " + method.returnType +
-      " (" +
-      "defined in: " + method.declaringType +
-      ", line(s): " + method.allLineLocations.map(_.lineNumber).mkString("[", ",", "]") +
-      ")"
-  }.toOption.getOrElse("<no information>")
+    val name = err(method.name)
+    val args = err {
+      method.arguments.map(arg => arg.name + ": " + arg.typeName).mkString(",")
+    }
+    val returnType = err(method.returnType)
+    val declaringType = err(method.declaringType)
+    val lineLocations = err(method.allLineLocations.map(_.lineNumber).mkString(","))
+
+    s"$params def $name($args): $returnType (defined in: $declaringType, line(s): [$lineLocations])"
+  }
 }

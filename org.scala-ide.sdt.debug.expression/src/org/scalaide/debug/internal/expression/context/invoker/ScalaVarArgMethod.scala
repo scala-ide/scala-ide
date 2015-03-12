@@ -23,7 +23,7 @@ trait ScalaVarArgSupport
 
   private object PossiblyVarArg {
     def unapply(types: Seq[Type]): Boolean = types match {
-      case normal :+ vararg if vararg.name == seqName && checkTypes(normal) => true
+      case normal :+ vararg if vararg.name == Names.Scala.seq && checkTypes(normal) => true
       case _ => false
     }
   }

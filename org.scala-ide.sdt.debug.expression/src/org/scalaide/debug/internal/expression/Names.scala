@@ -89,7 +89,7 @@ object Names {
       val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Unit)
     }
 
-    val `object` = "java.lang.Object"
+    val Object = classOf[java.lang.Object].getName
 
   }
 
@@ -133,6 +133,8 @@ object Names {
       "applyDynamic")
 
     val :: = "scala.collection.immutable.::"
+
+    val seq = "scala.collection.Seq"
 
     val rangeInclusive = "scala.collection.immutable.Range$Inclusive"
     val range = "scala.collection.immutable.Range"

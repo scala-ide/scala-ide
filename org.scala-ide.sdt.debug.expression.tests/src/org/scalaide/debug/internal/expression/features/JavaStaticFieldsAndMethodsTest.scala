@@ -50,7 +50,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   @Test
   def invokeStaticVarArgsMethodsOfClass(): Unit = {
     eval("JavaLibClass.staticVarArgMethod(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
-    eval("JavaLibClass.staticGenericVarArgMethod[java.lang.Double](1, 2, 3)", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.`object`))
+    eval("JavaLibClass.staticGenericVarArgMethod[java.lang.Double](1, 2, 3)", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.Object))
   }
 
   @Test

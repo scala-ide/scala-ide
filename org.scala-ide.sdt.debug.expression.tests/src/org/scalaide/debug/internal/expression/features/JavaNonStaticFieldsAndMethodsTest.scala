@@ -45,8 +45,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("""javaLibClass.normalStringToChange = "tesseract"; javaLibClass.normalStringToChange""", "tesseract", Java.boxed.String)
   }
 
-  // TODO this should be enabled or logged as an issue
-  @Ignore("Fails when running whole test suite - java.lang.IndexOutOfBoundsException: 0 from scala.reflect.internal.Importers$StandardImporter.recreateOrRelink$1")
+  @Ignore("Fails when running whole test suite with https://issues.scala-lang.org/browse/SI-9218")
   @Test
   def invokeGenericMethods(): Unit = {
     eval("javaLibClass.genericMethod(false)", false, Java.boxed.Boolean)
@@ -61,11 +60,10 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("javaLibClass.varArgMethod(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
   }
 
-  // TODO this should be enabled or logged as an issue
-  @Ignore("Fails when running whole test suite - java.lang.IndexOutOfBoundsException: 0 from scala.reflect.internal.Importers$StandardImporter.recreateOrRelink$1")
+  @Ignore("Fails when running whole test suite with https://issues.scala-lang.org/browse/SI-9218")
   @Test
   def invokeGenericVarArgsMethod(): Unit =
-    eval("javaLibClass.varArgGenericMethod[java.lang.Double](1.0, 2.0, 3.0)", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.`object`))
+    eval("""javaLibClass.varArgGenericMethod[String]("1.0", "2.0", "3.0")""", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.Object))
 }
 
 object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase)

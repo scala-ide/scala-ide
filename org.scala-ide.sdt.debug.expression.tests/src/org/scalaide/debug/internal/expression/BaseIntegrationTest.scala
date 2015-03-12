@@ -43,7 +43,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
   /**
    * Checks if given error type is thrown i.e. when given operation is not permitted for given type
    */
-  protected def evalWithToolboxError(code: String): Unit = {
+  protected def expectReflectiveCompilationError(code: String): Unit = {
     try {
       runInEclipse(code).toString
       fail(s"ToolBoxError should be thrown")

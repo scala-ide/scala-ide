@@ -19,9 +19,7 @@ trait VarArgSupport {
 
   protected def context: JdiContext
 
-  protected val seqName = "scala.collection.Seq"
-
-  private def seqObjectRef: ObjectReference = context.objectByName(seqName)
+  private def seqObjectRef: ObjectReference = context.objectByName(Names.Scala.seq)
 
   private def emptyListRef: ObjectReference = {
     def emptyMethod = context.methodOn(seqObjectRef, "empty", arity = 0)
@@ -29,7 +27,7 @@ trait VarArgSupport {
   }
 
   protected def packToVarArg(proxies: Seq[JdiProxy]): ObjectReference = {
-    def addMethod = context.methodOn(seqName, "$plus$colon")
+    def addMethod = context.methodOn(Names.Scala.seq, "+:", arity = 2)
     def canBuildFromMethod = context.methodOn(seqObjectRef, "canBuildFrom", arity = 0)
     def canBuildFrom = seqObjectRef.invokeMethod(context.currentThread(), canBuildFromMethod, List[Value]())
 

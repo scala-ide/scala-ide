@@ -90,8 +90,7 @@ trait Stringifier {
 
     val typeString = array.__underlying.`type` match {
       case arrayType: ArrayType =>
-        val ct = arrayType.componentType
-        val argumentType = TypeNameMappings.javaNameToScalaName(ct.name)
+        val argumentType = TypeNameMappings.javaNameToScalaName(arrayType.componentTypeName)
         Scala.Array(argumentType)
     }
     formatString(stringValue, typeString)

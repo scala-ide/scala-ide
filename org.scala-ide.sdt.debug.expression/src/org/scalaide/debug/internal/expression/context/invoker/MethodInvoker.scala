@@ -9,9 +9,6 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.Arity
-import org.scalaide.debug.internal.expression.Names
-import org.scalaide.debug.internal.expression.OnSide
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -52,7 +49,7 @@ trait MethodInvoker extends HasLogger {
 
       case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) => primitive.name == boxed.primitiveName
 
-      case (objectType, _, refType: ReferenceType) if objectType.name == Names.Java.`object` => true
+      case (objectType, _, refType: ReferenceType) if objectType.name == Names.Java.Object => true
 
       case (refType: ClassType, _, classType: ClassType) => isSuperClassOf(refType)(classType)
 
@@ -60,10 +57,6 @@ trait MethodInvoker extends HasLogger {
 
       case _ => false
     }
-  } onSide { result =>
-    val verb = if (result) " matches " else " does not match "
-    val proxyTpe = Option(proxy.__underlying).map(_.referenceType.toString).getOrElse("null")
-    logger.debug("Proxy of type: " + proxyTpe + verb + tpe)
   }
 
   private def isSuperClassOf(parentClass: ClassType)(thisClass: ClassType): Boolean = {
@@ -112,9 +105,8 @@ trait BaseMethodInvoker extends MethodInvoker {
     method.arity == args.length &&
       checkTypes(argumentTypesLoaded(method, args.head.proxyContext))
 
-  protected final def checkTypes(types: Seq[Type]): Boolean = types.zip(args).forall {
-    case (tpe, proxy) => conformsTo(proxy, tpe)
-  }
+  protected final def checkTypes(types: Seq[Type]): Boolean =
+    args.zip(types).forall((conformsTo _).tupled)
 
   /**
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed

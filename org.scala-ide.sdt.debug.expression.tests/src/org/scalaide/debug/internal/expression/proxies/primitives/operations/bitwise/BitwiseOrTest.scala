@@ -21,8 +21,8 @@ class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
     eval("byte | char2", byte | char2, Java.boxed.Integer)
     eval("byte | int2", byte | int2, Java.boxed.Integer)
     eval("byte | long2", byte | long2, Java.boxed.Long)
-    evalWithToolboxError("byte | float")
-    evalWithToolboxError("byte | double")
+    expectReflectiveCompilationError("byte | float")
+    expectReflectiveCompilationError("byte | double")
   }
 
   @Test
@@ -32,8 +32,8 @@ class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
     eval("short | char2", short | char2, Java.boxed.Integer)
     eval("short | int2", short | int2, Java.boxed.Integer)
     eval("short | long2", short | long2, Java.boxed.Long)
-    evalWithToolboxError("short | float")
-    evalWithToolboxError("short | double")
+    expectReflectiveCompilationError("short | float")
+    expectReflectiveCompilationError("short | double")
   }
 
   @Test
@@ -43,8 +43,8 @@ class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
     eval("char | char2", char | char2, Java.boxed.Integer)
     eval("char | int2", char | int2, Java.boxed.Integer)
     eval("char | long2", char | long2, Java.boxed.Long)
-    evalWithToolboxError("char | float")
-    evalWithToolboxError("char | double")
+    expectReflectiveCompilationError("char | float")
+    expectReflectiveCompilationError("char | double")
   }
 
   @Test
@@ -54,8 +54,8 @@ class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
     eval("int | char", int | char, Java.boxed.Integer)
     eval("int | int2", int | int2, Java.boxed.Integer)
     eval("int | long2", int | long2, Java.boxed.Long)
-    evalWithToolboxError("int | float")
-    evalWithToolboxError("int | double")
+    expectReflectiveCompilationError("int | float")
+    expectReflectiveCompilationError("int | double")
   }
 
   @Test
@@ -65,30 +65,30 @@ class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
     eval("long | char", long | char, Java.boxed.Long)
     eval("long | int2", long | int2, Java.boxed.Long)
     eval("long | long2", long | long2, Java.boxed.Long)
-    evalWithToolboxError("long | float")
-    evalWithToolboxError("long | double")
+    expectReflectiveCompilationError("long | float")
+    expectReflectiveCompilationError("long | double")
   }
 
   @Test
   def `float | byte`(): Unit = {
-    evalWithToolboxError("float | byte2")
-    evalWithToolboxError("float | short2")
-    evalWithToolboxError("float | char")
-    evalWithToolboxError("float | int2")
-    evalWithToolboxError("float | long2")
-    evalWithToolboxError("float | float2")
-    evalWithToolboxError("float | double")
+    expectReflectiveCompilationError("float | byte2")
+    expectReflectiveCompilationError("float | short2")
+    expectReflectiveCompilationError("float | char")
+    expectReflectiveCompilationError("float | int2")
+    expectReflectiveCompilationError("float | long2")
+    expectReflectiveCompilationError("float | float2")
+    expectReflectiveCompilationError("float | double")
   }
 
   @Test
   def `double | sth`(): Unit = {
-    evalWithToolboxError("double | byte2")
-    evalWithToolboxError("double | short2")
-    evalWithToolboxError("double | char")
-    evalWithToolboxError("double | int2")
-    evalWithToolboxError("double | long2")
-    evalWithToolboxError("double | float")
-    evalWithToolboxError("double | double2")
+    expectReflectiveCompilationError("double | byte2")
+    expectReflectiveCompilationError("double | short2")
+    expectReflectiveCompilationError("double | char")
+    expectReflectiveCompilationError("double | int2")
+    expectReflectiveCompilationError("double | long2")
+    expectReflectiveCompilationError("double | float")
+    expectReflectiveCompilationError("double | double2")
   }
 }
 

@@ -75,7 +75,7 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
     eval(""" varargsAndPrimitiveCoercion.f(1) """, "1", Java.boxed.Integer)
     eval(""" varargsAndPrimitiveCoercion.f(1.0) """, "1.0", Java.boxed.Double)
     eval(""" varargsAndPrimitiveCoercion.f(1, 1.0) """, "2.0", Java.boxed.Double)
-    evalWithToolboxError(""" varargsAndPrimitiveCoercion.f() """)
+    expectReflectiveCompilationError(""" varargsAndPrimitiveCoercion.f() """)
   }
 }
 

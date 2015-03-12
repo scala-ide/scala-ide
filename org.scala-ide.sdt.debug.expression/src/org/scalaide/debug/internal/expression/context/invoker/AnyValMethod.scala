@@ -13,7 +13,7 @@ import com.sun.jdi.Value
 
 /**
  * Custom handler for AnyVal calls
- * Call like on.method(restOfParams) is replaced with CompanionObject.method(on, restOfParams) or (new BoxingClass(on).method(restOfParams)
+ * Call like on.method(restOfParams) is replaced with `CompanionObject.method(on, restOfParams)` or `new BoxingClass(on).method(restOfParams)`
  */
 class AnyValMethod(proxy: JdiProxy, methodName: String, args: Seq[JdiProxy], realThisType: Option[String], context: JdiContext, invoker: JdiMethodInvoker)
     extends MethodInvoker {

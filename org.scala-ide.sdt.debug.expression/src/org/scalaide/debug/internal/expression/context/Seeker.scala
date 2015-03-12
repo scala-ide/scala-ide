@@ -4,7 +4,8 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
+import scala.reflect.NameTransformer
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
@@ -100,17 +101,34 @@ trait Seeker {
       case _: InvocationException => None
     }
 
-  /** Helper for getting methods from given class name */
-  final def methodOn(className: String, methodName: String): Method = {
-    val classRef = jvm.classesByName(className).head
-    classRef.methodsByName(methodName).head
+  /**
+   * Helper for getting methods from given class name.
+   * `methodName` is encoded if needed (like `+:` is changed to `$plus$colon`).
+   *
+   * @param className name of class to load method from
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws ClassNotFoundException when class does not exist
+   * @throws NoSuchMethodError when method is not found
+   */
+  final def methodOn(className: String, methodName: String, arity: Int): Method = {
+    val classRef = jvm.classesByName(className).headOption.getOrElse(
+      throw new ClassNotFoundException(s"Class with name $className not found."))
+    classRef.methodsByName(NameTransformer.encode(methodName)).find(_.arity == arity).getOrElse(
+      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${classRef.name}"))
   }
 
-  /** Helper for getting method from ObjectReference */
+  /** Helper for getting method from ObjectReference
+   *
+   * @param obj reference on which method is looked
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws NoSuchMethodError when method is not found
+   */
   final def methodOn(obj: ObjectReference, methodName: String, arity: Int): Method = {
-    val methods = obj.referenceType().methodsByName(methodName)
+    val methods = obj.referenceType().methodsByName(NameTransformer.encode(methodName))
     methods.find(_.arity == arity).getOrElse(
-      throw new RuntimeException(s"Method: $methodName with arity: $arity not found on ${obj.`type`}"))
+      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${obj.`type`}"))
   }
 
   /**

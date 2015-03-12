@@ -41,7 +41,6 @@ private[context] trait JdiMethodInvoker {
    * WARNING - this method is used in reflective compilation.
    * If you change it's name, package or behavior, make sure to change it also.
    *
-   *
    * @param on
    * @param onScalaType Scala type of object laying under proxy (e.g. for '1' in code '1.toDouble' it will be RichInt)
    * if you are not aware which type Scala see for object or you are not interested in e.g. AnyVal method calls just pass None here
@@ -87,30 +86,31 @@ private[context] trait JdiMethodInvoker {
     methodName: String,
     methodArgs: Seq[JdiProxy] = Seq.empty): Option[Value] = {
 
-    proxy match {
-      case StaticCallClassJdiProxy(_, classType) =>
-        val javaStaticMethod = new JavaStaticMethod(classType, methodName, methodArgs, this)
+    val standardMethod = new StandardMethod(proxy, methodName, methodArgs, this)
+    def varArgMethod = new ScalaVarArgMethod(proxy, methodName, methodArgs, this)
+    def javaVarArgMethod = new JavaVarArgMethod(proxy, methodName, methodArgs, this)
+    def stringConcat = new StringConcatenationMethod(proxy, methodName, methodArgs)
+    def anyValMethod = new AnyValMethod(proxy, methodName, methodArgs, onRealType, this, this)
+    def javaField = new JavaField(proxy, methodName, methodArgs, this)
 
-        javaStaticMethod()
-      // TODO - java static vararg method
-      case _ =>
-        val standardMethod = new StandardMethod(proxy, methodName, methodArgs, this)
-        def varArgMethod = new ScalaVarArgMethod(proxy, methodName, methodArgs, this)
-        def javaVarArgMethod = new JavaVarArgMethod(proxy, methodName, methodArgs, this)
-        def stringConcat = new StringConcatenationMethod(proxy, methodName, methodArgs)
-        def anyValMethod = new AnyValMethod(proxy, methodName, methodArgs, onRealType, this, this)
-        def javaField = new JavaField(proxy, methodName, methodArgs, this)
-
-        standardMethod() orElse
-          varArgMethod() orElse
-          javaVarArgMethod() orElse
-          stringConcat() orElse
-          anyValMethod() orElse
-          javaField()
-    }
+    standardMethod() orElse
+      varArgMethod() orElse
+      javaVarArgMethod() orElse
+      stringConcat() orElse
+      anyValMethod() orElse
+      javaField()
   }
 
-  /** TODO - document this, it's an API */
+  /**
+   * Invokes Java-style static method.
+   *
+   * @param classType type on which method is invoked
+   * @param methodName name of method to invoke
+   * @tparam Result type of result (subclass of `JdiProxy`)
+   * @throws ClassCastException if result is not of given type
+   * @throws NoSuchMethodError if method does not exist
+   * @return value returned from method
+   */
   final def invokeJavaStaticMethod[Result <: JdiProxy](
     classType: ClassType,
     methodName: String,
@@ -126,7 +126,16 @@ private[context] trait JdiMethodInvoker {
     valueProxy(value).asInstanceOf[Result]
   }
 
-  /** TODO - document this, it's an API */
+  /**
+   * Gets value from Java-style static field.
+   *
+   * @param referenceType type from which field is got
+   * @param fieldName name of field to get value from
+   * @tparam Result type of result (subclass of `JdiProxy`)
+   * @throws ClassCastException if result is not of given type
+   * @throws NoSuchMethodError if method does not exist
+   * @return value of given field
+   */
   final def getJavaStaticField[Result <: JdiProxy](referenceType: ReferenceType, fieldName: String): Result = {
     val fieldAccessor = new JavaStaticFieldGetter(referenceType, fieldName)
     def noSuchMethod() = throw new NoSuchMethodError(s"type ${referenceType.name} has no static method named $fieldName")
@@ -135,9 +144,17 @@ private[context] trait JdiMethodInvoker {
     valueProxy(value).asInstanceOf[Result]
   }
 
-  /** TODO - document this, it's an API */
-  final def setJavaStaticField(classType: ClassType, fieldName: String, newValue: Any): UnitJdiProxy = {
-    val fieldAccessor = new JavaStaticFieldSetter(classType, fieldName, newValue.asInstanceOf[JdiProxy], this)
+  /**
+   * Sets new value to a Java-style static field.
+   *
+   * @param classType ClassType on which field is set
+   * @param fieldName name of field
+   * @param newValue new value (as instance of JdiProxy)
+   * @throws NoSuchMethodError if method does not exist
+   * @return UnitJdiProxy
+   */
+  final def setJavaStaticField(classType: ClassType, fieldName: String, newValue: JdiProxy): UnitJdiProxy = {
+    val fieldAccessor = new JavaStaticFieldSetter(classType, fieldName, newValue, this)
     val value = fieldAccessor().getOrElse {
       throw new NoSuchFieldError(s"type ${classType.name} has no static field named $fieldName")
     }
@@ -154,7 +171,6 @@ private[context] trait JdiMethodInvoker {
    * @param args list of list of arguments to pass to method
    * @param implicits list of implicit arguments
    * @throws NoSuchMethodError when matching constructor is not found
-   * @throws IllegalArgumentException when result is not of requested type
    */
   final def newInstance(
     className: String,
