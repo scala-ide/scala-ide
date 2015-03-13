@@ -146,7 +146,7 @@ class JdiContext protected (protected val expressionClassLoader: ClassLoader, de
   /** JVM underlying current thread. */
   protected def jvm: VirtualMachine = currentThread().virtualMachine()
 
-  protected def currentThread(): ThreadReference = debugState.currentThread()
+  protected[expression] def currentThread(): ThreadReference = debugState.currentThread()
 
   protected def currentFrame(): StackFrame = debugState.currentFrame()
 

@@ -24,5 +24,5 @@ case class NullJdiProxy(proxyContext: JdiContext) extends JdiProxy {
   override def selectDynamic(name: String): JdiProxy = fail(name)
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit = fail(name)
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy = fail(name)
 }

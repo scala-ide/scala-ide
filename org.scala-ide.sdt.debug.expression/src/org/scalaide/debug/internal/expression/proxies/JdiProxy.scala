@@ -8,8 +8,8 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
@@ -57,8 +57,8 @@ trait JdiProxy extends Dynamic {
     }
 
   /** Implementation of variable mutation. */
-  def updateDynamic(name: String)(value: Any): Unit =
-    proxyContext.invokeMethod(this, genericThisType, s"${name}_=", Seq(value.asInstanceOf[JdiProxy]))
+  def updateDynamic(name: String)(value: Any): UnitJdiProxy =
+    proxyContext.invokeMethod(this, genericThisType, s"${name}_=", Seq(value.asInstanceOf[JdiProxy])).asInstanceOf[UnitJdiProxy]
 
   /** Forwards equality to debugged jvm */
   def ==(other: JdiProxy): JdiProxy =
@@ -138,7 +138,7 @@ class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiPr
   override def selectDynamic(name: String): JdiProxy = __outer.selectDynamic(name)
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit = __outer.updateDynamic(name)(value)
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy = __outer.updateDynamic(name)(value)
 
   /** Forwards equality to debugged jvm */
   override def ==(other: JdiProxy): JdiProxy = __outer.==(other)

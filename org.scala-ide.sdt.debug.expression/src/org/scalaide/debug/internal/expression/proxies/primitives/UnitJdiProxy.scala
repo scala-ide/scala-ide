@@ -24,5 +24,5 @@ case class UnitJdiProxy(proxyContext: JdiContext) extends JdiProxy {
   override def selectDynamic(name: String): JdiProxy = fail
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit = fail
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy = fail
 }

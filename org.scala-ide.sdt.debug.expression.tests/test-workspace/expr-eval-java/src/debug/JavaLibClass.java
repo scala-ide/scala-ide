@@ -141,6 +141,22 @@ public class JavaLibClass {
     return x;
   }
 
+  public int[] varArgMethod(int... x) {
+      return x;
+  }
+
+  public <T> T[] varArgGenericMethod(T... x) {
+      return x;
+  }
+
+  public static int[] staticVarArgMethod(int... x) {
+      return x;
+  }
+
+  public static <T> T[] staticGenericVarArgMethod(T... x) {
+      return x;
+  }
+
   @Override
   public String toString() {
     return "JavaLibClass()";

@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
 import scala.collection.JavaConversions._
 
@@ -25,7 +26,7 @@ trait JdiClassLoader {
     val classObj = jvm.classesByName("java.lang.Class").head.asInstanceOf[ClassType]
     val byName = classObj.methodsByName("forName").head
     val classMirror = jvm.mirrorOf(name)
-    classObj.invokeMethod(currentThread, byName, List(classMirror), ObjectReference.INVOKE_SINGLE_THREADED)
+    classObj.invokeMethod(currentThread, byName, List(classMirror))
   }
 
   /**
@@ -55,11 +56,10 @@ trait JdiClassLoader {
     val parseMetod = dateTypeConverterClazzReference.methodsByName("parseBase64Binary").head
 
     // encoded
-    val remoteByteArray = dateTypeConverterClazzReference.invokeMethod(currentThread, parseMetod, List(remoteByteStrings),
-      ObjectReference.INVOKE_SINGLE_THREADED)
+    val remoteByteArray = dateTypeConverterClazzReference.invokeMethod(currentThread, parseMetod, List(remoteByteStrings))
 
     // load the class
-    classLoaderRef.invokeMethod(currentThread, defineClassMethod, List(remoteByteArray, jvm.mirrorOf(0), jvm.mirrorOf(code.length)),
-      ObjectReference.INVOKE_SINGLE_THREADED).asInstanceOf[ClassObjectReference]
+    val args = List(remoteByteArray, jvm.mirrorOf(0), jvm.mirrorOf(code.length))
+    classLoaderRef.invokeMethod(currentThread, defineClassMethod, args).asInstanceOf[ClassObjectReference]
   }
 }

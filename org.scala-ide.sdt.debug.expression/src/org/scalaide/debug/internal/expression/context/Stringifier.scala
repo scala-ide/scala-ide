@@ -6,16 +6,19 @@ package org.scalaide.debug.internal.expression.context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.Names
+import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.TypeNameMappings
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
-import org.scalaide.debug.internal.expression.TypeNameMappings
 
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
+import com.sun.jdi.ClassType
+import com.sun.jdi.ObjectReference
 import com.sun.jdi.StringReference
 import com.sun.jdi.Value
 
@@ -41,7 +44,7 @@ trait Stringifier {
   /**
    * String representation of given proxy. Contains value and type.
    */
-  def show(proxy: JdiProxy, withType: Boolean = true): String = proxy match {
+  final def show(proxy: JdiProxy, withType: Boolean = true): String = proxy match {
     case _: NullJdiProxy => formatString(Scala.nullLiteral, Scala.nullType)
 
     case _: UnitJdiProxy => formatString(Scala.unitLiteral, Scala.unitType)
@@ -56,9 +59,18 @@ trait Stringifier {
   private def formatString(value: String, typeName: String) = s"$value (of type: $typeName)"
 
   private def handleArray(array: ArrayJdiProxy[_]): String = {
+
+    // to avoid 'java.lang.Double (id=423)' in results
+    def handleBoxedPrimitive(value: Value): String = value match {
+      case objectRef: ObjectReference if Java.boxed.all.contains(objectRef.`type`.toString) =>
+        val field = objectRef.referenceType.asInstanceOf[ClassType].fieldByName("value")
+        objectRef.getValue(field).toString
+      case other => other.toString
+    }
+
     // responsible for converting value to its string rep
     def inner(value: Value): String = {
-      var x = Option(value).fold("null")(_.toString)
+      var x = Option(value).fold("null")(handleBoxedPrimitive)
       val isString = x.head == '\"' && x.last == '\"'
       // remove " from strings
       if (isString) x = x.drop(1).dropRight(1)

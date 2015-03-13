@@ -38,8 +38,8 @@ class UnaryOperatorsTest extends BaseIntegrationTest(UnaryOperatorsTest) {
 
   @Test
   def `unary ~ (bitwise negation)`(): Unit = {
-    evalWithToolboxError("~float")
-    evalWithToolboxError("~double")
+    expectReflectiveCompilationError("~float")
+    expectReflectiveCompilationError("~double")
     eval("~int", ~int, Java.boxed.Integer)
     eval("~long", ~long, Java.boxed.Long)
     eval("~byte", ~byte, Java.boxed.Integer)

@@ -47,7 +47,7 @@ object AnonymousFunctionSupport {
 
       (filesAfterCompilation diff filesBeforeCompilation).toSeq match {
         case Seq(newClassDir) => newClassDir
-        case _ => throw new RuntimeException("Multiple package created for one compile method call")
+        case _ => throw new RuntimeException("Multiple packages were created during single lambda compilation.")
       }
     }
 

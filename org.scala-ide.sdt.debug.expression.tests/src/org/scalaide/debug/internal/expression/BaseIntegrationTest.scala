@@ -16,7 +16,7 @@ import org.scalaide.logging.HasLogger
 
 class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion) extends HasLogger {
 
-  private val resultRegex = s"(.+) \\(of type: (.+)\\)".r
+  private val resultRegex = s"(.*) \\(of type: (.+)\\)".r
 
   /**
    * Test code and returns tuple with (returnedValue, returnedType)
@@ -43,20 +43,25 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
   /**
    * Checks if given error type is thrown i.e. when given operation is not permitted for given type
    */
-  protected def evalWithToolboxError(code: String): Unit = {
+  protected def expectReflectiveCompilationError(code: String): Unit = {
     try {
       runInEclipse(code).toString
       fail(s"ToolBoxError should be thrown")
     } catch {
-      case expected: ToolBoxError => assertTrue(true)
+      case expected: ReflectiveCompilationFailure => // OK
+      case other: Throwable =>
+        other.printStackTrace()
+        fail(s"Expected ReflectiveCompilationFailure, got $other")
     }
   }
 
-  protected def runInEclipse(code: String): JdiProxy =
-    companion.expressionEvaluator.apply(code) match {
+  protected def runInEclipse(code: String): JdiProxy = {
+    val eval = companion.expressionEvaluator
+    ExpressionException.recoverFromErrors(eval.apply(code), eval.createContext(), logger) match {
       case Success(result) => result
       case Failure(exception) => throw exception
     }
+  }
 
   /**
    * Some tests fail for an unknown reason on Java 8. Therefore, if we are on

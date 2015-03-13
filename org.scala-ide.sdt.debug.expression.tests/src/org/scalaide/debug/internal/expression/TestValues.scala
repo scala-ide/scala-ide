@@ -208,17 +208,7 @@ object TestValues {
   object VarargsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-varargs"
     val fileName = "Varargs"
-    val breakpointLine = 43
-
-    val x = 13
-    val y = 17
-    val i1 = 1
-    val i2 = 2
-    val i3 = 3
-    val i4 = 4
-    val l1 = 1L
-    val l2 = 2L
-    val l4 = 4L
+    val breakpointLine = 45
   }
 
   object VariablesTestCase extends IntegrationTestCaseSettings {

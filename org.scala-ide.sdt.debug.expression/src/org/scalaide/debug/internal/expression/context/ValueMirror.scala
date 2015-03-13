@@ -14,11 +14,12 @@ import com.sun.jdi.StringReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.ByteValue
 import com.sun.jdi.ShortValue
+import com.sun.jdi.VoidValue
 
 /**
  * Type class for mirroring primitives and String on JVM in JdiContext.
  */
-@implicitNotFound("Mirroring type $T is not supported.")
+@implicitNotFound("Mirroring type ${ValueType} is not supported.")
 sealed trait ValueMirror[ValueType, ReturnType] {
   def mirrorOf(value: ValueType, jvm: VirtualMachine): ReturnType
 }
@@ -51,4 +52,6 @@ object ValueMirror {
   implicit val floatMirror = ValueMirror[Float, FloatValue](_ mirrorOf _)
 
   implicit val doubleMirror = ValueMirror[Double, DoubleValue](_ mirrorOf _)
+
+  implicit val voidMirror = ValueMirror[Unit, VoidValue]((jvm, value) => jvm.mirrorOfVoid())
 }
