@@ -27,6 +27,7 @@ object Values extends App {
     val anyVal: LibAnyVal = 2
 
     val objectVal = Libs
+    val objectList = List(Libs, Libs)
 
     val nullVal = null
     val nullValString: String = null

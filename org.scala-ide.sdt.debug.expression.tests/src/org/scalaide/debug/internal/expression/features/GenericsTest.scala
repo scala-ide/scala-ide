@@ -20,12 +20,9 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
   def testFieldOfGenericTypeFromMethod(): Unit =
     eval("b", "ala", Names.Java.boxed.String)
 
-  @Ignore("TODO - O-7394 - add support for generic method and class parameters")
   @Test
   def testFieldOfGenericTypeFromMethodThatRequiresExactType(): Unit =
     eval("b.filter('a' ==)", "aa", Names.Java.boxed.String)
-
-
 }
 
 object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) {
