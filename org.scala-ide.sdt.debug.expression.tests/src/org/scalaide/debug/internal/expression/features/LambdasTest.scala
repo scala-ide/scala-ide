@@ -74,7 +74,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def `libClass.performByName("ala".mkString) `(): Unit =
     eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.boxed.String)
 
-  @Ignore("TODO - O-7447 Support for nested lambdas")
+
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =
     eval(""" multilist.map(list => list.map(_ + 1)) """, "List(List(2), List(3, 4))", Scala.::)
@@ -86,11 +86,14 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   @Test
   def genericTypedArgument(): Unit =
     eval(""" multilist.map(list => list.sum) """, "List(1, 5)", Scala.::)
+  
+  @Test
+  def `lambda inside lambda inside lambda: multilist.map(list => list.map(_ + 1))`(): Unit =
+    eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """, "List(List(2), List(9, 11))", Scala.::)
 
-  @Ignore("TODO - O-5770 - add support for nested lambdas")
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =
-    eval(""" libClass.performOnList(list => list.map(_ + 1)) """, "List(2, 3, 4)", Scala.::)
+    eval(""" libClass.performOnList(list => list.map(_ + 1)) """, "List(2, 3)", Scala.::)
 }
 
 object LambdasTest extends BaseIntegrationTestCompanion
