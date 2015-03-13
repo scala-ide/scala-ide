@@ -101,7 +101,8 @@ trait BaseMethodInvoker extends MethodInvoker {
   protected def args: Seq[JdiProxy]
 
   // method match for this call
-  private def methodMatch(method: Method) =
+  private def matchesSignature(method: Method): Boolean =
+    !method.isAbstract &&
     method.arity == args.length &&
       checkTypes(argumentTypesLoaded(method, args.head.proxyContext))
 
@@ -118,7 +119,7 @@ trait BaseMethodInvoker extends MethodInvoker {
   protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)
 
   // found methods
-  protected def matching: Seq[Method] = allMethods.filter(methodMatch)
+  protected def matching: Seq[Method] = allMethods.filter(matchesSignature)
 
   // handles situation when you have multiple overloads
   protected def handleMultipleOverloads(candidates: Seq[Method], invoker: Method => Value): Option[Value] = {
