@@ -79,6 +79,14 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =
     eval(""" multilist.map(list => list.map(_ + 1)) """, "List(List(2), List(3, 4))", Scala.::)
 
+  @Test
+  def objectTypedArgument(): Unit =
+    eval(""" objectList.map(list => list.value) """, "List(11, 11)", Scala.::)
+
+  @Test
+  def genericTypedArgument(): Unit =
+    eval(""" multilist.map(list => list.sum) """, "List(1, 5)", Scala.::)
+
   @Ignore("TODO - O-5770 - add support for nested lambdas")
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =

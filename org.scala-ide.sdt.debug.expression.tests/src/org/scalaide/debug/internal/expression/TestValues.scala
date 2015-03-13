@@ -11,7 +11,7 @@ object TestValues {
   object AppObjectTestCase extends IntegrationTestCaseSettings {
     val projectName = ValuesTestCase.projectName
     val fileName = ValuesTestCase.fileName
-    val breakpointLine = 49
+    val breakpointLine = 50
   }
 
   object ArgumentsTestCase extends IntegrationTestCaseSettings {
@@ -182,7 +182,7 @@ object TestValues {
   object ValuesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "Values"
-    val breakpointLine = 44
+    val breakpointLine = 45
 
     val byte: Byte = 4
     val byte2: Byte = 3
