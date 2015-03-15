@@ -164,7 +164,6 @@ abstract class DeclarationPrinter extends HasLogger {
   }
 
   def showFunction(tpe: TypeRef): String = {
-    import tpe._
     import definitions._
 
     val noArgsString = s"${showSymbolName(tpe.sym)}"

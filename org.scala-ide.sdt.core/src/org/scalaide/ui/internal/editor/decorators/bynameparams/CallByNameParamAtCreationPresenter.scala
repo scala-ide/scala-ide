@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor.decorators.bynameparams
 
-import org.scalaide.core.extensions.SemanticHighlightingParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler

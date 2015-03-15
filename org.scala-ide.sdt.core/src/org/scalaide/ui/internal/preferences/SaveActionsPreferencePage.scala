@@ -56,7 +56,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     timeoutValue = new Text(timeout, SWT.BORDER | SWT.SINGLE)
     timeoutValue.setText(prefStore.getString(SaveActionExtensions.SaveActionTimeoutId))
     timeoutValue.addModifyListener { e: ModifyEvent =>
-      def error = {
+      def error() = {
         setValid(false)
         setErrorMessage(s"Timeout value needs to be >= $MinSaveActionTimeout ms")
       }
@@ -143,7 +143,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     super.performDefaults
   }
 
-  private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
+  private def mkTextArea(parent: Composite, lineHeight: Int, initialText: String = "", columnSize: Int): Text = {
     val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
     t.setText(initialText)
     t.setLayoutData({

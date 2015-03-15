@@ -14,8 +14,6 @@ import org.scalaide.util.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
 
-  private var document: IDocument = _
-
   /**
    * The underlying compilation unit, in general implemented by a ScalaSourceFile.
    *
@@ -29,15 +27,12 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
   // for which reconciliation of the locally opened editor makes little sense
   // (it's more properly a ScalaClassFileViewer) but we still want to flush
   // scheduled reloads nonetheless
-  private val listeningEditor : Option[IJavaReconcilingListener] =
+  private val listeningEditor: Option[IJavaReconcilingListener] =
     icuEditor.asInstanceOfOpt[IJavaReconcilingListener]
 
-  override def setDocument(doc: IDocument) {
-    document = doc
-  }
+  override def setDocument(doc: IDocument) {}
 
-  override def setProgressMonitor(pMonitor : IProgressMonitor) {
-  }
+  override def setProgressMonitor(pMonitor: IProgressMonitor) {}
 
   override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion) {
     logger.debug("Incremental reconciliation not implemented.")

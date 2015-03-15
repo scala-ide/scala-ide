@@ -28,7 +28,7 @@ class ContextualizedObjectInputStream(in: InputStream) extends ObjectInputStream
 
   override def resolveClass(desc: ObjectStreamClass) = {
 
-    val res  = Try(Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
+    val res = Try[Class[_]](Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
     res match {
       case Success(cl) => cl
       case Failure(thrown) => throw new IllegalAccessException("Something went horribly wrong deserializing")

@@ -352,7 +352,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     ScalaInstallation.bundledInstallations.map(_.library.classJar) contains library
   }
 
-  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary], canFixInstallationFromScalaLib: Boolean = false): Seq[(Int, String, String)] = {
+  private def validateScalaLibrary(fragmentRoots: Seq[ScalaLibrary], canFixInstallationFromScalaLib: Boolean): Seq[(Int, String, String)] = {
     import org.scalaide.util.internal.CompilerUtils._
 
     def incompatibleScalaLibrary(scalaLib: ScalaLibrary) = scalaLib match {

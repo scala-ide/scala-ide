@@ -61,7 +61,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     setUpSelectionListener
   }
 
-  private def setUpSelectionListener {
+  private def setUpSelectionListener() = {
     enableSemanticHighlightingCheckBox.addSelectionListener { () =>
       overlayStore.setValue(ENABLE_SEMANTIC_HIGHLIGHTING, enableSemanticHighlightingCheckBox.getSelection)
       extraAccuracyCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)

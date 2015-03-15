@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.preferences
 
-import org.eclipse.jface.preference._
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer

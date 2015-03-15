@@ -5,7 +5,6 @@ import scala.reflect.internal.util.RangePosition
 import org.eclipse.jface.text.IRegion
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.logging.HasLogger
 import scala.reflect.internal.Flags
 
 private[classifier] trait SymbolTests { self: SymbolClassification =>

@@ -100,7 +100,7 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
 
       pos flatMap { p =>
         if (p eq NoPosition) None
-        else Some(cunit, p.point)
+        else Some((cunit, p.point))
       }
     }
 }

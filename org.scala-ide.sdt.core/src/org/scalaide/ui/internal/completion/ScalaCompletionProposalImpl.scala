@@ -38,7 +38,6 @@ import org.scalaide.util.internal.Commons
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
-import org.scalaide.ui.editor.hover.ScalaHover
 import org.scalaide.ui.internal.editor.hover.HoverControlCreator
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.editor.hover.IScalaHover
@@ -109,7 +108,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   /** Some additional info (like javadoc ...)
    */
   override def getAdditionalProposalInfo(): String = null  // Rather the next method is called.
-  override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation() orNull
+  override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation().orNull
 
   override def getSelection(d: IDocument): Point = null
   override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }

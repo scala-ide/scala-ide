@@ -35,11 +35,6 @@ object OSGiUtils {
     Option(bundle).map(b => Path.fromOSString(FileLocator.getBundleFile(b).getAbsolutePath()))
   }
 
-  private def allPathsInBundle(bundle: Bundle, path: String, filePattern: String): Iterator[IPath] = {
-    import scala.collection.JavaConverters._
-    bundle.findEntries(path, filePattern, false).asScala map urlToPath
-  }
-
   /**
    * Read the content of a file whose `filePath` points to a location in a
    * given `bundleId` and returns them. A [[scala.util.Failure]] is returned if

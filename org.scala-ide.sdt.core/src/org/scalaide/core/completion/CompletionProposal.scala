@@ -20,7 +20,6 @@ object CompletionContext {
   case object InfixMethodContext extends ContextType
 }
 
-
 /** A completion proposal coming from the Scala compiler. This
  *  class holds together data about completion proposals.
  *
@@ -125,7 +124,7 @@ case class CompletionProposal(
   private case object SimpleFunctionType {
     def unapply(fun: String): Option[(String, String)] = {
       fun.split("=>") match {
-        case Array(a, b) if !a.isEmpty => Some(a.trim, b.trim)
+        case Array(a, b) if !a.isEmpty => Some((a.trim, b.trim))
         case _                         => None
       }
     }
