@@ -3,12 +3,10 @@
 */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.{Test, Ignore}
+import org.junit.Ignore
+import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TestValues.MethodsAsFunctions._
 
 trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
 
@@ -41,13 +39,3 @@ trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
   @Test
   def composeMethods(): Unit = eval("(inc _ compose dec)(zero)", "0", Java.boxed.Integer)
 }
-
-@Ignore("Fails with 'Different class symbols have the same bytecode-level internal name'")
-class MethodsAsFunctionsInnerTraitTest extends BaseIntegrationTest(MethodsAsFunctionsInnerTraitTest) with MethodsAsFunctionsTest
-object MethodsAsFunctionsInnerTraitTest extends BaseIntegrationTestCompanion(MethodsAsFunctionsInnerTraitTestCase)
-
-class MethodsAsFunctionsInnerClassTest extends BaseIntegrationTest(MethodsAsFunctionsInnerClassTest) with MethodsAsFunctionsTest
-object MethodsAsFunctionsInnerClassTest extends BaseIntegrationTestCompanion(MethodsAsFunctionsInnerClassTestCase)
-
-class MethodsAsFunctionsInnerObjectTest extends BaseIntegrationTest(MethodsAsFunctionsInnerObjectTest) with MethodsAsFunctionsTest
-object MethodsAsFunctionsInnerObjectTest extends BaseIntegrationTestCompanion(MethodsAsFunctionsInnerObjectTestCase)
