@@ -12,7 +12,6 @@ import scala.util.Try
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.JdiProxyWrapper
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 import org.scalaide.logging.HasLogger
 
@@ -42,8 +41,6 @@ trait MethodInvoker extends HasLogger {
     else (tpe, proxy, proxy.__underlying.referenceType) match {
 
       case (arrayType: ArrayType, arrayProxy: ArrayJdiProxy[_], _) => arrayProxy.__underlying.`type` == arrayType
-
-      case (_, wrapper: JdiProxyWrapper, _) => conformsTo(wrapper.__outer, tpe)
 
       case _ if tpe == proxy.referenceType => true
 
@@ -80,7 +77,6 @@ trait MethodInvoker extends HasLogger {
 
   /** Gets underlying primitive from proxy or object if primitive is not needed. */
   protected def getValue(ofType: Type, fromProxy: JdiProxy): Value = (ofType, fromProxy) match {
-    case (tpe, parent: JdiProxyWrapper) => getValue(tpe, parent.__outer)
     case (_: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
     case (_, proxy) => proxy.__underlying
   }

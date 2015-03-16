@@ -90,7 +90,6 @@ trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
   /**
    * Creates JdiProxy based on given one. Handles following cases:
    * - for `NullJdiProxy` returns instance of `Proxy` type with null as underlying
-   * - for `JdiProxyWrapper` returns inside of wrapper
    * - for `Proxy` just returns it
    * - otherwise throws IllegalArgumentException
    *
@@ -107,7 +106,6 @@ object JdiProxyCompanion {
    */
   private[proxies] def unwrap[Proxy <: JdiProxy : ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
     case np: NullJdiProxy => apply(np.proxyContext, np.__underlying.asInstanceOf[Underlying])
-    case wrapper: JdiProxyWrapper => unwrap(wrapper.__outer)(apply)
     case proxy: Proxy => proxy
     case _ =>
       val className = classTag[Proxy].runtimeClass.getSimpleName
@@ -119,27 +117,3 @@ object JdiProxyCompanion {
  * Simplest implementation of [[org.scalaide.debug.internal.expression.proxies.JdiProxy]].
  */
 case class SimpleJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference) extends JdiProxy
-
-/**
- * Implementation of wrapper on JdiProxies. Stubs generated during reflective compilation extends from it.
- *
- * WARNING - this class is used in reflective compilation.
- * If you change it's name, package or behavior, make sure to change it also.
- */
-class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiProxy {
-  override protected[expression] val proxyContext: JdiContext = __outer.proxyContext
-
-  override protected[expression] def __underlying: ObjectReference = __outer.__underlying
-
-  /** Implementation of method application. */
-  override def applyDynamic(name: String)(args: Any*): JdiProxy = __outer.applyDynamic(name)(args: _*)
-
-  /** Implementation of field selection. */
-  override def selectDynamic(name: String): JdiProxy = __outer.selectDynamic(name)
-
-  /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): UnitJdiProxy = __outer.updateDynamic(name)(value)
-
-  /** Forwards equality to debugged jvm */
-  override def ==(other: JdiProxy): JdiProxy = __outer.==(other)
-}
