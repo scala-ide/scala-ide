@@ -12,6 +12,7 @@ import org.eclipse.jface.text.source.IAnnotationModelExtension2
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.editors.text.TextEditor
 
+@deprecated("Unnecessary complex class. Use DecoratedInteractiveEditor instead.", since = "4.1.0")
 trait SourceCodeEditor extends ISourceViewerEditor with InteractiveCompilationUnitEditor { self: TextEditor =>
 
   protected type UnderlyingCompilationUnit <: CompilationUnit
