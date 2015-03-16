@@ -1,18 +1,15 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import java.io.File
 
 import scala.io.Source
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.FunctionProxyArgumentTypeNotInferredException
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.NestedLambdaException
-import org.scalaide.debug.internal.expression.TypesContext
 
 object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
@@ -37,12 +34,16 @@ object AnonymousFunctionSupport {
    *
    * @param className part of class name that should define required class
    */
-  protected class ClassListener(className: String)(compile: () => Any) {
+  protected class ClassListener(className: String, lambdaCode: String)(compile: () => Any) {
     private val parentDirFile = new File(AnonymousFunctionSupport.tempDir)
 
-    private def findNewClassDirectory() = {
+    private def findNewClassDirectory(): String = {
       val filesBeforeCompilation = parentDirFile.list().toSet
-      compile()
+      try {
+        compile()
+      } catch {
+        case t: Throwable => throw new LambdaCompilationFailure(lambdaCode, t)
+      }
       val filesAfterCompilation = parentDirFile.list().toSet
 
       (filesAfterCompilation diff filesBeforeCompilation).toSeq match {
@@ -201,7 +202,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
     val functionReseted = ResetTypeInformation(toolbox).transform(newFunctionClass)
 
-    new ClassListener(newClassName)(() => {
+    new ClassListener(newClassName, functionReseted.toString)(() => {
       toolbox.compile(functionReseted)
     }).collectNewClassFiles
   }

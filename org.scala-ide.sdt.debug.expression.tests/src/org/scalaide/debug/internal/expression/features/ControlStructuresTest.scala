@@ -8,6 +8,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues
 import org.scalaide.debug.internal.expression.UnsupportedFeature
 
@@ -45,6 +46,40 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   @Test(expected = classOf[UnsupportedFeature])
   def tryCatchFinally(): Unit =
     eval("""try { 1 } finally { 2 }""", 2, Java.boxed.Integer)
+
+  @Test
+  def simpleForComprehension(): Unit =
+    eval("""for { i <- list } yield i""", for { i <- list } yield i, Scala.::)
+
+  @Test
+  def filteredForComprehension(): Unit =
+    eval("""for { i <- list; if i % 2 == 0 } yield i""", for { i <- list; if i % 2 == 0 } yield i, Scala.::)
+
+  @Test
+  def forComprehensionWithVal(): Unit =
+    eval("""for { i <- list; j = i.toString } yield j""", for { i <- list; j = i.toString } yield j, Scala.::)
+
+  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
+  @Test
+  def nestedForComprehension(): Unit =
+    eval("""for { i <- list; j <- list } yield (i,j)""", for { i <- list; j <- list } yield (i, j), Scala.::)
+
+  @Test
+  def simpleForLoop(): Unit =
+    eval("""for { i <- list } i""", Scala.unitLiteral, Scala.unitType)
+
+  @Test
+  def filteredForLoop(): Unit =
+    eval("""for { i <- list; if i % 2 == 0 } i""", Scala.unitLiteral, Scala.unitType)
+
+  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
+  @Test
+  def nestedForLoop(): Unit =
+    eval("""for { i <- list; j <- list } (i,j)""", Scala.unitLiteral, Scala.unitType)
+
+  @Test
+  def forLoopWithVal(): Unit =
+    eval("""for { i <- list; j = i.toString } j""", Scala.unitLiteral, Scala.unitType)
 
 }
 
