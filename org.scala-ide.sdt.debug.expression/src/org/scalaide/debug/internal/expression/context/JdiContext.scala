@@ -20,7 +20,7 @@ object JdiContext {
    * Method to mark that given val/def that needs to be implemented in later phases.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholder = ???
 
@@ -28,7 +28,7 @@ object JdiContext {
    * Method to mark that given nested function needs to be implemented in later phases.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholderNestedMethod(parametersListsCount: Int, beginLine: Int, endLine: Int) = ???
 
@@ -38,7 +38,7 @@ object JdiContext {
    * @param lambdaName name of proxy for this lambda - use only to pass information in AST
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholderPartialFunction[Ret](lambdaName: String, closureParams: Seq[Any] = Nil): PartialFunction[Any, Ret] = ???
 
@@ -46,7 +46,7 @@ object JdiContext {
    * Used to obtain types for given values in scope.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholderArgs(args: Any*) = ???
 
@@ -56,7 +56,7 @@ object JdiContext {
    * @param lambdaName name of proxy for this lambda - use only to pass information in AST
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholderFunction1[Ret](lambdaName: String, closureParams: Seq[Any] = Nil): Any => Ret = _ => ???
 
@@ -143,6 +143,7 @@ class JdiContext protected (protected val expressionClassLoader: ClassLoader, de
   with Seeker
   with Proxyfier
   with Stringifier
+  with InstanceOf
   with HashCode {
 
   /** JVM underlying current thread. */

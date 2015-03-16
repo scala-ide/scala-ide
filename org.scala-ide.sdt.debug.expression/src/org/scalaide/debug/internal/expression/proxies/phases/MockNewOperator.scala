@@ -49,7 +49,7 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
     val methodCall = {
       // creating nested type applied tree is too cumbersome to do by hand
       import Debugger._
-      Select(Ident(newTermName(contextParamName)), newTermName(newInstance))
+      Select(Ident(TermName(contextParamName)), TermName(newInstance))
     }
 
     // responsible for "Seq(Seq(a), Seq(a))" part of expression

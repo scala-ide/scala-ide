@@ -6,10 +6,10 @@ package org.scalaide.debug.internal.expression.proxies
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ArrayReference
+import com.sun.jdi.ArrayType
 
 /**
  * JdiProxy implementation for java `Array`s.
@@ -22,6 +22,8 @@ case class ArrayJdiProxy[ProxyType <: JdiProxy](proxyContext: JdiContext, __unde
     case "apply" => callApply(args)
     case _ => None
   }
+
+  override def referenceType: ArrayType = __underlying.referenceType.asInstanceOf[ArrayType]
 
   private def callLenght() = Some(proxyContext.proxy(__underlying.length))
 

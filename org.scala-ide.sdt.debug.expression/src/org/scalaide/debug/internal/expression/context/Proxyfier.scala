@@ -51,7 +51,7 @@ private[context] trait Proxyfier {
    * Creates a proxy for a Scala object with given name.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def objectOrStaticCallProxy(name: String): JdiProxy =
     tryObjectByName(name) match {
@@ -76,7 +76,7 @@ private[context] trait Proxyfier {
    * @throws NoSuchFieldError if field is not found.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def valueProxy(name: String): JdiProxy = {
     val value = valueFromFrame(this.currentFrame(), name)
@@ -137,7 +137,7 @@ private[context] trait Proxyfier {
    * Creates a proxy for `this` object.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   final def thisObjectProxy(): JdiProxy = valueProxy(currentFrame().thisObject())
 
@@ -148,7 +148,7 @@ private[context] trait Proxyfier {
    * Implementation uses `ValueProxifier` type class.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    *
    * @param value value to create proxy from
    */

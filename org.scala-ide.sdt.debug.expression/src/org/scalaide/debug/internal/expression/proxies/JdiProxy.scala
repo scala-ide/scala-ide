@@ -94,7 +94,7 @@ trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
    * - otherwise throws IllegalArgumentException
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def apply(on: JdiProxy)(implicit tag: ClassTag[Proxy]): Proxy = JdiProxyCompanion.unwrap(on)(this.apply)
 }

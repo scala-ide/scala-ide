@@ -36,7 +36,7 @@ trait Stringifier {
    * Calls `toString` on given proxy, returns StringJdiProxy.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   final def stringify(proxy: JdiProxy): JdiProxy =
     this.invokeMethod(proxy, None, "toString")
