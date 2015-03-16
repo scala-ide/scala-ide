@@ -166,7 +166,10 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
       .findUnboundValues().filterNot {
       case (name, _) => vparamsName.contains(name)
     }.map {
-      case (name, Some(valueType)) => name -> valueType
+      case (name, Some(valueType)) =>
+        val isFunctionImport = valueType.contains("$$")
+        val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
+        name -> fixedType
       case (name, _) => name -> Debugger.proxyName
     }
   }
