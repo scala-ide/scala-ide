@@ -26,9 +26,9 @@ class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the hi
 
   override def createFieldEditors() {
     addBooleanFieldEditors(
-      PActive -> "Enabled",
-      PBold -> "Bold",
-      PItalic -> "Italic",
+      PActive -> "Enable implicit highlighting",
+      PBold -> "Highlight in bold",
+      PItalic -> "Highlight in italic",
       PConversionsOnly -> "Only highlight implicit conversions",
       PFirstLineOnly -> "Only highlight the first line in an implicit conversion")
   }
