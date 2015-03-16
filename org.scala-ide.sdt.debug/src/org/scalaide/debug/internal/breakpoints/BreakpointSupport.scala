@@ -12,7 +12,11 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.scalaide.debug.BreakpointContext
+import org.scalaide.debug.ContinueExecution
 import org.scalaide.debug.DebugContext
+import org.scalaide.debug.JdiEventCommand
+import org.scalaide.debug.NoCommand
+import org.scalaide.debug.SuspendExecution
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
@@ -50,9 +54,13 @@ private object BreakpointSupportActor {
 
   val eventHandlerMappings = EventHandlerMapping.mappings
 
-  def handleEvent(event: Event, context: DebugContext): Option[_] = {
+  /**
+   * Sends the event to all registered event handlers and returns their results.
+   * All `NoCommand` result values are filtered out.
+   */
+  def handleEvent(event: Event, context: DebugContext): Set[JdiEventCommand] = {
     val handlerResults = eventHandlerMappings.iterator.flatMap(_.withInstance(_.handleEvent(event, context)))
-    handlerResults.find(_.isDefined).flatten
+    handlerResults.filter(_ != NoCommand).toSet
   }
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
@@ -128,24 +136,33 @@ private class BreakpointSupportActor private (
     requestsEnabled = enabled
   }
 
+  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]) = cmds foreach {
+    case SuspendExecution  ⇒ reply(true)
+    case ContinueExecution ⇒ reply(false)
+    case _                 ⇒
+  }
+
+  private def applyDefaultHandling(event: Event) = event match {
+    case event: ClassPrepareEvent ⇒
+      // JDI event triggered when a class is loaded
+      classPrepared(event.referenceType)
+      reply(false)
+    case event: BreakpointEvent ⇒
+      // JDI event triggered when a breakpoint is hit
+      breakpointHit(event.location, event.thread)
+      reply(true)
+  }
+
   // Manage the events
   override protected def behavior: PartialFunction[Any, Unit] = {
     case event: Event =>
       val context = BreakpointContext(breakpoint, debugTarget)
-      val res = handleEvent(event, context)
+      val cmds = handleEvent(event, context)
 
-      // TODO handle invalid result value; should always a boolean be returned?
-      if (res.isDefined) reply(res.get)
-      else event match {
-        case event: ClassPrepareEvent =>
-          // JDI event triggered when a class is loaded
-          classPrepared(event.referenceType)
-          reply(false)
-        case event: BreakpointEvent =>
-          // JDI event triggered when a breakpoint is hit
-          breakpointHit(event.location, event.thread)
-          reply(true)
-      }
+      if (cmds.nonEmpty)
+        handleJdiEventCommands(cmds)
+      else
+        applyDefaultHandling(event)
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
