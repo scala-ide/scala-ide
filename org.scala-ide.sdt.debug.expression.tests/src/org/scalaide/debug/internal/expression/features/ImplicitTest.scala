@@ -1,36 +1,28 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.features
+package org.scalaide.debug.internal.expression
+package features
 
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.TestValues.ImplicitsTestCase
-import org.scalaide.debug.internal.expression.Names.Scala
+
+import Names.Java
+import Names.Scala
+
+import TestValues.ImplicitsTestCase
 
 class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
 
-  // implicit parameters from companion object scope
   @Test
-  def `new LibClassImplicits(1)`(): Unit =
-    eval("new LibClassImplicits(1)", "LibClassImplicits(1)", "debug.LibClassImplicits")
+  def testToMapImplicit(): Unit =
+    eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
 
   @Test
-  def `new LibClass2ListsAndImplicits(1)(2)`(): Unit =
-    eval("new LibClass2ListsAndImplicits(1)(2)", "LibClass2ListsAndImplicits(1)", "debug.LibClass2ListsAndImplicits")
+  def testTopLevelImport: Unit = eval("implicitField[TopLevelImport]", "TopLevelImport", Java.boxed.String)
 
   @Test
-  def `libClass.withImplicitConversion(2)`(): Unit = disableOnJava8 {
-    eval("libClass.withImplicitConversion(2)", "2", Java.boxed.Integer)
-  }
-
-  @Test
-  def `libClass.withImplicitParameter`(): Unit = disableOnJava8 {
-    eval("libClass.withImplicitParameter", "1", Java.boxed.Integer)
-  }
+  def testClassField: Unit = eval("implicitField[ClassField]", "ClassField", Java.boxed.String)
 
   @Test
   def `scala collections implicits: List(1, 2).filter(_ > 1).head`(): Unit = disableOnJava8 {
@@ -42,27 +34,76 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
     eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
   }
 
-  @Test
-  def `ImplicitsValues3.ArrowAssocWithoutAnyVal`: Unit = {
-    eval("import ImplicitsValues3._; 1 --> 3", "(1,3)", "scala.Tuple2")
-    eval("import ImplicitsValues3._; (new ArrowAssocWithoutAnyVal(1))-->(2)", "(1,2)", "scala.Tuple2")
-  }
-
-  // value from imports and local values
-
-  @Ignore("TODO - O-5225 Add support for local implicits")
-  @Test
-  def `local val implicit: libClass.withImplicitIntParameter`(): Unit =
-    eval("libClass.withImplicitIntParameter", "12", Java.boxed.Integer)
+  def testWildcardClassImport: Unit = eval("implicitField[WildcardClassImport]", "WildcardClassImport", Java.boxed.String)
 
   @Test
-  def `explicit import implicit: ibClass.withImplicitStringParameter`(): Unit =
-    eval("libClass.withImplicitStringParameter", "ala", Java.boxed.String)
+  def testImplicitClassImport: Unit = eval("implicitField[ImplicitClassImport]", "ImplicitClassImport", Java.boxed.String)
 
-  @Ignore("TODO - O-5225 Add support for local implicits")
   @Test
-  def `_ import implicit: libClass.withImplicitDoubleParameter`(): Unit =
-    eval("libClass.withImplicitDoubleParameter", "1.1", Java.boxed.Double)
+  def testLocalImplicitImport: Unit = eval("implicitField[LocalImplicitImport]", "LocalImplicitImport", Java.boxed.String)
+
+  @Test
+  def testLocalWildcardImport: Unit = eval("implicitField[LocalWildcardImport]", "LocalWildcardImport", Java.boxed.String)
+
+  @Test
+  def testLocalField: Unit = eval("implicitField[LocalField]", "LocalField", Java.boxed.String)
+
+  @Test
+  def testCompanionObjectFunctionConversion: Unit = eval(
+    "implicitConversion[CompanionObjectFunctionConversion](1)",
+    "CompanionObjectFunctionConversion",
+    Java.boxed.String)
+
+  @Test
+  def testClassFunctionConversion: Unit = eval(
+    "implicitConversion[ClassFunctionConversion](1)",
+    "ClassFunctionConversion",
+    Java.boxed.String)
+
+  @Test
+  def testLocalFunctionConversion: Unit = eval(
+    "implicitConversion[LocalFunctionConversion](1)",
+    "LocalFunctionConversion",
+    Java.boxed.String)
+
+  @Test
+  def testCompanionObjectFunctionConversionBound: Unit = eval(
+    "implicitBounds(new CompanionObjectFunctionConversion)",
+    "CompanionObjectFunctionConversion",
+    Java.boxed.String)
+
+  @Test
+  def testClassFunctionConversionBound: Unit = eval(
+    "implicitBounds(new ClassFunctionConversion)",
+    "ClassFunctionConversion",
+    Java.boxed.String)
+
+  @Test(expected = classOf[UnsupportedFeature])
+  def testLocalFunctionConversionBound: Unit = runCode(
+    "implicitBounds(new LocalFunctionConversion)")
+
+  @Test
+  def testContextBounds: Unit = eval("""contextBounds("ContextBounds")""", "ContextBounds", Java.boxed.String)
+
+  @Test
+  def testClassWithImplicitArgument: Unit = eval("""new ClassWithImplicitArgument""", "ClassWithImplicitArgument", "debug.ClassWithImplicitArgument")
+
+  @Test
+  def testClassWithMultipleArgumentListAndImplicits: Unit = eval(
+    """new ClassWithMultipleArgumentListAndImplicits(1)(2)""",
+    "ClassWithMultipleArgumentListAndImplicits",
+    "debug.ClassWithMultipleArgumentListAndImplicits")
+
+  @Test
+  def testImplicitClass: Unit = eval("1 --> 2", "(1,2)", "scala.Tuple2")
+
+  @Test
+  def testExplicitAndImplicitUsageOfVal = eval("List(localField, implicitField[LocalField])", "List(LocalField, LocalField)", Scala.::)
+
+  @Test
+  def testImplicitsConflict: Unit = expectReflectiveCompilationError("implicitField[Conflict]")
+
+  //TODO make sure that we use correct implicits O-8575
 }
 
 object ImplicitTest extends BaseIntegrationTestCompanion(ImplicitsTestCase)

@@ -16,7 +16,7 @@ object GenericTypes extends SPCIntegration with HasLogger {
 
   object Field extends GenericEntryType
 
-  case class GenericEntry(entryType: GenericEntryType, name: String, genericType: String)
+  case class GenericEntry(entryType: GenericEntryType, name: String, genericType: String, isLocalImplicit: Boolean)
 
   /**
    * Finds generics from source code for current (from debugger point of view) file and line
@@ -25,7 +25,7 @@ object GenericTypes extends SPCIntegration with HasLogger {
    */
   class GenericProvider {
     // Tries to obtain generic arguments twice on failure (SPC is fragile)
-    private lazy val entries = genericTypeForValues().orElse(genericTypeForValues()).getOrElse(Map())
+    private lazy val entries: Map[String, GenericEntry] = genericTypeForValues().orElse(genericTypeForValues()).getOrElse(Map())
 
     /** Try to find type for field */
     def typeForField(name: String): Option[String] = entries.get(name).filter(_.entryType == Field).map(_.genericType)
@@ -33,6 +33,10 @@ object GenericTypes extends SPCIntegration with HasLogger {
     /** try to find nested method type information */
     def typeForNestedMethod(name: String): Option[GenericEntry] =
       entries.get(name).filter(_.entryType.isInstanceOf[LocalMethod])
+
+    /** gets all implicit local fields and methods */
+    def implicits: Seq[GenericEntry] =
+      entries.values.filter(_.isLocalImplicit).toSeq
   }
 
   private def genericTypeForValues(): Option[Map[String, GenericEntry]] =
@@ -75,9 +79,18 @@ object GenericTypes extends SPCIntegration with HasLogger {
           val endLine = pos.source.offsetToLine(pos.end + positionFixingForOffsetComputation) +
             fixingLineNumberAfterOffsetToLineTransformation
 
-          Some(name -> GenericEntry(LocalMethod(argumentListCount, startLine, endLine), name, signature))
+          Some(name -> GenericEntry(
+            LocalMethod(argumentListCount, startLine, endLine),
+            name,
+            signature,
+            member.sym.isImplicit))
         case "var" | "val" =>
-          Some(name -> GenericEntry(Field, name, member.tpe.toLongString))
+
+          Some(name -> GenericEntry(
+            Field,
+            name,
+            member.tpe.toLongString,
+            member.sym.isImplicit && member.sym.isLocalToBlock))
         case other =>
           None
       }

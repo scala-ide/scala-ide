@@ -126,7 +126,7 @@ object TestValues {
   object ImplicitsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "Implicits"
-    val breakpointLine = 15
+    val breakpointLine = 39
   }
 
   object MethodsAsFunctions {
