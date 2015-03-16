@@ -55,6 +55,9 @@ object ExpressionException {
   def notExistingField(name: String) =
     s"Field $name does not exist in current scope."
 
+  def lambdaCompilationFailure(lambdaSource: String): String =
+    s"Could not compile lambda expression: \n$lambdaSource\nSee underlying message for more details."
+
   /**
    * Recovers from errors after expression compilation and evaluation.
    * Provides nice, user-readable descriptions for all known problems.
@@ -73,6 +76,9 @@ object ExpressionException {
     case unsupportedFeature: UnsupportedFeature =>
       logger.warn(s"Unsupported feature was used: ${unsupportedFeature.name}", unsupportedFeature)
       Failure(unsupportedFeature)
+    case lambdaCompilationException: LambdaCompilationFailure =>
+      logger.warn(lambdaCompilationException.getMessage, lambdaCompilationException.getCause)
+      Failure(lambdaCompilationException)
     // WARNING - this case catches ALL ExpressionExceptions, do not add it's subclasses below it
     case expressionException: ExpressionException =>
       logger.error("Exception during expression evaluation", expressionException)
@@ -101,6 +107,10 @@ object ExpressionException {
   }
 
 }
+
+class LambdaCompilationFailure(lambdaSource: String, reason: Throwable)
+  extends RuntimeException(ExpressionException.lambdaCompilationFailure(lambdaSource), reason)
+  with ExpressionException
 
 case class JavaStaticInvocationProblem(description: String)
   extends RuntimeException(description)

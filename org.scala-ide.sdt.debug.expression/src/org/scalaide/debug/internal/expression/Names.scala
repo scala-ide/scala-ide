@@ -225,6 +225,8 @@ object Names {
         else None
     }
 
+    val primitiveValueOfProxyMethodName = "__value"
+
     /*  JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
@@ -295,8 +297,6 @@ object Names {
       classOf[LongJdiProxy],
       classOf[ShortJdiProxy])
       .map(_.getSimpleName)
-
-    val primitiveValueOfProxyMethodName = "__value"
 
     val newClassName = "CustomFunction"
 

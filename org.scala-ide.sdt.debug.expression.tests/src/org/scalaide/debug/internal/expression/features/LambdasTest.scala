@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.features
+package org.scalaide.debug.internal.expression
+package features
 
 import org.junit.Ignore
 import org.junit.Test
@@ -10,8 +11,12 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.TestValues
 
 class LambdasTest extends BaseIntegrationTest(LambdasTest) {
+
+  import TestValues.ValuesTestCase._
+  import TestValues.any2String
 
   @Test
   def `(x: Int) => int + x`(): Unit =
@@ -89,6 +94,11 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   @Test
   def `lambda inside lambda inside lambda: multilist.map(list => list.map(_ + 1))`(): Unit =
     eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """, "List(List(2), List(9, 11))", Scala.::)
+
+  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
+  @Test
+  def nestedLambdaInCarthsianProduct(): Unit =
+    eval("""list.flatMap { i => list.map { j => (i,j) } }""", list.flatMap { i => list.map { j => (i, j) } }, Scala.::)
 
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =
