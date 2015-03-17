@@ -219,7 +219,7 @@ object Names {
 
     val primitiveValueOfProxyMethodName = "__value"
 
-    /*  JdiProxy - in all variants */
+    /** JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
     val proxySpecialMethods = Scala.dynamicTraitMethods ++ List("$eq$eq", "$bang$eq", "$plus", "apply", primitiveValueOfProxyMethodName)
@@ -227,7 +227,7 @@ object Names {
 
     def ArrayJdiProxy(typeName: String) = s"ArrayJdiProxy[$typeName]"
 
-    /* JdiContext in all variants */
+    /** JdiContext in all variants */
     val contextName = classOf[JdiContext].getSimpleName
     val contextFullName = classOf[JdiContext].getName
 
@@ -254,6 +254,9 @@ object Names {
 
     /** Name of proxy method, used in reflective compilation. */
     val objectOrStaticCallProxyMethodName = "objectOrStaticCallProxy"
+
+    /** Name of proxy method, used in reflective compilation. */
+    val classOfProxyMethodName = "classOfProxy"
 
     /** Name of stringify method, used in reflective compilation. */
     val stringifyMethodName = "stringify"
