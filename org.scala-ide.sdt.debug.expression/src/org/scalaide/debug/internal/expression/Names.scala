@@ -212,25 +212,14 @@ object Names {
    */
   object Debugger {
 
-    /** Prefix for object or type used for static call in generated stubs. */
-    val objectOrStaticCallTypeNamePrefix = "$o_"
-
     /** Type used to show for custom user-defined lambdas */
     val lambdaType = "<custom_lambda>"
-
-    /** Matches names that starts with objNamePrefix and extracts name without prefix. */
-    object PrefixedObjectOrStaticCall {
-      def unapply(name: String): Option[String] =
-        if (name.startsWith(objectOrStaticCallTypeNamePrefix)) Some(name.drop(objectOrStaticCallTypeNamePrefix.length))
-        else None
-    }
 
     val primitiveValueOfProxyMethodName = "__value"
 
     /*  JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
-    val proxyObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(proxyFullName)
     val proxySpecialMethods = Scala.dynamicTraitMethods ++ List("$eq$eq", "$bang$eq", "$plus", "apply", primitiveValueOfProxyMethodName)
     val proxyGenericApplyMethodName = "applyWithGenericType"
 
@@ -239,7 +228,6 @@ object Names {
     /* JdiContext in all variants */
     val contextName = classOf[JdiContext].getSimpleName
     val contextFullName = classOf[JdiContext].getName
-    val contextObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(contextFullName)
 
     /** Name of placeholder method, used in reflective compilation. */
     val placeholderName = "placeholder"

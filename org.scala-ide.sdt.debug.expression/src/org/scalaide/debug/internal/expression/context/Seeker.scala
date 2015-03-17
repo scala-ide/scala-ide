@@ -31,7 +31,6 @@ trait Seeker {
 
   /** real name of class - replace object name prefix and handles arrays */
   private def realClassName(name: String): String = name match {
-    case Debugger.PrefixedObjectOrStaticCall(realName) => realName
     case Scala.Array(typeArg) => Java.primitives.Array(realClassName(scalaToJavaTypeName(typeArg)))
     case other => other
   }
