@@ -12,7 +12,6 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.scalaide.debug.BreakpointContext
-import org.scalaide.debug.ContinueExecution
 import org.scalaide.debug.DebugContext
 import org.scalaide.debug.JdiEventCommand
 import org.scalaide.debug.NoCommand
@@ -136,21 +135,23 @@ private class BreakpointSupportActor private (
     requestsEnabled = enabled
   }
 
-  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]) = cmds foreach {
-    case SuspendExecution  ⇒ reply(true)
-    case ContinueExecution ⇒ reply(false)
-    case _                 ⇒
+  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]) = {
+    val shouldSuspend = cmds(SuspendExecution)
+    reply(shouldSuspend)
   }
 
-  private def applyDefaultHandling(event: Event) = event match {
-    case event: ClassPrepareEvent ⇒
-      // JDI event triggered when a class is loaded
-      classPrepared(event.referenceType)
-      reply(false)
-    case event: BreakpointEvent ⇒
-      // JDI event triggered when a breakpoint is hit
-      breakpointHit(event.location, event.thread)
-      reply(true)
+  private def applyDefaultHandling(event: Event) = {
+    val shouldSuspend = event match {
+      case event: ClassPrepareEvent ⇒
+        // JDI event triggered when a class is loaded
+        classPrepared(event.referenceType)
+        false
+      case event: BreakpointEvent ⇒
+        // JDI event triggered when a breakpoint is hit
+        breakpointHit(event.location, event.thread)
+        true
+    }
+    reply(shouldSuspend)
   }
 
   // Manage the events
