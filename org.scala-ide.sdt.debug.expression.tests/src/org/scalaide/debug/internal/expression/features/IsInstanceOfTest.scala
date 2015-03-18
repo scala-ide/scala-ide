@@ -7,6 +7,7 @@ package features
 import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.InstanceOfTestCase
 
 class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
@@ -32,7 +33,7 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
   }
 
   @Test
-  def begativePrimitiveIsInstanceOf(): Unit = {
+  def negativePrimitiveIsInstanceOf(): Unit = {
     eval("int.isInstanceOf[Long]", int.isInstanceOf[Long], Java.boxed.Boolean)
     eval("int.isInstanceOf[Float]", int.isInstanceOf[Float], Java.boxed.Boolean)
     eval("float.isInstanceOf[Double]", float.isInstanceOf[Double], Java.boxed.Boolean)
@@ -60,6 +61,10 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
   }
 
   @Test
+  def lambdasAndIsInstanceOfIntegration(): Unit =
+    eval("""List[Any](1, "2", 3).filter(_.isInstanceOf[java.lang.Integer])""", "List(1, 3)", Scala.::)
+
+  @Test
   def genericIsInstanceOf(): Unit =
     eval("intList.isInstanceOf[List[Int]]", intList.isInstanceOf[List[Int]], Java.boxed.Boolean)
 
@@ -69,7 +74,7 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
 
   @Test
   def wildcardGenericIsInstanceOf(): Unit =
-    eval("intList.isInstanceOf[List[Int]]", intList.isInstanceOf[List[_]], Java.boxed.Boolean)
+    eval("intList.isInstanceOf[List[_]]", intList.isInstanceOf[List[_]], Java.boxed.Boolean)
 
   @Test
   def nullIsInstanceOf(): Unit =

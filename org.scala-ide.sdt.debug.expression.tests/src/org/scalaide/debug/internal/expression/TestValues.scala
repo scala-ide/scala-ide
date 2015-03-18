@@ -47,7 +47,7 @@ object TestValues {
   object InstanceOfTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-instance-of"
     val fileName = "InstanceOf"
-    val breakpointLine = 56
+    val breakpointLine = 58
 
     trait A1
     class A2 extends A1

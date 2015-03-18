@@ -22,8 +22,6 @@ case class FailFast(toolbox: ToolBox[universe.type])
   import toolbox.u._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case TypeApply(Select(on, method), List(tpe)) if method.toString == "asInstanceOf" =>
-      throw new UnsupportedFeature("asInstanceOf")
     case Apply(on, args) if on.toString == "Array" =>
       throw new UnsupportedFeature("Array.apply()")
     case TypeApply(on, args) if on.toString == "Array" =>

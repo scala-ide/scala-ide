@@ -21,6 +21,8 @@ class Bar extends Foo
 
 object InstanceOf extends App {
 
+  def check[A](a: A): A = a
+
   def foo() {
     def byte: Any = (4: Byte)
     def short: Any = (6: Short)
