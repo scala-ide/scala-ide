@@ -25,7 +25,6 @@ import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
 import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
 import org.scalaide.debug.internal.expression.context.invoker.VarArgConstructorMethod
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ClassType
@@ -39,7 +38,7 @@ private[context] trait JdiMethodInvoker {
    * Invokes a method on a proxy. Wraps `invokeUnboxed` with a `valueProxy`.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    *
    * @param on
    * @param onScalaType Scala type of object laying under proxy (e.g. for '1' in code '1.toDouble' it will be RichInt)
@@ -165,7 +164,7 @@ private[context] trait JdiMethodInvoker {
    * Creates new instance of given class.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    *
    * @param className class for object to create
    * @param args list of list of arguments to pass to method

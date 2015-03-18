@@ -17,14 +17,6 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   import TestValues.ValuesTestCase._
   import TestValues.any2String
 
-  // TODO - O-5919 - implement support for isInstanceOf
-  @Test(expected = classOf[UnsupportedFeature])
-  def isInstanceOf(): Unit = eval("int.isInstanceOf[Int]", int.isInstanceOf[Int], Java.boxed.Boolean)
-
-  // TODO - O-5919 - implement support for asInstanceOf
-  @Test(expected = classOf[UnsupportedFeature])
-  def asInstanceOf(): Unit = eval("int.asInstanceOf[Int]", int.asInstanceOf[Int], Java.boxed.Integer)
-
   @Test
   def ifElseCondition(): Unit = eval("if (true) byte + byte2 else byte", byte + byte2, Java.boxed.Integer)
 

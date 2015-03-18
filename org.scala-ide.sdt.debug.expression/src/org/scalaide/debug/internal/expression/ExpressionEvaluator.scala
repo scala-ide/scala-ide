@@ -64,6 +64,8 @@ object ExpressionEvaluator {
     ctx => MockLiteralsAndConstants(ctx.toolbox, ctx.typesContext),
     ctx => MockPrimitivesOperations(ctx.toolbox),
     ctx => MockToString(ctx.toolbox),
+    ctx => new MockIsInstanceOf(ctx.toolbox),
+    ctx => new RemoveAsInstanceOf(ctx.toolbox),
     ctx => MockHashCode(ctx.toolbox),
     ctx => MockMethodsCalls(ctx.toolbox),
     ctx => MockObjectsAndStaticCalls(ctx.toolbox, ctx.typesContext),

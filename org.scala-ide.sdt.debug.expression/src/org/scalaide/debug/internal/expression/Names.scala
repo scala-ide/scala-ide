@@ -114,6 +114,8 @@ object Names {
 
     val simpleNothingType = "Nothing"
 
+    val boxedUnitType = classOf[scala.runtime.BoxedUnit].getName
+
     val unitType = "scala.Unit"
 
     val unitLiteral = "()"
@@ -255,6 +257,9 @@ object Names {
 
     /** Name of stringify method, used in reflective compilation. */
     val stringifyMethodName = "stringify"
+
+    /** Name of `isInstanceOf` method, used in reflective compilation. */
+    val isInstanceOfMethodName = "isInstanceOfCheck"
 
     /** Name of generateHashCode method, used in reflective compilation. */
     val hashCodeMethodName = "generateHashCode"
