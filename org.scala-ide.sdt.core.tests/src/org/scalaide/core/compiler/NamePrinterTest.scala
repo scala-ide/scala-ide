@@ -6,6 +6,7 @@ import org.junit.Test
 import org.scalaide.CompilerSupportTests
 import NamePrinterTest.mkScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.FlakyTest
 
 object NamePrinterTest extends CompilerSupportTests
 
@@ -235,7 +236,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnDef() {
+  def testWithAnonClassOnDef() = FlakyTest.retry("testWithAnonClassOnDef") {
     testWith(
       """|class AnonClassOnDef {
          |  def fun() {
@@ -248,7 +249,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassWithMultipleParents() {
+  def testWithAnonClassWithMultipleParents() {
     testWith(
       """|trait Trait1
          |trait Trait2
@@ -263,7 +264,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnCall() {
+  def testWithAnonClassOnCall() {
     testWith(
       """|class AnonClassOnCall {
          |  def fun() {
@@ -276,7 +277,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnDeeplyNestedName() {
+  def testWithDeeplyNestedName() {
     testWith(
       """|package deeply.nested
          |class Ca {
