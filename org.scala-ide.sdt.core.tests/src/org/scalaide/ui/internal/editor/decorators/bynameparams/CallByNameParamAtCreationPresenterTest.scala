@@ -144,7 +144,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithSimplePartiallyAppliedFunction() {
+  def testWithSimplePartiallyAppliedFunction() = FlakyTest.retry("testWithSimplePartiallyAppliedFunction") {
     testWithSingleLineCfg("""
       object X {
         def f(i: => Int) = i
