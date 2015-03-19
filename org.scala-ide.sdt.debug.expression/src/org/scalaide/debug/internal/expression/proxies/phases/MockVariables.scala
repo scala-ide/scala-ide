@@ -1,28 +1,27 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
-
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.context._
-
-import org.scalaide.debug.internal.expression.Names
-import org.scalaide.debug.internal.expression.TransformationPhase
+import org.scalaide.debug.internal.expression.Names.Debugger
+import org.scalaide.debug.internal.expression.context.GenericVariableType
+import org.scalaide.debug.internal.expression.context.PlainVariableType
+import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.sources.GenericTypes
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
 import org.scalaide.logging.HasLogger
 
 class MockVariables(val toolbox: ToolBox[universe.type],
   context: VariableContext,
   unboundVariables: => Set[universe.TermName])
-  extends TransformationPhase
-  with HasLogger {
+    extends TransformationPhase
+    with HasLogger {
 
-  import toolbox.u.{Try => _, _}
+  import toolbox.u.{ Try => _, _ }
 
   /**
    * Insert mock proxy code for unbound variables into given code tree
@@ -43,9 +42,13 @@ class MockVariables(val toolbox: ToolBox[universe.type],
       }
     }
 
-    /** breaks generated expression into sequence of definitions of values */
-    private def breakValDefBlock(code: Tree): Seq[Tree] = code match {
+    /**
+     * Breaks generated block into sequence of trees.
+     * If last one is `()` it is removed as it is not needed.
+     */
+    private def breakBlock(code: Tree): Seq[Tree] = code match {
       case valDef: ValDef => Seq(valDef)
+      case Block(children, Literal(Constant(()))) => children
       case block: Block => block.children
       case empty @ universe.EmptyTree => Nil
       case any => throw new IllegalArgumentException(s"Unsupported tree: $any")
@@ -59,12 +62,13 @@ class MockVariables(val toolbox: ToolBox[universe.type],
     private def generateProxies(names: Set[TermName], context: VariableContext): List[Tree] = {
       val namesWithThis: Seq[TermName] = (names.toSeq ++ context.syntheticVariables).distinct //order matter in case of this values
       val genericProvider = new GenericProvider
-      val proxyDefinitions =
+      val proxiesAndImports =
         namesWithThis.flatMap(buildProxyDefinition(context, genericProvider)) ++
           context.syntheticImports ++
           names.toSeq.flatMap(buildNestedMethodDefinition(genericProvider))
 
-      breakValDefBlock(toolbox.parse(proxyDefinitions.mkString("\n"))).toList
+      val proxiesAndImportsParsed = toolbox.parse(proxiesAndImports.mkString("\n"))
+      breakBlock(proxiesAndImportsParsed).toList
     }
 
     /**
