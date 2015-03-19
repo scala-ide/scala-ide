@@ -44,3 +44,9 @@ case object ContinueExecution extends JdiEventCommand
  * that could be handled by the debugger implementation.
  */
 case object NoCommand extends JdiEventCommand
+
+/**
+ * Prepares a class in the target VM. See the JVM specification for a definition
+ * of class preparation.
+ */
+case object PrepareClass extends JdiEventCommand

@@ -15,6 +15,7 @@ import org.scalaide.debug.BreakpointContext
 import org.scalaide.debug.DebugContext
 import org.scalaide.debug.JdiEventCommand
 import org.scalaide.debug.NoCommand
+import org.scalaide.debug.PrepareClass
 import org.scalaide.debug.SuspendExecution
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
@@ -135,35 +136,37 @@ private class BreakpointSupportActor private (
     requestsEnabled = enabled
   }
 
-  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]) = {
-    val shouldSuspend = cmds(SuspendExecution)
-    reply(shouldSuspend)
-  }
-
-  private def applyDefaultHandling(event: Event) = {
+  private def handleJdiEventCommands(event: Event, cmds: Set[JdiEventCommand]) = {
     val shouldSuspend = event match {
-      case event: ClassPrepareEvent ⇒
+      case event: ClassPrepareEvent if cmds(PrepareClass) ⇒
         // JDI event triggered when a class is loaded
         classPrepared(event.referenceType)
         false
-      case event: BreakpointEvent ⇒
+      case event: BreakpointEvent if cmds(SuspendExecution) ⇒
         // JDI event triggered when a breakpoint is hit
         breakpointHit(event.location, event.thread)
         true
+      case _ ⇒
+        false
     }
     reply(shouldSuspend)
+  }
+
+  private def defaultCommands(event: Event): JdiEventCommand = event match {
+    case _: ClassPrepareEvent ⇒ PrepareClass
+    case _: BreakpointEvent   ⇒ SuspendExecution
   }
 
   // Manage the events
   override protected def behavior: PartialFunction[Any, Unit] = {
     case event: Event =>
       val context = BreakpointContext(breakpoint, debugTarget)
-      val cmds = handleEvent(event, context)
+      val cmds = {
+        val cmds = handleEvent(event, context)
+        if (cmds.nonEmpty) cmds else Set(defaultCommands(event))
+      }
 
-      if (cmds.nonEmpty)
-        handleJdiEventCommands(cmds)
-      else
-        applyDefaultHandling(event)
+      handleJdiEventCommands(event, cmds)
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
