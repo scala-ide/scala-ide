@@ -4,6 +4,8 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
+import scala.collection.JavaConversions._
+
 import org.scalaide.debug.internal.expression.Arity
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -21,23 +23,24 @@ trait ScalaVarArgSupport
     extends VarArgSupport {
   self: BaseMethodInvoker =>
 
-  private object PossiblyVarArg {
-    def unapply(types: Seq[Type]): Boolean = types match {
-      case normal :+ vararg if vararg.name == Names.Scala.seq && checkTypes(normal) => true
-      case _ => false
-    }
+  private def isSeq(tpe: Type) = tpe.name == Names.Scala.seq
+
+  private def isVarArgSig(method: Method) =
+    isFirstParamVarArg(method) || isLastParamVarArg(method)
+
+  protected def isFirstParamVarArg(method: Method) = argumentTypesLoaded(method, context) match {
+    case vararg +: normal if isSeq(vararg) && checkTypesRight(normal) => true
+    case _ => false
   }
 
-  private def matchesVarArgSig(method: Method): Option[Method] =
-    argumentTypesLoaded(method, context) match {
-      case PossiblyVarArg() => Some(method)
-      case _ => None
-    }
+  private def isLastParamVarArg(method: Method) = argumentTypesLoaded(method, context) match {
+    case normal :+ vararg if isSeq(vararg) && checkTypes(normal) => true
+    case _ => false
+  }
 
   // we have to add `1` as someone can call vararg without any arguments at all
   protected def candidates: Seq[Method] =
-    allMethods.filter(_.arity <= args.size + 1).flatMap(matchesVarArgSig)
-
+    allMethods.filter(_.arity <= args.size + 1).filter(isVarArgSig)
 }
 
 /**
@@ -50,9 +53,18 @@ class ScalaVarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], 
   override def apply(): Option[Value] = {
     def invoke(method: Method): Value = {
       val normalSize = method.arity - 1
-      val standardArgs = generateArguments(method).take(normalSize)
-      val varArgs = packToVarArg(args.drop(normalSize))
-      proxy.__underlying.invokeMethod(context.currentThread(), method, standardArgs :+ varArgs)
+
+      val argsWithVarArg = if (isFirstParamVarArg(method)) {
+        val standardArgs = generateArgumentsRight(method).takeRight(normalSize)
+        val varArgs = packToVarArg(args.dropRight(normalSize))
+        varArgs +: standardArgs
+      } else {
+        val standardArgs = generateArguments(method).take(normalSize)
+        val varArgs = packToVarArg(args.drop(normalSize))
+        standardArgs :+ varArgs
+      }
+
+      proxy.__underlying.invokeMethod(context.currentThread(), method, argsWithVarArg)
     }
 
     handleMultipleOverloads(candidates, invoke)
