@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
 import scala.reflect.runtime.universe.TermName
 
@@ -63,9 +64,9 @@ trait VariableContext extends Any {
 
   /**
    * Get list of all synthetic variables for given expression.
-   *  They are e.g. different version of this
+   * They are e.g. different version of `this`.
    */
-  def syntheticVariables: Seq[TermName]
+  def syntheticVariables: Seq[Variable]
 
   /**
    * Get list of all synthetic imports for given expression.
@@ -82,4 +83,10 @@ trait VariableContext extends Any {
 
   /** Try to implement nested method base on it's declaration */
   def nestedMethodImplementation(function: NestedMethodDeclaration): Option[NestedMethodImplementation]
+
+  /**
+   * Set of names of variables local to frame in which thread is suspended.
+   * This contains `val`s and `var`s defined in current method.
+   */
+  def localVariablesNames(): Set[String]
 }

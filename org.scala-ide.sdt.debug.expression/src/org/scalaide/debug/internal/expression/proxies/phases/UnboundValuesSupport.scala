@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime.universe
-
-import org.scalaide.debug.internal.expression.Names
 
 trait UnboundValuesSupport {
 
@@ -51,7 +50,7 @@ trait UnboundValuesSupport {
      * Unbound names in a sense that a name is unbound if there exists at least one scope in which it is unbound.
      * NOTE: In some other scopes in a processed code snippet the unbound name might be actually bound
      */
-    private var _unboundNames = Map.empty[TermName, Option[String]]
+    private var _unboundNames = Map.empty[UnboundVariable, Option[String]]
 
     /**
      * A map of names and corresponding trees which bind the name
@@ -61,7 +60,7 @@ trait UnboundValuesSupport {
     /**
      * @return collected unbound names
      */
-    final def unboundNames(): Map[TermName, Option[String]] = _unboundNames
+    final def unboundNames(): Map[UnboundVariable, Option[String]] = _unboundNames
 
     /**
      * @param name identifier
@@ -76,13 +75,13 @@ trait UnboundValuesSupport {
      * @param name an identifier
      * @param tree tree representing the name usage
      */
-    final def registerUnboundName(name: TermName, tree: Tree): Unit = {
+    final def registerUnboundName(name: TermName, tree: Tree, isLocal: Boolean): Unit = {
       val isBound = boundingTreesOf(name).exists(parentOf(tree))
       val isScalaSymbol = name == termNames.WILDCARD || name == Names.Scala.scalaPackageTermName
       val isSymbolVisibleByDefault = isVisibleByDefault(name.toString)
 
       if (!isScalaSymbol && !isSymbolVisibleByDefault && !isBound && name.isTermName) {
-        _unboundNames += name -> extractType(tree)
+        _unboundNames += UnboundVariable(name, isLocal) -> extractType(tree)
       }
     }
 
@@ -124,26 +123,31 @@ trait UnboundValuesSupport {
   /**
    * Collects unbound names in the tree.
    */
-  class VariableProxyTraverser(tree: Tree, extractType: Tree => Option[String] = _ => None) extends Traverser {
+  class VariableProxyTraverser(
+      tree: Tree,
+      extractType: Tree => Option[String] = _ => None,
+      localVariablesNames: => Set[String] = Set.empty) extends Traverser {
 
     private val scopeManager = new ScopeManager(tree)
 
     private val nameManager = new VariableManager(extractType)
 
     /**
-     * Collects unbound names in the tree.
+     * Collects unbound variables in the tree.
      */
-    final def findUnboundNames(): Set[TermName] = {
+    final def findUnboundVariables(): Set[UnboundVariable] =
       findUnboundValues.keySet
-    }
 
     /**
      * Collects unbound values (name, type) in the tree.
      */
-    final def findUnboundValues(): Map[TermName, Option[String]] = {
+    final def findUnboundValues(): Map[UnboundVariable, Option[String]] = {
       this.traverse(tree)
       nameManager.unboundNames()
     }
+
+    private def isLocalVar(termName: TermName): Boolean =
+      localVariablesNames.contains(termName.encodedName.toString)
 
     /**
      * Collects unbound names in tree.
@@ -152,13 +156,14 @@ trait UnboundValuesSupport {
     final override def traverse(tree: Tree): Unit = {
       scopeManager.pushTree(tree)
       tree match {
-        // all identifiers
-        case Assign(Ident(termName), value) =>
-          // suppressing value extraction from lhs
+        case assign @ Assign(Ident(name: TermName), value) =>
+          // suppressing value extraction from lhs if it's not local
+          if (isLocalVar(name)) nameManager.registerUnboundName(name, tree, isLocal = true)
           super.traverse(value)
 
+        // all identifiers
         case Ident(name: TermName) if !scopeManager.insideImport =>
-          nameManager.registerUnboundName(name, tree)
+          nameManager.registerUnboundName(name, tree, isLocal = false)
 
         // like: case ala: Ala =>
         case CaseDef(Bind(name, _), _, _) =>
@@ -170,7 +175,8 @@ trait UnboundValuesSupport {
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(tree)
 
-        // for assignments like: var ala; ala = "ola"
+        // for binding in pattern matching like: ala @ Ala(name)
+        // and, apparently, for values in for-comprehension
         case Bind(name, _) =>
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(tree)

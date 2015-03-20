@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -263,6 +263,9 @@ object Names {
 
     /** Name of generateHashCode method, used in reflective compilation. */
     val hashCodeMethodName = "generateHashCode"
+
+    /** Name of method for setting local variables values, used in reflective compilation. */
+    val setLocalVariable = "setLocalVariable"
 
     /** Name of context val on top level function for expression. */
     val contextParamName = "__context"

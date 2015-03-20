@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression.proxies.phases
 
@@ -17,7 +17,7 @@ class VariableProxiesTest extends HasEvaluator {
     val code = Evaluator.parse(in)
 
     val typesContext = new TypesContext()
-    SearchForUnboundVariables(Evaluator.toolbox, typesContext).transform(code)
+    new SearchForUnboundVariables(Evaluator.toolbox, typesContext, Set.empty).transform(code)
     val foundVariables = typesContext.unboundVariables
 
     assertEquals(

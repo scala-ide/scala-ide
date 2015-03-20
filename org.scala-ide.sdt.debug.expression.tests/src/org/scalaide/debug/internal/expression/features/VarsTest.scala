@@ -1,25 +1,25 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.Ignore
 import org.junit.Test
-import org.junit.Assert._
-
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.VariablesTestCase
+import org.scalaide.debug.internal.expression.UnsupportedFeature
 
 class VarsTest extends BaseIntegrationTest(VarsTest) {
 
-  private def testAssignment(on: String, tpe: String, values: String*) = values.foreach { value =>
+  private def testAssignment(on: String, tpe: String, values: String*) = {
     val (oldValue, oldType) = runCode(on)
     try {
-      val (resultValue, _) = runCode(value)
-      runCode(s"$on = $value")
-      eval(code = on, expectedValue = resultValue, expectedType = tpe)
+      values.foreach { value =>
+        val (resultValue, _) = runCode(value)
+        runCode(s"$on = $value")
+        eval(code = on, expectedValue = resultValue, expectedType = tpe)
+      }
     } finally {
       // set old value for next tests
       if (oldType == Java.boxed.String) runCode(s"""$on = "$oldValue"""")
@@ -31,9 +31,20 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
   def testVariableAssignment(): Unit =
     testAssignment("state.int", Java.boxed.Integer, values = "1", "2", "3")
 
-  @Ignore("TODO - O-5374 - add support for local variables")
   @Test
-  def testLocalVariableAssignment(): Unit =
+  def testLocalVariableAssignment(): Unit = {
+    def s(a: Any) = '"' + a.toString + '"'
+
+    testAssignment("localString", Java.boxed.String, values = s("1"), s("2"), s("3"))
+    testAssignment("localBoxedInt", Java.boxed.Integer,
+      values = "new java.lang.Integer(1)",
+      "new java.lang.Integer(2)",
+      "new java.lang.Integer(3)")
+  }
+
+  // TODO - O-8559 - This fails with 'InvalidStackFrameException' when you try to assign to local primitive :(
+  @Test(expected = classOf[UnsupportedFeature])
+  def testLocalVariableAssignmentForPrimitives(): Unit =
     testAssignment("localInt", Java.boxed.Integer, values = "1", "2", "3")
 
   @Test
@@ -71,8 +82,8 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
   }
 
   @Test
-  def testLocalVariable(): Unit = eval("var a = 1; a = 2; a", "2", Java.boxed.Integer)
-
+  def testVariableInExpression(): Unit =
+    eval("var a = 1; a = 2; a", "2", Java.boxed.Integer)
 }
 
 object VarsTest extends BaseIntegrationTestCompanion(VariablesTestCase)

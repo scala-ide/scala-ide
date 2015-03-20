@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -48,9 +48,9 @@ object ExpressionEvaluator {
 
   private[expression] def phases: Seq[Context => TransformationPhase] = Seq(
     ctx => FailFast(ctx.toolbox),
-    ctx => SearchForUnboundVariables(ctx.toolbox, ctx.typesContext),
+    ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.typesContext, ctx.context.localVariablesNames()),
     ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
-    ctx => new MockVariables(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
+    ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
     ctx => new AddImports(ctx.toolbox, ctx.context.thisPackage),
     ctx => MockThis(ctx.toolbox),
     ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext),
@@ -64,6 +64,7 @@ object ExpressionEvaluator {
     ctx => MockLiteralsAndConstants(ctx.toolbox, ctx.typesContext),
     ctx => MockPrimitivesOperations(ctx.toolbox),
     ctx => MockToString(ctx.toolbox),
+    ctx => new MockLocalAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
     ctx => new MockIsInstanceOf(ctx.toolbox),
     ctx => new RemoveAsInstanceOf(ctx.toolbox),
     ctx => MockHashCode(ctx.toolbox),

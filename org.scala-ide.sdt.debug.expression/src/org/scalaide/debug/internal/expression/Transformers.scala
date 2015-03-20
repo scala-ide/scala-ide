@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -15,6 +15,8 @@ import Names.Scala
  */
 trait TransformationPhase {
 
+  protected def beforeTypecheck: Boolean = false
+
   /**
    * Transforms current tree to new form.
    * It is called only once per object lifetime.
@@ -25,7 +27,7 @@ trait TransformationPhase {
 }
 
 trait BeforeTypecheck {
-  self: AstTransformer =>
+  self: TransformationPhase =>
   override protected def beforeTypecheck: Boolean = true
 }
 
@@ -34,11 +36,9 @@ trait BeforeTypecheck {
  * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
  */
 abstract class AstTransformer
-  extends TransformationPhase {
+    extends TransformationPhase {
 
   private var _wholeTree: Tree = EmptyTree
-
-  protected def beforeTypecheck: Boolean = false
 
   /** gets whole tree for this transformer - transformation starts with this tree */
   final def wholeTree = _wholeTree

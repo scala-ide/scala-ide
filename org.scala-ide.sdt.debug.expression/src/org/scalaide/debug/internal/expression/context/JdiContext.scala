@@ -154,7 +154,4 @@ class JdiContext protected (protected val expressionClassLoader: ClassLoader, de
   protected def currentFrame(): StackFrame = debugState.currentFrame()
 
   override def toString: String = s"JdiContext(thread = ${currentThread().name})"
-
-  //current transformation context
-  protected final val transformationContext = ExtendedContext(currentFrame())
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -269,7 +269,7 @@ object TestValues {
   object VariablesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-variables"
     val fileName = "Variables"
-    val breakpointLine = 17
+    val breakpointLine = 19
   }
 
   object VisibilityTestCase extends IntegrationTestCaseSettings {
