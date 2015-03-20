@@ -102,14 +102,26 @@ trait BaseMethodInvoker extends MethodInvoker {
     method.arity == args.length &&
       checkTypes(argumentTypesLoaded(method, args.head.proxyContext))
 
+  private final def checkTypes(types: Seq[Type], arguments: Seq[JdiProxy]): Boolean =
+    arguments.zip(types).forall((conformsTo _).tupled)
+
   protected final def checkTypes(types: Seq[Type]): Boolean =
-    args.zip(types).forall((conformsTo _).tupled)
+    checkTypes(types, args)
+
+  protected final def checkTypesRight(types: Seq[Type]): Boolean =
+    checkTypes(types.reverse, args.reverse)
+
+  private final def generateArguments(types: List[Type], arguments: Seq[JdiProxy]): Seq[Value] =
+   types.zip(arguments).map((getValue _).tupled)
 
   /**
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
    */
   protected final def generateArguments(method: Method): Seq[Value] =
-    method.argumentTypes().zip(args).map((getValue _).tupled)
+    generateArguments(method.argumentTypes.toList, args)
+
+  protected final def generateArgumentsRight(method: Method): Seq[Value] =
+    generateArguments(method.argumentTypes.toList.reverse, args.reverse).reverse
 
   // search for all visible methods
   protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)

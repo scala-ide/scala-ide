@@ -108,3 +108,28 @@ object LibObject {
     }
   }
 }
+
+sealed class NatNum(val n : Int)
+object Nat1 extends NatNum(1)
+object Nat2 extends NatNum(2)
+object Nat3 extends NatNum(3)
+
+object LibVarargs {
+
+  case class Lst(l: List[NatNum])
+
+  implicit val implicitList = Lst(List(Nat1, Nat2))
+
+  trait LibTraitVarargs {
+    def sub(a: NatNum)(b: Int) = a.n - b
+    def sum(s: NatNum)(m: Int*) = m.map(_ + s.n).toList
+    def mul(m: Int*)(s: NatNum) = m.map(_ * s.n).toList
+    def product(l1: Int*)(implicit l2: Lst) = (for { i1 <- l1; i2 <- l2.l } yield i1 * i2.n).toList
+
+    def sum3(a: Int)(b: NatNum)(c: Int*) = a + b.n + c.sum
+  }
+
+  class LibClassVarargs(i: Int)(v: Int*) extends LibTraitVarargs
+
+  object LibObjectVarargs extends LibTraitVarargs
+}
