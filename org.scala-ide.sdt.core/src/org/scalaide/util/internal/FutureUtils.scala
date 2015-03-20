@@ -28,7 +28,7 @@ object FutureUtils {
   /**
    * Adds extensions to the `Future` companion object.
    */
-  implicit class FutureExtensions[A](private val f: Future.type) extends AnyVal {
+  implicit class FutureExtensions(private val f: Future.type) extends AnyVal {
 
     /**
      * Returns a `Future` that is never completed.

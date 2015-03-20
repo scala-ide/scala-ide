@@ -26,6 +26,7 @@ class ExtractExpressions extends QuickAssist {
     val proposals = new ArrayBuffer[ExtractionProposal]
 
     icu.withSourceFile { (file, compiler) =>
+      import scala.language.reflectiveCalls
       val refactoring = createRefactoring(compiler, file, selectionStart, selectionEnd)
       var relevance = RelevanceValues.ProposalRefactoringHandlerAdapter - 1
 

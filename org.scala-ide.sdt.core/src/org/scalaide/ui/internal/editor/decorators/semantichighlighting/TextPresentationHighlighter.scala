@@ -10,7 +10,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.PositionsTrack
  *
  *  @note This trait is needed for running tests in a headless environment.
  */
-trait TextPresentationHighlighter {
+private[scalaide] trait TextPresentationHighlighter {
   def sourceViewer: ISourceViewer
 
   def initialize(semanticHighlightingJob: Job, positionsTracker: PositionsTracker): Unit

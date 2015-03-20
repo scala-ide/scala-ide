@@ -31,7 +31,6 @@ import org.eclipse.ui.editors.text.TextEditor
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
-import org.scalaide.util.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger

@@ -29,8 +29,6 @@ object SourceFileProviderRegistry extends HasLogger {
     record.map(_._2).getOrElse(null)
   }
 
-  private def getProvider(extension: String): SourceFileProvider = registry get extension
-
   private def registerProviders() {
     val extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(EXTENSION_POINT)
     if (extensionPoint != null) {

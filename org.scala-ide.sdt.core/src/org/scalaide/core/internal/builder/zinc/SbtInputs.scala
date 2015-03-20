@@ -65,7 +65,7 @@ class SbtInputs(installation: IScalaInstallation,
     sbt.inc.IncOptions.Default.
       withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withNewClassfileManager(ClassfileManager.transactional(tempDir)).
+      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
       withApiDumpDirectory(None).
       withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
       withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))

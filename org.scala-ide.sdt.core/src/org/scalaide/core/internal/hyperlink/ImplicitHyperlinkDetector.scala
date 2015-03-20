@@ -4,8 +4,6 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitConversionAnnotation
-import org.scalaide.util.eclipse.EditorUtils
 
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 

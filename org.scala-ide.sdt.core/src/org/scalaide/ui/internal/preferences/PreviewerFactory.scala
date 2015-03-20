@@ -40,7 +40,6 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     val document = new Document
     document.set(initialText)
 
-    import scala.collection.JavaConverters._
     TextUtilities.addDocumentPartitioners(document, asJavaHashMap(factoryConfiguration.getDocumentPartitioners()))
     previewViewer.setDocument(document)
 

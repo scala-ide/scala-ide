@@ -537,9 +537,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  @deprecated("removed this cache to avoid sync issues with desired Source level", "4.0.1")
-  private val compatibilityModeCache = null
-
   @deprecated("Don't use or depend on this because it will be removed soon.", since = "4.0.0")
   def defaultOrElse[T]: T = {
     throw InvalidCompilerSettings()

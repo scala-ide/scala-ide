@@ -2,8 +2,6 @@ package org.scalaide.ui.editor
 
 import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
 import org.scalaide.core.internal.hyperlink.ImplicitHyperlinkDetector
-import org.eclipse.jface.text.hyperlink.IHyperlinkDetectorExtension
-import org.eclipse.jface.text.hyperlink.IHyperlinkDetector
 import org.scalaide.core.internal.hyperlink.ScalaHyperlink
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink

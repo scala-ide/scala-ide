@@ -33,7 +33,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.launching.ISearchMethods
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
-
 /** A JUnit4 test finder that works for Java and Scala.
  *
  *  We hook this test finder using an internal extension point defined by `org.eclipse.jdt.junit.core`,
@@ -101,7 +100,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
           // classes in the empty package are not found in the root mirror
           val sym = if (fqn.lastPos('.') > -1) rootMirror.getClassByName(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
           sym.annotations
-          sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet[String]
+          sym.info.members.filter(hasTestAnnotation).map(_.unexpandedName.toString).toSet[String]
         }.getOrElse(emptySet)()
       } getOrElse (emptySet)
     } getOrElse (emptySet)

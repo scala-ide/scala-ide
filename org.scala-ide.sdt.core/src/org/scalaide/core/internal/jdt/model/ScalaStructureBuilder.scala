@@ -595,9 +595,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         // When done, remove.
         if (sym ne NoSymbol) {
           sym.initialize
-          val getter = sym.getter(sym.owner)
+          val getter = sym.getterIn(sym.owner)
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
-          val setter = sym.setter(sym.owner)
+          val setter = sym.setterIn(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
           addBeanAccessors(sym)
         }
@@ -606,7 +606,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
 
       def addBeanAccessors(sym: Symbol) {
-        val beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
+        val beanName = sym.name.dropLocal.toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)

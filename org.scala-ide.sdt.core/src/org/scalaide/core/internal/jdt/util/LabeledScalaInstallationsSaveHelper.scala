@@ -28,7 +28,7 @@ class ContextualizedObjectInputStream(in: InputStream) extends ObjectInputStream
 
   override def resolveClass(desc: ObjectStreamClass) = {
 
-    val res  = Try(Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
+    val res = Try[Class[_]](Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
     res match {
       case Success(cl) => cl
       case Failure(thrown) => throw new IllegalAccessException("Something went horribly wrong deserializing")
@@ -73,16 +73,16 @@ object LabeledScalaInstallationsSaveHelper {
 
   /** A ScalaModule replacement used for object serialization
    */
+  @SerialVersionUID(1001667379327078799L)
   class ScalaModuleReplace(val classJar: IPath, val srcJar: Option[IPath]) extends Serializable {
-    private val serialVersionUID = 1001667379327078799L
     def this(sm: ScalaModule) = this(sm.classJar, sm.sourceJar)
     def getScalaModule() = ScalaModule(classJar, srcJar)
   }
 
   /** A ScalaInstallation replacement used for object serialization
    */
+  @SerialVersionUID(3901667379327078799L)
   class LabeledScalaInstallationReplace(val name: ScalaInstallationLabel, val compilerMod: ScalaModule, val libraryMod: ScalaModule, val extraJarsMods: Seq[ScalaModule]) extends Serializable {
-    private val serialVersionUID = 3901667379327078799L
     def this(ins: LabeledScalaInstallation) = this(ins.label, ins.compiler, ins.library, ins.extraJars)
     def getLabeledScalaInstallation() = new LabeledScalaInstallation() {
       override def label = name
@@ -95,8 +95,8 @@ object LabeledScalaInstallationsSaveHelper {
 
   /** An IPath replacement used for object serialization
    */
+  @SerialVersionUID(-2361259525684491181L)
   class PathReplace(val path: String) extends Serializable {
-    private val serialVersionUID = -2361259525684491181L
     def this(ip: IPath) = this(ip.toPortableString())
     def getPath() = Path.fromPortableString(path)
   }

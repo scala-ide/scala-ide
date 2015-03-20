@@ -3,7 +3,6 @@ package org.scalaide.ui.editor
 import scala.reflect.io.AbstractFile
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.resources.EclipseResource
-import scala.tools.nsc.interactive.Response
 import org.eclipse.core.resources.IFile
 import org.eclipse.jface.text.IDocument
 
