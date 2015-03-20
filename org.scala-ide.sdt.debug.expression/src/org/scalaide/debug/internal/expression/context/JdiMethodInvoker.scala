@@ -5,6 +5,7 @@ package org.scalaide.debug.internal.expression
 package context
 
 import scala.annotation.tailrec
+import scala.reflect.NameTransformer
 import scala.util.Success
 import scala.util.Try
 
@@ -86,11 +87,13 @@ private[context] trait JdiMethodInvoker {
     methodName: String,
     methodArgs: Seq[JdiProxy] = Seq.empty): Option[Value] = {
 
-    val standardMethod = new StandardMethod(proxy, methodName, methodArgs, this)
-    def varArgMethod = new ScalaVarArgMethod(proxy, methodName, methodArgs, this)
+    val encodedName = NameTransformer.encode(methodName)
+
+    val standardMethod = new StandardMethod(proxy, encodedName, methodArgs, this)
+    def varArgMethod = new ScalaVarArgMethod(proxy, encodedName, methodArgs, this)
     def javaVarArgMethod = new JavaVarArgMethod(proxy, methodName, methodArgs, this)
-    def stringConcat = new StringConcatenationMethod(proxy, methodName, methodArgs)
-    def anyValMethod = new AnyValMethod(proxy, methodName, methodArgs, onRealType, this, this)
+    def stringConcat = new StringConcatenationMethod(proxy, encodedName, methodArgs)
+    def anyValMethod = new AnyValMethod(proxy, encodedName, methodArgs, onRealType, this, this)
     def javaField = new JavaField(proxy, methodName, methodArgs, this)
 
     standardMethod() orElse
@@ -169,7 +172,8 @@ private[context] trait JdiMethodInvoker {
    * @return UnitJdiProxy
    */
   final def setLocalVariable(variableName: String, newValue: JdiProxy): UnitJdiProxy = {
-    val invoker = new LocalVariableInvoker(variableName, newValue, this, () => this.currentFrame())
+    val nameEncoded = NameTransformer.encode(variableName)
+    val invoker = new LocalVariableInvoker(nameEncoded, newValue, this, () => this.currentFrame())
     val result = invoker().getOrElse {
       throw new NoSuchFieldError(s"field $variableName not found in current frame")
     }

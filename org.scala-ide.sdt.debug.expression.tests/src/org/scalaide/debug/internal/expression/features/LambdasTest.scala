@@ -103,6 +103,11 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =
     eval(""" libClass.performOnList(list => list.map(_ + 1)) """, "List(2, 3)", Scala.::)
+
+  @Ignore("TODO - O-8578 - using values from objects in lambdas does not work")
+  @Test
+  def closureOnObjectValue(): Unit =
+    eval("list.map(i => i + Libs.value)", "List(12, 13, 14)", Scala.::)
 }
 
 object LambdasTest extends BaseIntegrationTestCompanion

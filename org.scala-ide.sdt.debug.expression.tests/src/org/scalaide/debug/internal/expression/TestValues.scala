@@ -260,6 +260,12 @@ object TestValues {
     val breakpointLine = 41
   }
 
+  object OperatorsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-operators"
+    val fileName = "Operators"
+    val breakpointLine = 41
+  }
+
   object VarargsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-varargs"
     val fileName = "Varargs"

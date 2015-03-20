@@ -12,6 +12,7 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[OperatorsTest],
     classOf[AsInstanceOfTest],
     classOf[IsInstanceOfTest],
     classOf[GenericsTest],
