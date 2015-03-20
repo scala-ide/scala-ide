@@ -55,6 +55,7 @@ object ExpressionEvaluator {
     ctx => MockThis(ctx.toolbox),
     ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext),
     ctx => TypeCheck(ctx.toolbox),
+    ctx => FixClassTags(ctx.toolbox),
     ctx => DetectNothingTypedExpression(ctx.toolbox),
     ctx => RemoveImports(ctx.toolbox),
     // function should be first because this transformer needs tree as clean as possible

@@ -22,11 +22,33 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
   extends AstTransformer with PrimitivesCommons {
 
   import toolbox.u._
+  import Debugger._
 
   private val constantTransformMap = Map(
     "-Infinity" -> "NegativeInfinity",
     "Infinity" -> "PositiveInfinity",
     "NaN" -> "NaN")
+
+  private val ClassOf = """classOf\[(.*?)\]""".r
+
+  private def classOfCode(literal: Literal) = {
+    val ClassOf(className) = literal.toString()
+    toolbox.parse(s"""$contextParamName.$classOfProxyMethodName("$className")""")
+  }
+
+  private def nullLiteralCode = {
+    val nullProxy = classOf[NullJdiProxy].getSimpleName
+    Apply(
+      SelectApplyMethod(nullProxy),
+      List(Ident(TermName(contextParamName))))
+  }
+
+  private def unitLiteralCode = {
+    val unitProxy = classOf[UnitJdiProxy].getSimpleName
+    Apply(
+      SelectApplyMethod(unitProxy),
+      List(Ident(TermName(contextParamName))))
+  }
 
   /**
    * Create code to replace literal.
@@ -34,21 +56,11 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    */
   private def literalCode(literal: Literal): Tree = {
     import Debugger._
-    if (constantTransformMap.contains(literal.toString)) {
-      literalConstantCode(literal)
-    } else if (literal.toString == Scala.nullLiteral) {
-      val nullProxy = classOf[NullJdiProxy].getSimpleName
-      Apply(
-        SelectApplyMethod(nullProxy),
-        List(Ident(TermName(contextParamName))))
-    } else if (literal.toString == Scala.unitLiteral) {
-      val unitProxy = classOf[UnitJdiProxy].getSimpleName
-      Apply(
-        SelectApplyMethod(unitProxy),
-        List(Ident(TermName(contextParamName))))
-    } else {
-      packPrimitive(literal)
-    }
+    if (ClassOf.findFirstIn(literal.toString()).isDefined) classOfCode(literal)
+    else if (constantTransformMap.contains(literal.toString)) literalConstantCode(literal)
+    else if (literal.toString == Scala.nullLiteral) nullLiteralCode
+    else if (literal.toString == Scala.unitLiteral) unitLiteralCode
+    else packPrimitive(literal)
   }
 
   /**
@@ -58,7 +70,6 @@ case class MockLiteralsAndConstants(toolbox: ToolBox[universe.type], typesContex
    */
   private def literalConstantCode(literal: Literal): Tree =
     packPrimitive(literal)
-
 
   /** See `AstTransformer.transformSingleTree`. */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {

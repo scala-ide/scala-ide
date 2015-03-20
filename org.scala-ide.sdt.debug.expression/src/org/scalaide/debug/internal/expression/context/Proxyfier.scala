@@ -70,6 +70,16 @@ private[context] trait Proxyfier {
     }
 
   /**
+   * Creates a proxy for a Scala `classOf` method.
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change its name, package or behavior, make sure to change it also.
+   */
+  def classOfProxy(name: String): JdiProxy = {
+    valueProxy(classByName(name).classObject)
+  }
+
+  /**
    * Creates a proxy for a value with given name.
    * Value of that name have to exist in scope or running program.
    *

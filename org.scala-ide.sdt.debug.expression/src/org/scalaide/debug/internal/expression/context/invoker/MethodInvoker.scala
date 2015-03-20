@@ -38,26 +38,27 @@ trait MethodInvoker extends HasLogger {
    */
   protected final def conformsTo(proxy: JdiProxy, tpe: Type): Boolean = {
     if (proxy.__underlying == null) tpe.isInstanceOf[ClassType]
-    else (tpe, proxy, proxy.__underlying.referenceType) match {
-
-      case (arrayType: ArrayType, arrayProxy: ArrayJdiProxy[_], _) => arrayProxy.__underlying.`type` == arrayType
-
-      case _ if tpe == proxy.referenceType => true
-
-      case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) => primitive.name == boxed.primitiveName
-
-      case (objectType, _, refType: ReferenceType) if objectType.name == Names.Java.Object => true
-
-      case (refType: ClassType, _, classType: ClassType) => isSuperClassOf(refType)(classType)
-
-      case (interfaceType: InterfaceType, _, classType: ClassType) => classType.allInterfaces.contains(interfaceType)
-
-      case _ => false
+    else (tpe, proxy, proxy.referenceType) match {
+      case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) =>
+        primitive.name == boxed.primitiveName
+      case (parentArrayType: ArrayType, _, thisArrayType: ArrayType) =>
+        isSuperClassOf(parentArrayType.componentType)(thisArrayType.componentType)
+      case (parentType: Type, _, thisType: Type) =>
+        isSuperClassOf(parentType)(thisType)
     }
   }
 
-  private def isSuperClassOf(parentClass: ClassType)(thisClass: ClassType): Boolean = {
-    parentClass == thisClass || Option(thisClass.superclass()).map(isSuperClassOf(parentClass)).getOrElse(false)
+  private def isSuperClassOf(parentType: Type)(thisType: Type): Boolean = {
+    (parentType, thisType) match {
+      case (parentType, thisType) if parentType == thisType || parentType.name == Names.Java.Object =>
+        true
+      case (parentInterfaceType: InterfaceType, thisClassType: ClassType) =>
+        thisClassType.allInterfaces.contains(parentInterfaceType)
+      case (parentRefType: ReferenceType, thisClassType: ClassType) =>
+        Option(thisClassType.superclass()).map(isSuperClassOf(parentRefType)).getOrElse(false)
+      case _ =>
+        false
+    }
   }
 
   /**

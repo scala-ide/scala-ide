@@ -66,8 +66,15 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
   def testStringArray(): Unit =
     eval("stringArray", ScalaRunTime.stringOf(stringArray), Scala.Array(Java.boxed.String))
 
-  // TODO - O-5695 - add support for new array creation
-  @Test(expected = classOf[UnsupportedFeature])
+  @Test
+  def testIntListToArray(): Unit =
+    eval("List(1, 2, 3).toArray", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+
+  @Test
+  def testStringListToArray(): Unit =
+    eval("""List("a", "b").toArray""", """Array(a, b)""", Scala.Array(Java.boxed.String))
+
+  @Test()
   def testIntArrayCreation(): Unit =
     eval("Array(1,2,3)", ScalaRunTime.stringOf(Array[Int](1, 2, 3)), Scala.Array(Scala.primitives.Int))
 
@@ -77,8 +84,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
     expectedValue = ScalaRunTime.stringOf(Array[Int](1, 2, 3)),
     expectedType = Scala.Array(Scala.primitives.Int))
 
-  // TODO - O-5695 - add support for new array creation
-  @Test(expected = classOf[UnsupportedFeature])
+  @Test
   def testStringArrayCreation(): Unit =
     eval("""Array("ala", "ola", "ula")""", ScalaRunTime.stringOf(Array("ala", "ola", "ula")), Scala.Array(Java.boxed.String))
 
@@ -149,13 +155,19 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
       expectedValue = ScalaRunTime.stringOf(new Array[String](10)),
       expectedType = Scala.Array(Java.boxed.String))
 
-  @Ignore("TODO - O-5695 - add support for rich methods on arrays")
   @Test
-  def testRichArrayMethods(): Unit = {
+  def testRichArrayMethodsHead(): Unit =
     eval("stringArray.head", stringArray.head, Java.boxed.String)
-    eval("stringArray ++ intArray", stringArray ++ intArray, Scala.arrayType)
-    eval("intArray.map { (i: Int) => i.toString }", intArray.map { (i: Int) => i.toString }, Scala.arrayType)
-  }
+
+  @Ignore("TODO - O-8564 Investigate test failures connected with HasNewBuilder and CanBuildFrom errors")
+  @Test
+  def testRichArrayMethodsConcatenation(): Unit =
+    eval("stringArray ++ intArray", ScalaRunTime.stringOf(stringArray ++ intArray), Scala.Array(Java.Object))
+
+  @Ignore("TODO - O-8564 Investigate test failures connected with HasNewBuilder and CanBuildFrom errors")
+  @Test
+  def testRichArrayMethodsMap(): Unit =
+    eval("intArray.map { _.toString }", intArray.map { _.toString }, Scala.Array(Java.boxed.String))
 
   @Test
   def testNestedArrayAccess(): Unit =
