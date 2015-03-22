@@ -22,6 +22,8 @@ class FailFast
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case Try(_, _, _) =>
       throw new UnsupportedFeature("try/catch/finally")
+    case Select(New(Ident(TypeName("$anon"))), termNames.CONSTRUCTOR) =>
+      throw new UnsupportedFeature("refined types")
     case other =>
       transformFurther(other)
   }
