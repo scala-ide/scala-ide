@@ -85,7 +85,7 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
   def testCharacterLiterals(): Unit = {
     eval("'c'", "c", Java.boxed.Character)
     eval("'\u0041'", "A", Java.boxed.Character)
-    eval("'\t'", "\t", Java.boxed.Character)
+    eval("'\t'", s("\t"), Java.boxed.Character)
   }
 
   @Test
@@ -95,6 +95,15 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
     eval("3.14159f", "3.14159", Java.boxed.Float)
     eval("1.0e10f", "1.0E10", Java.boxed.Float)
     eval(".1f", "0.1", Java.boxed.Float)
+  }
+
+  @Test
+  def testStringLiteralsWithTrailingWhitespace(): Unit = {
+    eval(s(""), s(""), Java.boxed.String)
+    eval(s(" "), s(" "), Java.boxed.String)
+    eval(s(" a"), s(" a"), Java.boxed.String)
+    eval(s("a "), s("a "), Java.boxed.String)
+    eval(s(" a "), s(" a "), Java.boxed.String)
   }
 
   @Test
