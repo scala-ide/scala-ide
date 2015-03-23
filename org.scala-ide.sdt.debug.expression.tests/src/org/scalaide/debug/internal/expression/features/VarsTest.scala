@@ -1,14 +1,12 @@
 /*
  * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.features
+package org.scalaide.debug.internal.expression
+package features
 
 import org.junit.Test
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.VariablesTestCase
-import org.scalaide.debug.internal.expression.UnsupportedFeature
 
 trait AssignmentTest {
   self: BaseIntegrationTest =>
@@ -23,7 +21,8 @@ trait AssignmentTest {
       }
     } finally {
       // set old value for next tests
-      if (oldType == Java.boxed.String) runCode(s"""$on = "$oldValue"""")
+      def haveQuotes(s: String) = s.startsWith("\"") && s.endsWith("\"")
+      if (oldType == Java.boxed.String && !haveQuotes(oldValue)) runCode(s"""$on = "$oldValue"""")
       else runCode(s"$on = $oldValue")
     }
   }
@@ -37,8 +36,6 @@ class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
 
   @Test
   def testLocalVariableAssignment(): Unit = {
-    def s(a: Any) = '"' + a.toString + '"'
-
     testAssignment("localString", Java.boxed.String, values = s("1"), s("2"), s("3"))
     testAssignment("localBoxedInt", Java.boxed.Integer,
       values = "new java.lang.Integer(1)",

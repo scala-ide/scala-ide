@@ -54,7 +54,7 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
 
   @Test
   def varargWithSimpleOverloads(): Unit = {
-    eval(""" varargWithSimpleOverloads.f() """, "", Java.boxed.String)
+    eval(""" varargWithSimpleOverloads.f() """, s(""), Java.boxed.String)
     eval(""" varargWithSimpleOverloads.f("1") """, "s", Java.boxed.String)
     eval(""" varargWithSimpleOverloads.f("1", "2") """, "s*", Java.boxed.String)
   }

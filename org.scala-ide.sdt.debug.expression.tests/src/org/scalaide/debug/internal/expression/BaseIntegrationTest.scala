@@ -16,6 +16,9 @@ import org.scalaide.logging.HasLogger
 
 class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion) extends HasLogger {
 
+  /** Wraps value with `"` */
+  protected def s(a: Any) = '"' + a.toString + '"'
+
   private val resultRegex = s"(.*) \\(of type: (.+)\\)".r
 
   /**
