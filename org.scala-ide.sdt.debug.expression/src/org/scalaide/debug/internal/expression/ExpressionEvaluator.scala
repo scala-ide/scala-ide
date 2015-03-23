@@ -52,6 +52,7 @@ object ExpressionEvaluator {
 
     val beforeTypeCheck: Phases[BeforeTypecheck] = Seq(
       ctx => new FailFast,
+      ctx => new SingleValDefWorkaround,
       ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.typesContext, ctx.context.localVariablesNames()),
       ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
       ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
