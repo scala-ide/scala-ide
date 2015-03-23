@@ -1,17 +1,23 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.features
+package org.scalaide.debug.internal.expression
+package features
 
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NewInstancesTestCase
-import org.scalaide.debug.internal.expression.ReflectiveCompilationFailure
 
 class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
+
+  @Test(expected = classOf[UnsupportedFeature])
+  def traitRefinement(): Unit =
+    eval("new A {}", "A", "A")
+
+  @Test(expected = classOf[UnsupportedFeature])
+  def classRefinement(): Unit =
+    eval("new B {}", "B", "B")
 
   @Test
   def noArgConstructor(): Unit = eval("new LibClassWithoutArgs", "LibClassWithoutArgs", "debug.LibClassWithoutArgs")
