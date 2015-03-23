@@ -4,6 +4,7 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
+import scala.reflect.NameTransformer
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
@@ -34,7 +35,7 @@ class MockAssignment(val toolbox: ToolBox[universe.type], unboundVariables: => S
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case Assign(Ident(termName: TermName), value) if isNonLocalUnboundVariable(termName) =>
       Apply(
-        SelectMethod(Debugger.thisValName, termName + "_$eq"),
+        SelectMethod(Debugger.thisValName, termName + NameTransformer.SETTER_SUFFIX_STRING),
         List(value))
     case other => transformFurther(other)
   }

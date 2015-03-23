@@ -4,8 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.reflect.NameTransformer
-
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 
@@ -16,10 +14,7 @@ import com.sun.jdi.Value
 /**
  * Implementation of `BaseMethodInvoker`for Scala methods.
  */
-abstract class ScalaMethod(name: String, proxy: JdiProxy) extends BaseMethodInvoker {
-
-  protected val methodName: String = NameTransformer.encode(name)
-
+abstract class ScalaMethod(val methodName: String, proxy: JdiProxy) extends BaseMethodInvoker {
   protected def referenceType: ReferenceType = proxy.referenceType
 }
 

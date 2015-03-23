@@ -29,9 +29,8 @@ trait Seeker {
 
   protected def jvm: VirtualMachine
 
-  /** real name of class - replace object name prefix and handles arrays */
-  private def realClassName(name: String): String = name match {
-    case Scala.Array(typeArg) => Java.primitives.Array(realClassName(scalaToJavaTypeName(typeArg)))
+  private def handleArray(name: String): String = name match {
+    case Scala.Array(typeArg) => Java.primitives.Array(handleArray(scalaToJavaTypeName(typeArg)))
     case other => other
   }
 
@@ -50,7 +49,7 @@ trait Seeker {
   }
 
   final def arrayClassByName(name: String): ArrayType =
-    jvm.classesByName(realClassName(name)).head match {
+    jvm.classesByName(handleArray(name)).head match {
       case arrayType: ArrayType => arrayType
       case other => throw new IllegalArgumentException(s"Returned type is not an array: $other")
     }
@@ -58,10 +57,10 @@ trait Seeker {
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType =
     tryClassByName(name)
-      .getOrElse(throw new ClassNotFoundException("Class or object not found: " + realClassName(name)))
+      .getOrElse(throw new ClassNotFoundException("Class or object not found: " + handleArray(name)))
 
   final def tryClassByName(name: String): Option[ClassType] = {
-    val className = realClassName(name)
+    val className = handleArray(name)
     def getClassType() = jvm.classesByName(className).collectFirst {
       case classType: ClassType => classType
     }
@@ -73,8 +72,7 @@ trait Seeker {
   }
 
   /** Looks up an interface for given name and returns jdi reference to it. */
-  final def interfaceByName(name: String, onNotFound: String => InterfaceType): InterfaceType = {
-    val interfaceName = realClassName(name)
+  final def interfaceByName(interfaceName: String, onNotFound: String => InterfaceType): InterfaceType = {
     jvm.classesByName(interfaceName).collectFirst {
       case interfaceType: InterfaceType => interfaceType
     } getOrElse onNotFound(interfaceName)
@@ -83,22 +81,21 @@ trait Seeker {
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
   final def objectByName(name: String): ObjectReference = {
     val classType = tryClassByName(name + "$")
-      .getOrElse(throw new ClassNotFoundException("Class not found: " + realClassName(name) + "$"))
-    val field = Option(classType.fieldByName("MODULE$"))
-      .getOrElse(throw new NoSuchMethodError(s"No field named `MODULE$$` found in class $name"))
+      .getOrElse(throw new ClassNotFoundException("Class not found: " + handleArray(name) + "$"))
+    val field = Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
+      .getOrElse(throw new NoSuchMethodError(s"No field named `${NameTransformer.MODULE_INSTANCE_NAME}` found in class $name"))
     classType.getValue(field).asInstanceOf[ObjectReference]
   }
 
-  private[expression] final def tryObjectByName(name: String): Option[ObjectReference] =
-    try {
-      for {
-        classType <- tryClassByName(name + "$")
-        field <- Option(classType.fieldByName("MODULE$"))
-      } yield classType.getValue(field).asInstanceOf[ObjectReference]
-    } catch {
-      // thrown when trying to force loading nonexistent class
-      case _: InvocationException => None
-    }
+  private[expression] final def tryObjectByName(name: String): Option[ObjectReference] = try {
+    for {
+      classType <- tryClassByName(name + "$")
+      field <- Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
+    } yield classType.getValue(field).asInstanceOf[ObjectReference]
+  } catch {
+    // thrown when trying to force loading nonexistent class
+    case _: InvocationException => None
+  }
 
   /**
    * Helper for getting methods from given class name.
@@ -117,7 +114,8 @@ trait Seeker {
       throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${classRef.name}"))
   }
 
-  /** Helper for getting method from ObjectReference
+  /**
+   * Helper for getting method from ObjectReference
    *
    * @param obj reference on which method is looked
    * @param methodName name of method

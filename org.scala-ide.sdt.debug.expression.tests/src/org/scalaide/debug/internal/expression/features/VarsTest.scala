@@ -10,9 +10,10 @@ import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.VariablesTestCase
 import org.scalaide.debug.internal.expression.UnsupportedFeature
 
-class VarsTest extends BaseIntegrationTest(VarsTest) {
+trait AssignmentTest {
+  self: BaseIntegrationTest =>
 
-  private def testAssignment(on: String, tpe: String, values: String*) = {
+  protected def testAssignment(on: String, tpe: String, values: String*) = {
     val (oldValue, oldType) = runCode(on)
     try {
       values.foreach { value =>
@@ -26,6 +27,9 @@ class VarsTest extends BaseIntegrationTest(VarsTest) {
       else runCode(s"$on = $oldValue")
     }
   }
+}
+
+class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
 
   @Test
   def testVariableAssignment(): Unit =
