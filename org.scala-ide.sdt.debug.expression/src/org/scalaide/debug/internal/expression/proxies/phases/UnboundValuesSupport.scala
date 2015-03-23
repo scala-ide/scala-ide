@@ -4,14 +4,11 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
-import scala.tools.reflect.ToolBox
 import scala.reflect.runtime.universe
 
 trait UnboundValuesSupport {
 
-  val toolbox: ToolBox[universe.type]
-
-  import toolbox.u._
+  import universe._
 
   /**
    * Keeps track of all enclosing trees

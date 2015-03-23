@@ -5,7 +5,6 @@ package org.scalaide.debug.internal.expression
 package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -23,10 +22,10 @@ import org.scalaide.debug.internal.expression.Names.Scala
  *  value
  * }}}
  */
-class RemoveAsInstanceOf(val toolbox: ToolBox[universe.type])
-    extends AstTransformer {
+class RemoveAsInstanceOf
+    extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case TypeApply(Select(on, TermName("asInstanceOf")), List(TypeTree())) => on

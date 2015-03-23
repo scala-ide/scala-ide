@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression.proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.BeforeTypecheck
@@ -15,11 +14,10 @@ import org.scalaide.debug.internal.expression.UnsupportedFeature
  *
  * This transformer works on untyped trees - before typecheck.
  */
-case class FailFast(toolbox: ToolBox[universe.type])
-  extends AstTransformer
-  with BeforeTypecheck {
+class FailFast
+  extends AstTransformer[BeforeTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case Try(_, _, _) =>

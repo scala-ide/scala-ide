@@ -74,7 +74,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) {
   def testStringListToArray(): Unit =
     eval("""List("a", "b").toArray""", """Array(a, b)""", Scala.Array(Java.boxed.String))
 
-  @Test()
+  @Test
   def testIntArrayCreation(): Unit =
     eval("Array(1,2,3)", ScalaRunTime.stringOf(Array[Int](1, 2, 3)), Scala.Array(Scala.primitives.Int))
 

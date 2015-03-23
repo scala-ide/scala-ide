@@ -5,7 +5,6 @@ package org.scalaide.debug.internal.expression
 package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 
@@ -21,14 +20,12 @@ import org.scalaide.debug.internal.expression.Names.Debugger
  *  __context.setLocalVariable("localString", <expression>)
  * }}}
  *
- * This phase runs after `typecheck`.
- *
  * @param unboundVariables by-name of unbound variables in current frame (used to check if variable is local)
  */
-class MockLocalAssignment(val toolbox: ToolBox[universe.type], unboundVariables: => Set[UnboundVariable])
-    extends AstTransformer {
+class MockLocalAssignment(unboundVariables: => Set[UnboundVariable])
+    extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   def isLocalUnboundVariable(termName: TermName): Boolean =
     unboundVariables.contains(UnboundVariable(termName, isLocal = true))

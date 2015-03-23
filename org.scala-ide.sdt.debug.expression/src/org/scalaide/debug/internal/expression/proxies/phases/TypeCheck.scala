@@ -1,16 +1,21 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.TransformationPhase
 import org.scalaide.logging.HasLogger
 
+/**
+ * Typechecks given code using `toolbox.typecheck`.
+ *
+ * Hops through some loops to work around some problems with Toolbox.
+ */
 case class TypeCheck(toolbox: ToolBox[universe.type])
-  extends TransformationPhase
+  extends TransformationPhase[IsTypecheck]
   with HasLogger {
 
   // TODO - O-6127 - workaround for compiler error - will be resolved with Typesafe

@@ -1,25 +1,33 @@
 /*
  * Copyright (c) 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
+
+import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
 import org.scalaide.debug.internal.expression.context.VariableContext
-
-import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.Names.Debugger._
-import org.scalaide.debug.internal.expression.UnsupportedFeature
-
-import scala.reflect.runtime._
-import scala.tools.reflect.ToolBox
 
 /**
  * Tries to implement all found nested functions mocks.
- * It remove mock value definition and rewrite nested method call.
+ * It removes mock values definitions and rewrites nested method call.
+ *
+ * Transforms:
+ * {{{
+ *   val simpleNested: Int => String = org.scalaide.debug.internal.expression.context.JdiContext.placeholderNestedMethod(1, 8, 9);
+ *   simpleNested.apply(1)
+ * }}}
+ * into:
+ * {{{
+ *   __this_1.simpleNested$1(1)
+ * }}}
  */
-class ImplementMockedNestedMethods(val toolbox: ToolBox[universe.type], context: VariableContext) extends AstTransformer {
+class ImplementMockedNestedMethods(context: VariableContext)
+    extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   private var nestedMethods: Map[String, NestedMethodDeclaration] = Map()
 
@@ -33,14 +41,14 @@ class ImplementMockedNestedMethods(val toolbox: ToolBox[universe.type], context:
 
   private def checkParametersListsCount(args: List[_], applyCount: Int): Boolean =
     if (applyCount < args.size) false
-    else if(applyCount > args.size) throw new UnsupportedFeature("Nested method as function")
+    else if (applyCount > args.size) throw new UnsupportedFeature("Nested method as function")
     else true
-
 
   private def implementMethod(functionName: Name, args: List[List[Tree]]): Option[Tree] = {
     val name = functionName.toString
     for {
-      nestedMethodDeclaration <- nestedMethods.get(name) if checkParametersListsCount(args, nestedMethodDeclaration.parametersListsCount)
+      nestedMethodDeclaration <- nestedMethods.get(name)
+      if checkParametersListsCount(args, nestedMethodDeclaration.parametersListsCount)
       nestedMethodImplementation <- context.nestedMethodImplementation(nestedMethodDeclaration)
     } yield {
 
@@ -72,7 +80,7 @@ class ImplementMockedNestedMethods(val toolbox: ToolBox[universe.type], context:
       // remove mock value definition
       EmptyTree
 
-    case original@NestedMethod(name, args) =>
+    case original @ NestedMethod(name, args) =>
       implementMethod(name, args).getOrElse(transformFurther(original))
 
     case other =>

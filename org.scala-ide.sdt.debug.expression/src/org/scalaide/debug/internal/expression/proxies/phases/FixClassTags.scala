@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
@@ -10,9 +11,20 @@ import org.scalaide.debug.internal.expression.AstTransformer
 
 /**
  * Replaces all occurrences of `ClassTag` class with fully qualified `scala.reflect.ClassTag`.
+ *
+ * Transforms:
+ * {{{
+ *   immutable.this.List.apply[Int](1, 2, 3).toArray[Int]((ClassTag.Int: scala.reflect.ClassTag[Int]))
+ * }}}
+ * into:
+ * {{{
+ *   immutable.this.List.apply[Int](1, 2, 3).toArray[Int](scala.reflect.ClassTag.Int)
+ * }}}
+ *
+ * This phase runs after `typecheck`.
  */
 case class FixClassTags(toolbox: ToolBox[universe.type])
-  extends AstTransformer {
+    extends AstTransformer[AfterTypecheck] {
 
   import universe._
 

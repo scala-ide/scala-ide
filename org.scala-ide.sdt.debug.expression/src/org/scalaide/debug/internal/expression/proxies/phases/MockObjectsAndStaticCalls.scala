@@ -6,26 +6,27 @@ package proxies.phases
 
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
+import org.scalaide.debug.internal.expression.Names.Scala
 
 /**
- * Extract and transforms all object-like code to valid proxies
- * (it can be also Java static call but we can't distinguish here - there's needed dynamic dispatch on a later level).
+ * Extracts and transforms all object-like code to valid proxies
+ * (it can be also Java static call but we can't distinguish here - dynamic dispatch is needed later).
+ *
  * E.g. call to object:
  * {{{
- *  Ala
+ *   Ala
  * }}}
  * is transformed to:
  * {{{
- *  __proxy.objectOrStaticCallProxy("ala.package.Ala")
- *  }}}
+ *   __proxy.objectOrStaticCallProxy("Ala")
+ * }}}
  */
-case class MockObjectsAndStaticCalls(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer {
+class MockObjectsAndStaticCalls
+  extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   /**
    * Check if given select is stable object.
@@ -46,13 +47,30 @@ case class MockObjectsAndStaticCalls(toolbox: ToolBox[universe.type], typesConte
       select.toString != Debugger.contextFullName
   }
 
+  /** Creates java names for classes (replaces `.` with `$` for nested classes). */
+  private def jvmTypeForClass(tpe: universe.Type): String = {
+    import universe.TypeRefTag
+    // hack for typecheck replacing `List.apply()` with `immutable.this.Nil`
+    if (tpe.toString == "List[Nothing]") Scala.nil
+    else tpe.typeConstructor match {
+      case universe.TypeRef(prefix, sym, _) if !prefix.typeConstructor.typeSymbol.isPackage =>
+        val className = sym.name
+        val parentName = jvmTypeForClass(prefix)
+        parentName + "$" + className
+      case _ =>
+        tpe.typeSymbol.fullName
+    }
+  }
+
   /** generate and parse object/static call code */
   private def createProxy(select: Tree): Tree = {
-    val className = typesContext.jvmTypeForClass(select.tpe)
+    val className = jvmTypeForClass(select.tpe)
 
     // generates code like __proxy.objectOrStaticCallProxy("ala.package.Ala")
     import Debugger._
-    toolbox.parse(s"""$contextParamName.$objectOrStaticCallProxyMethodName("$className")""")
+    Apply(
+        SelectMethod(contextParamName, objectOrStaticCallProxyMethodName),
+        List(Literal(Constant(className))))
   }
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {

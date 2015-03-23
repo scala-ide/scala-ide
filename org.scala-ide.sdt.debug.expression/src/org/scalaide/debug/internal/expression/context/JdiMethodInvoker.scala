@@ -184,7 +184,6 @@ private[context] trait JdiMethodInvoker {
    *
    * @param className class for object to create
    * @param args list of list of arguments to pass to method
-   * @param implicits list of implicit arguments
    * @throws NoSuchMethodError when matching constructor is not found
    */
   final def newInstance(

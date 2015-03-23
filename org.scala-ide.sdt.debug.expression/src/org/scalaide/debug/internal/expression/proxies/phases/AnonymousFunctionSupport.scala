@@ -7,6 +7,8 @@ package proxies.phases
 import java.io.File
 
 import scala.io.Source
+import scala.reflect.runtime.universe
+import scala.tools.reflect.ToolBox
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.Names.Debugger
@@ -91,7 +93,12 @@ object AnonymousFunctionSupport {
 }
 
 trait AnonymousFunctionSupport extends UnboundValuesSupport {
-  self: AstTransformer =>
+  self: AstTransformer[TypecheckRelation] =>
+
+  //requirements
+  protected val typesContext: TypesContext
+
+  val toolbox: ToolBox[universe.type]
 
   import toolbox.u.{ Try => _, _ }
 
@@ -139,9 +146,6 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     }
   }
 
-  //requirements
-  protected val typesContext: TypesContext
-
   // for function naming
   private var functionsCount = 0
 
@@ -165,14 +169,14 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, typesContext.treeTypeName)
       .findUnboundValues().filterNot {
-      case (variable, _) => vparamsName.contains(variable.name)
-    }.map {
-      case (variable, Some(valueType)) =>
-        val isFunctionImport = valueType.contains("$$")
-        val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
-        variable.name -> fixedType
-      case (variable, _) => variable.name -> Debugger.proxyName
-    }
+        case (variable, _) => vparamsName.contains(variable.name)
+      }.map {
+        case (variable, Some(valueType)) =>
+          val isFunctionImport = valueType.contains("$$")
+          val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
+          variable.name -> fixedType
+        case (variable, _) => variable.name -> Debugger.proxyName
+      }
   }
 
   /**
@@ -203,7 +207,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val DefDef(functionMods, functionName, _, _, retType, _) = impl.last
     val newApplyFunction = DefDef(functionMods, functionName, Nil, List(params), retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
-    val functionReseted = ResetTypeInformation(toolbox).transform(newFunctionClass)
+    val functionReseted = new ResetTypeInformation().transform(newFunctionClass)
 
     new ClassListener(newClassName, functionReseted.toString)(() => {
       toolbox.compile(functionReseted)

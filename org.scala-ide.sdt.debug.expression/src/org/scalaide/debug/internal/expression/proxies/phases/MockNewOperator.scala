@@ -1,29 +1,32 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstMatchers
-import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TypesContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
 
 /**
  * Proxies all constructors in code.
- * for construction we use JdiContext.newInstance
- * Rewrites new Class(a)(b) to __context.newInstance("package.Class", Seq(Seq(a), Seq(b)))
  *
+ * Transforms:
+ * {{{
+ *   new Class(a)(b)
+ * }}}
+ * to:
+ * {{{
+ *   __context.newInstance("Class", Seq(a, b))
+ * }}}
  */
-case class MockNewOperator(toolbox: ToolBox[universe.type])
-  extends AstTransformer {
+class MockNewOperator
+  extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   /**
    * Traverse through method call and returns arguments
@@ -42,17 +45,17 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
     // parameters lists for constructor
     val params = extractParameters(fun) ++ args
 
-    // responsible for ""package.Class"" part of expression
+    // responsible for `"Class"` part of expression
     val classTypeCode: Tree = Literal(Constant(classType))
 
-    // responsible for "__context.newInstance" part of expression
+    // responsible for `__context.newInstance` part of expression
     val methodCall = {
       // creating nested type applied tree is too cumbersome to do by hand
       import Debugger._
       Select(Ident(TermName(contextParamName)), TermName(newInstance))
     }
 
-    // responsible for "Seq(Seq(a), Seq(a))" part of expression
+    // responsible for `Seq(a, b)` part of expression
     val argsCode = Apply(SelectApplyMethod("Seq"), params)
 
     Apply(methodCall, List(classTypeCode, argsCode))
@@ -60,7 +63,6 @@ case class MockNewOperator(toolbox: ToolBox[universe.type])
 
   private def isConstructor(symbol: Symbol) = symbol.name.toString == Scala.constructorMethodName
 
-  /** Transformer */
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
       val classType = newTree.tpe match {

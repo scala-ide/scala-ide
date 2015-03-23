@@ -21,13 +21,10 @@ import org.scalaide.debug.internal.expression.Names.Debugger
  *   __this.localString_$eq(<expression>)
  * }}}
  *
- * This phase runs before `typecheck`.
- *
  * @param unboundVariables by-name of unbound variables in current frame (used to check if variable is local)
  */
 class MockAssignment(val toolbox: ToolBox[universe.type], unboundVariables: => Set[UnboundVariable])
-    extends AstTransformer
-    with BeforeTypecheck {
+    extends AstTransformer[BeforeTypecheck] {
 
   import toolbox.u._
 

@@ -10,7 +10,7 @@ import org.scalaide.debug.internal.expression.Names.Java
 
 trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
 
-  @Ignore("TODO - 0-8464 Add support for using methods from objects as first class functions")
+  @Ignore("TODO - O-8464 Add support for using methods from objects as first class functions")
   @Test
   def methodsFromObject(): Unit = {
     eval("List(1, 2).foldLeft(ObjectMethods.zero)(ObjectMethods.sum)", "3", Java.boxed.Integer)

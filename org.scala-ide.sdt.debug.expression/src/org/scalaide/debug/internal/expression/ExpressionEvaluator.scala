@@ -46,38 +46,49 @@ object ExpressionEvaluator {
     context: VariableContext,
     typesContext: TypesContext)
 
-  private[expression] def phases: Seq[Context => TransformationPhase] = Seq(
-    ctx => FailFast(ctx.toolbox),
-    ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.typesContext, ctx.context.localVariablesNames()),
-    ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
-    ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
-    ctx => new AddImports(ctx.toolbox, ctx.context.thisPackage),
-    ctx => MockThis(ctx.toolbox),
-    ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext),
-    ctx => TypeCheck(ctx.toolbox),
-    ctx => FixClassTags(ctx.toolbox),
-    ctx => DetectNothingTypedExpression(ctx.toolbox),
-    ctx => RemoveImports(ctx.toolbox),
-    // function should be first because this transformer needs tree as clean as possible
-    ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
-    ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
-    ctx => new ImplementMockedNestedMethods(ctx.toolbox, ctx.context),
-    ctx => MockLiteralsAndConstants(ctx.toolbox, ctx.typesContext),
-    ctx => MockPrimitivesOperations(ctx.toolbox),
-    ctx => MockToString(ctx.toolbox),
-    ctx => new MockLocalAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
-    ctx => new MockIsInstanceOf(ctx.toolbox),
-    ctx => new RemoveAsInstanceOf(ctx.toolbox),
-    ctx => MockHashCode(ctx.toolbox),
-    ctx => MockMethodsCalls(ctx.toolbox),
-    ctx => MockObjectsAndStaticCalls(ctx.toolbox, ctx.typesContext),
-    ctx => MockNewOperator(ctx.toolbox),
-    ctx => FlattenFunctions(ctx.toolbox),
-    ctx => ImplementValues(ctx.toolbox, ctx.context.implementValue),
-    ctx => CleanUpValDefs(ctx.toolbox),
-    ctx => ResetTypeInformation(ctx.toolbox),
-    ctx => new AddImports(ctx.toolbox, ctx.context.thisPackage),
-    ctx => new PackInFunction(ctx.toolbox))
+  type Phases[A <: TypecheckRelation] = Seq[Context => TransformationPhase[A]]
+
+  private[expression] def phases: Phases[TypecheckRelation] = {
+
+    val beforeTypeCheck: Phases[BeforeTypecheck] = Seq(
+      ctx => new FailFast,
+      ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.typesContext, ctx.context.localVariablesNames()),
+      ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
+      ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
+      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage),
+      ctx => new MockThis,
+      ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext))
+
+    val typecheck: Phases[IsTypecheck] = Seq(
+      ctx => TypeCheck(ctx.toolbox))
+
+    val afterTypecheck: Phases[AfterTypecheck] = Seq(
+      ctx => FixClassTags(ctx.toolbox),
+      ctx => new DetectNothingTypedExpression,
+      ctx => new RemoveImports,
+      // function should be first because this transformer needs tree as clean as possible
+      ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
+      ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
+      ctx => new ImplementMockedNestedMethods(ctx.context),
+      ctx => new MockLiteralsAndConstants(ctx.typesContext),
+      ctx => new MockPrimitivesOperations,
+      ctx => new MockToString,
+      ctx => new MockLocalAssignment(ctx.typesContext.unboundVariables),
+      ctx => new MockIsInstanceOf,
+      ctx => new RemoveAsInstanceOf,
+      ctx => new MockHashCode,
+      ctx => new MockMethodsCalls,
+      ctx => new MockObjectsAndStaticCalls,
+      ctx => new MockNewOperator,
+      ctx => new FlattenMultiArgListMethods,
+      ctx => new RemoveTypeArgumentsFromMethods,
+      ctx => ImplementValues(ctx.toolbox, ctx.context.implementValue),
+      ctx => new ResetTypeInformation,
+      ctx => new AddImports[AfterTypecheck](ctx.toolbox, ctx.context.thisPackage),
+      ctx => new PackInFunction(ctx.toolbox))
+
+    beforeTypeCheck ++ typecheck ++ afterTypecheck
+  }
 }
 
 /**
@@ -140,8 +151,9 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
       toolbox.compile(tree)
     } catch {
       case e: UnsupportedOperationException =>
-        //Workaround for "No position error"
-        //Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
+        // Workaround for "No position error"
+        // Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
+        logger.warn("Compilation failed - stringifying and recompilig whole tree.")
         recompileFromStrigifiedTree(tree)
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
@@ -156,7 +168,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     phases.map(_(ctx))
   }
 
-  private def transform(code: universe.Tree, phases: Seq[TransformationPhase]): universe.Tree = {
+  private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): universe.Tree = {
     val (_, finalTree) = phases.foldLeft(Vector(("Initial code", code))) {
       case (treesAfterPhases, phase) =>
         val phaseName = phase.getClass.getSimpleName

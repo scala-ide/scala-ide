@@ -12,13 +12,11 @@ import scala.tools.reflect.ToolBox
  *
  * Does not transform the tree in any way.
  *
- * This phase runs before `typecheck`.
- *
  * @param typesContext context to which unbound variables are registered
  * @param localVariablesNames list of names for `val`s and `var`s defined in current method
  */
 class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], typesContext: TypesContext, localVariablesNames: => Set[String])
-    extends TransformationPhase
+    extends TransformationPhase[BeforeTypecheck]
     with UnboundValuesSupport {
 
   import toolbox.u._

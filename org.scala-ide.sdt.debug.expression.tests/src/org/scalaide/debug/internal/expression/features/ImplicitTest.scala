@@ -50,7 +50,7 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
 
   // value from imports and local values
 
-  @Ignore("TODO - 0-5225 Add support for local implicits")
+  @Ignore("TODO - O-5225 Add support for local implicits")
   @Test
   def `local val implicit: libClass.withImplicitIntParameter`(): Unit =
     eval("libClass.withImplicitIntParameter", "12", Java.boxed.Integer)
@@ -59,7 +59,7 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
   def `explicit import implicit: ibClass.withImplicitStringParameter`(): Unit =
     eval("libClass.withImplicitStringParameter", "ala", Java.boxed.String)
 
-  @Ignore("TODO - 0-5225 Add support for local implicits")
+  @Ignore("TODO - O-5225 Add support for local implicits")
   @Test
   def `_ import implicit: libClass.withImplicitDoubleParameter`(): Unit =
     eval("libClass.withImplicitDoubleParameter", "1.1", Java.boxed.Double)
