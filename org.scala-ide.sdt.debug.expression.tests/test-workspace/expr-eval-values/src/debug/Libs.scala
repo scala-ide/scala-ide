@@ -50,18 +50,6 @@ case class LibClass(a: Int) {
 
   def performOnList[A](func: List[Int] => A): A = func(List(1, 2))
 
-  private implicit val implInt = 3
-
-  def withImplicitConversion(param: ImplicitLibClass) = param.value
-
-  def withImplicitParameter(implicit value: ImplicitLibClass) = value.value
-
-  def withImplicitIntParameter(implicit value: Int) = value
-
-  def withImplicitStringParameter(implicit value: String) = value
-
-  def withImplicitDoubleParameter(implicit value: Double) = value
-
   def withDefaultValue(name: String = "ala") = name
 
   def withExplicitAndDefaultValue(prefix: String, name: String = "ala") = s"$prefix $name"
@@ -71,19 +59,7 @@ case class LibClass(a: Int) {
 
 case class LibClass2Lists(a: Int)(b: Int)
 
-case class LibClassImplicits(a: Int)(implicit b: ImplicitLibClass)
-
-case class LibClass2ListsAndImplicits(a: Int)(b: Int)(implicit c: ImplicitLibClass)
-
 case class LibClassWithVararg(a: Int*)
-
-case class ImplicitLibClass(val value: Int)
-
-object ImplicitLibClass {
-  implicit val defult: ImplicitLibClass = new ImplicitLibClass(1)
-
-  implicit def int2ImplcitLibClass(value: Int) = new ImplicitLibClass(value)
-}
 
 object LibObject {
   val id = 1
