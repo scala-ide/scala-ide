@@ -11,7 +11,7 @@ import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.Names.Debugger._
 
 /**
- * Tries to implement all found nested functions mocks.
+ * Tries to implement all found nested methods mocks.
  * It removes mock values definitions and rewrites nested method call.
  *
  * Transforms:
@@ -41,11 +41,11 @@ class ImplementMockedNestedMethods(context: VariableContext)
 
   private def checkParametersListsCount(args: List[_], applyCount: Int): Boolean =
     if (applyCount < args.size) false
-    else if (applyCount > args.size) throw new UnsupportedFeature("Nested method as function")
+    else if (applyCount > args.size) throw new UnsupportedFeature("Nested method used as a function (eta expansion)")
     else true
 
-  private def implementMethod(functionName: Name, args: List[List[Tree]]): Option[Tree] = {
-    val name = functionName.toString
+  private def implementMethod(methodName: Name, args: List[List[Tree]]): Option[Tree] = {
+    val name = methodName.toString
     for {
       nestedMethodDeclaration <- nestedMethods.get(name)
       if checkParametersListsCount(args, nestedMethodDeclaration.parametersListsCount)
@@ -63,8 +63,8 @@ class ImplementMockedNestedMethods(context: VariableContext)
     def unapply(tree: Tree): Option[(Name, List[List[Tree]])] = tree match {
       case Apply(Select(NestedMethod(name, lowLevelArgs), TermName("apply")), args) =>
         Some((name, args :: lowLevelArgs))
-      case Ident(functionName) =>
-        Some((functionName, Nil))
+      case Ident(methodName) =>
+        Some((methodName, Nil))
       case _ => None
     }
   }

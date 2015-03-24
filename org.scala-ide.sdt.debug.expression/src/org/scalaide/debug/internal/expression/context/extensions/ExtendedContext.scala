@@ -40,8 +40,10 @@ case class ExtendedContext(currentFrame: StackFrame)
     case _ => Nil
   }
 
-  /** Find implementation information about nested function.
-    * Returns None when we have cannot determine this object context.  */
+  /**
+   * Find implementation information about nested methods.
+   * Returns None when we have cannot determine this object context.
+   */
   final def nestedMethod(declaration: NestedMethodDeclaration): Option[NestedMethodImplementation] = {
 
     def isLocationInMethodDeclaration(location: Location): Boolean =

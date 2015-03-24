@@ -105,7 +105,6 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
       case variable => valueDefinitionCode(variable.name.toString, false, fieldType)
     }
 
-
     private def valueDefinitionCode(name: String, isVar: Boolean, fieldType: String): String = {
       import Debugger._
       val fieldKind = if (isVar) "var" else "val"

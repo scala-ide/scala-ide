@@ -80,8 +80,8 @@ private[context] trait JdiVariableContext
     value.map(nameAndGenericName)
   }
 
-  override def nestedMethodImplementation(function: NestedMethodDeclaration): Option[NestedMethodImplementation] =
-    transformationContext.nestedMethod(function)
+  override def nestedMethodImplementation(method: NestedMethodDeclaration): Option[NestedMethodImplementation] =
+    transformationContext.nestedMethod(method)
 
   /** Changes all `$` and `_` to `.`, if type ends with `$` changes it to `.type` */
   private def escape(name: String): String = {

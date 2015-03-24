@@ -166,13 +166,13 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
     val closuresTypes: Map[TermName, String] = closureTypesForTypedLambda(body, vparams)
 
-    val typeCheckedFucntion: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
+    val typeCheckedFunction: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
 
-    val retType = typesContext.treeTypeName(typeCheckedFucntion.body)
+    val retType = typesContext.treeTypeName(typeCheckedFunction.body)
       .getOrElse(throw new RuntimeException("Function must have a return type!"))
 
-    val compiled = compileFunction(typeCheckedFucntion.vparams,
-      typeCheckedFucntion.body,
+    val compiled = compileFunction(typeCheckedFunction.vparams,
+      typeCheckedFunction.body,
       closuresTypes)
 
     import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
@@ -195,7 +195,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   private def createStubedPartialFunction(function: Match): Tree = {
     val stubVarName = "__x"
 
-    // recreate body for this function - currently we support only Function1 //TODO O-5330
+    // TODO - O-5330 - recreate body for this function - currently we support only Function1
     val params = List(ValDef(Modifiers(NoFlags | Flag.PARAM), TermName(stubVarName), Ident(TypeName("Any")), EmptyTree))
     val body = Match(Ident(TermName(stubVarName)), function.cases)
 
