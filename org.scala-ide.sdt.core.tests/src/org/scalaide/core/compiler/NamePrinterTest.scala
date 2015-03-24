@@ -4,8 +4,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.CompilerSupportTests
-
 import NamePrinterTest.mkScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.FlakyTest
 
 object NamePrinterTest extends CompilerSupportTests
 
@@ -235,7 +236,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnDef() {
+  def testWithAnonClassOnDef() = FlakyTest.retry("testWithAnonClassOnDef") {
     testWith(
       """|class AnonClassOnDef {
          |  def fun() {
@@ -248,7 +249,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassWithMultipleParents() {
+  def testWithAnonClassWithMultipleParents() {
     testWith(
       """|trait Trait1
          |trait Trait2
@@ -263,7 +264,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnCall() {
+  def testWithAnonClassOnCall() {
     testWith(
       """|class AnonClassOnCall {
          |  def fun() {
@@ -276,7 +277,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnDeeplyNestedName() {
+  def testWithDeeplyNestedName() {
     testWith(
       """|package deeply.nested
          |class Ca {
@@ -387,13 +388,140 @@ class NamePrinterTest {
       "WithLazyVal.x")
   }
 
+  @Test
+  def testWithMethodCallInNestedStructure() {
+    testWith(
+      """|object MethodcallInNestedStructure {
+         |  def method = 999
+         |}
+         |class MethodcallInNestedStructure {
+         |  def otherMethod {
+         |     MethodcallInNestedStructure.method/**/
+         |  }
+         |}""",
+      "MethodcallInNestedStructure.method")
+  }
+
+  @Test
+  def testWithNamedParamCtorCallInMethod() {
+    testWith(
+      """|package test.named.param.ctor.call
+         |class NamedParamCtorCallInMethod(arg: String) {
+         |  def method {
+         |    new NamedParamCtorCallInMethod(arg/**/ = "aaahrg")
+         |  }
+         |}""",
+      "test.named.param.ctor.call.NamedParamCtorCallInMethod(arg: String)")
+  }
+
+  @Test
+  def testWithSimpleAnnotation() {
+    testWith(
+      """|import scala.annotation._
+         |class SimpleAnnotation extends StaticAnnotation
+         |@SimpleAnnotation/**/
+         |class WithSimpleAnnotation
+      """,
+      "SimpleAnnotation")
+  }
+
+  @Test
+  def testWithAnnotationOnDefOnParam() {
+    testWith(
+      """|import scala.annotation._
+         |class AnnotationOnDefOnParam(val name: String) extends StaticAnnotation
+         |object AnnotationOnDefOnParam {
+         |  @AnnotationOnDefOnParam(name/**/ = "Hallo")
+         |  def test = 32
+         |}""",
+      "AnnotationOnDefOnParam(name: String)")
+  }
+
+  @Test
+  def testWithAnnotationOnDef() {
+    testWith(
+      """|import scala.annotation._
+         |class AnnotationOnDef(val name: String) extends StaticAnnotation
+         |object AnnotationOnDef {
+         |  @AnnotationOnDef/**/(name = "Hallo")
+         |  def test = 32
+         |}""",
+      "AnnotationOnDef")
+  }
+
+  @Test
+  def testWithJavaxGeneratedAnnotationOnClass() {
+    testWith(
+      """|import javax.annotation._
+         |@Generated/**/(Array("today"))
+         |class WithJavaxGeneratedAnnotationOnClass""",
+      "javax.annotation.Generated")
+  }
+
+  @Test
+  def testWithJavaxGeneratedAnnotationOnMethod() {
+    testWith(
+      """|import javax.annotation._
+         |class WithJavaxGeneratedAnnotationOnMethod {
+         |  @Generated/**/(Array("yesterday"))
+         |  def method = Unit
+         |}""",
+      "javax.annotation.Generated")
+  }
+
+  @Test
+  def testWithJavaxResourceAnnotationOnMethod() {
+    testWith(
+      """|import javax.annotation._
+         |class WithJavaxResourceAnnotationOnResource {
+         |  @Resource/**/(name = "test", lookup = "anywhere")
+         |  def method = Unit
+         |}""",
+      "javax.annotation.Resource")
+  }
+
+  @Test
+  def testWithAuxillaryCtor() {
+    testWith(
+      """|class WithAxillaryCtor(str: String) {
+         |  def this(i: Int) = this(i.toString)
+         |  def foo() { new WithAxillaryCtor(/**/33) }
+         |}""",
+      "WithAxillaryCtor(i: Int)")
+  }
+
+  @Test
+  def testWithMethodCallOnGeneric() {
+    testWith(
+      """|class WithMethodCallOnGeneric[A](a: A) {
+         |  def method[B, C](b: B, c: C) = b.hashCode + c.hashCode
+         |  def foo = {
+         |    val tst = new WithMethodCallOnGeneric("string")
+         |    tst.method(/**/1L, 0.0)
+         |  }
+         |}""",
+      "WithMethodCallOnGeneric.method[B, C](b: B, c: C)")
+  }
+
   private def testQnameWith(input: String, expected: Option[String]) {
     val source = input.stripMargin
-    val cu = mkScalaCompilationUnit(source)
+    val cu = prepareCompilationUnit(source)
     val offset = verifyOffset(source.indexOf("/**/") - 1)
     val namePrinter = new NamePrinter(cu)
     val res = namePrinter.qualifiedNameAt(offset)
     assertEquals(expected, res)
+  }
+
+  private def prepareCompilationUnit(source: String) = {
+    waitForReconcile(mkScalaCompilationUnit(source, true))
+  }
+
+  private def waitForReconcile(cu: ScalaCompilationUnit) = {
+    cu.initialReconcile().get match {
+      case Left(_) => ()
+      case Right(th) => throw th
+    }
+    cu
   }
 
   private def verifyOffset(offset: Int) = {

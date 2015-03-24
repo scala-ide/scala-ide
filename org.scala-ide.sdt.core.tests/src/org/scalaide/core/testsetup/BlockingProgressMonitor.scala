@@ -1,11 +1,22 @@
 package org.scalaide.core.testsetup
 
-import org.eclipse.core.runtime.NullProgressMonitor
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.CancellationException
+
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
 
 object BlockingProgressMonitor {
   class CancellationException extends RuntimeException("Operation cancelled")
+
+  /**
+   * Executes the given operation with a [[IProgressMonitor]] and waits until it is done or cancelled.
+   */
+  def waitUntilDone[T](op: IProgressMonitor => T): T = {
+    val monitor = new BlockingProgressMonitor
+    val res = op(monitor)
+    monitor.waitUntilDone()
+    res
+  }
 }
 
 /**

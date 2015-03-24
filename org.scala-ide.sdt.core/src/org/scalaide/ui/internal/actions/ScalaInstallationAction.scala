@@ -81,12 +81,11 @@ class ScalaInstallationAction extends IObjectActionDelegate {
 
   //Ask the user to select a build configuration from the selected project.
   private def chooseScalaInstallation(): Option[ScalaInstallationChoice] = {
-    val dialog = new ElementListSelectionDialog(getShell(), labeler) {
-      def getInstallationChoice(): Option[ScalaInstallationChoice] = {
-        val res = getResult()
-        if (res != null && !res.isEmpty) res(0).asInstanceOfOpt[ScalaInstallationChoice]
-        else None
-      }
+    val dialog = new ElementListSelectionDialog(getShell(), labeler)
+    def getInstallationChoice: Option[ScalaInstallationChoice] = {
+      val res = dialog.getResult
+      if (res != null && !res.isEmpty) res(0).asInstanceOfOpt[ScalaInstallationChoice]
+      else None
     }
     val dynamicVersions:List[ScalaInstallationChoice] = List("2.10", "2.11").map((s) => ScalaInstallationChoice(ScalaVersion(s)))
     val fixedVersions: List[ScalaInstallationChoice] = ScalaInstallation.availableInstallations.map((si) => ScalaInstallationChoice(si))
@@ -96,9 +95,10 @@ class ScalaInstallationAction extends IObjectActionDelegate {
     dialog.setMultipleSelection(false)
     val result = dialog.open()
     labeler.dispose()
-    if (result == Window.OK) {
-      dialog.getInstallationChoice()
-    } else None
+    if (result == Window.OK)
+      getInstallationChoice
+    else
+      None
   }
 
   private def getShell() = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell

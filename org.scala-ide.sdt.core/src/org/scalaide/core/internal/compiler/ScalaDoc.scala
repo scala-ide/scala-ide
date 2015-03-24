@@ -49,7 +49,6 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
 
   val TIMEOUT = if (IScalaPlugin().noTimeoutMode) Duration.Inf else 500.millis
 
-
   def parsedDocComment(sym: Symbol, site: Symbol, javaProject:IJavaProject): Option[Comment] = {
     val res =
 
@@ -78,8 +77,6 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   }
 
   def headerForSymbol(sym:Symbol, tpe: Type): Option[String] = asyncExec{
-    def compose(ss: List[String]): String = ss.filterNot(_.isEmpty).mkString(" ")
-
     def defString(sym: Symbol, tpe: Type): String = {
       // NoType is returned for defining occurrences, in this case we want to display symbol info itself.
       val tpeinfo = if (tpe ne NoType) tpe.widen else sym.info

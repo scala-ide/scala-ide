@@ -4,7 +4,6 @@ package createmethod
 import org.eclipse.jdt.core.IJavaElement
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.scalariform.ArgPosition
 import org.scalaide.util.internal.scalariform.MethodCallInfo
@@ -120,12 +119,12 @@ object MissingMemberInfo {
           }
         }.getOption()
       }.flatten
-      optopt.flatten.orElse(Some(Nil, None))
+      optopt.flatten.orElse(Some((Nil, None)))
     }
 
     val result = for (MethodCallInfo(offset, length, argPosition) <- ScalariformUtils.callingOffsetAndLength(source, offset)) yield {
       getParamsAndReturnType(offset, length, argPosition)
     }
-    result.flatten.getOrElse(Nil,None)
+    result.flatten.getOrElse((Nil,None))
   }
 }

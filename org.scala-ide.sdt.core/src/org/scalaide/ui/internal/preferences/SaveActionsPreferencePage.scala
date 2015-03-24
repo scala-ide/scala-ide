@@ -56,7 +56,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     timeoutValue = new Text(timeout, SWT.BORDER | SWT.SINGLE)
     timeoutValue.setText(prefStore.getString(SaveActionExtensions.SaveActionTimeoutId))
     timeoutValue.addModifyListener { e: ModifyEvent =>
-      def error = {
+      def error() = {
         setValid(false)
         setErrorMessage(s"Timeout value needs to be >= $MinSaveActionTimeout ms")
       }
@@ -141,6 +141,24 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     changes = Set()
     settings foreach (changes += _)
     super.performDefaults
+  }
+
+  private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
+    t.setText(initialText)
+    t.setLayoutData({
+      val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
+      gd.heightHint = lineHeight*t.getLineHeight()
+      gd
+    })
+    t
+  }
+
+  private def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
+    val lb = new Label(parent, SWT.NONE)
+    lb.setText(text)
+    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
+    lb
   }
 
   private def isEnabled(saveAction: SaveActionSetting): Boolean =

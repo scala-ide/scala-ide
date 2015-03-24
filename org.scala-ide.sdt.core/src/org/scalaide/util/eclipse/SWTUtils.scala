@@ -18,16 +18,6 @@ object SWTUtils {
 
   import scala.language.implicitConversions
 
-  @deprecated("Use org.scalaide.util.ui.DisplayThread.asyncExec", "3.0.0")
-  private def asyncExec(f: => Unit) {
-    DisplayThread.asyncExec(f)
-  }
-
-  @deprecated("Use org.scalaide.util.ui.DisplayThread.syncExec", "3.0.0")
-  private def syncExec(f: => Unit) {
-    DisplayThread.syncExec(f)
-  }
-
   /** Returns the active workbench window's shell
    *
    *  @return the shell containing this window's controls or `null`

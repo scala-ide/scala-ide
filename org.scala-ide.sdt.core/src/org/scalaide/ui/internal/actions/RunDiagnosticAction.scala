@@ -5,7 +5,6 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.IWorkbenchWindow
-import org.scalaide.util.Utils
 import org.scalaide.core.internal.logging.LogManager
 import org.eclipse.ui.IWorkbenchWindowActionDelegate
 import org.scalaide.ui.internal.diagnostic

@@ -265,7 +265,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     if (asyncExec { sym.owner.isClass || sym.owner.isFreeType }.getOrElse(false)()) {
       askDocComment(sym, source, site, fragments, response)
     } else {
-      response.set("", "", NoPosition)
+      response.set(("", "", NoPosition))
     }
     response
   }

@@ -10,7 +10,6 @@ import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.HighlightingStyle
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Preferences
-import org.eclipse.jface.util.PropertyChangeEvent
 
 class StandardPreviewerFactoryConfiguration extends PreviewerFactoryConfiguration {
 

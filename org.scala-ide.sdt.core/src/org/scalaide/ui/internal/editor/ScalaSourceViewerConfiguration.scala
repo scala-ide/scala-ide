@@ -43,7 +43,6 @@ import org.scalaide.core.internal.hyperlink._
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import org.scalaide.core.internal.formatter.ScalaFormattingStrategy
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.lexical._
 import org.scalaide.ui.editor.extensionpoints.ScalaHoverDebugOverrideExtensionPoint
 import org.scalaide.ui.internal.editor.autoedits._
 import org.scalaide.ui.internal.editor.hover.BrowserControlAdditions
@@ -213,7 +212,6 @@ class ScalaSourceViewerConfiguration(
 
       val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
-      reconciler.install(sourceViewer)
       reconciler.setProgressMonitor(new NullProgressMonitor())
       reconciler
     }.orNull

@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor.decorators.bynameparams
 
-import org.scalaide.core.extensions.SemanticHighlightingParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler
@@ -60,13 +59,16 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
          * This should cover partially applied functions referencing by-name-params (see #1002381).
          */
         def referencesByNameParam(param: compiler.Symbol) = {
+          import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
           if (!param.hasRawInfo) {
             false
           } else {
-            param.rawInfo.typeSymbol match {
-              case cs: compiler.ClassSymbol => cs.name == compiler.tpnme.BYNAME_PARAM_CLASS_NAME
-              case _ => false
-            }
+            compiler.asyncExec {
+              param.rawInfo.typeSymbol match {
+                case cs: compiler.ClassSymbol => cs.name == compiler.tpnme.BYNAME_PARAM_CLASS_NAME
+                case _ => false
+              }
+            }.getOrElse(false)()
           }
         }
 

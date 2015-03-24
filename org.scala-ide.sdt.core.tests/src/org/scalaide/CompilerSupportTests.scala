@@ -49,14 +49,14 @@ trait CompilerSupportTests {
    * Note, that `source` is not checked for compilation errors. This should be
    * done immediately after the typechecking phase.
    */
-  final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit = {
+  final def mkScalaCompilationUnit(source: String, force: Boolean = false): ScalaCompilationUnit = {
     val PkgFinder = """(?s).*?package ([\w\.]+).*?""".r
     val pkgName = source match {
       case PkgFinder(name) ⇒ name
       case _ ⇒ uniquePkgName()
     }
     val p = SDTTestUtils.createSourcePackage(pkgName)(project)
-    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source).asInstanceOf[ScalaCompilationUnit]
+    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source, force).asInstanceOf[ScalaCompilationUnit]
   }
 
   /**
