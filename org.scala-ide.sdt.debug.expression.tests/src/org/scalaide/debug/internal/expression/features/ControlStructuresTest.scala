@@ -1,16 +1,13 @@
 /*
  * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.features
+package org.scalaide.debug.internal.expression
+package features
 
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TestValues
-import org.scalaide.debug.internal.expression.UnsupportedFeature
 
 class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
 
@@ -76,6 +73,19 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
     eval("""for { i <- list; j = i.toString } j""", Scala.unitLiteral, Scala.unitType)
     eval("""for { i <- list; val j = i.toString } j""", Scala.unitLiteral, Scala.unitType)
   }
+
+  @Test
+  def singleVal(): Unit =
+    eval("val a = 1", Scala.unitLiteral, Scala.unitType)
+
+  // TODO - O-8580 - add support for lazy vals in evaluated expression
+  @Test(expected = classOf[UnsupportedFeature])
+  def singleLazyVal(): Unit =
+    eval("lazy val a: Int = 1", Scala.unitLiteral, Scala.unitType)
+
+  @Test
+  def singleDef(): Unit =
+    eval("def foo() = 1", Scala.unitLiteral, Scala.unitType)
 
 }
 
