@@ -128,18 +128,6 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
     expectedResult = None)
 
   @Test
-  def testDisplayIllegalNothingTypeInferred(): Unit = withExpressionManager(
-    code = "None.get",
-    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
-    expectedResult = None)
-
-  @Test
-  def testDisplayIllegalNothingTypeInferredInCondition(): Unit = evalConditionWithManager(
-    code = "None.get",
-    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
-    expectedResult = None)
-
-  @Test
   def testDisplayMessageForLambdaWithoutInferredTypeInCondition(): Unit = evalConditionWithManager(
     code = "list.map(_ - 1)",
     expectedError = Some(ExpressionException.noBooleanJdiProxyExceptionMessage("scala.collection.immutable.$colon$colon")),
