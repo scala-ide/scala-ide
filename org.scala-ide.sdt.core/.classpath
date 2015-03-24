@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="target/lib/scala-parser-combinators_2.11-1.0.2.jar" sourcepath="target/lib/scala-parser-combinators_2.11-1.0.2-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/scala-pickling_2.11-0.10.0.jar" sourcepath="target/lib/scala-pickling_2.11-0.10.0-sources.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" output="target/classes" path="src"/>
