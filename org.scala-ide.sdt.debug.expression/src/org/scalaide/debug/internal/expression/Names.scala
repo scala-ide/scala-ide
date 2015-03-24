@@ -234,7 +234,7 @@ object Names {
     /** Name of placeholder method, used in reflective compilation. */
     val placeholderName = "placeholder"
 
-    /** Name of placeholder method for nested function, used in reflective compilation. */
+    /** Name of placeholder method for nested method, used in reflective compilation. */
     val placeholderNestedMethodName = "placeholderNestedMethod"
 
     /** Name of placeholder function method, used in reflective compilation. */

@@ -82,7 +82,7 @@ trait VariableContext extends Any {
   def implementValue(name: TermName): Option[String]
 
   /** Try to implement nested method base on it's declaration */
-  def nestedMethodImplementation(function: NestedMethodDeclaration): Option[NestedMethodImplementation]
+  def nestedMethodImplementation(method: NestedMethodDeclaration): Option[NestedMethodImplementation]
 
   /**
    * Set of names of variables local to frame in which thread is suspended.
