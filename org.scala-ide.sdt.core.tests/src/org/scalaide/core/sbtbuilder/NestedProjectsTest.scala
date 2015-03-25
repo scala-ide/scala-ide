@@ -95,7 +95,8 @@ class NestedProjectsTest {
       assertEquals("No errors in top-level project", 0, topLevelErrors.length)
 
       val nestedErrors = scalaProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-      assertEquals("One error in nested project", 1, nestedErrors.length)
+      val errors = SDTTestUtils.markersMessages(nestedErrors.toList)
+      assertEquals("One error in nested project " + errors, 1, errors.length)
     } finally
       SDTTestUtils.changeContentOfFile(unitIFile, saved)
   }

@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference
 import scala.collection.mutable
 import scala.tools.nsc.Settings
 
+import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
@@ -18,7 +19,6 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.logging.HasLogger
@@ -26,6 +26,7 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 import org.scalaide.util.internal.SbtUtils.m2o
 
+import EclipseSbtBuildManager.FileHelper
 import sbt.Logger.xlog2Log
 import sbt.compiler.AggressiveCompile
 import sbt.compiler.CompileFailed
@@ -46,7 +47,9 @@ import xsbti.compile.CompileProgress
  *
  *  It uses the configured ScalaInstallation, meaning it can build with different versions of Scala.
  */
-class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) extends EclipseBuildManager with HasLogger {
+class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
+  addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
+    extends CachedAnalysisBuildManager with HasLogger {
   import EclipseSbtBuildManager._
 
   /** Initialized in `build`, used by the SbtProgress. */
@@ -55,8 +58,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   private val sources: mutable.Set[IFile] = mutable.Set.empty
   private val cached = new AtomicReference[SoftReference[Analysis]]
 
-  private val cachePath = project.underlying.getFile(".cache")
-  private def cacheFile = cachePath.getLocation.toFile
+  def analysisStore = analysisCache.getOrElse(project.underlying.getFile(".cache"))
+  private def cacheFile = analysisStore.getLocation.toFile
 
   // this directory is used by Sbt to store classfiles between
   // compilation runs to implement all-or-nothing compilation
@@ -79,29 +82,30 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
     sbtReporter.reset()
     val toBuild = addedOrUpdated -- removed
     monitor = pm
-    hasErrors = false
+    hasInternalErrors = false
     try {
       update(toBuild, removed)
     } catch {
       case oce: OperationCanceledException =>
         throw oce
       case e: Throwable =>
-        hasErrors = true
+        hasInternalErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
         sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
     }
-
-    hasErrors = sbtReporter.hasErrors || hasErrors
+    hasInternalErrors = sbtReporter.hasErrors || hasInternalErrors
   }
 
   override def clean(implicit monitor: IProgressMonitor) {
-    cachePath.refreshLocal(IResource.DEPTH_ZERO, null)
-    cachePath.delete(true, false, monitor)
+    analysisStore.refreshLocal(IResource.DEPTH_ZERO, null)
+    analysisStore.delete(true, false, monitor)
     clearCached()
   }
 
   override def invalidateAfterLoad: Boolean = true
+
+  override def canTrackDependencies: Boolean = true
 
   def findInstallation(project: IScalaProject): IScalaInstallation = project.effectiveScalaInstallation()
 
@@ -117,8 +121,6 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]) {
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
-
-    project.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     clearTasks(added)
     removeFiles(removed)
     sources ++= added
@@ -133,7 +135,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
     val scalaInstall = findInstallation(project)
     logger.info(s"Running compiler using $scalaInstall")
     val progress = new SbtProgress
-    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, progress, tempDirFile, sbtLogger)
+    val inputs = new SbtInputs(scalaInstall, sources, project, monitor, progress, tempDirFile, sbtLogger,
+      addToClasspath, srcOutputs)
     val analysis =
       try
         Some(aggressiveCompile(inputs, sbtLogger))
@@ -179,7 +182,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   }
 
   // take by-name argument because we need incOptions only when we have a cache miss
-  private[zinc] def latestAnalysis(incOptions: => IncOptions): Analysis =
+  def latestAnalysis(incOptions: => IncOptions): Analysis =
     Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile, incOptions))
 
   /** Inspired by IC.compile

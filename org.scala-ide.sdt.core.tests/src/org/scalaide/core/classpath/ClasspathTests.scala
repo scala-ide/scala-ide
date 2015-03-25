@@ -522,8 +522,9 @@ class ClasspathTests {
     checkMarkers(0, 0)
 
     // two excepted code errors
-    var markers= project.underlying.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
-    assertEquals("Unexpected number of scala problems in project", 2, markers.length)
+    var markers = project.underlying.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
+    val errors = SDTTestUtils.markersMessages(markers.toList)
+    assertEquals("Unexpected number of scala problems in project: " + errors, 2, errors.length)
 
     // switch to an invalid classpath
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
