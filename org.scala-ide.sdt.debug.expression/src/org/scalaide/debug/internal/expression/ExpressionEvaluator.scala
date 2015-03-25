@@ -44,7 +44,7 @@ object ExpressionEvaluator {
   private[expression] case class Context(
     toolbox: ToolBox[universe.type],
     context: VariableContext,
-    typesContext: TypesContext)
+    typesContext: NewTypesContext)
 
   type Phases[A <: TypecheckRelation] = Seq[Context => TransformationPhase[A]]
 
@@ -122,7 +122,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
     val parsed = parse(code)
 
-    val typesContext = new TypesContext()
+    val typesContext = new NewTypesContext()
 
     val phases = genPhases(context, typesContext)
 
@@ -164,7 +164,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
-  private def genPhases(context: VariableContext, typesContext: TypesContext) = {
+  private def genPhases(context: VariableContext, typesContext: NewTypesContext) = {
     val ctx = Context(toolbox, context, typesContext)
     phases.map(_(ctx))
   }

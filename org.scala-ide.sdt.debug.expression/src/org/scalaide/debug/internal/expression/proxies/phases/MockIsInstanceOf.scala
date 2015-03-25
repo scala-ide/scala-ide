@@ -7,7 +7,6 @@ package proxies.phases
 import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Scala
 
 /**
  * Transformer for converting `isInstanceOf` method invocations on proxies.
@@ -34,12 +33,7 @@ class MockIsInstanceOf
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case TypeApply(Select(on, TermName("isInstanceOf")), List(tpt @ TypeTree())) =>
-      val classType = tpt.tpe match {
-        case AstMatchers.ArrayRef(typeParam) => Scala.Array(typeParam.typeSymbol.fullName)
-        // it's a hack, I don't know a better way of handling objects
-        case other if other.toString.endsWith(".type") => other.typeSymbol.fullName + "$"
-        case other => other.typeSymbol.fullName
-      }
+      val classType = TypeNames.getFromTree(tpt, withoutGenerics = true)
       createProxy(transformFurther(on), classType)
     case other => transformFurther(other)
   }

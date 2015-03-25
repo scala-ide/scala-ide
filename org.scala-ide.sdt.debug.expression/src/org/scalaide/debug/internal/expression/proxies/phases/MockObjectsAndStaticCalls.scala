@@ -47,15 +47,17 @@ class MockObjectsAndStaticCalls
       select.toString != Debugger.contextFullName
   }
 
-  /** Creates java names for classes (replaces `.` with `$` for nested classes). */
-  private def jvmTypeForClass(tpe: universe.Type): String = {
+  /**
+   * Create java name for classes (replace . with $ for nested classes)
+   */
+  private def jvmTypeNameForClass(tpe: universe.Type): String = {
     import universe.TypeRefTag
     // hack for typecheck replacing `List.apply()` with `immutable.this.Nil`
     if (tpe.toString == "List[Nothing]") Scala.nil
     else tpe.typeConstructor match {
       case universe.TypeRef(prefix, sym, _) if !prefix.typeConstructor.typeSymbol.isPackage =>
         val className = sym.name
-        val parentName = jvmTypeForClass(prefix)
+        val parentName = jvmTypeNameForClass(prefix)
         parentName + "$" + className
       case _ =>
         tpe.typeSymbol.fullName
@@ -64,7 +66,7 @@ class MockObjectsAndStaticCalls
 
   /** generate and parse object/static call code */
   private def createProxy(select: Tree): Tree = {
-    val className = jvmTypeForClass(select.tpe)
+    val className = jvmTypeNameForClass(select.tpe)
 
     // generates code like __proxy.objectOrStaticCallProxy("ala.package.Ala")
     import Debugger._

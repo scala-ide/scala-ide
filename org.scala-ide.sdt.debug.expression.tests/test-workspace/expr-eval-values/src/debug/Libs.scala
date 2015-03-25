@@ -22,6 +22,10 @@ object Libs {
 
   val stringArray = Array("Ala", "Ola", "Ula")
 
+  val existentialList: List[_] = List(1, "2")
+
+  val existentialMultilist: List[List[_]] = List(List(1, "2"))
+
   override def toString: String = "Libs - object"
 }
 

@@ -7,7 +7,7 @@ package proxies.phases
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.Names.Scala
+import Names.Scala
 
 /**
  * Responsible for extracting all functions created from code and rewriting them to proxies.
@@ -26,7 +26,7 @@ import org.scalaide.debug.internal.expression.Names.Scala
  *   ))(immutable.this.List.canBuildFrom[Int])
  * }}}
  */
-case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: TypesContext)
+case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: NewTypesContext)
   extends AstTransformer[AfterTypecheck]
   with AnonymousFunctionSupport {
 

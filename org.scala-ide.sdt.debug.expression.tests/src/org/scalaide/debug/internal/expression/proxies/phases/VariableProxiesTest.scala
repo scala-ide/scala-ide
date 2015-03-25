@@ -1,14 +1,15 @@
 /*
  * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe._
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.scalaide.debug.internal.expression.TypesContext
+import org.scalaide.debug.internal.expression.NewTypesContext
 
 @RunWith(classOf[JUnit4])
 class VariableProxiesTest extends HasEvaluator {
@@ -16,7 +17,7 @@ class VariableProxiesTest extends HasEvaluator {
   private def testVariables(variables: String*)(in: String) {
     val code = Evaluator.parse(in)
 
-    val typesContext = new TypesContext()
+    val typesContext = new NewTypesContext()
     new SearchForUnboundVariables(Evaluator.toolbox, typesContext, Set.empty).transform(code)
     val foundVariables = typesContext.unboundVariables
 

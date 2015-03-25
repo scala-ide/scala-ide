@@ -11,7 +11,7 @@ object TestValues {
   object AppObjectTestCase extends IntegrationTestCaseSettings {
     val projectName = ValuesTestCase.projectName
     val fileName = ValuesTestCase.fileName
-    val breakpointLine = 50
+    val breakpointLine = 53
   }
 
   object ArgumentsTestCase extends IntegrationTestCaseSettings {
@@ -231,7 +231,7 @@ object TestValues {
   object ValuesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "Values"
-    val breakpointLine = 45
+    val breakpointLine = 48
 
     val byte: Byte = 4
     val byte2: Byte = 3
@@ -249,6 +249,8 @@ object TestValues {
     val boolean2 = true
     val string = "Ala"
     val list = List(1, 2, 3)
+    val multilist = List(List(1), List(2, 3))
+    val intArray = list.toArray
     val * = 1
     val long = 1l
     val long2 = 2l
@@ -257,7 +259,7 @@ object TestValues {
   object NestedMethodsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "NestedMethods"
-    val breakpointLine = 41
+    val breakpointLine = 43
   }
 
   object OperatorsTestCase extends IntegrationTestCaseSettings {

@@ -66,7 +66,6 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
     eval("""for { i <- list; val j = i.toString } yield j""", for { i <- list; val j = i.toString } yield j, Scala.::)
   }
 
-  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
   @Test
   def nestedForComprehension(): Unit =
     eval("""for { i <- list; j <- list } yield (i,j)""", for { i <- list; j <- list } yield (i, j), Scala.::)
@@ -79,7 +78,6 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   def filteredForLoop(): Unit =
     eval("""for { i <- list; if i % 2 == 0 } i""", Scala.unitLiteral, Scala.unitType)
 
-  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
   @Test
   def nestedForLoop(): Unit =
     eval("""for { i <- list; j <- list } (i,j)""", Scala.unitLiteral, Scala.unitType)

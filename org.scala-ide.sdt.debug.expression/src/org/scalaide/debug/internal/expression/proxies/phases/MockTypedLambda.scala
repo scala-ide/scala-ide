@@ -21,7 +21,7 @@ import scala.tools.reflect.ToolBox
  *   ))
  * }}}
  */
-case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
+case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTypesContext)
     extends AstTransformer[BeforeTypecheck]
     with AnonymousFunctionSupport {
 
@@ -52,8 +52,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
     def unapply(tree: Tree): Option[Map[TermName, String]] = tree match {
       case Apply(on, args) if on.toString() == onString =>
         Some(args.map {
-          case ident @ Ident(name: TermName) => name -> typesContext.treeTypeName(ident)
-            .getOrElse(throw new RuntimeException("Parameters must have type!"))
+          case ident @ Ident(name: TermName) => name -> TypeNames.getFromTree(ident)
         }(collection.breakOut))
       case _ => None
     }
@@ -168,8 +167,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
     val typeCheckedFunction: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
 
-    val retType = typesContext.treeTypeName(typeCheckedFunction.body)
-      .getOrElse(throw new RuntimeException("Function must have a return type!"))
+    val retType = TypeNames.getFromTree(typeCheckedFunction.body)
 
     val compiled = compileFunction(typeCheckedFunction.vparams,
       typeCheckedFunction.body,
@@ -178,8 +176,10 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
     import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
     val proxyClassName = s"$customLambdaPrefix${functionsCount}_typed"
     functionsCount += 1
-    val newFunctionType = typesContext.newType(proxyClassName,
-      compiled.newClassName,
+    val newFunctionType = compiled.newClassName
+
+    typesContext.createNewType(proxyClassName,
+      newFunctionType,
       compiled.newClassCode,
       closuresTypes.values.toSeq)
 
@@ -198,9 +198,6 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
     // TODO - O-5330 - recreate body for this function - currently we support only Function1
     val params = List(ValDef(Modifiers(NoFlags | Flag.PARAM), TermName(stubVarName), Ident(TypeName("Any")), EmptyTree))
     val body = Match(Ident(TermName(stubVarName)), function.cases)
-
-    val traverser = new universe.Traverser()
-    traverser.traverse(body)
 
     createAnyStubbedFunction(body, params,
       Names.Debugger.placeholderPartialFunctionName)

@@ -12,7 +12,6 @@ import org.eclipse.jface.fieldassist.ContentProposal
 import org.eclipse.jface.fieldassist.IContentProposal
 import org.eclipse.jface.fieldassist.IContentProposalProvider
 import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.ClassNotLoadedException
@@ -73,7 +72,7 @@ class SimpleContentProposalProvider extends IContentProposalProvider {
 }
 
 object SimpleContentProposalProvider extends HasLogger {
-  import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
+  import org.scalaide.debug.internal.expression.TypeNames.javaNameToScalaName
 
   private lazy val constantProposals = createConstantProposals()
   private val cannotLoadReturnedTypeText = "Cannot load returned type"

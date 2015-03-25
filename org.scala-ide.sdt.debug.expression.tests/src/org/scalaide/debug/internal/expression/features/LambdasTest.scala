@@ -43,17 +43,17 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def simpleLambdaWithWrittenTypes(): Unit = disableOnJava8 {
-    eval("list.map((_: Int) + 1)", "List(2, 3, 4)", Scala.::)
+    eval("list.map((_: Int) + 1)", list.map((_: Int) + 1), Scala.::)
   }
 
   @Test
   def `function and primitives: list.filter(_ >= 2) `(): Unit = disableOnJava8 {
-    eval("list.filter(_ >= 2)", "List(2, 3)", Scala.::)
+    eval("list.filter(_ >= 2)", list.filter(_ >= 2), Scala.::)
   }
 
   @Test
   def `function and primitives: list.filter(1 <) `(): Unit = disableOnJava8 {
-    eval("list.filter(1 <)", "List(2, 3)", Scala.::)
+    eval("list.filter(1 <)", list.filter(1 <), Scala.::)
   }
 
   @Test
@@ -71,8 +71,10 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def mappingOnFullType(): Unit = disableOnJava8 {
-    eval("multilist.map( (_: collection.immutable.List[Any]).toString)", "List(List(1), List(2, 3))", Scala.::)
-    eval("multilist.map( (list: collection.immutable.List[_]) => list.toString)", "List(List(1), List(2, 3))", Scala.::)
+    eval("multilist.map( (_: collection.immutable.List[Any]).toString)",
+      multilist.map((_: collection.immutable.List[Any]).toString), Scala.::)
+    eval("multilist.map( (list: collection.immutable.List[_]) => list.toString)",
+      multilist.map((list: collection.immutable.List[_]) => list.toString), Scala.::)
   }
 
   @Test
@@ -81,7 +83,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =
-    eval(""" multilist.map(list => list.map(_ + 1)) """, "List(List(2), List(3, 4))", Scala.::)
+    eval(""" multilist.map(list => list.map(_ + 1)) """, multilist.map(list => list.map(_ + 1)), Scala.::)
 
   @Test
   def objectTypedArgument(): Unit =
@@ -89,20 +91,55 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def genericTypedArgument(): Unit =
-    eval(""" multilist.map(list => list.sum) """, "List(1, 5)", Scala.::)
+    eval(""" multilist.map(list => list.sum) """, multilist.map(list => list.sum), Scala.::)
 
   @Test
   def `lambda inside lambda inside lambda: multilist.map(list => list.map(_ + 1))`(): Unit =
-    eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """, "List(List(2), List(9, 11))", Scala.::)
-
-  @Ignore("TODO - O-8498 - nested lambdas closing over generic type")
-  @Test
-  def nestedLambdaInCarthsianProduct(): Unit =
-    eval("""list.flatMap { i => list.map { j => (i,j) } }""", list.flatMap { i => list.map { j => (i, j) } }, Scala.::)
+    eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """, multilist.map(list => list.map(int => list.map(_ + int).sum)), Scala.::)
 
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =
     eval(""" libClass.performOnList(list => list.map(_ + 1)) """, "List(2, 3)", Scala.::)
+
+  //Lambda closure params
+
+  @Test
+  def genricClosureParam(): Unit =
+    eval("""list.flatMap { i => list.map { j => (i,j) } }""", list.flatMap { i => list.map { j => (i, j) } }, Scala.::)
+
+  @Test
+  def arrayClosureParam(): Unit =
+    eval("""list.map { i => intArray(0) + i }""", list.map { i => intArray(0) + i }, Scala.::)
+
+  @Test
+  def multipleGenricClosureParam(): Unit =
+    eval("""multilist.map { i => multilist.map { j => (i,j) } }""", multilist.map { i => multilist.map { j => (i, j) } }, Scala.::)
+
+  @Test
+  def objectClosureParam(): Unit =
+    eval("""list.map { _ + objectVal.value }""", list.map { _ + 11 }, Scala.::)
+
+  @Test
+  def primitiveClosureParam(): Unit =
+    eval("""list.map { _ + int }""", list.map { _ + int }, Scala.::)
+
+  @Test
+  def anyValClosureParam(): Unit =
+    eval("""list.map { i => anyVal.asInt() }""", list.map { i => "2" }, Scala.::)
+
+  @Test
+  def existentialTypeClosureParam(): Unit =
+    eval("""Libs.existentialList.map { i => i.toString }""", List("1", "2"), Scala.::)
+
+  @Ignore("TODO - O-8579 Support for nested lambdas over existential generics parameters")
+  @Test
+  def existentialGenricTypeClosureParam(): Unit =
+    eval("""Libs.existentialMultilist.flatMap { i => i.map(_.toString) }""", List("1", "2"), Scala.::)
+
+  @Ignore("TODO - O-8604 Toolbox bug with CanBuildFrom resolution")
+  @Test
+  def anyValClosureParamWithMethod(): Unit =
+    eval("""list.map { i => anyVal.printMe }""", list.flatMap { i => "2" }, Scala.::)
 
   @Ignore("TODO - O-8578 - using values from objects in lambdas does not work")
   @Test

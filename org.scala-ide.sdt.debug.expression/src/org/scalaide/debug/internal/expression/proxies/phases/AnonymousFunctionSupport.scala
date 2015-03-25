@@ -11,7 +11,7 @@ import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.Names.Debugger
+import Names.Debugger
 
 object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
@@ -96,7 +96,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   self: AstTransformer[TypecheckRelation] =>
 
   //requirements
-  protected val typesContext: TypesContext
+  protected val typesContext: NewTypesContext
 
   val toolbox: ToolBox[universe.type]
 
@@ -167,7 +167,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   /** Search for names (with types) that are from outside of given tree - must be closure parameters */
   protected final def getClosureParamsNamesAndType(body: Tree, vparams: List[ValDef]): Map[TermName, String] = {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
-    new VariableProxyTraverser(body, typesContext.treeTypeName)
+    new VariableProxyTraverser(body, tree => TypeNames.fromTree(tree))
       .findUnboundValues().filterNot {
         case (variable, _) => vparamsName.contains(variable.name)
       }.map {
@@ -186,7 +186,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
    * @param closuresParams map of (closureParamName, closureArgumentType) for this function
    */
   protected def compileFunction(params: List[ValDef], body: Tree, closuresParams: Map[TermName, String]): NewClassContext = {
-    val parametersTypes = params.map(_.tpt.tpe.toString)
+    val parametersTypes = params.map(v => TypeNames.getFromTree(v.tpt))
 
     parametersTypes.foreach { elem =>
       if (elem == Debugger.proxyFullName) throw FunctionProxyArgumentTypeNotInferredException
@@ -195,17 +195,23 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val functionGenericTypes = (parametersTypes ++ Seq("Any")).mkString(", ")
     val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType" }.mkString(",")
     val arity = params.size
+
+    val lambdaParams = params.zip(parametersTypes).map{
+      case (ValDef(mods, name, _, impl), typeName) =>
+        s"$name: $typeName"
+    }.mkString(", ")
+
     import Debugger.newClassName
     val classCode =
       s"""class $newClassName($constructorParams) extends Function$arity[$functionGenericTypes]{
-         |  override def apply(v1: Any) = ???
+         |  override def apply($lambdaParams) = ???
          |}""".stripMargin
     val newClass = toolbox.parse(classCode)
 
     val ClassDef(mods, name, tparams, Template(parents, self, impl)) = newClass
 
-    val DefDef(functionMods, functionName, _, _, retType, _) = impl.last
-    val newApplyFunction = DefDef(functionMods, functionName, Nil, List(params), retType, body)
+    val DefDef(functionMods, functionName, _, applyParams, retType, _) = impl.last
+    val newApplyFunction = DefDef(functionMods, functionName, Nil, applyParams, retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
     val functionReseted = new ResetTypeInformation().transform(newFunctionClass)
 
@@ -223,15 +229,14 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val proxyClassName = s"$customLambdaPrefix$functionsCount"
     functionsCount += 1
 
-    nested.foreach(nestedFunction => typesContext.newType(nestedFunction.newClassName,
+    nested.foreach(nestedFunction => typesContext.createNewType(nestedFunction.newClassName,
       nestedFunction.newClassName, nestedFunction.newClassCode, Nil))
 
-    val newFunctionType =
-      typesContext.newType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
+    typesContext.createNewType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
 
     val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name) }(collection.breakOut)
 
-    lambdaProxy(newFunctionType, closureParamTrees)
+    lambdaProxy(jvmClassName, closureParamTrees)
   }
 
   /** creates proxy for given lambda with given closure arguments */

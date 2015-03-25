@@ -6,10 +6,10 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
+import Names.Debugger
+import Names.Scala
+import proxies.primitives.UnitJdiProxy
+import proxies.primitives.NullJdiProxy
 
 /**
  * Transformer for literals and constants:
@@ -28,7 +28,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
  *   __context.proxy(<literal>)
  * }}}
  */
-case class MockLiteralsAndConstants(typesContext: TypesContext)
+case class MockLiteralsAndConstants(typesContext: NewTypesContext)
     extends AstTransformer[AfterTypecheck]
     with PrimitivesCommons {
 

@@ -24,7 +24,7 @@ import com.sun.jdi.Value
  * In [[org.scalaide.debug.internal.expression.ConditionManager]] sits the logic for evaluating conditions for
  * conditional expressions.
  *
- * [[org.scalaide.debug.internal.expression.TypesContext]] contains append only mutable state about types encountered
+ * [[org.scalaide.debug.internal.expression.NewTypesContext]] contains append only mutable state about types encountered
  * during transformation, it's updated by multiple transformation phases and passed over.
  *
  * Several helpers exists here also:

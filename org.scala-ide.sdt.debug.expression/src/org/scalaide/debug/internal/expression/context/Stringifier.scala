@@ -7,9 +7,6 @@ package context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
@@ -22,6 +19,10 @@ import com.sun.jdi.ObjectReference
 import com.sun.jdi.StringReference
 import com.sun.jdi.Type
 import com.sun.jdi.Value
+
+import Names.Debugger
+import Names.Java
+import Names.Scala
 
 /**
  * Part of JdiContext responsible for converting proxies to their string representations.
@@ -101,9 +102,9 @@ trait Stringifier {
     def innerTpe(tpe: Type): String = tpe match {
       case arrayType: ArrayType =>
         val argumentType = innerTpe(arrayType.componentType)
-        Scala.Array(TypeNameMappings.javaNameToScalaName(argumentType))
+        Scala.Array(TypeNames.javaNameToScalaName(argumentType))
       case other =>
-        TypeNameMappings.javaNameToScalaName(other.name)
+        TypeNames.javaNameToScalaName(other.name)
     }
 
     innerTpe(array.__underlying.`type`)
