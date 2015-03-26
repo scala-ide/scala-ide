@@ -169,14 +169,14 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, tree => TypeNames.fromTree(tree))
       .findUnboundValues().filterNot {
-        case (variable, _) => vparamsName.contains(variable.name)
-      }.map {
-        case (variable, Some(valueType)) =>
-          val isFunctionImport = valueType.contains("$$")
-          val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
-          variable.name -> fixedType
-        case (variable, _) => variable.name -> Debugger.proxyName
-      }
+      case (variable, _) => vparamsName.contains(variable.name)
+    }.flatMap {
+      case (variable, Some(valueType)) =>
+        val isFunctionImport = valueType.contains("$$")
+        val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
+        Some(variable.name -> fixedType)
+      case _ => None
+    }
   }
 
   /**
