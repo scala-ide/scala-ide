@@ -26,11 +26,10 @@ class ImportsTest extends BaseIntegrationTest(ImportsTest) {
     eval("new ImportedClass().importedClass", "importedClass", Java.boxed.String)
   }
 
-  @Ignore("TODO - O-6485 - support for overloaded imports")
   @Test
   def importFromMiddleOfFile(): Unit = {
     eval("ImportedObject2.importedObject2", "importedObject2", Java.boxed.String)
-    eval("new ImportedClass2.importedClass2", "importedClass2", Java.boxed.String)
+    eval("new ImportedClass2().importedClass2", "importedClass2", Java.boxed.String)
   }
 }
 
