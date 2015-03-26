@@ -25,7 +25,7 @@ import org.scalaide.debug.internal.expression.sources.Imports
  * Could be run both before and after `typecheck`.
  */
 class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], thisPackage: => Option[String])
-    extends TransformationPhase[A] {
+  extends TransformationPhase[A] {
 
   import toolbox.u._
 
@@ -34,22 +34,13 @@ class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], th
     val contextPackageName = org.scalaide.debug.internal.expression.context.name
     val primitiveProxiesPackageName = org.scalaide.debug.internal.expression.proxies.primitives.name
 
-    // import from enclosing package (if one exists)
-    val thisPackageImport = thisPackage.map(name => s"import $name._").getOrElse("")
-    val importsFromCurrentFile = Imports.importsFromCurrentStackFrame.mkString("\n")
+    val debuggerImportsRoots = thisPackage.toList ++ List(contextPackageName, proxiesPackageName, primitiveProxiesPackageName)
+    val debuggerImports = debuggerImportsRoots.map(root => s"import $root._")
+    val allImports = debuggerImports +: Imports.importsFromCurrentStackFrame
 
-    val importCode = s"""
-      | $thisPackageImport
-      | import $contextPackageName._
-      | import $proxiesPackageName._
-      | import $primitiveProxiesPackageName._
-      | $importsFromCurrentFile
-      | ???
-      |""".stripMargin
-
-    val Block(imports, _) = toolbox.parse(importCode)
-
-    Block(imports, tree)
+    allImports.foldRight(tree) {
+      case (imports, tree) =>
+        Block(imports.map(toolbox.parse), tree)
+    }
   }
-
 }
