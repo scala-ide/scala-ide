@@ -69,7 +69,6 @@ class OperatorsTest
   def valInClosure(): Unit =
     eval("list.map(i => i + ++)", "List(2, 3, 4)", Scala.::)
 
-  @Ignore("TODO - O-8578 - using values from objects in lambdas does not work")
   @Test
   def valFromObjectInClosure(): Unit =
     eval("list.map(i => i + OperatorsObj.++)", "List(2, 3, 4)", Scala.::)

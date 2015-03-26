@@ -141,10 +141,13 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def anyValClosureParamWithMethod(): Unit =
     eval("""list.map { i => anyVal.printMe }""", list.flatMap { i => "2" }, Scala.::)
 
-  @Ignore("TODO - O-8578 - using values from objects in lambdas does not work")
   @Test
   def closureOnObjectValue(): Unit =
     eval("list.map(i => i + Libs.value)", "List(12, 13, 14)", Scala.::)
+
+  @Test
+  def fullySpecifiedNameInLambda(): Unit =
+    eval("list.map(i => i + scala.collection.immutable.List().size)", "List(1, 2, 3)", Scala.::)
 }
 
 object LambdasTest extends BaseIntegrationTestCompanion

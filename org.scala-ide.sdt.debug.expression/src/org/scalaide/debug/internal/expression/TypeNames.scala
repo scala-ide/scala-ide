@@ -7,7 +7,6 @@ import Names.Java
 import Names.Scala
 
 import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe.TypeRef
 
 object TypeNames {
 
@@ -40,16 +39,22 @@ object TypeNames {
    * @param withoutGenerics remove generics for this tree
    * @return Some(<type name>) if `tree.tpe != null`
    */
-  def fromTree(tree: universe.Tree, withoutGenerics: Boolean = false): Option[String] = tree.tpe match {
-    case null => None
-    case tpe => Some(typeName(tpe, withoutGenerics))
+  def fromTree(tree: universe.Tree, withoutGenerics: Boolean = false): Option[String] = {
+    def isPackageType(tpe: universe.Type) = tpe.widen.getClass.getSimpleName == "PackageTypeRef"
+
+    tree.tpe match {
+      case null => None
+      case packageType if isPackageType(packageType) => None
+      case tpe => Some(typeName(tpe, withoutGenerics))
+    }
   }
 
   /** Same as `fromTree`, but throws exception if `tree.tpe == null`. */
-  def getFromTree(tree: universe.Tree, withoutGenerics: Boolean = false): String = tree.tpe match {
-    case null => throw new RuntimeException(s"Tree: $tree have null type.")
-    case tpe => typeName(tpe, withoutGenerics)
-  }
+  def getFromTree(tree: universe.Tree, withoutGenerics: Boolean = false): String =
+    tree.tpe match {
+      case null => throw new RuntimeException(s"Tree: $tree have null type.")
+      case tpe => typeName(tpe, withoutGenerics)
+    }
 
   /**
    * Obtains type name as string for given tree.
@@ -58,13 +63,14 @@ object TypeNames {
    */
   private def typeName(tpe: universe.Type, withoutGenerics: Boolean): String = {
 
-    def isUnderscoreType(tpe: universe.Type) = tpe.getClass.getSimpleName == "AbstractNoArgsTypeRef"
+    import universe._
 
-    def isObjectType(tpe: universe.Type) = tpe.getClass.getSimpleName == "ModuleTypeRef"
+    def isUnderscoreType(tpe: Type) = tpe.getClass.getSimpleName == "AbstractNoArgsTypeRef"
+
+    def isObjectType(tpe: Type) = tpe.getClass.getSimpleName == "ModuleTypeRef"
 
     def isPackageObjectScoped(typeRef: TypeRef) = typeRef.typeSymbol.name.toString.startsWith("package$")
 
-    import universe._
     tpe.widen match {
       case NoType =>
         "Any"
