@@ -3,31 +3,59 @@
  */
 package org.scalaide.debug.internal.expression
 
+import scala.reflect.runtime.universe
+
+import org.eclipse.jdi.internal.TypeImpl
+
 import Names.Java
 import Names.Scala
 
-import scala.reflect.runtime.universe
-
 object TypeNames {
+
+  /**
+   * Converts array signature to name.
+   *
+   * For example `[[I` becomes `int[][]` and `[Ljava.lang.String` becomes `java.lang.String[]`.
+   */
+  def arraySignatureToName(javaArrayTpe: String): String =
+    TypeImpl.arraySignatureToName(javaArrayTpe)
+
+  case class Primitive(java: String, scala: String, javaBoxed: String)
+
+  private val primitives = Seq(
+    Primitive(Java.primitives.boolean, Scala.primitives.Boolean, Java.boxed.Boolean),
+    Primitive(Java.primitives.byte, Scala.primitives.Byte, Java.boxed.Byte),
+    Primitive(Java.primitives.char, Scala.primitives.Char, Java.boxed.Character),
+    Primitive(Java.primitives.double, Scala.primitives.Double, Java.boxed.Double),
+    Primitive(Java.primitives.float, Scala.primitives.Float, Java.boxed.Float),
+    Primitive(Java.primitives.int, Scala.primitives.Int, Java.boxed.Integer),
+    Primitive(Java.primitives.long, Scala.primitives.Long, Java.boxed.Long),
+    Primitive(Java.primitives.short, Scala.primitives.Short, Java.boxed.Short),
+    Primitive(Java.primitives.void, Scala.unitType, Java.boxed.Void))
+
+  type Convert = Primitive => String
+  val JavaPrimitive: Convert = _.java
+  val ScalaPrimitive: Convert = _.scala
+  val JavaBoxed: Convert = _.javaBoxed
+
+  /**
+   * Example usage: `convert(typeName, from = JavaPrimitive, to = ScalaPrimitive)`.
+   */
+  def convert(value: String, from: Convert, to: Convert): Option[String] =
+    primitives.find(p => from(p) == value).map(to)
 
   /**
    * Maps java primitives to Scala unified names.
    * Java arrays (int[], String[]) are mapped to Scala Arrays (Array[Int], Array[String]).
    * Other names are unchanged.
    */
-  def javaNameToScalaName(typeName: String): String = typeName match {
-    case Java.primitives.boolean => Scala.primitives.Boolean
-    case Java.primitives.byte => Scala.primitives.Byte
-    case Java.primitives.char => Scala.primitives.Char
-    case Java.primitives.double => Scala.primitives.Double
-    case Java.primitives.float => Scala.primitives.Float
-    case Java.primitives.int => Scala.primitives.Int
-    case Java.primitives.long => Scala.primitives.Long
-    case Java.primitives.short => Scala.primitives.Short
-    case Java.primitives.void => Scala.unitType
-    case Java.primitives.Array(innerType) => Scala.Array(javaNameToScalaName(innerType))
-    case other => other
-  }
+  def javaNameToScalaName(typeName: String): String =
+    convert(typeName, from = JavaPrimitive, to = ScalaPrimitive).getOrElse {
+      typeName match {
+        case Java.primitives.Array(innerType) => Scala.Array(javaNameToScalaName(innerType))
+        case other => other
+      }
+    }
 
   /** Drops ''scala.'' from primitive type names */
   def fixScalaPrimitives(name: String): String =

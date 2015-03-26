@@ -13,7 +13,7 @@ import com.sun.jdi.Value
 class ArrayConstructor(className: String, args: Seq[JdiProxy], context: JdiContext) extends MethodInvoker {
   def apply(): Option[Value] = args match {
     case List(proxy: IntJdiProxy) =>
-      val arrayType = context.arrayClassByName(className)
+      val arrayType = context.arrayByName(className)
       Some(arrayType.newInstance(proxy.__value[Int]))
     case other => None
   }

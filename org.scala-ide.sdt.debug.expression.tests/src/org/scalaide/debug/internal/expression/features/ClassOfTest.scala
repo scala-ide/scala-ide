@@ -15,8 +15,17 @@ class ClassOfTest extends BaseIntegrationTest(ClassOfTest) {
     eval("classOf[String]", "class java.lang.String", "java.lang.Class")
 
   @Test
-  def classOfInt(): Unit =
-    eval("classOf[Int]", "class scala.Int", "java.lang.Class")
+  def classOfPrimitive(): Unit = {
+    eval("classOf[Boolean]", "boolean", "java.lang.Class")
+    eval("classOf[Byte]", "byte", "java.lang.Class")
+    eval("classOf[Char]", "char", "java.lang.Class")
+    eval("classOf[Double]", "double", "java.lang.Class")
+    eval("classOf[Float]", "float", "java.lang.Class")
+    eval("classOf[Int]", "int", "java.lang.Class")
+    eval("classOf[Long]", "long", "java.lang.Class")
+    eval("classOf[Short]", "short", "java.lang.Class")
+    eval("classOf[Unit]", "void", "java.lang.Class")
+  }
 
   @Test
   def classOfList(): Unit =
@@ -26,15 +35,23 @@ class ClassOfTest extends BaseIntegrationTest(ClassOfTest) {
   def classOfJavaList(): Unit =
     eval("classOf[java.util.ArrayList[Int]]", "class java.util.ArrayList", "java.lang.Class")
 
-  @Ignore("TODO - O-8565 Add support for classOf[Array[T]]")
   @Test
   def classOfIntArray(): Unit =
-    eval("classOf[scala.Array[Int]]", "class scala.Array", "java.lang.Class")
+    eval("classOf[scala.Array[Int]]", "class [I", "java.lang.Class")
 
-  @Ignore("TODO - O-8565 Add support for classOf[Array[T]]")
   @Test
   def classOfStringArray(): Unit =
-    eval("classOf[scala.Array[String]]", "class scala.Array", "java.lang.Class")
+    eval("classOf[scala.Array[String]]", "class [Ljava.lang.String;", "java.lang.Class")
+
+  @Ignore("TODO - O-8565 Add support for classOf[Array[Array[T]]]")
+  @Test
+  def classOfNestedIntArray(): Unit =
+    eval("classOf[scala.Array[scala.Array[Int]]]", "class [[I", "java.lang.Class")
+
+  @Ignore("TODO - O-8565 Add support for classOf[Array[Array[T]]]")
+  @Test
+  def classOfNestedStringArray(): Unit =
+    eval("classOf[scala.Array[scala.Array[String]]]", "class [[Ljava.lang.String;", "java.lang.Class")
 }
 
 object ClassOfTest extends BaseIntegrationTestCompanion

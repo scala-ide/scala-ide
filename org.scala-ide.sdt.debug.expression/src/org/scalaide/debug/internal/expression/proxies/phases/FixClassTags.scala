@@ -34,6 +34,8 @@ case class FixClassTags(toolbox: ToolBox[universe.type])
   }
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
+    case This(TypeName("ScalaRunTime")) =>
+      toolbox.typecheck(q"scala.runtime.ScalaRunTime")
     case q"ClassTag" =>
       toolbox.typecheck(q"scala.reflect.ClassTag")
     case Typed(expr: Tree, tpt: Tree) if isClassTagType(tpt.toString()) =>

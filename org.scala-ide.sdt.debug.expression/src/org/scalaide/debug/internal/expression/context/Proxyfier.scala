@@ -5,10 +5,10 @@ package org.scalaide.debug.internal.expression
 package context
 
 import scala.annotation.implicitNotFound
-import scala.collection.JavaConversions.asScalaBuffer
-import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.JavaConversions._
 
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
@@ -31,6 +31,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.BooleanValue
 import com.sun.jdi.ByteValue
+import com.sun.jdi.ClassType
 import com.sun.jdi.CharValue
 import com.sun.jdi.DoubleValue
 import com.sun.jdi.FloatValue
@@ -60,7 +61,7 @@ private[context] trait Proxyfier {
     }
 
   private def staticCallProxy(name: String) =
-    tryClassByName(name) match {
+    tryByName[ClassType](name) match {
       case Some(classType) =>
         StaticCallClassJdiProxy(this, classType)
       case None =>
@@ -76,7 +77,25 @@ private[context] trait Proxyfier {
    * If you change its name, package or behavior, make sure to change it also.
    */
   def classOfProxy(name: String): JdiProxy = {
-    valueProxy(classByName(name).classObject)
+    import TypeNames._
+
+    /** `true` if string matches either Java or Scala definition of array */
+    def isArray(signature: String): Boolean = signature.startsWith("[")
+
+    val result = convert(name, from = ScalaPrimitive, to = JavaBoxed) match {
+      // primitives
+      case Some(boxedName) =>
+        val clsTpe = classByName(boxedName)
+        clsTpe.getValue(clsTpe.fieldByName("TYPE"))
+      // arrays
+      case None if isArray(name) =>
+        val fromSignature = TypeNames.arraySignatureToName(name)
+        arrayByName(fromSignature).classObject
+      // objects
+      case None =>
+        classByName(name).classObject
+    }
+    valueProxy(result)
   }
 
   /**
