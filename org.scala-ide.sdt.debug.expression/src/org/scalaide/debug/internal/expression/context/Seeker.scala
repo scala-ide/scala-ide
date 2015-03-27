@@ -17,6 +17,7 @@ import com.sun.jdi.InterfaceType
 import com.sun.jdi.InvocationException
 import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.Value
 import com.sun.jdi.VirtualMachine
@@ -109,8 +110,21 @@ trait Seeker {
   final def methodOn(className: String, methodName: String, arity: Int): Method = {
     val classRef = jvm.classesByName(className).headOption.getOrElse(
       throw new ClassNotFoundException(s"Class with name $className not found."))
-    classRef.methodsByName(NameTransformer.encode(methodName)).find(_.arity == arity).getOrElse(
-      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${classRef.name}"))
+    methodOn(classRef, methodName, arity)
+  }
+
+  /**
+   * Helper for getting methods from given class reference.
+   * `methodName` is encoded if needed (like `+:` is changed to `$plus$colon`).
+   *
+   * @param tpe type to load method from
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws NoSuchMethodError when method is not found
+   */
+  final def methodOn(tpe: ReferenceType, methodName: String, arity: Int): Method = {
+    tpe.methodsByName(NameTransformer.encode(methodName)).find(_.arity == arity).getOrElse(
+      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${tpe.name}"))
   }
 
   /**

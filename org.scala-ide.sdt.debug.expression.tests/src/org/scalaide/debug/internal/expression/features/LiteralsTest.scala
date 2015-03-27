@@ -85,7 +85,7 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
   def testCharacterLiterals(): Unit = {
     eval("'c'", "c", Java.boxed.Character)
     eval("'\u0041'", "A", Java.boxed.Character)
-    eval("'\t'", s("\t"), Java.boxed.Character)
+    eval("'\t'", "\t", Java.boxed.Character)
   }
 
   @Test
