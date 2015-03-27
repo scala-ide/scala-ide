@@ -16,12 +16,19 @@ import sbt.client.SbtClient
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ScopedKey
 
+/**
+ * Wrapper around [[sbt.client.SbtClient]] to provide more functionality.
+ */
 class RichSbtClient(private[core] val client: SbtClient) {
   import KeyProvider._
   import scala.language.higherKinds
 
   private type Out[A] = Try[(ScopedKey, A)]
 
+  /**
+   * Retrieves elements that get send to [[sbt.client.SbtClient.watchBuild]] by
+   * a Source.
+   */
   def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
     SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
       val c = client.watchBuild { b ⇒
@@ -31,6 +38,13 @@ class RichSbtClient(private[core] val client: SbtClient) {
     }
   }
 
+  /**
+   * Returns the value of a given `keyName` relative to a project given by
+   * `projectName`. `config` can be specified to further limit the key.
+   *
+   * Example: `keyValue("testProject", "sourceDirectories", Some("compile"))`
+   * will send the request `testProject/compile:sourceDirectories` to sbt.
+   */
   def keyValue
       [A : Unpickler, KP[_] : KeyProvider]
       (projectName: String, keyName: String, config: Option[String])
@@ -41,6 +55,9 @@ class RichSbtClient(private[core] val client: SbtClient) {
     }
   }
 
+  /**
+   * Forwards to [[sbt.client.SbtClient.requestExecution]].
+   */
   def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
     client.requestExecution(commandOrTask, interaction)
 

@@ -106,6 +106,10 @@ object SbtBuild extends AnyRef with HasLogger {
 
 }
 
+/**
+ * Represents a connection to a running sbt server instance, which is connected
+ * to the build root.
+ */
 class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
   import system.dispatcher

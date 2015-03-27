@@ -14,6 +14,9 @@ object KeyProvider {
 
   import scala.language.higherKinds
 
+  /**
+   * Allows to abstract at least over [[sbt.client.TaskKey]] and [[sbt.cleint.SettingKey]].
+   */
   trait KeyProvider[M[_]] {
     def key[A](key: ScopedKey): M[A]
     def watch[A : Unpickler](a: M[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription

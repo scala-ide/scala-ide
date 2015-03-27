@@ -13,6 +13,11 @@ import akka.stream.scaladsl.Source
 object SourceUtils {
 
   implicit class RichSource[A](src: Source[A]) {
+
+    /**
+     * Returns the first element of the source and cancels the source
+     * afterwards.
+     */
     def firstFuture(implicit materializer: FlowMaterializer): Future[A] = {
       val p = Promise[A]
       src.take(1).runForeach { elem ⇒

@@ -16,7 +16,7 @@ object SbtUtils {
   }
 
   /**
-   * Retrieves a `Source` that gets its elements from `client`. All events, that
+   * Retrieves a `Source` that gets its elements from `client`. All events that
    * are subtypes of `A` are fed into the returned `Source`.
    */
   def protocolEventWatcher[A <: Event : reflect.ClassTag](client: SbtClient)(implicit ctx: ExecutionContext): Source[A] = {

@@ -25,6 +25,11 @@ import sbt.protocol.Attributed
 
 object SbtProjectSupport {
 
+  /**
+   * Creates a project with a given `projectName` in the workspace based on the
+   * information of a sbt build. `builderName` is set as the default builder of
+   * the project.
+   */
   def createWorkspaceProject(build: SbtBuild, projectName: String, builderName: String, monitor: IProgressMonitor)(implicit ctx: ExecutionContext): Future[IProject] = {
     val progress = SubMonitor.convert(monitor, 100)
 
