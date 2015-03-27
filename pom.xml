@@ -19,7 +19,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-672ab670f78705a0c38eb7ab25be0331b7f89f42</sbtrc.version>
+    <sbtrc.version>1.0-79fc61bcce56226ab3f4c06dc871a459d0c37994</sbtrc.version>
     <pickling.version>0.10.0</pickling.version>
     <akka.version>2.3.9</akka.version>
     <akka.stream.version>1.0-M3</akka.stream.version>
