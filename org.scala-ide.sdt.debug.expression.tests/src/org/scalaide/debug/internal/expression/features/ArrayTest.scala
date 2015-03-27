@@ -104,14 +104,12 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
     ScalaRunTime.stringOf(Array(Array(1, 2, 3), Array(2.0, 3.0, 4.0))),
     Scala.Array(Java.Object))
 
-  @Ignore("TODO - fails with: ScalaRunTime is not an enclosing class")
   @Test
   def testNestedIntArrayApply(): Unit = eval(
     "Array(Array(1,2,3))",
     ScalaRunTime.stringOf(Array(Array(1, 2, 3))),
     Scala.Array(Scala.Array(Scala.primitives.Int)))
 
-  @Ignore("TODO - fails with: ScalaRunTime is not an enclosing class")
   @Test
   def testNestedStringArrayApply(): Unit = eval(
     """Array(Array("1","2","3"))""",

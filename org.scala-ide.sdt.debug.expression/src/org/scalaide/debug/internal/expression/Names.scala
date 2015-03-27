@@ -86,7 +86,9 @@ object Names {
 
       val Short = classOf[java.lang.Short].getName
 
-      val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Unit)
+      val Void = classOf[java.lang.Void].getName
+
+      val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Void)
     }
 
     val Object = classOf[java.lang.Object].getName

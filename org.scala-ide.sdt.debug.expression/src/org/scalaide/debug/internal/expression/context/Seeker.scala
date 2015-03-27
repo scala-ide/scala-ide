@@ -48,26 +48,25 @@ trait Seeker {
     case other => other
   }
 
-  final def arrayClassByName(name: String): ArrayType =
-    jvm.classesByName(handleArray(name)).head match {
-      case arrayType: ArrayType => arrayType
-      case other => throw new IllegalArgumentException(s"Returned type is not an array: $other")
-    }
+  /** Looks up an array type for given name and returns jdi reference to it. */
+  final def arrayByName(name: String): ArrayType =
+    tryByName[ArrayType](name)
+      .getOrElse(throw new IllegalArgumentException(s"Returned type is not an array: $name"))
 
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType =
-    tryClassByName(name)
+    tryByName[ClassType](name)
       .getOrElse(throw new ClassNotFoundException("Class or object not found: " + handleArray(name)))
 
-  final def tryClassByName(name: String): Option[ClassType] = {
+  final def tryByName[Type <: com.sun.jdi.ReferenceType : scala.reflect.ClassTag](name: String): Option[Type] = {
     val className = handleArray(name)
-    def getClassType() = jvm.classesByName(className).collectFirst {
-      case classType: ClassType => classType
+    def getType() = jvm.classesByName(className).collectFirst {
+      case tpe: Type => tpe
     }
 
-    getClassType().orElse {
+    getType().orElse {
       loadClass(className)
-      getClassType()
+      getType()
     }
   }
 
@@ -80,7 +79,7 @@ trait Seeker {
 
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
   final def objectByName(name: String): ObjectReference = {
-    val classType = tryClassByName(name + "$")
+    val classType = tryByName[ClassType](name + "$")
       .getOrElse(throw new ClassNotFoundException("Class not found: " + handleArray(name) + "$"))
     val field = Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
       .getOrElse(throw new NoSuchMethodError(s"No field named `${NameTransformer.MODULE_INSTANCE_NAME}` found in class $name"))
@@ -89,7 +88,7 @@ trait Seeker {
 
   private[expression] final def tryObjectByName(name: String): Option[ObjectReference] = try {
     for {
-      classType <- tryClassByName(name + "$")
+      classType <- tryByName[ClassType](name + "$")
       field <- Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
     } yield classType.getValue(field).asInstanceOf[ObjectReference]
   } catch {
