@@ -43,6 +43,13 @@ object FileUtils {
   }
 
   /**
+   * Returns the full path of this file.
+   */
+  def toIPath(file: AbstractFile): Option[IPath] = {
+    toIFile(file).map(_.getFullPath)
+  }
+
+  /**
    * Removes all problem markers from this IFile.
    */
   def clearBuildErrors(file: IFile, monitor: IProgressMonitor) =
