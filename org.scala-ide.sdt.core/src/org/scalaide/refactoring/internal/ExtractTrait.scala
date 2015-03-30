@@ -58,6 +58,7 @@ class ExtractTrait extends RefactoringExecutorWithWizard {
             (change :: textChanges, newFiles)
           case ((textChanges, newFilesChanges), change: NewFileChange) =>
             (textChanges, change :: newFilesChanges)
+          case (changes, _) => changes
         }
       }
 
