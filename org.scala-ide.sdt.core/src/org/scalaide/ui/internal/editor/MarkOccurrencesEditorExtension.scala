@@ -22,7 +22,8 @@ import org.scalaide.util.internal.eclipse.AnnotationUtils._
  * Contains functionality to enable the mark occurrences feature for Scala
  * compilation unit editors.
  */
-trait MarkOccurrencesEditorExtension extends ScalaCompilationUnitEditor {
+trait MarkOccurrencesEditorExtension {
+  this: ScalaCompilationUnitEditor ⇒
 
   // needs to be lazy because [[getInteractiveCompilationUnit]] succeeds only after the editor is fully loaded
   private lazy val occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
@@ -31,7 +32,7 @@ trait MarkOccurrencesEditorExtension extends ScalaCompilationUnitEditor {
   private var occurencesFinderInstalled = false
 
   private lazy val selectionListener = new ISelectionListener() {
-    override def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
+    override def selectionChanged(part: IWorkbenchPart, selection: ISelection) = {
       selection match {
         case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
         case _ =>
@@ -43,65 +44,50 @@ trait MarkOccurrencesEditorExtension extends ScalaCompilationUnitEditor {
     requireOccurrencesUpdate(selection)
   }
 
-  override def doSelectionChanged(selection: ISelection) {
-    super.doSelectionChanged(selection)
-    val selectionProvider = getSelectionProvider
-    if (selectionProvider != null)
-      selectionProvider.getSelection match {
-        case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
-        case _ =>
-      }
-  }
-
-  override def installOccurrencesFinder(forceUpdate: Boolean) {
+  override def installOccurrencesFinder(forceUpdate: Boolean): Unit = {
     if (!occurencesFinderInstalled) {
-      super.installOccurrencesFinder(forceUpdate)
       getEditorSite.getPage.addPostSelectionListener(selectionListener)
       occurencesFinderInstalled = true
     }
   }
 
-  override def uninstallOccurrencesFinder() {
+  override def uninstallOccurrencesFinder(): Unit = {
     occurencesFinderInstalled = false
     getEditorSite.getPage.removePostSelectionListener(selectionListener)
-    super.uninstallOccurrencesFinder
     removeScalaOccurrenceAnnotations()
   }
 
   /** Clear the existing Mark Occurrences annotations.
    */
-  def removeScalaOccurrenceAnnotations() {
+  private def removeScalaOccurrenceAnnotations() = {
     for (annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
       annotationModel.replaceAnnotations(occurrenceAnnotations, Map())
       occurrenceAnnotations = Set()
     }
   }
 
-  def requireOccurrencesUpdate(selection: ITextSelection) {
-
-    if (selection.getLength < 0 || selection.getOffset < 0)
-      return
-
-    if (getDocumentProvider == null || !EditorUtils.isActiveEditor(this))
-      return
-
-    val lastModified = sourceViewer.getDocument match {
-      case document: IDocumentExtension4 =>
-        document.getModificationStamp
-      case _ => return
-    }
-    EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
-      Option(getInteractiveCompilationUnit) foreach { cu =>
-        val fileName = cu.file.name
-        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
-          performOccurrencesUpdate(selection, lastModified)
-        }
+  private def requireOccurrencesUpdate(selection: ITextSelection): Unit = {
+    if (selection.getLength >= 0
+        && selection.getOffset >= 0
+        && getDocumentProvider != null
+        && EditorUtils.isActiveEditor(this))
+      sourceViewer.getDocument match {
+        case document: IDocumentExtension4 =>
+          val lastModified = document.getModificationStamp
+          EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
+            Option(getInteractiveCompilationUnit) foreach { cu =>
+              val fileName = cu.file.name
+              Utils.debugTimed(s"""Time elapsed for "updateOccurrences" in source $fileName""") {
+                performOccurrencesUpdate(selection, lastModified)
+              }
+            }
+            Status.OK_STATUS
+          }
+        case _ =>
       }
-      Status.OK_STATUS
-    }
   }
 
-  private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
+  private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) = {
     val annotations = getAnnotations(selection, documentLastModified)
     for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
       annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)

@@ -50,7 +50,7 @@ import org.scalaide.util.ui.DisplayThread
 class ScalaSourceFileEditor
     extends CompilationUnitEditor
     with ScalaCompilationUnitEditor
-    with MarkOccurrencesEditorExtension { self =>
+    with MarkOccurrencesEditorExtension {
 
   import ScalaSourceFileEditor._
 
@@ -67,7 +67,7 @@ class ScalaSourceFileEditor
    * Contains references to all extensions provided by the extension point
    * `org.scala-ide.sdt.core.semanticHighlightingParticipants`.
    *
-   * These extensions are mainly provided by users, therefore any accesss need
+   * These extensions are mainly provided by users, therefore any accesses need
    * to be wrapped in a safe runner.
    */
   private lazy val semanticHighlightingParticipants = new IJavaReconcilingListener {
@@ -84,7 +84,7 @@ class ScalaSourceFileEditor
 
     override def aboutToBeReconciled() = ()
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
-      self.getInteractiveCompilationUnit() match {
+      getInteractiveCompilationUnit() match {
         case scu: ScalaCompilationUnit => exts foreach { ext =>
           EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'.") {
             ext(scu)
@@ -98,7 +98,7 @@ class ScalaSourceFileEditor
   setPartName("Scala Editor")
   setDocumentProvider(ScalaPlugin().documentProvider)
 
-  override protected def createActions() {
+  override protected def createActions(): Unit = {
     super.createActions()
 
     val cutAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT) //$NON-NLS-1$
@@ -134,7 +134,7 @@ class ScalaSourceFileEditor
       private def scalaCompilationUnit: Option[ScalaCompilationUnit] =
         Option(getInteractiveCompilationUnit) map (_.asInstanceOf[ScalaCompilationUnit])
 
-      override def run {
+      override def run(): Unit = {
         scalaCompilationUnit foreach { scu =>
           scu.followDeclaration(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
@@ -153,7 +153,7 @@ class ScalaSourceFileEditor
   override def isTabsToSpacesConversionEnabled(): Boolean =
     false
 
-  override protected def initializeKeyBindingScopes() {
+  override protected def initializeKeyBindingScopes(): Unit = {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
   }
 
@@ -211,7 +211,7 @@ class ScalaSourceFileEditor
     RefactoringMenu.fillContextMenu(menu, this)
   }
 
-  override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
     super.createPartControl(parent)
     RefactoringMenu.fillQuickMenu(this)
     reconcilingListeners.addReconcileListener(semanticHighlightingParticipants)
