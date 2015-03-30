@@ -186,6 +186,8 @@ private[context] trait JdiMethodInvoker {
    * WARNING - this method is used in reflective compilation.
    * If you change its name, package or behavior, make sure to change it also.
    *
+   * `AstTransformer.NewInstanceCall` extractor depends on this method having exactly 2 parameters.
+   *
    * @param className class for object to create
    * @param args list of list of arguments to pass to method
    * @throws NoSuchMethodError when matching constructor is not found

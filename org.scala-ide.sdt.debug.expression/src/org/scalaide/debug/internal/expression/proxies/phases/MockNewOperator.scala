@@ -24,7 +24,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
  * }}}
  */
 class MockNewOperator
-  extends AstTransformer[AfterTypecheck] {
+    extends AstTransformer[AfterTypecheck] {
 
   import universe._
 
@@ -39,7 +39,7 @@ class MockNewOperator
   }
 
   /**
-   * Rewrites new Class(a)(b) to __context.newInstance("package.Class", Seq(Seq(a), Seq(b)))
+   * Rewrites `new Class(a)(b)` to `__context.newInstance("package.Class", Seq(a, b))`
    */
   private def proxiedNewCode(fun: Tree, args: List[Tree], classType: String): Tree = {
     // parameters lists for constructor
@@ -66,7 +66,10 @@ class MockNewOperator
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
       val classType = TypeNames.getFromTree(newTree, withoutGenerics = true)
-      proxiedNewCode(fun, args, classType)
+      proxiedNewCode(
+        fun,
+        args.map(arg => transformSingleTree(arg, transformFurther)),
+        classType)
     case any => transformFurther(any)
   }
 }

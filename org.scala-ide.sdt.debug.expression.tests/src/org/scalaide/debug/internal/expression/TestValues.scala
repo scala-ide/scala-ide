@@ -197,7 +197,7 @@ object TestValues {
   object NewInstancesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "NewInstances"
-    val breakpointLine = 11
+    val breakpointLine = 15
   }
 
   object TraitsTestCase extends IntegrationTestCaseSettings {

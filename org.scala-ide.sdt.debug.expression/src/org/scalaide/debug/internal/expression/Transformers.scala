@@ -7,6 +7,7 @@ import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 
+import Names.Debugger
 import Names.Scala
 
 /**
@@ -68,18 +69,29 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
   private def isDynamicMethod(methodName: String) =
     Scala.dynamicTraitMethods.contains(methodName)
 
-  private def isContextMethod(on: Tree, name: String): Boolean = {
-    on.toString() == Names.Debugger.contextParamName && name == Names.Debugger.newInstance
+  /** Construction/destruction for `__context.newInstance` */
+  object NewInstanceCall {
+    import Debugger._
+
+    def apply(className: Tree, argList: Tree): Tree =
+      Apply(SelectMethod(contextParamName, newInstance), List(className, argList))
+
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
+      case Apply(Select(Ident(TermName(`contextParamName`)), TermName(`newInstance`)), List(className, argList)) =>
+        Some(className, argList)
+      case _ => None
+    }
   }
 
   /** Transformer that skip all part of tree that is dynamic and it is not a part of original expression */
   private val transformer = new universe.Transformer {
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
-      //dynamic calls
-      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
-        universe.Apply(universe.Select(transformSingleTree(on, tree => super.transform(tree)), name), args)
-      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isContextMethod(on, name.toString) =>
-        tree
+      // dynamic calls
+      case Apply(Select(on, name), args) if isDynamicMethod(name.toString) =>
+        Apply(Select(transformSingleTree(on, super.transform), name), args)
+      // on calls to `__context.newInstance` do not process the first argument
+      case NewInstanceCall(className, argList) =>
+        NewInstanceCall(className, transformSingleTree(argList, super.transform))
       case tree =>
         transformSingleTree(tree, super.transform)
     }
