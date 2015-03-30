@@ -213,7 +213,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val DefDef(functionMods, functionName, _, applyParams, retType, _) = impl.last
     val newApplyFunction = DefDef(functionMods, functionName, Nil, applyParams, retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
-    val functionReseted = new ResetTypeInformation().transform(newFunctionClass)
+    val functionReseted = new ResetTypeInformation().transform(TransformationPhaseData(newFunctionClass)).tree
 
     new ClassListener(newClassName, functionReseted.toString)(() => {
       toolbox.compile(functionReseted)

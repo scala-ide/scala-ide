@@ -29,7 +29,7 @@ class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], th
 
   import toolbox.u._
 
-  override def transform(tree: Tree): Tree = {
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
     val proxiesPackageName = org.scalaide.debug.internal.expression.proxies.name
     val contextPackageName = org.scalaide.debug.internal.expression.context.name
     val primitiveProxiesPackageName = org.scalaide.debug.internal.expression.proxies.primitives.name
@@ -38,9 +38,10 @@ class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], th
     val debuggerImports = debuggerImportsRoots.map(root => s"import $root._")
     val allImports = debuggerImports +: Imports.importsFromCurrentStackFrame
 
-    allImports.foldRight(tree) {
+    val newTree = allImports.foldRight(data.tree) {
       case (imports, tree) =>
         Block(imports.map(toolbox.parse), tree)
     }
+    data.after(phaseName, newTree)
   }
 }

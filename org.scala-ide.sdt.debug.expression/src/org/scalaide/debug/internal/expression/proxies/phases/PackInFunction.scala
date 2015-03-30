@@ -23,7 +23,7 @@ class PackInFunction(val toolbox: ToolBox[universe.type])
 
   import toolbox.u._
 
-  override def transform(tree: Tree): Tree = {
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
     // gets AST of function arguments required in expression
     val functionArgs: List[ValDef] = {
       import Debugger._
@@ -34,6 +34,7 @@ class PackInFunction(val toolbox: ToolBox[universe.type])
       args
     }
 
-    Function(functionArgs, tree)
+    val newTree = Function(functionArgs, data.tree)
+    data.after(phaseName, newTree)
   }
 }

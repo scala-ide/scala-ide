@@ -4,9 +4,6 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
-import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericEntry
-import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
-
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
@@ -15,6 +12,8 @@ import org.scalaide.debug.internal.expression.context.GenericVariableType
 import org.scalaide.debug.internal.expression.context.PlainVariableType
 import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.sources.GenericTypes
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericEntry
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
 import org.scalaide.logging.HasLogger
 
 /**
@@ -156,6 +155,8 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
     }
   }
 
-  override def transform(tree: universe.Tree): universe.Tree =
-    MockProxyBuilder.prependMockProxyCode(tree)
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    val newTree = MockProxyBuilder.prependMockProxyCode(data.tree)
+    data.after(phaseName, newTree)
+  }
 }

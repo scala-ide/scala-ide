@@ -28,10 +28,29 @@ trait TransformationPhase[+Tpe <: TypecheckRelation] {
   /**
    * Transforms current tree to new form.
    * It is called only once per object lifetime.
+   *
    * Result of this method is passed to another TransformationPhase instance.
-   * @param baseTree tree to transform
+   *
+   * @param data data for transformation. Contains tree and metadata.
    */
-  def transform(baseTree: universe.Tree): universe.Tree
+  def transform(data: TransformationPhaseData): TransformationPhaseData
+
+  /** Name of this phase - by default just simpleName of class */
+  def phaseName = this.getClass.getSimpleName
+}
+
+/**
+ * Contains current tree and metadata connected with transformation.
+ *
+ * @param tree tree after last transformation
+ * @param history trees after phases
+ */
+case class TransformationPhaseData(
+    tree: universe.Tree = universe.EmptyTree,
+    history: Vector[(String, universe.Tree)] = Vector.empty) {
+
+  final def after(phaseName: String, newTree: universe.Tree): TransformationPhaseData =
+    this.copy(tree = newTree, history = this.history :+ (phaseName, newTree))
 }
 
 /**
@@ -59,9 +78,10 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
   protected def transformSingleTree(baseTree: universe.Tree, transformFurther: universe.Tree => universe.Tree): universe.Tree
 
   /** Main method for transformer, applies transformation */
-  final override def transform(baseTree: universe.Tree): universe.Tree = {
-    _wholeTree = baseTree
-    transformer.transform(baseTree)
+  final override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    _wholeTree = data.tree
+    val newTree = transformer.transform(data.tree)
+    data.after(phaseName, newTree)
   }
 
   /** Checks if symbol corresponds to some of methods on `scala.Dynamic`. */

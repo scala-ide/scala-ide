@@ -21,10 +21,10 @@ class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], typesContex
 
   import toolbox.u._
 
-  override def transform(tree: universe.Tree): universe.Tree = {
-    val unboundNames = new VariableProxyTraverser(tree, _ => None, localVariablesNames).findUnboundVariables()
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    val unboundNames = new VariableProxyTraverser(data.tree, _ => None, localVariablesNames).findUnboundVariables()
     typesContext.addUnboundVariables(unboundNames)
-    tree
+    data.after(phaseName, data.tree)
   }
 
 }

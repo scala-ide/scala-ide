@@ -45,8 +45,11 @@ case class TypeCheck(toolbox: ToolBox[universe.type])
     }
   }
 
-  override def transform(tree: universe.Tree): universe.Tree = {
-    def doTypeCheck = toolbox.typecheck(tree)
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    def doTypeCheck = {
+      val newTree = toolbox.typecheck(data.tree)
+      data.after(phaseName, newTree)
+    }
     try {
       doTypeCheck
     } catch {

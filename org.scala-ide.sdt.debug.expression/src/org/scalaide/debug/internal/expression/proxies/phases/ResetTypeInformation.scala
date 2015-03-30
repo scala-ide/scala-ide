@@ -8,6 +8,7 @@ package org.scalaide.debug.internal.expression.proxies.phases {
 
   import org.scalaide.debug.internal.expression.AfterTypecheck
   import org.scalaide.debug.internal.expression.TransformationPhase
+  import org.scalaide.debug.internal.expression.TransformationPhaseData
 
   /**
    * Removes all type information from given tree.
@@ -16,13 +17,14 @@ package org.scalaide.debug.internal.expression.proxies.phases {
    */
   class ResetTypeInformation extends TransformationPhase[AfterTypecheck] {
 
-    override def transform(tree: universe.Tree): universe.Tree = {
+    override def transform(data: TransformationPhaseData): TransformationPhaseData = {
       import scala.tools.nsc.ast.Brutal
       val runtimeUniverse = universe.asInstanceOf[scala.reflect.runtime.JavaUniverse]
       val brutal = new Brutal(runtimeUniverse)
-      val brutalTree = tree.asInstanceOf[brutal.u.Tree]
+      val brutalTree = data.tree.asInstanceOf[brutal.u.Tree]
       val resetTree = brutal.brutallyResetAttrs(brutalTree)
-      resetTree.asInstanceOf[universe.Tree]
+      val newTree = resetTree.asInstanceOf[universe.Tree]
+      data.after(phaseName, newTree)
     }
   }
 

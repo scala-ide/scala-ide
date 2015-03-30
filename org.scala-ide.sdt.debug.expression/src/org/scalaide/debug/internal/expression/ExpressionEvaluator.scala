@@ -129,12 +129,13 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     val transformed = transform(parsed, phases)
 
     try {
-      compile(transformed, typesContext.classesToLoad)
+      compile(transformed.tree, typesContext.classesToLoad)
     } catch {
       case exception: Throwable =>
+        val codeAfterPhases = stringifyTreesAfterPhases(transformed.history)
         val message =
           s"""Reflective compilation failed
-             |Tree to compile:
+             |Trees transformation history:
              |$transformed
              |""".stripMargin
         logger.error(message, exception)
@@ -169,33 +170,30 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     phases.map(_(ctx))
   }
 
-  private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): universe.Tree = {
-    val (_, finalTree) = phases.foldLeft(Vector(("Initial code", code))) {
-      case (treesAfterPhases, phase) =>
-        val phaseName = phase.getClass.getSimpleName
-        monitor.startNamedSubTask(s"Applying transformation phase:")
+  private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): TransformationPhaseData = {
+    val data = TransformationPhaseData(tree = code, history = Vector(("Initial code", code)))
+    phases.foldLeft(data) {
+      case (lastData, phase) =>
+        monitor.startNamedSubTask("Applying transformation phase: " + phase.phaseName)
         try {
-          val (_, previousTree) = treesAfterPhases.last
-          val current = (phaseName, phase.transform(previousTree))
-          val result = treesAfterPhases :+ current
+          val newData = phase.transform(lastData)
           monitor.reportProgress(1)
-          result
+          newData
         } catch {
           case e: Throwable =>
-            val codeAfterPhases = stringifyTreesAfterPhases(treesAfterPhases)
+            val codeAfterPhases = stringifyTreesAfterPhases(lastData.history)
             val message =
-              s"""Applying phase: $phaseName failed
+              s"""Applying phase: ${phase.phaseName} failed
                |Trees before current transformation:
                |$codeAfterPhases
                |""".stripMargin
             logger.error(message, e)
             throw e
         }
-    }.last
-    finalTree
+    }
   }
 
-  private def stringifyTreesAfterPhases(treesAfterPhases: Seq[(String, universe.Tree)]): String =
+  private def stringifyTreesAfterPhases(treesAfterPhases: Vector[(String, universe.Tree)]): String =
     treesAfterPhases.map {
       case (phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
     } mkString ("------------", "\n\n------------ ", "\n------------")
