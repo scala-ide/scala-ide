@@ -41,4 +41,9 @@ class RemoveDuplicatedEmptyLinesTest extends DocumentSaveActionTests {
     |  }
     |}
     |""".stripMargin after SaveEvent
+
+  @Test
+  def do_not_throw_exception_on_single_empty_line() = """|^
+    |class X""".stripMargin becomes """|^
+    |class X""".stripMargin after SaveEvent
 }
