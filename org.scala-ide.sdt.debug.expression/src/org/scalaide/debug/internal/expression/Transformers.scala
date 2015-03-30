@@ -44,13 +44,18 @@ trait TransformationPhase[+Tpe <: TypecheckRelation] {
  *
  * @param tree tree after last transformation
  * @param history trees after phases
+ * @param times execution times (in microseconds)
  */
 case class TransformationPhaseData(
     tree: universe.Tree = universe.EmptyTree,
-    history: Vector[(String, universe.Tree)] = Vector.empty) {
+    history: Vector[(String, universe.Tree)] = Vector.empty,
+    times: Vector[(String, Long)] = Vector.empty) {
 
   final def after(phaseName: String, newTree: universe.Tree): TransformationPhaseData =
     this.copy(tree = newTree, history = this.history :+ (phaseName, newTree))
+
+  final def withTime(phaseName: String, timeInMicros: Long): TransformationPhaseData =
+    this.copy(times = this.times :+ (phaseName, timeInMicros))
 }
 
 /**

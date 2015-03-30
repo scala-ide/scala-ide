@@ -129,7 +129,11 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     val transformed = transform(parsed, phases)
 
     try {
-      compile(transformed.tree, typesContext.classesToLoad)
+      val (compiled, time) = measure {
+        compile(transformed.tree, typesContext.classesToLoad)
+      }
+      logTimesToFile(transformed.withTime("Compilation", time))
+      compiled
     } catch {
       case exception: Throwable =>
         val codeAfterPhases = stringifyTreesAfterPhases(transformed.history)
@@ -142,6 +146,27 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
         throw exception
     }
   }
+
+  // measure execution time in microseconds
+  private def measure[A](block: => A): (A, Long) = {
+    val now = System.nanoTime()
+    val result = block
+    val micros = (System.nanoTime - now) / 1000
+    (result, micros)
+  }
+
+  // Writes data about execution times to file. Use for debugging.
+  // Runs only when environment property `scalaide.ee-time-log` is defined.
+  private def logTimesToFile(data: TransformationPhaseData): Unit =
+    if (Option(System.getProperty("scalaide.eelogtimes")).isDefined) {
+      val logFile = new java.io.File(".ee-time-log.csv")
+      val pw = new java.io.FileWriter(logFile, /* append = */ true)
+      try {
+        pw.write("Phases:\t" + data.times.map(_._1).mkString("\t") + "\n")
+        val code = data.history.head._2.toString.replace("\n", " ").replace("\r", " ")
+        pw.write("Expression: " + code + "\t" + data.times.map(_._2).mkString("\t") + "\n")
+      } finally pw.close()
+    }
 
   private def recompileFromStrigifiedTree(tree: u.Tree): () => Any = {
     toolbox.compile(toolbox.parse(tree.toString()))
@@ -171,14 +196,16 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   }
 
   private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): TransformationPhaseData = {
-    val data = TransformationPhaseData(tree = code, history = Vector(("Initial code", code)))
+    val data = TransformationPhaseData(tree = code, history = Vector(("Parse", code)))
     phases.foldLeft(data) {
       case (lastData, phase) =>
         monitor.startNamedSubTask("Applying transformation phase: " + phase.phaseName)
         try {
-          val newData = phase.transform(lastData)
+          val (newData, time) = measure {
+            phase.transform(lastData)
+          }
           monitor.reportProgress(1)
-          newData
+          newData.withTime(phase.phaseName, time)
         } catch {
           case e: Throwable =>
             val codeAfterPhases = stringifyTreesAfterPhases(lastData.history)
