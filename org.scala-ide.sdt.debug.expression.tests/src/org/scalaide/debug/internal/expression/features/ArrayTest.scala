@@ -197,6 +197,37 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   @Test
   def testNestedObjectArrayElementAccess(): Unit =
     eval("nestedObjectArray(0)(2)", nestedObjectArray(0)(2), Java.boxed.String)
+
+  // Tests for displaying arrays
+
+  @Test
+  def displayEmptyArray(): Unit =
+    eval("Array[Int]()", "Array()", Scala.Array(Scala.primitives.Int))
+
+  @Test
+  def displayIntArray(): Unit =
+    eval("Array(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+
+  @Test
+  def displayStringArray(): Unit =
+    eval("""Array("1", "2", "3")""", "Array(1, 2, 3)", Scala.Array(Java.boxed.String))
+
+  @Test
+  def displayNestedArray(): Unit = eval(
+    "Array(Array(1, 2, 3), Array(1, 2, 3))",
+    "Array(Array(1, 2, 3), Array(1, 2, 3))",
+    Scala.Array(Scala.Array(Scala.primitives.Int)))
+
+  @Test
+  def displayListWithArray(): Unit =
+    eval("List(Array(1, 2, 3), Array(1.0, 2.0, 3.0))", "List(Array(1, 2, 3), Array(1.0, 2.0, 3.0))", Scala.::)
+
+  // this one sometimes (depending on test order) fails assertion in:
+  // scala.tools.nsc.transform.AddInterfaces$LazyImplClassType.implType$1(AddInterfaces.scala:196)
+  @Test
+  def displayMapWithArray(): Unit =
+    eval("Map(1 -> Array(1, 2, 3))", "Map(1 -> Array(1, 2, 3))", "scala.collection.immutable.Map$Map1")
+
 }
 
 object ArrayTest extends BaseIntegrationTestCompanion(ArraysTestCase)

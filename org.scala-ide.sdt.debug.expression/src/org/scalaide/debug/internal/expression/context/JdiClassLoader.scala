@@ -23,8 +23,8 @@ trait JdiClassLoader {
    * Needed for JDI to work sometimes.
    */
   final def loadClass(name: String): Unit = {
-    val classObj = jvm.classesByName("java.lang.Class").head.asInstanceOf[ClassType]
-    val byName = classObj.methodsByName("forName").head
+    val classObj = classByName("java.lang.Class")
+    val byName = methodOn(classObj, "forName", arity = 1)
     val classMirror = jvm.mirrorOf(name)
     classObj.invokeMethod(currentThread, byName, List(classMirror))
   }
@@ -53,7 +53,7 @@ trait JdiClassLoader {
     val remoteByteStrings = jvm.mirrorOf(localByteString)
 
     val dateTypeConverterClazzReference = classByName("javax.xml.bind.DatatypeConverter")
-    val parseMetod = dateTypeConverterClazzReference.methodsByName("parseBase64Binary").head
+    val parseMetod = methodOn(dateTypeConverterClazzReference, "parseBase64Binary", arity = 1)
 
     // encoded
     val remoteByteArray = dateTypeConverterClazzReference.invokeMethod(currentThread, parseMetod, List(remoteByteStrings))

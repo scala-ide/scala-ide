@@ -56,7 +56,7 @@ abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitiv
    * @param proxy proxy to get value from
    */
   final def primitive(proxy: Proxy): Value = {
-    val method = proxy.referenceType.methodsByName(unboxedName + "Value").head
+    val method = proxy.proxyContext.methodOn(proxy.referenceType, unboxedName + "Value", arity = 0)
 
     proxy.proxyContext.invokeUnboxed[Value](proxy, None, method.name)
   }
