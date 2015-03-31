@@ -1,7 +1,10 @@
 package org.scalaide.core.testsetup
 
+import scala.concurrent.duration._
 import scala.tools.nsc.interactive.Response
+
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.ICompilationUnit
@@ -9,6 +12,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.text.edits.ReplaceEdit
 import org.junit.Assert.assertNotNull
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
@@ -138,5 +142,29 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     val path = sourcePath.makeRelativeTo(projectSrcPath)
     open(path.toOSString())
     waitUntilTypechecked(source)
+  }
+
+  /**
+   * Allows to modify sources in test workspace and then build project incrementally.
+   * Be aware that it's heavy and it may be difficult to reason whether some events have been already propagated or not.
+   *
+   * @param compilationUnitPath path to file which we'll change
+   * @param lineNumber line which will be removed (line numbers start from 1)
+   * @param newLine code inserted in place of line with lineNumber
+   * @param waitTime time to wait when build is started (so events can propagate etc.), defaults to 500 milliseconds
+   */
+  def buildWithModifiedLine(compilationUnitPath: String, lineNumber: Int, newLine: String, waitTime: Duration = 500.millis): Unit = {
+    val lineIndex = lineNumber - 1
+    val cu = scalaCompilationUnit(compilationUnitPath)
+    val code = cu.getSource
+    val lines = code.split('\n').toList
+    val newLines = lines.updated(lineIndex, newLine)
+    val newCode = newLines.mkString("\n")
+
+    val textEdit = new ReplaceEdit(0, code.length(), newCode)
+    cu.applyTextEdit(textEdit, new NullProgressMonitor)
+    cu.save(new NullProgressMonitor, true)
+    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    Thread.sleep(waitTime.toMillis)
   }
 }

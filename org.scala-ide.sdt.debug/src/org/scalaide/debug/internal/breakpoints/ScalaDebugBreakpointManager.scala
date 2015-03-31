@@ -5,6 +5,7 @@ import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
+import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import scala.actors.Actor
 import BreakpointSupportActor.Changed
 import org.scalaide.debug.internal.BaseDebuggerActor
@@ -50,6 +51,13 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
     companionActor ! BreakpointAdded(breakpoint)
   }
 
+  /**
+   * Intended to ensure that we'll hit already defined and enabled breakpoints after performing hcr.
+   * @param changedClassesNames fully qualified names of types
+   */
+  def reenableBreakpointsInClasses(changedClassesNames: Seq[String]): Unit =
+    companionActor ! ReenableBreakpointsAfterHcr(changedClassesNames)
+
   // ------------
 
   def init() {
@@ -88,6 +96,8 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointAdded(breakpoint: IBreakpoint)
   case class BreakpointRemoved(breakpoint: IBreakpoint)
   case class BreakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta)
+  case class ReenableBreakpointsAfterHcr(classNames: Seq[String])
+  case object ReenableBreakpointAfterHcr
 
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
@@ -138,6 +148,8 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
         case _ =>
           // see previous comment
       }
+    case ReenableBreakpointsAfterHcr(changedClassesNames) =>
+      reenableBreakpointAfterHcr(changedClassesNames)
     case ScalaDebugBreakpointManager.ActorDebug =>
       reply(None)
 
@@ -151,6 +163,33 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
 
   private def createBreakpointSupport(breakpoint: IBreakpoint): Unit = {
     breakpoints += (breakpoint -> BreakpointSupport(breakpoint, debugTarget))
+  }
+
+  private def reenableBreakpointAfterHcr(changedClassesNames: Seq[String]): Unit = {
+    /*
+     * We need to prepare names of changed classes and these taken from breakpoints because
+     * from some reasons they differ. We need to change them slightly as:
+     *
+     * Type names used in breakpoints from some reason have double intermediate dollars,
+     * e.g. debug.Foo$$x$$Bar instead of debug.Foo$x$Bar, debug.Foo$$x$ instead of debug.Foo$x$.
+     *
+     * There are also anonymous types which really should have double dollars but anyway
+     * breakpoints for such types have currently set type like
+     * com.test.debug.Foo$$x$$Bar$java.lang.Object$java.lang.Object
+     * instead of
+     * debug.Foo$x$Bar$$anon$2$$anon$1
+     */
+    val anonTypePattern = """\$anon\$[1-9][0-9]*"""
+    val namesToCompareWithOnesFromBreakpoints = changedClassesNames.map(_.replaceAll(anonTypePattern, "java.lang.Object"))
+    def isChanged(typeName: String): Boolean =
+      namesToCompareWithOnesFromBreakpoints.contains(typeName.replace("$$", "$"))
+
+    val affectedBreakpoints = breakpoints.keys.collect {
+      case bp: JavaLineBreakpoint if isChanged(bp.getTypeName) => bp
+    }
+    affectedBreakpoints.foreach { breakpoint =>
+      breakpoints(breakpoint) ! ReenableBreakpointAfterHcr
+    }
   }
 
   override protected def preExit(): Unit = breakpoints.values.foreach(_ ! PoisonPill)

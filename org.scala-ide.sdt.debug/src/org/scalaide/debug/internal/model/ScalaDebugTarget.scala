@@ -1,9 +1,15 @@
 package org.scalaide.debug.internal.model
 
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaSourceLookupParticipant
 import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
+import org.scalaide.debug.internal.hcr.ClassFileResource
+import org.scalaide.debug.internal.hcr.HotCodeReplaceExecutor
+import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
+import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
+import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 
 import org.eclipse.core.resources.IMarkerDelta
@@ -43,6 +49,7 @@ object ScalaDebugTarget extends HasLogger {
     val debugTarget = new ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect, allowTerminate, classPath) {
       override val companionActor = ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, this)
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
+      override val hcrManager: Option[ScalaHotCodeReplaceManager] = ScalaHotCodeReplaceManager.create(companionActor)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
       override val cache: ScalaDebugCache = ScalaDebugCache(this, companionActor)
     }
@@ -67,7 +74,8 @@ object ScalaDebugTarget extends HasLogger {
 
   /** A message sent to the companion actor to indicate we're attached to the VM. */
   private[model] object AttachedToVM
-
+  private[internal] case class UpdateStackFramesAfterHcr(dropAffectedFrames: Boolean)
+  private[internal] case class ReplaceClasses(changedClasses: Seq[ClassFileResource])
 }
 
 /**
@@ -158,8 +166,14 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   @volatile
   private var threads = List[ScalaThread]()
 
+  @volatile
+  private var isDuringHcr: Boolean = false
+  private[internal] def isPerformingHotCodeReplace: Boolean = isDuringHcr
+  private[internal] def isPerformingHotCodeReplace_=(isPerforming: Boolean) = { isDuringHcr = isPerforming }
+
   private[debug] val eventDispatcher: ScalaJdiEventDispatcher
   private[debug] val breakpointManager: ScalaDebugBreakpointManager
+  private[debug] val hcrManager: Option[ScalaHotCodeReplaceManager]
   private[debug] val companionActor: BaseDebuggerActor
   private[debug] val cache: ScalaDebugCache
 
@@ -335,7 +349,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
 
   /** Callback form the actor when the connection with the vm is enabled.
    *
-   *  This method initializes the debug traget object:
+   *  This method initializes the debug target object:
    *   - retrieves the initial list of threads and creates the corresponding debug elements.
    *   - initializes the breakpoint manager
    *   - fires a change event
@@ -345,6 +359,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
     import scala.collection.JavaConverters._
     initializeThreads(virtualMachine.allThreads.asScala.toList)
     breakpointManager.init()
+    hcrManager.foreach(_.init())
     fireChangeEvent(DebugEvent.CONTENT)
   }
 
@@ -355,6 +370,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
+    hcrManager.foreach(_.dispose())
     cache.dispose()
     disposeThreads()
     fireTerminateEvent()
@@ -395,6 +411,12 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   }
 
   /**
+   * Refreshes frames of all suspended, non-system threads and optionally drops affected stack frames.
+   */
+  private[internal] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Unit =
+    companionActor ! ScalaDebugTarget.UpdateStackFramesAfterHcr(dropAffectedFrames)
+
+  /**
    * Return the current list of threads
    */
   private[model] def getScalaThreads: List[ScalaThread] = threads
@@ -409,6 +431,7 @@ private[model] object ScalaDebugTargetActor {
 
   def apply(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget): ScalaDebugTargetActor = {
     val actor = new ScalaDebugTargetActor(threadStartRequest, threadDeathRequest, debugTarget)
+    if (!IScalaPlugin().headlessMode) actor.subscribe(HotCodeReplaceListener)
     actor.start()
     actor
   }
@@ -423,7 +446,9 @@ private[model] object ScalaDebugTargetActor {
  * of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
  * linked actors).
  */
-private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
+private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, protected val debugTarget: ScalaDebugTarget)
+    extends BaseDebuggerActor
+    with HotCodeReplaceExecutor {
 
   import ScalaDebugTargetActor._
 
@@ -448,6 +473,11 @@ private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartReque
     case ThreadSuspended(thread, eventDetail) =>
       // forward the event to the right thread
       debugTarget.getScalaThreads.find(_.threadRef == thread).foreach(_.suspendedFromScala(eventDetail))
+    case msg: ScalaDebugTarget.UpdateStackFramesAfterHcr =>
+      val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
+      nonSystemThreads.foreach(_.updateStackFramesAfterHcr(msg))
+    case ScalaDebugTarget.ReplaceClasses(changedClasses) =>
+      replaceClassesIfVMAllows(changedClasses)
   }
 
   /** Initialize this debug target actor:
