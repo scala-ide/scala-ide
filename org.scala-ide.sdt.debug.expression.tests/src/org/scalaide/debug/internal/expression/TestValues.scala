@@ -268,6 +268,12 @@ object TestValues {
     val breakpointLine = 41
   }
 
+  object ToolBoxBugsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-toolbox-bugs"
+    val fileName = "ToolBoxBugs"
+    val breakpointLine = 6
+  }
+
   object VarargsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-varargs"
     val fileName = "Varargs"

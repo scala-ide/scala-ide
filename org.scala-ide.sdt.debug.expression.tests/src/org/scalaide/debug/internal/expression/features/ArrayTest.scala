@@ -172,15 +172,13 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   def testRichArrayMethodsHead(): Unit =
     eval("stringArray.head", stringArray.head, Java.boxed.String)
 
-  @Ignore("TODO - O-8564 Investigate test failures connected with HasNewBuilder and CanBuildFrom errors")
   @Test
   def testRichArrayMethodsConcatenation(): Unit =
     eval("stringArray ++ intArray", ScalaRunTime.stringOf(stringArray ++ intArray), Scala.Array(Java.Object))
 
-  @Ignore("TODO - O-8564 Investigate test failures connected with HasNewBuilder and CanBuildFrom errors")
   @Test
   def testRichArrayMethodsMap(): Unit =
-    eval("intArray.map { _.toString }", intArray.map { _.toString }, Scala.Array(Java.boxed.String))
+    eval("intArray.map { _.toString }", ScalaRunTime.stringOf(intArray.map { _.toString }), Scala.Array(Java.boxed.String))
 
   @Test
   def testNestedArrayAccess(): Unit =

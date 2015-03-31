@@ -25,7 +25,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
    * Test code and returns tuple with (returnedValue, returnedType)
    */
   protected final def runCode(code: String): (String, String) = {
-    val proxy = runInEclipse(code)
+    val proxy = runInEclipse(code, forceRetry = true)
     val resultString = proxy.proxyContext.show(proxy)
 
     resultString match {
@@ -48,7 +48,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
    */
   protected def expectReflectiveCompilationError(code: String): Unit = {
     try {
-      runInEclipse(code).toString
+      runInEclipse(code, forceRetry = false).toString
       fail(s"ToolBoxError should be thrown")
     } catch {
       case expected: ReflectiveCompilationFailure => // OK
@@ -58,11 +58,18 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
     }
   }
 
-  protected def runInEclipse(code: String): JdiProxy = {
+  protected def runInEclipse(code: String, forceRetry: Boolean = true): JdiProxy = {
     val eval = companion.expressionEvaluator
+
     ExpressionException.recoverFromErrors(eval.apply(code), eval.createContext(), logger) match {
-      case Success(result) => result
-      case Failure(exception) => throw exception
+      case Success(result) =>
+        result
+      case Failure(exception) =>
+        if (forceRetry) {
+          logger.warn("Failed to evaluate expresions. Retrying with new instance of JdiExpressionEvaluator...")
+          companion.prepareEvaluator()
+          runInEclipse(code, false)
+        } else throw exception
     }
   }
 
@@ -99,6 +106,10 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
    */
   protected def typeName: String = "debug." + fileName + "$"
 
+  def prepareEvaluator(): Unit = {
+    expressionEvaluator = initializeEvaluator(session)
+  }
+
   @BeforeClass
   def prepareTestDebugSession(): Unit = {
     refreshBinaryFiles()
@@ -107,7 +118,7 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
 
     session.runToLine(typeName, lineNumber, suspendPolicy = suspensionPolicy)
 
-    expressionEvaluator = initializeEvaluator(session)
+    prepareEvaluator()
   }
 
 }
