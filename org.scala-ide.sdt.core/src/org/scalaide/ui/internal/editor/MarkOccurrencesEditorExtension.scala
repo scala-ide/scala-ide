@@ -30,6 +30,7 @@ trait MarkOccurrencesEditorExtension {
 
   private var occurrenceAnnotations: Set[Annotation] = Set()
   private var occurencesFinderInstalled = false
+  private var runningJob: Job = _
 
   private lazy val selectionListener = new ISelectionListener() {
     override def selectionChanged(part: IWorkbenchPart, selection: ISelection) = {
@@ -67,22 +68,26 @@ trait MarkOccurrencesEditorExtension {
   }
 
   private def requireOccurrencesUpdate(selection: ITextSelection): Unit = {
+    def spawnNewJob(lastModified: Long) = {
+      runningJob = EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
+        Option(getInteractiveCompilationUnit) foreach { cu =>
+          val fileName = cu.file.name
+          Utils.debugTimed(s"""Time elapsed for "updateOccurrences" in source $fileName""") {
+            performOccurrencesUpdate(selection, lastModified)
+          }
+        }
+        Status.OK_STATUS
+      }
+    }
+
     if (selection.getLength >= 0
         && selection.getOffset >= 0
         && getDocumentProvider != null
         && EditorUtils.isActiveEditor(this))
       sourceViewer.getDocument match {
-        case document: IDocumentExtension4 =>
-          val lastModified = document.getModificationStamp
-          EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
-            Option(getInteractiveCompilationUnit) foreach { cu =>
-              val fileName = cu.file.name
-              Utils.debugTimed(s"""Time elapsed for "updateOccurrences" in source $fileName""") {
-                performOccurrencesUpdate(selection, lastModified)
-              }
-            }
-            Status.OK_STATUS
-          }
+        // don't spawn a new job when another one is already running
+        case document: IDocumentExtension4 if runningJob == null || runningJob.getState == Job.NONE ⇒
+          spawnNewJob(document.getModificationStamp)
         case _ =>
       }
   }
