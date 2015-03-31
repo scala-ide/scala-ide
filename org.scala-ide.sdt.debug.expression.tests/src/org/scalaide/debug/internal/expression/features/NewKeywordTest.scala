@@ -11,6 +11,18 @@ import org.scalaide.debug.internal.expression.TestValues.NewInstancesTestCase
 
 class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
+  @Test
+  def nestedConstructor(): Unit =
+    eval("new Bar(new Foo())", "Bar(Foo())", "debug.Bar")
+
+  @Test
+  def doubleNestedConstructor(): Unit =
+    eval("new Baz(new Bar(new Foo()))", "Baz(Bar(Foo()))", "debug.Baz")
+
+  @Test
+  def genericMethodInConstructor(): Unit =
+    eval("new Bar(identity(foo))", "Bar(Foo())", "debug.Bar")
+
   @Test(expected = classOf[UnsupportedFeature])
   def traitRefinement(): Unit =
     eval("new A {}", "A", "A")
@@ -40,7 +52,7 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
     eval("new LibClassWithVararg(1, 2)", "LibClassWithVararg(List(1, 2))", "debug.LibClassWithVararg")
   }
 
-  // TODO - Toolbox cannot typecheck java vararg methods https://issues.scala-lang.org/browse/SI-9212
+  // TODO - Toolbox cannot typecheck java vararg constructors https://issues.scala-lang.org/browse/SI-9212
   // If this test fails it means Toolbox is fixed, yay! (or some other exception is thrown)
   @Test(expected = classOf[ReflectiveCompilationFailure])
   def javaVarArgConstructor(): Unit = {
