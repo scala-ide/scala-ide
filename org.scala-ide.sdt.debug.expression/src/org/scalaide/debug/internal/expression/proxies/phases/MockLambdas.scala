@@ -26,9 +26,8 @@ import Names.Scala
  *   ))(immutable.this.List.canBuildFrom[Int])
  * }}}
  */
-case class MockLambdas(toolbox: ToolBox[universe.type], typesContext: NewTypesContext)
-  extends AstTransformer[AfterTypecheck]
-  with AnonymousFunctionSupport {
+case class MockLambdas(toolbox: ToolBox[universe.type])
+  extends AnonymousFunctionSupport[AfterTypecheck] {
 
   import toolbox.u._
 

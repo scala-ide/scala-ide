@@ -28,7 +28,7 @@ import proxies.primitives.NullJdiProxy
  *   __context.proxy(<literal>)
  * }}}
  */
-case class MockLiteralsAndConstants(typesContext: NewTypesContext)
+class MockLiteralsAndConstants
     extends AstTransformer[AfterTypecheck]
     with PrimitivesCommons {
 

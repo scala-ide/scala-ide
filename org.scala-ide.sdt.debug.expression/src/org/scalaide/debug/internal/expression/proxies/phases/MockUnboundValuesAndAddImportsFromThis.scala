@@ -4,9 +4,6 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
-import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericEntry
-import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
-
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
@@ -15,6 +12,8 @@ import org.scalaide.debug.internal.expression.context.GenericVariableType
 import org.scalaide.debug.internal.expression.context.PlainVariableType
 import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.sources.GenericTypes
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericEntry
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
 import org.scalaide.logging.HasLogger
 
 /**
@@ -37,11 +36,9 @@ import org.scalaide.logging.HasLogger
  * }}}
  *
  * @param context gives access to imports, local variables etc. from current scope
- * @param unboundVariables variables for which mocks should be generated
  */
 class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type],
-                                             context: VariableContext,
-                                             unboundVariables: => Set[UnboundVariable])
+                                             context: VariableContext)
   extends TransformationPhase[BeforeTypecheck]
   with HasLogger {
 
@@ -57,7 +54,7 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
      * @param code processed code
      * @return code with mock definitions prepended
      */
-    final def prependMockProxyCode(code: Tree): Tree = {
+    final def prependMockProxyCode(code: Tree, unboundVariables: Set[UnboundVariable]): Tree = {
       val mockProxiesCode = generateProxies(unboundVariables, context)
       if (mockProxiesCode.isEmpty)
         code
@@ -156,6 +153,8 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
     }
   }
 
-  override def transform(tree: universe.Tree): universe.Tree =
-    MockProxyBuilder.prependMockProxyCode(tree)
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    val newTree = MockProxyBuilder.prependMockProxyCode(data.tree, data.unboundVariables)
+    data.after(phaseName, newTree)
+  }
 }

@@ -12,19 +12,17 @@ import scala.tools.reflect.ToolBox
  *
  * Does not transform the tree in any way.
  *
- * @param typesContext context to which unbound variables are registered
  * @param localVariablesNames list of names for `val`s and `var`s defined in current method
  */
-class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], typesContext: NewTypesContext, localVariablesNames: => Set[String])
+class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], localVariablesNames: => Set[String])
     extends TransformationPhase[BeforeTypecheck]
     with UnboundValuesSupport {
 
   import toolbox.u._
 
-  override def transform(tree: universe.Tree): universe.Tree = {
-    val unboundNames = new VariableProxyTraverser(tree, _ => None, localVariablesNames).findUnboundVariables()
-    typesContext.addUnboundVariables(unboundNames)
-    tree
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    val unboundNames = new VariableProxyTraverser(data.tree, _ => None, localVariablesNames).findUnboundVariables()
+    data.after(phaseName, data.tree).withUnboundVariables(unboundNames)
   }
 
 }

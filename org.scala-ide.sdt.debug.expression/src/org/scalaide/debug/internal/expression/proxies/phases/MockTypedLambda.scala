@@ -21,14 +21,10 @@ import scala.tools.reflect.ToolBox
  *   ))
  * }}}
  */
-case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTypesContext)
-    extends AstTransformer[BeforeTypecheck]
-    with AnonymousFunctionSupport {
+case class MockTypedLambda(toolbox: ToolBox[universe.type])
+    extends AnonymousFunctionSupport[BeforeTypecheck] {
 
   import toolbox.u._
-
-  // for function naming
-  private var functionsCount = 0
 
   //should we mock this lambda?
   private def allParamsTyped(params: Seq[ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
@@ -111,7 +107,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTyp
                 ret
           }
       }
-    }.transform(wholeTree)
+    }.transform(data.tree)
 
   private def closureTypesForTypedLambda(body: Tree, vparams: List[ValDef]): Map[TermName, String] = {
     val names = getClosureParamsNames(body, vparams)
@@ -173,13 +169,9 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTyp
       typeCheckedFunction.body,
       closuresTypes)
 
-    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
-    val proxyClassName = s"$customLambdaPrefix${functionsCount}_typed"
-    functionsCount += 1
     val newFunctionType = compiled.newClassName
 
-    typesContext.createNewType(proxyClassName,
-      newFunctionType,
+    typesContext.createNewType(newFunctionType,
       compiled.newClassCode,
       closuresTypes.values.toSeq)
 

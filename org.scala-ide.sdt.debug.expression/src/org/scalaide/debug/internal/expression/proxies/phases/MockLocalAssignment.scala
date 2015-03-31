@@ -22,13 +22,13 @@ import org.scalaide.debug.internal.expression.Names.Debugger
  *
  * @param unboundVariables by-name of unbound variables in current frame (used to check if variable is local)
  */
-class MockLocalAssignment(unboundVariables: => Set[UnboundVariable])
+class MockLocalAssignment
     extends AstTransformer[AfterTypecheck] {
 
   import universe._
 
   def isLocalUnboundVariable(termName: TermName): Boolean =
-    unboundVariables.contains(UnboundVariable(termName, isLocal = true))
+    data.unboundVariables.contains(UnboundVariable(termName, isLocal = true))
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case Assign(Ident(termName: TermName), value) if isLocalUnboundVariable(termName) =>

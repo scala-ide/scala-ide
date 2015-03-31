@@ -92,13 +92,43 @@ object AnonymousFunctionSupport {
 
 }
 
-trait AnonymousFunctionSupport extends UnboundValuesSupport {
-  self: AstTransformer[TypecheckRelation] =>
+/**
+ * Contains data about new classes to load on debugged JVM.
+ * Populated during lambda-related phases (mostly from `AnonymousFunctionSupport`).
+ *
+ * WARNING - this class have mutable (append-only) internal state
+ */
+final class NewTypesContext() {
 
-  //requirements
-  protected val typesContext: NewTypesContext
+  /** Maps function names to it's stubs */
+  private var _newCodeClasses: Set[ClassData] = Set.empty
+
+  /** Classes to be loaded on debugged jvm. */
+  def classesToLoad: Iterable[ClassData] = _newCodeClasses
+
+  /**
+   * Creates a new type that will be loaded in debugged jvm.
+   *
+   * @param className name of class in jvm - must be same as in compiled code
+   * @param jvmCode code of compiled class
+   * @param constructorArgsTypes
+   */
+  def createNewType(className: String,
+    jvmCode: Array[Byte],
+    constructorArgsTypes: Seq[String]): Unit =
+    _newCodeClasses += ClassData(className, jvmCode, constructorArgsTypes)
+}
+
+trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
+  extends AstTransformer[Tpe]
+  with UnboundValuesSupport {
 
   val toolbox: ToolBox[universe.type]
+
+  protected val typesContext = new NewTypesContext()
+
+  override def transform(data: TransformationPhaseData): TransformationPhaseData =
+    super.transform(data).withClasses(typesContext.classesToLoad.toSeq)
 
   import toolbox.u.{ Try => _, _ }
 
@@ -145,9 +175,6 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
       case _ => None
     }
   }
-
-  // for function naming
-  private var functionsCount = 0
 
   private val ContextParamName = TermName(Debugger.contextParamName)
 
@@ -213,7 +240,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val DefDef(functionMods, functionName, _, applyParams, retType, _) = impl.last
     val newApplyFunction = DefDef(functionMods, functionName, Nil, applyParams, retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
-    val functionReseted = new ResetTypeInformation().transform(newFunctionClass)
+    val functionReseted = new ResetTypeInformation().transform(TransformationPhaseData(newFunctionClass)).tree
 
     new ClassListener(newClassName, functionReseted.toString)(() => {
       toolbox.compile(functionReseted)
@@ -225,14 +252,10 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val closuresParams = getClosureParamsNamesAndType(body, params)
     val NewClassContext(jvmClassName, classCode, nested) = compileFunction(params, body, closuresParams)
 
-    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
-    val proxyClassName = s"$customLambdaPrefix$functionsCount"
-    functionsCount += 1
+    nested.foreach(nestedFunction =>
+      typesContext.createNewType(nestedFunction.newClassName, nestedFunction.newClassCode, Nil))
 
-    nested.foreach(nestedFunction => typesContext.createNewType(nestedFunction.newClassName,
-      nestedFunction.newClassName, nestedFunction.newClassCode, Nil))
-
-    typesContext.createNewType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
+    typesContext.createNewType(jvmClassName, classCode, closuresParams.values.toSeq)
 
     val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name) }(collection.breakOut)
 
@@ -247,7 +270,10 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Debugger.newInstance)), constructorArgs)
   }
 
-  /** Extract by name params for function as Seq of Boolean. This Seq might be shorter then param list - due to varargs */
+  /**
+   * Extracts by-name params for function as `Seq[Boolean]`.
+   * This Seq might be shorter then param list - due to varargs.
+   */
   protected def extractByNameParams(select: Tree): Option[Seq[Boolean]] = Try {
 
     def innerArgs(tpe: Type): Seq[Boolean] =

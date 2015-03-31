@@ -307,8 +307,6 @@ object Names {
       .map(_.getSimpleName)
 
     val newClassName = "CustomFunction"
-
-    val customLambdaPrefix = "FunctionNo"
   }
 
 }
