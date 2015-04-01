@@ -91,13 +91,13 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
  * @param fileName name of file to run during test
  * @param lineNumber line number in which breakpoint should be added
  */
-class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNumber: Int)
-    extends CommonIntegrationTestCompanion(projectName) {
+class BaseIntegrationTestCompanion(fileName: String, lineNumber: Int)
+    extends CommonIntegrationTestCompanion("expression-evaluator") {
 
   var expressionEvaluator: JdiExpressionEvaluator = null
 
   def this(testCaseSettings: IntegrationTestCaseSettings = ValuesTestCase) =
-    this(testCaseSettings.projectName, testCaseSettings.fileName, testCaseSettings.breakpointLine)
+    this(testCaseSettings.fileName, testCaseSettings.breakpointLine)
 
   /** Default suspension policy. Override it to change value for your test. */
   protected def suspensionPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD
@@ -110,10 +110,11 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
   }
 
   @BeforeClass
-  def prepareTestDebugSession(): Unit = {
-    refreshBinaryFiles()
+  def prepareTestDebugSession(): Unit = withDebuggingSession(fileName) { newSession =>
+    if (!EclipseProjectContext.isRemote)
+      refreshBinaryFiles()
 
-    session = initDebugSession(fileName)
+    session = newSession
 
     session.runToLine(typeName, lineNumber, suspendPolicy = suspensionPolicy)
 
@@ -123,7 +124,6 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
 }
 
 trait IntegrationTestCaseSettings {
-  val projectName: String
   val fileName: String
   val breakpointLine: Int
 }

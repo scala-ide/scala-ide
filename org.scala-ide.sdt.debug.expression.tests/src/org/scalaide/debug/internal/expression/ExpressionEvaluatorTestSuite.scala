@@ -8,6 +8,7 @@ import org.scalaide.debug.internal.expression.proxies.primitives.PrimitivesOpera
 import org.scalaide.debug.internal.expression.conditional.ConditionalBreakpointsTest
 import org.scalaide.debug.internal.expression.features.FeaturesTestSuite
 import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
+import org.scalaide.debug.internal.expression.remote.RemoteTestSuite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
@@ -18,6 +19,7 @@ import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
   classOf[PhasesTestSuite],
   classOf[ConditionalBreakpointsTest],
   classOf[SimpleContentProposalProviderTest],
-  classOf[SimpleContentProposalProviderIntegrationTest]
+  classOf[SimpleContentProposalProviderIntegrationTest],
+  classOf[RemoteTestSuite]
 ))
 class ExpressionEvaluatorTestSuite

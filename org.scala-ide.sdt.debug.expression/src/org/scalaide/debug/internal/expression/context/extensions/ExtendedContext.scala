@@ -2,27 +2,23 @@
  * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
-package context.extensions
+package context
+package extensions
 
 import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe
+import scala.util.Try
+
+import com.sun.jdi._
 
 import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
 import org.scalaide.debug.internal.expression.Names.Debugger.objectOrStaticCallProxyMethodName
 import org.scalaide.debug.internal.expression.Names.Debugger.valueProxyMethodName
-import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
-import org.scalaide.debug.internal.expression.context.NestedMethodImplementation
 import org.scalaide.logging.HasLogger
 
-import com.sun.jdi.Location
-import com.sun.jdi.Method
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.StackFrame
-
 /** Responsible for handling all context extension and provide aggregated results for expression context */
-case class ExtendedContext(currentFrame: StackFrame)
-  extends HasLogger {
+case class ExtendedContext(currentFrame: StackFrame, searchForMembers: Boolean)
+    extends HasLogger {
 
   // aggregated current transformation
   private lazy val currentTransformation: Option[ThisTransformation] =
@@ -30,8 +26,34 @@ case class ExtendedContext(currentFrame: StackFrame)
       .map(parentClasses)
 
   /** Get type for variable - if variable is one of 'this' variables returns its type */
-  final def typeFor(name: universe.TermName): Option[ReferenceType] =
+  final def typeFor(name: universe.TermName): Option[Type] =
     currentTransformation.flatMap(_.elementMap.get(name)).map(_.referenceType)
+
+  /**
+   * Search for member using JDI in each of this element.
+   * This is used only when we missing classpath (e.g. Remote debugging).
+   */
+  final def findMember(variable: Variable): Option[TypedVariable] =
+    if (!searchForMembers) None
+    else {
+      val name = variable.name.toString
+      currentTransformation.flatMap { transformation =>
+        def matchingFields = for {
+          thisElement <- transformation.thisHistory.toStream
+          field <- thisElement.referenceType.allFields if field.name == name
+          parentName <- transformation.nameMap.get(thisElement)
+        } yield DynamicMemberBasedVariable(variable, parentName.toString)
+
+        def matchingMethods = for {
+          thisElement <- transformation.thisHistory.toStream
+          method <- thisElement.referenceType.allMethods if method.name == name
+          parentName <- transformation.nameMap.get(thisElement)
+          arity <- Try(method.arity).toOption
+        } yield DynamicMemberBasedMethod(variable, parentName.toString, arity)
+
+        matchingFields.headOption orElse matchingMethods.headOption
+      }
+    }
 
   /** List of variables that mock this */
   final def thisFields: Seq[Variable] = currentTransformation match {
@@ -64,8 +86,8 @@ case class ExtendedContext(currentFrame: StackFrame)
           thisEntry <- transformation.thisHistory
           candidateMethod <- thisEntry.referenceType.methods() if isCandidate(candidateMethod)
         } yield NestedMethodImplementation(transformation.nameMap(thisEntry),
-            candidateMethod.name(),
-            candidateMethod.arguments().map(_.name()))
+          candidateMethod.name(),
+          candidateMethod.arguments().map(_.name()))
 
         nestedMethodsImplementations match {
           case Seq(onlyCandidate) =>

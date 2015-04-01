@@ -6,9 +6,7 @@ import java.net.Socket
 import java.net.SocketException
 import java.util.{ Map => JMap }
 import java.util.concurrent.CountDownLatch
-import org.scalaide.debug.internal.ScalaDebugRunningTest
-import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.core.testsetup.TestProjectSetup
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -20,14 +18,25 @@ import org.eclipse.debug.core.ILaunchManager
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.jdt.launching.JavaRuntime
 import org.junit.After
-import org.junit.Assert._
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
-import org.junit.Test
-import org.scalaide.debug.internal.EclipseDebugEvent
 import org.junit.Ignore
+import org.junit.Test
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.EclipseDebugEvent
+import org.scalaide.debug.internal.ScalaDebugRunningTest
+import org.scalaide.debug.internal.ScalaDebugTestSession
+import org.scalaide.debug.internal.ScalaDebugTestSession.addDebugEventListener
 
-object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
+object RemoteConnectorTest
+  extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests")
+  with ScalaDebugRunningTest with RemoteConnector
+
+trait RemoteConnector {
+  self: TestProjectSetup =>
   import ScalaDebugTestSession._
 
   final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
@@ -63,7 +72,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
    * Launch the given launch configuration, using the given port for the debug connector.
    * Return the launch instance created.
    */
-  def launchInRunMode(launchConfigurationName: String, port: Int): ILaunch = {
+  def launchInRunMode(launchConfigurationName: String, port: Int, delay: Long = 0): ILaunch = {
     // event listener to wait for the creation of the process
     val latch = new CountDownLatch(1)
     val eventListener = addDebugEventListener {
@@ -76,7 +85,8 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
       val workingLaunchConfiguration = launchConfiguration.getWorkingCopy()
 
       // update the port number
-      val vmArgs = workingLaunchConfiguration.getAttribute(VmArgsKey, "")
+      val vmArgs = workingLaunchConfiguration
+        .getAttribute(VmArgsKey, s"-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000 -DremoteDebugDelay=$delay")
       workingLaunchConfiguration.setAttribute(VmArgsKey, vmArgs.replace("8000", port.toString))
 
       val launch = workingLaunchConfiguration.launch(ILaunchManager.RUN_MODE, null)

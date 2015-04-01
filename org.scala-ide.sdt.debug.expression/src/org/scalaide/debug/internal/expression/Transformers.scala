@@ -15,8 +15,11 @@ import Names.Scala
  * relative to [[org.scalaide.debug.internal.expression.proxies.phases.TypeCheck]].
  */
 sealed trait TypecheckRelation
+
 class BeforeTypecheck extends TypecheckRelation
+
 class IsTypecheck extends TypecheckRelation
+
 class AfterTypecheck extends TypecheckRelation
 
 /**
@@ -82,6 +85,7 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
 
   /** Construction/destruction for `__context.newInstance` */
   object NewInstanceCall {
+
     import Debugger._
 
     def apply(className: Tree, argList: Tree): Tree =
@@ -96,15 +100,89 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
 
   /** Transformer that skip all part of tree that is dynamic and it is not a part of original expression */
   private val transformer = new universe.Transformer {
+    private val baseTransform = super.transform _
+
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
       // dynamic calls
-      case Apply(Select(on, name), args) if isDynamicMethod(name.toString) =>
-        Apply(Select(transformSingleTree(on, super.transform), name), args)
+      case JdiSelectDynamic(on, name) =>
+        JdiSelectDynamic(transform(on), name)
+      case JdiUpdateDynamic(on, name, value) =>
+        JdiUpdateDynamic(transform(on), name, transform(value))
+      case JdiApplyDynamic(on, name, values) =>
+        JdiApplyDynamic(transform(on), name, values.map(transform))
+      case NoArgumentsJdiApplyDynamic(on, name) =>
+        NoArgumentsJdiApplyDynamic(transform(on), name)
       // on calls to `__context.newInstance` do not process the first argument
       case NewInstanceCall(className, argList) =>
-        NewInstanceCall(className, transformSingleTree(argList, super.transform))
+        NewInstanceCall(className, transform(argList))
       case tree =>
-        transformSingleTree(tree, super.transform)
+        transformSingleTree(tree, baseTransform)
     }
+
+    import Scala._
+
+    /**
+     * Match exact select dynamic call.
+     * Used when dynamic methods are resolved during typecheck not compilation.
+     */
+    object JdiSelectDynamic {
+      def apply(tree: Tree, name: Tree): Tree =
+        Apply(Select(tree, TermName(SelectDynamicName)), List(name))
+
+      def unapply(t: Tree): Option[(Tree, Tree)] = t match {
+        case Apply(Select(on, TermName(SelectDynamicName)), List(name)) =>
+          Some((on, name))
+        case _ => None
+      }
+    }
+
+    /**
+     * Match exact update dynamic call.
+     * Used when dynamic methods are resolved during typecheck not compilation.
+     */
+    object JdiUpdateDynamic {
+
+      def apply(on: Tree, name: Tree, value: Tree): Tree = {
+        val selectVariable = Apply(Select(on, TermName(UpdateDynamicName)), List(name))
+        Apply(selectVariable, List(value))
+      }
+
+      def unapply(t: Tree): Option[(Tree, Tree, Tree)] = t match {
+        case Apply(Apply(Select(on, TermName(UpdateDynamicName)), List(name)), List(value)) =>
+          Some((on, name, value))
+        case _ => None
+      }
+    }
+
+    /**
+     * Match exact apply dynamic call without arguments list.
+     * Used when dynamic methods are resolved during typecheck not compilation.
+     */
+    object NoArgumentsJdiApplyDynamic {
+      def apply(on: Tree, name: Tree): Tree =
+        Apply(Select(transform(on), TermName(ApplyDynamicName)), List(name))
+
+      def unapply(t: Tree): Option[(Tree, Tree)] = t match {
+        case Apply(Select(on, TermName(ApplyDynamicName)), List(name)) =>
+          Some((on, name))
+        case _ => None
+      }
+    }
+
+    /**
+     * Match exact apply dynamic call with arguments list.
+     *   Used when dynamic methods are resolved during typecheck not compilation.
+     */
+    object JdiApplyDynamic {
+      def apply(on: Tree, name: Tree, args: List[Tree]): Tree =
+        Apply(NoArgumentsJdiApplyDynamic(on, name), args)
+
+      def unapply(t: Tree): Option[(Tree, Tree, List[Tree])] = t match {
+        case Apply(NoArgumentsJdiApplyDynamic(on, name), values) =>
+          Some(on, name, values)
+        case _ => None
+      }
+    }
+
   }
 }

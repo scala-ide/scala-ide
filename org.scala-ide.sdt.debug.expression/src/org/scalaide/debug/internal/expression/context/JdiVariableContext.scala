@@ -24,12 +24,12 @@ import extensions.ExtendedContext
  * Implementation of VariableContext based on ThreadReference.
  */
 private[context] trait JdiVariableContext
-    extends VariableContext {
+  extends VariableContext {
   self: JdiContext =>
 
   protected def expressionClassLoader: ClassLoader
 
-  private val transformationContext = ExtendedContext(currentFrame())
+  private val transformationContext = ExtendedContext(currentFrame(), searchForMembers = !hasClasspath)
 
   override def syntheticVariables: Seq[Variable] = transformationContext.thisFields
 
@@ -50,9 +50,9 @@ private[context] trait JdiVariableContext
   }
 
   /** Return VariableType for given type. */
-  def nameAndGenericName(typeName: Type): VariableType = {
+  def nameAndGenericName(variable: Variable)(typeName: Type): TypedVariable = {
 
-    if (typeName == null) PlainVariableType(Scala.nullType)
+    if (typeName == null) PlainTypedVariable(variable, Scala.nullType)
     else {
       val genericSignature = typeName match {
         case refType: ReferenceType => Option(refType.genericSignature())
@@ -66,21 +66,20 @@ private[context] trait JdiVariableContext
       else
         Debugger.proxyName
 
-      VariableType(scalaType, genericSignature)
+      TypedVariable(variable, scalaType, genericSignature)
     }
   }
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
-  override def typeOf(variableName: TermName): Option[VariableType] = {
-    import Debugger._
-
+  override def typed(variable: Variable): Option[TypedVariable] = {
     // null-safe Value.type
     def typeOfValue(value: Value): Type = if (value == null) null else value.`type`()
 
-    val value = transformationContext.typeFor(variableName)
-      .orElse(valueFromFrame(currentFrame(), variableName.toString).map(typeOfValue))
+    val value = transformationContext.typeFor(variable.name)
+      .orElse(valueFromFrame(currentFrame(), variable.name.toString).map(typeOfValue))
 
-    value.map(nameAndGenericName)
+    value.map(nameAndGenericName(variable))
+      .orElse(transformationContext.findMember(variable))
   }
 
   override def nestedMethodImplementation(method: NestedMethodDeclaration): Option[NestedMethodImplementation] =

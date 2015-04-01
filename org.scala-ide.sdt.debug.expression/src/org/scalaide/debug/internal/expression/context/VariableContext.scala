@@ -6,16 +6,20 @@ package context
 
 import scala.reflect.runtime.universe.TermName
 
-sealed trait VariableType {
+sealed trait TypedVariable {
   /** type like collection.immutable.List (class name without generics) */
   def plainType: String
+
+  def untyped: Variable
+
+  def name: TermName = untyped.name
 }
 
-object VariableType {
-  def apply(plainType: String, genericType: Option[String]): VariableType =
+object TypedVariable {
+  def apply(variable: Variable, plainType: String, genericType: Option[String]): TypedVariable =
     genericType match {
-      case None => PlainVariableType(plainType)
-      case Some(genericType) => GenericVariableType(plainType, genericType)
+      case None => PlainTypedVariable(variable, plainType)
+      case Some(genericType) => GenericVariable(variable, plainType, genericType)
     }
 }
 
@@ -23,9 +27,22 @@ object VariableType {
  * @param plainType type like collection.immutable.List (class name without generics)
  * @param genericType generic signature of type from JDI
  */
-case class GenericVariableType(plainType: String, genericType: String) extends VariableType
+case class GenericVariable(untyped: Variable, plainType: String, genericType: String) extends TypedVariable
 
-case class PlainVariableType(plainType: String) extends VariableType
+case class PlainTypedVariable(untyped: Variable, plainType: String) extends TypedVariable
+
+/** Marker, used when working without classpath */
+trait DynamicVariable
+
+/** Variable that come from dynamic-typed this - used without classpath */
+case class DynamicMemberBasedVariable(untyped: Variable, memberName: String) extends TypedVariable with DynamicVariable {
+  override def plainType: String = Names.Debugger.proxyFullName
+}
+
+/** Method (mock as variable) that come from dynamic-typed this - used without classpath */
+case class DynamicMemberBasedMethod(untyped: Variable, memberName: String, arity: Int) extends TypedVariable with DynamicVariable {
+  override def plainType: String = Names.Debugger.proxyFullName
+}
 
 /**
  * Contains information required to run nested method
@@ -48,12 +65,15 @@ case class NestedMethodDeclaration(name: String, startLine: Int, endLine: Int, a
  */
 trait VariableContext extends Any {
 
+  /** Is classpath present in this context */
+  def hasClasspath: Boolean
+
   /**
    * Looks up a type of variable with a given name.
    * Returns Some if there is variable in scope
    * Returns `None` if variable is not defined in current scope.
    */
-  def typeOf(variableName: TermName): Option[VariableType]
+  def typed(variableName: Variable): Option[TypedVariable]
 
   /**
    * Name of enclosing package.
@@ -70,14 +90,14 @@ trait VariableContext extends Any {
 
   /**
    * Get list of all synthetic imports for given expression.
-   *  They are e.g. imports from this or outer fields
+   * They are e.g. imports from this or outer fields.
    */
   def syntheticImports: Seq[String]
 
   /**
    * Try to implement a value
-   *  When returning Some with string implementation for given value it alters default value implementation
-   *  @param name name of variable to implement
+   * When returning Some with string implementation for given value it alters default value implementation.
+   * @param name name of variable to implement
    */
   def implementValue(name: TermName): Option[String]
 

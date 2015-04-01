@@ -9,6 +9,7 @@ import scala.util.Success
 import scala.util.Try
 
 import org.scalaide.debug.internal.ScalaDebugger
+import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaThread
@@ -39,7 +40,9 @@ trait ProgressMonitor {
  */
 object NullProgressMonitor extends ProgressMonitor {
   def done(): Unit = ()
+
   def reportProgress(amount: Int): Unit = ()
+
   def startNamedSubTask(name: String): Unit = ()
 }
 
@@ -82,6 +85,15 @@ trait ExpressionManager extends HasLogger {
     }
   }
 
+  def renderErrorMessage(hasClasspath: Boolean, message: String): String =
+    if (hasClasspath) message
+    else
+      s"""[Warn] Missing classpath might have caused this exception.
+         |To avoid this problem please set project for this run.
+         |
+         |$message
+       """.stripMargin
+
   /**
    * Computes an expression.
    *
@@ -101,7 +113,9 @@ trait ExpressionManager extends HasLogger {
         outputText <- show(result)
       } yield (result, outputText)
 
-      ExpressionException.recoverFromErrors(resultWithStringRep, evaluator.createContext(), logger) match {
+      val context = evaluator.createContext()
+
+      ExpressionException.recoverFromErrors(resultWithStringRep, context, logger) match {
         case Success((result, outputText)) =>
           Try(result.__value) match {
             case Success(underlying) =>
@@ -111,7 +125,7 @@ trait ExpressionManager extends HasLogger {
               SuccessWithoutValue(outputText)
           }
         case Failure(exception) =>
-          val errorMessage = exception.getMessage
+          val errorMessage = renderErrorMessage(context.hasClasspath, exception.getMessage)
           logger.error(errorMessage, exception)
           EvaluationFailure(errorMessage)
       }
