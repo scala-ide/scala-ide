@@ -14,7 +14,6 @@ import org.scalaide.debug.internal.expression.TestValues.InstanceOfTestCase
 class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
 
   import TestValues.InstanceOfTestCase._
-  import TestValues.any2String
 
   @Test
   def simpleAsInstanceOf(): Unit = {
@@ -24,8 +23,8 @@ class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
 
   @Test
   def arrayAsInstanceOf(): Unit = {
-    eval("check[Array[Int]](intArray.asInstanceOf[Array[Int]])", ScalaRunTime.stringOf(intArray), Scala.Array(Scala.primitives.Int))
-    eval("check[Array[String]](objectArray.asInstanceOf[Array[String]])", ScalaRunTime.stringOf(objectArray), Scala.Array(Java.boxed.String))
+    eval("check[Array[Int]](intArray.asInstanceOf[Array[Int]])", intArray, Scala.Array(Scala.primitives.Int))
+    eval("check[Array[String]](objectArray.asInstanceOf[Array[String]])", objectArray, Scala.Array(Java.boxed.String))
   }
 
   @Test

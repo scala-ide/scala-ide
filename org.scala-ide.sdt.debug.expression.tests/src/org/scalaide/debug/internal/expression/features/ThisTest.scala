@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.TestValues.ThisTestCase
 
 class ThisTest extends BaseIntegrationTest(ThisTest) {
 
-  import TestValues.any2String
   import ThisTestCase._
 
   // IMPLICIT this tests

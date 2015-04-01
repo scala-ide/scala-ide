@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class BooleanComparisonTest extends BaseIntegrationTest(BooleanComparisonTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `!boolean`(): Unit = eval("!boolean", !boolean, Java.boxed.Boolean)

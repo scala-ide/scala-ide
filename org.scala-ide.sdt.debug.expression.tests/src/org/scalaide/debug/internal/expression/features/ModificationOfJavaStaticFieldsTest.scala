@@ -9,7 +9,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
-import org.scalaide.debug.internal.expression.TestValues.any2String
 
 class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(ModificationOfJavaStaticFieldsTest) {
 
@@ -31,7 +30,7 @@ class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(Modificatio
   def changeStaticFieldOfInnerStaticClassOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt = 123; JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt",
       123, Java.boxed.Integer)
-    eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt = -110", Scala.unitLiteral, Scala.unitType)
+    eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt = -110", (), Scala.unitType)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt", -110, Java.boxed.Integer)
   }
 }

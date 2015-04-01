@@ -25,11 +25,11 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
   @Test(expected = classOf[UnsupportedFeature])
   def traitRefinement(): Unit =
-    eval("new A {}", "A", "A")
+    eval("new A {}", "n/a", "n/a")
 
   @Test(expected = classOf[UnsupportedFeature])
   def classRefinement(): Unit =
-    eval("new B {}", "B", "B")
+    eval("new B {}", "n/a", "n/a")
 
   @Test
   def noArgConstructor(): Unit = eval("new LibClassWithoutArgs", "LibClassWithoutArgs", "debug.LibClassWithoutArgs")
@@ -43,7 +43,7 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
   @Test
   def createNewInstanceOfPrimitiveType(): Unit =
-    eval("new java.lang.Integer(12345)", "12345", Java.boxed.Integer)
+    eval("new java.lang.Integer(12345)", 12345, Java.boxed.Integer)
 
   @Test
   def scalaVarArgConstructor(): Unit = {
@@ -63,7 +63,7 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
   @Test
   def nestedInstantiatedClassField(): Unit =
-    eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", "4", Java.boxed.Integer)
+    eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", 4, Java.boxed.Integer)
 }
 
 object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase)

@@ -14,18 +14,18 @@ class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambd
 
   @Test
   def testPartialFunctionAndPrimitives(): Unit = disableOnJava8 {
-    eval("list.filter { case a => a > 2 }", "List(3)", Scala.::)
+    eval("list.filter { case a => a > 2 }", List(3), Scala.::)
   }
 
   @Test
   def testPartialFunctionAndAnnotatedPrimitives(): Unit = disableOnJava8 {
-    eval("list.filter { case a: Int => a > 2 }", "List(3)", Scala.::)
+    eval("list.filter { case a: Int => a > 2 }", List(3), Scala.::)
   }
 
   @Ignore("TODO - O-5266 - add support for multiple parameter typed partial function lambda")
   @Test
   def testPartialFunctionAndMulipleParameterLists(): Unit =
-    eval("list.foldLeft(1){case (a: Int, b: Int) => a + b}", "7", Java.boxed.Integer)
+    eval("list.foldLeft(1){case (a: Int, b: Int) => a + b}", 7, Java.boxed.Integer)
 
 }
 

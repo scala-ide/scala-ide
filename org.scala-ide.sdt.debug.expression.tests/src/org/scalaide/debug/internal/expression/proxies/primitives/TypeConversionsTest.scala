@@ -14,7 +14,6 @@ import org.scalaide.debug.internal.expression.TestValues
 
 class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
 
-  import TestValues.any2String
   import TestValues.ValuesTestCase._
 
   @Test

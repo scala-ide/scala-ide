@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class MultiplicationTest extends BaseIntegrationTest(MultiplicationTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `byte * sth`(): Unit = {

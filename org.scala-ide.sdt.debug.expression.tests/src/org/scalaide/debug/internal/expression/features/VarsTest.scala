@@ -77,14 +77,14 @@ class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
   @Test
   def testSetterMethod(): Unit = {
     runCode(s"state.int_=(1)")
-    eval("state.int", "1", Java.boxed.Integer)
+    eval("state.int", 1, Java.boxed.Integer)
     runCode(s"state.int_=(123)")
-    eval("state.int", "123", Java.boxed.Integer)
+    eval("state.int", 123, Java.boxed.Integer)
   }
 
   @Test
   def testVariableInExpression(): Unit =
-    eval("var a = 1; a = 2; a", "2", Java.boxed.Integer)
+    eval("var a = 1; a = 2; a", 2, Java.boxed.Integer)
 }
 
 object VarsTest extends BaseIntegrationTestCompanion(VariablesTestCase)

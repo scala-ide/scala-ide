@@ -14,7 +14,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def testOperationsOnScalaNumberProxy(): Unit = {

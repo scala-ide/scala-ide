@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class UnaryOperatorsTest extends BaseIntegrationTest(UnaryOperatorsTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `unary -`(): Unit = {

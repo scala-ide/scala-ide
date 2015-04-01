@@ -9,7 +9,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TestValues.any2String
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
 import JavaTestCase._
 
@@ -20,7 +19,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("javaLibClass.normalInt", JavaLibClass.normalInt, Java.boxed.Integer)
     eval("javaLibClass.normalString", JavaLibClass.normalString, Java.boxed.String)
     eval("javaLibClass.self", JavaLibClass.asString, "debug.JavaLibClass")
-    eval("javaLibClass.normalNull", Scala.nullLiteral, Scala.nullType)
+    eval("javaLibClass.normalNull", null, Scala.nullType)
   }
 
   @Test
@@ -54,16 +53,16 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
 
   @Test
   def invokeVarArgsMethods(): Unit = {
-    eval("javaLibClass.varArgMethod()", "Array()", Scala.Array(Scala.primitives.Int))
-    eval("javaLibClass.varArgMethod(1)", "Array(1)", Scala.Array(Scala.primitives.Int))
-    eval("javaLibClass.varArgMethod(1, 2)", "Array(1, 2)", Scala.Array(Scala.primitives.Int))
-    eval("javaLibClass.varArgMethod(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+    eval("javaLibClass.varArgMethod()", Array(), Scala.Array(Scala.primitives.Int))
+    eval("javaLibClass.varArgMethod(1)", Array(1), Scala.Array(Scala.primitives.Int))
+    eval("javaLibClass.varArgMethod(1, 2)", Array(1, 2), Scala.Array(Scala.primitives.Int))
+    eval("javaLibClass.varArgMethod(1, 2, 3)", Array(1, 2, 3), Scala.Array(Scala.primitives.Int))
   }
 
   @Ignore("Fails when running whole test suite with https://issues.scala-lang.org/browse/SI-9218")
   @Test
   def invokeGenericVarArgsMethod(): Unit =
-    eval("""javaLibClass.varArgGenericMethod[String]("1.0", "2.0", "3.0")""", "Array(1.0, 2.0, 3.0)", Scala.Array(Java.Object))
+    eval("""javaLibClass.varArgGenericMethod[String]("1.0", "2.0", "3.0")""", Array(1.0, 2.0, 3.0), Scala.Array(Java.Object))
 }
 
 object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase)

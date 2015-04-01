@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.TestValues.VisibilityTestCase
 
 class VisibilityTest extends BaseIntegrationTest(VisibilityTest) {
 
-  import TestValues.any2String
   import VisibilityTestCase._
 
   // IMPLICIT this tests

@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   private def baseBooleanTest(operator: String, expected: Boolean): Unit =
     eval(s"int $operator int2", expected.toString, Java.boxed.Boolean) // compare to 1

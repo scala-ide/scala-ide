@@ -14,7 +14,7 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 
   @Test
   def testFieldOfGenericTypeFromClass(): Unit =
-    eval("a", "1", Names.Java.boxed.Integer)
+    eval("a", 1, Names.Java.boxed.Integer)
 
   @Test
   def testFieldOfGenericTypeFromMethod(): Unit =

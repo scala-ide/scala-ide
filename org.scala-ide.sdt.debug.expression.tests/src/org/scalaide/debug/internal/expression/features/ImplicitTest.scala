@@ -16,7 +16,7 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
 
   @Test
   def testToMapImplicit(): Unit =
-    eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
+    eval("List((1, 2), (2, 3)).toMap", Map(1 -> 2, 2 -> 3), "scala.collection.immutable.Map$Map2")
 
   @Test
   def testTopLevelImport: Unit = eval("implicitField[TopLevelImport]", "TopLevelImport", Java.boxed.String)
@@ -95,7 +95,7 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
     "debug.ClassWithMultipleArgumentListAndImplicits")
 
   @Test
-  def testImplicitClass: Unit = eval("1 --> 2", "(1,2)", "scala.Tuple2")
+  def testImplicitClass: Unit = eval("1 --> 2", (1, 2), "scala.Tuple2")
 
   @Test
   def testExplicitAndImplicitUsageOfVal = eval("List(localField, implicitField[LocalField])", "List(LocalField, LocalField)", Scala.::)

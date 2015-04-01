@@ -16,7 +16,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `(x: Int) => int + x`(): Unit =
@@ -38,7 +37,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def higherOrderFunctionWithMultipleParameterLists(): Unit = disableOnJava8 {
-    eval("List(1, 2, 3).fold(0)(_ + _)", "6", Java.boxed.Integer)
+    eval("List(1, 2, 3).fold(0)(_ + _)", 6, Java.boxed.Integer)
   }
 
   @Test
@@ -58,16 +57,16 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `libClass.perform(_ + 2) `(): Unit =
-    eval("libClass.perform(_ + 2)", "3", Java.boxed.Integer)
+    eval("libClass.perform(_ + 2)", 3, Java.boxed.Integer)
 
   @Test
   def `libClass.performByName(1 + 2) `(): Unit = disableOnJava8 {
-    eval("libClass.performByName(1 + 2)", "4", Java.boxed.Integer)
+    eval("libClass.performByName(1 + 2)", 4, Java.boxed.Integer)
   }
 
   @Test
   def `libClass.performTwice(libClass.incrementAndGet()) `(): Unit =
-    eval(" libClass.performTwice(libClass.incrementAndGet()) ", "5", Java.boxed.Integer)
+    eval(" libClass.performTwice(libClass.incrementAndGet()) ", 5, Java.boxed.Integer)
 
   @Test
   def mappingOnFullType(): Unit = disableOnJava8 {
@@ -87,7 +86,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def objectTypedArgument(): Unit =
-    eval(""" objectList.map(list => list.value) """, "List(11, 11)", Scala.::)
+    eval(""" objectList.map(list => list.value) """, List(11, 11), Scala.::)
 
   @Test
   def genericTypedArgument(): Unit =
@@ -95,11 +94,13 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `lambda inside lambda inside lambda: multilist.map(list => list.map(_ + 1))`(): Unit =
-    eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """, multilist.map(list => list.map(int => list.map(_ + int).sum)), Scala.::)
+    eval(""" multilist.map(list => list.map(int => list.map(_ + int).sum)) """,
+        multilist.map(list => list.map(int => list.map(_ + int).sum)),
+        Scala.::)
 
   @Test
   def `libClass.performOnList(list => list.map(_ + 1))`(): Unit =
-    eval(""" libClass.performOnList(list => list.map(_ + 1)) """, "List(2, 3)", Scala.::)
+    eval(""" libClass.performOnList(list => list.map(_ + 1)) """, List(2, 3), Scala.::)
 
   //Lambda closure params
 
@@ -142,11 +143,11 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def closureOnObjectValue(): Unit =
-    eval("list.map(i => i + Libs.value)", "List(12, 13, 14)", Scala.::)
+    eval("list.map(i => i + Libs.value)", List(12, 13, 14), Scala.::)
 
   @Test
   def fullySpecifiedNameInLambda(): Unit =
-    eval("list.map(i => i + scala.collection.immutable.List().size)", "List(1, 2, 3)", Scala.::)
+    eval("list.map(i => i + scala.collection.immutable.List().size)", List(1, 2, 3), Scala.::)
 }
 
 object LambdasTest extends BaseIntegrationTestCompanion
