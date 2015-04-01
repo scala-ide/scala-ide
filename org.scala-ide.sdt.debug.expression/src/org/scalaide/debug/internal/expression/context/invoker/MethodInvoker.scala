@@ -136,9 +136,9 @@ trait BaseMethodInvoker extends MethodInvoker {
       case Nil => None
       case method +: Nil =>
         Some(invoker(method))
-      case multiple =>
+      case multiple @ head +: rest =>
         logger.warn(multipleOverloadsMessage(multiple))
-        Some(invoker(multiple.head))
+        Some(invoker(head))
     }
   }
 

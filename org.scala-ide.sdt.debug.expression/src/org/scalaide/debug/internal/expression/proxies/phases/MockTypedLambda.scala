@@ -114,13 +114,13 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type])
 
     if (names.isEmpty) Map()
     else {
-      //If we have closure args - then replace last expression with them and typecheck it. You just got the types.
+      // If we have closure args - then replace last expression with them and typecheck it. You just got the types.
       import Names.Debugger._
       val replaceTree = toolbox.parse(names.mkString(s"$contextName.$placeholderArgsName(", ", ", ")"))
 
-      //in partial function is better to search for first case -> match can change during the processing
+      // In partial function is better to search for first case -> match can change during the processing
       val stopTree = body match {
-        case Match(_, cases) => cases.head
+        case Match(_, first :: cases) => first
         case _ => body
       }
 
