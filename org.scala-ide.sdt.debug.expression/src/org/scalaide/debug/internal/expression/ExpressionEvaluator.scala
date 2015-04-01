@@ -137,7 +137,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
         val message =
           s"""Reflective compilation failed
              |Trees transformation history:
-             |$transformed
+             |$codeAfterPhases
              |""".stripMargin
         logger.error(message, exception)
         throw exception
