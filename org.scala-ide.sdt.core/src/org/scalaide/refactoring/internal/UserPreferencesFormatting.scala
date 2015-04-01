@@ -19,13 +19,7 @@ trait UserPreferencesFormatting {
   trait FormattingOverrides {
     this: Refactoring =>
 
-    override val spacingAroundMultipleImports: String = {
-      for {
-        javaProject <- Option(file.getJavaProject)
-        prefs = FormatterPreferences.getPreferences(javaProject)
-        if  prefs(SpaceInsideParentheses)
-      } yield " "
-    } getOrElse ""
+    override val spacingAroundMultipleImports: String = " "
 
     // TODO: Create more overrides here and in the refactoring library.
   }
