@@ -52,5 +52,6 @@ import org.junit.runners.Suite
     classOf[ImportsTest],
     classOf[NestedMethodsTest],
     classOf[ControlStructuresTest],
-    classOf[ClassOfTest]))
+    classOf[ClassOfTest],
+    classOf[ToolBoxBugsTest]))
 class FeaturesTestSuite

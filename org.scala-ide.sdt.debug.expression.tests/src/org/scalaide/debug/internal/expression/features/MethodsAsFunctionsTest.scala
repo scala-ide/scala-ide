@@ -17,7 +17,6 @@ trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
     eval("List(-1, 1).filter(_ > ObjectMethods.zero)", "Array(1)", "scala.Array[scala.Int]")
   }
 
-  @Ignore("Works in IDE, in tests there are some problems with canBuildFrom")
   @Test
   def methodAsMapParam(): Unit = eval("nat.map(inc)", "Array(3, 4, 5)", "scala.Array[scala.Int]")
 

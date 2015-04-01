@@ -20,7 +20,7 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
 
   private def withUnsuportedFeature(feature: String)(code: String) = {
     try {
-      runInEclipse(code)
+      runInEclipse(code, forceRetry = false)
       fail(s"UnsupportedFeature exception about: $feature should be thrown")
     } catch {
       case e: UnsupportedFeature =>

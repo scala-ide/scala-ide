@@ -136,10 +136,9 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
   def existentialGenricTypeClosureParam(): Unit =
     eval("""Libs.existentialMultilist.flatMap { i => i.map(_.toString) }""", List("1", "2"), Scala.::)
 
-  @Ignore("TODO - O-8604 Toolbox bug with CanBuildFrom resolution")
   @Test
   def anyValClosureParamWithMethod(): Unit =
-    eval("""list.map { i => anyVal.printMe }""", list.flatMap { i => "2" }, Scala.::)
+    eval("""list.map { i => anyVal.printMe }""", list.map { i => "2" }, Scala.::)
 
   @Test
   def closureOnObjectValue(): Unit =
