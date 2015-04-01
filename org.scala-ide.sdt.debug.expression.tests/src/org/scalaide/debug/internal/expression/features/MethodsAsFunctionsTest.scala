@@ -3,18 +3,17 @@
 */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 
 trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
 
-  @Ignore("TODO - O-8464 Add support for using methods from objects as first class functions")
   @Test
   def methodsFromObject(): Unit = {
     eval("List(1, 2).foldLeft(ObjectMethods.zero)(ObjectMethods.sum)", "3", Java.boxed.Integer)
-    eval("List(-1, 1).filter(_ > ObjectMethods.zero)", "Array(1)", "scala.Array[scala.Int]")
+    eval("List(-1, 1).filter(_ > ObjectMethods.zero)", "List(1)", Scala.::)
   }
 
   @Test
