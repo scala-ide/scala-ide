@@ -47,7 +47,6 @@ import org.junit.runners.Suite
     classOf[MethodsAsFunctionsInnerTraitTest],
     classOf[MethodsAsFunctionsInnerClassTest],
     classOf[MethodsAsFunctionsInnerObjectTest],
-    classOf[NamedParameterTest],
     classOf[AppObjectTest],
     classOf[NestedClassTest],
     classOf[ImportsTest],
