@@ -13,7 +13,7 @@ trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
   @Test
   def methodsFromObject(): Unit = {
     eval("List(1, 2).foldLeft(ObjectMethods.zero)(ObjectMethods.sum)", 3, Java.boxed.Integer)
-    eval("List(-1, 1).filter(_ > ObjectMethods.zero)", List(1), Scala.Array(Scala.primitives.Int))
+    eval("List(-1, 1).filter(_ > ObjectMethods.zero)", List(1), Scala.::)
   }
 
   @Test

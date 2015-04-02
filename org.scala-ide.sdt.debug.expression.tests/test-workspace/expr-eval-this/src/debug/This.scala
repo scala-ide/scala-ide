@@ -20,7 +20,13 @@ object This extends App {
     def objectMethod() = 3
 
     def testMethod(): Unit = {
-      val debug = 1
+      def innerTestMethodWithLambda(): Unit = {
+        Some(1).map { e =>
+          val debug = 1
+        }
+      }
+
+      innerTestMethodWithLambda()
     }
   }
 

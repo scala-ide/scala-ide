@@ -209,7 +209,7 @@ object TestValues {
   object ThisTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-this"
     val fileName = "This"
-    val breakpointLine = 23
+    val breakpointLine = 25
 
     val traitParam = 1
     val traitMethod = 1

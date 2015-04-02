@@ -29,7 +29,11 @@ class MockThis
   import universe._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case This(thisName) => Ident(TermName(Debugger.thisValName))
-    case other => transformFurther(other)
+    case Select(This(_), name) =>
+      Ident(name)
+    case This(_) =>
+      Ident(TermName(Debugger.thisValName))
+    case other =>
+      transformFurther(other)
   }
 }
