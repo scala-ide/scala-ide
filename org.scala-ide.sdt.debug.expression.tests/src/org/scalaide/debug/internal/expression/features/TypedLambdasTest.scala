@@ -16,27 +16,27 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
   // Grzegorz Kossakowski said it's a bug in Scala and we could investigate it further and file a ticket
   @Test
   def testMapWithExplicitType(): Unit = disableOnJava8 {
-    eval("list.map((_: Int) - 1)", "List(0, 1, 2)", Scala.::)
+    eval("list.map((_: Int) - 1)", List(0, 1, 2), Scala.::)
   }
 
   @Test
   def testFilterWithExplicitType(): Unit = disableOnJava8 {
-    eval("list.filter((_: Int) > 1)", "List(2, 3)", Scala.::)
+    eval("list.filter((_: Int) > 1)", List(2, 3), Scala.::)
   }
 
   @Test
   def testMapWithExplicitTypeAndClosure(): Unit = disableOnJava8 {
-    eval("list.map((_: Int) - int)", "List(0, 1, 2)", Scala.::)
+    eval("list.map((_: Int) - int)", List(0, 1, 2), Scala.::)
   }
 
   @Test
   def testLambdaWithExplicitTypeAndClosureThatRequiresReturnValue(): Unit = disableOnJava8 {
-    eval("list.map((_: Int) - int).head + 1", "1", Java.boxed.Integer)
+    eval("list.map((_: Int) - int).head + 1", 1, Java.boxed.Integer)
   }
 
   @Test
   def testTypedLambdaBeforeNormalLambda(): Unit = disableOnJava8 {
-    eval("list.map((_: Int).toString).map(_.size)", "List(1, 1, 1)", Scala.::)
+    eval("list.map((_: Int).toString).map(_.size)", List(1, 1, 1), Scala.::)
   }
 
   @Test
@@ -53,21 +53,21 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
 
   @Test
   def testLambdaWithExplicitTypeThatRequiresReturnValue(): Unit =
-    eval("list.map((_: Int) - 1).sum", "3", Java.boxed.Integer)
+    eval("list.map((_: Int) - 1).sum", 3, Java.boxed.Integer)
 
   @Test
   def testLambdaWithPartialFunction(): Unit = disableOnJava8 {
-    eval("list.map{ case i: Int => i - int}", "List(0, 1, 2)", Scala.::)
+    eval("list.map{ case i: Int => i - int}", List(0, 1, 2), Scala.::)
   }
 
   @Test
   def testLambdaWithPartialFunctionAndImportantReturnType(): Unit = disableOnJava8 {
-    eval("list.map{ case i: Int => i - int}.head + 1", "1", Java.boxed.Integer)
+    eval("list.map{ case i: Int => i - int}.head + 1", 1, Java.boxed.Integer)
   }
 
   @Test
   def testHigherOrderfunctionWithMultipleParameterListsOnValue(): Unit = disableOnJava8 {
-    eval("list.fold(0)((_: Int) + (_: Int))", "6", Java.boxed.Integer)
+    eval("list.fold(0)((_: Int) + (_: Int))", 6, Java.boxed.Integer)
   }
 
 }

@@ -298,17 +298,4 @@ object TestValues {
     val objectParam = 3
     val objectMethod = 3
   }
-
-  import scala.language.implicitConversions
-
-  /**
-   * To enable tests like:
-   *
-   * import TestValues.any2String
-   * import TestValues.Values._
-   *
-   * @Test
-   * def testSomething(): Unit = eval("int + double * long", int + double * long, Names.Java.boxed.Double)
-   */
-  implicit def any2String(x: Any) = x.toString()
 }

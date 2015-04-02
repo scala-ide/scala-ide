@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.TestValues.InstanceOfTestCase
 class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
 
   import TestValues.InstanceOfTestCase._
-  import TestValues.any2String
 
   @Test
   def simpleIsInstanceOf(): Unit = {
@@ -62,7 +61,7 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
 
   @Test
   def lambdasAndIsInstanceOfIntegration(): Unit =
-    eval("""List[Any](1, "2", 3).filter(_.isInstanceOf[java.lang.Integer])""", "List(1, 3)", Scala.::)
+    eval("""List[Any](1, "2", 3).filter(_.isInstanceOf[java.lang.Integer])""", List(1, 3), Scala.::)
 
   @Test
   def genericIsInstanceOf(): Unit =

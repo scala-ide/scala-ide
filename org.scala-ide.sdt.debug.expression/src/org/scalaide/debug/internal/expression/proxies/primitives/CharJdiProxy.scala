@@ -18,7 +18,6 @@ case class CharJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
 
   override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichChar")
 
-
   override def __value[I] = this.primitive.asInstanceOf[CharValue].value().asInstanceOf[I]
 }
 

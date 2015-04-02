@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `!boolean`(): Unit = eval("!boolean", !boolean, Java.boxed.Boolean)

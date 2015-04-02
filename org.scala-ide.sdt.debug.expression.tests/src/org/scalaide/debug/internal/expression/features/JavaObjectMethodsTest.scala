@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.TestValues
 
 class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
 
-  import TestValues.any2String
   import TestValues.ValuesTestCase._
 
   @Test

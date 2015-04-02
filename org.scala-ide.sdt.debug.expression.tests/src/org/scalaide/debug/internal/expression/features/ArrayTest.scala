@@ -15,7 +15,6 @@ import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 
 class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
-  import TestValues.any2String
   import ArraysTestCase._
 
   @Test
@@ -36,7 +35,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testEmptyArray(): Unit =
-    eval("emptyArray", ScalaRunTime.stringOf(emptyArray), Scala.Array(Scala.primitives.Int))
+    eval("emptyArray", emptyArray, Scala.Array(Scala.primitives.Int))
 
   /*
    * If this test does not fail anymore it means eclipse implementation of ArrayReference.getValues() is fixed
@@ -50,79 +49,79 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testIntArray(): Unit =
-    eval("intArray", ScalaRunTime.stringOf(intArray), Scala.Array(Scala.primitives.Int))
+    eval("intArray", intArray, Scala.Array(Scala.primitives.Int))
 
   @Test
   def testStringArray(): Unit =
-    eval("stringArray", ScalaRunTime.stringOf(stringArray), Scala.Array(Java.boxed.String))
+    eval("stringArray", stringArray, Scala.Array(Java.boxed.String))
 
   @Test
   def testNestedIntArray(): Unit =
-    eval("nestedArray", ScalaRunTime.stringOf(nestedArray), Scala.Array(Scala.Array(Scala.primitives.Int)))
+    eval("nestedArray", nestedArray, Scala.Array(Scala.Array(Scala.primitives.Int)))
 
   @Test
   def testNestedStringArray(): Unit =
-    eval("nestedObjectArray", ScalaRunTime.stringOf(nestedObjectArray), Scala.Array(Scala.Array(Java.boxed.String)))
+    eval("nestedObjectArray", nestedObjectArray, Scala.Array(Scala.Array(Java.boxed.String)))
 
   @Test
   def testIntListToArray(): Unit =
-    eval("List(1, 2, 3).toArray", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+    eval("List(1, 2, 3).toArray", Array(1, 2, 3), Scala.Array(Scala.primitives.Int))
 
   @Test
   def testStringListToArray(): Unit =
-    eval("""List("a", "b").toArray""", """Array(a, b)""", Scala.Array(Java.boxed.String))
+    eval("""List("a", "b").toArray""", Array("a", "b"), Scala.Array(Java.boxed.String))
 
   @Test
   def testIntArrayApply(): Unit =
-    eval("Array(1,2,3)", ScalaRunTime.stringOf(Array[Int](1, 2, 3)), Scala.Array(Scala.primitives.Int))
+    eval("Array(1,2,3)", Array[Int](1, 2, 3), Scala.Array(Scala.primitives.Int))
 
   @Test
   def testIntArrayCreationWorkaround(): Unit = eval(
     code = """val a = new Array[Int](3); a(0) = 1; a(1) = 2; a(2) = 3; a""",
-    expectedValue = ScalaRunTime.stringOf(Array[Int](1, 2, 3)),
+    expectedValue = Array[Int](1, 2, 3),
     expectedType = Scala.Array(Scala.primitives.Int))
 
   @Test
   def testStringArrayApply(): Unit = eval(
     """Array("ala", "ola", "ula")""",
-    ScalaRunTime.stringOf(Array("ala", "ola", "ula")),
+    Array("ala", "ola", "ula"),
     Scala.Array(Java.boxed.String))
 
   @Test
   def testStringArrayCreationWorkaround(): Unit = eval(
     code = """val a = new Array[String](3); a(0) = "ala"; a(1) = "ola"; a(2) = "ula"; a""",
-    expectedValue = ScalaRunTime.stringOf(Array("ala", "ola", "ula")),
+    expectedValue = Array("ala", "ola", "ula"),
     expectedType = Scala.Array(Java.boxed.String))
 
   @Test
   def testArrayWithEmptyString(): Unit =
-    eval("""Array("")""", ScalaRunTime.stringOf(Array("")), Scala.Array(Java.boxed.String))
+    eval("""Array("")""", Array(""), Scala.Array(Java.boxed.String))
 
   @Test
   def testNestedMixedArrayApply(): Unit = eval(
     "Array(Array(1,2,3), Array(2.0, 3.0, 4.0))",
-    ScalaRunTime.stringOf(Array(Array(1, 2, 3), Array(2.0, 3.0, 4.0))),
+    Array(Array(1, 2, 3), Array(2.0, 3.0, 4.0)),
     Scala.Array(Java.Object))
 
   @Test
   def testNestedIntArrayApply(): Unit = eval(
     "Array(Array(1,2,3))",
-    ScalaRunTime.stringOf(Array(Array(1, 2, 3))),
+    Array(Array(1, 2, 3)),
     Scala.Array(Scala.Array(Scala.primitives.Int)))
 
   @Test
   def testNestedStringArrayApply(): Unit = eval(
     """Array(Array("1","2","3"))""",
-    ScalaRunTime.stringOf(Array(Array("1", "2", "3"))),
+    Array(Array("1", "2", "3")),
     Scala.Array(Scala.Array(Java.boxed.String)))
 
   @Test
   def testIntArrayCreationWithNew(): Unit =
-    eval("new Array[Int](2)", ScalaRunTime.stringOf(new Array[Int](2)), Scala.Array(Scala.primitives.Int))
+    eval("new Array[Int](2)", new Array[Int](2), Scala.Array(Scala.primitives.Int))
 
   @Test
   def testStringArrayCreationWithNew(): Unit =
-    eval("new Array[String](10)", ScalaRunTime.stringOf(new Array[String](10)), Scala.Array(Java.boxed.String))
+    eval("new Array[String](10)", new Array[String](10), Scala.Array(Java.boxed.String))
 
   @Test
   def testIntArrayAccess(): Unit =
@@ -150,22 +149,22 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testMethodTakingIntArray(): Unit =
-    eval(s"$arrayIdentity(intArray)", ScalaRunTime.stringOf(intArray), Scala.Array(Scala.primitives.Int))
+    eval(s"$arrayIdentity(intArray)", intArray, Scala.Array(Scala.primitives.Int))
 
   @Test
   def testMethodTakingStringArray(): Unit =
-    eval(s"$arrayIdentity(stringArray)", ScalaRunTime.stringOf(stringArray), Scala.Array(Java.boxed.String))
+    eval(s"$arrayIdentity(stringArray)", stringArray, Scala.Array(Java.boxed.String))
 
   @Test
   def testMethodTakingNewIntArray(): Unit = eval(
     s"$arrayIdentity(new Array[Int](2))",
-    ScalaRunTime.stringOf(new Array[Int](2)),
+    new Array[Int](2),
     Scala.Array(Scala.primitives.Int))
 
   @Test
   def testMethodTakingNewStringArray(): Unit = eval(
     code = s"$arrayIdentity(new Array[String](10))",
-    expectedValue = ScalaRunTime.stringOf(new Array[String](10)),
+    expectedValue = new Array[String](10),
     expectedType = Scala.Array(Java.boxed.String))
 
   @Test
@@ -174,7 +173,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testRichArrayMethodsConcatenation(): Unit =
-    eval("stringArray ++ intArray", ScalaRunTime.stringOf(stringArray ++ intArray), Scala.Array(Java.Object))
+    eval("stringArray ++ intArray", stringArray ++ intArray, Scala.Array(Java.Object))
 
   @Test
   def testRichArrayMethodsMap(): Unit =
@@ -182,7 +181,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNestedArrayAccess(): Unit =
-    eval("nestedArray(0)", ScalaRunTime.stringOf(nestedArray(0)), Scala.Array(Scala.primitives.Int))
+    eval("nestedArray(0)", nestedArray(0), Scala.Array(Scala.primitives.Int))
 
   @Test
   def testNestedArrayElementAccess(): Unit =
@@ -190,7 +189,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNestedObjectArrayAccess(): Unit =
-    eval("nestedObjectArray(0)", ScalaRunTime.stringOf(nestedObjectArray(0)), Scala.Array(Java.boxed.String))
+    eval("nestedObjectArray(0)", nestedObjectArray(0), Scala.Array(Java.boxed.String))
 
   @Test
   def testNestedObjectArrayElementAccess(): Unit =
@@ -204,27 +203,27 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def displayIntArray(): Unit =
-    eval("Array(1, 2, 3)", "Array(1, 2, 3)", Scala.Array(Scala.primitives.Int))
+    eval("Array(1, 2, 3)", Array(1, 2, 3), Scala.Array(Scala.primitives.Int))
 
   @Test
   def displayStringArray(): Unit =
-    eval("""Array("1", "2", "3")""", "Array(1, 2, 3)", Scala.Array(Java.boxed.String))
+    eval("""Array("1", "2", "3")""", Array("1", "2", "3"), Scala.Array(Java.boxed.String))
 
   @Test
   def displayNestedArray(): Unit = eval(
     "Array(Array(1, 2, 3), Array(1, 2, 3))",
-    "Array(Array(1, 2, 3), Array(1, 2, 3))",
+    Array(Array(1, 2, 3), Array(1, 2, 3)),
     Scala.Array(Scala.Array(Scala.primitives.Int)))
 
   @Test
   def displayListWithArray(): Unit =
-    eval("List(Array(1, 2, 3), Array(1.0, 2.0, 3.0))", "List(Array(1, 2, 3), Array(1.0, 2.0, 3.0))", Scala.::)
+    eval("List(Array(1, 2, 3), Array(1.0, 2.0, 3.0))", List(Array(1, 2, 3), Array(1.0, 2.0, 3.0)), Scala.::)
 
   // this one sometimes (depending on test order) fails assertion in:
   // scala.tools.nsc.transform.AddInterfaces$LazyImplClassType.implType$1(AddInterfaces.scala:196)
   @Test
   def displayMapWithArray(): Unit =
-    eval("Map(1 -> Array(1, 2, 3))", "Map(1 -> Array(1, 2, 3))", "scala.collection.immutable.Map$Map1")
+    eval("Map(1 -> Array(1, 2, 3))", Map(1 -> Array(1, 2, 3)), "scala.collection.immutable.Map$Map1")
 
 }
 

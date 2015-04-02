@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.ReflectiveCompilationFailure
 
 class NestedScopeTest extends BaseIntegrationTest(NestedScopeTest) {
 
-  import TestValues.any2String
   import NestedTestCase._
 
   @Test

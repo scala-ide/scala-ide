@@ -9,7 +9,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TestValues.any2String
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase._
 
@@ -19,7 +18,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def getValuesOfStaticFieldsOfClass(): Unit = {
     eval("JavaLibClass.staticString", JavaLibClass.staticString, Java.boxed.String)
     eval("JavaLibClass.staticInt", JavaLibClass.staticInt, Java.boxed.Integer)
-    eval("JavaLibClass.staticNull", Scala.nullLiteral, Scala.nullType)
+    eval("JavaLibClass.staticNull", null, Scala.nullType)
   }
 
   @Test

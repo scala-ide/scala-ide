@@ -17,7 +17,7 @@ class OperatorsTest
 
   @Test
   def testValInScope(): Unit =
-    eval("++", "1", Java.boxed.Integer)
+    eval("++", 1, Java.boxed.Integer)
 
   @Test
   def testVarInScope(): Unit =
@@ -25,19 +25,19 @@ class OperatorsTest
 
   @Test
   def testNoArgDefInScope(): Unit =
-    eval("!!!", "1", Java.boxed.Integer)
+    eval("!!!", 1, Java.boxed.Integer)
 
   @Test
   def testEmptyArgDefInScope(): Unit =
-    eval("@@@()", "2", Java.boxed.Integer)
+    eval("@@@()", 2, Java.boxed.Integer)
 
   @Test
   def testDefInScope(): Unit =
-    eval("###(123)", "123", Java.boxed.Integer)
+    eval("###(123)", 123, Java.boxed.Integer)
 
   @Test
   def testVarArgDefInScope(): Unit =
-    eval("""$$$("a", "b", "c")""", "List(a, b, c)", Scala.::)
+    eval("""$$$("a", "b", "c")""", List("a", "b", "c"), Scala.::)
 
   // local (in method)
 
@@ -47,7 +47,7 @@ class OperatorsTest
 
   @Test
   def testLocalVar(): Unit =
-    testAssignment(on = "-:-", tpe = Java.boxed.String, values = "\"1\"", "\"2\"", "\"3\"")
+    testAssignment(on = "-:-", tpe = Java.boxed.String, values = s("1"), s("2"), s("3"))
 
   // constructors
 
@@ -63,25 +63,25 @@ class OperatorsTest
 
   @Test
   def localValInClosure(): Unit =
-    eval("list.map(i => i + --)", "List(124, 125, 126)", Scala.::)
+    eval("list.map(i => i + --)", List(124, 125, 126), Scala.::)
 
   @Test
   def valInClosure(): Unit =
-    eval("list.map(i => i + ++)", "List(2, 3, 4)", Scala.::)
+    eval("list.map(i => i + ++)", List(2, 3, 4), Scala.::)
 
   @Test
   def valFromObjectInClosure(): Unit =
-    eval("list.map(i => i + OperatorsObj.++)", "List(2, 3, 4)", Scala.::)
+    eval("list.map(i => i + OperatorsObj.++)", List(2, 3, 4), Scala.::)
 
   @Test
   def valOnInstanceInClosure(): Unit =
-    eval("list.map(i => i + operators.++)", "List(2, 3, 4)", Scala.::)
+    eval("list.map(i => i + operators.++)", List(2, 3, 4), Scala.::)
 
   // on object
 
   @Test
   def testValOnObject(): Unit =
-    eval("OperatorsObj.++", "1", Java.boxed.Integer)
+    eval("OperatorsObj.++", 1, Java.boxed.Integer)
 
   @Test
   def testVarOnObject(): Unit =
@@ -89,25 +89,25 @@ class OperatorsTest
 
   @Test
   def testNoArgDefOnObject(): Unit =
-    eval("OperatorsObj.!!!", "1", Java.boxed.Integer)
+    eval("OperatorsObj.!!!", 1, Java.boxed.Integer)
 
   @Test
   def testEmptyArgDefOnObject(): Unit =
-    eval("OperatorsObj.@@@()", "2", Java.boxed.Integer)
+    eval("OperatorsObj.@@@()", 2, Java.boxed.Integer)
 
   @Test
   def testDefOnObject(): Unit =
-    eval("OperatorsObj.###(123)", "123", Java.boxed.Integer)
+    eval("OperatorsObj.###(123)", 123, Java.boxed.Integer)
 
   @Test
   def testVarArgDefOnObject(): Unit =
-    eval("""OperatorsObj.$$$("a", "b", "c")""", "List(a, b, c)", Scala.::)
+    eval("""OperatorsObj.$$$("a", "b", "c")""", List("a", "b", "c"), Scala.::)
 
   // on instance
 
   @Test
   def testVal(): Unit =
-    eval("operators.++", "1", Java.boxed.Integer)
+    eval("operators.++", 1, Java.boxed.Integer)
 
   @Test
   def testVar(): Unit =
@@ -115,19 +115,19 @@ class OperatorsTest
 
   @Test
   def testNoArgDef(): Unit =
-    eval("operators.!!!", "1", Java.boxed.Integer)
+    eval("operators.!!!", 1, Java.boxed.Integer)
 
   @Test
   def testEmptyArgDef(): Unit =
-    eval("operators.@@@()", "2", Java.boxed.Integer)
+    eval("operators.@@@()", 2, Java.boxed.Integer)
 
   @Test
   def testDef(): Unit =
-    eval("operators.###(123)", "123", Java.boxed.Integer)
+    eval("operators.###(123)", 123, Java.boxed.Integer)
 
   @Test
   def testVarArgDef(): Unit =
-    eval("""operators.$$$("a", "b", "c")""", "List(a, b, c)", Scala.::)
+    eval("""operators.$$$("a", "b", "c")""", List("a", "b", "c"), Scala.::)
 
 }
 

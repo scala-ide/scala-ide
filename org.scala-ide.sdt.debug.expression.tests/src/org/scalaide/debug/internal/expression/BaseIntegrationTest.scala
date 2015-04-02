@@ -3,6 +3,7 @@
  */
 package org.scalaide.debug.internal.expression
 
+import scala.runtime.ScalaRunTime
 import scala.tools.reflect.ToolBoxError
 import scala.util.Failure
 import scala.util.Success
@@ -37,9 +38,10 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
   }
 
   /** test code for given value and its type */
-  protected final def eval(code: String, expectedValue: String, expectedType: String): Unit = {
+  protected final def eval(code: String, expectedValue: Any, expectedType: String): Unit = {
     val (resultValue, resultType) = runCode(code)
-    assertEquals("Result value differs:", expectedValue, resultValue)
+    val expectedValueString = ScalaRunTime.stringOf(expectedValue)
+    assertEquals("Result value differs:", expectedValueString, resultValue)
     assertEquals("Result type differs:", expectedType, resultType)
   }
 
@@ -99,11 +101,10 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
   def this(testCaseSettings: IntegrationTestCaseSettings = ValuesTestCase) =
     this(testCaseSettings.projectName, testCaseSettings.fileName, testCaseSettings.breakpointLine)
 
+  /** Default suspension policy. Override it to change value for your test. */
   protected def suspensionPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD
 
-  /**
-   * Type in which breakpoint is set. By default `debug.<fileName>$`.
-   */
+  /** Type in which breakpoint is set. By default `debug.<fileName>$`. */
   protected def typeName: String = "debug." + fileName + "$"
 
   def prepareEvaluator(): Unit = {

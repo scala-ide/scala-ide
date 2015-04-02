@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.TestValues
 class BitwiseAndTest extends BaseIntegrationTest(BitwiseAndTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `byte & sth`(): Unit = {

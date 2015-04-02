@@ -12,7 +12,6 @@ import org.scalaide.debug.internal.expression.Names.Scala
 class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def ifElseCondition(): Unit = eval("if (true) byte + byte2 else byte", byte + byte2, Java.boxed.Integer)
@@ -72,34 +71,34 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
 
   @Test
   def simpleForLoop(): Unit =
-    eval("""for { i <- list } i""", Scala.unitLiteral, Scala.unitType)
+    eval("""for { i <- list } i""", (), Scala.unitType)
 
   @Test
   def filteredForLoop(): Unit =
-    eval("""for { i <- list; if i % 2 == 0 } i""", Scala.unitLiteral, Scala.unitType)
+    eval("""for { i <- list; if i % 2 == 0 } i""", (), Scala.unitType)
 
   @Test
   def nestedForLoop(): Unit =
-    eval("""for { i <- list; j <- list } (i,j)""", Scala.unitLiteral, Scala.unitType)
+    eval("""for { i <- list; j <- list } (i,j)""", (), Scala.unitType)
 
   @Test
   def forLoopWithVal(): Unit = {
-    eval("""for { i <- list; j = i.toString } j""", Scala.unitLiteral, Scala.unitType)
-    eval("""for { i <- list; val j = i.toString } j""", Scala.unitLiteral, Scala.unitType)
+    eval("""for { i <- list; j = i.toString } j""", (), Scala.unitType)
+    eval("""for { i <- list; val j = i.toString } j""", (), Scala.unitType)
   }
 
   @Test
   def singleVal(): Unit =
-    eval("val a = 1", Scala.unitLiteral, Scala.unitType)
+    eval("val a = 1", (), Scala.unitType)
 
   // TODO - O-8580 - add support for lazy vals in evaluated expression
   @Test(expected = classOf[UnsupportedFeature])
   def singleLazyVal(): Unit =
-    eval("lazy val a: Int = 1", Scala.unitLiteral, Scala.unitType)
+    eval("lazy val a: Int = 1", (), Scala.unitType)
 
   @Test
   def singleDef(): Unit =
-    eval("def foo() = 1", Scala.unitLiteral, Scala.unitType)
+    eval("def foo() = 1", (), Scala.unitType)
 
 }
 

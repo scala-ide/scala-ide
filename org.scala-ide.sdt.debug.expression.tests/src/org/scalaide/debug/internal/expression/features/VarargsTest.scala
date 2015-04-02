@@ -17,7 +17,6 @@ import org.scalaide.debug.internal.expression.TestValues.VarargsTestCase
  */
 class VarargsTest extends BaseIntegrationTest(VarargsTest) {
 
-  import TestValues.any2String
   import VarargsTestCase._
 
   @Test
@@ -42,7 +41,7 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
   @Ignore("TODO - O-4581 - proper method with varargs should be chosen when erased signature is the same")
   @Test
   def sameErasedSignatureVararg(): Unit = {
-    eval(""" sameErasedSignature.f(1, 2, 3) """, "6", Java.boxed.Integer)
+    eval(""" sameErasedSignature.f(1, 2, 3) """, 6, Java.boxed.Integer)
     eval(""" sameErasedSignature.f("1", "2", "3") """, "123", Java.boxed.String)
   }
 
@@ -62,19 +61,19 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
   @Ignore("TODO - O-4581 - proper method with varargs should be chosen with subtypes")
   @Test
   def varargWithSubtyping(): Unit = {
-    eval(""" varargsAndSubtyping.f(new A) """, "1", Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f(new A) """, 1, Java.boxed.Integer)
     eval(""" varargsAndSubtyping.f(new B) """, "2", Java.boxed.String)
-    eval(""" varargsAndSubtyping.f(new B, new A) """, "1", Java.boxed.Integer)
-    eval(""" varargsAndSubtyping.f(new A, new B) """, "1", Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f(new B, new A) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f(new A, new B) """, 1, Java.boxed.Integer)
     eval(""" varargsAndSubtyping.f() """, "2", Java.boxed.String)
   }
 
   @Ignore("TODO - O-4581 - proper method with varargs should be chosen with primitives coercion")
   @Test
   def varargWithPrimitiveCoercion(): Unit = {
-    eval(""" varargsAndPrimitiveCoercion.f(1) """, "1", Java.boxed.Integer)
-    eval(""" varargsAndPrimitiveCoercion.f(1.0) """, "1.0", Java.boxed.Double)
-    eval(""" varargsAndPrimitiveCoercion.f(1, 1.0) """, "2.0", Java.boxed.Double)
+    eval(""" varargsAndPrimitiveCoercion.f(1) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndPrimitiveCoercion.f(1.0) """, 1.0, Java.boxed.Double)
+    eval(""" varargsAndPrimitiveCoercion.f(1, 1.0) """, 2.0, Java.boxed.Double)
     expectReflectiveCompilationError(""" varargsAndPrimitiveCoercion.f() """)
   }
 }

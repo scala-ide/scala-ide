@@ -9,7 +9,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
-import org.scalaide.debug.internal.expression.TestValues.any2String
 
 class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) {
 
