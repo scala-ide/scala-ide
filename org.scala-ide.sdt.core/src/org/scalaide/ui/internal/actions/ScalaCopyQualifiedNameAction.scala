@@ -1,19 +1,20 @@
 package org.scalaide.ui.internal.actions
 
+import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
+import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
-import org.eclipse.jdt.internal.ui.actions.CopyQualifiedNameAction
+import org.eclipse.jdt.ui.actions.SelectionDispatchAction
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.SWTError
 import org.eclipse.swt.dnd.Clipboard
 import org.eclipse.swt.dnd.DND
 import org.eclipse.swt.dnd.TextTransfer
 import org.eclipse.swt.dnd.Transfer
-import org.scalaide.core.compiler.NamePrinter
-import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
-import org.eclipse.jdt.ui.actions.SelectionDispatchAction
-import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.ui.PlatformUI
-import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
+import org.scalaide.core.compiler.NamePrinter
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.statistics.Features
+import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 
 /**
  * A Scala-aware replacement for CopyQualifiedNameAction.
@@ -21,7 +22,9 @@ import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
 class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends SelectionDispatchAction(editor.getSite) {
   initGui()
 
-  override def run() {
+  override def run(): Unit = {
+    ScalaPlugin().statistics.incUses(Features.CopyQualifiedName)
+
     val qname = {
       for (cu <- compilationUnit) yield {
         val selection = editor.getViewer.getSelectedRange
@@ -34,7 +37,7 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends S
       copyToClipboard(qname.get)
   }
 
-  private def copyToClipboard(str: String) {
+  private def copyToClipboard(str: String): Unit = {
     val data: Array[Object] = Array(str)
     val dataTypes: Array[Transfer] = Array(TextTransfer.getInstance)
     val clipboard = new Clipboard(getShell().getDisplay())
@@ -55,7 +58,7 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends S
     }
   }
 
-  private def initGui() {
+  private def initGui(): Unit = {
     setText(ActionMessages.CopyQualifiedNameAction_ActionName);
     setToolTipText(ActionMessages.CopyQualifiedNameAction_ToolTipText);
     setDisabledImageDescriptor(JavaPluginImages.DESC_DLCL_COPY_QUALIFIED_NAME);
