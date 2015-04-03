@@ -940,6 +940,9 @@
      <initializer
            class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
      </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ScalaPreferenceInitializer">
+     </initializer>
   </extension>
 
   <extension point="org.eclipse.core.expressions.propertyTesters">

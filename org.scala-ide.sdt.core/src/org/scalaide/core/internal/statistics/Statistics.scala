@@ -13,18 +13,10 @@ import scala.pickling.pickler.AllPicklers
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.internal.statistics.Features.CopyQualifiedName
 import org.scalaide.core.internal.statistics.Features.ExplicitReturnType
+import org.scalaide.core.ScalaIdeDataStore
 import Features._
 
-object Statistics {
-
-  val IdeConfigStore = new File(System.getProperty("user.home") + File.separator + ".scalaide")
-
-  val StatisticsFile = new File(IdeConfigStore.getAbsolutePath + File.separator + "statistics")
-
-}
-
 class Statistics {
-  import Statistics._
   import scala.pickling.Defaults._
   import scala.pickling.json._
 
@@ -44,13 +36,11 @@ class Statistics {
   }
 
   private def readStats(): Unit = {
-    EclipseUtils.withSafeRunner("Error while reading statistics from disk") {
+    ScalaIdeDataStore.read(ScalaIdeDataStore.statisticsLocation) { file ⇒
       import Picklers._
-      if (StatisticsFile.exists()) {
-        val stats = read[StatData](StatisticsFile)
-        firstStat = stats.firstStat
-        cache = stats.featureData.map(stat ⇒ stat.feature → stat)(collection.breakOut)
-      }
+      val stats = read[StatData](file)
+      firstStat = stats.firstStat
+      cache = stats.featureData.map(stat ⇒ stat.feature → stat)(collection.breakOut)
     }
   }
 
@@ -58,13 +48,9 @@ class Statistics {
     if (firstStat == 0) firstStat = System.currentTimeMillis
     val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
-    EclipseUtils.withSafeRunner("Error while writing statistics to disk") {
+    ScalaIdeDataStore.write(ScalaIdeDataStore.statisticsLocation) { file ⇒
       import Picklers._
-      if (!StatisticsFile.exists()) {
-        IdeConfigStore.mkdirs()
-        StatisticsFile.createNewFile()
-      }
-      write(StatisticsFile, stats)
+      write(file, stats)
     }
   }
 
