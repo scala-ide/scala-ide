@@ -34,6 +34,7 @@ class Statistics {
   readStats()
 
   def data: Seq[FeatureData] = cache.values.toList
+  def startOfStats: Long = firstStat
 
   def incUses(feature: Feature): Unit = {
     val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.currentTimeMillis))

@@ -1,5 +1,8 @@
 package org.scalaide.ui.internal.preferences
 
+import java.text.DateFormat
+import java.util.Calendar
+
 import org.eclipse.jface.layout.TableColumnLayout
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.viewers.ColumnWeightData
@@ -28,6 +31,8 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
   def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
+
+    mkLabel(base, s"Statistics tracking started at $startOfStats.")
 
     val tableComposite = new Composite(base, SWT.NONE)
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1))
@@ -87,6 +92,13 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     viewer.setInput(data)
 
     base
+  }
+
+  private def startOfStats: String = {
+    val df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+    val c = Calendar.getInstance
+    c.setTimeInMillis(ScalaPlugin().statistics.startOfStats)
+    df.format(c.getTime)
   }
 
   private def timeAgo(time: Long): String = {
