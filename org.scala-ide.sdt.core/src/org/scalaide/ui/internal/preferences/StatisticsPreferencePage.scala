@@ -77,13 +77,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val columnLastUsed = new TableViewerColumn(viewer, SWT.NONE)
     columnLastUsed.getColumn.setText("Last used")
-    columnLastUsed.onLabelUpdate { d ⇒
-      val stat = d.asInstanceOf[Stat]
-      if (stat.lastUsed == 0)
-        "Never"
-      else
-        timeAgo(stat.lastUsed)
-    }
+    columnLastUsed.onLabelUpdate(d ⇒ timeAgo(d.asInstanceOf[Stat].lastUsed))
     columnLastUsed.getColumn.addSelectionListener { e: SelectionEvent ⇒
       ColumnSorter.doSort(ColumnSorter.Column.LastUsed)
       viewer.refresh()
@@ -97,16 +91,14 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
   private def timeAgo(time: Long): String = {
     import scala.concurrent.duration._
-    val d = (System.nanoTime - time).nanos
 
-    if (d < 2.minutes)
-      "moments ago"
-    else if (d < 1.hour)
-      s"${d.toMinutes} minutes ago"
-    else if (d < 1.day)
-      s"${d.toHours} hours ago"
-    else
-      s"${d.toDays} days ago"
+    (System.nanoTime - time).nanos match {
+      case d if d < 0.nanos   ⇒ "Never"
+      case d if d < 2.minutes ⇒ "Moments ago"
+      case d if d < 1.hour    ⇒ s"${d.toMinutes} minutes ago"
+      case d if d < 1.day     ⇒ s"${d.toHours} hours ago"
+      case d                  ⇒ s"${d.toDays} days ago"
+    }
   }
 
   def init(workbench: IWorkbench): Unit = ()
