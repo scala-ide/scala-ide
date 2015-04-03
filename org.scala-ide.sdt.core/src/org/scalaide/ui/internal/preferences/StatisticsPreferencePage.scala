@@ -18,7 +18,7 @@ import org.eclipse.swt.widgets.Table
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.core.internal.statistics.Stat
+import org.scalaide.core.internal.statistics.FeatureData
 import org.scalaide.util.eclipse.SWTUtils._
 
 class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
@@ -45,7 +45,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val columnFeature = new TableViewerColumn(viewer, SWT.NONE)
     columnFeature.getColumn.setText("Feature")
-    columnFeature.onLabelUpdate(_.asInstanceOf[Stat].feature.description)
+    columnFeature.onLabelUpdate(_.asInstanceOf[FeatureData].feature.description)
     columnFeature.getColumn.addSelectionListener { e: SelectionEvent ⇒
       ColumnSorter.doSort(ColumnSorter.Column.Feature)
       viewer.refresh()
@@ -54,7 +54,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val columnGroup = new TableViewerColumn(viewer, SWT.NONE)
     columnGroup.getColumn.setText("Group")
-    columnGroup.onLabelUpdate(_.asInstanceOf[Stat].feature.group.description)
+    columnGroup.onLabelUpdate(_.asInstanceOf[FeatureData].feature.group.description)
     columnGroup.getColumn.addSelectionListener { e: SelectionEvent ⇒
       ColumnSorter.doSort(ColumnSorter.Column.Group)
       viewer.refresh()
@@ -63,7 +63,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val columnUsed = new TableViewerColumn(viewer, SWT.NONE)
     columnUsed.getColumn.setText("Used")
-    columnUsed.onLabelUpdate(_.asInstanceOf[Stat].nrOfUses match {
+    columnUsed.onLabelUpdate(_.asInstanceOf[FeatureData].nrOfUses match {
       case 0 ⇒ "Never"
       case 1 ⇒ "Once"
       case 2 ⇒ "Twice"
@@ -77,7 +77,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val columnLastUsed = new TableViewerColumn(viewer, SWT.NONE)
     columnLastUsed.getColumn.setText("Last used")
-    columnLastUsed.onLabelUpdate(d ⇒ timeAgo(d.asInstanceOf[Stat].lastUsed))
+    columnLastUsed.onLabelUpdate(d ⇒ timeAgo(d.asInstanceOf[FeatureData].lastUsed))
     columnLastUsed.getColumn.addSelectionListener { e: SelectionEvent ⇒
       ColumnSorter.doSort(ColumnSorter.Column.LastUsed)
       viewer.refresh()
@@ -120,7 +120,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     override def compare(viewer: Viewer, o1: AnyRef, o2: AnyRef): Int = {
       def str(o: AnyRef) = o match {
-        case Stat(feature, nrOfUses, lastUsed) ⇒ sortCol match {
+        case FeatureData(feature, nrOfUses, lastUsed) ⇒ sortCol match {
           case Feature  ⇒ feature.description
           case Group    ⇒ feature.group.description
           case NrOfUses ⇒ nrOfUses.toString

@@ -28,14 +28,15 @@ class Statistics {
   import scala.pickling.Defaults._
   import scala.pickling.json._
 
-  private var cache = Map[Feature, Stat]()
+  private var firstStat = 0L
+  private var cache = Map[Feature, FeatureData]()
 
   readStats()
 
-  def data: Seq[Stat] = cache.values.toList
+  def data: Seq[FeatureData] = cache.values.toList
 
   def incUses(feature: Feature): Unit = {
-    val stat = cache.get(feature).getOrElse(Stat(feature, 0, System.nanoTime))
+    val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.nanoTime))
     cache += feature → stat.copy(nrOfUses = stat.nrOfUses + 1, lastUsed = System.nanoTime)
 
     writeStats()
@@ -44,15 +45,17 @@ class Statistics {
   private def readStats(): Unit = {
     EclipseUtils.withSafeRunner("Error while reading statistics from disk") {
       import Picklers._
-      if (StatisticsFile.exists())
-        cache = read[Seq[Stat]](StatisticsFile).map(stat ⇒ stat.feature → stat)(collection.breakOut)
-      else
-        Seq()
+      if (StatisticsFile.exists()) {
+        val stats = read[StatData](StatisticsFile)
+        firstStat = stats.firstStat
+        cache = stats.featureData.map(stat ⇒ stat.feature → stat)(collection.breakOut)
+      }
     }
   }
 
   private def writeStats(): Unit = {
-    val values: Seq[Stat] = cache.map(_._2)(collection.breakOut)
+    if (firstStat == 0) firstStat = System.nanoTime
+    val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
     EclipseUtils.withSafeRunner("Error while writing statistics to disk") {
       import Picklers._
@@ -60,7 +63,7 @@ class Statistics {
         IdeConfigStore.mkdirs()
         StatisticsFile.createNewFile()
       }
-      write(StatisticsFile, values)
+      write(StatisticsFile, stats)
     }
   }
 
@@ -110,7 +113,8 @@ object Features {
   object NotSpecified extends Feature("<not specified>", Uncategorized)
 }
 
-case class Stat(feature: Feature, nrOfUses: Int, lastUsed: Long)
+final case class StatData(firstStat: Long, featureData: Seq[FeatureData])
+final case class FeatureData(feature: Feature, nrOfUses: Int, lastUsed: Long)
 
 private object Picklers {
   object fqn {
@@ -174,10 +178,10 @@ private object Picklers {
    * but because its macros fall flat on their faces while doing this the
    * implementation was written manually. One related issue is at least SI-7588.
    */
-  implicit val statPickler: Pickler[Stat] with Unpickler[Stat] = new Pickler[Stat] with Unpickler[Stat] {
-    override val tag = FastTypeTag[Stat]
+  implicit val statPickler: Pickler[FeatureData] with Unpickler[FeatureData] = new Pickler[FeatureData] with Unpickler[FeatureData] {
+    override val tag = FastTypeTag[FeatureData]
 
-    override def pickle(s: Stat, b: PBuilder): Unit = {
+    override def pickle(s: FeatureData, b: PBuilder): Unit = {
       b.pushHints()
       b.hintTag(tag)
 
@@ -240,7 +244,7 @@ private object Picklers {
 
       r.endEntry()
       r.popHints()
-      Stat(feature, nrOfUses, lastUsed)
+      FeatureData(feature, nrOfUses, lastUsed)
     }
 
   }
