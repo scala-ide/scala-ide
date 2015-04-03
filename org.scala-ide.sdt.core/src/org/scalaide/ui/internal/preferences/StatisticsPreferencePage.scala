@@ -127,8 +127,8 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     }
     import Column._, Direction._
 
-    var sortCol: Column = Feature
-    var sortDir: Direction = Ascending
+    var sortCol: Column = NrOfUses
+    var sortDir: Direction = Descending
 
     override def compare(viewer: Viewer, o1: AnyRef, o2: AnyRef): Int = {
       def cmp = (o1, o2) match {
