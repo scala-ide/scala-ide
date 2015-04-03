@@ -104,15 +104,18 @@ private object Picklers {
   object fqn {
     val fExplicitReturnType = FastTypeTag[ExplicitReturnType.type].key
     val fCopyQualifiedName = FastTypeTag[CopyQualifiedName.type].key
+    val fRestartPresentationCompiler = FastTypeTag[RestartPresentationCompiler.type].key
 
     def asString(c: Feature): String = c match {
       case ExplicitReturnType ⇒ fExplicitReturnType
       case CopyQualifiedName ⇒ fCopyQualifiedName
+      case RestartPresentationCompiler ⇒ fRestartPresentationCompiler
     }
 
     def fromString(s: String): Feature = s match {
       case `fExplicitReturnType` ⇒ ExplicitReturnType
       case `fCopyQualifiedName` ⇒ CopyQualifiedName
+      case `fRestartPresentationCompiler` ⇒ RestartPresentationCompiler
     }
   }
 
