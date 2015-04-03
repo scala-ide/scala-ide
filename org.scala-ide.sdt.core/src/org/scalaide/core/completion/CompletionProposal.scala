@@ -2,14 +2,17 @@ package org.scalaide.core.completion
 
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
+
+import org.eclipse.jface.internal.text.html.BrowserInput
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
-import org.scalaide.util.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.statistics.Features.CharactersSaved
+import org.scalaide.core.internal.statistics.Features.ImportMissingMember
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.eclipse.jface.internal.text.html.BrowserInput
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object CompletionContext {
   trait ContextType
@@ -211,7 +214,7 @@ case class CompletionProposal(
       val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
 
       val importStmt =
-        if (!needImport)
+      if (!needImport)
           Nil
         else {
           val refactoring = new AddImportStatement { val global = compiler }
@@ -222,6 +225,10 @@ case class CompletionProposal(
         (context != CompletionContext.ImportContext
         && (!overwrite || !paramsProbablyExists)
         && explicitParamNames.flatten.nonEmpty)
+
+      val charactersAdded = completionFullString.length-(offset-startPos)
+      ScalaPlugin().statistics.incUses(CharactersSaved, numToInc = charactersAdded)
+      importStmt foreach (_ ⇒ ScalaPlugin().statistics.incUses(ImportMissingMember))
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring

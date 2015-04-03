@@ -22,17 +22,25 @@ import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.statistics.FeatureData
+import org.scalaide.core.internal.statistics.Features.CharactersSaved
 import org.scalaide.util.eclipse.SWTUtils._
 
 class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val data = ScalaPlugin().statistics.data.toArray
+  /*
+   * [[CharactersSaved]] should not be displayed in the list of used features.
+   */
+  private val (data, Array(charsSaved)) = {
+    val d = ScalaPlugin().statistics.data.toArray
+    d.partition(_.feature != CharactersSaved)
+  }
 
   def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
 
     mkLabel(base, s"Statistics tracking started at $startOfStats.")
+    mkLabel(base, s"Code completion has saved you from typing approx. ${charsSaved.nrOfUses} characters")
 
     val tableComposite = new Composite(base, SWT.NONE)
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1))

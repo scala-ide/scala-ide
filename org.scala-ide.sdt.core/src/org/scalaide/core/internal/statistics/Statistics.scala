@@ -36,9 +36,9 @@ class Statistics {
   def data: Seq[FeatureData] = cache.values.toList
   def startOfStats: Long = firstStat
 
-  def incUses(feature: Feature): Unit = {
+  def incUses(feature: Feature, numToInc: Int = 1): Unit = {
     val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.currentTimeMillis))
-    cache += feature → stat.copy(nrOfUses = stat.nrOfUses + 1, lastUsed = System.currentTimeMillis)
+    cache += feature → stat.copy(nrOfUses = stat.nrOfUses + numToInc, lastUsed = System.currentTimeMillis)
 
     writeStats()
   }
@@ -87,7 +87,7 @@ object Groups {
   object Uncategorized extends Group("Uncategorized")
   object QuickAssist extends Group("Quick Assist")
   object Refactoring extends Group("Refactoring")
-  object CodeAssist extends Group("Code Assist")
+  object Editing extends Group("Editing")
   object SaveAction extends Group("Save Action")
   object AutoEdit extends Group("Auto Edit")
   object Wizard extends Group("Wizard")
@@ -112,6 +112,8 @@ object Features {
   object RestartPresentationCompiler extends Feature("Restart Presentation Compiler", Uncategorized)
   /** Exists for backward compatibility with previous versions of the IDE. */
   object NotSpecified extends Feature("<not specified>", Uncategorized)
+  object CodeAssist extends Feature("Code completion", Editing)
+  object CharactersSaved extends Feature("Number of typed characters saved thanks to code completion", Editing)
 }
 
 final case class StatData(firstStat: Long, featureData: Seq[FeatureData])
@@ -133,6 +135,8 @@ private object Picklers {
     val fCopyQualifiedName = FastTypeTag[CopyQualifiedName.type].key
     val fRestartPresentationCompiler = FastTypeTag[RestartPresentationCompiler.type].key
     val fNotSpecified = FastTypeTag[NotSpecified.type].key
+    val fCodeAssist = FastTypeTag[CodeAssist.type].key
+    val fCharactersSaved = FastTypeTag[CharactersSaved.type].key
 
     def asString(c: Feature): String = c match {
       case ExplicitReturnType          ⇒ fExplicitReturnType
@@ -149,6 +153,8 @@ private object Picklers {
       case CopyQualifiedName           ⇒ fCopyQualifiedName
       case RestartPresentationCompiler ⇒ fRestartPresentationCompiler
       case NotSpecified                ⇒ fNotSpecified
+      case CodeAssist                  ⇒ fCodeAssist
+      case CharactersSaved             ⇒ fCharactersSaved
     }
 
     def fromString(s: String): Feature = s match {
@@ -166,6 +172,8 @@ private object Picklers {
       case `fCopyQualifiedName`           ⇒ CopyQualifiedName
       case `fRestartPresentationCompiler` ⇒ RestartPresentationCompiler
       case `fNotSpecified`                ⇒ NotSpecified
+      case `fCodeAssist`                  ⇒ CodeAssist
+      case `fCharactersSaved`             ⇒ CharactersSaved
     }
   }
 
