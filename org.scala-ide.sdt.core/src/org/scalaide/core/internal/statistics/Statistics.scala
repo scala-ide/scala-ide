@@ -36,8 +36,8 @@ class Statistics {
   def data: Seq[FeatureData] = cache.values.toList
 
   def incUses(feature: Feature): Unit = {
-    val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.nanoTime))
-    cache += feature → stat.copy(nrOfUses = stat.nrOfUses + 1, lastUsed = System.nanoTime)
+    val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.currentTimeMillis))
+    cache += feature → stat.copy(nrOfUses = stat.nrOfUses + 1, lastUsed = System.currentTimeMillis)
 
     writeStats()
   }
@@ -54,7 +54,7 @@ class Statistics {
   }
 
   private def writeStats(): Unit = {
-    if (firstStat == 0) firstStat = System.nanoTime
+    if (firstStat == 0) firstStat = System.currentTimeMillis
     val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
     EclipseUtils.withSafeRunner("Error while writing statistics to disk") {

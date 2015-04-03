@@ -92,7 +92,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
   private def timeAgo(time: Long): String = {
     import scala.concurrent.duration._
 
-    (System.nanoTime - time).nanos match {
+    (System.currentTimeMillis - time).millis match {
       case d if d < 0.nanos   ⇒ "Never"
       case d if d < 2.minutes ⇒ "Moments ago"
       case d if d < 1.hour    ⇒ s"${d.toMinutes} minutes ago"
