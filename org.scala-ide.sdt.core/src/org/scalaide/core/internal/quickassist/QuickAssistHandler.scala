@@ -14,6 +14,7 @@ import org.eclipse.jface.text.source.Annotation
 import org.eclipse.ui.IEditorInput
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.statistics.Features.NotSpecified
 import org.scalaide.core.quickassist.AssistLocation
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
@@ -44,8 +45,8 @@ final class QuickAssistHandler extends AbstractHandler {
  * This proposal should be shown when no other proposals are found. If no
  * proposals would be shown, the user wouldn't see a quick assist window at all.
  */
-object NoProposals extends BasicCompletionProposal(0, "No suggestions available") {
-  override def apply(doc: IDocument): Unit = ()
+object NoProposals extends BasicCompletionProposal(NotSpecified, 0, "No suggestions available") {
+  override def applyProposal(doc: IDocument): Unit = ()
 }
 
 object QuickAssistProcessor {

@@ -1,17 +1,17 @@
 package org.scalaide.core.internal.quickassist
 package expand
 
-import org.eclipse.jface.text.Position
+import org.scalaide.core.internal.statistics.Features.ExpandImplicitArgument
+import org.scalaide.core.internal.statistics.Features.ExpandImplicitConversion
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
-import org.scalaide.util.eclipse.EditorUtils
 
 class ImplicitConversionExpandingProposal(s: String, offset: Int, length: Int)
-  extends ExpandingProposalBase(s, "Expand this implicit conversion: ", offset, length)
+  extends ExpandingProposalBase(ExpandImplicitConversion, s, "Expand this implicit conversion: ", offset, length)
 
 class ImplicitArgumentExpandingProposal(s: String, offset: Int, length: Int)
-  extends ExpandingProposalBase(s, "Explicitly inline the implicit arguments: ", offset, length)
+  extends ExpandingProposalBase(ExpandImplicitArgument, s, "Explicitly inline the implicit arguments: ", offset, length)
 
 object ExpandImplicits {
   private final val ImplicitConversionFound = "(?s)Implicit conversion found: `(.*?)` => `(.*):.*?`".r

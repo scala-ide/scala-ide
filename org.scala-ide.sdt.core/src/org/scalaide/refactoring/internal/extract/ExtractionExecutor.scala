@@ -116,7 +116,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
           val proposals = es.extractions.map { e =>
             val pos = e.extractionTarget.enclosing.pos
             new ExtractionProposal(e.displayName, pos.start, pos.end) {
-              def apply(doc: IDocument) = {
+              def applyProposal(doc: IDocument) = {
                 block(Some(e))
               }
             }

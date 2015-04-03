@@ -10,6 +10,8 @@ import org.eclipse.jface.text.IDocument
 import org.scalaide.core.quickassist.AssistLocation
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
+import org.scalaide.core.internal.statistics.Features.NotSpecified
+import org.scalaide.core.internal.statistics.Features.Feature
 
 /**
  * Adapter for [[org.scalaide.core.quickassist.InvocationContext]] that
@@ -34,12 +36,13 @@ final class JavaInvocationContextAdapter(ctx: InvocationContext) extends IInvoca
  * Adapter for [[org.eclipse.jdt.ui.text.java.IJavaCompletionProposal]] that
  * implements [[org.scalaide.core.quickassist.BasicCompletionProposal]].
  */
-final case class JavaProposalAdapter(jcp: IJavaCompletionProposal)
+final case class JavaProposalAdapter(override val feature: Feature, jcp: IJavaCompletionProposal)
     extends BasicCompletionProposal(
+      feature = feature,
       relevance = jcp.getRelevance,
       displayString = jcp.getDisplayString,
       image = jcp.getImage) {
 
-  override def apply(document: IDocument): Unit =
+  override def applyProposal(document: IDocument): Unit =
     jcp.apply(document)
 }

@@ -94,8 +94,20 @@ object Features {
 
   sealed abstract class Feature(val description: String, val group: Group)
   object ExplicitReturnType extends Feature("Add explicit return type", QuickAssist)
+  object InlineLocalValue extends Feature("Inline local value", QuickAssist)
+  object ExpandCaseClassBinding extends Feature("Expand case class binding", QuickAssist)
+  object ExpandImplicitConversion extends Feature("Expand implicit conversion", QuickAssist)
+  object ExpandImplicitArgument extends Feature("Expand implicit argument", QuickAssist)
+  object FixTypeMismatch extends Feature("Fix type mismatch", QuickAssist)
+  object ImportMissingMember extends Feature("Import missing member", QuickAssist)
+  object CreateClass extends Feature("Create class", QuickAssist)
+  object FixSpellingMistake extends Feature("Fix spelling mistake", QuickAssist)
+  object CreateMethod extends Feature("Create method", QuickAssist)
+  object ExtractCode extends Feature("Extract code", QuickAssist)
   object CopyQualifiedName extends Feature("Copy qualified name", Uncategorized)
   object RestartPresentationCompiler extends Feature("Restart Presentation Compiler", Uncategorized)
+  /** Exists for backward compatibility with previous versions of the IDE. */
+  object NotSpecified extends Feature("<not specified>", Uncategorized)
 }
 
 case class Stat(feature: Feature, nrOfUses: Int, lastUsed: Long)
@@ -103,19 +115,52 @@ case class Stat(feature: Feature, nrOfUses: Int, lastUsed: Long)
 private object Picklers {
   object fqn {
     val fExplicitReturnType = FastTypeTag[ExplicitReturnType.type].key
+    val fInlineLocalValue = FastTypeTag[InlineLocalValue.type].key
+    val fExpandCaseClassBinding = FastTypeTag[ExpandCaseClassBinding.type].key
+    val fExpandImplicitConversion = FastTypeTag[ExpandImplicitConversion.type].key
+    val fExpandImplicitArgument = FastTypeTag[ExpandImplicitArgument.type].key
+    val fFixTypeMismatch = FastTypeTag[FixTypeMismatch.type].key
+    val fImportMissingMember = FastTypeTag[ImportMissingMember.type].key
+    val fCreateClass = FastTypeTag[CreateClass.type].key
+    val fFixSpellingMistake = FastTypeTag[FixSpellingMistake.type].key
+    val fCreateMethod = FastTypeTag[CreateMethod.type].key
+    val fExtractCode = FastTypeTag[ExtractCode.type].key
     val fCopyQualifiedName = FastTypeTag[CopyQualifiedName.type].key
     val fRestartPresentationCompiler = FastTypeTag[RestartPresentationCompiler.type].key
+    val fNotSpecified = FastTypeTag[NotSpecified.type].key
 
     def asString(c: Feature): String = c match {
-      case ExplicitReturnType ⇒ fExplicitReturnType
-      case CopyQualifiedName ⇒ fCopyQualifiedName
+      case ExplicitReturnType          ⇒ fExplicitReturnType
+      case InlineLocalValue            ⇒ fInlineLocalValue
+      case ExpandCaseClassBinding      ⇒ fExpandCaseClassBinding
+      case ExpandImplicitConversion    ⇒ fExpandImplicitConversion
+      case ExpandImplicitArgument      ⇒ fExpandImplicitArgument
+      case FixTypeMismatch             ⇒ fFixTypeMismatch
+      case ImportMissingMember         ⇒ fImportMissingMember
+      case CreateClass                 ⇒ fCreateClass
+      case FixSpellingMistake          ⇒ fFixSpellingMistake
+      case CreateMethod                ⇒ fCreateMethod
+      case ExtractCode                 ⇒ fExtractCode
+      case CopyQualifiedName           ⇒ fCopyQualifiedName
       case RestartPresentationCompiler ⇒ fRestartPresentationCompiler
+      case NotSpecified                ⇒ fNotSpecified
     }
 
     def fromString(s: String): Feature = s match {
-      case `fExplicitReturnType` ⇒ ExplicitReturnType
-      case `fCopyQualifiedName` ⇒ CopyQualifiedName
+      case `fExplicitReturnType`          ⇒ ExplicitReturnType
+      case `fInlineLocalValue`            ⇒ InlineLocalValue
+      case `fExpandCaseClassBinding`      ⇒ ExpandCaseClassBinding
+      case `fExpandImplicitConversion`    ⇒ ExpandImplicitConversion
+      case `fExpandImplicitArgument`      ⇒ ExpandImplicitArgument
+      case `fFixTypeMismatch`             ⇒ FixTypeMismatch
+      case `fImportMissingMember`         ⇒ ImportMissingMember
+      case `fCreateClass`                 ⇒ CreateClass
+      case `fFixSpellingMistake`          ⇒ FixSpellingMistake
+      case `fCreateMethod`                ⇒ CreateMethod
+      case `fExtractCode`                 ⇒ ExtractCode
+      case `fCopyQualifiedName`           ⇒ CopyQualifiedName
       case `fRestartPresentationCompiler` ⇒ RestartPresentationCompiler
+      case `fNotSpecified`                ⇒ NotSpecified
     }
   }
 
