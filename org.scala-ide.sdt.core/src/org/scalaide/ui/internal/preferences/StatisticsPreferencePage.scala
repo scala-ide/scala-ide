@@ -131,18 +131,15 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     var sortDir: Direction = Ascending
 
     override def compare(viewer: Viewer, o1: AnyRef, o2: AnyRef): Int = {
-      def str(o: AnyRef) = o match {
-        case FeatureData(feature, nrOfUses, lastUsed) ⇒ sortCol match {
-          case Feature  ⇒ feature.description
-          case Group    ⇒ feature.group.description
-          case NrOfUses ⇒ nrOfUses.toString
-          case LastUsed ⇒ lastUsed.toString
+      def cmp = (o1, o2) match {
+        case (o1: FeatureData, o2: FeatureData) ⇒ sortCol match {
+          case Feature  ⇒ o1.feature.description compareTo o2.feature.description
+          case Group    ⇒ o1.feature.group.description compareTo o2.feature.group.description
+          case NrOfUses ⇒ (o1.nrOfUses-o2.nrOfUses).toInt
+          case LastUsed ⇒ (o1.lastUsed-o2.lastUsed).toInt
         }
       }
-      sortDir match {
-        case Ascending ⇒ str(o1) compareTo str(o2)
-        case Descending ⇒ str(o2) compareTo str(o1)
-      }
+      if (sortDir == Ascending) cmp else -cmp
     }
 
     def doSort(col: Column) = {
