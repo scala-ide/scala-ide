@@ -19,13 +19,13 @@ import ui.IntroduceProductNTraitConfigurationPageGenerator
  */
 class IntroduceProductNTrait extends RefactoringExecutorWithWizard {
 
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
+  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new IntroduceProductNTraitRefactoring(selectionStart, selectionEnd, file)
 
-  class GenerateHashcodeAndEqualsScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ClassParameterDrivenIdeRefactoring(IntroduceProductNTrait, "Generate hashCode and equals", start, end, file) with IntroduceProductNTraitConfigurationPageGenerator {
+  class IntroduceProductNTraitRefactoring(start: Int, end: Int, file: ScalaSourceFile)
+    extends ClassParameterDrivenIdeRefactoring(IntroduceProductNTrait, "Introduce ProductN trait", start, end, file) with IntroduceProductNTraitConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
-      new implementations.IntroduceProductNTrait{
+      new implementations.IntroduceProductNTrait {
         val global = c
       }
     }
