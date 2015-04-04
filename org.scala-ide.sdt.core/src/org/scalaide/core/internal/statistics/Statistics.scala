@@ -100,6 +100,17 @@ object Features {
   object NotSpecified extends Feature("<not specified>", Uncategorized)
   object CodeAssist extends Feature("Code completion", Editing)
   object CharactersSaved extends Feature("Number of typed characters saved thanks to code completion", Editing)
+  object OrganizeImports extends Feature("Organize imports", Refactoring)
+  object ExtractMemberToTrait extends Feature("Extract member to trait", Refactoring)
+  object MoveConstructorToCompanion extends Feature("Move constructor to companion object", Refactoring)
+  object GenerateHashcodeAndEquals extends Feature("Generate hashCode and equals method", Refactoring)
+  object IntroduceProductNTrait extends Feature("Introduce ProductN trait", Refactoring)
+  object LocalRename extends Feature("Rename local value", Refactoring)
+  object GlobalRename extends Feature("Rename global value", Refactoring)
+  object MoveClass extends Feature("Move class/object/trait", Refactoring)
+  object SplitParameterLists extends Feature("Split parameter lists", Refactoring)
+  object MergeParameterLists extends Feature("Merge parameter lists", Refactoring)
+  object ChangeParameterOrder extends Feature("Change parameter order", Refactoring)
 }
 
 final case class StatData(firstStat: Long, featureData: Seq[FeatureData])
@@ -123,6 +134,17 @@ private object Picklers {
     val fNotSpecified = FastTypeTag[NotSpecified.type].key
     val fCodeAssist = FastTypeTag[CodeAssist.type].key
     val fCharactersSaved = FastTypeTag[CharactersSaved.type].key
+    val fOrganizeImports = FastTypeTag[OrganizeImports.type].key
+    val fExtractMemberToTrait = FastTypeTag[ExtractMemberToTrait.type].key
+    val fMoveConstructorToCompanion = FastTypeTag[MoveConstructorToCompanion.type].key
+    val fGenerateHashcodeAndEquals = FastTypeTag[GenerateHashcodeAndEquals.type].key
+    val fIntroduceProductNTrait = FastTypeTag[IntroduceProductNTrait.type].key
+    val fLocalRename = FastTypeTag[LocalRename.type].key
+    val fGlobalRename = FastTypeTag[GlobalRename.type].key
+    val fMoveClass = FastTypeTag[MoveClass.type].key
+    val fSplitParameterLists = FastTypeTag[SplitParameterLists.type].key
+    val fMergeParameterLists = FastTypeTag[MergeParameterLists.type].key
+    val fChangeParameterOrder = FastTypeTag[ChangeParameterOrder.type].key
 
     def asString(c: Feature): String = c match {
       case ExplicitReturnType          ⇒ fExplicitReturnType
@@ -141,6 +163,17 @@ private object Picklers {
       case NotSpecified                ⇒ fNotSpecified
       case CodeAssist                  ⇒ fCodeAssist
       case CharactersSaved             ⇒ fCharactersSaved
+      case OrganizeImports             ⇒ fOrganizeImports
+      case ExtractMemberToTrait        ⇒ fExtractMemberToTrait
+      case MoveConstructorToCompanion  ⇒ fMoveConstructorToCompanion
+      case GenerateHashcodeAndEquals   ⇒ fGenerateHashcodeAndEquals
+      case IntroduceProductNTrait      ⇒ fIntroduceProductNTrait
+      case LocalRename                 ⇒ fLocalRename
+      case GlobalRename                ⇒ fGlobalRename
+      case MoveClass                   ⇒ fMoveClass
+      case SplitParameterLists         ⇒ fSplitParameterLists
+      case MergeParameterLists         ⇒ fMergeParameterLists
+      case ChangeParameterOrder        ⇒ fChangeParameterOrder
     }
 
     def fromString(s: String): Feature = s match {
@@ -160,6 +193,17 @@ private object Picklers {
       case `fNotSpecified`                ⇒ NotSpecified
       case `fCodeAssist`                  ⇒ CodeAssist
       case `fCharactersSaved`             ⇒ CharactersSaved
+      case `fOrganizeImports`             ⇒ OrganizeImports
+      case `fExtractMemberToTrait`        ⇒ ExtractMemberToTrait
+      case `fMoveConstructorToCompanion`  ⇒ MoveConstructorToCompanion
+      case `fGenerateHashcodeAndEquals`   ⇒ GenerateHashcodeAndEquals
+      case `fIntroduceProductNTrait`      ⇒ IntroduceProductNTrait
+      case `fLocalRename`                 ⇒ LocalRename
+      case `fGlobalRename`                ⇒ GlobalRename
+      case `fMoveClass`                   ⇒ MoveClass
+      case `fSplitParameterLists`         ⇒ SplitParameterLists
+      case `fMergeParameterLists`         ⇒ MergeParameterLists
+      case `fChangeParameterOrder`        ⇒ ChangeParameterOrder
     }
   }
 

@@ -28,6 +28,8 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.IPath
 import scala.reflect.io.AbstractFile
 import org.eclipse.core.resources.ResourcesPlugin
+import org.scalaide.core.internal.statistics.Features.Feature
+import org.scalaide.core.internal.ScalaPlugin
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -53,7 +55,7 @@ import org.eclipse.core.resources.ResourcesPlugin
  * @param getName The displayable name of this refactoring.
  * @param file The file this refactoring started from.
  */
-abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
+abstract class ScalaIdeRefactoring(val feature: Feature, val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
   extends LTKRefactoring with UserPreferencesFormatting {
 
   /**
@@ -162,6 +164,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * @return The list of changes or an empty list when an error occurred.
    */
   private [refactoring] def performRefactoring(): List[Change] = {
+    ScalaPlugin().statistics.incUses(feature)
 
     val params = refactoringParameters
     val sel = selection()
@@ -198,8 +201,8 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
  * Should be extended by Scala IDE refactorings that mixin
  * [[import scala.tools.refactoring.ParameterlessRefactoring]].
  */
-abstract class ParameterlessScalaIdeRefactoring(getName: String, file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
-  extends ScalaIdeRefactoring(getName, file, selectionStart, selectionEnd) {
+abstract class ParameterlessScalaIdeRefactoring(feature: Feature, getName: String, file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
+  extends ScalaIdeRefactoring(feature, getName, file, selectionStart, selectionEnd) {
 
   override val refactoring: MultiStageRefactoring with InteractiveScalaCompiler with ParameterlessRefactoring
 

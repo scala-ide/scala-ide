@@ -5,8 +5,7 @@ import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.RefactoringExecutor
-import org.scalaide.refactoring.internal.ScalaIdeRefactoring
+import org.scalaide.core.internal.statistics.Features.LocalRename
 import org.scalaide.util.eclipse.EditorUtils
 
 /**
@@ -20,7 +19,8 @@ class LocalRename extends RefactoringExecutor {
 
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 
-  class RenameScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile) extends ScalaIdeRefactoring("Inline Rename", file, start, end) {
+  class RenameScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
+      extends ScalaIdeRefactoring(LocalRename, "Inline Rename", file, start, end) {
 
     def refactoringParameters = ""
 

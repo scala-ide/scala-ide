@@ -1,11 +1,13 @@
 package org.scalaide.refactoring.internal
 
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.Feature
 
 /**
  * Helper trait that adds an index variable to a refactoring.
@@ -21,8 +23,8 @@ trait Indexed {
 /**
  * Abstract ScalaIdeRefactoring for refactorings that need an index of the full project.
  */
-abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
-  extends ScalaIdeRefactoring(refactoringName, sourcefile, start, end) with FullProjectIndex {
+abstract class IndexedIdeRefactoring(feature: Feature, refactoringName: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
+  extends ScalaIdeRefactoring(feature, refactoringName, sourcefile, start, end) with FullProjectIndex {
 
   val project: IScalaProject = sourcefile.scalaProject
 

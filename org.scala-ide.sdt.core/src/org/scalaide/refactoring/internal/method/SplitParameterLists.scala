@@ -4,8 +4,8 @@ package method
 import scala.tools.refactoring.implementations
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
-import org.scalaide.refactoring.internal.method.ui.SplitParameterListsConfigurationPageGenerator
+import org.scalaide.core.internal.statistics.Features.SplitParameterLists
+import ui.SplitParameterListsConfigurationPageGenerator
 
 /**
  * A method signature refactoring that splits parameter lists of a method.
@@ -16,7 +16,7 @@ class SplitParameterLists extends RefactoringExecutorWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new SplitParameterListsIdeRefactoring(start, end, file)
 
   class SplitParameterListsIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureIdeRefactoring("Split parameter lists", start, end, f) with SplitParameterListsConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring(SplitParameterLists, "Split parameter lists", start, end, f) with SplitParameterListsConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new implementations.SplitParameterLists with IndexedMethodSignatureRefactoring {

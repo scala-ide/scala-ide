@@ -1,6 +1,5 @@
 package org.scalaide.refactoring.internal
 
-import org.scalaide.refactoring.internal.ui.ExtractTraitConfigurationPageGenerator
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
@@ -11,8 +10,9 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.corext.refactoring.nls.changes.CreateFileChange
 import org.eclipse.ltk.core.refactoring.{Change => EclipseChange}
 import org.eclipse.ltk.core.refactoring.CompositeChange
-
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.ExtractMemberToTrait
+import org.scalaide.refactoring.internal.ui.ExtractTraitConfigurationPageGenerator
 
 /**
  * The ExtractTrait refactoring extracts members (vals, vars and defs) of a class
@@ -25,7 +25,7 @@ class ExtractTrait extends RefactoringExecutorWithWizard {
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new ExtractTraitScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class ExtractTraitScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ScalaIdeRefactoring("Extract trait", file, start, end) with ExtractTraitConfigurationPageGenerator {
+    extends ScalaIdeRefactoring(ExtractMemberToTrait, "Extract trait", file, start, end) with ExtractTraitConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
       new implementations.ExtractTrait with GlobalIndexes {

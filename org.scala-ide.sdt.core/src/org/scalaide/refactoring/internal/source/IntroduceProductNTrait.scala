@@ -5,6 +5,7 @@ import scala.tools.refactoring.implementations
 
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.IntroduceProductNTrait
 import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
 
 import ui.IntroduceProductNTraitConfigurationPageGenerator
@@ -21,7 +22,7 @@ class IntroduceProductNTrait extends RefactoringExecutorWithWizard {
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class GenerateHashcodeAndEqualsScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ClassParameterDrivenIdeRefactoring("Generate hashCode and equals", start, end, file) with IntroduceProductNTraitConfigurationPageGenerator {
+    extends ClassParameterDrivenIdeRefactoring(IntroduceProductNTrait, "Generate hashCode and equals", start, end, file) with IntroduceProductNTraitConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
       new implementations.IntroduceProductNTrait{
