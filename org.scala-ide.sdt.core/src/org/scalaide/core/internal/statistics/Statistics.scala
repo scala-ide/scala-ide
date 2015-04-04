@@ -70,7 +70,7 @@ class Statistics {
 
 object Groups {
   sealed abstract class Group(val description: String)
-  object Uncategorized extends Group("Uncategorized")
+  object Miscellaneous extends Group("Miscellaneous")
   object QuickAssist extends Group("Quick Assist")
   object Refactoring extends Group("Refactoring")
   object Editing extends Group("Editing")
@@ -94,10 +94,10 @@ object Features {
   object FixSpellingMistake extends Feature("Fix spelling mistake", QuickAssist)
   object CreateMethod extends Feature("Create method", QuickAssist)
   object ExtractCode extends Feature("Extract code", QuickAssist)
-  object CopyQualifiedName extends Feature("Copy qualified name", Uncategorized)
-  object RestartPresentationCompiler extends Feature("Restart Presentation Compiler", Uncategorized)
+  object CopyQualifiedName extends Feature("Copy qualified name", Miscellaneous)
+  object RestartPresentationCompiler extends Feature("Restart Presentation Compiler", Miscellaneous)
   /** Exists for backward compatibility with previous versions of the IDE. */
-  object NotSpecified extends Feature("<not specified>", Uncategorized)
+  object NotSpecified extends Feature("<not specified>", Miscellaneous)
   object CodeAssist extends Feature("Code completion", Editing)
   object CharactersSaved extends Feature("Number of typed characters saved thanks to code completion", Editing)
   object OrganizeImports extends Feature("Organize imports", Refactoring)
