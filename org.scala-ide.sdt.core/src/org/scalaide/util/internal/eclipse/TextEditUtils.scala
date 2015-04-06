@@ -27,7 +27,7 @@ object TextEditUtils {
   }
 
   /** Creates a `TextFileChange` which always contains a `MultiTextEdit`. */
-  def createTextFileChange(file: IFile, fileChanges: List[TextChange], saveAfter: Boolean = true): TextFileChange = {
+  def createTextFileChange(file: IFile, fileChanges: List[TextChange], leaveDirty: Boolean): TextFileChange = {
     new TextFileChange(file.getName(), file) {
 
       val fileChangeRootEdit = new MultiTextEdit
@@ -36,7 +36,7 @@ object TextEditUtils {
         new ReplaceEdit(change.from, change.to - change.from, change.text)
       } foreach fileChangeRootEdit.addChild
 
-      if (!saveAfter) setSaveMode(TextFileChange.LEAVE_DIRTY)
+      if (leaveDirty) setSaveMode(TextFileChange.LEAVE_DIRTY)
       else setSaveMode(TextFileChange.KEEP_SAVE_STATE)
 
       setEdit(fileChangeRootEdit)
@@ -55,17 +55,17 @@ object TextEditUtils {
    * @param textSelection The currently selected area of the document.
    * @param file The file that we're currently editing (the document alone isn't enough because we need to get an IFile).
    * @param changes The changes that should be applied.
-   * @param saveAfter Whether files should be saved after changes
+   * @param leaveDirty Whether files should be left dirty after changes
    */
   def applyChangesToFile(
       document: IDocument,
       textSelection: ITextSelection,
       file: AbstractFile,
       changes: List[TextChange],
-      saveAfter: Boolean = true): Option[ITextSelection] = {
+      leaveDirty: Boolean = false): Option[ITextSelection] = {
 
     FileUtils.toIFile(file) map { f =>
-      createTextFileChange(f, changes, saveAfter).getEdit match {
+      createTextFileChange(f, changes, leaveDirty).getEdit match {
         // we know that it is a MultiTextEdit because we created it above
         case edit: MultiTextEdit =>
           applyMultiTextEdit(document, textSelection, edit)
