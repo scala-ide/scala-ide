@@ -36,7 +36,9 @@ object TextEditUtils {
         new ReplaceEdit(change.from, change.to - change.from, change.text)
       } foreach fileChangeRootEdit.addChild
 
-      if (saveAfter) setSaveMode(TextFileChange.LEAVE_DIRTY)
+      if (!saveAfter) setSaveMode(TextFileChange.LEAVE_DIRTY)
+      else setSaveMode(TextFileChange.KEEP_SAVE_STATE)
+
       setEdit(fileChangeRootEdit)
     }
   }
