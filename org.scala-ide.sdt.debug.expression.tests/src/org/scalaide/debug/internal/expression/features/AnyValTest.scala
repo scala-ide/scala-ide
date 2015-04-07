@@ -24,9 +24,9 @@ class AnyValTest extends BaseIntegrationTest(AnyValTest) {
     eval(""" (1 -> 2).ensuring(true, "Error") """, (1, 2), "scala.Tuple2")
     eval(""" (1 -> 2).ensuring(_ => true, "Error") """, (1, 2), "scala.Tuple2")
     eval(""" (1 -> 2).ensuring(true) """, (1, 2), "scala.Tuple2")
-    eval(""" 6 min 4 """, 4, Java.boxed.Integer)
+    eval(""" 6 min 4 """, 4, Java.primitives.int)
     eval(""" 1 + "2" """, 12, Java.boxed.String)
-    eval("(-1).abs", 1, Java.boxed.Integer)
+    eval("(-1).abs", 1, Java.primitives.int)
   }
 
   @Test

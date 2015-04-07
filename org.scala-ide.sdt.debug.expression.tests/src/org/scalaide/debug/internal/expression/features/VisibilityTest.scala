@@ -19,52 +19,52 @@ class VisibilityTest extends BaseIntegrationTest(VisibilityTest) {
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedImplicitThisValFromTrait(): Unit = eval("traitParam", traitParam, Java.boxed.Integer)
+  def protectedImplicitThisValFromTrait(): Unit = eval("traitParam", traitParam, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedImplicitThisDefFromTrait(): Unit = eval("traitMethod()", traitMethod, Java.boxed.Integer)
+  def protectedImplicitThisDefFromTrait(): Unit = eval("traitMethod()", traitMethod, Java.primitives.int)
 
   @Test
-  def protectedImplicitThisValFromClass(): Unit = eval("classParam", classParam, Java.boxed.Integer)
-
-  @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
-  @Test
-  def protectedImplicitThisDefFromClass(): Unit = eval("classMethod()", classMethod, Java.boxed.Integer)
+  def protectedImplicitThisValFromClass(): Unit = eval("classParam", classParam, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def privateImplicitThisValFromObject(): Unit = eval("objectParam", objectParam, Java.boxed.Integer)
+  def protectedImplicitThisDefFromClass(): Unit = eval("classMethod()", classMethod, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def privateImplicitThisDefFromObject(): Unit = eval("objectMethod()", objectMethod, Java.boxed.Integer)
+  def privateImplicitThisValFromObject(): Unit = eval("objectParam", objectParam, Java.primitives.int)
+
+  @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
+  @Test
+  def privateImplicitThisDefFromObject(): Unit = eval("objectMethod()", objectMethod, Java.primitives.int)
 
   // EXPLICIT this tests
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedExplicitThisValFromTrait(): Unit = eval("traitParam", traitParam, Java.boxed.Integer)
+  def protectedExplicitThisValFromTrait(): Unit = eval("traitParam", traitParam, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedExplicitThisDefFromTrait(): Unit = eval("traitMethod()", traitMethod, Java.boxed.Integer)
+  def protectedExplicitThisDefFromTrait(): Unit = eval("traitMethod()", traitMethod, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedExplicitThisValFromClass(): Unit = eval("classParam", classParam, Java.boxed.Integer)
+  def protectedExplicitThisValFromClass(): Unit = eval("classParam", classParam, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def protectedExplicitThisDefFromClass(): Unit = eval("classMethod()", classMethod, Java.boxed.Integer)
+  def protectedExplicitThisDefFromClass(): Unit = eval("classMethod()", classMethod, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def privateExplicitThisValFromObject(): Unit = eval("objectParam", objectParam, Java.boxed.Integer)
+  def privateExplicitThisValFromObject(): Unit = eval("objectParam", objectParam, Java.primitives.int)
 
   @Ignore("TODO - O-5463 - Add support for private/protected methods and fields")
   @Test
-  def privateExplicitThisDefFromObject(): Unit = eval("objectMethod()", objectMethod, Java.boxed.Integer)
+  def privateExplicitThisDefFromObject(): Unit = eval("objectMethod()", objectMethod, Java.primitives.int)
 
 }
 

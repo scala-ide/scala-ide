@@ -14,7 +14,7 @@ class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersL
 
   @Test
   def testMultipleParametersClassMethod(): Unit =
-    eval("(new LibVarargs.LibClassVarargs(1)()).sub(Nat3)(1)", 2, Java.boxed.Integer)
+    eval("(new LibVarargs.LibClassVarargs(1)()).sub(Nat3)(1)", 2, Java.primitives.int)
 
   @Test
   def testMultipleParametersClassMethodFirstVararg(): Unit =
@@ -30,7 +30,7 @@ class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersL
 
   @Test
   def testMultipleParametersObjectMethod(): Unit =
-    eval("debug.LibVarargs.LibObjectVarargs.sub(Nat3)(1)", 2, Java.boxed.Integer)
+    eval("debug.LibVarargs.LibObjectVarargs.sub(Nat3)(1)", 2, Java.primitives.int)
 
   @Test
   def testMultipleParametersObjectMethodFirstVararg(): Unit =
@@ -46,16 +46,16 @@ class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersL
 
   @Test
   def testMultipleParametersFunction(): Unit =
-    eval("Libs.libMultipleParamers(int)(int)", 2, Java.boxed.Integer)
+    eval("Libs.libMultipleParamers(int)(int)", 2, Java.primitives.int)
 
   @Test
   def testFullNameMultipleParametersMethod(): Unit =
-    eval("debug.Libs.libMultipleParamers(int)(int)", 2, Java.boxed.Integer)
+    eval("debug.Libs.libMultipleParamers(int)(int)", 2, Java.primitives.int)
 
   @Ignore("TODO - O-8563 - Add support for varargs with multiple parameters list")
   @Test
   def testThreeParameterLists(): Unit =
-    eval("(new LibVarargs.LibVarargs).sum(6)(Nat3)(1, 4, 2)", 16, Java.boxed.Integer)
+    eval("(new LibVarargs.LibVarargs).sum(6)(Nat3)(1, 4, 2)", 16, Java.primitives.int)
 }
 
 object MultipleParametersListTest extends BaseIntegrationTestCompanion

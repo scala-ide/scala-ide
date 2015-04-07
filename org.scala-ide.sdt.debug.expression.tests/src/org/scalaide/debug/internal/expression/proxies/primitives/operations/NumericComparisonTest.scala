@@ -15,7 +15,7 @@ class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) {
   import TestValues.ValuesTestCase._
 
   private def baseBooleanTest(operator: String, expected: Boolean): Unit =
-    eval(s"int $operator int2", expected.toString, Java.boxed.Boolean) // compare to 1
+    eval(s"int $operator int2", expected.toString, Java.primitives.boolean) // compare to 1
 
   @Test
   def integerComparisonTest(): Unit = {
@@ -29,17 +29,17 @@ class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) {
 
   @Test
   def testComparisionForDifferentTypes(): Unit = {
-    eval("int == double", int == double, Java.boxed.Boolean)
-    eval("int != double", int != double, Java.boxed.Boolean)
-    eval("1 < 5L", 1 < 5L, Java.boxed.Boolean)
-    eval("int < 5L", int < 5L, Java.boxed.Boolean)
-    eval("int < long", int < long, Java.boxed.Boolean)
-    eval("int <= long", int <= long, Java.boxed.Boolean)
-    eval("int > long", int > long, Java.boxed.Boolean)
-    eval("int >= long", int >= long, Java.boxed.Boolean)
-    eval("short >= double", short >= double, Java.boxed.Boolean)
-    eval("long >= int", long >= int, Java.boxed.Boolean)
-    eval("double >= short", double >= short, Java.boxed.Boolean)
+    eval("int == double", int == double, Java.primitives.boolean)
+    eval("int != double", int != double, Java.primitives.boolean)
+    eval("1 < 5L", 1 < 5L, Java.primitives.boolean)
+    eval("int < 5L", int < 5L, Java.primitives.boolean)
+    eval("int < long", int < long, Java.primitives.boolean)
+    eval("int <= long", int <= long, Java.primitives.boolean)
+    eval("int > long", int > long, Java.primitives.boolean)
+    eval("int >= long", int >= long, Java.primitives.boolean)
+    eval("short >= double", short >= double, Java.primitives.boolean)
+    eval("long >= int", long >= int, Java.primitives.boolean)
+    eval("double >= short", double >= short, Java.primitives.boolean)
   }
 }
 

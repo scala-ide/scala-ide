@@ -17,7 +17,7 @@ class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
 
   @Test
   def simpleAsInstanceOf(): Unit = {
-    eval("check[Int](int.asInstanceOf[Int])", int, Java.boxed.Integer)
+    eval("check[Int](int.asInstanceOf[Int])", int, Java.primitives.int)
     eval("check[String](string.asInstanceOf[String])", string, Java.boxed.String)
   }
 

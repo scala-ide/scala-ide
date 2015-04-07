@@ -89,7 +89,7 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
   def testDisplayIntResult(): Unit = withExpressionManager(
     code = "int",
     expectedError = None,
-    expectedResult = Some(s"${TestValues.ValuesTestCase.int} (of type: ${Names.Java.boxed.Integer})"))
+    expectedResult = Some(s"${TestValues.ValuesTestCase.int} (of type: ${Names.Java.primitives.int})"))
 
   @Test
   def testDisplayEmptyExpressionError(): Unit = withExpressionManager(

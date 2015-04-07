@@ -16,7 +16,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
 
   @Test
   def getValuesOfFields(): Unit = {
-    eval("javaLibClass.normalInt", JavaLibClass.normalInt, Java.boxed.Integer)
+    eval("javaLibClass.normalInt", JavaLibClass.normalInt, Java.primitives.int)
     eval("javaLibClass.normalString", JavaLibClass.normalString, Java.boxed.String)
     eval("javaLibClass.self", JavaLibClass.asString, "debug.JavaLibClass")
     eval("javaLibClass.normalNull", null, Scala.nullType)
@@ -24,19 +24,19 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
 
   @Test
   def checkAdditionalOperationsOnRetrievedStaticFields(): Unit = {
-    eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.boxed.Integer) // this one works because self is not AnyVal
-    eval("javaLibClass.normalInt - 2.0", JavaLibClass.normalInt - 2.0, Java.boxed.Double)
-    eval("javaLibClass.normalInt + 2.0", JavaLibClass.normalInt + 2.0, Java.boxed.Double)
-    eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.boxed.Integer)
+    eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.primitives.int) // this one works because self is not AnyVal
+    eval("javaLibClass.normalInt - 2.0", JavaLibClass.normalInt - 2.0, Java.primitives.double)
+    eval("javaLibClass.normalInt + 2.0", JavaLibClass.normalInt + 2.0, Java.primitives.double)
+    eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.primitives.int)
     eval("""javaLibClass.normalString + "foo" """, JavaLibClass.normalString + "foo", Java.boxed.String)
   }
 
   @Test
   def checkEqualityOfFields(): Unit = {
-    eval(s"""javaLibClass.normalString == "${JavaLibClass.normalString}" """, true, Java.boxed.Boolean)
-    eval("javaLibClass.normalString == 15", false, Java.boxed.Boolean)
-    eval(s"""javaLibClass.normalString != "${JavaLibClass.normalString}" """, false, Java.boxed.Boolean)
-    eval("javaLibClass.normalString != 15", true, Java.boxed.Boolean)
+    eval(s"""javaLibClass.normalString == "${JavaLibClass.normalString}" """, true, Java.primitives.boolean)
+    eval("javaLibClass.normalString == 15", false, Java.primitives.boolean)
+    eval(s"""javaLibClass.normalString != "${JavaLibClass.normalString}" """, false, Java.primitives.boolean)
+    eval("javaLibClass.normalString != 15", true, Java.primitives.boolean)
   }
 
   @Test
@@ -47,7 +47,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
   @Ignore("Fails when running whole test suite with https://issues.scala-lang.org/browse/SI-9218")
   @Test
   def invokeGenericMethods(): Unit = {
-    eval("javaLibClass.genericMethod(false)", false, Java.boxed.Boolean)
+    eval("javaLibClass.genericMethod(false)", false, Java.primitives.boolean)
     eval("javaLibClass.genericMethod('a')", 'a', Java.boxed.Character)
   }
 

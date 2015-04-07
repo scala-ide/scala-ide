@@ -15,54 +15,54 @@ class BooleanComparisonTest extends BaseIntegrationTest(BooleanComparisonTest) {
   import TestValues.ValuesTestCase._
 
   @Test
-  def `!boolean`(): Unit = eval("!boolean", !boolean, Java.boxed.Boolean)
+  def `!boolean`(): Unit = eval("!boolean", !boolean, Java.primitives.boolean)
 
   @Test
   def equality(): Unit = {
-    eval("boolean == boolean", boolean == boolean, Java.boxed.Boolean)
-    eval("boolean == boolean2", boolean == boolean2, Java.boxed.Boolean)
-    eval("boolean2 == boolean2", boolean2 == boolean2, Java.boxed.Boolean)
-    eval("boolean2 == boolean", boolean2 == boolean, Java.boxed.Boolean)
+    eval("boolean == boolean", boolean == boolean, Java.primitives.boolean)
+    eval("boolean == boolean2", boolean == boolean2, Java.primitives.boolean)
+    eval("boolean2 == boolean2", boolean2 == boolean2, Java.primitives.boolean)
+    eval("boolean2 == boolean", boolean2 == boolean, Java.primitives.boolean)
   }
 
   @Test
   def inequality(): Unit = {
-    eval("boolean != boolean", boolean != boolean, Java.boxed.Boolean)
-    eval("boolean != boolean2", boolean != boolean2, Java.boxed.Boolean)
-    eval("boolean2 != boolean2", boolean2 != boolean2, Java.boxed.Boolean)
-    eval("boolean2 != boolean", boolean2 != boolean, Java.boxed.Boolean)
+    eval("boolean != boolean", boolean != boolean, Java.primitives.boolean)
+    eval("boolean != boolean2", boolean != boolean2, Java.primitives.boolean)
+    eval("boolean2 != boolean2", boolean2 != boolean2, Java.primitives.boolean)
+    eval("boolean2 != boolean", boolean2 != boolean, Java.primitives.boolean)
   }
 
   @Test
   def lesserThan(): Unit = {
-    eval("boolean < boolean", boolean < boolean, Java.boxed.Boolean)
-    eval("boolean < boolean2", boolean < boolean2, Java.boxed.Boolean)
-    eval("boolean2 < boolean2", boolean2 < boolean2, Java.boxed.Boolean)
-    eval("boolean2 < boolean", boolean2 < boolean, Java.boxed.Boolean)
+    eval("boolean < boolean", boolean < boolean, Java.primitives.boolean)
+    eval("boolean < boolean2", boolean < boolean2, Java.primitives.boolean)
+    eval("boolean2 < boolean2", boolean2 < boolean2, Java.primitives.boolean)
+    eval("boolean2 < boolean", boolean2 < boolean, Java.primitives.boolean)
   }
 
   @Test
   def greaterThan(): Unit = {
-    eval("boolean > boolean", boolean > boolean, Java.boxed.Boolean)
-    eval("boolean > boolean2", boolean > boolean2, Java.boxed.Boolean)
-    eval("boolean2 > boolean2", boolean2 > boolean2, Java.boxed.Boolean)
-    eval("boolean2 > boolean", boolean2 > boolean, Java.boxed.Boolean)
+    eval("boolean > boolean", boolean > boolean, Java.primitives.boolean)
+    eval("boolean > boolean2", boolean > boolean2, Java.primitives.boolean)
+    eval("boolean2 > boolean2", boolean2 > boolean2, Java.primitives.boolean)
+    eval("boolean2 > boolean", boolean2 > boolean, Java.primitives.boolean)
   }
 
   @Test
   def lesserThanOrEqual(): Unit = {
-    eval("boolean <= boolean", boolean <= boolean, Java.boxed.Boolean)
-    eval("boolean <= boolean2", boolean <= boolean2, Java.boxed.Boolean)
-    eval("boolean2 <= boolean2", boolean2 <= boolean2, Java.boxed.Boolean)
-    eval("boolean2 <= boolean", boolean2 <= boolean, Java.boxed.Boolean)
+    eval("boolean <= boolean", boolean <= boolean, Java.primitives.boolean)
+    eval("boolean <= boolean2", boolean <= boolean2, Java.primitives.boolean)
+    eval("boolean2 <= boolean2", boolean2 <= boolean2, Java.primitives.boolean)
+    eval("boolean2 <= boolean", boolean2 <= boolean, Java.primitives.boolean)
   }
 
   @Test
   def greaterThanOrEqual(): Unit = {
-    eval("boolean >= boolean", boolean >= boolean, Java.boxed.Boolean)
-    eval("boolean >= boolean2", boolean >= boolean2, Java.boxed.Boolean)
-    eval("boolean2 >= boolean2", boolean2 >= boolean2, Java.boxed.Boolean)
-    eval("boolean2 >= boolean", boolean2 >= boolean, Java.boxed.Boolean)
+    eval("boolean >= boolean", boolean >= boolean, Java.primitives.boolean)
+    eval("boolean >= boolean2", boolean >= boolean2, Java.primitives.boolean)
+    eval("boolean2 >= boolean2", boolean2 >= boolean2, Java.primitives.boolean)
+    eval("boolean2 >= boolean", boolean2 >= boolean, Java.primitives.boolean)
   }
 
 }

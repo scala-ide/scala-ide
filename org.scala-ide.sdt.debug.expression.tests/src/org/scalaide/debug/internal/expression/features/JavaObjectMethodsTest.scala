@@ -28,17 +28,17 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
 
   @Test
   def equalsWithNull(): Unit = {
-    eval("libClass == null", false, Java.boxed.Boolean)
-    eval("libClass != null", true, Java.boxed.Boolean)
-    eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
-    eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
+    eval("libClass == null", false, Java.primitives.boolean)
+    eval("libClass != null", true, Java.primitives.boolean)
+    eval("libClass.selfRef() != null", true, Java.primitives.boolean)
+    eval("libClass.selfRef() != null", true, Java.primitives.boolean)
   }
 
   @Test
-  def hashCodeWithoutParens(): Unit = disableOnJava8 { eval("int.hashCode", int, Java.boxed.Integer) }
+  def hashCodeWithoutParens(): Unit = disableOnJava8 { eval("int.hashCode", int, Java.primitives.int) }
 
   @Test
-  def hashCodeWithParens(): Unit = disableOnJava8 { eval("int.hashCode()", int, Java.boxed.Integer) }
+  def hashCodeWithParens(): Unit = disableOnJava8 { eval("int.hashCode()", int, Java.primitives.int) }
 
 }
 

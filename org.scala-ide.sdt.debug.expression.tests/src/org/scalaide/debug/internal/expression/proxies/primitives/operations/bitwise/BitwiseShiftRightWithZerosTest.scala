@@ -15,55 +15,55 @@ class BitwiseShiftRightWithZerosTest extends BaseIntegrationTest(BitwiseShiftRig
 
   @Test
   def `byte >>> sth`(): Unit = {
-    eval("byte >>> byte2", byte >>> byte2, Java.boxed.Integer)
-    eval("byte >>> short2", byte >>> short2, Java.boxed.Integer)
-    eval("byte >>> char2", byte >>> char2, Java.boxed.Integer)
-    eval("byte >>> int2", byte >>> int2, Java.boxed.Integer)
-    eval("byte >>> long2", byte >>> long2, Java.boxed.Integer)
+    eval("byte >>> byte2", byte >>> byte2, Java.primitives.int)
+    eval("byte >>> short2", byte >>> short2, Java.primitives.int)
+    eval("byte >>> char2", byte >>> char2, Java.primitives.int)
+    eval("byte >>> int2", byte >>> int2, Java.primitives.int)
+    eval("byte >>> long2", byte >>> long2, Java.primitives.int)
     expectReflectiveCompilationError("byte >>> float")
     expectReflectiveCompilationError("byte >>> double")
   }
 
   @Test
   def `short >>> sth`(): Unit = {
-    eval("short >>> byte2", short >>> byte2, Java.boxed.Integer)
-    eval("short >>> short2", short >>> short2, Java.boxed.Integer)
-    eval("short >>> char2", short >>> char2, Java.boxed.Integer)
-    eval("short >>> int2", short >>> int2, Java.boxed.Integer)
-    eval("short >>> long2", short >>> long2, Java.boxed.Integer)
+    eval("short >>> byte2", short >>> byte2, Java.primitives.int)
+    eval("short >>> short2", short >>> short2, Java.primitives.int)
+    eval("short >>> char2", short >>> char2, Java.primitives.int)
+    eval("short >>> int2", short >>> int2, Java.primitives.int)
+    eval("short >>> long2", short >>> long2, Java.primitives.int)
     expectReflectiveCompilationError("short >>> float")
     expectReflectiveCompilationError("short >>> double")
   }
 
   @Test
   def `char >>> sth`(): Unit = {
-    eval("char >>> byte2", char >>> byte2, Java.boxed.Integer)
-    eval("char >>> short2", char >>> short2, Java.boxed.Integer)
-    eval("char >>> char2", char >>> char2, Java.boxed.Integer)
-    eval("char >>> int2", char >>> int2, Java.boxed.Integer)
-    eval("char >>> long2", char >>> long2, Java.boxed.Integer)
+    eval("char >>> byte2", char >>> byte2, Java.primitives.int)
+    eval("char >>> short2", char >>> short2, Java.primitives.int)
+    eval("char >>> char2", char >>> char2, Java.primitives.int)
+    eval("char >>> int2", char >>> int2, Java.primitives.int)
+    eval("char >>> long2", char >>> long2, Java.primitives.int)
     expectReflectiveCompilationError("char >>> float")
     expectReflectiveCompilationError("char >>> double")
   }
 
   @Test
   def `int >>> sth`(): Unit = {
-    eval("int >>> byte2", int >>> byte2, Java.boxed.Integer)
-    eval("int >>> short2", int >>> short2, Java.boxed.Integer)
-    eval("int >>> char", int >>> char, Java.boxed.Integer)
-    eval("int >>> int2", int >>> int2, Java.boxed.Integer)
-    eval("int >>> long2", int >>> long2, Java.boxed.Integer)
+    eval("int >>> byte2", int >>> byte2, Java.primitives.int)
+    eval("int >>> short2", int >>> short2, Java.primitives.int)
+    eval("int >>> char", int >>> char, Java.primitives.int)
+    eval("int >>> int2", int >>> int2, Java.primitives.int)
+    eval("int >>> long2", int >>> long2, Java.primitives.int)
     expectReflectiveCompilationError("int >>> float")
     expectReflectiveCompilationError("int >>> double")
   }
 
   @Test
   def `long >>> sth`(): Unit = {
-    eval("long >>> byte2", long >>> byte2, Java.boxed.Long)
-    eval("long >>> short2", long >>> short2, Java.boxed.Long)
-    eval("long >>> char", long >>> char, Java.boxed.Long)
-    eval("long >>> int2", long >>> int2, Java.boxed.Long)
-    eval("long >>> long2", long >>> long2, Java.boxed.Long)
+    eval("long >>> byte2", long >>> byte2, Java.primitives.long)
+    eval("long >>> short2", long >>> short2, Java.primitives.long)
+    eval("long >>> char", long >>> char, Java.primitives.long)
+    eval("long >>> int2", long >>> int2, Java.primitives.long)
+    eval("long >>> long2", long >>> long2, Java.primitives.long)
     expectReflectiveCompilationError("long >>> float")
     expectReflectiveCompilationError("long >>> double")
   }
@@ -92,10 +92,10 @@ class BitwiseShiftRightWithZerosTest extends BaseIntegrationTest(BitwiseShiftRig
 
   // these result types below are Scala bug - not ours (see SI-8462)
   @Test
-  def `'c' >>> 2L`(): Unit = eval("'c' >>> 2L", 'c' >>> 2L, Java.boxed.Long)
+  def `'c' >>> 2L`(): Unit = eval("'c' >>> 2L", 'c' >>> 2L, Java.primitives.long)
 
   @Test
-  def `1 >>> 2L`(): Unit = eval("1 >>> 2L", 1 >>> 2L, Java.boxed.Long)
+  def `1 >>> 2L`(): Unit = eval("1 >>> 2L", 1 >>> 2L, Java.primitives.long)
 }
 
 object BitwiseShiftRightWithZerosTest extends BaseIntegrationTestCompanion

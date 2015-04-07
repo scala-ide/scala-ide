@@ -19,7 +19,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNonLocalIntArray(): Unit =
-    eval("Libs.intArray(1)", intArray(1), Java.boxed.Integer)
+    eval("Libs.intArray(1)", intArray(1), Java.primitives.int)
 
   @Test
   def testNonLocalStringArray(): Unit =
@@ -27,7 +27,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNonLocalIntArrayAssignment(): Unit =
-    testAssignment(on = "Libs.intArray(1)", tpe = Java.boxed.Integer, values = "123", "345")
+    testAssignment(on = "Libs.intArray(1)", tpe = Java.primitives.int, values = "123", "345")
 
   @Test
   def testNonLocalStringArrayAssignment(): Unit =
@@ -44,7 +44,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   @Test(expected = classOf[IndexOutOfBoundsException])
   def testIfEclipseStillDoesNotSupportEmptyArrays(): Unit = {
     val emptyArrayProxy @ ArrayJdiProxy(_, _) = runInEclipse("emptyArray")
-    emptyArrayProxy.__underlying.getValues()
+    emptyArrayProxy.__value.getValues()
   }
 
   @Test
@@ -125,7 +125,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testIntArrayAccess(): Unit =
-    eval("intArray(1)", intArray(1), Java.boxed.Integer)
+    eval("intArray(1)", intArray(1), Java.primitives.int)
 
   @Test
   def testStringArrayAccess(): Unit =
@@ -133,7 +133,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testIntArrayUpdate(): Unit =
-    testAssignment(on = "intArray(1)", tpe = Java.boxed.Integer, values = "123", "345")
+    testAssignment(on = "intArray(1)", tpe = Java.primitives.int, values = "123", "345")
 
   @Test
   def testStringArrayUpdate(): Unit =
@@ -141,11 +141,11 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testIntArrayLength(): Unit =
-    eval("intArray.length", intArray.length, Java.boxed.Integer)
+    eval("intArray.length", intArray.length, Java.primitives.int)
 
   @Test
   def testStringArrayLength(): Unit =
-    eval("stringArray.length", stringArray.length, Java.boxed.Integer)
+    eval("stringArray.length", stringArray.length, Java.primitives.int)
 
   @Test
   def testMethodTakingIntArray(): Unit =
@@ -185,7 +185,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNestedArrayElementAccess(): Unit =
-    eval("nestedArray(0)(2)", nestedArray(0)(2), Java.boxed.Integer)
+    eval("nestedArray(0)(2)", nestedArray(0)(2), Java.primitives.int)
 
   @Test
   def testNestedObjectArrayAccess(): Unit =

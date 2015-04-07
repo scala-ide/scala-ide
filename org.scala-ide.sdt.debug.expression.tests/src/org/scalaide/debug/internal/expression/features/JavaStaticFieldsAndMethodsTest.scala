@@ -17,33 +17,33 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   @Test
   def getValuesOfStaticFieldsOfClass(): Unit = {
     eval("JavaLibClass.staticString", JavaLibClass.staticString, Java.boxed.String)
-    eval("JavaLibClass.staticInt", JavaLibClass.staticInt, Java.boxed.Integer)
+    eval("JavaLibClass.staticInt", JavaLibClass.staticInt, Java.primitives.int)
     eval("JavaLibClass.staticNull", null, Scala.nullType)
   }
 
   @Test
   def checkEqualityOfStaticFieldsOfClass(): Unit = {
-    eval(s"""JavaLibClass.staticString == "${JavaLibClass.staticString}" """, true, Java.boxed.Boolean)
-    eval(s"""JavaLibClass.staticString == "${JavaLibClass.staticString}42" """, false, Java.boxed.Boolean)
-    eval(s"""JavaLibClass.staticString != "${JavaLibClass.staticString}" """, false, Java.boxed.Boolean)
-    eval(s"""JavaLibClass.staticString != "${JavaLibClass.staticString}42" """, true, Java.boxed.Boolean)
+    eval(s"""JavaLibClass.staticString == "${JavaLibClass.staticString}" """, true, Java.primitives.boolean)
+    eval(s"""JavaLibClass.staticString == "${JavaLibClass.staticString}42" """, false, Java.primitives.boolean)
+    eval(s"""JavaLibClass.staticString != "${JavaLibClass.staticString}" """, false, Java.primitives.boolean)
+    eval(s"""JavaLibClass.staticString != "${JavaLibClass.staticString}42" """, true, Java.primitives.boolean)
 
-    eval("JavaLibClass.staticInt == JavaLibClass.staticInt", true, Java.boxed.Boolean)
-    eval("JavaLibClass.staticInt == 2 + 2", false, Java.boxed.Boolean)
-    eval("JavaLibClass.staticInt != JavaLibClass.staticInt", false, Java.boxed.Boolean)
-    eval("JavaLibClass.staticInt != 2 + 2", true, Java.boxed.Boolean)
+    eval("JavaLibClass.staticInt == JavaLibClass.staticInt", true, Java.primitives.boolean)
+    eval("JavaLibClass.staticInt == 2 + 2", false, Java.primitives.boolean)
+    eval("JavaLibClass.staticInt != JavaLibClass.staticInt", false, Java.primitives.boolean)
+    eval("JavaLibClass.staticInt != 2 + 2", true, Java.primitives.boolean)
   }
 
   @Test
   def invokeStaticMethodsOfClass(): Unit = {
     eval("""JavaLibClass.staticStringMethod("foo")""", JavaLibClass.staticStringMethod("foo"), Java.boxed.String)
-    eval("JavaLibClass.staticIntMethod", JavaLibClass.staticIntMethod, Java.boxed.Integer)
+    eval("JavaLibClass.staticIntMethod", JavaLibClass.staticIntMethod, Java.primitives.int)
   }
 
   @Test
   def invokeStaticGenericMethodsOfClass(): Unit = {
-    eval("JavaLibClass.staticGenericMethod[Double](7.1)", 7.1, Java.boxed.Double)
-    eval("JavaLibClass.staticGenericMethod('g')", 'g', Java.boxed.Character)
+    eval("JavaLibClass.staticGenericMethod[Double](7.1)", 7.1, Java.primitives.double)
+    eval("JavaLibClass.staticGenericMethod('g')", 'g', Java.primitives.char)
   }
 
   @Test
@@ -54,33 +54,33 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def classStaticFieldsIntegration(): Unit = {
-    eval("JavaLibClass.staticInt - 2.0", JavaLibClass.staticInt - 2.0, Java.boxed.Double)
-    eval("JavaLibClass.staticInt + 2.0", JavaLibClass.staticInt + 2.0, Java.boxed.Double)
+    eval("JavaLibClass.staticInt - 2.0", JavaLibClass.staticInt - 2.0, Java.primitives.double)
+    eval("JavaLibClass.staticInt + 2.0", JavaLibClass.staticInt + 2.0, Java.primitives.double)
     eval("""JavaLibClass.staticString + "foo" """, JavaLibClass.staticString + "foo", Java.boxed.String)
   }
 
   @Test
   def classStaticMethodsIntegration(): Unit = {
     eval("""JavaLibClass.staticStringMethod("foo") + 42""", JavaLibClass.staticStringMethod("foo") + 42, Java.boxed.String)
-    eval("JavaLibClass.staticIntMethod - 42", JavaLibClass.staticIntMethod - 42, Java.boxed.Integer)
-    eval("JavaLibClass.staticIntMethod + 42", JavaLibClass.staticIntMethod + 42, Java.boxed.Integer)
+    eval("JavaLibClass.staticIntMethod - 42", JavaLibClass.staticIntMethod - 42, Java.primitives.int)
+    eval("JavaLibClass.staticIntMethod + 42", JavaLibClass.staticIntMethod + 42, Java.primitives.int)
   }
 
   @Test
   def getValuesOfStaticFieldsOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.staticString", JavaLibClass.InnerStaticClass.staticString, Java.boxed.String)
-    eval("JavaLibClass.InnerStaticClass.innerStaticDouble", JavaLibClass.InnerStaticClass.innerStaticDouble, Java.boxed.Double)
+    eval("JavaLibClass.InnerStaticClass.innerStaticDouble", JavaLibClass.InnerStaticClass.innerStaticDouble, Java.primitives.double)
     eval("JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass", JavaLibClass.asString, "debug.JavaLibClass")
   }
 
   @Test
   def checkEqualityOfStaticFieldsOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass == JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass",
-      true, Java.boxed.Boolean)
-    eval("""JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass == "foo" """, false, Java.boxed.Boolean)
+      true, Java.primitives.boolean)
+    eval("""JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass == "foo" """, false, Java.primitives.boolean)
     eval("JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass != JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass",
-      false, Java.boxed.Boolean)
-    eval("""JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass != "foo" """, true, Java.boxed.Boolean)
+      false, Java.primitives.boolean)
+    eval("""JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass != "foo" """, true, Java.primitives.boolean)
   }
 
   @Test
@@ -88,8 +88,8 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
     eval("""JavaLibClass.InnerStaticClass.innerStaticMethod("foo")""",
       JavaLibClass.InnerStaticClass.innerStaticMethod("foo"),
       Java.boxed.String)
-    eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(42)", 42, Java.boxed.Integer)
-    eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(false)", false, Java.boxed.Boolean)
+    eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(42)", 42, Java.primitives.int)
+    eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(false)", false, Java.primitives.boolean)
   }
 
   // TODO this test depends on location of a test class in a test suite
@@ -99,19 +99,19 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def getValueOfStaticFieldOfInnerStaticClassOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt,
-      Java.boxed.Integer)
+      Java.primitives.int)
   }
 
   @Test
   def checkEqualityOfStaticFieldOfInnerStaticClassOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt == JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt",
-      true, Java.boxed.Boolean)
+      true, Java.primitives.boolean)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt == 42",
-      false, Java.boxed.Boolean)
+      false, Java.primitives.boolean)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt != JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt",
-      false, Java.boxed.Boolean)
+      false, Java.primitives.boolean)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt != 42",
-      true, Java.boxed.Boolean)
+      true, Java.primitives.boolean)
   }
 
   @Test
@@ -121,16 +121,16 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
       Java.boxed.String)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod,
-      Java.boxed.Integer)
+      Java.primitives.int)
   }
 
   @Ignore("TODO O-7263 Fails as it doesn't see methods of field's value - generating stubs doesn't support local operations on Java fields of type AnyVal")
   @Test
   def nestedClassStaticFieldsIntegration(): Unit = {
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt - 2.0",
-      JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt - 2.0, Java.boxed.Double)
+      JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt - 2.0, Java.primitives.double)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt + 2.0",
-      JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt + 2.0, Java.boxed.Double)
+      JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt + 2.0, Java.primitives.double)
   }
 
   @Test
@@ -140,26 +140,26 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
       Java.boxed.String)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2,
-      Java.boxed.Double)
+      Java.primitives.double)
   }
 
   @Test
   def getValuesOfStaticFieldsOfInterface(): Unit = {
     eval("JavaLibInterface.staticString", JavaLibInterface.staticString, Java.boxed.String)
-    eval("JavaLibInterface.staticInt", JavaLibInterface.staticInt, Java.boxed.Integer)
+    eval("JavaLibInterface.staticInt", JavaLibInterface.staticInt, Java.primitives.int)
   }
 
   @Test
   def checkEqualityOfStaticFieldsOfInterface(): Unit = {
-    eval("JavaLibInterface.staticString == JavaLibInterface.staticString", true, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticString == 114", false, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticString != JavaLibInterface.staticString", false, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticString != 114", true, Java.boxed.Boolean)
+    eval("JavaLibInterface.staticString == JavaLibInterface.staticString", true, Java.primitives.boolean)
+    eval("JavaLibInterface.staticString == 114", false, Java.primitives.boolean)
+    eval("JavaLibInterface.staticString != JavaLibInterface.staticString", false, Java.primitives.boolean)
+    eval("JavaLibInterface.staticString != 114", true, Java.primitives.boolean)
 
-    eval("JavaLibInterface.staticInt == JavaLibInterface.staticInt", true, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticInt == 6565", false, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticInt != JavaLibInterface.staticInt", false, Java.boxed.Boolean)
-    eval("JavaLibInterface.staticInt != 6565", true, Java.boxed.Boolean)
+    eval("JavaLibInterface.staticInt == JavaLibInterface.staticInt", true, Java.primitives.boolean)
+    eval("JavaLibInterface.staticInt == 6565", false, Java.primitives.boolean)
+    eval("JavaLibInterface.staticInt != JavaLibInterface.staticInt", false, Java.primitives.boolean)
+    eval("JavaLibInterface.staticInt != 6565", true, Java.primitives.boolean)
   }
 }
 

@@ -16,10 +16,10 @@ class NestedScopeTest extends BaseIntegrationTest(NestedScopeTest) {
   import NestedTestCase._
 
   @Test
-  def testUsedVariableIsVisibleInInnerScope(): Unit = eval("outerUsed", outerUsed, Java.boxed.Integer)
+  def testUsedVariableIsVisibleInInnerScope(): Unit = eval("outerUsed", outerUsed, Java.primitives.int)
 
   @Test(expected = classOf[ReflectiveCompilationFailure])
-  def testUnusedVariableIsNotVisibleInInnerScope(): Unit = eval("outerUnused", outerUnused, Java.boxed.Integer)
+  def testUnusedVariableIsNotVisibleInInnerScope(): Unit = eval("outerUnused", outerUnused, Java.primitives.int)
 }
 
 object NestedScopeTest extends BaseIntegrationTestCompanion(NestedTestCase)

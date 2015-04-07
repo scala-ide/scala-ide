@@ -14,21 +14,21 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   import TestValues.ValuesTestCase._
 
   @Test
-  def ifElseCondition(): Unit = eval("if (true) byte + byte2 else byte", byte + byte2, Java.boxed.Integer)
+  def ifElseCondition(): Unit = eval("if (true) byte + byte2 else byte", byte + byte2, Java.primitives.int)
 
   @Test
   def ifElseIfElseConditions(): Unit =
-    eval("if (int == int2) byte + byte2 else if (int != int) byte2 else byte", byte, Java.boxed.Integer)
+    eval("if (int == int2) byte + byte2 else if (int != int) byte2 else byte", byte, Java.primitives.int)
 
   @Test
   def nestedIfElseConditions(): Unit =
-    eval("if (if (int == int) false else true) 1 else { if (int <= int) { if (false) 2 else { if (true) 3 else 4 } } else 5 }", 3, Java.boxed.Integer)
+    eval("if (if (int == int) false else true) 1 else { if (int <= int) { if (false) 2 else { if (true) 3 else 4 } } else 5 }", 3, Java.primitives.int)
 
   @Test
-  def whileExpressionCondition(): Unit = eval("var i = 1; while (i > 1) i; i", 1, Java.boxed.Integer)
+  def whileExpressionCondition(): Unit = eval("var i = 1; while (i > 1) i; i", 1, Java.primitives.int)
 
   @Test
-  def doWhileExpressionCondition(): Unit = eval("var i = 1; do i while (false); i", 1, Java.boxed.Integer)
+  def doWhileExpressionCondition(): Unit = eval("var i = 1; do i while (false); i", 1, Java.primitives.int)
 
   // TODO - O-8599 - support for return
   @Test(expected = classOf[UnsupportedFeature])
@@ -49,7 +49,7 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   // TODO - O-8596 - support for try/catch/finally
   @Test(expected = classOf[UnsupportedFeature])
   def tryCatchFinally(): Unit =
-    eval("""try { 1 } finally { 2 }""", 2, Java.boxed.Integer)
+    eval("""try { 1 } finally { 2 }""", 2, Java.primitives.int)
 
   @Test
   def simpleForComprehension(): Unit =
