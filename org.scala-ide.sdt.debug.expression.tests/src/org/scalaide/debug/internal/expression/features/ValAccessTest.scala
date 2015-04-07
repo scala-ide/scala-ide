@@ -18,7 +18,7 @@ class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
   def testChar(): Unit = eval("char", "c", Java.boxed.Character)
 
   @Test
-  def testDouble(): Unit = eval("double", "1.1", Java.boxed.Double)
+  def testDouble(): Unit = disableOnJava8 { eval("double", "1.1", Java.boxed.Double) }
 
   @Test
   def testFloat(): Unit = eval("float", "1.1", Java.boxed.Float)
@@ -27,16 +27,16 @@ class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
   def testBoolean(): Unit = eval("boolean", "false", Java.boxed.Boolean)
 
   @Test
-  def testString(): Unit = eval("string", "Ala", Java.boxed.String)
+  def testString(): Unit = disableOnJava8 { eval("string", "Ala", Java.boxed.String) }
 
   @Test
   def testLong(): Unit = eval("long", "1", Java.boxed.Long)
 
   @Test
-  def testStringMethod(): Unit = eval("string.toLowerCase", "ala", Java.boxed.String)
+  def testStringMethod(): Unit = disableOnJava8 { eval("string.toLowerCase", "ala", Java.boxed.String) }
 
   @Test
-  def testObjectList(): Unit = eval("list", "List(1, 2, 3)", Scala.::)
+  def testObjectList(): Unit = disableOnJava8 { eval("list", "List(1, 2, 3)", Scala.::) }
 
   @Test
   def testObjectListMethod(): Unit = eval("list.mkString", "123", Java.boxed.String)

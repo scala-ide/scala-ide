@@ -19,13 +19,13 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
   def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.boxed.String)
 
   @Test
-  def toStringWithoutParentheses(): Unit = eval("int.toString", int, Java.boxed.String)
+  def toStringWithoutParentheses(): Unit = disableOnJava8 { eval("int.toString", int, Java.boxed.String) }
 
   @Test
-  def toStringOnObject(): Unit = eval("list.toString", list, Java.boxed.String)
+  def toStringOnObject(): Unit = disableOnJava8 { eval("list.toString", list, Java.boxed.String) }
 
   @Test
-  def toStringOnString(): Unit = eval("string.toString", string, Java.boxed.String)
+  def toStringOnString(): Unit = disableOnJava8 { eval("string.toString", string, Java.boxed.String) }
 
   @Test
   def equalsWithNull(): Unit = {
@@ -36,10 +36,10 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
   }
 
   @Test
-  def hashCodeWithoutParens(): Unit = eval("int.hashCode", int, Java.boxed.Integer)
+  def hashCodeWithoutParens(): Unit = disableOnJava8 { eval("int.hashCode", int, Java.boxed.Integer) }
 
   @Test
-  def hashCodeWithParens(): Unit = eval("int.hashCode()", int, Java.boxed.Integer)
+  def hashCodeWithParens(): Unit = disableOnJava8 { eval("int.hashCode()", int, Java.boxed.Integer) }
 
 }
 

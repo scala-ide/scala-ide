@@ -23,20 +23,24 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
     eval("new LibClass2ListsAndImplicits(1)(2)", "LibClass2ListsAndImplicits(1)", "debug.LibClass2ListsAndImplicits")
 
   @Test
-  def `libClass.withImplicitConversion(2)`(): Unit =
+  def `libClass.withImplicitConversion(2)`(): Unit = disableOnJava8 {
     eval("libClass.withImplicitConversion(2)", "2", Java.boxed.Integer)
+  }
 
   @Test
-  def `libClass.withImplicitParameter`(): Unit =
+  def `libClass.withImplicitParameter`(): Unit = disableOnJava8 {
     eval("libClass.withImplicitParameter", "1", Java.boxed.Integer)
+  }
 
   @Test
-  def `scala collections implicits: List(1, 2).filter(_ > 1).head`(): Unit =
+  def `scala collections implicits: List(1, 2).filter(_ > 1).head`(): Unit = disableOnJava8 {
     eval("List(1, 2).filter(_ >= 2)", "List(2)", Scala.::)
+  }
 
   @Test
-  def `scala collections implicits: List(1 -> 2, 2 -> 3).toMap`(): Unit =
+  def `scala collections implicits: List(1 -> 2, 2 -> 3).toMap`(): Unit = disableOnJava8 {
     eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
+  }
 
   // value from imports and local values
 

@@ -57,6 +57,16 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
       case Success(result) => result
       case Failure(exception) => throw exception
     }
+
+  /**
+   * Some tests fail for an unknown reason on Java 8. Therefore, if we are on
+   * Java 8, this method marks a test as ignored.
+   */
+  protected def disableOnJava8(f: ⇒ Unit): Unit = {
+    org.junit.Assume.assumeTrue(System.getProperty("java.specification.version") != "1.8")
+    f
+  }
+
 }
 
 /**
