@@ -43,4 +43,7 @@ object ExpressionEvaluatorPreferences {
 
   def showCollectionsLogicalStructure_=(enabled: Boolean): Unit =
     preferenceStore.setValue(ShowCollectionsLogicalStructure, enabled)
+
+  def shouldRefreshVariablesViewAfterEvaluation: Boolean =
+    preferenceStore.getBoolean(RefreshVariablesViewAfterEvaluation)
 }
