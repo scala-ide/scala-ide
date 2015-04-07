@@ -15,16 +15,16 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
   import TestValues.ValuesTestCase._
 
   @Test
-  def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.boxed.String)
+  def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.String)
 
   @Test
-  def toStringWithoutParentheses(): Unit = disableOnJava8 { eval("int.toString", int, Java.boxed.String) }
+  def toStringWithoutParentheses(): Unit = disableOnJava8 { eval("int.toString", int, Java.String) }
 
   @Test
-  def toStringOnObject(): Unit = disableOnJava8 { eval("list.toString", list, Java.boxed.String) }
+  def toStringOnObject(): Unit = disableOnJava8 { eval("list.toString", list, Java.String) }
 
   @Test
-  def toStringOnString(): Unit = disableOnJava8 { eval("string.toString", string, Java.boxed.String) }
+  def toStringOnString(): Unit = disableOnJava8 { eval("string.toString", string, Java.String) }
 
   @Test
   def equalsWithNull(): Unit = {

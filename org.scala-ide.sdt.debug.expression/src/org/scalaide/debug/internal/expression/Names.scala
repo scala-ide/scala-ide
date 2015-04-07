@@ -68,8 +68,6 @@ object Names {
      */
     object boxed {
 
-      val String = classOf[java.lang.String].getName
-
       val Boolean = classOf[java.lang.Boolean].getName
 
       val Integer = classOf[java.lang.Integer].getName
@@ -93,6 +91,7 @@ object Names {
 
     val Object = classOf[java.lang.Object].getName
 
+    val String = classOf[java.lang.String].getName
   }
 
   /**

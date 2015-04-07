@@ -16,7 +16,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def getValuesOfStaticFieldsOfClass(): Unit = {
-    eval("JavaLibClass.staticString", JavaLibClass.staticString, Java.boxed.String)
+    eval("JavaLibClass.staticString", JavaLibClass.staticString, Java.String)
     eval("JavaLibClass.staticInt", JavaLibClass.staticInt, Java.primitives.int)
     eval("JavaLibClass.staticNull", null, Scala.nullType)
   }
@@ -36,7 +36,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def invokeStaticMethodsOfClass(): Unit = {
-    eval("""JavaLibClass.staticStringMethod("foo")""", JavaLibClass.staticStringMethod("foo"), Java.boxed.String)
+    eval("""JavaLibClass.staticStringMethod("foo")""", JavaLibClass.staticStringMethod("foo"), Java.String)
     eval("JavaLibClass.staticIntMethod", JavaLibClass.staticIntMethod, Java.primitives.int)
   }
 
@@ -56,19 +56,19 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def classStaticFieldsIntegration(): Unit = {
     eval("JavaLibClass.staticInt - 2.0", JavaLibClass.staticInt - 2.0, Java.primitives.double)
     eval("JavaLibClass.staticInt + 2.0", JavaLibClass.staticInt + 2.0, Java.primitives.double)
-    eval("""JavaLibClass.staticString + "foo" """, JavaLibClass.staticString + "foo", Java.boxed.String)
+    eval("""JavaLibClass.staticString + "foo" """, JavaLibClass.staticString + "foo", Java.String)
   }
 
   @Test
   def classStaticMethodsIntegration(): Unit = {
-    eval("""JavaLibClass.staticStringMethod("foo") + 42""", JavaLibClass.staticStringMethod("foo") + 42, Java.boxed.String)
+    eval("""JavaLibClass.staticStringMethod("foo") + 42""", JavaLibClass.staticStringMethod("foo") + 42, Java.String)
     eval("JavaLibClass.staticIntMethod - 42", JavaLibClass.staticIntMethod - 42, Java.primitives.int)
     eval("JavaLibClass.staticIntMethod + 42", JavaLibClass.staticIntMethod + 42, Java.primitives.int)
   }
 
   @Test
   def getValuesOfStaticFieldsOfInnerStaticClass(): Unit = {
-    eval("JavaLibClass.InnerStaticClass.staticString", JavaLibClass.InnerStaticClass.staticString, Java.boxed.String)
+    eval("JavaLibClass.InnerStaticClass.staticString", JavaLibClass.InnerStaticClass.staticString, Java.String)
     eval("JavaLibClass.InnerStaticClass.innerStaticDouble", JavaLibClass.InnerStaticClass.innerStaticDouble, Java.primitives.double)
     eval("JavaLibClass.InnerStaticClass.staticInstanceOfOuterClass", JavaLibClass.asString, "debug.JavaLibClass")
   }
@@ -87,7 +87,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def invokeStaticMethodOfInnerStaticClass(): Unit = {
     eval("""JavaLibClass.InnerStaticClass.innerStaticMethod("foo")""",
       JavaLibClass.InnerStaticClass.innerStaticMethod("foo"),
-      Java.boxed.String)
+      Java.String)
     eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(42)", 42, Java.primitives.int)
     eval("JavaLibClass.InnerStaticClass.innerStaticGenericMethod(false)", false, Java.primitives.boolean)
   }
@@ -118,7 +118,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def invokeStaticMethodOfInnerStaticClassOfInnerStaticClass(): Unit = {
     eval("""JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2)""",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2),
-      Java.boxed.String)
+      Java.String)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod,
       Java.primitives.int)
@@ -137,7 +137,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   def nestedClassStaticMethodsIntegration(): Unit = {
     eval("""JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2) + false""",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticStringMethod("foo", 2) + false,
-      Java.boxed.String)
+      Java.String)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2",
       JavaLibClass.InnerStaticClass.InnerStaticInStatic.innerStaticIntMethod - 1.2,
       Java.primitives.double)
@@ -145,7 +145,7 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
 
   @Test
   def getValuesOfStaticFieldsOfInterface(): Unit = {
-    eval("JavaLibInterface.staticString", JavaLibInterface.staticString, Java.boxed.String)
+    eval("JavaLibInterface.staticString", JavaLibInterface.staticString, Java.String)
     eval("JavaLibInterface.staticInt", JavaLibInterface.staticInt, Java.primitives.int)
   }
 

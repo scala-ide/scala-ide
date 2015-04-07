@@ -17,7 +17,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
   @Test
   def getValuesOfFields(): Unit = {
     eval("javaLibClass.normalInt", JavaLibClass.normalInt, Java.primitives.int)
-    eval("javaLibClass.normalString", JavaLibClass.normalString, Java.boxed.String)
+    eval("javaLibClass.normalString", JavaLibClass.normalString, Java.String)
     eval("javaLibClass.self", JavaLibClass.asString, "debug.JavaLibClass")
     eval("javaLibClass.normalNull", null, Scala.nullType)
   }
@@ -28,7 +28,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("javaLibClass.normalInt - 2.0", JavaLibClass.normalInt - 2.0, Java.primitives.double)
     eval("javaLibClass.normalInt + 2.0", JavaLibClass.normalInt + 2.0, Java.primitives.double)
     eval("javaLibClass.self.normalInt", JavaLibClass.normalInt, Java.primitives.int)
-    eval("""javaLibClass.normalString + "foo" """, JavaLibClass.normalString + "foo", Java.boxed.String)
+    eval("""javaLibClass.normalString + "foo" """, JavaLibClass.normalString + "foo", Java.String)
   }
 
   @Test
@@ -41,7 +41,7 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
 
   @Test
   def changeValuesOfFields(): Unit = {
-    eval("""javaLibClass.normalStringToChange = "tesseract"; javaLibClass.normalStringToChange""", "tesseract", Java.boxed.String)
+    eval("""javaLibClass.normalStringToChange = "tesseract"; javaLibClass.normalStringToChange""", "tesseract", Java.String)
   }
 
   @Ignore("Fails when running whole test suite with https://issues.scala-lang.org/browse/SI-9218")

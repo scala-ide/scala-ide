@@ -28,8 +28,8 @@ class StringConcatenationMethod(proxy: JdiProxy, name: String, args: Seq[JdiProx
   override def apply(): Option[Value] = (name, args) match {
     case ("+" | "$plus", Seq(arg)) =>
       (proxy.__type.name, arg.__type.name) match {
-        case (Java.boxed.String, _) => callConcatMethod(proxy, arg)
-        case (_, Java.boxed.String) => callConcatMethod(stringify(proxy), arg)
+        case (Java.String, _) => callConcatMethod(proxy, arg)
+        case (_, Java.String) => callConcatMethod(stringify(proxy), arg)
         case _ => None
       }
     case _ => None

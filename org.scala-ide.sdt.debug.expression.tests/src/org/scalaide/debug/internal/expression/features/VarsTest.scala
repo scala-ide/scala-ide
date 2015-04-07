@@ -22,7 +22,7 @@ trait AssignmentTest {
     } finally {
       // set old value for next tests
       def haveQuotes(s: String) = s.startsWith("\"") && s.endsWith("\"")
-      if (oldType == Java.boxed.String && !haveQuotes(oldValue)) runCode(s"""$on = "$oldValue"""")
+      if (oldType == Java.String && !haveQuotes(oldValue)) runCode(s"""$on = "$oldValue"""")
       else runCode(s"$on = $oldValue")
     }
   }
@@ -36,7 +36,7 @@ class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
 
   @Test
   def testLocalVariableAssignment(): Unit =
-    testAssignment("localString", Java.boxed.String, values = s("1"), s("2"), s("3"))
+    testAssignment("localString", Java.String, values = s("1"), s("2"), s("3"))
 
   // TODO - O-8559 - This fails with 'InvalidStackFrameException' when you try to assign to local boxed primitive :(
   @Test(expected = classOf[UnsupportedFeature])
@@ -74,7 +74,7 @@ class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
 
   @Test
   def testStringToStringAssignment(): Unit =
-    testAssignment("fieldString", Java.boxed.String, "anotherStringField")
+    testAssignment("fieldString", Java.String, "anotherStringField")
 
   @Test
   def testSetterMethod(): Unit = {

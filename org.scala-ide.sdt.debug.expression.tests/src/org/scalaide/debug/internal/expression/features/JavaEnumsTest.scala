@@ -13,7 +13,7 @@ class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
 
   @Test
   def accessingEnumValues(): Unit = {
-    eval("JavaEnum.FOO.name()", "FOO", Java.boxed.String)
+    eval("JavaEnum.FOO.name()", "FOO", Java.String)
     eval("JavaEnum.BAZ.ordinal()", 2, Java.primitives.int)
   }
 

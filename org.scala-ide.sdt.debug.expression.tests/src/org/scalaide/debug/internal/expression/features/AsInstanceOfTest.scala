@@ -18,13 +18,13 @@ class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
   @Test
   def simpleAsInstanceOf(): Unit = {
     eval("check[Int](int.asInstanceOf[Int])", int, Java.primitives.int)
-    eval("check[String](string.asInstanceOf[String])", string, Java.boxed.String)
+    eval("check[String](string.asInstanceOf[String])", string, Java.String)
   }
 
   @Test
   def arrayAsInstanceOf(): Unit = {
     eval("check[Array[Int]](intArray.asInstanceOf[Array[Int]])", intArray, Scala.Array(Scala.primitives.Int))
-    eval("check[Array[String]](objectArray.asInstanceOf[Array[String]])", objectArray, Scala.Array(Java.boxed.String))
+    eval("check[Array[String]](objectArray.asInstanceOf[Array[String]])", objectArray, Scala.Array(Java.String))
   }
 
   @Test

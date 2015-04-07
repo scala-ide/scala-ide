@@ -17,7 +17,7 @@ class ObjectsTest extends BaseIntegrationTest(ObjectsTest) {
   def testListApply(): Unit = disableOnJava8 { eval("List(1,2)", List(1, 2), Scala.::) }
 
   @Test
-  def testListApplyWithMkString(): Unit = eval("List(1,2).mkString", 12, Java.boxed.String)
+  def testListApplyWithMkString(): Unit = eval("List(1,2).mkString", 12, Java.String)
 
   @Test
   def testNestedObject(): Unit = disableOnJava8 { eval("LibObject.LibNestedObject.id", 2, Java.primitives.int) }

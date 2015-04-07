@@ -14,15 +14,15 @@ class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(Modificatio
 
   @Test
   def changeStaticFieldsOfClass(): Unit = {
-    eval("JavaLibClass.staticString = Int.MaxValue.toString; JavaLibClass.staticString", Int.MaxValue, Java.boxed.String)
+    eval("JavaLibClass.staticString = Int.MaxValue.toString; JavaLibClass.staticString", Int.MaxValue, Java.String)
     eval("JavaLibClass.staticInt -= 2 + 2; JavaLibClass.staticInt", JavaTestCase.JavaLibClass.staticInt - 4, Java.primitives.int)
   }
 
   @Test
   def changeStaticFieldsOfInnerStaticClass(): Unit = {
-    eval("""JavaLibClass.InnerStaticClass.staticString = "bar"; JavaLibClass.InnerStaticClass.staticString""", "bar", Java.boxed.String)
+    eval("""JavaLibClass.InnerStaticClass.staticString = "bar"; JavaLibClass.InnerStaticClass.staticString""", "bar", Java.String)
     eval("""JavaLibClass.InnerStaticClass.staticString = "baz" + JavaLibClass.InnerStaticClass.staticString; JavaLibClass.InnerStaticClass.staticString""",
-      "bazbar", Java.boxed.String)
+      "bazbar", Java.String)
     eval("JavaLibClass.InnerStaticClass.innerStaticDouble = -42; JavaLibClass.InnerStaticClass.innerStaticDouble", -42.0, Java.primitives.double)
   }
 

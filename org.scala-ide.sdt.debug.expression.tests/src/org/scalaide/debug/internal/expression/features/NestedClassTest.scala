@@ -13,27 +13,27 @@ class NestedClassTest extends BaseIntegrationTest(NestedClassTest) {
 
   @Test
   def testParentObjectField(): Unit =
-    eval("parentObjectField", "parentObjectField", Names.Java.boxed.String)
+    eval("parentObjectField", "parentObjectField", Names.Java.String)
 
   @Test
   def testParentObjectMethod(): Unit =
-    eval("parentObjectMethod", "parentObjectMethod", Names.Java.boxed.String)
+    eval("parentObjectMethod", "parentObjectMethod", Names.Java.String)
 
   @Test
   def testParentObject2Field(): Unit =
-    eval("parentObject2Field", "parentObject2Field", Names.Java.boxed.String)
+    eval("parentObject2Field", "parentObject2Field", Names.Java.String)
 
   @Test
   def testParentObject2Method(): Unit =
-    eval("parentObject2Method", "parentObject2Method", Names.Java.boxed.String)
+    eval("parentObject2Method", "parentObject2Method", Names.Java.String)
 
   @Test
   def parentClassMethod(): Unit =
-    eval("parentClassMethod", "parentClassMethod", Names.Java.boxed.String)
+    eval("parentClassMethod", "parentClassMethod", Names.Java.String)
 
   @Test
   def parentClassField(): Unit =
-    eval("parentClassField", "parentClassField", Names.Java.boxed.String)
+    eval("parentClassField", "parentClassField", Names.Java.String)
 
 }
 

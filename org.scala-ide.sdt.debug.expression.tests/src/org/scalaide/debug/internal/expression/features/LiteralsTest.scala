@@ -99,17 +99,17 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
 
   @Test
   def testStringLiteralsWithTrailingWhitespace(): Unit = {
-    eval(s(""), s(""), Java.boxed.String)
-    eval(s(" "), s(" "), Java.boxed.String)
-    eval(s(" a"), s(" a"), Java.boxed.String)
-    eval(s("a "), s("a "), Java.boxed.String)
-    eval(s(" a "), s(" a "), Java.boxed.String)
+    eval(s(""), s(""), Java.String)
+    eval(s(" "), s(" "), Java.String)
+    eval(s(" a"), s(" a"), Java.String)
+    eval(s("a "), s("a "), Java.String)
+    eval(s(" a "), s(" a "), Java.String)
   }
 
   @Test
   def testStringLiterals(): Unit = {
-    eval(" \"ala\" ", "ala", Java.boxed.String)
-    eval(" \"\"\"ala\"\"\" ", "ala", Java.boxed.String)
+    eval(" \"ala\" ", "ala", Java.String)
+    eval(" \"\"\"ala\"\"\" ", "ala", Java.String)
   }
 
   @Test

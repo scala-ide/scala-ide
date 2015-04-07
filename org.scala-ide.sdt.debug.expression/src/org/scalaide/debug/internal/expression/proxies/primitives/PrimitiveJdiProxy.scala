@@ -116,5 +116,5 @@ private[expression] object PrimitiveJdiProxy {
     Java.boxed.Float -> classOf[FloatJdiProxy],
     Java.boxed.Character -> classOf[CharJdiProxy],
     Java.boxed.Boolean -> classOf[BooleanJdiProxy],
-    Java.boxed.String -> classOf[StringJdiProxy]).mapValues(_.getSimpleName)
+    Java.String -> classOf[StringJdiProxy]).mapValues(_.getSimpleName)
 }

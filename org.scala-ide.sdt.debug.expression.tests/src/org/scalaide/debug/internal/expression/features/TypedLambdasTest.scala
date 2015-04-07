@@ -48,7 +48,7 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
         | (list.map((_: Int) - diff).head + 1).toString
         |}
         |ala
-        |""".stripMargin, "0", Java.boxed.String)
+        |""".stripMargin, "0", Java.String)
   }
 
   @Test

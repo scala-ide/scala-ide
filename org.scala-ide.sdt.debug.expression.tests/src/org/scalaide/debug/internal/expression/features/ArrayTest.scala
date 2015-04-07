@@ -23,7 +23,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNonLocalStringArray(): Unit =
-    eval("Libs.stringArray(1)", stringArray(1), Java.boxed.String)
+    eval("Libs.stringArray(1)", stringArray(1), Java.String)
 
   @Test
   def testNonLocalIntArrayAssignment(): Unit =
@@ -31,7 +31,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNonLocalStringArrayAssignment(): Unit =
-    testAssignment(on = "Libs.stringArray(2)", tpe = Java.boxed.String, values = s("Ala"), s("Ola"), s("Ula"))
+    testAssignment(on = "Libs.stringArray(2)", tpe = Java.String, values = s("Ala"), s("Ola"), s("Ula"))
 
   @Test
   def testEmptyArray(): Unit =
@@ -53,7 +53,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testStringArray(): Unit =
-    eval("stringArray", stringArray, Scala.Array(Java.boxed.String))
+    eval("stringArray", stringArray, Scala.Array(Java.String))
 
   @Test
   def testNestedIntArray(): Unit =
@@ -61,7 +61,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNestedStringArray(): Unit =
-    eval("nestedObjectArray", nestedObjectArray, Scala.Array(Scala.Array(Java.boxed.String)))
+    eval("nestedObjectArray", nestedObjectArray, Scala.Array(Scala.Array(Java.String)))
 
   @Test
   def testIntListToArray(): Unit =
@@ -69,7 +69,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testStringListToArray(): Unit =
-    eval("""List("a", "b").toArray""", Array("a", "b"), Scala.Array(Java.boxed.String))
+    eval("""List("a", "b").toArray""", Array("a", "b"), Scala.Array(Java.String))
 
   @Test
   def testIntArrayApply(): Unit =
@@ -85,17 +85,17 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   def testStringArrayApply(): Unit = eval(
     """Array("ala", "ola", "ula")""",
     Array("ala", "ola", "ula"),
-    Scala.Array(Java.boxed.String))
+    Scala.Array(Java.String))
 
   @Test
   def testStringArrayCreationWorkaround(): Unit = eval(
     code = """val a = new Array[String](3); a(0) = "ala"; a(1) = "ola"; a(2) = "ula"; a""",
     expectedValue = Array("ala", "ola", "ula"),
-    expectedType = Scala.Array(Java.boxed.String))
+    expectedType = Scala.Array(Java.String))
 
   @Test
   def testArrayWithEmptyString(): Unit =
-    eval("""Array("")""", Array(""), Scala.Array(Java.boxed.String))
+    eval("""Array("")""", Array(""), Scala.Array(Java.String))
 
   @Test
   def testNestedMixedArrayApply(): Unit = eval(
@@ -113,7 +113,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   def testNestedStringArrayApply(): Unit = eval(
     """Array(Array("1","2","3"))""",
     Array(Array("1", "2", "3")),
-    Scala.Array(Scala.Array(Java.boxed.String)))
+    Scala.Array(Scala.Array(Java.String)))
 
   @Test
   def testIntArrayCreationWithNew(): Unit =
@@ -121,7 +121,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testStringArrayCreationWithNew(): Unit =
-    eval("new Array[String](10)", new Array[String](10), Scala.Array(Java.boxed.String))
+    eval("new Array[String](10)", new Array[String](10), Scala.Array(Java.String))
 
   @Test
   def testIntArrayAccess(): Unit =
@@ -129,7 +129,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testStringArrayAccess(): Unit =
-    eval("stringArray(1)", stringArray(1), Java.boxed.String)
+    eval("stringArray(1)", stringArray(1), Java.String)
 
   @Test
   def testIntArrayUpdate(): Unit =
@@ -137,7 +137,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testStringArrayUpdate(): Unit =
-    testAssignment(on = "stringArray(2)", tpe = Java.boxed.String, values = s("Ala"), s("Ola"), s("Ula"))
+    testAssignment(on = "stringArray(2)", tpe = Java.String, values = s("Ala"), s("Ola"), s("Ula"))
 
   @Test
   def testIntArrayLength(): Unit =
@@ -153,7 +153,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testMethodTakingStringArray(): Unit =
-    eval(s"$arrayIdentity(stringArray)", stringArray, Scala.Array(Java.boxed.String))
+    eval(s"$arrayIdentity(stringArray)", stringArray, Scala.Array(Java.String))
 
   @Test
   def testMethodTakingNewIntArray(): Unit = eval(
@@ -165,11 +165,11 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
   def testMethodTakingNewStringArray(): Unit = eval(
     code = s"$arrayIdentity(new Array[String](10))",
     expectedValue = new Array[String](10),
-    expectedType = Scala.Array(Java.boxed.String))
+    expectedType = Scala.Array(Java.String))
 
   @Test
   def testRichArrayMethodsHead(): Unit =
-    eval("stringArray.head", stringArray.head, Java.boxed.String)
+    eval("stringArray.head", stringArray.head, Java.String)
 
   @Test
   def testRichArrayMethodsConcatenation(): Unit =
@@ -177,7 +177,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testRichArrayMethodsMap(): Unit =
-    eval("intArray.map { _.toString }", ScalaRunTime.stringOf(intArray.map { _.toString }), Scala.Array(Java.boxed.String))
+    eval("intArray.map { _.toString }", ScalaRunTime.stringOf(intArray.map { _.toString }), Scala.Array(Java.String))
 
   @Test
   def testNestedArrayAccess(): Unit =
@@ -189,11 +189,11 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def testNestedObjectArrayAccess(): Unit =
-    eval("nestedObjectArray(0)", nestedObjectArray(0), Scala.Array(Java.boxed.String))
+    eval("nestedObjectArray(0)", nestedObjectArray(0), Scala.Array(Java.String))
 
   @Test
   def testNestedObjectArrayElementAccess(): Unit =
-    eval("nestedObjectArray(0)(2)", nestedObjectArray(0)(2), Java.boxed.String)
+    eval("nestedObjectArray(0)(2)", nestedObjectArray(0)(2), Java.String)
 
   // Tests for displaying arrays
 
@@ -207,7 +207,7 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
   @Test
   def displayStringArray(): Unit =
-    eval("""Array("1", "2", "3")""", Array("1", "2", "3"), Scala.Array(Java.boxed.String))
+    eval("""Array("1", "2", "3")""", Array("1", "2", "3"), Scala.Array(Java.String))
 
   @Test
   def displayNestedArray(): Unit = eval(

@@ -81,16 +81,16 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
   def testRangeOperationsOnIntegral(): Unit = {
     eval("int to int2", int to int2, Scala.rangeInclusive)
     eval("int.to(int2, 1)", int.to(int2, 1), Scala.rangeInclusive)
-    eval("(int until int2).mkString", (int until int2).mkString, Java.boxed.String)
-    eval("int.until(int2, 1).mkString", int.until(int2, 1).mkString, Java.boxed.String)
+    eval("(int until int2).mkString", (int until int2).mkString, Java.String)
+    eval("int.until(int2, 1).mkString", int.until(int2, 1).mkString, Java.String)
   }
 
   @Test
   def testRangeOperationsOnFractional(): Unit = {
-    eval("(double to double2 by 1).mkString", (double to double2 by 1).mkString, Java.boxed.String)
-    eval("double.to(double2, 0.5).mkString", double.to(double2, 0.5).mkString, Java.boxed.String)
-    eval("(double until double2 by 1).mkString", (double until double2 by 1).mkString, Java.boxed.String)
-    eval("double.until(double2, 0.5).mkString", double.until(double2, 0.5).mkString, Java.boxed.String)
+    eval("(double to double2 by 1).mkString", (double to double2 by 1).mkString, Java.String)
+    eval("double.to(double2, 0.5).mkString", double.to(double2, 0.5).mkString, Java.String)
+    eval("(double until double2 by 1).mkString", (double until double2 by 1).mkString, Java.String)
+    eval("double.until(double2, 0.5).mkString", double.until(double2, 0.5).mkString, Java.String)
   }
 
   @Test
@@ -123,16 +123,16 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
 
   @Test
   def testOperationsOnRichInt(): Unit = {
-    eval("int.toBinaryString", int.toBinaryString, Java.boxed.String)
-    eval("int.toHexString", int.toHexString, Java.boxed.String)
-    eval("int.toOctalString", int.toOctalString, Java.boxed.String)
+    eval("int.toBinaryString", int.toBinaryString, Java.String)
+    eval("int.toHexString", int.toHexString, Java.String)
+    eval("int.toOctalString", int.toOctalString, Java.String)
   }
 
   @Test
   def testOperationsOnRichLong(): Unit = {
-    eval("long.toBinaryString", long.toBinaryString, Java.boxed.String)
-    eval("long.toHexString", long.toHexString, Java.boxed.String)
-    eval("long.toOctalString", long.toOctalString, Java.boxed.String)
+    eval("long.toBinaryString", long.toBinaryString, Java.String)
+    eval("long.toHexString", long.toHexString, Java.String)
+    eval("long.toOctalString", long.toOctalString, Java.String)
   }
 }
 

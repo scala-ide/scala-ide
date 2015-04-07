@@ -32,7 +32,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `((x: Int) => x.toString.mkString)(2) `(): Unit = disableOnJava8 {
-    eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.boxed.String)
+    eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.String)
   }
 
   @Test
@@ -78,7 +78,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `libClass.performByName("ala".mkString) `(): Unit =
-    eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.boxed.String)
+    eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.String)
 
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =

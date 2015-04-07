@@ -27,7 +27,7 @@ class TypeExtractionTest extends HasEvaluator {
     testTypes("1.23f", "Float")
     testTypes("123L", "Long")
     testTypes(""" 'c' """, "Char")
-    testTypes(""" "123L" """, Java.boxed.String)
+    testTypes(""" "123L" """, Java.String)
   }
 
   @Test
@@ -40,6 +40,6 @@ class TypeExtractionTest extends HasEvaluator {
   def fields(): Unit = {
     testTypes("val set = Set(1, 2,3); set", "scala.collection.immutable.Set[Int]")
     testTypes("""  val i = "ala".map(_.toInt).sum; i + 1 """, "Int")
-    testTypes("""  val i = ("ala", 1); i._1 """, Java.boxed.String)
+    testTypes("""  val i = ("ala", 1); i._1 """, Java.String)
   }
 }

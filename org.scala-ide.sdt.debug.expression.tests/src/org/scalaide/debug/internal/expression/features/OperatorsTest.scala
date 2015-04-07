@@ -47,7 +47,7 @@ class OperatorsTest
 
   @Test
   def testLocalVar(): Unit =
-    testAssignment(on = "-:-", tpe = Java.boxed.String, values = s("1"), s("2"), s("3"))
+    testAssignment(on = "-:-", tpe = Java.String, values = s("1"), s("2"), s("3"))
 
   // constructors
 

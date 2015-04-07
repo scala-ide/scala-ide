@@ -18,11 +18,11 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 
   @Test
   def testFieldOfGenericTypeFromMethod(): Unit =
-    eval("b", "ala", Java.boxed.String)
+    eval("b", "ala", Java.String)
 
   @Test
   def testFieldOfGenericTypeFromMethodThatRequiresExactType(): Unit =
-    eval("b.filter('a' ==)", "aa", Java.boxed.String)
+    eval("b.filter('a' ==)", "aa", Java.String)
 }
 
 object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) {

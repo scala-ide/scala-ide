@@ -37,7 +37,7 @@ trait Seeker {
 
   /** converts some Scala names to java ones */
   private def scalaToJavaTypeName(scalaName: String): String = scalaName match {
-    case "String" => Java.boxed.String
+    case "String" => Java.String
     case "Boolean" => Java.primitives.boolean
     case "Byte" => Java.primitives.byte
     case "Char" => Java.primitives.char
