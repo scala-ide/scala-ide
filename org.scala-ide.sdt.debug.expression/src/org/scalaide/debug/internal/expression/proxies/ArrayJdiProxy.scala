@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression.proxies
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
@@ -14,7 +14,8 @@ import com.sun.jdi.ArrayType
 /**
  * JdiProxy implementation for java `Array`s.
  */
-case class ArrayJdiProxy[ProxyType <: JdiProxy](proxyContext: JdiContext, __underlying: ArrayReference) extends JdiProxy {
+case class ArrayJdiProxy[ProxyType <: JdiProxy](override val __context: JdiContext, override val __value: ArrayReference)
+  extends ObjectJdiProxy(__context, __value) {
 
   override protected def callSpecialMethod(name: String, args: Seq[Any]): Option[JdiProxy] = name match {
     case "length" if args.isEmpty => callLenght()
@@ -23,24 +24,21 @@ case class ArrayJdiProxy[ProxyType <: JdiProxy](proxyContext: JdiContext, __unde
     case _ => None
   }
 
-  override def referenceType: ArrayType = __underlying.referenceType.asInstanceOf[ArrayType]
+  override def __type: ArrayType = __value.referenceType.asInstanceOf[ArrayType]
 
-  private def callLenght() = Some(proxyContext.proxy(__underlying.length))
+  private def callLenght() = Some(__context.proxy(__value.length))
 
   private def callUpdate(args: Seq[Any]) = args match {
-    case Seq(i: IntJdiProxy, value: BoxedJdiProxy[_, _]) =>
-      __underlying.setValue(i.__value[Int], value.primitive)
-      Some(UnitJdiProxy(proxyContext))
     case Seq(i: IntJdiProxy, value: JdiProxy) =>
-      __underlying.setValue(i.__value[Int], value.__underlying)
-      Some(UnitJdiProxy(proxyContext))
+      __value.setValue(i.__value.value, value.__value)
+      Some(UnitJdiProxy(__context))
     case _ => None
   }
 
   private def callApply(args: Seq[Any]) =
     args match {
       case Seq(i: IntJdiProxy) =>
-        Some(proxyContext.valueProxy(__underlying.getValue(i.__value[Int])))
+        Some(__context.valueProxy(__value.getValue(i.__value.value)))
       case _ => None
     }
 }

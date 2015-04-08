@@ -31,7 +31,7 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
 
   @Test
   def testLambdaWithExplicitTypeAndClosureThatRequiresReturnValue(): Unit = disableOnJava8 {
-    eval("list.map((_: Int) - int).head + 1", 1, Java.boxed.Integer)
+    eval("list.map((_: Int) - int).head + 1", 1, Java.primitives.int)
   }
 
   @Test
@@ -48,12 +48,12 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
         | (list.map((_: Int) - diff).head + 1).toString
         |}
         |ala
-        |""".stripMargin, "0", Java.boxed.String)
+        |""".stripMargin, "0", Java.String)
   }
 
   @Test
   def testLambdaWithExplicitTypeThatRequiresReturnValue(): Unit =
-    eval("list.map((_: Int) - 1).sum", 3, Java.boxed.Integer)
+    eval("list.map((_: Int) - 1).sum", 3, Java.primitives.int)
 
   @Test
   def testLambdaWithPartialFunction(): Unit = disableOnJava8 {
@@ -62,12 +62,12 @@ class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
 
   @Test
   def testLambdaWithPartialFunctionAndImportantReturnType(): Unit = disableOnJava8 {
-    eval("list.map{ case i: Int => i - int}.head + 1", 1, Java.boxed.Integer)
+    eval("list.map{ case i: Int => i - int}.head + 1", 1, Java.primitives.int)
   }
 
   @Test
   def testHigherOrderfunctionWithMultipleParameterListsOnValue(): Unit = disableOnJava8 {
-    eval("list.fold(0)((_: Int) + (_: Int))", 6, Java.boxed.Integer)
+    eval("list.fold(0)((_: Int) + (_: Int))", 6, Java.primitives.int)
   }
 
 }

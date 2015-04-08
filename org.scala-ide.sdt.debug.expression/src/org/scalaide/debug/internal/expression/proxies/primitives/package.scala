@@ -19,9 +19,9 @@ package org.scalaide.debug.internal.expression.proxies
  *  $ [[org.scalaide.debug.internal.expression.proxies.primitives.LongJdiProxy]]
  *  $ [[org.scalaide.debug.internal.expression.proxies.primitives.ShortJdiProxy]]
  *
- * All extends [[org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy]], which defines common interface for them.
+ * All extends [[org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy]], which defines common interface for them.
  *
- * Their companion object extends [[org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxyCompanion]], which defines common methods
+ * Their companion object extends [[org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxyCompanion]], which defines common methods
  * and simplifies implementation.
  */
 package object primitives {

@@ -17,23 +17,23 @@ class OperatorsTest
 
   @Test
   def testValInScope(): Unit =
-    eval("++", 1, Java.boxed.Integer)
+    eval("++", 1, Java.primitives.int)
 
   @Test
   def testVarInScope(): Unit =
-    testAssignment(on = "+:+", tpe = Java.boxed.Integer, values = "1", "2", "3")
+    testAssignment(on = "+:+", tpe = Java.primitives.int, values = "1", "2", "3")
 
   @Test
   def testNoArgDefInScope(): Unit =
-    eval("!!!", 1, Java.boxed.Integer)
+    eval("!!!", 1, Java.primitives.int)
 
   @Test
   def testEmptyArgDefInScope(): Unit =
-    eval("@@@()", 2, Java.boxed.Integer)
+    eval("@@@()", 2, Java.primitives.int)
 
   @Test
   def testDefInScope(): Unit =
-    eval("###(123)", 123, Java.boxed.Integer)
+    eval("###(123)", 123, Java.primitives.int)
 
   @Test
   def testVarArgDefInScope(): Unit =
@@ -43,11 +43,11 @@ class OperatorsTest
 
   @Test
   def testLocalVal(): Unit =
-    eval("--", "123", Java.boxed.Integer)
+    eval("--", "123", Java.primitives.int)
 
   @Test
   def testLocalVar(): Unit =
-    testAssignment(on = "-:-", tpe = Java.boxed.String, values = s("1"), s("2"), s("3"))
+    testAssignment(on = "-:-", tpe = Java.String, values = s("1"), s("2"), s("3"))
 
   // constructors
 
@@ -81,23 +81,23 @@ class OperatorsTest
 
   @Test
   def testValOnObject(): Unit =
-    eval("OperatorsObj.++", 1, Java.boxed.Integer)
+    eval("OperatorsObj.++", 1, Java.primitives.int)
 
   @Test
   def testVarOnObject(): Unit =
-    testAssignment(on = "OperatorsObj.+:+", tpe = Java.boxed.Integer, values = "1", "2", "3")
+    testAssignment(on = "OperatorsObj.+:+", tpe = Java.primitives.int, values = "1", "2", "3")
 
   @Test
   def testNoArgDefOnObject(): Unit =
-    eval("OperatorsObj.!!!", 1, Java.boxed.Integer)
+    eval("OperatorsObj.!!!", 1, Java.primitives.int)
 
   @Test
   def testEmptyArgDefOnObject(): Unit =
-    eval("OperatorsObj.@@@()", 2, Java.boxed.Integer)
+    eval("OperatorsObj.@@@()", 2, Java.primitives.int)
 
   @Test
   def testDefOnObject(): Unit =
-    eval("OperatorsObj.###(123)", 123, Java.boxed.Integer)
+    eval("OperatorsObj.###(123)", 123, Java.primitives.int)
 
   @Test
   def testVarArgDefOnObject(): Unit =
@@ -107,23 +107,23 @@ class OperatorsTest
 
   @Test
   def testVal(): Unit =
-    eval("operators.++", 1, Java.boxed.Integer)
+    eval("operators.++", 1, Java.primitives.int)
 
   @Test
   def testVar(): Unit =
-    testAssignment(on = "operators.+:+", tpe = Java.boxed.Integer, values = "1", "2", "3")
+    testAssignment(on = "operators.+:+", tpe = Java.primitives.int, values = "1", "2", "3")
 
   @Test
   def testNoArgDef(): Unit =
-    eval("operators.!!!", 1, Java.boxed.Integer)
+    eval("operators.!!!", 1, Java.primitives.int)
 
   @Test
   def testEmptyArgDef(): Unit =
-    eval("operators.@@@()", 2, Java.boxed.Integer)
+    eval("operators.@@@()", 2, Java.primitives.int)
 
   @Test
   def testDef(): Unit =
-    eval("operators.###(123)", 123, Java.boxed.Integer)
+    eval("operators.###(123)", 123, Java.primitives.int)
 
   @Test
   def testVarArgDef(): Unit =

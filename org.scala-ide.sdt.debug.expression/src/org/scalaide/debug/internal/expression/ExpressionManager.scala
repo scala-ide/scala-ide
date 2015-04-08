@@ -93,7 +93,7 @@ trait ExpressionManager extends HasLogger {
     val debugNotRunning = "Expression evaluation works only when debug is running and jvm is suspended"
     val emptyCode = "Expression is empty"
 
-    def show(proxy: JdiProxy): Try[String] = Try(proxy.proxyContext.show(proxy))
+    def show(proxy: JdiProxy): Try[String] = Try(proxy.__context.show(proxy))
 
     def computeInEvaluator(evaluator: JdiExpressionEvaluator, debugTarget: ScalaDebugTarget): ExpressionEvaluatorResult = {
       val resultWithStringRep = for {
@@ -103,7 +103,7 @@ trait ExpressionManager extends HasLogger {
 
       ExpressionException.recoverFromErrors(resultWithStringRep, evaluator.createContext(), logger) match {
         case Success((result, outputText)) =>
-          Try(result.__underlying) match {
+          Try(result.__value) match {
             case Success(underlying) =>
               SuccessWithValue(ScalaValue(underlying, debugTarget), outputText)
             case Failure(e) =>

@@ -72,8 +72,8 @@ private[context] trait JdiMethodInvoker {
     args: Seq[JdiProxy] = Seq.empty): Result = {
 
     def noSuchMethod: Nothing = {
-      val tpeName = proxy.referenceType.name
-      val argsString = args.map(_.referenceType.name).mkString("(", ", ", ")")
+      val tpeName = proxy.__type.name
+      val argsString = args.map(_.__type.name).mkString("(", ", ", ")")
       throw new NoSuchMethodError(s"field of type $tpeName has no method named $name with arguments: $argsString")
     }
 
@@ -88,13 +88,14 @@ private[context] trait JdiMethodInvoker {
     methodArgs: Seq[JdiProxy] = Seq.empty): Option[Value] = {
 
     val encodedName = NameTransformer.encode(methodName)
+    val boxed = proxy.__autoboxed
 
-    val standardMethod = new StandardMethod(proxy, encodedName, methodArgs, this)
-    def varArgMethod = new ScalaVarArgMethod(proxy, encodedName, methodArgs, this)
-    def javaVarArgMethod = new JavaVarArgMethod(proxy, methodName, methodArgs, this)
-    def stringConcat = new StringConcatenationMethod(proxy, encodedName, methodArgs)
+    val standardMethod = new StandardMethod(boxed, encodedName, methodArgs, this)
+    def varArgMethod = new ScalaVarArgMethod(boxed, encodedName, methodArgs, this)
+    def javaVarArgMethod = new JavaVarArgMethod(boxed, methodName, methodArgs, this)
+    def stringConcat = new StringConcatenationMethod(boxed, encodedName, methodArgs, this)
     def anyValMethod = new AnyValMethod(proxy, encodedName, methodArgs, onRealType, this, this)
-    def javaField = new JavaField(proxy, methodName, methodArgs, this)
+    def javaField = new JavaField(boxed, methodName, methodArgs, this)
 
     standardMethod() orElse
       varArgMethod() orElse
@@ -197,26 +198,26 @@ private[context] trait JdiMethodInvoker {
     args: Seq[JdiProxy] = Seq.empty): JdiProxy = {
 
     def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className " +
-      s"has no constructor with arguments: ${args.map(_.referenceType.name).mkString("(", ", ", ")")}")
+      s"has no constructor with arguments: ${args.map(_.__type.name).mkString("(", ", ", ")")}")
 
-    tryNewInstance(className, args).getOrElse(noSuchConstructor)
+    valueProxy(tryNewInstance(className, args).getOrElse(noSuchConstructor))
   }
 
   /** newInstance method that returns None if matching constructor is not found */
   private[context] def tryNewInstance(
     className: String,
-    methodArgs: Seq[JdiProxy]): Option[JdiProxy] = {
+    methodArgs: Seq[JdiProxy]): Option[Value] = {
 
     def standardConstructor(clsName: String) = new StandardConstructorMethod(clsName, methodArgs, this)
     def varArgConstructor(clsName: String) = new VarArgConstructorMethod(clsName, methodArgs, this)
     def javaVarArgConstructor(clsName: String) = new JavaVarArgConstructorMethod(clsName, methodArgs, this)
     def arrayConstructor(clsName: String) = new ArrayConstructor(clsName, methodArgs, this)
 
-    @tailrec def tryNext(clsName: String, constructor: String => MethodInvoker): Option[JdiProxy] = {
-      val proxy = Try((clsName match {
+    @tailrec def tryNext(clsName: String, constructor: String => MethodInvoker): Option[Value] = {
+      val proxy = Try(clsName match {
         case Scala.Array(_) => arrayConstructor(clsName).apply()
         case standardClass => constructor(standardClass).apply()
-      }).map(valueProxy))
+      })
 
       proxy match {
         case Success(some: Some[_]) => some

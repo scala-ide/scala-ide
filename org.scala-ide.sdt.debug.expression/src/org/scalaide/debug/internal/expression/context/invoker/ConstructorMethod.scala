@@ -27,8 +27,7 @@ class StandardConstructorMethod(className: String, val args: Seq[JdiProxy], cont
 
   override def apply(): Option[Value] = {
     def invoke(method: Method): Value = {
-      val finalArgs = generateArguments(method)
-      referenceType.newInstance(context.currentThread(), method, finalArgs)
+      referenceType.newInstance(context.currentThread(), method, generateArguments(method))
     }
 
     // ignore any errors from method invocation - it can mean it's a var-arg constructor

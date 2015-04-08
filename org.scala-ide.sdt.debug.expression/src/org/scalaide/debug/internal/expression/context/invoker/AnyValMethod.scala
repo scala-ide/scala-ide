@@ -7,7 +7,7 @@ package context.invoker
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.context.JdiMethodInvoker
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 
 import com.sun.jdi.Value
 
@@ -21,7 +21,7 @@ class AnyValMethod(proxy: JdiProxy, methodName: String, args: Seq[JdiProxy], rea
   private def companionObject = for {
     companionObjectName <- realThisType
     objectReference <- context.tryObjectByName(companionObjectName)
-  } yield new SimpleJdiProxy(context, objectReference)
+  } yield new ObjectJdiProxy(context, objectReference)
 
   private def invokeDelegate: Option[Value] = for {
     companionObject <- companionObject
@@ -33,7 +33,8 @@ class AnyValMethod(proxy: JdiProxy, methodName: String, args: Seq[JdiProxy], rea
   private def invokedBoxed: Option[Value] = for {
     className <- realThisType
     boxed <- invoker.tryNewInstance(className, Seq(proxy))
-    res <- context.tryInvokeUnboxed(boxed, None, methodName, args)
+    proxied = context.valueProxy(boxed)
+    res <- context.tryInvokeUnboxed(proxied, None, methodName, args)
   } yield res
 
   /** invoke delegate or box value and invoke method */

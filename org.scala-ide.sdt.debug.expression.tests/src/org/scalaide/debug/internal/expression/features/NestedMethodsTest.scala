@@ -34,10 +34,10 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
   def testNestedTwice(): Unit = runInEclipse("nestedTwice(1)")
 
   @Test
-  def testNestedInMultipleMethods(): Unit = eval("nestedInMultipleMethods(1)", "nestedInMultipleMethods", Java.boxed.String)
+  def testNestedInMultipleMethods(): Unit = eval("nestedInMultipleMethods(1)", "nestedInMultipleMethods", Java.String)
 
   @Test
-  def testSimpleNested(): Unit = eval("simpleNested(1)", "simpleNested: 1", Java.boxed.String)
+  def testSimpleNested(): Unit = eval("simpleNested(1)", "simpleNested: 1", Java.String)
 
   @Test
   def testLocalMethodMiscompilation(): Unit = expectReflectiveCompilationError("nestedStringMethod(1)")
@@ -49,17 +49,17 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
   def testNestedWithClosure(): Unit = withUnsuportedFeature("closure")("nestedWithClosure(1)")
 
   @Test
-  def testNestedMethodWithoutParenthesis(): Unit = eval("nestedMethodWithoutParenthesis", "nestedMethodWithoutParenthesis", Java.boxed.String)
+  def testNestedMethodWithoutParenthesis(): Unit = eval("nestedMethodWithoutParenthesis", "nestedMethodWithoutParenthesis", Java.String)
 
   @Test
-  def testNestedDefinedInLambda(): Unit = eval("nestedDefinedInLambda(1)", "nestedDefinedInLambda", Java.boxed.String)
+  def testNestedDefinedInLambda(): Unit = eval("nestedDefinedInLambda(1)", "nestedDefinedInLambda", Java.String)
 
   @Test
-  def testMultipleParametersNestedMethod(): Unit = eval("multipleParametersNestedMethod(1)(2)", "multipleParametersNestedMethod", Java.boxed.String)
+  def testMultipleParametersNestedMethod(): Unit = eval("multipleParametersNestedMethod(1)(2)", "multipleParametersNestedMethod", Java.String)
 
   @Test
   def testMultipleParametersNestedMethodReturningFunction(): Unit =
-    eval("multipleParametersNestedMethodReturningFunction(1)(2)(3)", "multipleParametersNestedMethodReturningFunction", Java.boxed.String)
+    eval("multipleParametersNestedMethodReturningFunction(1)(2)(3)", "multipleParametersNestedMethodReturningFunction", Java.String)
 
   @Test
   def testNestedMethodUsedInLambda(): Unit = withUnsuportedFeature("function")("objectList.map(simpleNested)")
@@ -68,10 +68,10 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
   def testMultipleParametersNestedMethodUsedInLambda(): Unit = withUnsuportedFeature("function")("objectList.map(multipleParametersNestedMethod(1))")
 
   @Test
-  def testNestedFunction(): Unit = eval("nestedFunction(1)", "nestedFunction", Java.boxed.String)
+  def testNestedFunction(): Unit = eval("nestedFunction(1)", "nestedFunction", Java.String)
 
   @Test
-  def testNestedWithExistentialType(): Unit = eval("nestedWithExistentialType(Nil)", "nestedWithExistentialType", Java.boxed.String)
+  def testNestedWithExistentialType(): Unit = eval("nestedWithExistentialType(Nil)", "nestedWithExistentialType", Java.String)
 }
 
 object NestedMethodsTest extends BaseIntegrationTestCompanion(NestedMethodsTestCase)

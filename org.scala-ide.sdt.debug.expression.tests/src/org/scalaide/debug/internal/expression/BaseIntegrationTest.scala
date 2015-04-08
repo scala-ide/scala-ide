@@ -27,7 +27,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
    */
   protected final def runCode(code: String): (String, String) = {
     val proxy = runInEclipse(code, forceRetry = true)
-    val resultString = proxy.proxyContext.show(proxy)
+    val resultString = proxy.__context.show(proxy)
 
     resultString match {
       case resultRegex(resultString, resultType) => (resultString, resultType)

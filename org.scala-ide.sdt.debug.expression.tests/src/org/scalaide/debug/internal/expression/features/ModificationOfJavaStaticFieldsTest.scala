@@ -14,24 +14,24 @@ class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(Modificatio
 
   @Test
   def changeStaticFieldsOfClass(): Unit = {
-    eval("JavaLibClass.staticString = Int.MaxValue.toString; JavaLibClass.staticString", Int.MaxValue, Java.boxed.String)
-    eval("JavaLibClass.staticInt -= 2 + 2; JavaLibClass.staticInt", JavaTestCase.JavaLibClass.staticInt - 4, Java.boxed.Integer)
+    eval("JavaLibClass.staticString = Int.MaxValue.toString; JavaLibClass.staticString", Int.MaxValue, Java.String)
+    eval("JavaLibClass.staticInt -= 2 + 2; JavaLibClass.staticInt", JavaTestCase.JavaLibClass.staticInt - 4, Java.primitives.int)
   }
 
   @Test
   def changeStaticFieldsOfInnerStaticClass(): Unit = {
-    eval("""JavaLibClass.InnerStaticClass.staticString = "bar"; JavaLibClass.InnerStaticClass.staticString""", "bar", Java.boxed.String)
+    eval("""JavaLibClass.InnerStaticClass.staticString = "bar"; JavaLibClass.InnerStaticClass.staticString""", "bar", Java.String)
     eval("""JavaLibClass.InnerStaticClass.staticString = "baz" + JavaLibClass.InnerStaticClass.staticString; JavaLibClass.InnerStaticClass.staticString""",
-      "bazbar", Java.boxed.String)
-    eval("JavaLibClass.InnerStaticClass.innerStaticDouble = -42; JavaLibClass.InnerStaticClass.innerStaticDouble", -42.0, Java.boxed.Double)
+      "bazbar", Java.String)
+    eval("JavaLibClass.InnerStaticClass.innerStaticDouble = -42; JavaLibClass.InnerStaticClass.innerStaticDouble", -42.0, Java.primitives.double)
   }
 
   @Test
   def changeStaticFieldOfInnerStaticClassOfInnerStaticClass(): Unit = {
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt = 123; JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt",
-      123, Java.boxed.Integer)
+      123, Java.primitives.int)
     eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt = -110", (), Scala.unitType)
-    eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt", -110, Java.boxed.Integer)
+    eval("JavaLibClass.InnerStaticClass.InnerStaticInStatic.staticInt", -110, Java.primitives.int)
   }
 }
 

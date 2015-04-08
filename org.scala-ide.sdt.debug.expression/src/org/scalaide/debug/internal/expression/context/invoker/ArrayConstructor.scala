@@ -14,7 +14,7 @@ class ArrayConstructor(className: String, args: Seq[JdiProxy], context: JdiConte
   def apply(): Option[Value] = args match {
     case List(proxy: IntJdiProxy) =>
       val arrayType = context.arrayByName(className)
-      Some(arrayType.newInstance(proxy.__value[Int]))
+      Some(arrayType.newInstance(proxy.__value.value))
     case other => None
   }
 }

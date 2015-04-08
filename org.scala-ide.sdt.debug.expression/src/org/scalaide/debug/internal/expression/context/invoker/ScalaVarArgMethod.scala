@@ -6,9 +6,9 @@ package context.invoker
 
 import scala.collection.JavaConversions._
 
-import org.scalaide.debug.internal.expression.Arity
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 
 import com.sun.jdi.Method
 import com.sun.jdi.Type
@@ -46,7 +46,7 @@ trait ScalaVarArgSupport
 /**
  * Calls vararg method on given `ObjectReference` in context of debug.
  */
-class ScalaVarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
+class ScalaVarArgMethod(proxy: ObjectJdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
     extends ScalaMethod(name, proxy)
     with ScalaVarArgSupport {
 
@@ -64,7 +64,7 @@ class ScalaVarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], 
         standardArgs :+ varArgs
       }
 
-      proxy.__underlying.invokeMethod(context.currentThread(), method, argsWithVarArg)
+      proxy.__value.invokeMethod(context.currentThread(), method, argsWithVarArg)
     }
 
     handleMultipleOverloads(candidates, invoke)

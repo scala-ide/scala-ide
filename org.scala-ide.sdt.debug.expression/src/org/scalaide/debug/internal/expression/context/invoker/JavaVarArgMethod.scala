@@ -4,11 +4,11 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 
-import org.scalaide.debug.internal.expression.Arity
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 
 import com.sun.jdi.ArrayType
 import com.sun.jdi.Method
@@ -41,11 +41,11 @@ trait JavaVarArgSupport
 /**
  * Calls vararg method on given `ObjectReference` in context of debug.
  */
-class JavaVarArgMethod(proxy: JdiProxy, val methodName: String, val args: Seq[JdiProxy], protected val context: JdiContext)
+class JavaVarArgMethod(proxy: ObjectJdiProxy, val methodName: String, val args: Seq[JdiProxy], protected val context: JdiContext)
     extends BaseMethodInvoker
     with JavaVarArgSupport {
 
-  def referenceType = proxy.referenceType
+  override def referenceType = proxy.__type
 
   override def apply(): Option[Value] = {
 
@@ -53,7 +53,7 @@ class JavaVarArgMethod(proxy: JdiProxy, val methodName: String, val args: Seq[Jd
       val normalSize = method.arity - 1
       val standardArgs = generateArguments(method).take(normalSize)
       val varArgs = packToJavaVarArg(method.argumentTypes.last.asInstanceOf[ArrayType], args.drop(normalSize))
-      proxy.__underlying.invokeMethod(context.currentThread(), method, standardArgs :+ varArgs)
+      proxy.__value.invokeMethod(context.currentThread(), method, standardArgs :+ varArgs)
     }
 
     handleMultipleOverloads(candidates, invoke)

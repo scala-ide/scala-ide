@@ -1,9 +1,10 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.primitives
+package org.scalaide.debug.internal.expression
+package proxies.primitives
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -12,30 +13,48 @@ import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxyCompanion
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
+import com.sun.jdi.ClassType
+import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
-import com.sun.jdi.Value
+import com.sun.jdi.PrimitiveValue
 
 /**
- * Base for all boxed primitives proxies.
+ * Base for all primitive proxies.
  *
  * @tparam Primitive type to proxy
  * @tparam Proxy type of proxy
  * @param companion companion object for this proxy
  */
-abstract class BoxedJdiProxy[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](companion: BoxedJdiProxyCompanion[Primitive, Proxy])
-  extends JdiProxy {
+abstract class PrimitiveJdiProxy[Primitive, Proxy <: PrimitiveJdiProxy[Primitive, Proxy, ValueType], ValueType <: PrimitiveValue](
+  companion: PrimitiveJdiProxyCompanion[Primitive, Proxy, ValueType])
+    extends JdiProxy {
   self: Proxy =>
 
   /** Underlying primitive value from this proxy. */
-  final def primitive: Value = companion.primitive(this)
+  override def __value: ValueType
+
+  final def boxed: ObjectReference = {
+    val boxedClass: ClassType = __context.classByName(companion.name.javaBoxed)
+
+    val boxingMethod: Method = boxedClass
+      .methodsByName("valueOf")
+      .filter(_.argumentTypeNames.toSeq == Seq(companion.name.java))
+      .head
+
+    boxedClass.invokeMethod(__context.currentThread(), boxingMethod, List(__value)).asInstanceOf[ObjectReference]
+  }
 
   /** Underlying primitive name. */
-  final def primitiveName: String = companion.unboxedName
+  final def primitiveName: String = companion.name.java
 
+  /** Underlying boxed name */
+  final def boxedName: String = companion.name.javaBoxed
+
+  override final protected[expression] def genericThisType: Option[String] = Some(companion.name.scalaRich)
 }
 
 /**
- * Base for companions of [[org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy]].
+ * Base for companions of [[org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy]].
  *
  * It requires one to implement `mirror` method.
  *
@@ -44,33 +63,19 @@ abstract class BoxedJdiProxy[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]
  * @param boxedName name of boxed type (for example 'java.lang.Character')
  * @param unboxedName name of unboxed type (for example 'char')
  */
-abstract class BoxedJdiProxyCompanion[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](val boxedName: String, val unboxedName: String)
-  extends JdiProxyCompanion[Proxy, ObjectReference] {
+abstract class PrimitiveJdiProxyCompanion[Primitive, Proxy <: PrimitiveJdiProxy[Primitive, Proxy, ValueType], ValueType <: PrimitiveValue](
+  val name: TypeNames.Primitive)
+    extends JdiProxyCompanion[Proxy, ValueType] {
 
   /** Creates a mirror of primitive value in debug context. */
-  protected def mirror(value: Primitive, context: JdiContext): Value
-
-  /**
-   * Underlying primitive value using JDI.
-   *
-   * @param proxy proxy to get value from
-   */
-  final def primitive(proxy: Proxy): Value = {
-    val method = proxy.proxyContext.methodOn(proxy.referenceType, unboxedName + "Value", arity = 0)
-
-    proxy.proxyContext.invokeUnboxed[Value](proxy, None, method.name)
-  }
+  protected def mirror(value: Primitive, context: JdiContext): ValueType
 
   /** Creates proxy from primitive using proxy context */
   final def fromPrimitive(value: Primitive, context: JdiContext): Proxy =
-    fromPrimitiveValue(mirror(value, context), context)
-
-  /** Creates proxy from value using proxy context */
-  final def fromPrimitiveValue(value: Value, context: JdiContext): Proxy =
-    context.fromPrimitiveValue(value, this)
+    apply(context, mirror(value, context))
 }
 
-private[expression] object BoxedJdiProxy {
+private[expression] object PrimitiveJdiProxy {
 
   /** Maps java and scala primitive type names to appropriate proxies. */
   def primitiveToProxy(primitiveType: String): String = {
@@ -111,5 +116,5 @@ private[expression] object BoxedJdiProxy {
     Java.boxed.Float -> classOf[FloatJdiProxy],
     Java.boxed.Character -> classOf[CharJdiProxy],
     Java.boxed.Boolean -> classOf[BooleanJdiProxy],
-    Java.boxed.String -> classOf[StringJdiProxy]).mapValues(_.getSimpleName)
+    Java.String -> classOf[StringJdiProxy]).mapValues(_.getSimpleName)
 }

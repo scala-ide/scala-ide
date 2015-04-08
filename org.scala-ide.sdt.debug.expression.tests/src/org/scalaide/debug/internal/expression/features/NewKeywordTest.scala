@@ -43,7 +43,7 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
   @Test
   def createNewInstanceOfPrimitiveType(): Unit =
-    eval("new java.lang.Integer(12345)", 12345, Java.boxed.Integer)
+    eval("new java.lang.Integer(12345)", 12345, Java.primitives.int)
 
   @Test
   def scalaVarArgConstructor(): Unit = {
@@ -63,7 +63,7 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
 
   @Test
   def nestedInstantiatedClassField(): Unit =
-    eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", 4, Java.boxed.Integer)
+    eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", 4, Java.primitives.int)
 }
 
 object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase)

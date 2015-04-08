@@ -32,12 +32,12 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `((x: Int) => x.toString.mkString)(2) `(): Unit = disableOnJava8 {
-    eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.boxed.String)
+    eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.String)
   }
 
   @Test
   def higherOrderFunctionWithMultipleParameterLists(): Unit = disableOnJava8 {
-    eval("List(1, 2, 3).fold(0)(_ + _)", 6, Java.boxed.Integer)
+    eval("List(1, 2, 3).fold(0)(_ + _)", 6, Java.primitives.int)
   }
 
   @Test
@@ -57,16 +57,16 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `libClass.perform(_ + 2) `(): Unit =
-    eval("libClass.perform(_ + 2)", 3, Java.boxed.Integer)
+    eval("libClass.perform(_ + 2)", 3, Java.primitives.int)
 
   @Test
   def `libClass.performByName(1 + 2) `(): Unit = disableOnJava8 {
-    eval("libClass.performByName(1 + 2)", 4, Java.boxed.Integer)
+    eval("libClass.performByName(1 + 2)", 4, Java.primitives.int)
   }
 
   @Test
   def `libClass.performTwice(libClass.incrementAndGet()) `(): Unit =
-    eval(" libClass.performTwice(libClass.incrementAndGet()) ", 5, Java.boxed.Integer)
+    eval(" libClass.performTwice(libClass.incrementAndGet()) ", 5, Java.primitives.int)
 
   @Test
   def mappingOnFullType(): Unit = disableOnJava8 {
@@ -78,7 +78,7 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
   @Test
   def `libClass.performByName("ala".mkString) `(): Unit =
-    eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.boxed.String)
+    eval(""" libClass.performByNameGen("ala".mkString) """, "ala", Java.String)
 
   @Test
   def `lambda inside lambda over collection: multilist.map(list => list.map(_ + 1))`(): Unit =

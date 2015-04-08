@@ -6,7 +6,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.Names
+import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
 import org.junit.Ignore
 
@@ -14,15 +14,15 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 
   @Test
   def testFieldOfGenericTypeFromClass(): Unit =
-    eval("a", 1, Names.Java.boxed.Integer)
+    eval("a", 1, Java.primitives.int)
 
   @Test
   def testFieldOfGenericTypeFromMethod(): Unit =
-    eval("b", "ala", Names.Java.boxed.String)
+    eval("b", "ala", Java.String)
 
   @Test
   def testFieldOfGenericTypeFromMethodThatRequiresExactType(): Unit =
-    eval("b.filter('a' ==)", "aa", Names.Java.boxed.String)
+    eval("b.filter('a' ==)", "aa", Java.String)
 }
 
 object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) {
