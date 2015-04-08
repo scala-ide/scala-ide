@@ -256,6 +256,12 @@ object TestValues {
     val long2 = 2l
   }
 
+  object NamedParametersTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "NamedParameters"
+    val breakpointLine = 13
+  }
+
   object NestedMethodsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "NestedMethods"

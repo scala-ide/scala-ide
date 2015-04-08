@@ -53,12 +53,6 @@ case class LibClass(a: Int) {
   }
 
   def performOnList[A](func: List[Int] => A): A = func(List(1, 2))
-
-  def withDefaultValue(name: String = "ala") = name
-
-  def withExplicitAndDefaultValue(prefix: String, name: String = "ala") = s"$prefix $name"
-
-  def withNamedParameter(left: Boolean = true, top: Boolean = true) = s"left $left top $top"
 }
 
 case class LibClass2Lists(a: Int)(b: Int)
