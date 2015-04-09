@@ -20,7 +20,14 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
   /** Wraps value with `"` */
   protected def s(a: Any) = '"' + a.toString + '"'
 
-  private val resultRegex = s"(.*) \\(of type: (.+)\\)".r
+  private object Result {
+    private val regex = s"(.*) \\(of type: (.+)\\)".r
+    def apply(value: String, tpe: String) = s"$value (of type: $tpe)"
+    def unapply(string: String): Option[(String, String)] = string match {
+      case regex(value, tpe) => Some((value, tpe))
+      case other => None
+    }
+  }
 
   /**
    * Test code and returns tuple with (returnedValue, returnedType)
@@ -30,7 +37,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
     val resultString = proxy.__context.show(proxy)
 
     resultString match {
-      case resultRegex(resultString, resultType) => (resultString, resultType)
+      case Result(resultString, resultType) => (resultString, resultType)
       case resultString =>
         fail(s"'$resultString' don't match 'res (of type: resType)' standard")
         throw new RuntimeException("Fail should throw an exception!")
@@ -41,8 +48,9 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
   protected final def eval(code: String, expectedValue: Any, expectedType: String): Unit = {
     val (resultValue, resultType) = runCode(code)
     val expectedValueString = ScalaRunTime.stringOf(expectedValue)
-    assertEquals("Result value differs:", expectedValueString, resultValue)
-    assertEquals("Result type differs:", expectedType, resultType)
+    assertEquals("Result value differs:",
+      Result(expectedValueString, expectedType),
+      Result(resultValue, resultType))
   }
 
   /**
