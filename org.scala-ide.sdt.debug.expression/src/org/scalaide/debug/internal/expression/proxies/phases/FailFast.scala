@@ -46,7 +46,7 @@ class AfterTypecheckFailFast
     case Match(_, _) =>
       throw new UnsupportedFeature("pattern matching")
     case Throw(_) =>
-      throw new UnsupportedFeature("throw")
+      throw new ThrowDetected()
     case other =>
       transformFurther(other)
   }
