@@ -11,12 +11,15 @@ import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlighting
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 
-class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
+class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor with MarkOccurrencesEditorExtension {
 
   private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
     super.createPartControl(parent)
+
+    if (isMarkingOccurrences())
+      installOccurrencesFinder(/*forceUpdate*/false)
 
     getInteractiveCompilationUnit() match {
       case scu: ScalaCompilationUnit => implicitHighlighter(scu)

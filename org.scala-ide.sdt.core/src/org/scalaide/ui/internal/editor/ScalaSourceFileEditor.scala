@@ -6,8 +6,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SynchronizedBuffer
 
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -22,27 +20,17 @@ import org.eclipse.jface.action.IContributionItem
 import org.eclipse.jface.action.MenuManager
 import org.eclipse.jface.action.Separator
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.ITextOperationTarget
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.ITextViewerExtension
-import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.information.InformationPresenter
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.util.PropertyChangeEvent
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IWorkbenchCommandConstants
-import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.core.internal.decorators.markoccurrences.Occurrences
-import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
-import org.scalaide.core.internal.formatter.FormatterPreferences.RichFormatterPreference
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
@@ -51,37 +39,22 @@ import org.scalaide.refactoring.internal.source.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.source.IntroduceProductNTrait
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.actions
-import org.scalaide.ui.internal.editor.autoedits.SurroundSelectionStrategy
+import org.scalaide.ui.internal.editor.autoedits._
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.util.Utils
 import org.scalaide.util.eclipse.EclipseUtils
-import org.scalaide.util.eclipse.EditorUtils
-import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
 import org.scalaide.util.ui.DisplayThread
 
-import scalariform.formatter.preferences.IndentSpaces
-import scalariform.formatter.preferences.IndentWithTabs
+class ScalaSourceFileEditor
+    extends CompilationUnitEditor
+    with ScalaCompilationUnitEditor
+    with MarkOccurrencesEditorExtension {
 
-class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationUnitEditor { self =>
   import ScalaSourceFileEditor._
 
-  private var occurrenceAnnotations: Set[Annotation] = Set()
-  private var occurrencesFinder: ScalaOccurrencesFinder = _
-  private var occurencesFinderInstalled = false
-
   private val reconcilingListeners: ReconcilingListeners = new ScalaSourceFileEditor.ReconcilingListeners
-
-  private lazy val selectionListener = new ISelectionListener() {
-    override def selectionChanged(part: IWorkbenchPart, selection: ISelection) {
-      selection match {
-        case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
-        case _ =>
-      }
-    }
-  }
 
   private lazy val tpePresenter = {
     val infoPresenter = new InformationPresenter(new FocusedControlCreator(IScalaHover.HoverFontId))
@@ -94,7 +67,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
    * Contains references to all extensions provided by the extension point
    * `org.scala-ide.sdt.core.semanticHighlightingParticipants`.
    *
-   * These extensions are mainly provided by users, therefore any accesss need
+   * These extensions are mainly provided by users, therefore any accesses need
    * to be wrapped in a safe runner.
    */
   private lazy val semanticHighlightingParticipants = new IJavaReconcilingListener {
@@ -111,7 +84,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
 
     override def aboutToBeReconciled() = ()
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
-      self.getInteractiveCompilationUnit() match {
+      getInteractiveCompilationUnit() match {
         case scu: ScalaCompilationUnit => exts foreach { ext =>
           EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'.") {
             ext(scu)
@@ -125,7 +98,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   setPartName("Scala Editor")
   setDocumentProvider(ScalaPlugin().documentProvider)
 
-  override protected def createActions() {
+  override protected def createActions(): Unit = {
     super.createActions()
 
     val cutAction = new TextOperationAction(bundleForConstructedKeys, "Editor.Cut.", this, ITextOperationTarget.CUT) //$NON-NLS-1$
@@ -161,7 +134,7 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
       private def scalaCompilationUnit: Option[ScalaCompilationUnit] =
         Option(getInteractiveCompilationUnit) map (_.asInstanceOf[ScalaCompilationUnit])
 
-      override def run {
+      override def run(): Unit = {
         scalaCompilationUnit foreach { scu =>
           scu.followDeclaration(ScalaSourceFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
@@ -180,99 +153,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
   override def isTabsToSpacesConversionEnabled(): Boolean =
     false
 
-  override protected def initializeKeyBindingScopes() {
+  override protected def initializeKeyBindingScopes(): Unit = {
     setKeyBindingScopes(Array(SCALA_EDITOR_SCOPE))
-  }
-
-  override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
-    requireOccurrencesUpdate(selection)
-  }
-
-  /** Returns the annotation model of the current document provider.
-   */
-  private def getAnnotationModelOpt: Option[IAnnotationModel] = {
-    for {
-      documentProvider <- Option(getDocumentProvider)
-      annotationModel <- Option(documentProvider.getAnnotationModel(getEditorInput))
-    } yield annotationModel
-  }
-
-  private def performOccurrencesUpdate(selection: ITextSelection, documentLastModified: Long) {
-    val annotations = getAnnotations(selection, documentLastModified)
-    for(annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
-      annotationModel.replaceAnnotations(occurrenceAnnotations, annotations)
-      occurrenceAnnotations = annotations.keySet
-    }
-  }
-
-  private def getAnnotations(selection: ITextSelection, documentLastModified: Long): Map[Annotation, Position] = {
-    val region = EditorUtils.textSelection2region(selection)
-    val occurrences = occurrencesFinder.findOccurrences(region, documentLastModified)
-    for {
-      Occurrences(name, locations) <- occurrences.toList
-      location <- locations
-      annotation = new Annotation(OCCURRENCE_ANNOTATION, false, "Occurrence of '" + name + "'")
-      position = new Position(location.getOffset, location.getLength)
-    } yield annotation -> position
-  }.toMap
-
-  private def requireOccurrencesUpdate(selection: ITextSelection) {
-
-    if (selection.getLength < 0 || selection.getOffset < 0)
-      return
-
-    if (getDocumentProvider == null || !isActiveEditor)
-      return
-
-    val lastModified = getSourceViewer.getDocument match {
-      case document: IDocumentExtension4 =>
-        document.getModificationStamp
-      case _ => return
-    }
-
-    EclipseUtils.scheduleJob("Updating occurrence annotations", priority = Job.DECORATE) { monitor =>
-      Option(getInteractiveCompilationUnit) foreach { cu =>
-        val fileName = cu.file.name
-        Utils.debugTimed("Time elapsed for \"updateOccurrences\" in source " + fileName) {
-          performOccurrencesUpdate(selection, lastModified)
-        }
-      }
-      Status.OK_STATUS
-    }
-  }
-
-  override def doSelectionChanged(selection: ISelection) {
-    super.doSelectionChanged(selection)
-    val selectionProvider = getSelectionProvider
-    if (selectionProvider != null)
-      selectionProvider.getSelection match {
-        case textSel: ITextSelection => requireOccurrencesUpdate(textSel)
-        case _ =>
-      }
-  }
-
-  override def installOccurrencesFinder(forceUpdate: Boolean) {
-    if (!occurencesFinderInstalled) {
-      super.installOccurrencesFinder(forceUpdate)
-      getEditorSite.getPage.addPostSelectionListener(selectionListener)
-      occurencesFinderInstalled = true
-    }
-  }
-
-  override def uninstallOccurrencesFinder() {
-    occurencesFinderInstalled = false
-    getEditorSite.getPage.removePostSelectionListener(selectionListener)
-    super.uninstallOccurrencesFinder
-    removeScalaOccurrenceAnnotations()
-  }
-
-  /** Clear the existing Mark Occurrences annotations.
-   */
-  def removeScalaOccurrenceAnnotations() {
-    for (annotationModel <- getAnnotationModelOpt) annotationModel.withLock {
-      annotationModel.replaceAnnotations(occurrenceAnnotations, Map())
-      occurrenceAnnotations = Set()
-    }
   }
 
   /** Return the `InformationPresenter` used to display the type of the selected expression.*/
@@ -329,9 +211,8 @@ class ScalaSourceFileEditor extends CompilationUnitEditor with ScalaCompilationU
     RefactoringMenu.fillContextMenu(menu, this)
   }
 
-  override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
     super.createPartControl(parent)
-    occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
     RefactoringMenu.fillQuickMenu(this)
     reconcilingListeners.addReconcileListener(semanticHighlightingParticipants)
 
@@ -406,7 +287,7 @@ object ScalaSourceFileEditor {
 
   private val SCALA_EDITOR_SCOPE = "scala.tools.eclipse.scalaEditorScope"
 
-  private val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
+  private[editor] val OCCURRENCE_ANNOTATION = "org.eclipse.jdt.ui.occurrences"
 
   /** A thread-safe object for keeping track of Java reconciling listeners.*/
   private class ReconcilingListeners extends IJavaReconcilingListener {
