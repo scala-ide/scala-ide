@@ -327,61 +327,6 @@
             id="org.scala-ide.sdt.core.wizards.newProject">
             <description>Create a Scala project</description>
       </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewClassWizard"
-            icon="icons/full/etool16/newclass_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Class"
-            id="org.scala-ide.sdt.core.wizards.newClass">
-            <description>Create a Scala class</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewObjectWizard"
-            icon="icons/full/etool16/newobject_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Object"
-            id="org.scala-ide.sdt.core.wizards.newObject">
-            <description>Create a Scala object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewPackageObjectWizard"
-            icon="icons/full/etool16/newpackage_object_wiz.png"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Package Object"
-            id="org.scala-ide.sdt.core.wizards.newPackageObject">
-            <description>Create a Scala Package Object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewTraitWizard"
-            icon="icons/full/etool16/newtrait_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Trait"
-            id="org.scala-ide.sdt.core.wizards.newTrait">
-            <description>Create a Scala trait</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewApplicationWizard"
-            icon="icons/full/etool16/scala_app.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Application"
-            id="org.scala-ide.sdt.core.wizards.newApplication">
-            <description>Create a Scala application</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
    </extension>
    <extension
          point="org.eclipse.ui.ide.projectNatureImages">
@@ -1874,14 +1819,6 @@
           id="org.scalaide.ui.wizards.empty"
           name="Empty File"
           templateId="org.scalaide.core.templates.wizards.empty">
-    </fileCreator>
-    <fileCreator
-          class="org.scalaide.ui.wizards.ClassCreator"
-          description="Create a Scala File"
-          icon="icons/full/etool16/newclass_wiz.gif"
-          id="org.scalaide.ui.wizards.scalaCreator"
-          name="New Scala File"
-          templateId="org.scalaide.core.templates.wizards.class">
     </fileCreator>
  </extension>
  <extension
