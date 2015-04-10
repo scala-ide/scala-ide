@@ -17,28 +17,33 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala210.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
       <version>${scala210.version}</version>
+      <optional>true</optional>
     </dependency>
     <!-- toolchain, Scala compiler -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
       <version>${scala210.version}</version>
+      <optional>true</optional>
     </dependency>
     <!-- modules -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-swing</artifactId>
       <version>${scala210.version}</version>
+      <optional>true</optional>
     </dependency>
     <!-- sources -->
     <dependency>
@@ -46,12 +51,14 @@
       <artifactId>scala-library</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
+      <optional>true</optional>
     </dependency>
     <!-- toolchain, Scala compiler -->
     <dependency>
@@ -59,6 +66,7 @@
       <artifactId>scala-compiler</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
+      <optional>true</optional>
     </dependency>
     <!-- modules -->
     <dependency>
@@ -66,12 +74,14 @@
       <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
+      <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-swing</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 

@@ -4,7 +4,6 @@ package rename
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.NameValidation
 import scala.tools.refactoring.implementations
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
@@ -103,19 +102,7 @@ class GlobalRename extends RefactoringExecutorWithWizard {
 
     override def createChange(pm: IProgressMonitor) = {
       val compositeChange = super.createChange(pm)
-
-      preparationResult.right.get.selectedTree match {
-        case impl: refactoring.global.ImplDef if impl.name.toString + ".scala" == file.file.name =>
-          file.getCorrespondingResource match {
-            case ifile: IFile =>
-              compositeChange.add(new RenameResourceChange(ifile.getFullPath, name + ".scala"))
-            case _ =>
-          }
-        case _ =>
-      }
-
       cleanup()
-
       compositeChange
     }
   }

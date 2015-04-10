@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved
+ */
 package org.scalaide.ui.internal.repl
 
 import org.eclipse.swt.custom.StyledText
@@ -30,12 +33,20 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
   import CommandField.Evaluator
 
+  var clearTextAfterEvaluation = true
+
+  def isEmpty = getCharCount() == 0
+
   protected case class MaskedKeyCode(code: Int, mask: Int) {
-    def apply(e: org.eclipse.swt.events.KeyEvent): Boolean =
+    def matches(e: org.eclipse.swt.events.KeyEvent): Boolean =
       e.keyCode == code && (e.stateMask & mask) == mask
   }
 
-  protected val evaluateKey = MaskedKeyCode(SWT.CR, SWT.CTRL)
+  protected val evaluateKeys = Seq(
+    MaskedKeyCode(SWT.CR, SWT.CTRL), // Ctrl + Enter
+    MaskedKeyCode(SWT.KEYPAD_CR, SWT.CTRL) // Ctrl + numpad's Enter
+  )
+
   protected val historyUpKey = MaskedKeyCode(SWT.ARROW_UP, SWT.CTRL)
   protected val historyDownKey = MaskedKeyCode(SWT.ARROW_DOWN, SWT.CTRL)
 
@@ -56,22 +67,29 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       pos = history.length
     }
 
-    override def keyReleased(e: org.eclipse.swt.events.KeyEvent) {
-      if (evaluateKey(e)) evaluate(getText)
-      else if (historyUpKey(e)) showPreviousExprFromHistory()
-      else if (historyDownKey(e)) showNextExprFromHistory()
+    def clearHistory() {
+      history.clear()
+      resetHistoryPos()
     }
 
-    override def verifyKey(e: org.eclipse.swt.events.VerifyEvent) {
-      if (evaluateKey(e))
+    override def keyReleased(e: org.eclipse.swt.events.KeyEvent): Unit = {
+      if (pressedEvaluationKeys(e)) evaluate(getText)
+      else if (historyUpKey.matches(e)) showPreviousExprFromHistory()
+      else if (historyDownKey.matches(e)) showNextExprFromHistory()
+    }
+
+    override def verifyKey(e: org.eclipse.swt.events.VerifyEvent): Unit =
+      if (pressedEvaluationKeys(e)) {
         e.doit = false
-    }
+      }
 
-    private def evaluate(command: String) {
+    private def pressedEvaluationKeys(e: org.eclipse.swt.events.KeyEvent) = evaluateKeys.exists(_.matches(e))
+
+    private[repl] def evaluate(command: String) {
       if (command.nonEmpty) {
         appendHistory(command)
         evaluator.eval(command)
-        setText("")
+        if (clearTextAfterEvaluation) setText("")
       }
     }
 
@@ -101,7 +119,8 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     }
   }
 
-  /** Handles the display of a help text message that should describe the kind
+  /**
+   * Handles the display of a help text message that should describe the kind
    * of input that `CommandField` expects.
    * When the input field gains the focus, the help text is automatically hidden.
    * The help text message is re-displayed when the field is empty and it lose the
@@ -124,27 +143,30 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     import org.eclipse.swt.events.FocusListener
     import org.eclipse.swt.events.FocusEvent
     textWidget.addFocusListener(new FocusListener {
-      override def focusGained(e: FocusEvent) {
-        if (helpTextDisplayed) {
-          textWidget.setForeground(defaultBgColor)
-          textWidget.setText("")
-          helpTextDisplayed = false
-        }
-      }
-      override def focusLost(e: FocusEvent) {
-        maybeShowHelpText()
-      }
+      override def focusGained(e: FocusEvent): Unit = hideHelpText()
+
+      override def focusLost(e: FocusEvent): Unit = maybeShowHelpText()
     })
 
-    private def maybeShowHelpText() {
-      if (textWidget.getText().isEmpty) {
-        textWidget.setForeground(codeBgColor)
-        textWidget.setText(helpText)
-        helpTextDisplayed = true
+    def isHelpTextDisplayed: Boolean = helpTextDisplayed
+
+    def hideHelpText() {
+      if (helpTextDisplayed) {
+        helpTextDisplayed = false
+        textWidget.setForeground(defaultBgColor)
+        textWidget.setText("")
       }
     }
 
-    def dispose() {
+    def maybeShowHelpText() {
+      if (textWidget.getText().isEmpty) {
+        helpTextDisplayed = true
+        textWidget.setForeground(codeBgColor)
+        textWidget.setText(helpText)
+      }
+    }
+
+    def dispose(): Unit = {
       codeBgColor.dispose()
       defaultBgColor.dispose()
     }
@@ -162,9 +184,18 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   /** Allows to plug a different evaluation strategy for the typed command. */
   def setEvaluator(_evaluator: Evaluator) { evaluator = _evaluator }
 
-  def clear() {
-    inputFieldListener.reset()
-  }
+  def clear(): Unit = inputFieldListener.reset()
+
+  def clearHistory(): Unit = inputFieldListener.clearHistory()
+
+  // to be able to execute evaluation in other way than key event and still be able to add something to history
+  def executeEvaluation(): Unit = inputFieldListener.evaluate(getText())
+
+  def hideHelpText(): Unit = fieldHelp.hideHelpText()
+
+  def maybeShowHelpText(): Unit = fieldHelp.maybeShowHelpText()
+
+  def isHelpTextDisplayed: Boolean = fieldHelp.isHelpTextDisplayed
 
   override def dispose() {
     fieldHelp.dispose()

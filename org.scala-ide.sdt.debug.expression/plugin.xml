@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+    <extension point="org.eclipse.ui.perspectiveExtensions">
+        <perspectiveExtension
+            targetID="org.eclipse.debug.ui.DebugPerspective">
+                <view
+                    relative="org.eclipse.ui.console.ConsoleView"
+                    visible="true"
+                    relationship="stack"
+                    id="org.scalaide.debug.internal.ui.ExpressionEvaluation"/>
+        </perspectiveExtension>
+    </extension>
+
+    <extension point="org.eclipse.ui.views">
+        <view
+            id="org.scalaide.debug.internal.ui.ExpressionEvaluation"
+            name="Scala Expression Evaluator"
+            category="org.eclipse.debug.ui"
+            class="org.scalaide.debug.internal.ui.ExpressionEvaluatorView"
+            allowMultiple="false"/>
+    </extension>
+           
+    <extension
+        point="org.eclipse.ui.commands">
+        <command
+            categoryId="org.eclipse.debug.ui.category.run"
+            id="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator"
+            name="Send Selection to Scala Expression Evaluator"/>
+    </extension>
+         
+    <extension point="org.eclipse.ui.bindings">
+        <key
+            commandId="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            contextId="scala.tools.eclipse.scalaEditorScope"
+            sequence="M1+M2+Z"/>
+    </extension>
+	
+    <extension
+        point="org.eclipse.ui.handlers">
+        <handler
+            class="org.scalaide.debug.internal.ui.actions.RunSelectionInExpressionEvaluator"
+            commandId="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator">
+        </handler>
+    </extension>
+		
+    <extension
+        point="org.eclipse.ui.menus">
+        <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+            <toolbar
+                id="org.scala-ide.sdt.core.toolbar"
+                label="Scala Text Editor">
+                <command
+                    commandId="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator"
+                    disabledIcon="icons/full/dtool16/run_evaluator.gif"
+                    icon="icons/full/etool16/run_evaluator.gif"
+                    label="Run Selection in Scala Expression Evaluator"
+                    style="push"
+                    tooltip="Run Selection in Scala Expression Evaluator">
+                </command>
+            </toolbar>
+        </menuContribution>
+    </extension>
+    <extension
+          point="org.eclipse.ui.preferencePages">
+       <page
+             category="org.scalaide.ui.preferences.debug"
+             class="org.scalaide.debug.internal.preferences.ExprEvalPreferencePage"
+             id="org.scalaide.ui.preferences.expression"
+             name="Expression Evaluator">
+       </page>
+    </extension>
+    <extension
+          point="org.eclipse.core.runtime.preferences">
+       <initializer
+             class="org.scalaide.debug.internal.preferences.ExprEvalPreferencesInitializer">
+       </initializer>
+    </extension>
+    <extension
+          point="org.scala-ide.sdt.debug.eventHandler">
+       <eventHandler
+             class="org.scalaide.debug.internal.ui.BreakpointEventHandler"
+             id="org.scala-ide.sdt.debug.expression.breakpointEventHandler"
+             name="Breakpoint Event Handler of Expression Evaluator">
+       </eventHandler>
+    </extension>
+</plugin>

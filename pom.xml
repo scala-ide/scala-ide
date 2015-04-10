@@ -60,9 +60,9 @@
 
     <!-- base versions -->
     <!-- Scala 2.10.x -->
-    <scala210.version>2.10.5-SNAPSHOT</scala210.version>
+    <scala210.version>2.10.5</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.6-SNAPSHOT</scala211.version>
+    <scala211.version>2.11.7-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
     <scala211.scala-xml.version>1.0.3</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
@@ -268,6 +268,7 @@
         <scala212.source.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.source.feature</scala212.source.feature.dir>
         <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
+        <sdt.debug.expression.dir>org.scala-ide.sdt.debug.expression</sdt.debug.expression.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
       </properties>
       <build>
@@ -432,6 +433,13 @@
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.debug.dir}/META-INF/MANIFEST.MF"
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                        </filterset>
+                    </copy>
+                    <copy file="${sdt.debug.expression.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
+                        tofile="${sdt.debug.expression.dir}/META-INF/MANIFEST.MF"
                         overwrite="true">
                         <filterset>
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
@@ -633,6 +641,9 @@
               <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
               <dir>org.scala-ide.sdt.debug.tests/src</dir>
               <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
+              <dir>org.scala-ide.sdt.debug.expression/src</dir>
+              <dir>org.scala-ide.sdt.debug.expression.tests/src</dir>
+              <dir>org.scala-ide.sdt.debug.expression.tests/test-workspace</dir>
             </sourceDirectories>
             <configLocation>org.scala-ide.sdt.core/scala-ide-style-config.xml</configLocation>
           </configuration>

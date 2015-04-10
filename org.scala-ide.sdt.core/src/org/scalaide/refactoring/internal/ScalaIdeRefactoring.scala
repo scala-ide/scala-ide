@@ -21,6 +21,13 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.core.SdtConstants
+import scala.tools.refactoring.common.TextChange
+import scala.tools.refactoring.common.RenameSourceFileChange
+import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.IPath
+import scala.reflect.io.AbstractFile
+import org.eclipse.core.resources.ResourcesPlugin
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -68,6 +75,14 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
   def getPages: List[RefactoringWizardPage] = Nil
 
   /**
+   * Set this flag to true if you want changes from this refactoring to be marked as dirty in the editor.
+   *
+   * '''Warning''': Don't set this flag to true for refactorings that might affect files that are not
+   * currently open in the editor, as changes for these files would be lost. See ticket #1002079.
+   */
+  protected def leaveDirty: Boolean = false
+
+  /**
    * Holds the result of preparing this refactoring. We can keep this
    * in a lazy var because it will only be evaluated once.
    */
@@ -92,9 +107,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * these, which overrides this method.
    */
   def createChange(pm: IProgressMonitor): CompositeChange = {
-    val changes = performRefactoring() collect {
-      case tc: TextChange => tc
-    }
+    val changes = performRefactoring()
     new CompositeChange(getName) {
       scalaChangesToEclipseChanges(changes) foreach add
     }
@@ -128,15 +141,20 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    *
    * @throws Throws a CoreException if the IFile for the corresponding AbstractFile can't be found.
    */
-  private [refactoring] def scalaChangesToEclipseChanges(changes: List[TextChange]) = {
-    changes groupBy (_.sourceFile.file) map {
+  private [refactoring] def scalaChangesToEclipseChanges(changes: List[Change]) = {
+    val textChanges = changes.collect { case tc: TextChange => tc }
+    val renameChanges = changes.collect { case r: RenameSourceFileChange => r }
+
+    textChanges.groupBy(_.sourceFile.file).map {
       case (file, fileChanges) =>
         FileUtils.toIFile(file) map { file =>
-          TextEditUtils.createTextFileChange(file, fileChanges)
+          TextEditUtils.createTextFileChange(file, fileChanges, leaveDirty)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path
           throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, 0, msg, null))
         }
+    } ++ renameChanges.flatMap { r =>
+      FileUtils.toIPath(r.sourceFile).map(path => new RenameResourceChange(path, r.to))
     }
   }
 

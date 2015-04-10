@@ -27,7 +27,11 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     // do not run in an UI less environment
     if (!IScalaPlugin().headlessMode) {
       copyKeyBindings()
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ScalaFileCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ClassCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.TraitCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ObjectCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.PackageObjectCreatorWizId)
+      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.AppCreatorWizId)
     }
   }
 
@@ -136,6 +140,6 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     copyKeyBinding("scala.tools.eclipse.refactoring.command.Rename", "org.scalaide.refactoring.Rename")
     copyKeyBinding("scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding", "org.scalaide.refactoring.ExpandCaseClassBinding")
     copyKeyBinding("scala.tools.eclipse.refactoring.commands.quickMenu", "org.scalaide.ui.menu.quickMenu")
-    copyKeyBinding("scala.tools.eclipse.interpreter.RunSelection", "org.scalaide.core.handler.RunSelection")
+    copyKeyBinding("scala.tools.eclipse.interpreter.RunSelection", "org.scalaide.core.handler.RunSelectionInInterpreter")
   }
 }

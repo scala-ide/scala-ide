@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.util.eclipse
 
 import org.eclipse.jface.preference._
@@ -7,10 +10,9 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events._
 import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
-import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
-import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.IWorkbenchWindow
+import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.dialogs.PreferencesUtil
 
 // TODO move out implicit conversions to a separate module?
@@ -44,6 +46,10 @@ object SWTUtils {
    */
   implicit def fnToModifyListener(f: ModifyEvent => Unit): ModifyListener = new ModifyListener {
     override def modifyText(e: ModifyEvent) = f(e)
+  }
+
+  implicit def noArgFnToModifyListener(f: () => Unit): ModifyListener = new ModifyListener {
+    def modifyText(e: ModifyEvent) = f()
   }
 
   /** Returns an adapter class that provides default implementations for the
