@@ -8,7 +8,9 @@ import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-import scala.util.Try
+import org.scalaide.core.IScalaPlugin
+
+import com.sun.jdi.StackFrame
 
 import model.ScalaStackFrame
 import model.ScalaThread
@@ -25,6 +27,7 @@ object ScalaDebugger {
 
   @volatile private var _currentThread: ScalaThread = null
   @volatile private var _currentStackFrame: ScalaStackFrame = null
+  @volatile private var _currentFrameIndex: Int = 0
 
   /**
    * Currently selected thread & stack frame in the debugger UI view.
@@ -34,26 +37,30 @@ object ScalaDebugger {
    * values of `currentThread` & `currentStackFrame` are not the expected ones. Practically, this means that accesses to these members
    * should always happen within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
    */
-  def currentThread = _currentThread
-  def currentStackFrame = _currentStackFrame
+  def currentThread: ScalaThread = _currentThread
+  def currentStackFrame: ScalaStackFrame = _currentStackFrame
+  def currentFrame(): Option[StackFrame] = Option(currentThread).map(_.threadRef.frame(_currentFrameIndex))
 
-  def updateCurrentThreadAndStackFrame(selection: ISelection) {
-    val (newThread, newStackFrame) = selection match {
+  private[debug] def updateCurrentThread(selection: ISelection) {
+    def setValues(thread: ScalaThread, frame: ScalaStackFrame, frameIndex: Int = 0) {
+      _currentThread = thread
+      _currentStackFrame = frame
+      _currentFrameIndex = frameIndex
+    }
+
+    selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
           case scalaThread: ScalaThread =>
-            (scalaThread, Try(scalaThread.getTopStackFrame.asInstanceOf[ScalaStackFrame]) getOrElse null)
+            setValues(thread = scalaThread, frame = scalaThread.getTopStackFrame, frameIndex = 0)
           case scalaStackFrame: ScalaStackFrame =>
-            (scalaStackFrame.thread, scalaStackFrame)
+            setValues(thread = scalaStackFrame.thread, frame = scalaStackFrame, frameIndex = scalaStackFrame.index)
           case _ =>
-            (null, null)
+            setValues(thread = null, frame = null)
         }
       case _ =>
-        (null, null)
+        setValues(thread = null, frame = null)
     }
-
-    _currentThread = newThread
-    _currentStackFrame = newStackFrame
   }
 
   def init() {
@@ -62,7 +69,8 @@ object ScalaDebugger {
     }
   }
 
-  /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
+  /**
+   * `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
    *  object, it will not be loaded as soon as `ScalaDebugger` is used.
    *  This allow to use `ScalaDebugger` even if the application is launched in `headless` mode, like while running tests.
    */
@@ -73,7 +81,8 @@ object ScalaDebugger {
     }
 
     override def debugContextChanged(event: DebugContextEvent) {
-      ScalaDebugger.updateCurrentThreadAndStackFrame(event.getContext())
+      ScalaDebugger.updateCurrentThread(event.getContext())
     }
   }
+
 }

@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+Eclipse-ExtensibleAPI: true
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Debug Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.debug;singleton:=true
@@ -74,11 +75,13 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
+ org.scalaide.debug,
  org.scalaide.debug.internal,
  org.scalaide.debug.internal.breakpoints,
  org.scalaide.debug.internal.classfile,
  org.scalaide.debug.internal.command,
  org.scalaide.debug.internal.editor,
+ org.scalaide.debug.internal.extensions,
  org.scalaide.debug.internal.launching,
  org.scalaide.debug.internal.model,
  org.scalaide.debug.internal.preferences
