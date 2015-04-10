@@ -22,8 +22,7 @@ import org.scalaide.util.internal.eclipse.AnnotationUtils._
  * Contains functionality to enable the mark occurrences feature for Scala
  * compilation unit editors.
  */
-trait MarkOccurrencesEditorExtension {
-  this: ScalaCompilationUnitEditor ⇒
+trait MarkOccurrencesEditorExtension extends ScalaCompilationUnitEditor {
 
   // needs to be lazy because [[getInteractiveCompilationUnit]] succeeds only after the editor is fully loaded
   private lazy val occurrencesFinder = new ScalaOccurrencesFinder(getInteractiveCompilationUnit)
