@@ -76,4 +76,20 @@ SUCH DAMAGE.
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="org.scala-ide.sdt.debug.expression.tests"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
+   <plugin
+         id="org.scala-ide.sdt.debug.tests"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
+         unpack="false"/>
+
 </feature>
