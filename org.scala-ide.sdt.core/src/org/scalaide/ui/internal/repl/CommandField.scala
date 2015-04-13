@@ -5,6 +5,7 @@ package org.scalaide.ui.internal.repl
 
 import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.widgets.Composite
+import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.custom.VerifyKeyListener
@@ -133,8 +134,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
    *                    }
    */
   private class FieldHelpText(textWidget: StyledText, helpText: String) {
-    private lazy val codeBgColor = new Color(parent.getDisplay, 150, 150, 150) // gray
-    private val defaultBgColor = textWidget.getForeground()
+    private lazy val codeFgColor = JFaceResources.getColorRegistry.get(InterpreterConsoleView.ForegroundColor)
 
     private var helpTextDisplayed = false
 
@@ -153,7 +153,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     def hideHelpText() {
       if (helpTextDisplayed) {
         helpTextDisplayed = false
-        textWidget.setForeground(defaultBgColor)
+        textWidget.setForeground(codeFgColor)
         textWidget.setText("")
       }
     }
@@ -161,14 +161,9 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     def maybeShowHelpText() {
       if (textWidget.getText().isEmpty) {
         helpTextDisplayed = true
-        textWidget.setForeground(codeBgColor)
+        textWidget.setForeground(codeFgColor)
         textWidget.setText(helpText)
       }
-    }
-
-    def dispose(): Unit = {
-      codeBgColor.dispose()
-      defaultBgColor.dispose()
     }
   }
 
@@ -196,9 +191,4 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   def maybeShowHelpText(): Unit = fieldHelp.maybeShowHelpText()
 
   def isHelpTextDisplayed: Boolean = fieldHelp.isHelpTextDisplayed
-
-  override def dispose() {
-    fieldHelp.dispose()
-    super.dispose()
-  }
 }

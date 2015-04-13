@@ -25,6 +25,7 @@ object InterpreterConsoleView {
   val BackgroundColor = "org.scalaide.ui.color.interpreterBackground"
   val ForegroundColor = "org.scalaide.ui.color.interpreterForeground"
   val ErrorForegroundColor = "org.scalaide.ui.color.interpreterErrorForeground"
+  val LineNumberBackgroundColor = "org.scalaide.ui.color.lineNumberBackground"
 }
 
 /**
@@ -79,6 +80,7 @@ trait InterpreterConsoleView extends ViewPart {
     resultsTextWidget.setEditable(false)
     resultsTextWidget.setCaret(new Caret(resultsTextWidget, SWT.NONE))
     resultsTextWidget.setAlwaysShowScrollBars(false)
+    resultsTextWidget.setBackground(reg.get(BackgroundColor))
 
     val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
     resultsTextWidget.setFont(editorFont) // java editor font
@@ -105,25 +107,24 @@ trait InterpreterConsoleView extends ViewPart {
     appendText("\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
   }
 
-  protected def displayOutput(text: String) = displayPadded(null) {
-    appendText(text, null, null, SWT.NORMAL)
+  protected def displayOutput(text: String) = displayPadded(codeBgColor) {
+    appendText(text + "\n", codeFgColor, codeBgColor, SWT.NORMAL)
   }
 
-  protected def displayError(text: String) = displayPadded(null) {
-    appendText(text, errorFgColor, null, SWT.NORMAL)
+  protected def displayError(text: String) = displayPadded(codeBgColor) {
+    appendText(text + "\n", errorFgColor, codeBgColor, SWT.NORMAL)
   }
 
   protected def displayPadded(bgColor: Color)(display: => Unit) {
-    insertSpacing(bgColor, true)
+    insertSpacing(bgColor)
     display
-    insertSpacing(bgColor, false)
   }
 
   private def insertSpacing(bgColor: Color, isTop: Boolean) {
     val fontData = resultsTextWidget.getFont().getFontData()
     fontData.foreach(_.setHeight(4))
     val font = new Font(display, fontData)
-    appendText(if (isTop) "\n " else " \n", null, bgColor, SWT.NORMAL, font = font)
+    appendText("\n ", null, bgColor, SWT.NORMAL, font = font)
   }
 
   protected def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, font: Font = null, insertNewline: Boolean = false) {

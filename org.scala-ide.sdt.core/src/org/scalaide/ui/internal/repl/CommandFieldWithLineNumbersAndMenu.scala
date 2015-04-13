@@ -3,6 +3,7 @@
  */
 package org.scalaide.ui.internal.repl
 
+import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.Bullet
 import org.eclipse.swt.custom.ST
@@ -30,10 +31,13 @@ class CommandFieldWithLineNumbersAndMenu(parent: Composite, style: Int)
 trait InputContextMenuAndLineNumbers extends CommandField {
   import SWTUtils._
 
-  protected val lineNumberBgColor: Color = new Color(getDisplay(), 230, 230, 230) // light gray
+  protected val lineNumberBgColor: Color = JFaceResources.getColorRegistry.get(InterpreterConsoleView.LineNumberBackgroundColor)
   protected val lineNumbersModifyListener: ModifyListener = () => redrawWithLineNumbers()
   protected def onLineNumbersVisibilityUpdated(enabled: Boolean): Unit = {}
   private val lineNumbersItem: MenuItem = initContextMenuAndReturnLineNumbersItem
+
+  setBackground(JFaceResources.getColorRegistry.get(InterpreterConsoleView.BackgroundColor))
+  setForeground(JFaceResources.getColorRegistry.get(InterpreterConsoleView.ForegroundColor))
 
   def setLineNumbersVisibility(visible: Boolean): Unit = {
     lineNumbersItem.setSelection(visible)
@@ -133,10 +137,5 @@ trait InputContextMenuAndLineNumbers extends CommandField {
     bullet.style.background = lineNumberBgColor
     setLineBullet(0, getLineCount(), null) // clear current numbers
     setLineBullet(0, getLineCount(), bullet) // add new ones
-  }
-
-  override def dispose(): Unit = {
-    lineNumberBgColor.dispose()
-    super.dispose()
   }
 }
