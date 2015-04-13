@@ -3,12 +3,13 @@
  */
 package org.scalaide.ui.internal.repl
 
-import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Composite
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.custom.VerifyKeyListener
+import org.eclipse.swt.events.FocusEvent
+import org.eclipse.swt.events.FocusListener
+import org.eclipse.swt.widgets.Composite
 
 object CommandField {
   /** Common interface for command evaluator.*/
@@ -60,7 +61,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       history += expr
       // every time a new command is pushed in the history, the
       // currently tracked history position (used for history navigation
-      // via ARROW_UP/DOWN keys) is resetted.
+      // via ARROW_UP/DOWN keys) has been reset.
       resetHistoryPos()
     }
 
@@ -140,8 +141,6 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
     maybeShowHelpText()
 
-    import org.eclipse.swt.events.FocusListener
-    import org.eclipse.swt.events.FocusEvent
     textWidget.addFocusListener(new FocusListener {
       override def focusGained(e: FocusEvent): Unit = hideHelpText()
 

@@ -8,11 +8,11 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.Bullet
 import org.eclipse.swt.custom.ST
 import org.eclipse.swt.custom.StyleRange
+import org.eclipse.swt.events.ModifyListener
 import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.graphics.GlyphMetrics
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.widgets.Event
 import org.eclipse.swt.widgets.Listener
 import org.eclipse.swt.widgets.Menu
@@ -21,15 +21,13 @@ import org.eclipse.ui.ISharedImages
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
-import org.scalaide.util.eclipse.SWTUtils
-import org.eclipse.swt.events.ModifyListener
+import org.scalaide.util.eclipse.SWTUtils._
 
 class CommandFieldWithLineNumbersAndMenu(parent: Composite, style: Int)
   extends CommandField(parent, style)
   with InputContextMenuAndLineNumbers
 
 trait InputContextMenuAndLineNumbers extends CommandField {
-  import SWTUtils._
 
   protected val lineNumberBgColor: Color = JFaceResources.getColorRegistry.get(InterpreterConsoleView.LineNumberBackgroundColor)
   protected val lineNumbersModifyListener: ModifyListener = () => redrawWithLineNumbers()
@@ -63,7 +61,7 @@ trait InputContextMenuAndLineNumbers extends CommandField {
     val lineNumbersMenuItem = createLineNumbersMenuItem(contextMenu)
 
     contextMenu.addListener(SWT.Show, new Listener() {
-      override def handleEvent(event: Event) {
+      override def handleEvent(event: Event) = {
         val selection = getSelection()
 
         val textSelected = selection.x != selection.y
@@ -125,14 +123,13 @@ trait InputContextMenuAndLineNumbers extends CommandField {
     onLineNumbersVisibilityUpdated(lineNumbersEnabled)
   }
 
-  private def redrawWithLineNumbers() {
+  private def redrawWithLineNumbers() = {
     val maxLine = getLineCount()
     val lineCountWidth = Math.max(String.valueOf(maxLine).length(), 3)
 
     val style = new StyleRange()
     style.metrics = new GlyphMetrics(0, 0, lineCountWidth * 8 + 5)
     val bullet = new Bullet(ST.BULLET_NUMBER, style)
-    val device = Display.getCurrent()
 
     bullet.style.background = lineNumberBgColor
     setLineBullet(0, getLineCount(), null) // clear current numbers

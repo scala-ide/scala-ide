@@ -123,7 +123,7 @@ class ExpressionEvaluatorView extends ViewPart with InterpreterConsoleView {
     proposalAdapter.setPopupSize(new Point(codeCompletionPopupWidth, codeCompletionPopupHeight))
 
     inputCommandField.addVerifyKeyListener(new VerifyKeyListener { // prevent insertion of \n after pressing Enter when dialog with proposals is shown
-      override def verifyKey(event: VerifyEvent) {
+      override def verifyKey(event: VerifyEvent) = {
         if (proposalAdapter.isProposalPopupOpen() && event.keyCode == SWT.CR)
           event.doit = false
       }

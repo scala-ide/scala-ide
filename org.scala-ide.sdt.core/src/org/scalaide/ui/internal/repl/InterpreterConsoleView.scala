@@ -115,19 +115,19 @@ trait InterpreterConsoleView extends ViewPart {
     appendText(text + "\n", errorFgColor, codeBgColor, SWT.NORMAL)
   }
 
-  protected def displayPadded(bgColor: Color)(display: => Unit) {
+  protected def displayPadded(bgColor: Color)(display: => Unit) = {
     insertSpacing(bgColor)
     display
   }
 
-  private def insertSpacing(bgColor: Color, isTop: Boolean) {
+  private def insertSpacing(bgColor: Color) = {
     val fontData = resultsTextWidget.getFont().getFontData()
     fontData.foreach(_.setHeight(4))
     val font = new Font(display, fontData)
     appendText("\n ", null, bgColor, SWT.NORMAL, font = font)
   }
 
-  protected def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, font: Font = null, insertNewline: Boolean = false) {
+  protected def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, font: Font = null, insertNewline: Boolean = false) = {
     val lastOffset = resultsTextWidget.getCharCount
     val oldLastLine = resultsTextWidget.getLineCount
 
