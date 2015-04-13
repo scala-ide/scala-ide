@@ -21,6 +21,12 @@ import org.eclipse.ui.part.ViewPart
 
 import scalariform.lexer.ScalaLexer
 
+object InterpreterConsoleView {
+  val BackgroundColor = "org.scalaide.ui.color.interpreterBackground"
+  val ForegroundColor = "org.scalaide.ui.color.interpreterForeground"
+  val ErrorForegroundColor = "org.scalaide.ui.color.interpreterErrorForeground"
+}
+
 /**
  * A split horizontal view for enter scala commands and displaying REPL output.
  *
@@ -28,6 +34,8 @@ import scalariform.lexer.ScalaLexer
  * and the bottom view being an instance of `CommandField` for entering scala expressions.
  */
 trait InterpreterConsoleView extends ViewPart {
+  import InterpreterConsoleView._
+
   protected var interpreterPanel: SashForm = null
   protected var resultsTextWidget: StyledTextWithSimpleMenu = null
   protected var inputCommandField: CommandFieldWithLineNumbersAndMenu = null
@@ -56,9 +64,11 @@ trait InterpreterConsoleView extends ViewPart {
    */
   protected def createInterpreterPartControl(parent: Composite): Unit = {
     display = parent.getDisplay()
-    codeBgColor = new Color(display, 230, 230, 230) // light gray
-    codeFgColor = new Color(display, 60, 0, 128) // eggplant
-    errorFgColor = new Color(display, 128, 0, 64) // maroon
+
+    val reg = JFaceResources.getColorRegistry
+    codeBgColor = reg.get(BackgroundColor)
+    codeFgColor = reg.get(ForegroundColor)
+    errorFgColor = reg.get(ErrorForegroundColor)
 
     interpreterPanel = new SashForm(parent, SWT.VERTICAL)
     interpreterPanel.setLayout(new FillLayout)
@@ -139,9 +149,6 @@ trait InterpreterConsoleView extends ViewPart {
   }
 
   override def dispose(): Unit = {
-    if (codeBgColor != null) codeBgColor.dispose()
-    if (codeFgColor != null) codeFgColor.dispose()
-    if (errorFgColor != null) errorFgColor.dispose()
     if (interpreterPanel != null) interpreterPanel.dispose()
     if (inputCommandField != null) inputCommandField.dispose()
     if (resultsTextWidget != null) resultsTextWidget.dispose()
