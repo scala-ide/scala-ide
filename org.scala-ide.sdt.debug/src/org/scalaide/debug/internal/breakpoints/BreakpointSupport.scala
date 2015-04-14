@@ -52,6 +52,9 @@ private object BreakpointSupportActor {
   // specific events
   case class Changed(delta: IMarkerDelta)
 
+  /** The message used to reenable breakpoint requests managed by the given actor. */
+  case object ReenableBreakpointAfterHcr
+
   val eventHandlerMappings = EventHandlerMapping.mappings
 
   /**
@@ -174,7 +177,7 @@ private class BreakpointSupportActor private (
       reply(None)
     case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
       reply(requestsEnabled)
-    case ScalaDebugBreakpointManagerActor.ReenableBreakpointAfterHcr =>
+    case BreakpointSupportActor.ReenableBreakpointAfterHcr =>
       reenableBreakpointRequestsAfterHcr()
   }
 

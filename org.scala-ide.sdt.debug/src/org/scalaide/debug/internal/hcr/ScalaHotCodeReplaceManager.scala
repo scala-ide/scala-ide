@@ -17,6 +17,7 @@ import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaDebugTarget.ReplaceClasses
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.EclipseUtils
 
 import com.sun.jdi.ReferenceType
 
@@ -42,11 +43,9 @@ private[internal] object ScalaHotCodeReplaceManager {
  * Monitors changed resources and notifies debug target's companion actor, when there are some changed class files
  * which could be replaced in VM.
  */
-class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebuggerActor) extends IResourceChangeListener with HasLogger {
+class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebuggerActor) extends IResourceChangeListener {
 
   import scala.collection.JavaConverters._
-
-  private lazy val visitor = new ChangedClassFilesVisitor
 
   private[internal] def init(): Unit = {
     ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_BUILD)
@@ -67,16 +66,14 @@ class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebugge
     if (delta == null || event.getType() != IResourceChangeEvent.POST_BUILD)
       Nil
     else
-      try {
-        visitor.reset()
+      EclipseUtils.withSafeRunner {
+        val affectedProjects = delta.getAffectedChildren.map(_.getResource.getName).mkString(", ")
+        s"Error occurred while looking for changed classes in projects: $affectedProjects"
+      } {
+        val visitor = new ChangedClassFilesVisitor
         delta.accept(visitor)
         visitor.getChangedClasses
-      } catch {
-        case e: Exception =>
-          logger.error(s"Something went wrong when processing an event with delta $delta", e)
-          // quiet failure - should we do something else?
-          Nil
-      }
+      }.getOrElse(Nil)
   }
 }
 
@@ -114,7 +111,7 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
       logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName' succeeded")
     } catch {
       case e: Exception =>
-        logger.error(s"Something went wrong when redefining classes in VM for debug configuration '$launchName'", e)
+        eclipseLog.error(s"Error occurred while redefining classes in VM for debug configuration '$launchName'.", e)
         runAsynchronously {
           () => publish(HCRFailed(launchName))
         }

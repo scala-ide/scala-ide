@@ -52,8 +52,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   override def canStepOver: Boolean = canStep
   override def canStepReturn: Boolean = canStep
   override def isStepping: Boolean = ???
-  private def canStep = suspended && // TODO: needs real logic
-    !target.isPerformingHotCodeReplace
+  private def canStep = suspended && !target.isPerformingHotCodeReplace
 
   override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
   override def stepOver(): Unit = {
@@ -65,8 +64,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume: Boolean = suspended && // TODO: needs real logic
-    !target.isPerformingHotCodeReplace
+  override def canResume: Boolean = suspended && !target.isPerformingHotCodeReplace
   override def canSuspend: Boolean = !suspended // TODO: need real logic
   override def isSuspended: Boolean = util.Try(threadRef.isSuspended).getOrElse(false)
 

@@ -7,7 +7,6 @@ import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import scala.actors.Actor
-import BreakpointSupportActor.Changed
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
 
@@ -96,8 +95,9 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointAdded(breakpoint: IBreakpoint)
   case class BreakpointRemoved(breakpoint: IBreakpoint)
   case class BreakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta)
+
+  /** The message used to reenable all breakpoints related to given classes. */
   case class ReenableBreakpointsAfterHcr(classNames: Seq[String])
-  case object ReenableBreakpointAfterHcr
 
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
@@ -111,6 +111,7 @@ private[debug] object ScalaDebugBreakpointManagerActor {
 private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
   import ScalaDebugBreakpointManagerActor._
   import BreakpointSupportActor.Changed
+  import BreakpointSupportActor.ReenableBreakpointAfterHcr
 
   private var breakpoints = Map[IBreakpoint, Actor]()
 
@@ -168,9 +169,9 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
   private def reenableBreakpointAfterHcr(changedClassesNames: Seq[String]): Unit = {
     /*
      * We need to prepare names of changed classes and these taken from breakpoints because
-     * from some reasons they differ. We need to change them slightly as:
+     * for some reasons they differ. We need to change them slightly as:
      *
-     * Type names used in breakpoints from some reason have double intermediate dollars,
+     * Type names used in breakpoints have double intermediate dollars,
      * e.g. debug.Foo$$x$$Bar instead of debug.Foo$x$Bar, debug.Foo$$x$ instead of debug.Foo$x$.
      *
      * There are also anonymous types which really should have double dollars but anyway

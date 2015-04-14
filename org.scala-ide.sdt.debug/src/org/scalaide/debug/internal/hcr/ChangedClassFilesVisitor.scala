@@ -17,8 +17,9 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.util.IClassFileReader
 import org.eclipse.jdt.internal.debug.core.JavaDebugUtils
-import org.scalaide.logging.HasLogger
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.EclipseUtils
 
 private[internal] case class ClassFileResource(fullyQualifiedName: String, classFile: IFile)
 
@@ -34,7 +35,7 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
 
   // the value stored as a field to finish applying the same strategy to all classes even when someone changed
   // the configuration in the meantime
-  private var replaceDespiteCompilationErrors = HotCodeReplacePreferences.performHcrForFilesContainingErrors
+  private val replaceDespiteCompilationErrors = HotCodeReplacePreferences.performHcrForFilesContainingErrors
 
   /**
    * Found classes containing changes.
@@ -42,14 +43,6 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
   private val changedClasses = scala.collection.mutable.Set[ClassFileResource]()
 
   def getChangedClasses: List[ClassFileResource] = changedClasses.toList
-
-  /**
-   * It should be called always before the visitor is reused.
-   */
-  def reset(): Unit = {
-    replaceDespiteCompilationErrors = HotCodeReplacePreferences.performHcrForFilesContainingErrors
-    changedClasses.clear()
-  }
 
   /**
    * Looks for modified classes, adds them to changedClasses and decides whether children should be visited.
@@ -76,6 +69,8 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
     } {
       val slashDelimitedQualifiedName = new String(reader.getClassName())
 
+      // Replacing classes, when there are errors, can lead to the broken debug session (like in Java).
+      // We have it for consistency with Java HCR implementation.
       if (replaceDespiteCompilationErrors || !hasCompilationErrors(classFile, reader, slashDelimitedQualifiedName)) {
         val className = slashDelimitedQualifiedName.replace('/', '.')
         changedClasses.add(ClassFileResource(className, classFile))
@@ -95,7 +90,7 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
    * @param fullyQualifiedName slash delimited name of type
    */
   private def hasCompilationErrors(classFile: IFile, reader: IClassFileReader, fullyQualifiedName: String): Boolean =
-    try {
+    EclipseUtils.withSafeRunner(s"Error occurred while looking for compilation error markers for type '$fullyQualifiedName'") {
       def isErrorMarker(marker: IMarker): Boolean =
         marker.getAttribute(IMarker.SEVERITY, /* defaultValue = */ IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR
 
@@ -106,17 +101,13 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
 
       val srcFile = getSourceFile(classFile, reader, fullyQualifiedName)
       srcFile exists hasErrorMarkers
-    } catch {
-      case e: Exception =>
-        logger.error(s"Something went wrong when looking for compilation error markers for type $fullyQualifiedName", e)
-        true
-    }
+    }.getOrElse(true)
 
   /**
    * Tries to find the source file for given type in the associated project.
    */
-  private def getSourceFile(classFile: IFile, reader: IClassFileReader, fullyQualifiedName: String): Option[IResource] = {
-    try {
+  private def getSourceFile(classFile: IFile, reader: IClassFileReader, fullyQualifiedName: String): Option[IResource] =
+    EclipseUtils.withSafeRunner(s"Error occurred while looking for src file for type '$fullyQualifiedName'") {
       val project: IJavaProject = JavaCore.create(classFile.getProject)
 
       val sourceAttribute = Option(reader.getSourceFileAttribute)
@@ -134,12 +125,7 @@ private[internal] class ChangedClassFilesVisitor extends IResourceDeltaVisitor w
         case cu: ICompilationUnit => Some(cu.getCorrespondingResource())
         case _ => None
       }
-    } catch {
-      case e: Exception =>
-        logger.error(s"Something went wrong when looking for src file for type $fullyQualifiedName", e)
-        None
-    }
-  }
+    }.flatten
 
   private def isClassFile(file: IFile) = "class" == file.getFullPath().getFileExtension()
 

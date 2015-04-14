@@ -167,9 +167,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   private var threads = List[ScalaThread]()
 
   @volatile
-  private var isDuringHcr: Boolean = false
-  private[internal] def isPerformingHotCodeReplace: Boolean = isDuringHcr
-  private[internal] def isPerformingHotCodeReplace_=(isPerforming: Boolean) = { isDuringHcr = isPerforming }
+  private[internal] var isPerformingHotCodeReplace: Boolean = false
 
   private[debug] val eventDispatcher: ScalaJdiEventDispatcher
   private[debug] val breakpointManager: ScalaDebugBreakpointManager

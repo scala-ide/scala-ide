@@ -202,20 +202,20 @@ object EclipseUtils extends HasLogger {
 
   /**
    * Executes a given function `f` in a safe runner that catches potential
-   * occuring exceptions and logs them together with `errorMsg` if this is the
+   * occurring exceptions and logs them together with `errorMsg` if this is the
    * case.
    *
    * If no error occurs, the result of `f` is returned, otherwise `None`.
    */
-  def withSafeRunner[A](errorMsg: String)(f: => A): Option[A] = {
-    var res = null.asInstanceOf[A]
+  def withSafeRunner[A](errorMsg: => String)(f: => A): Option[A] = {
+    var res: Option[A] = None
     SafeRunner.run(new ISafeRunnable {
       override def handleException(e: Throwable) =
         eclipseLog.error(s"$errorMsg. Check the previous stack trace for more information.")
 
-      override def run() = res = f
+      override def run() = { res = Option(f) }
     })
-    Option(res)
+    res
   }
 
   /** Returns the root resource of this workspace.

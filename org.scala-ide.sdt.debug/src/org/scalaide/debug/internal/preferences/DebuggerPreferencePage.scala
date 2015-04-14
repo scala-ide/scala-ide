@@ -81,9 +81,6 @@ object DebuggerPreferencePage {
   val HotCodeReplaceEnabled = "org.scala-ide.sdt.debug.hcr.enabled"
   val NotifyAboutFailedHcr = "org.scala-ide.sdt.debug.hcr.notifyFailed"
   val NotifyAboutUnsupportedHcr = "org.scala-ide.sdt.debug.hcr.notifyUnsupported"
-
-  // like in Java, it can lead to broken debug session but we have it for consistency
-  // with Java's hcr implementation
   val PerformHcrForFilesContainingErrors = "org.scala-ide.sdt.debug.hcr.performForFilesContainingErrors"
   val DropObsoleteFramesAutomatically = "org.scala-ide.sdt.debug.hcr.dropObsoleteFramesAutomatically"
   val AllowToDropObsoleteFramesManually = "org.scala-ide.sdt.debug.hcr.allowToDropObsoleteFramesManually"
