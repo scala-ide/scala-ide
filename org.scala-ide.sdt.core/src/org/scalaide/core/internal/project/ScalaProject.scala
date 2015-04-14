@@ -427,20 +427,27 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   /** Compiler settings that are honored by the presentation compiler. */
   private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
     import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation,
+
+    val compilerPluginSettings: Set[Settings#Setting] = Set(pluginOptions,
+      pluginSetting,
+      pluginsDir)
+
+    val generalSettings: Set[Settings#Setting] = Set(deprecation,
       unchecked,
-      pluginOptions,
       verbose,
       Xexperimental,
       future,
       Ylogcp,
-      pluginSetting,
-      pluginsDir,
       YpresentationDebug,
       YpresentationVerbose,
       YpresentationLog,
       YpresentationReplay,
       YpresentationDelay)
+
+    if (effectiveScalaInstallation().version == ScalaInstallation.platformInstallation.version)
+      generalSettings ++ compilerPluginSettings
+    else
+      generalSettings
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String) {
