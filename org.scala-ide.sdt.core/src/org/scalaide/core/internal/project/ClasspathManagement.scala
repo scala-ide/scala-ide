@@ -45,6 +45,7 @@ import scala.util.Success
 import org.scalaide.core.IScalaClasspath
 import org.scalaide.core.ScalaInstallationChange
 import org.eclipse.jface.preference.IPersistentPreferenceStore
+import scala.tools.nsc.Settings
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
  *
@@ -231,7 +232,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       classpathCheckLock.synchronized {
         // mark as in progress
         classpathHasBeenChecked = false
-            checkClasspath()
+          checkClasspath()
         if (classpathValid) {
           // no point in resetting compilers on an invalid classpath,
           // it would not work anyway. But we need to reset them if the classpath
@@ -340,7 +341,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     val errors =
       validateScalaLibrary(scalaLibraries, canFixInstallationFromScalaLib) ++
         (if (withVersionClasspathValidator) {
-          validateBinaryVersionsOnClasspath()
+          validateBinaryVersionsOnClasspath() ++ validateCompilerPlugins()
         } else {
           Seq()
         })
@@ -493,5 +494,42 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     errors.toSeq
   }
 
+  /** Make sure compiler plugins are binary compatible with the selected Scala installation.
+   *
+   *  Unlike regular dependencies, compiler plugins must be cross-compiled with the exact compiler
+   *  version used for building.
+   */
+  private def validateCompilerPlugins(): Seq[(Int, String, String)] = if (!isUsingCompatibilityMode()) Seq() else {
+    val errors = mutable.ListBuffer[(Int, String, String)]()
+
+    def paths(p: String) =
+      p.split(File.pathSeparator).toSeq.filterNot(_.isEmpty).distinct
+
+    def scanDir(d: String) = {
+      val entries = Option(new File(d).listFiles).getOrElse(Array.empty[File])
+      for (f <- entries if f.isFile)
+        yield f.getAbsolutePath
+    }
+
+    val plugins = paths(storage.getString("Xpluginsdir")).flatMap(scanDir) ++ paths(storage.getString("Xplugin"))
+    val installation = effectiveScalaInstallation()
+    def error(v: ScalaVersion, path: String) =
+      (IMarker.SEVERITY_ERROR,
+       s"Compiler plugin ${new Path(path).lastSegment()} is cross-compiled with incompatible version for this project: ${v.unparse} vs ${installation.version.unparse}",
+       SdtConstants.ScalaVersionProblemMarkerId)
+
+    for (p <- plugins if p.nonEmpty) {
+      p match {
+        case VersionInFile(version) if (version != installation.version) =>
+          errors += error(version, p)
+        case _ =>
+          ()
+      }
+    }
+
+    errors.toSeq
+  }
+
   private class cpMarkerFactory(key:String) extends MarkerFactory(key)
+
 }
