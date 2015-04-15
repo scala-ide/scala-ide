@@ -6,8 +6,11 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
+import com.sun.jdi.ClassType
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.proxies.JdiProxyCompanion
+
+import TypeNames._
 
 /**
  * Extracts and transforms all implicit methods calls to valid proxies.
@@ -30,15 +33,30 @@ class MockMethodsCalls
 
   import universe._
 
-  private def isContext(f: Tree) = f.toString() == Debugger.contextParamName
-
   private def isSpecialMethod(name: Name) = Debugger.proxySpecialMethods.contains(name.toString())
 
+  private def isValidQualifier(qualifier: Tree) = qualifier match {
+    case New(_) => false
+    case GenericSelect(_, name) if name.toString() == Debugger.primitiveValueOfProxyMethodName => false
+    case q => !isPrimitive(q) && q.toString() != Debugger.contextParamName
+  }
+
+  private def getType(qualifier: Tree, tpe: Option[String]): Option[String] =  tpe match {
+    case Some(MockSuper.SuperTypeMarker) =>
+      val baseClassesWithoutCurrent = qualifier.tpe.baseClasses.drop(1)
+      val superClass = baseClassesWithoutCurrent.headOption.map(_.name.toString())
+      superClass
+    case Some(thisType) =>
+      Some(thisType)
+    case None =>
+      fromTree(qualifier, withoutGenerics = true).map(fixScalaObjectType)
+  }
+
   /** Creates a proxy to mock methods calls. */
-  private def createProxy(qualifier: Tree, name: Name, args: List[Tree], transformFurther: Tree => Tree): Tree = {
-    val thisType = TypeNames.fromTree(qualifier, withoutGenerics = true).map(name => q"Some($name)").getOrElse(q"None")
-    val transformedQualifier = transformFurther(qualifier)
-    val transformedArgs = args.mapConserve(transformFurther)
+  private def createProxy(qualifier: Tree, name: Name, args: List[Tree], tpe: Option[String], transformFurther: Tree => Tree): Tree = {
+    val thisType = getType(qualifier, tpe).map(name => q"Some($name)").getOrElse(q"None")
+    val transformedQualifier = transformSingleTree(qualifier, transformFurther)
+    val transformedArgs = args.mapConserve(transformSingleTree(_, transformFurther))
     val applyWithGenericType = Select(transformedQualifier, TermName(Debugger.proxyGenericApplyMethodName))
     val applyWithGenericTypeArgs = Literal(Constant(name.toString)) :: thisType :: transformedArgs
 
@@ -46,10 +64,10 @@ class MockMethodsCalls
   }
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case Apply(Select(qualifier: Apply, name), args) if !isSpecialMethod(name) && !isContext(qualifier) =>
-      createProxy(qualifier, name, args, transformFurther)
-    case Apply(TypeApply(Select(qualifier: Apply, name), _), args) if !isSpecialMethod(name) && !isContext(qualifier) =>
-      createProxy(qualifier, name, args, transformFurther)
+    case MockSuper(GenericSelectOrApply(qualifier, name, args), tpe) =>
+      createProxy(qualifier, name, args, Some(tpe), transformFurther)
+    case GenericApply(qualifier, name, args) if !isSpecialMethod(name) && isValidQualifier(qualifier) =>
+      createProxy(qualifier, name, args, None, transformFurther)
     case other =>
       transformFurther(other)
   }

@@ -21,8 +21,6 @@ class FailFast
       throw new UnsupportedFeature("lazy val")
     case Try(_, _, _) =>
       throw new UnsupportedFeature("try/catch/finally")
-    case Super(_) =>
-      throw new UnsupportedFeature("super")
     case Return(_) =>
       throw new UnsupportedFeature("return")
     case Select(New(Ident(TypeName("$anon"))), termNames.CONSTRUCTOR) =>

@@ -251,6 +251,9 @@ object Names {
     /** Name of placeholder function for obtaining arguments types */
     val placeholderArgsName = "placeholderArgs"
 
+    /** Name of placeholder function for handling `super` */
+    val placeholderSuperName = "placeholderSuper"
+
     /** Name of proxy method, used in reflective compilation. */
     val proxyMethodName = "proxy"
 

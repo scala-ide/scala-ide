@@ -47,7 +47,8 @@ trait TransformationPhase[+Tpe <: TypecheckRelation] {
  * @tparam Tpe where this phase is placed relative to `TypeCheck` phase
  */
 abstract class AstTransformer[+Tpe <: TypecheckRelation]
-    extends TransformationPhase[Tpe] {
+    extends TransformationPhase[Tpe]
+    with AstHelpers {
 
   import universe._
 
@@ -106,11 +107,4 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
         transformSingleTree(tree, super.transform)
     }
   }
-
-  /** Helper for creating Select on 'apply' method */
-  protected def SelectApplyMethod(typeName: String): Select = SelectMethod(typeName, "apply")
-
-  /** Helper for creating Select on given method */
-  protected def SelectMethod(typeName: String, methodName: String): Select =
-    Select(Ident(TermName(typeName)), TermName(methodName))
 }

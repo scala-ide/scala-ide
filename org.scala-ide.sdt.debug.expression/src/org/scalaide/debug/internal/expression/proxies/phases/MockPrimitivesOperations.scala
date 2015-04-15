@@ -56,15 +56,6 @@ class MockPrimitivesOperations
     case other => transformFurther(other)
   }
 
-  object ProxifiedPrimitive {
-    import Debugger._
-    def unapply(tree: Tree): Option[Literal] = tree match {
-      case Apply(contextFun, List(literal: Literal)) if contextFun.toString() == s"$contextParamName.$proxyMethodName" => Some(literal)
-      case literal: Literal => Some(literal)
-      case _ => None
-    }
-  }
-
   private def obtainPrimitive(on: Tree, transformFurther: Tree => Tree): Tree =
     on match {
       case ProxifiedPrimitive(literal) => literal
@@ -94,11 +85,4 @@ class MockPrimitivesOperations
   private val unaryOperations = Set("!", "~", "-", "+").map(name => s"unary_${NameTransformer.encode(name)}")
 
   private def isPrimitiveOperation(name: Name): Boolean = !notPrimitiveOperation.contains(name.toString)
-
-  private def isPrimitive(tree: Tree): Boolean = TypeNames.fromTree(tree) match {
-    case Some(treeType) => Names.Scala.primitives.allShorten.contains(treeType)
-    case _ => isPrimitiveProxy(tree)
-  }
-
-  private def isPrimitiveProxy(tree: Tree): Boolean = ProxifiedPrimitive.unapply(tree).isDefined
 }

@@ -11,6 +11,8 @@ import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 
+import scala.language.dynamics
+
 /**
  * Companion for JdiContext, contains names to be used in reflective compilation.
  */
@@ -33,7 +35,7 @@ object JdiContext {
   def placeholderNestedMethod(parametersListsCount: Int, beginLine: Int, endLine: Int) = ???
 
   /**
-   * Methods to mark that given lambda  that needs to be implemented in later phases.
+   * Methods to mark that given lambda needs to be implemented in later phases.
    *
    * @param lambdaName name of proxy for this lambda - use only to pass information in AST
    *
@@ -49,6 +51,14 @@ object JdiContext {
    * If you change its name, package or behavior, make sure to change it also.
    */
   def placeholderArgs(args: Any*) = ???
+
+  /**
+   * Used to keep track of type of object on which we want to call the method
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change its name, package or behavior, make sure to change it also.
+   */
+  def placeholderSuper[Ret](methodCall: Ret, tpe: Any): Ret = ???
 
   /**
    * Methods to mark that given lambda  that needs to be implemented in later phases.

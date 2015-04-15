@@ -41,6 +41,10 @@ case class StaticCallClassJdiProxy(override val __context: JdiContext, override 
   override def applyDynamic(name: String)(args: Any*): JdiProxy =
     __context.invokeJavaStaticMethod[JdiProxy](referenceType, name, args.map(_.asInstanceOf[JdiProxy]))
 
+  /** Implementation of method application. */
+  override def applyWithGenericType(name: String, thisType: Option[String], args: Any*): JdiProxy =
+    applyDynamic(name)(args :_*)
+
   /** Implementation of variable mutation. */
   override def updateDynamic(name: String)(value: Any): UnitJdiProxy =
     __context.setJavaStaticField(referenceType, name, value.asInstanceOf[JdiProxy])

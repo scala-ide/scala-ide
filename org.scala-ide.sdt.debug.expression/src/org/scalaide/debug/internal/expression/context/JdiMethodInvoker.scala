@@ -90,11 +90,12 @@ private[context] trait JdiMethodInvoker {
     val encodedName = NameTransformer.encode(methodName)
     val boxed = proxy.__autoboxed
 
-    val standardMethod = new StandardMethod(boxed, encodedName, methodArgs, this)
-    def varArgMethod = new ScalaVarArgMethod(boxed, encodedName, methodArgs, this)
+    val standardMethod = new StandardMethod(boxed, encodedName, methodArgs, onRealType, this)
+    def varArgMethod = new ScalaVarArgMethod(boxed, encodedName, methodArgs, onRealType, this)
+    def anyValMethod = new AnyValMethod(proxy, encodedName, methodArgs, onRealType, this, this)
+
     def javaVarArgMethod = new JavaVarArgMethod(boxed, methodName, methodArgs, this)
     def stringConcat = new StringConcatenationMethod(boxed, encodedName, methodArgs, this)
-    def anyValMethod = new AnyValMethod(proxy, encodedName, methodArgs, onRealType, this, this)
     def javaField = new JavaField(boxed, methodName, methodArgs, this)
 
     standardMethod() orElse
