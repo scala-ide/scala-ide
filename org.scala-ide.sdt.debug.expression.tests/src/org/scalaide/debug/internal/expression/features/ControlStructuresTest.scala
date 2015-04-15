@@ -42,8 +42,7 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   @Test(expected = classOf[UnsupportedFeature])
   def patternMatch(): Unit = eval("int match { case i: Int => i } ", "", "")
 
-  // TODO - O-5626 - support for throw
-  @Test(expected = classOf[UnsupportedFeature])
+  @Test(expected = classOf[ThrowDetected])
   def throwException(): Unit = eval("""throw new RuntimeException("Boo!")""", "", "")
 
   // TODO - O-8596 - support for try/catch/finally

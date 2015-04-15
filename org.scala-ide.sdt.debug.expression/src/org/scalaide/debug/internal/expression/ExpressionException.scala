@@ -24,6 +24,8 @@ sealed trait ExpressionException extends Throwable with NoStackTrace
 /** Long messages are placed here for readability */
 object ExpressionException {
 
+  val throwDetected = "Throwing exception from evaluated code is not possible."
+
   val functionProxyArgumentTypeNotInferredMessage =
     """You used a lambda expression for which we could not infer its type parameters.
       |Please provide explicit types for all lambda parameters.""".stripMargin
@@ -109,6 +111,13 @@ object ExpressionException {
   }
 
 }
+
+/**
+ * Raised when user uses `throw` inside expression which makes little sense.
+ */
+class ThrowDetected
+  extends RuntimeException(ExpressionException.throwDetected)
+  with ExpressionException
 
 class LambdaCompilationFailure(lambdaSource: String, reason: Throwable)
   extends RuntimeException(ExpressionException.lambdaCompilationFailure(lambdaSource), reason)
