@@ -23,7 +23,7 @@ object SemanticHighlightingParticipants {
   def extensions: Seq[SemanticHighlightingParticipant] = {
     val elems = EclipseUtils.configElementsForExtension(ExtensionPointId)
     elems flatMap { e =>
-      EclipseUtils.withSafeRunner("Error occurred while trying to create semantic highlighting participant.") {
+      EclipseUtils.withSafeRunner("Error occurred while trying to create semantic highlighting participant") {
         e.createExecutableExtension("class").asInstanceOf[SemanticHighlightingParticipant]
       }
     }

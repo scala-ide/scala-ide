@@ -20,6 +20,7 @@ import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStep
 import org.scalaide.debug.internal.command.ScalaStepInto
 import org.scalaide.debug.internal.command.ScalaStepReturn
+import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import scala.actors.Future
 import scala.collection.JavaConverters.asScalaBufferConverter
@@ -47,10 +48,11 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  override def canStepInto: Boolean = suspended // TODO: need real logic
-  override def canStepOver: Boolean = suspended // TODO: need real logic
-  override def canStepReturn: Boolean = suspended // TODO: need real logic
+  override def canStepInto: Boolean = canStep
+  override def canStepOver: Boolean = canStep
+  override def canStepReturn: Boolean = canStep
   override def isStepping: Boolean = ???
+  private def canStep = suspended && !target.isPerformingHotCodeReplace
 
   override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
   override def stepOver(): Unit = {
@@ -62,7 +64,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume: Boolean = suspended // TODO: need real logic
+  override def canResume: Boolean = suspended && !target.isPerformingHotCodeReplace
   override def canSuspend: Boolean = !suspended // TODO: need real logic
   override def isSuspended: Boolean = util.Try(threadRef.isSuspended).getOrElse(false)
 
@@ -147,14 +149,23 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * It's not possible to drop the bottom stack frame. Moreover all dropped frames and also
    * the one below the target frame can't be native.
+   *
+   * @param frame frame which we'd like to drop and step into it once again
+   * @param relatedToHcr when dropping frames automatically after Hot Code Replace we need a bit different processing
    */
-  private[model] def canDropToFrame(frame: ScalaStackFrame): Boolean = {
+  private[model] def canDropToFrame(frame: ScalaStackFrame, relatedToHcr: Boolean = false): Boolean = {
     val frames = stackFrames
     val indexOfFrame = frames.indexOf(frame)
 
     val atLeastLastButOne = frames.size >= indexOfFrame + 2
-    def notNative = !frames.take(indexOfFrame + 2).exists(_.isNative)
-    canPopFrames && atLeastLastButOne && notNative
+    val canDropObsoleteFrames = HotCodeReplacePreferences.allowToDropObsoleteFramesManually
+
+    // Obsolete frames are marked as native so we have to ignore isNative when user really wants to drop obsolete frames manually.
+    // User has to be aware that it can cause problems when he'd really try to drop the native frame marked as obsolete.
+    def isNativeAndIsNotObsoleteWhenObsoleteAllowed(f: ScalaStackFrame) = f.isNative && !(canDropObsoleteFrames && f.isObsolete)
+
+    def notNative = !frames.take(indexOfFrame + 2).exists(isNativeAndIsNotObsoleteWhenObsoleteAllowed)
+    canPopFrames && atLeastLastButOne && (relatedToHcr || (!target.isPerformingHotCodeReplace && notNative))
   }
 
   private[model] def canPopFrames: Boolean = isSuspended && target.canPopFrames
@@ -165,15 +176,19 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * Removes all top stack frames starting from a given one and performs StepInto to reach the given frame again.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def dropToFrameInternal(frame: ScalaStackFrame): Unit =
-    if (canDropToFrame(frame)) {
-      val frames = stackFrames
-      val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
-      threadRef.popFrames(frame.stackFrame)
-      stepIntoFrame(startFrameForStepInto)
+  private[model] def dropToFrameInternal(frame: ScalaStackFrame, relatedToHcr: Boolean = false): Unit =
+    (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame")) {
+      if (canDropToFrame(frame, relatedToHcr)) {
+        val frames = stackFrames
+        val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
+        threadRef.popFrames(frame.stackFrame)
+        stepIntoFrame(startFrameForStepInto)
+      }
     }
 
   def refreshStackFrames(): Unit = companionActor ! RebindStackFrames
+
+  private[internal] def updateStackFramesAfterHcr(msg: ScalaDebugTarget.UpdateStackFramesAfterHcr): Unit = companionActor ! msg
 
   private def processMethodInvocationResult(res: Option[Any]): Value = res match {
     case Some(Right(null)) =>
@@ -234,11 +249,36 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def rebindScalaStackFrames(): Unit = (safeThreadCalls(()) or wrapJDIException("Exception while rebinding stack frames")) {
+    rebindFrames()
+  }
+
+  private def rebindFrames(): Unit = {
     // FIXME: Should check that `threadRef.frames == stackFrames` before zipping
     threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
     }
   }
+
+  /**
+   * Refreshes frames and optionally drops affected ones.
+   * FOR THE COMPANION ACTOR ONLY.
+   */
+  private[model] def updateScalaStackFramesAfterHcr(dropAffectedFrames: Boolean): Unit =
+    (safeThreadCalls(()) or wrapJDIException("Exception while rebinding stack frames")) {
+      // obsolete frames will be marked as native so we need to check this before we'll rebind frames
+      val nativeFrameIndex = stackFrames.indexWhere(_.isNative)
+
+      rebindFrames()
+      if (dropAffectedFrames) {
+        val topNonNativeFrames =
+          if (nativeFrameIndex == -1) stackFrames
+          else stackFrames.take(nativeFrameIndex - 1) // we can't drop to native frame and also the first older frame can't be native
+        val obsoleteFrames = topNonNativeFrames.filter(_.isObsolete)
+        for (frame <- obsoleteFrames.lastOption)
+          dropToFrameInternal(frame, relatedToHcr = true)
+      }
+      fireChangeEvent(DebugEvent.CONTENT)
+    }
 
   import scala.util.control.Exception
   import Exception.Catch
@@ -292,6 +332,8 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       thread.dropToFrameInternal(frame)
     case RebindStackFrames =>
       if (thread.isSuspended) thread.rebindScalaStackFrames()
+    case ScalaDebugTarget.UpdateStackFramesAfterHcr(dropAffectedFrames) =>
+      if (thread.isSuspended) thread.updateScalaStackFramesAfterHcr(dropAffectedFrames)
     case InvokeMethod(objectReference, method, args) =>
       reply(
         if (!thread.isSuspended) {

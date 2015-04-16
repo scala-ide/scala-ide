@@ -553,7 +553,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val settings = ScalaPresentationCompiler.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
       initializeCompilerSettings(settings, _ => true)
-      // source path should be emtpy. The build manager decides what files get recompiled when.
+      // source path should be empty. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
       // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
       // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath

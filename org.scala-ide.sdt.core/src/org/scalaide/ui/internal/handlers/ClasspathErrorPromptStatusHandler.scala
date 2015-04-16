@@ -68,7 +68,7 @@ class ClasspathErrorPromptStatusHandler extends RichStatusHandler {
       val buttonId = dialog.getReturnCode()
       if (buttonId == IDialogConstants.OK_ID)
         continuation.get trySuccess { () =>
-          EclipseUtils.withSafeRunner("Error occurred while trying to set source level.") {
+          EclipseUtils.withSafeRunner("Error occurred while trying to set source level") {
             project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "Classpath check dialog tasked with restoring compatibility")
           }
         }
