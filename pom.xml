@@ -93,5 +93,10 @@
       <name>typesafe maven releases</name>
       <url>http://private-repo.typesafe.com/typesafe/maven-releases</url>
     </repository>
+    <repository>
+      <id>sonatype releases</id>
+      <name>sonatype releases</name>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
   </repositories>
 </project>
