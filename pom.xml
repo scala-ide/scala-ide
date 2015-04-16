@@ -79,6 +79,39 @@
     <module>org.scala-ide.sbt.update-site</module>
   </modules>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- configuration of the scala compiler -->
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>${scala.plugin.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <args>
+              <arg>-deprecation</arg>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-Xlint</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
   <repositories>
     <repository>
       <id>typesafe releases</id>
