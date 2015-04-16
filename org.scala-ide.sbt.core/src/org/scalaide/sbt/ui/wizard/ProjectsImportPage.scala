@@ -137,7 +137,6 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   private var directoryPathField: Combo = _
   private var browseDirectoriesButton: Button = _
   private var projectsList: CheckboxTreeViewer = _
-  private var copyCheckbox: Button = _
 
   override def createControl(parent: Composite): Unit = {
 
@@ -205,7 +204,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     val dialog = new DirectoryDialog(directoryPathField.getShell(), SWT.SHEET)
     dialog.setMessage(DataTransferMessages.WizardProjectsImportPage_SelectDialogTitle)
 
-    var dirName = directoryPathField.getText().trim()
+    val dirName = directoryPathField.getText().trim()
 
     if (dirName.isEmpty)
       dialog.setFilterPath(workbenchLocation.toOSString())
@@ -338,7 +337,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     setAllDisabled(composite)
   }
 
-  private def setAllDisabled(control: Control) {
+  private def setAllDisabled(control: Control): Unit = {
     control match {
       case composite: Composite =>
         composite.getChildren().foreach(setAllDisabled(_))
@@ -456,18 +455,6 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     }
 
     true
-  }
-
-  private def addToWorkingSets(projects: immutable.Seq[IProject]): Unit = {
-    // TODO: make working set support working. sbt-11
-    //    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
-    //
-    //    for {
-    //      workingGroup <- model.workingSetGroup
-    //      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
-    //      if selectedWorkingSets.nonEmpty
-    //      project <- projects
-    //    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
   }
 
 }

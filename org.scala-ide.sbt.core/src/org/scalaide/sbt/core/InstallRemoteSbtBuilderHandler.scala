@@ -31,7 +31,7 @@ class InstallRemoteSbtBuilderHandler extends AbstractHandler{
     null // from javadoc spec
   }
 
-  private def switchBuilder(project: IProject) {
+  private def switchBuilder(project: IProject): Unit = {
     EclipseUtils.withSafeRunner("Couldn't switch builder") {
       val builderToRemove = "org.scala-ide.sdt.core.scalabuilder"
       val builderToAdd = "org.scala-ide.sbt.core.remoteBuilder"
