@@ -16,6 +16,7 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
+import org.scalaide.core.FlakyTest
 
 private object HotCodeReplaceTest {
 
@@ -161,7 +162,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def successfulHcrWithSimpleMethod(): Unit = {
+  def successfulHcrWithSimpleMethod(): Unit = FlakyTest.retry("successfulHcrWithSimpleMethod") {
     createAndGoToBreakpointAtTheEndOfClassMethod()
 
     // WHEN edit code and rebuild
@@ -192,7 +193,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def hcrWithDisabledAutomaticDroppingFrames(): Unit = {
+  def hcrWithDisabledAutomaticDroppingFrames(): Unit = FlakyTest.retry("hcrWithDisabledAutomaticDroppingFrames") {
     HotCodeReplacePreferences.dropObsoleteFramesAutomatically = false
     HotCodeReplacePreferences.allowToDropObsoleteFramesManually = true
 
@@ -214,7 +215,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def successfulHcrWithMethodNotInStackTrace(): Unit = {
+  def successfulHcrWithMethodNotInStackTrace(): Unit = FlakyTest.retry("successfulHcrWithMethodNotInStackTrace") {
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
     // WHEN edit code and rebuild
@@ -234,7 +235,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def disabledHcrWithMethodNotInStackTrace(): Unit = {
+  def disabledHcrWithMethodNotInStackTrace(): Unit = FlakyTest.retry("disabledHcrWithMethodNotInStackTrace") {
     disableHcr()
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
@@ -255,7 +256,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def classesNotReplacedDueToErrorsInCodeWithMethodNotInStackTrace(): Unit = {
+  def classesNotReplacedDueToErrorsInCodeWithMethodNotInStackTrace(): Unit = FlakyTest.retry("classesNotReplacedDueToErrorsInCodeWithMethodNotInStackTrace") {
     disableHcrForFilesContainingErrors()
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
@@ -277,7 +278,7 @@ class HotCodeReplaceTest
 
   @Ignore("Probably the VM crash will be fixed, when the automatic semantic dropping frames BEFORE HCR will be implemented")
   @Test
-  def successfulHcrWithRecursiveMethod(): Unit = {
+  def successfulHcrWithRecursiveMethod(): Unit = FlakyTest.retry("successfulHcrWithRecursiveMethod") {
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
     // WHEN edit code and rebuild
@@ -298,7 +299,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def successfulHcrWithAffectedFartherFrame(): Unit = {
+  def successfulHcrWithAffectedFartherFrame(): Unit = FlakyTest.retry("successfulHcrWithAffectedFartherFrame") {
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
     addLineBreakpointAt(RecursiveMethodSelfCall)
@@ -319,7 +320,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def disabledHcr(): Unit = {
+  def disabledHcr(): Unit = FlakyTest.retry("disabledHcr") {
     disableHcr()
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
@@ -342,7 +343,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def classesNotReplacedDueToErrorsInCode(): Unit = {
+  def classesNotReplacedDueToErrorsInCode(): Unit = FlakyTest.retry("classesNotReplacedDueToErrorsInCode") {
     disableHcrForFilesContainingErrors()
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
@@ -369,7 +370,7 @@ class HotCodeReplaceTest
   // as expected. Anyway it should get better when we'll stop using isObsolete to state what should be dropped.
   @Ignore("Hopefully it will be fixed, when the automatic semantic dropping frames BEFORE HCR will be implemented")
   @Test
-  def automaticDroppingFramesAfterManyHcrOperationsInARow(): Unit = {
+  def automaticDroppingFramesAfterManyHcrOperationsInARow(): Unit = FlakyTest.retry("automaticDroppingFramesAfterManyHcrOperationsInARow") {
     createAndGoToBreakpointAtTheEndOfClassMethod()
 
     // WHEN edit code and rebuild
@@ -392,7 +393,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def doNotDropLastFrame(): Unit = {
+  def doNotDropLastFrame(): Unit = FlakyTest.retry("doNotDropLastFrame") {
     // GIVEN the thread is suspended at the correct breakpoint in the separate thread and initial values are correct
     addLineBreakpointAt(RunMethodEnd)
     session.launch()
@@ -407,7 +408,7 @@ class HotCodeReplaceTest
   }
 
   @Test
-  def prohibitedDroppingObsoleteFramesManuallyDoesNotAffectAutomaticDropping(): Unit = {
+  def prohibitedDroppingObsoleteFramesManuallyDoesNotAffectAutomaticDropping(): Unit = FlakyTest.retry("prohibitedDroppingObsoleteFramesManuallyDoesNotAffectAutomaticDropping") {
     HotCodeReplacePreferences.allowToDropObsoleteFramesManually = false
     createAndGoToBreakpointAtTheEndOfClassMethod()
 
