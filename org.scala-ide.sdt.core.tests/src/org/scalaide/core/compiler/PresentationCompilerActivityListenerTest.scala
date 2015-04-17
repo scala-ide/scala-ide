@@ -5,6 +5,7 @@ package org.scalaide.core.compiler
 
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.junit.Test
+import org.junit.Ignore
 import org.junit.Assert._
 import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import Thread.sleep
@@ -221,6 +222,7 @@ class PresentationCompilerActivityListenerTest {
     listener.stop()
   }
 
+  @Ignore("Flaky, often fails in Scala PR validation.")
   @Test
   def changingManyPreferencesAtOnce(): Unit = {
     val shutdownMock = new MockShutdownFun
