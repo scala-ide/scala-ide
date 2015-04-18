@@ -45,6 +45,9 @@ object ScalaDebugTestSession {
     debugEventListener
   }
 
+  def removeDebugEventListener(debugEventListener: IDebugEventSetListener): Unit =
+    DebugPlugin.getDefault.removeDebugEventListener(debugEventListener)
+
   def apply(launchConfiguration: ILaunchConfiguration): ScalaDebugTestSession = {
     val session = new ScalaDebugTestSession(launchConfiguration)
     session.skipAllBreakpoints(false)
@@ -132,6 +135,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
 
   // ----
 
+  @volatile
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null

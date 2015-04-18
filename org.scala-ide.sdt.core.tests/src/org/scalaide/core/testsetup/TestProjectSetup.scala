@@ -1,6 +1,5 @@
 package org.scalaide.core.testsetup
 
-import scala.concurrent.duration._
 import scala.tools.nsc.interactive.Response
 
 import org.eclipse.core.resources.IFile
@@ -145,17 +144,15 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /**
-   * Allows to modify sources in test workspace and then build project incrementally.
-   * Be aware that it's heavy and it may be difficult to reason whether some events have been already propagated or not.
+   * Allows to modify sources in test workspace.
    *
    * @param compilationUnitPath path to file which we'll change
    * @param lineNumber line which will be removed (line numbers start from 1)
    * @param newLine code inserted in place of line with lineNumber
-   * @param waitTime time to wait when build is started (so events can propagate etc.), defaults to 500 milliseconds
    */
-  def buildWithModifiedLine(compilationUnitPath: String, lineNumber: Int, newLine: String, waitTime: Duration = 500.millis): Unit = {
+  def modifyLine(compilationUnitPath: String, lineNumber: Int, newLine: String): Unit = {
     val lineIndex = lineNumber - 1
-    val cu = scalaCompilationUnit(compilationUnitPath)
+    val cu = compilationUnit(compilationUnitPath)
     val code = cu.getSource
     val lines = code.split('\n').toList
     val newLines = lines.updated(lineIndex, newLine)
@@ -164,7 +161,12 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     val textEdit = new ReplaceEdit(0, code.length(), newCode)
     cu.applyTextEdit(textEdit, new NullProgressMonitor)
     cu.save(new NullProgressMonitor, true)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-    Thread.sleep(waitTime.toMillis)
   }
+
+  /**
+   * Be aware that it can be heavy. Moreover, it's needed to ensure that
+   * events are already properly propagated after the build.
+   */
+  def buildIncrementally(): Unit =
+    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 }

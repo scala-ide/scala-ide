@@ -3,8 +3,15 @@
  */
 package org.scalaide.debug.internal.hcr
 
+import scala.collection.mutable.Publisher
+import scala.collection.mutable.Subscriber
+import scala.util.Failure
+import scala.util.Try
+import scala.util.Success
+import scala.util.control.NoStackTrace
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -17,6 +24,9 @@ import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 
+import ScalaHotCodeReplaceManager.HCRResult
+import ScalaHotCodeReplaceManager.HCRSucceeded
+
 private object HotCodeReplaceTest {
 
   class Matcher[T](check: T => Unit) {
@@ -27,10 +37,57 @@ private object HotCodeReplaceTest {
     def asObsolete = Location(typeName, "Obsolete method", lineNumber = -1)
   }
 
+  /**
+   * Checks whether we got exactly one message and it's of type HCRSucceeded.
+   * Otherwise, when checking whether HCR succeeded, the test fails with an appropriate message.
+   */
+  class TestHcrSuccessListener extends Subscriber[HCRResult, Publisher[HCRResult]] {
+
+    private var onlyOneSuccessReceived: Try[Boolean] = Success(false)
+
+    def checkIfSucceeded: Boolean = onlyOneSuccessReceived match {
+      case Success(value) => value
+      case Failure(e) =>
+        // New exception to have informative stack trace.
+        throw new AssertionError("Unexpected message(s). Check the chained exception(s) for more information.", e)
+    }
+
+    override def notify(publisher: Publisher[HCRResult], event: HCRResult): Unit = event match {
+      case msg: HCRSucceeded => handleSuccess(msg)
+      case msg => handleWrongTypeOfMessage(msg)
+    }
+
+    private def handleSuccess(msg: HCRSucceeded): Unit = onlyOneSuccessReceived match {
+      case Success(false) =>
+        onlyOneSuccessReceived = Success(true)
+      case Failure(prevThrowable) =>
+        setFailureWithChainedThrowable(s"Received '$msg' but something went wrong previously.", prevThrowable)
+      case _ =>
+        setFailure("HCRSucceeded published twice.")
+    }
+
+    // We chain exceptions related to particular events for easier debugging.
+    private def handleWrongTypeOfMessage(msg: HCRResult): Unit = onlyOneSuccessReceived match {
+      case Success(false) =>
+        setFailure(s"Received an unexpected message '$msg'. HCRSucceeded is expected.")
+      case Failure(prevThrowable) =>
+        setFailureWithChainedThrowable(s"Received an unexpected message '$msg'.", prevThrowable)
+      case _ =>
+        setFailure(s"Received an unexpected message '$msg' after receiving expected HCRSucceeded.")
+    }
+
+    private def setFailure(errorMsg: String): Unit =
+      onlyOneSuccessReceived = Failure(new Exception(errorMsg) with NoStackTrace)
+
+    private def setFailureWithChainedThrowable(errorMsg: String, previous: Throwable): Unit =
+      onlyOneSuccessReceived = Failure(new Exception(errorMsg, previous) with NoStackTrace)
+  }
+
   val MainObjectTypeName = "debug.MainObject$"
   val NestedClassTypeName = "debug.MainObject$nestedObject$NestedClass"
   val CustomThreadTypeName = "debug.MainObject$CustomThread$"
   val TestedFilePath = "debug/Hcr.scala"
+  val JavaClassFilePath = "debug/JavaClass.java"
   val IntFromCtorArgName = "intFromCtor"
 
   val RecursiveMethodSignature = "recursiveMethod(I)I"
@@ -39,18 +96,19 @@ private object HotCodeReplaceTest {
   val RunMethodSignature = "run()V"
 
   val ClassMethodBeginning = Location(NestedClassTypeName, ClassMethodSignature, 7)
-  val ClassMethodEnd = ClassMethodBeginning.copy(lineNumber = 8)
+  val ClassMethodEnd = ClassMethodBeginning.copy(lineNumber = 9)
 
-  val RecursiveMethodBeginning = Location(MainObjectTypeName, RecursiveMethodSignature, 14)
-  val RecursiveMethodSelfCall = RecursiveMethodBeginning.copy(lineNumber = 17)
-  val RecursiveMethodEnd = RecursiveMethodBeginning.copy(lineNumber = 20)
+  val RecursiveMethodBeginning = Location(MainObjectTypeName, RecursiveMethodSignature, 15)
+  val RecursiveMethodSelfCall = RecursiveMethodBeginning.copy(lineNumber = 18)
+  val RecursiveMethodEnd = RecursiveMethodBeginning.copy(lineNumber = 21)
 
-  val MainMethodBeginning = Location(MainObjectTypeName, MainMethodSignature, 24)
-  val MainMethodEnd = MainMethodBeginning.copy(lineNumber = 25)
+  val MainMethodBeginning = Location(MainObjectTypeName, MainMethodSignature, 25)
+  val MainMethodEnd = MainMethodBeginning.copy(lineNumber = 26)
 
-  val RunMethodBeginning = Location(CustomThreadTypeName, RunMethodSignature, 32)
-  val RunMethodEnd = RunMethodBeginning.copy(lineNumber = 33)
+  val RunMethodBeginning = Location(CustomThreadTypeName, RunMethodSignature, 33)
+  val RunMethodEnd = RunMethodBeginning.copy(lineNumber = 34)
 
+  val JavaClassMethodEndLine = 5
   val DefaultRecursiveMethodLocalIntValue = 105
 }
 
@@ -58,7 +116,6 @@ private object HotCodeReplaceTest {
  * Tests whether HCR works (classes are correctly replaced in VM and we get new values)
  * and whether associated settings are correctly applied.
  */
-@Ignore("Flaky, often fails in Scala PR validation.")
 class HotCodeReplaceTest
     extends TestProjectSetup("hot-code-replace", bundleName = "org.scala-ide.sdt.debug.tests")
     with ScalaDebugRunningTest {
@@ -92,6 +149,7 @@ class HotCodeReplaceTest
   private val recursiveMethodLocalInt = intValueMatcher("recursiveMethodLocalInt")
   private val remainingRecursiveCallsCounter = intValueMatcher("remainingRecursiveCallsCounter")
   private val classLocalInt = intValueMatcher("classLocalInt")
+  private val classLocalIntReceivedFromJava = intValueMatcher("classLocalIntReceivedFromJava")
 
   private def intValueMatcher(valName: String): Matcher[Int] = {
     def expectIntValue(expectedValue: Int): Unit = {
@@ -109,38 +167,70 @@ class HotCodeReplaceTest
   }
 
   private def dropToTopFrame(): Unit = session dropToFrame session.currentStackFrame
-  private def dropToFrameWithIndex(frameIndex: Int): Unit = session dropToFrame session.currentStackFrames(frameIndex)
 
   private def addLineBreakpointAt(location: Location): Unit =
     breakpoints = breakpoints :+ session.addLineBreakpoint(location.typeName, location.lineNumber)
 
-  private def disableHcr(): Unit =
-    HotCodeReplacePreferences.hcrEnabled = false
-
-  private def disableHcrForFilesContainingErrors(): Unit =
-    HotCodeReplacePreferences.performHcrForFilesContainingErrors = false
+  private def buildWithModifiedLineAndHcr(lineNumber: Int, newLine: String): Unit = {
+    modifyLine(compilationUnitPath = TestedFilePath, lineNumber, newLine)
+    buildAndEnsureHcrSucceeded()
+  }
 
   private def buildWithNewValueAssignedToClassLocalInt(newValue: Int): Unit =
-    buildWithModifiedLine(TestedFilePath, ClassMethodBeginning.lineNumber, s"val classLocalInt = $newValue")
+    buildWithModifiedLineAndHcr(ClassMethodBeginning.lineNumber, s"val classLocalInt = $newValue")
 
   private def buildWithNewValueReturnedFromClassMethod(newLine: String): Unit =
-    buildWithModifiedLine(TestedFilePath, ClassMethodEnd.lineNumber, newLine)
+    buildWithModifiedLineAndHcr(ClassMethodEnd.lineNumber, newLine)
 
   private def buildWithNewParamOfNestedClassFactoryMethod(paramValue: Int): Unit =
-    buildWithModifiedLine(TestedFilePath,
-      RecursiveMethodBeginning.lineNumber,
-      s"val instance = nestedObject.NestedClass($paramValue)")
+    buildWithModifiedLineAndHcr(RecursiveMethodBeginning.lineNumber, s"val instance = nestedObject.NestedClass($paramValue)")
 
   private def buildWithNewValueAssignedToCustomThreadLocalString(newValue: String): Unit =
-    buildWithModifiedLine(TestedFilePath,
-      RunMethodBeginning.lineNumber,
-      s"""val customThreadLocalString = "$newValue"""")
+    buildWithModifiedLineAndHcr(RunMethodBeginning.lineNumber, s"""val customThreadLocalString = "$newValue"""")
 
   private def buildWithNewParamOfRecursiveMethod(newValue: Int): Unit =
-    buildWithModifiedLine(TestedFilePath, MainMethodEnd.lineNumber, s"recursiveMethod($newValue)")
+    buildWithModifiedLineAndHcr(MainMethodEnd.lineNumber, s"recursiveMethod($newValue)")
 
-  private def buildWithIncorrectParamOfRecursiveMethod(newValue: String): Unit =
-    buildWithModifiedLine(TestedFilePath, MainMethodEnd.lineNumber, s"""recursiveMethod("$newValue")""")
+  private def updateValueReturnedByJavaClassMethod(newLine: String): Unit =
+    modifyLine(compilationUnitPath = JavaClassFilePath, JavaClassMethodEndLine, newLine)
+
+  private def buildAndEnsureHcrSucceeded(): Unit = {
+    // 20 seconds should be enough even for Jenkins builds running under high load.
+    // For comparison, it seems that in normal situation even about 100-200 millis can be enough.
+    val hcrFinishedTimeoutMillis = 20000
+
+    val hcrEventsSubscriber = new TestHcrSuccessListener
+    val hcrEventsPublisher = session.debugTarget.companionActor.asInstanceOf[Publisher[HCRResult]]
+    hcrEventsPublisher.subscribe(hcrEventsSubscriber)
+
+    val thread = session.currentStackFrame.thread
+    def isExpectedEvent(e: DebugEvent) = e.getSource == thread &&
+      e.getKind == DebugEvent.CHANGE && e.getDetail == DebugEvent.CONTENT
+    var threadContentChangedEventReceived = false
+
+    // An additional check - an event fired after refreshing frames in ScalaThread.
+    // Note: It's not impossible that some day there will be another such an event but sent before we'll
+    // send this real expected one. Then we would state too early that it's done.
+    val debugEventListener = ScalaDebugTestSession.addDebugEventListener {
+      case e: DebugEvent if isExpectedEvent(e) => threadContentChangedEventReceived = true
+    }
+
+    // If we performed automatic dropping frames, we have to be sure that
+    // it finished and the test session updated its state.
+    def testSessionIsSuspended = session.state == session.State.SUSPENDED
+
+    buildIncrementally()
+    try {
+      SDTTestUtils.waitUntil(hcrFinishedTimeoutMillis, withTimeoutException = true) {
+        hcrEventsSubscriber.checkIfSucceeded &&
+          threadContentChangedEventReceived &&
+          testSessionIsSuspended
+      }
+    } finally {
+      hcrEventsPublisher.removeSubscription(hcrEventsSubscriber)
+      ScalaDebugTestSession.removeDebugEventListener(debugEventListener)
+    }
+  }
 
   private def createAndGoToBreakpointAtTheEndOfRecursiveMethod(): Unit = {
     // GIVEN the thread is suspended at the correct breakpoint and we're sure initial values are correct
@@ -159,6 +249,7 @@ class HotCodeReplaceTest
     session.waitUntilSuspended()
     currentFrameLocation mustEqual ClassMethodEnd
     classLocalInt mustEqual 7
+    classLocalIntReceivedFromJava mustEqual -20
   }
 
   @Test
@@ -234,48 +325,6 @@ class HotCodeReplaceTest
     recursiveMethodLocalInt mustEqual 235
   }
 
-  @Test
-  def disabledHcrWithMethodNotInStackTrace(): Unit = {
-    disableHcr()
-    createAndGoToBreakpointAtTheEndOfRecursiveMethod()
-
-    // WHEN edit code and rebuild
-    buildWithNewValueReturnedFromClassMethod(s"230 + $IntFromCtorArgName")
-
-    // AND return to the beginning of a current method
-    dropToTopFrame()
-    currentFrameLocation mustEqual RecursiveMethodBeginning
-
-    // AND recompute current frame
-    session.resumeToSuspension()
-
-    // THEN final values are correct
-    currentFrameLocation mustEqual RecursiveMethodEnd
-    remainingRecursiveCallsCounter mustEqual 0
-    recursiveMethodLocalInt mustEqual DefaultRecursiveMethodLocalIntValue
-  }
-
-  @Test
-  def classesNotReplacedDueToErrorsInCodeWithMethodNotInStackTrace(): Unit = {
-    disableHcrForFilesContainingErrors()
-    createAndGoToBreakpointAtTheEndOfRecursiveMethod()
-
-    // WHEN edit code and rebuild
-    buildWithNewValueReturnedFromClassMethod(s"2015 + compilation error!")
-
-    // AND return to the beginning of a current method
-    dropToTopFrame()
-    currentFrameLocation mustEqual RecursiveMethodBeginning
-
-    // AND recompute current frame
-    session.resumeToSuspension()
-
-    // THEN final values are correct
-    currentFrameLocation mustEqual RecursiveMethodEnd
-    remainingRecursiveCallsCounter mustEqual 0
-    recursiveMethodLocalInt mustEqual DefaultRecursiveMethodLocalIntValue
-  }
-
   @Ignore("Probably the VM crash will be fixed, when the automatic semantic dropping frames BEFORE HCR will be implemented")
   @Test
   def successfulHcrWithRecursiveMethod(): Unit = {
@@ -296,6 +345,39 @@ class HotCodeReplaceTest
     currentFrameLocation mustEqual RecursiveMethodEnd
     remainingRecursiveCallsCounter mustEqual 0
     recursiveMethodLocalInt mustEqual 150
+  }
+
+  @Test
+  def oneClassNotReplacedDueToErrorsInCode(): Unit = {
+    HotCodeReplacePreferences.performHcrForFilesContainingErrors = false
+    createAndGoToBreakpointAtTheEndOfClassMethod()
+
+    // WHEN edit code both in Scala and Java source files and build, Java source file contains error
+    updateValueReturnedByJavaClassMethod("return 8-/;")
+    buildWithNewValueAssignedToClassLocalInt(8)
+
+    // THEN we automatically returned to the beginning of a method
+    currentFrameLocation mustEqual ClassMethodBeginning
+
+    // WHEN resume execution
+    session.resumeToSuspension()
+
+    // THEN we stopped at the breakpoint, only value changed in Scala file is updated
+    currentFrameLocation mustEqual ClassMethodEnd
+    classLocalIntReceivedFromJava mustEqual -20
+    classLocalInt mustEqual 8
+
+    // WHEN the error is corrected and classes rebuilt
+    updateValueReturnedByJavaClassMethod("return 50;")
+    buildAndEnsureHcrSucceeded()
+
+    // AND drop one frame and resume
+    dropToTopFrame()
+    session.resumeToSuspension()
+
+    // THEN we stopped at the breakpoint, value from Java is updated
+    currentFrameLocation mustEqual ClassMethodEnd
+    classLocalIntReceivedFromJava mustEqual 50
   }
 
   @Test
@@ -321,48 +403,11 @@ class HotCodeReplaceTest
 
   @Test
   def disabledHcr(): Unit = {
-    disableHcr()
+    HotCodeReplacePreferences.hcrEnabled = false
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
 
-    addLineBreakpointAt(RecursiveMethodSelfCall)
-
-    // WHEN edit code and rebuild with disabled HCR
-    buildWithNewParamOfRecursiveMethod(4)
-
-    // THEN classes are not replaced
-    currentFrameLocation mustEqual RecursiveMethodEnd
-    dropToFrameWithIndex(3)
-
-    currentFrameLocation mustEqual MainMethodBeginning
-
-    session.resumeToSuspension()
-
-    currentFrameLocation mustEqual RecursiveMethodSelfCall
-    remainingRecursiveCallsCounter mustEqual 2
-    recursiveMethodLocalInt mustEqual DefaultRecursiveMethodLocalIntValue
-  }
-
-  @Test
-  def classesNotReplacedDueToErrorsInCode(): Unit = {
-    disableHcrForFilesContainingErrors()
-    createAndGoToBreakpointAtTheEndOfRecursiveMethod()
-
-    addLineBreakpointAt(RecursiveMethodSelfCall)
-
-    // WHEN edit code and rebuild with errors
-    buildWithIncorrectParamOfRecursiveMethod("compilation error as it's not Int")
-
-    // THEN classes are not replaced
-    currentFrameLocation mustEqual RecursiveMethodEnd
-    dropToFrameWithIndex(3)
-
-    currentFrameLocation mustEqual MainMethodBeginning
-
-    session.resumeToSuspension()
-
-    currentFrameLocation mustEqual RecursiveMethodSelfCall
-    remainingRecursiveCallsCounter mustEqual 2
-    recursiveMethodLocalInt mustEqual DefaultRecursiveMethodLocalIntValue
+    // THEN there's no ScalaHotCodeReplaceManager created for debug session
+    assertEquals("hcrManager shouldn't be created", None, session.debugTarget.hcrManager)
   }
 
   // Sometimes after a few HCR operations VM doesn't mark frames as obsolete. Then we don't perform

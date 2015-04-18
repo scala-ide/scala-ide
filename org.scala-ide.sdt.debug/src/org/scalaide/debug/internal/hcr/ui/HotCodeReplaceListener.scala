@@ -15,6 +15,7 @@ import org.scalaide.util.ui.DisplayThread
 import ScalaHotCodeReplaceManager.HCRFailed
 import ScalaHotCodeReplaceManager.HCRNotSupported
 import ScalaHotCodeReplaceManager.HCRResult
+import ScalaHotCodeReplaceManager.HCRSucceeded
 
 /**
  * Informs user when there's something wrong related to HCR.
@@ -22,6 +23,7 @@ import ScalaHotCodeReplaceManager.HCRResult
 private[internal] object HotCodeReplaceListener extends Subscriber[HCRResult, Publisher[HCRResult]] {
 
   override def notify(publisher: Publisher[HCRResult], event: HCRResult): Unit = event match {
+    case HCRSucceeded(launchName) => // nothing to do
     case HCRNotSupported(launchName) =>
       if (HotCodeReplacePreferences.notifyAboutUnsupportedHcr)
         notifyAboutUnsupportedHCR(launchName)
