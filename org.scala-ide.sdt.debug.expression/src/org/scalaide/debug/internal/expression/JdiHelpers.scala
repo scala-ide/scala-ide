@@ -22,16 +22,23 @@ object JdiHelpers {
     def arity: Int = method.argumentTypeNames.size
   }
 
+  private def methodInvocationFlags(method: Method): Int = {
+    val baseFlags = ObjectReference.INVOKE_SINGLE_THREADED
+
+    if (method.isAbstract || method.isConstructor) baseFlags
+    else baseFlags | ObjectReference.INVOKE_NONVIRTUAL
+  }
+
   final class SimpleInvokeOnClassType(private val ref: ClassType) extends AnyVal {
     def invokeMethod(threadRef: ThreadReference, method: Method, args: Seq[Value]): Value =
-      ref.invokeMethod(threadRef, method, args, ObjectReference.INVOKE_SINGLE_THREADED)
+      ref.invokeMethod(threadRef, method, args, methodInvocationFlags(method))
     def newInstance(threadRef: ThreadReference, method: Method, args: Seq[Value]): ObjectReference =
-      ref.newInstance(threadRef, method, args, ObjectReference.INVOKE_SINGLE_THREADED)
+      ref.newInstance(threadRef, method, args, methodInvocationFlags(method))
   }
 
   final class SimpleInvokeOnObjectRef(private val ref: ObjectReference) extends AnyVal {
     def invokeMethod(threadRef: ThreadReference, method: Method, args: Seq[Value]): Value =
-      ref.invokeMethod(threadRef, method, args, ObjectReference.INVOKE_SINGLE_THREADED)
+      ref.invokeMethod(threadRef, method, args, methodInvocationFlags(method))
   }
 }
 

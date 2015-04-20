@@ -20,6 +20,11 @@ object TypeNames {
   def arraySignatureToName(javaArrayTpe: String): String =
     TypeImpl.arraySignatureToName(javaArrayTpe)
 
+  def fixScalaObjectType(name: String): String = {
+    if (name.endsWith(".type")) name.dropRight(".type".length) + "$"
+    else name
+  }
+
   case class Primitive(java: String, scala: String, javaBoxed: String, scalaRich: String)
 
   val Boolean = Primitive(Java.primitives.boolean, Scala.primitives.Boolean, Java.boxed.Boolean, Scala.rich.Boolean)

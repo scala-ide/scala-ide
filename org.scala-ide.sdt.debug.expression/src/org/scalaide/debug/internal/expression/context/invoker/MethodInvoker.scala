@@ -11,18 +11,11 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.logging.HasLogger
 
-import com.sun.jdi.ArrayType
-import com.sun.jdi.ClassNotLoadedException
-import com.sun.jdi.ClassType
-import com.sun.jdi.InterfaceType
-import com.sun.jdi.Method
-import com.sun.jdi.PrimitiveType
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.Type
-import com.sun.jdi.Value
+import com.sun.jdi._
 
 /** Common interface for method invokers. */
 trait MethodInvoker extends HasLogger {
@@ -98,23 +91,26 @@ trait BaseMethodInvoker extends MethodInvoker {
   // reference to search (could be object or ClassType in the case of Java static members)
   protected def referenceType: ReferenceType
 
-  // arguments of call
+  // basic arguments of call
   protected def args: Seq[JdiProxy]
+
+  // augmented arguments of call, includes additional parameter for static methods from super traits (if needed)
+  protected def methodArgs(method: Method): Seq[JdiProxy] = args
 
   // method match for this call
   private def matchesSignature(method: Method): Boolean =
     !method.isAbstract &&
-      method.arity == args.length &&
-      checkTypes(argumentTypesLoaded(method, args.head.__context))
+    method.arity == methodArgs(method).length &&
+    checkTypes(argumentTypesLoaded(method, methodArgs(method).head.__context), method)
 
   private final def checkTypes(types: Seq[Type], arguments: Seq[JdiProxy]): Boolean =
     arguments.zip(types).forall((conformsTo _).tupled)
 
-  protected final def checkTypes(types: Seq[Type]): Boolean =
-    checkTypes(types, args)
+  protected final def checkTypes(types: Seq[Type], method: Method): Boolean =
+    checkTypes(types, methodArgs(method))
 
-  protected final def checkTypesRight(types: Seq[Type]): Boolean =
-    checkTypes(types.reverse, args.reverse)
+  protected final def checkTypesRight(types: Seq[Type], method: Method): Boolean =
+    checkTypes(types.reverse, methodArgs(method).reverse)
 
   private final def generateArguments(types: Seq[Type], arguments: Seq[JdiProxy]): Seq[Value] =
     types.zip(arguments).map { case (tpe, arg) => autobox(tpe, arg) }
@@ -123,13 +119,15 @@ trait BaseMethodInvoker extends MethodInvoker {
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
    */
   protected final def generateArguments(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes, args)
+    generateArguments(method.argumentTypes, methodArgs(method))
 
   protected final def generateArgumentsRight(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes.reverse, args.reverse).reverse
+    generateArguments(method.argumentTypes.reverse, methodArgs(method).reverse).reverse
 
   // search for all visible methods
-  protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)
+  protected def allMethods: Seq[Method] =
+    // both visibleMethods and allMethods calls are required to maintain proper order of methods
+    (referenceType.visibleMethods ++ referenceType.allMethods).filter(_.name == methodName)
 
   // found methods
   protected def matching: Seq[Method] = allMethods.filter(matchesSignature)

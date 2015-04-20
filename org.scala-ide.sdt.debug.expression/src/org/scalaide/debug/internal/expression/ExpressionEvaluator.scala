@@ -57,6 +57,7 @@ object ExpressionEvaluator {
       ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context),
       ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage),
       ctx => new MockThis,
+      ctx => new MockSuper(ctx.toolbox),
       ctx => MockTypedLambda(ctx.toolbox))
 
     val typecheck: Phases[IsTypecheck] = Seq(

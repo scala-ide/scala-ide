@@ -34,10 +34,6 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   @Test(expected = classOf[UnsupportedFeature])
   def returnFrom(): Unit = eval("return 123", "", "")
 
-  // TODO - O-8597 - support for super calls
-  @Test(expected = classOf[UnsupportedFeature])
-  def superCall(): Unit = eval("super.foo()", "", "")
-
   // TODO - O-8598 - support for pattern matching
   @Test(expected = classOf[UnsupportedFeature])
   def patternMatch(): Unit = eval("int match { case i: Int => i } ", "", "")

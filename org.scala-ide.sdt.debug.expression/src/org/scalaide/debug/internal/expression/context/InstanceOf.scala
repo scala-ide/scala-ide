@@ -40,11 +40,6 @@ private[context] trait InstanceOf {
   final def isInstanceOfCheck(proxy: JdiProxy, typeName: String): BooleanJdiProxy =
     valueProxy(this.mirrorOf(isInstanceOf(proxy, fixScalaObjectType(typeName)))).asInstanceOf[BooleanJdiProxy]
 
-  private def fixScalaObjectType(name: String) = {
-    if(name.endsWith(".type")) name.dropRight(".type".length) + "$"
-    else name
-  }
-
   /**
    * Checks if proxy matches given type.
    * Handles null, Unit, primitives and delegates everything else to `handleObject`.

@@ -29,12 +29,12 @@ trait ScalaVarArgSupport
     isFirstParamVarArg(method) || isLastParamVarArg(method)
 
   protected def isFirstParamVarArg(method: Method) = argumentTypesLoaded(method, context) match {
-    case vararg +: normal if isSeq(vararg) && checkTypesRight(normal) => true
+    case vararg +: normal if isSeq(vararg) && checkTypesRight(normal, method) => true
     case _ => false
   }
 
   private def isLastParamVarArg(method: Method) = argumentTypesLoaded(method, context) match {
-    case normal :+ vararg if isSeq(vararg) && checkTypes(normal) => true
+    case normal :+ vararg if isSeq(vararg) && checkTypes(normal, method) => true
     case _ => false
   }
 
@@ -46,9 +46,9 @@ trait ScalaVarArgSupport
 /**
  * Calls vararg method on given `ObjectReference` in context of debug.
  */
-class ScalaVarArgMethod(proxy: ObjectJdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
-    extends ScalaMethod(name, proxy)
-    with ScalaVarArgSupport {
+class ScalaVarArgMethod(proxy: ObjectJdiProxy, val methodName: String, val args: Seq[JdiProxy],
+    realThisType: Option[String], protected val context: JdiContext)
+  extends ScalaMethod(realThisType, proxy) with ScalaVarArgSupport {
 
   override def apply(): Option[Value] = {
     def invoke(method: Method): Value = {
@@ -56,15 +56,15 @@ class ScalaVarArgMethod(proxy: ObjectJdiProxy, name: String, val args: Seq[JdiPr
 
       val argsWithVarArg = if (isFirstParamVarArg(method)) {
         val standardArgs = generateArgumentsRight(method).takeRight(normalSize)
-        val varArgs = packToVarArg(args.dropRight(normalSize))
+        val varArgs = packToVarArg(methodArgs(method).dropRight(normalSize))
         varArgs +: standardArgs
       } else {
         val standardArgs = generateArguments(method).take(normalSize)
-        val varArgs = packToVarArg(args.drop(normalSize))
+        val varArgs = packToVarArg(methodArgs(method).drop(normalSize))
         standardArgs :+ varArgs
       }
 
-      proxy.__value.invokeMethod(context.currentThread(), method, argsWithVarArg)
+      invokeMethod(context.currentThread(), method, argsWithVarArg)
     }
 
     handleMultipleOverloads(candidates, invoke)
