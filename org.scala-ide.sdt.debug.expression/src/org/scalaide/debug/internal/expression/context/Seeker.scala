@@ -57,7 +57,7 @@ trait Seeker {
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType =
     tryClassByName(name)
-      .getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
+      .getOrElse(throw new ClassNotFoundException("Class or object not found: " + realClassName(name)))
 
   final def tryClassByName(name: String): Option[ClassType] = {
     val className = realClassName(name)

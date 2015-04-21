@@ -210,6 +210,7 @@ trait ExpressionManager extends HasLogger {
     case unsupportedFeature: UnsupportedFeature =>
       logger.warn(s"Unsupported feature was used: ${unsupportedFeature.name}", unsupportedFeature)
       Failure(unsupportedFeature)
+    // WARNING - this case catches ALL ExpressionExceptions, do not add it's subclasses below it
     case expressionException: ExpressionException =>
       logger.error("Exception during expression evaluation", expressionException)
       Failure(expressionException)
@@ -219,6 +220,8 @@ trait ExpressionManager extends HasLogger {
       Failure(new ReflectiveCompilationFailedWithClassNotFound(tb.getMessage))
     case tb: ToolBoxError =>
       Failure(new ReflectiveCompilationFailure(tb.getMessage))
+    case nsme: NoSuchMethodError =>
+      Failure(new RuntimeException(nsme.getMessage, nsme))
     case cnl: ClassNotLoadedException =>
       logger.error(s"Class with name: ${cnl.className} was not loaded.", cnl)
       handleUnknownException(cnl)
@@ -229,10 +232,8 @@ trait ExpressionManager extends HasLogger {
 
   /** Handles unknown exceptions with nice message for users */
   private def handleUnknownException(e: Throwable) = {
-    val currentMessage =
-      if (e.getMessage() != null) s"\nException message: ${e.getMessage()}"
-      else ""
-    val newMessage = s"Exception was thrown during expression evaluation. To see more details check scala-ide error log.$currentMessage"
+    val currentMessage = s"Exception message: ${e.getMessage}"
+    val newMessage = s"Exception was thrown during expression evaluation. To see more details check scala-ide error log.\n$currentMessage"
     Failure(new RuntimeException(newMessage, e))
   }
 }

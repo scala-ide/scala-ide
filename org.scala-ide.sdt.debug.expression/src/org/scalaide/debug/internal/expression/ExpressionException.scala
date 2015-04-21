@@ -47,6 +47,10 @@ object ExpressionException {
 
 }
 
+case class JavaStaticInvocationProblem(description: String)
+  extends RuntimeException(description)
+  with ExpressionException
+
 case class MissingField(name: String)
   extends RuntimeException(ExpressionException.notExistingField(name))
   with ExpressionException

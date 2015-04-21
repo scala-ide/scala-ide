@@ -6,7 +6,6 @@ package context
 
 import scala.annotation.tailrec
 import scala.util.Success
-import scala.util.Failure
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -16,9 +15,12 @@ import org.scalaide.debug.internal.expression.context.invoker.JavaField
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldGetter
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticFieldSetter
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticMethod
-import org.scalaide.debug.internal.expression.context.invoker.StandardConstructor
+import org.scalaide.debug.internal.expression.context.invoker.JavaVarArgConstructorMethod
+import org.scalaide.debug.internal.expression.context.invoker.MethodInvoker
+import org.scalaide.debug.internal.expression.context.invoker.StandardConstructorMethod
 import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
 import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
+import org.scalaide.debug.internal.expression.context.invoker.VarArgConstructorMethod
 import org.scalaide.debug.internal.expression.context.invoker.VarArgMethod
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
@@ -76,7 +78,8 @@ private[context] trait JdiMethodInvoker {
   }
 
   /** invokeUnboxed method that returns option instead of throwing an exception */
-  private[expression] def tryInvokeUnboxed(proxy: JdiProxy,
+  private[expression] def tryInvokeUnboxed(
+    proxy: JdiProxy,
     onRealType: Option[String],
     methodName: String,
     methodArgs: Seq[JdiProxy] = Seq.empty): Option[Value] = {
@@ -125,7 +128,7 @@ private[context] trait JdiMethodInvoker {
   }
 
   /** TODO - document this, it's an API */
-  final def setJavaStaticField[Result <: JdiProxy](classType: ClassType, fieldName: String, newValue: Any): Unit = {
+  final def setJavaStaticField(classType: ClassType, fieldName: String, newValue: Any): Unit = {
     val fieldAccessor = new JavaStaticFieldSetter(classType, fieldName)
     fieldAccessor setValue newValue
   }
@@ -146,8 +149,8 @@ private[context] trait JdiMethodInvoker {
     className: String,
     args: Seq[JdiProxy] = Seq.empty): JdiProxy = {
 
-    def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className" +
-      s" has no constructor with arguments: ${args.map(_.referenceType.name).mkString(", ")}")
+    def noSuchConstructor: Nothing = throw new NoSuchMethodError(s"class $className " +
+      s"has no constructor with arguments: ${args.map(_.referenceType.name).mkString("(", ", ", ")")}")
 
     tryNewInstance(className, args).getOrElse(noSuchConstructor)
   }
@@ -157,23 +160,32 @@ private[context] trait JdiMethodInvoker {
     className: String,
     methodArgs: Seq[JdiProxy]): Option[JdiProxy] = {
 
-    def standardConstructor(clsName: String) = new StandardConstructor(clsName, methodArgs, this)
-    // TODO vararg constructor
+    def standardConstructor(clsName: String) = new StandardConstructorMethod(clsName, methodArgs, this)
+    def varArgConstructor(clsName: String) = new VarArgConstructorMethod(clsName, methodArgs, this)
+    def javaVarArgConstructor(clsName: String) = new JavaVarArgConstructorMethod(clsName, methodArgs, this)
     def arrayConstructor(clsName: String) = new ArrayConstructor(clsName, methodArgs, this)
 
-    @tailrec def tryNext(clsName: String): Option[JdiProxy] = {
+    @tailrec def tryNext(clsName: String, constructor: String => MethodInvoker): Option[JdiProxy] = {
       val proxy = Try((clsName match {
-        case Scala.Array(typeParam) => arrayConstructor(clsName).apply()
-        case _ => standardConstructor(clsName).apply()
+        case Scala.Array(_) => arrayConstructor(clsName).apply()
+        case standardClass => constructor(standardClass).apply()
       }).map(valueProxy))
 
       proxy match {
         case Success(some: Some[_]) => some
-        case Success(none) if !clsName.contains('.') => none
-        case Failure(_) => tryNext(clsName.reverse.replaceFirst("\\.", "\\$").reverse)
+        case Success(other) if !clsName.contains('.') => other
+        case Success(other) =>
+          val newClsName = clsName.reverse.replaceFirst("\\.", "\\$").reverse
+          if (newClsName != clsName) tryNext(newClsName, constructor) else None
+        case util.Failure(ex: com.sun.jdi.InvocationException) =>
+          val newClsName = clsName.reverse.replaceFirst("\\.", "\\$").reverse
+          if (newClsName != clsName) tryNext(newClsName, constructor) else None
+        case util.Failure(exception) => throw exception
       }
     }
 
-    tryNext(className)
+    tryNext(className, standardConstructor) orElse
+      tryNext(className, varArgConstructor) //orElse
+      // tryNext(className, javaVarArgConstructor)
   }
 }

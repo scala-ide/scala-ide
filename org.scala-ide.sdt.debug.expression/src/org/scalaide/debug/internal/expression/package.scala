@@ -44,7 +44,7 @@ package object expression {
   }
 
   implicit final class Arity(private val method: Method) extends AnyVal {
-    def arity: Int = method.arguments.size
+    def arity: Int = method.argumentTypeNames.size
   }
 
   implicit final class SimpleInvokeOnClassType(ref: ClassType) {

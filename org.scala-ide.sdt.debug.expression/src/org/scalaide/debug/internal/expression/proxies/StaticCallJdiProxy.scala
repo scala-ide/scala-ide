@@ -3,6 +3,7 @@
  */
 package org.scalaide.debug.internal.expression.proxies
 
+import org.scalaide.debug.internal.expression.JavaStaticInvocationProblem
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
 
@@ -18,14 +19,16 @@ import com.sun.jdi.ObjectReference
 trait StaticCallJdiProxy extends JdiProxy {
 
   // we expect that it will be never called
-  def __underlying: ObjectReference = throw new RuntimeException("Cannot get an underlying object reference - Java static calls don't use such reference")
+  def __underlying: ObjectReference =
+    throw JavaStaticInvocationProblem("Cannot get an underlying object reference - Java static calls don't use such reference")
 
   /** Implementation of field selection. */
   override def selectDynamic(name: String): JdiProxy =
     proxyContext.getJavaStaticField[JdiProxy](referenceType, name)
 
   /** Forwards equality to debugged jvm. Invocation of this method shouldn't happen as Toolbox should report an error earlier. */
-  override def ==(other: JdiProxy): BooleanJdiProxy = throw new RuntimeException("Comparison of two proxies for types used for static calls has no sense")
+  override def ==(other: JdiProxy): BooleanJdiProxy =
+    throw JavaStaticInvocationProblem("Comparison of two proxies for types used for static calls has no sense")
 }
 
 case class StaticCallClassJdiProxy(proxyContext: JdiContext, override val referenceType: ClassType) extends StaticCallJdiProxy {
@@ -43,9 +46,9 @@ case class StaticCallInterfaceJdiProxy(proxyContext: JdiContext, override val re
 
   /** Implementation of method application. Invocation of this method shouldn't happen as Toolbox should report an error earlier. */
   override def applyDynamic(name: String)(args: Any*): JdiProxy =
-    throw new RuntimeException("Cannot invoke static method on interface as interfaces can't have static methods")
+    throw JavaStaticInvocationProblem("Cannot invoke static method on interface as interfaces can't have static methods")
 
   /** Implementation of variable mutation. */
   override def updateDynamic(name: String)(value: Any): Unit =
-    throw new RuntimeException("Cannot modify static field of interface. All interface fields are final")
+    throw JavaStaticInvocationProblem("Cannot modify static field of interface. All interface fields are final")
 }

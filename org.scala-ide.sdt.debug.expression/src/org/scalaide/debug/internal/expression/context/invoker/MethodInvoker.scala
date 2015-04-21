@@ -99,7 +99,7 @@ abstract class BaseMethodInvoker extends MethodInvoker {
 
   // method match for this call
   private def methodMatch(method: Method) =
-    method.argumentTypeNames().size() == args.length &&
+    method.arity == args.length &&
       checkTypes(argumentTypesLoaded(method, args.head.proxyContext))
 
   protected final def checkTypes(types: Seq[Type]): Boolean = types.zip(args).forall {

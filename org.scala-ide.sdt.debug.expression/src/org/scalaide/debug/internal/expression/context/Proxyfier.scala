@@ -65,7 +65,7 @@ private[context] trait Proxyfier {
         StaticCallClassJdiProxy(this, classType)
       case None =>
         val interfaceType = interfaceByName(name,
-          onNotFound = realTypeName => throw new RuntimeException(s"Class, object or interface not found: $realTypeName"))
+          onNotFound = realTypeName => throw new ClassNotFoundException(s"Class, object or interface not found: $realTypeName"))
         StaticCallInterfaceJdiProxy(this, interfaceType)
     }
 

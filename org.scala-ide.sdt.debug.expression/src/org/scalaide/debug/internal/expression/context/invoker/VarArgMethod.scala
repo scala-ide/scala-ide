@@ -15,17 +15,12 @@ import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 
-/**
- * Calls vararg method on given `ObjectReference` in context of debug.
- */
-class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], context: JdiContext)
-    extends BaseMethodInvoker {
+trait ScalaVarArgSupport {
+  self: BaseMethodInvoker =>
 
-  override val methodName: String = NameTransformer.encode(name)
+  protected def context: JdiContext
 
-  override def referenceType: ReferenceType = proxy.referenceType
-
-  private val seqName = "scala.collection.Seq"
+  protected val seqName = "scala.collection.Seq"
 
   private def seqObjectRef: ObjectReference = context.objectByName(seqName)
 
@@ -34,7 +29,7 @@ class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], conte
     seqObjectRef.invokeMethod(context.currentThread(), emptyMethod, List[Value]()).asInstanceOf[ObjectReference]
   }
 
-  private def packToVarArg(proxies: Seq[JdiProxy]): Value = {
+  protected def packToVarArg(proxies: Seq[JdiProxy]): Value = {
     def addMethod = context.methodOn(seqName, "$plus$colon")
     def canBuildFrom = seqObjectRef.invokeMethod(context.currentThread(), context.methodOn(seqObjectRef, "canBuildFrom"), List[Value]())
 
@@ -44,21 +39,34 @@ class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], conte
     }
   }
 
-  // we have to add `1` as someone can call vararg without any arguments at all
-  private def candidates = allMethods.filter(_.arity <= args.size + 1)
-
-  private object PossiblyVarArg {
+  protected object PossiblyVarArg {
     def unapply(types: Seq[Type]): Option[Seq[Type]] = types match {
       case normal :+ vararg if vararg.name == seqName && checkTypes(normal) => Some(normal)
       case _ => None
     }
   }
 
-  private def matchesVarArgSig(method: Method): Option[(Method, Int)] =
-    argumentTypesLoaded(method, proxy.proxyContext) match {
+  protected def matchesVarArgSig(method: Method): Option[(Method, Int)] =
+    argumentTypesLoaded(method, context) match {
       case PossiblyVarArg(normal) => Some(method, normal.size)
       case _ => None
     }
+
+  // we have to add `1` as someone can call vararg without any arguments at all
+  protected def candidates = allMethods.filter(_.arity <= args.size + 1)
+
+}
+
+/**
+ * Calls vararg method on given `ObjectReference` in context of debug.
+ */
+class VarArgMethod(proxy: JdiProxy, name: String, val args: Seq[JdiProxy], protected val context: JdiContext)
+    extends BaseMethodInvoker
+    with ScalaVarArgSupport {
+
+  override val methodName: String = NameTransformer.encode(name)
+
+  override def referenceType: ReferenceType = proxy.referenceType
 
   override def apply(): Option[Value] = {
     val varargMethods = candidates.flatMap(matchesVarArgSig)
