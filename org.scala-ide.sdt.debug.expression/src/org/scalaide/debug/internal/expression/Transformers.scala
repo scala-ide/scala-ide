@@ -40,25 +40,6 @@ trait TransformationPhase[+Tpe <: TypecheckRelation] {
 }
 
 /**
- * Contains current tree and metadata connected with transformation.
- *
- * @param tree tree after last transformation
- * @param history trees after phases
- * @param times execution times (in microseconds)
- */
-case class TransformationPhaseData(
-    tree: universe.Tree = universe.EmptyTree,
-    history: Vector[(String, universe.Tree)] = Vector.empty,
-    times: Vector[(String, Long)] = Vector.empty) {
-
-  final def after(phaseName: String, newTree: universe.Tree): TransformationPhaseData =
-    this.copy(tree = newTree, history = this.history :+ (phaseName, newTree))
-
-  final def withTime(phaseName: String, timeInMicros: Long): TransformationPhaseData =
-    this.copy(times = this.times :+ (phaseName, timeInMicros))
-}
-
-/**
  * This is proxy-aware transformer.
  * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
  *
@@ -69,10 +50,10 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
 
   import universe._
 
-  private var _wholeTree: Tree = EmptyTree
+  private var _data: TransformationPhaseData = _
 
-  /** gets whole tree for this transformer - transformation starts with this tree */
-  final def wholeTree = _wholeTree
+  /** Initial data passed to this transformer */
+  protected final def data: TransformationPhaseData = _data
 
   /**
    * Basic method for transforming a tree
@@ -82,9 +63,13 @@ abstract class AstTransformer[+Tpe <: TypecheckRelation]
    */
   protected def transformSingleTree(baseTree: universe.Tree, transformFurther: universe.Tree => universe.Tree): universe.Tree
 
-  /** Main method for transformer, applies transformation */
-  final override def transform(data: TransformationPhaseData): TransformationPhaseData = {
-    _wholeTree = data.tree
+  /**
+   * Main method for transformer, applies transformation.
+   *
+   * To modify the result (for example to add some meta-data) override it and use `super.transform`.
+   */
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    _data = data
     val newTree = transformer.transform(data.tree)
     data.after(phaseName, newTree)
   }

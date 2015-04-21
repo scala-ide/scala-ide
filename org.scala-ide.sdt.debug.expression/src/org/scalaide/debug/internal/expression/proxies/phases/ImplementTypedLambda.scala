@@ -23,9 +23,8 @@ import scala.tools.reflect.ToolBox
  *   ))(immutable.this.List.canBuildFrom[Int])
  * }}}
  */
-case class ImplementTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTypesContext)
-    extends AstTransformer[AfterTypecheck]
-    with AnonymousFunctionSupport {
+case class ImplementTypedLambda(toolbox: ToolBox[universe.type])
+    extends AnonymousFunctionSupport[AfterTypecheck] {
 
   import toolbox.u._
 

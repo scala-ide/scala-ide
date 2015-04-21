@@ -43,8 +43,7 @@ object ExpressionEvaluator {
 
   private[expression] case class Context(
     toolbox: ToolBox[universe.type],
-    context: VariableContext,
-    typesContext: NewTypesContext)
+    context: VariableContext)
 
   type Phases[A <: TypecheckRelation] = Seq[Context => TransformationPhase[A]]
 
@@ -53,12 +52,12 @@ object ExpressionEvaluator {
     val beforeTypeCheck: Phases[BeforeTypecheck] = Seq(
       ctx => new FailFast,
       ctx => new SingleValDefWorkaround,
-      ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.typesContext, ctx.context.localVariablesNames()),
-      ctx => new MockAssignment(ctx.toolbox, ctx.typesContext.unboundVariables),
-      ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context, ctx.typesContext.unboundVariables),
+      ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.context.localVariablesNames()),
+      ctx => new MockAssignment,
+      ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context),
       ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage),
       ctx => new MockThis,
-      ctx => MockTypedLambda(ctx.toolbox, ctx.typesContext))
+      ctx => MockTypedLambda(ctx.toolbox))
 
     val typecheck: Phases[IsTypecheck] = Seq(
       ctx => TypeCheck(ctx.toolbox))
@@ -67,14 +66,14 @@ object ExpressionEvaluator {
       ctx => FixClassTags(ctx.toolbox),
       ctx => new RemoveImports,
       // function should be first because this transformer needs tree as clean as possible
-      ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
-      ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
+      ctx => MockLambdas(ctx.toolbox),
+      ctx => ImplementTypedLambda(ctx.toolbox),
       ctx => new AfterTypecheckFailFast,
       ctx => new ImplementMockedNestedMethods(ctx.context),
-      ctx => new MockLiteralsAndConstants(ctx.typesContext),
+      ctx => new MockLiteralsAndConstants,
       ctx => new MockPrimitivesOperations,
       ctx => new MockToString,
-      ctx => new MockLocalAssignment(ctx.typesContext.unboundVariables),
+      ctx => new MockLocalAssignment,
       ctx => new MockIsInstanceOf,
       ctx => new RemoveAsInstanceOf,
       ctx => new MockHashCode,
@@ -122,15 +121,13 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
   final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
     val parsed = parse(code)
 
-    val typesContext = new NewTypesContext()
-
-    val phases = genPhases(context, typesContext)
+    val phases = genPhases(context)
 
     val transformed = transform(parsed, phases)
 
     try {
       val (compiled, time) = measure {
-        compile(transformed.tree, typesContext.classesToLoad)
+        compile(transformed.tree, transformed.classesToLoad)
       }
       logTimesToFile(transformed.withTime("Compilation", time))
       compiled
@@ -162,9 +159,9 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
       val logFile = new java.io.File(".ee-time-log.csv")
       val pw = new java.io.FileWriter(logFile, /* append = */ true)
       try {
-        pw.write("Phases:\t" + data.times.map(_._1).mkString("\t") + "\n")
-        val code = data.history.head._2.toString.replace("\n", " ").replace("\r", " ")
-        pw.write("Expression: " + code + "\t" + data.times.map(_._2).mkString("\t") + "\n")
+        pw.write("Phases:\t" + data.times.map(_.name).mkString("\t") + "\n")
+        val code = data.history.head.code.toString.replace("\n", " ").replace("\r", " ")
+        pw.write("Expression: " + code + "\t" + data.times.map(_.time).mkString("\t") + "\n")
       } finally pw.close()
     }
 
@@ -190,13 +187,14 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
-  private def genPhases(context: VariableContext, typesContext: NewTypesContext) = {
-    val ctx = Context(toolbox, context, typesContext)
+  private def genPhases(context: VariableContext) = {
+    val ctx = Context(toolbox, context)
     phases.map(_(ctx))
   }
 
   private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): TransformationPhaseData = {
-    val data = TransformationPhaseData(tree = code, history = Vector(("Parse", code)))
+    val parse = PhaseCode("Parse", code)
+    val data = TransformationPhaseData(tree = code, history = Vector(parse))
     phases.foldLeft(data) {
       case (lastData, phase) =>
         monitor.startNamedSubTask("Applying transformation phase: " + phase.phaseName)
@@ -220,8 +218,8 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
-  private def stringifyTreesAfterPhases(treesAfterPhases: Vector[(String, universe.Tree)]): String =
+  private def stringifyTreesAfterPhases(treesAfterPhases: Vector[PhaseCode]): String =
     treesAfterPhases.map {
-      case (phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
+      case PhaseCode(phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
     } mkString ("------------", "\n\n------------ ", "\n------------")
 }

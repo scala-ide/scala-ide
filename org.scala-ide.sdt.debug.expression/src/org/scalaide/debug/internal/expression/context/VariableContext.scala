@@ -18,8 +18,8 @@ object VariableType {
       case Some(genericType) => GenericVariableType(plainType, genericType)
     }
 }
+
 /**
- *
  * @param plainType type like collection.immutable.List (class name without generics)
  * @param genericType generic signature of type from JDI
  */
@@ -31,7 +31,7 @@ case class PlainVariableType(plainType: String) extends VariableType
  * Contains information required to run nested method
  * @param on - object that contains required method
  * @param jvmName - name real jvm methods (like name$1)
- * @param argsNames - names of aruments
+ * @param argsNames - names of arguments
  */
 case class NestedMethodImplementation(on: TermName, jvmName: String, argsNames: Seq[String])
 
