@@ -4,23 +4,21 @@
 package org.scalaide.debug.internal.expression
 package context
 
+import scala.collection.JavaConversions._
+import scala.reflect.runtime.universe.TermName
 import scala.util.Try
 
-import collection.JavaConversions._
+import org.scalaide.debug.internal.expression.TypeNames
+import org.scalaide.debug.internal.expression.Variable
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 
-import extensions.ExtendedContext
-
 import Names.Debugger
 import Names.Scala
-
-import scala.reflect.runtime.universe.TermName
-
-
+import extensions.ExtendedContext
 
 /**
  * Implementation of VariableContext based on ThreadReference.

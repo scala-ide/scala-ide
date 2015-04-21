@@ -30,19 +30,17 @@ class MockMethodsCalls
 
   import universe._
 
-  private def literal(n: String) = Literal(Constant(n))
-
   private def isContext(f: Tree) = f.toString() == Debugger.contextParamName
 
   private def isSpecialMethod(name: Name) = Debugger.proxySpecialMethods.contains(name.toString())
 
   /** Creates a proxy to mock methods calls. */
   private def createProxy(qualifier: Tree, name: Name, args: List[Tree], transformFurther: Tree => Tree): Tree = {
-    val fullType = TypeNames.fromTree(qualifier, withoutGenerics = true).map(name => q"Some($name)").getOrElse(q"None")
+    val thisType = TypeNames.fromTree(qualifier, withoutGenerics = true).map(name => q"Some($name)").getOrElse(q"None")
     val transformedQualifier = transformFurther(qualifier)
     val transformedArgs = args.mapConserve(transformFurther)
     val applyWithGenericType = Select(transformedQualifier, TermName(Debugger.proxyGenericApplyMethodName))
-    val applyWithGenericTypeArgs = literal(name.toString()) :: fullType :: transformedArgs
+    val applyWithGenericTypeArgs = Literal(Constant(name.toString)) :: thisType :: transformedArgs
 
     Apply(applyWithGenericType, applyWithGenericTypeArgs)
   }

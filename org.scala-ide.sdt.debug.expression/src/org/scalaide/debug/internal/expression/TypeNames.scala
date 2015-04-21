@@ -38,43 +38,48 @@ object TypeNames {
 
   /**
    * @param withoutGenerics remove generics for this tree
-   * @return type name as string for given tree.
+   * @return Some(<type name>) if `tree.tpe != null`
    */
   def fromTree(tree: universe.Tree, withoutGenerics: Boolean = false): Option[String] = tree.tpe match {
     case null => None
-    case tpe => typeName(tpe, withoutGenerics)
+    case tpe => Some(typeName(tpe, withoutGenerics))
   }
 
-  private def isUnderscoreType(tpe: universe.Type) =
-    tpe.getClass.getSimpleName == "AbstractNoArgsTypeRef"
-
-  private def isObjectType(tpe: universe.Type) =
-    tpe.getClass.getSimpleName == "ModuleTypeRef"
-
-  private def isPackageObjectScoped(typeRef: TypeRef) =
-    typeRef.typeSymbol.name.toString.startsWith("package$")
+  /** Same as `fromTree`, but throws exception if `tree.tpe == null`. */
+  def getFromTree(tree: universe.Tree, withoutGenerics: Boolean = false): String = tree.tpe match {
+    case null => throw new RuntimeException(s"Tree: $tree have null type.")
+    case tpe => typeName(tpe, withoutGenerics)
+  }
 
   /**
    * Obtains type name as string for given tree.
    *
    * @param tpe tree to search for
    */
-  private def typeName(tpe: universe.Type, withoutGenerics: Boolean): Option[String] = {
+  private def typeName(tpe: universe.Type, withoutGenerics: Boolean): String = {
+
+    def isUnderscoreType(tpe: universe.Type) = tpe.getClass.getSimpleName == "AbstractNoArgsTypeRef"
+
+    def isObjectType(tpe: universe.Type) = tpe.getClass.getSimpleName == "ModuleTypeRef"
+
+    def isPackageObjectScoped(typeRef: TypeRef) = typeRef.typeSymbol.name.toString.startsWith("package$")
+
     import universe._
     tpe.widen match {
-      case NoType => Some("Any")
-      case nullType if nullType.typeSymbol == null => None
+      case NoType =>
+        "Any"
       case underscoreType if isUnderscoreType(underscoreType) =>
-        Some("Any")
+        "Any"
       case moduleTypeRef if isObjectType(moduleTypeRef) =>
-        Some(moduleTypeRef.typeSymbol.fullName + ".type")
+        moduleTypeRef.typeSymbol.fullName + ".type"
+      case typeRef: TypeRef if isPackageObjectScoped(typeRef) =>
+        typeRef.typeSymbol.fullName.replace("package$", "")
       case typeRef: TypeRef =>
-        if (isPackageObjectScoped(typeRef))
-          Some(typeRef.typeSymbol.fullName.replace("package$", ""))
-        else Some(genenericTypeString(typeRef, typeRef.args, withoutGenerics))
+        genenericTypeString(typeRef, typeRef.args, withoutGenerics)
       case existentialType @ ExistentialType(_, _) =>
-        Some(genenericTypeString(existentialType, existentialType.typeArgs, withoutGenerics))
-      case any => throw new RuntimeException(s"Unsupported tree shape: $any.")
+        genenericTypeString(existentialType, existentialType.typeArgs, withoutGenerics)
+      case any =>
+        throw new RuntimeException(s"Unsupported tree shape: $any.")
     }
   }
 
@@ -84,7 +89,7 @@ object TypeNames {
     if (args.isEmpty || (withoutGenerics && !isArray))
       rootType
     else {
-      val argsStrings = args.flatMap(t => typeName(t, false)).mkString(", ")
+      val argsStrings = args.map(t => typeName(t, withoutGenerics = false)).mkString(", ")
       s"$rootType[$argsStrings]"
     }
   }

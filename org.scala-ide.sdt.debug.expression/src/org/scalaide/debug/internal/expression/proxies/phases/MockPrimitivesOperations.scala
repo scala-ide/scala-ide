@@ -76,8 +76,7 @@ class MockPrimitivesOperations
     }
 
   private def mirrorMethodType(on: Tree): Tree = {
-    val typeName = TypeNames.fromTree(on)
-      .getOrElse(throw new RuntimeException("Primitives mocking must have type!"))
+    val typeName = TypeNames.getFromTree(on)
     Ident(TypeName(typeName))
   }
 

@@ -52,8 +52,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTyp
     def unapply(tree: Tree): Option[Map[TermName, String]] = tree match {
       case Apply(on, args) if on.toString() == onString =>
         Some(args.map {
-          case ident @ Ident(name: TermName) => name -> TypeNames.fromTree(ident)
-            .getOrElse(throw new RuntimeException("Parameters must have type!"))
+          case ident @ Ident(name: TermName) => name -> TypeNames.getFromTree(ident)
         }(collection.breakOut))
       case _ => None
     }
@@ -168,8 +167,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTyp
 
     val typeCheckedFunction: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
 
-    val retType = TypeNames.fromTree(typeCheckedFunction.body)
-      .getOrElse(throw new RuntimeException("Function must have a return type!"))
+    val retType = TypeNames.getFromTree(typeCheckedFunction.body)
 
     val compiled = compileFunction(typeCheckedFunction.vparams,
       typeCheckedFunction.body,
@@ -178,8 +176,10 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: NewTyp
     import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
     val proxyClassName = s"$customLambdaPrefix${functionsCount}_typed"
     functionsCount += 1
-    val newFunctionType = typesContext.newType(proxyClassName,
-      compiled.newClassName,
+    val newFunctionType = compiled.newClassName
+
+    typesContext.createNewType(proxyClassName,
+      newFunctionType,
       compiled.newClassCode,
       closuresTypes.values.toSeq)
 

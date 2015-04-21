@@ -88,11 +88,11 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
 
   @Test
   def traitToClassToObjectInheritance(): Unit = {
-  /*  eval("A1.isInstanceOf[A1]", A1.isInstanceOf[A1], Java.boxed.Boolean)
+    eval("A1.isInstanceOf[A1]", A1.isInstanceOf[A1], Java.boxed.Boolean)
     eval("A2.isInstanceOf[A1]", A2.isInstanceOf[A1], Java.boxed.Boolean)
     eval("A2.isInstanceOf[A2]", A2.isInstanceOf[A1], Java.boxed.Boolean)
     eval("A3.isInstanceOf[A1]", A3.isInstanceOf[A1], Java.boxed.Boolean)
-    eval("A3.isInstanceOf[A2]", A3.isInstanceOf[A2], Java.boxed.Boolean)*/
+    eval("A3.isInstanceOf[A2]", A3.isInstanceOf[A2], Java.boxed.Boolean)
     eval("A3.isInstanceOf[A3.type]", A3.isInstanceOf[A3.type], Java.boxed.Boolean)
   }
 

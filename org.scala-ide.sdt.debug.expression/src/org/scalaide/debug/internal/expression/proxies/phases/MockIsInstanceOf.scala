@@ -33,8 +33,7 @@ class MockIsInstanceOf
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case TypeApply(Select(on, TermName("isInstanceOf")), List(tpt @ TypeTree())) =>
-      val classType = TypeNames.fromTree(tpt, withoutGenerics = true)
-        .getOrElse(throw new RuntimeException("Type tree must be convertable to String"))
+      val classType = TypeNames.getFromTree(tpt, withoutGenerics = true)
       createProxy(transformFurther(on), classType)
     case other => transformFurther(other)
   }

@@ -7,8 +7,6 @@ package context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import Names._
-
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
@@ -21,6 +19,10 @@ import com.sun.jdi.ObjectReference
 import com.sun.jdi.StringReference
 import com.sun.jdi.Type
 import com.sun.jdi.Value
+
+import Names.Debugger
+import Names.Java
+import Names.Scala
 
 /**
  * Part of JdiContext responsible for converting proxies to their string representations.

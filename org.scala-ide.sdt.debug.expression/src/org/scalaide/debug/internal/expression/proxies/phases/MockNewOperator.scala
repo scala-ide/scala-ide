@@ -65,9 +65,7 @@ class MockNewOperator
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
     case newTree @ Apply(fun, args) if isConstructor(fun.symbol) =>
-      val classType = TypeNames.fromTree(newTree, withoutGenerics = true)
-        .getOrElse(throw new RuntimeException("New instance must have type!"))
-
+      val classType = TypeNames.getFromTree(newTree, withoutGenerics = true)
       proxiedNewCode(fun, args, classType)
     case any => transformFurther(any)
   }
