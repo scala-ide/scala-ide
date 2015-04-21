@@ -40,7 +40,6 @@ import org.junit.runners.Suite
     classOf[VarargsTest],
     classOf[PartialFunctionLambdaTest],
     classOf[AnyValTest],
-    classOf[InnerMethodsTest],
     classOf[MethodsAsFunctionsInnerTraitTest],
     classOf[MethodsAsFunctionsInnerClassTest],
     classOf[MethodsAsFunctionsInnerObjectTest],
@@ -48,5 +47,6 @@ import org.junit.runners.Suite
     classOf[AppObjectTest],
     classOf[NestedClassTest],
     classOf[ImportsTest],
+    classOf[NestedMethodsTest],
     classOf[ControlStructuresTest]))
 class FeaturesTestSuite

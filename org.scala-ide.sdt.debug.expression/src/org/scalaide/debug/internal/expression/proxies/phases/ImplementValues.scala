@@ -33,10 +33,6 @@ case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: u
       other
   }
 
-  /** Checks if name corresponds to `this` stub */
-  private def isThisMethodStub(name: Name): Boolean =
-    name.toString.startsWith(Debugger.thisValName)
-
   /** Checks if a tree is a placeholder put there in previous phase. */
   private def isProxy(value: Tree): Boolean = {
     import Debugger._

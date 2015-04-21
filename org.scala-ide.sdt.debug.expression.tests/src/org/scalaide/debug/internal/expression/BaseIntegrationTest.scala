@@ -82,7 +82,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
  * @param lineNumber line number in which breakpoint should be added
  */
 class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNumber: Int)
-  extends CommonIntegrationTestCompanion(projectName) {
+    extends CommonIntegrationTestCompanion(projectName) {
 
   var expressionEvaluator: JdiExpressionEvaluator = null
 

@@ -27,6 +27,20 @@ case class GenericVariableType(plainType: String, genericType: String) extends V
 case class PlainVariableType(plainType: String) extends VariableType
 
 /**
+ * Contains information required to run nested method
+ * @param on - object that contains required method
+ * @param jvmName - name real jvm methods (like name$1)
+ * @param argsNames - names of aruments
+ */
+case class NestedMethodImplementation(on: TermName, jvmName: String, argsNames: Seq[String])
+
+/**
+ * All information about nested method from presentation compiler used to match this method to real runtime version
+ * @param parametersListsCount
+ */
+case class NestedMethodDeclaration(name: String, startLine: Int, endLine: Int, argumentsCount: Int, parametersListsCount: Int)
+
+/**
  * Represents variables in context of suspended debugging.
  *
  * Allows you to get information about types.
@@ -65,4 +79,7 @@ trait VariableContext extends Any {
    *  @param name name of variable to implement
    */
   def implementValue(name: TermName): Option[String]
+
+  /** Try to implement nested method base on it's declaration */
+  def nestedMethodImplementation(function: NestedMethodDeclaration): Option[NestedMethodImplementation]
 }

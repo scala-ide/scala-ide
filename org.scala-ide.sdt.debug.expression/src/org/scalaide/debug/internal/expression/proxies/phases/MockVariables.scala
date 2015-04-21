@@ -3,14 +3,16 @@
  */
 package org.scalaide.debug.internal.expression.proxies.phases
 
+import org.scalaide.debug.internal.expression.Names.Debugger
+import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
+
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
+import org.scalaide.debug.internal.expression.context._
+
 import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.TransformationPhase
-import org.scalaide.debug.internal.expression.context.GenericVariableType
-import org.scalaide.debug.internal.expression.context.PlainVariableType
-import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.sources.GenericTypes
 import org.scalaide.logging.HasLogger
 
@@ -20,17 +22,16 @@ class MockVariables(val toolbox: ToolBox[universe.type],
   extends TransformationPhase
   with HasLogger {
 
-  import toolbox.u.{ Try => _, _ }
+  import toolbox.u.{Try => _, _}
 
   /**
    * Insert mock proxy code for unbound variables into given code tree
    */
-  class MockProxyBuilder {
+  object MockProxyBuilder {
 
     /**
      * For variables that need to be proxied mock proxy code is generated
      * @param code processed code
-     * @param context variables context for retrieving type information
      * @return code with mock definitions prepended
      */
     final def prependMockProxyCode(code: Tree): Tree = {
@@ -57,7 +58,11 @@ class MockVariables(val toolbox: ToolBox[universe.type],
      */
     private def generateProxies(names: Set[TermName], context: VariableContext): List[Tree] = {
       val namesWithThis: Seq[TermName] = (names.toSeq ++ context.syntheticVariables).distinct //order matter in case of this values
-      val proxyDefinitions = namesWithThis.flatMap(buildProxyDefinition(context)) ++ context.syntheticImports
+      val genericProvider = new GenericProvider
+      val proxyDefinitions =
+        namesWithThis.flatMap(buildProxyDefinition(context, genericProvider)) ++
+          context.syntheticImports ++
+          names.toSeq.flatMap(buildNestedMethodDefinition(genericProvider))
 
       breakValDefBlock(toolbox.parse(proxyDefinitions.mkString("\n"))).toList
     }
@@ -67,34 +72,39 @@ class MockVariables(val toolbox: ToolBox[universe.type],
      * @param name variable name
      * @return String representing proxy variable definition
      */
-    private def buildProxyDefinition(context: VariableContext)(name: TermName): Option[String] = {
-      import Names.Debugger._
-
-      //Try obtain generic arguments twice on failure (SPC is fragile)
-      lazy val fromSource = GenericTypes.genericTypeForValues()
-        .orElse(GenericTypes.genericTypeForValues())
+    private def buildProxyDefinition(context: VariableContext, genericProvider: GenericProvider)(name: TermName): Option[String] = {
+      import Debugger._
 
       context.typeOf(name).map {
         case GenericVariableType(typeName, genericSignature) =>
-          val typeFromSource = fromSource.flatMap(_.get(name.toString()))
-          typeFromSource.getOrElse(generateProxiedGenericName(typeName, genericSignature))
+          genericProvider.typeForField(name.toString).getOrElse(generateProxiedGenericName(typeName, genericSignature))
         case PlainVariableType(typeName) =>
           typeName
       }.map(typeSig => s"""val $name: $typeSig = $contextName.$placeholderName""")
     }
 
-    private def generateProxiedGenericName(className: String, genericSignature: String): String = {
-      //genSignature is like '<A:Ljava/lang/Object;C:Ljava/lang/Object;>Ljava/lang/Object;Ldebug/GenericTrait<TC;>;'
+    private def buildNestedMethodDefinition(genericsProvider: GenericProvider)(name: TermName): Option[String] =
+      genericsProvider.typeForNestedMethod(name.toString).map(generateLocalFunctionSignature)
 
-      //cuts it to this: A:Ljava/lang/Object;C:Ljava/lang/Object;
+    private def generateLocalFunctionSignature(entry: GenericTypes.GenericEntry): String = {
+      import entry._
+      val GenericTypes.LocalMethod(parametersListCount, start, end) = entry.entryType
+      import Debugger._
+      s"""val $name: $genericType = $contextName.$placeholderNestedMethodName($parametersListCount, $start, $end)"""
+    }
+
+    private def generateProxiedGenericName(className: String, genericSignature: String): String = {
+      // genSignature is like '<A:Ljava/lang/Object;C:Ljava/lang/Object;>Ljava/lang/Object;Ldebug/GenericTrait<TC;>;'
+
+      // cuts it to this: A:Ljava/lang/Object;C:Ljava/lang/Object;
       val listTypes = genericSignature.split('>').head.drop(1)
 
-      //splits to this: Seq("A:Ljava/lang/Objec", "C:Ljava/lang/Object")
+      // splits to this: Seq("A:Ljava/lang/Objec", "C:Ljava/lang/Object")
       listTypes.split(";")
-        .map(_ => Names.Debugger.proxyName).mkString(s"$className[", ", ", "]")
+        .map(_ => Debugger.proxyName).mkString(s"$className[", ", ", "]")
     }
   }
 
   override def transform(tree: universe.Tree): universe.Tree =
-    new MockProxyBuilder().prependMockProxyCode(tree)
+    MockProxyBuilder.prependMockProxyCode(tree)
 }

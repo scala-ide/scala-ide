@@ -25,6 +25,14 @@ object JdiContext {
   def placeholder = ???
 
   /**
+   * Method to mark that given nested function needs to be implemented in later phases.
+   *
+   * WARNING - this method is used in reflective compilation.
+   * If you change it's name, package or behavior, make sure to change it also.
+   */
+  def placeholderNestedMethod(parametersListsCount: Int, beginLine: Int, endLine: Int) = ???
+
+  /**
    * Methods to mark that given lambda  that needs to be implemented in later phases.
    *
    * @param lambdaName name of proxy for this lambda - use only to pass information in AST

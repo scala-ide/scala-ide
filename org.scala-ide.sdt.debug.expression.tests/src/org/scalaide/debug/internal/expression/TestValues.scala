@@ -74,12 +74,6 @@ object TestValues {
     val breakpointLine = 15
   }
 
-  object InnerMethodsTestCase extends IntegrationTestCaseSettings {
-    val projectName = "expr-eval-inner-methods"
-    val fileName = "InnerMethods"
-    val breakpointLine = 10
-  }
-
   object MethodsAsFunctions {
 
     class MethodsAsFunctionsTestCaseBase(val breakpointLine: Int) extends IntegrationTestCaseSettings {
@@ -203,6 +197,12 @@ object TestValues {
     val * = 1
     val long = 1l
     val long2 = 2l
+  }
+
+  object NestedMethodsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "NestedMethods"
+    val breakpointLine = 41
   }
 
   object VarargsTestCase extends IntegrationTestCaseSettings {

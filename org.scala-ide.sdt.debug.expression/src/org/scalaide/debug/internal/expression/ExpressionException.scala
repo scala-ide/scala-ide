@@ -58,6 +58,11 @@ object ExpressionException {
   def lambdaCompilationFailure(lambdaSource: String): String =
     s"Could not compile lambda expression: \n$lambdaSource\nSee underlying message for more details."
 
+  def multipleMethodsMatchNestedOneMessage(functionName: String, candidates: Seq[String]) =
+    s"""We cannot determine real name of nested function: $functionName}.
+       |Candidates: ${candidates.mkString(", ")}
+       |Nested function is not fully supported in expression evaluator.")""".stripMargin
+
   /**
    * Recovers from errors after expression compilation and evaluation.
    * Provides nice, user-readable descriptions for all known problems.
@@ -182,5 +187,12 @@ object NestedLambdaException
  */
 class UnsupportedFeature(val name: String)
   extends RuntimeException(ExpressionException.unsupportedFeatureMessage(name))
+  with ExpressionException
+
+/**
+ * Raised when we cannot determine which method match nested one
+ */
+class MultipleMethodsMatchNestedOne(functionName: String, candidates: Seq[String])
+  extends RuntimeException(ExpressionException.multipleMethodsMatchNestedOneMessage(functionName, candidates))
   with ExpressionException
 

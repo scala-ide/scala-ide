@@ -3,17 +3,16 @@
  */
 package org.scalaide.debug.internal.expression.context.extensions
 
+import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
+import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
+import org.scalaide.debug.internal.expression.context.NestedMethodImplementation
+
 import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
-import org.scalaide.debug.internal.expression.Names.Debugger.objectOrStaticCallProxyMethodName
-import org.scalaide.debug.internal.expression.Names.Debugger.valueProxyMethodName
 import org.scalaide.logging.HasLogger
 
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.StackFrame
+import com.sun.jdi._
 
 /** Responsible for handling all context extension and provide aggregated results for expression context */
 case class ExtendedContext(currentFrame: StackFrame)
@@ -22,7 +21,7 @@ case class ExtendedContext(currentFrame: StackFrame)
   // aggregated current transformation
   private lazy val currentTransformation: Option[ThisTransformation] =
     createInitialTransformationContext
-      .map(parentClasses).map(parentObjects)
+      .map(parentClasses)
 
   /** Get type for variable - if variable is one of 'this' variables returns its type */
   final def typeFor(name: universe.TermName): Option[ReferenceType] =
@@ -33,6 +32,40 @@ case class ExtendedContext(currentFrame: StackFrame)
     case Some(transformation) =>
       transformation.thisHistory.map(transformation.nameMap).reverse
     case _ => Nil
+  }
+
+  /** Find implementation information about nested function.
+    * Returns None when we have cannot determine this object context.  */
+  final def nestedMethod(declaration: NestedMethodDeclaration): Option[NestedMethodImplementation] = {
+
+    def isLocationInMethodDeclaration(location: Location): Boolean =
+      declaration.startLine <= location.lineNumber() && location.lineNumber() <= declaration.endLine
+
+    lazy val currentExecutionLine = currentFrame.location().lineNumber()
+
+    def isCandidate(m: Method): Boolean = {
+      def nameMatch = m.name().startsWith(declaration.name + '$')
+      def placementCorrect = !m.allLineLocations().isEmpty && m.allLineLocations().forall(isLocationInMethodDeclaration)
+      def declaredBeforeCurrentLine = m.location().lineNumber() < currentExecutionLine
+
+      nameMatch && placementCorrect && declaredBeforeCurrentLine
+    }
+    currentTransformation.map {
+      transformation =>
+        val nestedMethodsImplementations = for {
+          thisEntry <- transformation.thisHistory
+          candidateMethod <- thisEntry.referenceType.methods() if isCandidate(candidateMethod)
+        } yield NestedMethodImplementation(transformation.nameMap(thisEntry),
+            candidateMethod.name(),
+            candidateMethod.arguments().map(_.name()))
+
+        nestedMethodsImplementations match {
+          case Seq(onlyCandidate) =>
+            onlyCandidate
+          case candidates =>
+            throw new MultipleMethodsMatchNestedOne(declaration.name, candidates.map(_.jvmName))
+        }
+    }
   }
 
   /** List of variables that mock this */
@@ -92,7 +125,7 @@ case class ExtendedContext(currentFrame: StackFrame)
     }
   }
 
-  /** class existing in VM*/
+  /** class existing in VM */
   private object ExistingClass {
     def unapply(name: String): Option[ReferenceType] =
       currentFrame.virtualMachine().classesByName(name).headOption

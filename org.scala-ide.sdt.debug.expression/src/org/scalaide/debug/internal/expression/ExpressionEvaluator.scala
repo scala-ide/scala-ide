@@ -60,6 +60,7 @@ object ExpressionEvaluator {
     // function should be first because this transformer needs tree as clean as possible
     ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
     ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
+    ctx => new ImplementMockedNestedMethods(ctx.toolbox, ctx.context),
     ctx => MockLiteralsAndConstants(ctx.toolbox, ctx.typesContext),
     ctx => MockPrimitivesOperations(ctx.toolbox),
     ctx => MockToString(ctx.toolbox),
@@ -83,7 +84,7 @@ object ExpressionEvaluator {
 abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader,
   monitor: ProgressMonitor,
   compilerOptions: Seq[String] = Seq.empty)
-  extends HasLogger {
+    extends HasLogger {
 
   import ExpressionEvaluator._
 
@@ -125,7 +126,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     }
   }
 
-  private def recompileFromStrigifiedTree(tree: u.Tree): () => Any ={
+  private def recompileFromStrigifiedTree(tree: u.Tree): () => Any = {
     toolbox.compile(toolbox.parse(tree.toString()))
   }
 
