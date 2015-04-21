@@ -1,24 +1,26 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.annotation.tailrec
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.ExpressionEvaluator
-import org.scalaide.debug.internal.expression.TypesContext
 
 /**
  * Extract and transforms all object-like code to valid proxies
- * (it can be also Java static call but we can't distinguish here - there's needed dynamic dispatch on a later level)
- * E.g. call to object 'Ala' is transformed to $o_ala_package_Ala_stub(__proxy.objectOrStaticCallProxy("ala.package.Ala"))
- * where:
- * - $o_ala_package_Ala_stub() - generated stub for this object
- * - __proxy.objectOrStaticAllProxy("ala.package.Ala") - obtain object from context
+ * (it can be also Java static call but we can't distinguish here - there's needed dynamic dispatch on a later level).
+ * E.g. call to object:
+ * {{{
+ *  Ala
+ * }}}
+ * is transformed to:
+ * {{{
+ *  __proxy.objectOrStaticCallProxy("ala.package.Ala")
+ *  }}}
  */
 case class MockObjectsAndStaticCalls(toolbox: ToolBox[universe.type], typesContext: TypesContext)
   extends AstTransformer {
@@ -48,7 +50,7 @@ case class MockObjectsAndStaticCalls(toolbox: ToolBox[universe.type], typesConte
   private def createProxy(select: Tree): Tree = {
     val className = typesContext.jvmTypeForClass(select.tpe)
 
-    // generates code like $o_ala_package_Ala_stub(__proxy.objectOrStaticCallProxy("ala.package.Ala"))
+    // generates code like __proxy.objectOrStaticCallProxy("ala.package.Ala")
     import Debugger._
     toolbox.parse(s"""$contextParamName.$objectOrStaticCallProxyMethodName("$className")""")
   }

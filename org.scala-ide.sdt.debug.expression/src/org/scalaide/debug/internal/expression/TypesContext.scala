@@ -51,8 +51,7 @@ final class TypesContextState() {
 /**
  * Contains all information of types obtained during compilation of expression
  * During phrases it is filled with types and function that is called on that types.
- * It generates mapping for names - plain jvm names are translated to it proxy versions.
- * During the GenerateStub phase type context is used to create stub classes.
+ * It generates mapping for names - plain JVM names are translated to it proxy versions.
  *
  * WARNING - this class have mutable internal state
  */
@@ -126,7 +125,6 @@ final class TypesContext() {
     def correctTypes(oldName: String): Option[String] = oldName match {
       case Scala.thisList => Some(Scala.list)
       case Scala.thisNil => Some(Scala.nil)
-      case name if isObject => Some(JdiContext.toObjectOrStaticCall(name))
       case Scala.nothingType => None
       case name => Some(name)
     }

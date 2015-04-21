@@ -123,12 +123,6 @@ object JdiContext {
   /** see `placeholderFunction1` */
   def placeholderFunction22[Ret](lambdaName: String, closureParams: Seq[Any] = Nil): (Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any) => Ret = (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => ???
 
-  /**
-   * Prefixes class name with object prefix.
-   * Used internally in generated stubs.
-   */
-  def toObjectOrStaticCall(className: String): String = Debugger.objectOrStaticCallTypeNamePrefix + className
-
   def apply(expressionClassLoader: ClassLoader, debugState: DebugState): JdiContext =
     new JdiContext(expressionClassLoader, debugState)
 
