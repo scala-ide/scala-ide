@@ -33,6 +33,9 @@ object Values extends App {
     val nullValString: String = null
     val nullValArray: Array[Int] = null
 
+    val listArray = multilist.toArray
+    val intArray = list.toArray
+
     def testFunction() {
       val debug = "ala"
     }

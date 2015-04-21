@@ -4,8 +4,10 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
-import scala.reflect.runtime.universe
+import Names.Debugger
+
 import scala.reflect.NameTransformer
+import scala.reflect.runtime.universe
 import scala.util.Success
 
 import org.scalaide.debug.internal.expression.Names.Debugger
@@ -73,8 +75,11 @@ class MockPrimitivesOperations
           List(typeForPrimitiveGetter))
     }
 
-  private def mirrorMethodType(on: Tree): Tree =
-    Ident(TypeName(on.tpe.typeSymbol.name.toString))
+  private def mirrorMethodType(on: Tree): Tree = {
+    val typeName = TypeNames.fromTree(on)
+      .getOrElse(throw new RuntimeException("Primitives mocking must have type!"))
+    Ident(TypeName(typeName))
+  }
 
   private def repackTwoPrimitives(on: Tree, name: Name, arg: Tree, transformFurther: Tree => Tree): Tree = {
     val l = obtainPrimitive(on, transformFurther)
@@ -91,12 +96,10 @@ class MockPrimitivesOperations
 
   private def isPrimitiveOperation(name: Name): Boolean = !notPrimitiveOperation.contains(name.toString)
 
-  private def isPrimitive(tree: Tree): Boolean =
-    util.Try(if (tree.tpe.typeSymbol.toString.startsWith("object ")) "" else tree.tpe.typeSymbol.fullName) match {
-      case Success(tp) =>
-        Names.Scala.primitives.all.contains(tp)
-      case _ => isPrimitiveProxy(tree)
-    }
+  private def isPrimitive(tree: Tree): Boolean = TypeNames.fromTree(tree) match {
+    case Some(treeType) => Names.Scala.primitives.allShorten.contains(treeType)
+    case _ => isPrimitiveProxy(tree)
+  }
 
   private def isPrimitiveProxy(tree: Tree): Boolean = ProxifiedPrimitive.unapply(tree).isDefined
 }

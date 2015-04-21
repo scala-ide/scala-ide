@@ -69,6 +69,9 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
 
   @Test
   def testNestedFunction(): Unit = eval("nestedFunction(1)", "nestedFunction", Java.boxed.String)
+
+  @Test
+  def testNestedWithExistentialType(): Unit = eval("nestedWithExistentialType(Nil)", "nestedWithExistentialType", Java.boxed.String)
 }
 
 object NestedMethodsTest extends BaseIntegrationTestCompanion(NestedMethodsTestCase)

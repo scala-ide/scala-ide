@@ -1,14 +1,14 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.TypesContext
+import Names.Java
 
 @RunWith(classOf[JUnit4])
 class TypeExtractionTest extends HasEvaluator {
@@ -16,7 +16,7 @@ class TypeExtractionTest extends HasEvaluator {
   def testTypes(code: String, resultType: String) {
     val toolbox = Evaluator.toolbox
     val compiled = toolbox.typecheck(Evaluator.parse(code))
-    val extracted = new TypesContext().treeTypeName(compiled)
+    val extracted = TypeNames.fromTree(compiled)
     assertEquals(s"mismatch type in: $code type( ${compiled.tpe})", Some(resultType), extracted)
   }
 
@@ -32,13 +32,13 @@ class TypeExtractionTest extends HasEvaluator {
 
   @Test
   def generics(): Unit = {
-    testTypes("Set(1, 2, 3)", "scala.collection.immutable.Set")
+    testTypes("Set(1, 2, 3)", "scala.collection.immutable.Set[Int]")
     testTypes("""  "ala".map(_.toInt).sum """, "scala.Int")
   }
 
   @Test
   def fields(): Unit = {
-    testTypes("val set = Set(1, 2,3); set", "scala.collection.immutable.Set")
+    testTypes("val set = Set(1, 2,3); set", "scala.collection.immutable.Set[Int]")
     testTypes("""  val i = "ala".map(_.toInt).sum; i + 1 """, "scala.Int")
     testTypes("""  val i = ("ala", 1); i._1 """, Java.boxed.String)
   }

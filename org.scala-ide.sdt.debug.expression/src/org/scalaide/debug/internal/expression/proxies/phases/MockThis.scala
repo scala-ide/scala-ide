@@ -6,7 +6,7 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.Names.Debugger
+import Names.Debugger
 
 /**
  * Transformer for converting `this` usages into special variable that stubs calls to `this`.

@@ -147,7 +147,9 @@ object Names {
      */
     val Array = """(?:scala\.)?Array\[(.+)\]""".r
 
-    def Array(typeName: String) = s"scala.Array[$typeName]"
+    def Array(typeName: String) = s"$ArrayRoot[$typeName]"
+
+    val ArrayRoot = "scala.Array"
 
     val nil = "scala.collection.immutable.Nil"
     // strange value that shows up instead of above one
@@ -181,6 +183,8 @@ object Names {
       val Unit = "scala.Unit"
 
       val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short, Unit)
+
+      val allShorten = all.map(_.drop("scala.".size))
     }
 
     /**

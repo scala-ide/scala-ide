@@ -7,9 +7,8 @@ package context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
+import Names._
+
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
@@ -101,9 +100,9 @@ trait Stringifier {
     def innerTpe(tpe: Type): String = tpe match {
       case arrayType: ArrayType =>
         val argumentType = innerTpe(arrayType.componentType)
-        Scala.Array(TypeNameMappings.javaNameToScalaName(argumentType))
+        Scala.Array(TypeNames.javaNameToScalaName(argumentType))
       case other =>
-        TypeNameMappings.javaNameToScalaName(other.name)
+        TypeNames.javaNameToScalaName(other.name)
     }
 
     innerTpe(array.__underlying.`type`)

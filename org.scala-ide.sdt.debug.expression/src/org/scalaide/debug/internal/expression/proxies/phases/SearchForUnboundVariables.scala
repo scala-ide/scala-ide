@@ -15,7 +15,7 @@ import scala.tools.reflect.ToolBox
  * @param typesContext context to which unbound variables are registered
  * @param localVariablesNames list of names for `val`s and `var`s defined in current method
  */
-class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], typesContext: TypesContext, localVariablesNames: => Set[String])
+class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], typesContext: NewTypesContext, localVariablesNames: => Set[String])
     extends TransformationPhase[BeforeTypecheck]
     with UnboundValuesSupport {
 

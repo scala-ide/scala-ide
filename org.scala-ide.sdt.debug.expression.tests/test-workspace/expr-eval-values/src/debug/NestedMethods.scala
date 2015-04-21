@@ -30,6 +30,8 @@ object NestedMethods extends App {
 
     def multipleParametersNestedMethodReturningFunction(i: Int)(j: Int): Int => String = _ => "multipleParametersNestedMethodReturningFunction"
 
+    def nestedWithExistentialType(list: List[_]) = "nestedWithExistentialType"
+
     val list = List(1)
     list.map { number =>
       def nestedDefinedInLambda(i: Int) = "nestedDefinedInLambda"

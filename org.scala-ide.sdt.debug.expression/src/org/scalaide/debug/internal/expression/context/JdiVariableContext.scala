@@ -4,18 +4,23 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
-import scala.reflect.runtime.universe.TermName
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.context.extensions.ExtendedContext
+import collection.JavaConversions._
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
+
+import extensions.ExtendedContext
+
+import Names.Debugger
+import Names.Scala
+
+import scala.reflect.runtime.universe.TermName
+
+
 
 /**
  * Implementation of VariableContext based on ThreadReference.
@@ -56,7 +61,7 @@ private[context] trait JdiVariableContext
           .filter(_.startsWith("<")) // If there are any generic parameters generic looks like <A:...
         case _ => None
       }
-      val primitivesMocked = TypeNameMappings.javaNameToScalaName(typeName.toString)
+      val primitivesMocked = TypeNames.javaNameToScalaName(typeName.toString)
 
       val scalaType = if (onClassPath(expressionClassLoader, primitivesMocked))
         getScalaNameFromType(primitivesMocked)

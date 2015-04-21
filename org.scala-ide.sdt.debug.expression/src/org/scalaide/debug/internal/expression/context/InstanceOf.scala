@@ -19,7 +19,7 @@ import com.sun.jdi.ClassType
 import com.sun.jdi.InterfaceType
 import com.sun.jdi.ReferenceType
 
-import TypeNameMappings.javaNameToScalaName
+import TypeNames._
 
 /**
  * Implements `isInstanceOfCheck` method used to mock `isInstanceOf`.
@@ -38,7 +38,12 @@ private[context] trait InstanceOf {
    * @param BooleanJdiProxy
    */
   final def isInstanceOfCheck(proxy: JdiProxy, typeName: String): BooleanJdiProxy =
-    valueProxy(this.mirrorOf(isInstanceOf(proxy, typeName))).asInstanceOf[BooleanJdiProxy]
+    valueProxy(this.mirrorOf(isInstanceOf(proxy, fixScalaObjectType(typeName)))).asInstanceOf[BooleanJdiProxy]
+
+  private def fixScalaObjectType(name: String) = {
+    if(name.endsWith(".type")) name.dropRight(".type".length) + "$"
+    else name
+  }
 
   /**
    * Checks if proxy matches given type.
@@ -48,11 +53,11 @@ private[context] trait InstanceOf {
     case nullProxy: NullJdiProxy =>
       false
     case unitProxy: UnitJdiProxy =>
-      typeName == Scala.unitType
+      typeName == fixScalaPrimitives(Scala.unitType)
     case _ if proxy.referenceType.name == Scala.boxedUnitType =>
-      typeName == Scala.unitType
+      typeName == fixScalaPrimitives(Scala.unitType)
     case boxedProxy: BoxedJdiProxy[_, _] =>
-      val scalaPrimitiveName = javaNameToScalaName(boxedProxy.primitive.`type`.name)
+      val scalaPrimitiveName = fixScalaPrimitives(javaNameToScalaName(boxedProxy.primitive.`type`.name))
       scalaPrimitiveName == typeName
     case other => handleObject(other, typeName)
   }
@@ -63,7 +68,7 @@ private[context] trait InstanceOf {
    */
   private def handleObject(proxy: JdiProxy, typeName: String): Boolean = proxy.referenceType match {
     case array: ArrayType =>
-      val scalaComponentType = javaNameToScalaName(array.componentTypeName)
+      val scalaComponentType = fixScalaPrimitives(javaNameToScalaName(array.componentTypeName))
       // TODO add support for variance - this needs some integration with `MethodInvoker.conformsTo`
       typeName == Scala.Array(scalaComponentType)
     case interface: InterfaceType =>

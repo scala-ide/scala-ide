@@ -6,7 +6,7 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.Names.Debugger
+import Names.Debugger
 
 /**
  * Transformer for converting `toString` method invocations on proxies.
@@ -32,7 +32,7 @@ class MockToString
       List(proxy))
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case Apply(Select(on, TermName("toString")), _) => createProxy(on)
+    case q"$on.toString()" => createProxy(on)
     case other => transformFurther(other)
   }
 }

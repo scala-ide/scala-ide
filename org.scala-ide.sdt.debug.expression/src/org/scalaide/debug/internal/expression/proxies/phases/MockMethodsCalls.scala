@@ -38,7 +38,7 @@ class MockMethodsCalls
 
   /** Creates a proxy to mock methods calls. */
   private def createProxy(qualifier: Tree, name: Name, args: List[Tree], transformFurther: Tree => Tree): Tree = {
-    val fullType = Option(qualifier.tpe).map(tpe => q"Some(${tpe.typeSymbol.fullName})").getOrElse(q"None")
+    val fullType = TypeNames.fromTree(qualifier, withoutGenerics = true).map(name => q"Some($name)").getOrElse(q"None")
     val transformedQualifier = transformFurther(qualifier)
     val transformedArgs = args.mapConserve(transformFurther)
     val applyWithGenericType = Select(transformedQualifier, TermName(Debugger.proxyGenericApplyMethodName))
