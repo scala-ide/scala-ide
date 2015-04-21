@@ -34,16 +34,13 @@ import org.scalaide.logging.HasLogger
  *   list.map(i => i + int)
  * }}}
  *
- * This phase runs before `typecheck`.
- *
  * @param context gives access to imports, local variables etc. from current scope
  * @param unboundVariables variables for which mocks should be generated
  */
 class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type],
   context: VariableContext,
   unboundVariables: => Set[UnboundVariable])
-    extends TransformationPhase
-    with BeforeTypecheck
+    extends TransformationPhase[BeforeTypecheck]
     with HasLogger {
 
   import toolbox.u.{ Try => _, _ }

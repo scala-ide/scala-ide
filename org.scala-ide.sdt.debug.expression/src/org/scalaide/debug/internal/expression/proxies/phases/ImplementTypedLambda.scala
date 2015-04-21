@@ -1,17 +1,31 @@
-package org.scalaide.debug.internal.expression.proxies.phases
+/*
+ * Copyright (c) 2014 -2015 Contributor. All rights reserved.
+ */
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.TypesContext
-
 /**
- * Implement all mock lambdas created during 'MockTypedLabdas' phase
+ * Implement all mock lambdas created during `MockTypedLambda` phase
+ *
+ * Transforms:
+ * {{{
+ *   list.map[Int, List[Int]](org.scalaide.debug.internal.expression.context.JdiContext.placeholderFunction1[Int](
+ *     "<random-name-of-compiled-lambda>", collection.this.Seq.apply[Int](int)
+ *   ))(immutable.this.List.canBuildFrom[Int])
+ * }}}
+ * into:
+ * {{{
+ *   list.map[Int, List[Int]](__context.newInstance(
+ *     "<random-name-of-compiled-lambda>", Seq.apply(int)
+ *   ))(immutable.this.List.canBuildFrom[Int])
+ * }}}
  */
 case class ImplementTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer
-  with AnonymousFunctionSupport {
+    extends AstTransformer[AfterTypecheck]
+    with AnonymousFunctionSupport {
 
   import toolbox.u._
 

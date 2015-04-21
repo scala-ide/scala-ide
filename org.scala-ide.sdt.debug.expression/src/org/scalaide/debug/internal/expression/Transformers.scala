@@ -4,18 +4,26 @@
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe._
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 
 import Names.Scala
 
 /**
- * Abstract representation of transformation phase, just transform expression tree to another tree
+ * Sealed hierarchy for defining where `TransformationPhase` is
+ * relative to [[org.scalaide.debug.internal.expression.proxies.phases.TypeCheck]].
  */
-trait TransformationPhase {
+sealed trait TypecheckRelation
+class BeforeTypecheck extends TypecheckRelation
+class IsTypecheck extends TypecheckRelation
+class AfterTypecheck extends TypecheckRelation
 
-  protected def beforeTypecheck: Boolean = false
+/**
+ * Abstract representation of transformation phase, just transform expression tree to another tree
+ *
+ * @tparam Tpe where this phase is placed relative to `TypeCheck` phase
+ */
+trait TransformationPhase[+Tpe <: TypecheckRelation] {
 
   /**
    * Transforms current tree to new form.
@@ -26,17 +34,16 @@ trait TransformationPhase {
   def transform(baseTree: universe.Tree): universe.Tree
 }
 
-trait BeforeTypecheck {
-  self: TransformationPhase =>
-  override protected def beforeTypecheck: Boolean = true
-}
-
 /**
  * This is proxy-aware transformer.
  * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
+ *
+ * @tparam Tpe where this phase is placed relative to `TypeCheck` phase
  */
-abstract class AstTransformer
-    extends TransformationPhase {
+abstract class AstTransformer[+Tpe <: TypecheckRelation]
+    extends TransformationPhase[Tpe] {
+
+  import universe._
 
   private var _wholeTree: Tree = EmptyTree
 

@@ -23,7 +23,7 @@ class VariableProxiesTest extends HasEvaluator {
     assertEquals(
       s"mismatch variables in: $in \n tree: ${Evaluator.toolbox.u.showRaw(code)}  \n",
       variables.toSet,
-      foundVariables.map(_.toString))
+      foundVariables.map(_.name.toString))
   }
 
   @Test

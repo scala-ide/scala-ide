@@ -1,34 +1,43 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.TypesContext
 
 /**
- * Transformation phase changing code defining mock proxies into code that actually implements them.
+ * Transforms code defining mock proxies into code that actually implements them.
+ * Also removes all types from values definitions (it all becomes JdiProxy).
+ *
+ * Transforms:
+ * {{{
+ *   val list: List[Int] = org.scalaide.debug.internal.expression.context.JdiContext.placeholder;
+ *   val int: Int = org.scalaide.debug.internal.expression.context.JdiContext.placeholder;
+ *   val __this: test.Values.type = org.scalaide.debug.internal.expression.context.JdiContext.placeholder;
+ * }}}
+ * into:
+ * {{{
+ *   val list = __context.valueProxy("list");
+ *   val int = __context.valueProxy("int");
+ *   val __this = __context.thisObjectProxy;
+ * }}}
  */
 case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: universe.TermName => Option[String])
-  extends AstTransformer {
+  extends AstTransformer[AfterTypecheck] {
 
   import toolbox.u._
 
   /**
    * Transforms a proxy mock definition into actual proxy creating code
-   *
-   * @param tree processed tree
-   * @param transformFurther function to transform tree further
-   * @return transformed tree
    */
   final override def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = transformFurther(tree) match {
     case ValDef(mods, name, tpt, value) if isProxy(value) =>
       val valImpl = proxyImplementation(name, tpt.toString)
-      ValDef(mods, name, tpt, valImpl)
+      ValDef(mods, name, TypeTree(), valImpl)
     case other =>
       other
   }

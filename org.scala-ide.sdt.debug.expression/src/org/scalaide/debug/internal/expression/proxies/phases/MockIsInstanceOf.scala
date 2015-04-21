@@ -5,7 +5,6 @@ package org.scalaide.debug.internal.expression
 package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -22,10 +21,10 @@ import org.scalaide.debug.internal.expression.Names.Scala
  *  __context.isInstanceOfCheck(value, "Type")
  * }}}
  */
-class MockIsInstanceOf(val toolbox: ToolBox[universe.type])
-    extends AstTransformer {
+class MockIsInstanceOf
+    extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   /** Creates a proxy to replace `isInstanceOf` call. */
   private def createProxy(proxy: Tree, classType: String): Tree =

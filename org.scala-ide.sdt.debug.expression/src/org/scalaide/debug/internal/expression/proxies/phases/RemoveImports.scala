@@ -1,20 +1,18 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
-import scala.tools.reflect.ToolBox
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.AstTransformer
-
 /**
- * Removes all imports - from inside of expression - they are not required after typecheck
- * @param toolbox
+ * Removes all imports from expression - they are not required after typecheck and before final compilation.
  */
-final case class RemoveImports(toolbox: ToolBox[universe.type]) extends AstTransformer {
+final class RemoveImports
+    extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   override protected def transformSingleTree(baseTree: universe.Tree, transformFurther: (universe.Tree) => universe.Tree): universe.Tree = baseTree match {
     case Import(_, _) => EmptyTree

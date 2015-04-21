@@ -1,15 +1,16 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
-import org.scalaide.debug.internal.expression.Names.Debugger
 import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
-import org.scalaide.debug.internal.expression.AstTransformer
+
+import org.scalaide.debug.internal.expression.Names.Debugger
 
 trait PrimitivesCommons {
-  self: AstTransformer =>
+  self: AstTransformer[_] =>
   import universe._
 
   /** creates code that pack primitive to proxy */

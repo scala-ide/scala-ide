@@ -113,23 +113,6 @@ final class TypesContext() {
   }
 
   /**
-   * Create java name for classes (replace . with $ for nested classes)
-   */
-  def jvmTypeForClass(tpe: universe.Type): String = {
-    import universe.TypeRefTag
-    // hack for typecheck replacing `List.apply()` with `immutable.this.Nil`
-    if (tpe.toString == "List[Nothing]") Scala.nil
-    else tpe.typeConstructor match {
-      case universe.TypeRef(prefix, sym, _) if !prefix.typeConstructor.typeSymbol.isPackage =>
-        val className = sym.name
-        val parentName = jvmTypeForClass(prefix)
-        parentName + "$" + className
-      case _ =>
-        tpe.typeSymbol.fullName
-    }
-  }
-
-  /**
    * See `TypesContext.treeTypeName`.
    *
    * @param tpe type to search for name
