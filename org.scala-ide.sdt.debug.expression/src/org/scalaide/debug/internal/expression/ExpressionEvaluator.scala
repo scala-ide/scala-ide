@@ -65,11 +65,11 @@ object ExpressionEvaluator {
 
     val afterTypecheck: Phases[AfterTypecheck] = Seq(
       ctx => FixClassTags(ctx.toolbox),
-      ctx => new DetectNothingTypedExpression,
       ctx => new RemoveImports,
       // function should be first because this transformer needs tree as clean as possible
       ctx => MockLambdas(ctx.toolbox, ctx.typesContext),
       ctx => ImplementTypedLambda(ctx.toolbox, ctx.typesContext),
+      ctx => new AfterTypecheckFailFast,
       ctx => new ImplementMockedNestedMethods(ctx.context),
       ctx => new MockLiteralsAndConstants(ctx.typesContext),
       ctx => new MockPrimitivesOperations,

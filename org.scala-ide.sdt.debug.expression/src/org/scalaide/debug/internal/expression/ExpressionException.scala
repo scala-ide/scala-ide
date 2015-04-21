@@ -24,9 +24,6 @@ sealed trait ExpressionException extends Throwable with NoStackTrace
 /** Long messages are placed here for readability */
 object ExpressionException {
 
-  val nothingTypeInferredMessage =
-    "scala.Nothing was inferred as a result of an expression, which makes no sense and thus is not supported."
-
   val functionProxyArgumentTypeNotInferredMessage =
     """You used a lambda expression for which we could not infer its type parameters.
       |Please provide explicit types for all lambda parameters.""".stripMargin
@@ -159,16 +156,6 @@ class MethodInvocationException(reason: String, underlying: Throwable)
   with ExpressionException
 
 /**
- * Raised when `Nothing` is inferred as return type from expression.
- *
- * Evaluating Nothing-returning methods in evaluator is pretty useless, or even harmful if they recurse indefinitely,
- * and will require extra work to support.
- */
-object NothingTypeInferredException
-  extends RuntimeException(ExpressionException.nothingTypeInferredMessage)
-  with ExpressionException
-
-/**
  * Raised when not all types of arguments to lambda was inferred.
  */
 object FunctionProxyArgumentTypeNotInferredException
@@ -195,4 +182,3 @@ class UnsupportedFeature(val name: String)
 class MultipleMethodsMatchNestedOne(functionName: String, candidates: Seq[String])
   extends RuntimeException(ExpressionException.multipleMethodsMatchNestedOneMessage(functionName, candidates))
   with ExpressionException
-

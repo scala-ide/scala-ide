@@ -31,7 +31,23 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   @Test
   def doWhileExpressionCondition(): Unit = eval("var i = 1; do i while (false); i", 1, Java.boxed.Integer)
 
-  // TODO - O-5626 - support for try and throw
+  // TODO - O-8599 - support for return
+  @Test(expected = classOf[UnsupportedFeature])
+  def returnFrom(): Unit = eval("return 123", "", "")
+
+  // TODO - O-8597 - support for super calls
+  @Test(expected = classOf[UnsupportedFeature])
+  def superCall(): Unit = eval("super.foo()", "", "")
+
+  // TODO - O-8598 - support for pattern matching
+  @Test(expected = classOf[UnsupportedFeature])
+  def patternMatch(): Unit = eval("int match { case i: Int => i } ", "", "")
+
+  // TODO - O-5626 - support for throw
+  @Test(expected = classOf[UnsupportedFeature])
+  def throwException(): Unit = eval("""throw new RuntimeException("Boo!")""", "", "")
+
+  // TODO - O-8596 - support for try/catch/finally
   @Test(expected = classOf[UnsupportedFeature])
   def tryCatchFinally(): Unit =
     eval("""try { 1 } finally { 2 }""", 2, Java.boxed.Integer)
