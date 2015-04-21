@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 package proxies.phases
@@ -147,7 +147,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
 
   private val ContextParamName = TermName(Debugger.contextParamName)
 
-  // we should exlude start function -> it must stay function cos it is not a part of original expression
+  // we should exclude start function -> it must stay function cos it is not a part of original expression
   protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
     case List(ValDef(_, name, typeTree, _)) if name == ContextParamName => true
     case _ => false
@@ -157,7 +157,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   protected final def getClosureParamsNames(body: Tree, vparams: List[ValDef]): Set[TermName] = {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
 
-    new VariableProxyTraverser(body).findUnboundNames() -- vparamsName
+    new VariableProxyTraverser(body).findUnboundVariables().map(_.name) -- vparamsName
   }
 
   /** Search for names (with types) that are from outside of given tree - must be closure parameters */
@@ -165,13 +165,13 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
     new VariableProxyTraverser(body, typesContext.treeTypeName)
       .findUnboundValues().filterNot {
-      case (name, _) => vparamsName.contains(name)
+      case (variable, _) => vparamsName.contains(variable.name)
     }.map {
-      case (name, Some(valueType)) =>
+      case (variable, Some(valueType)) =>
         val isFunctionImport = valueType.contains("$$")
         val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
-        name -> fixedType
-      case (name, _) => name -> Debugger.proxyName
+        variable.name -> fixedType
+      case (variable, _) => variable.name -> Debugger.proxyName
     }
   }
 

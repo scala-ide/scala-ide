@@ -1,18 +1,24 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context.extensions
-
-import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
-import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
-import org.scalaide.debug.internal.expression.context.NestedMethodImplementation
+package org.scalaide.debug.internal.expression
+package context.extensions
 
 import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe
 
+import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
+import org.scalaide.debug.internal.expression.Names.Debugger.objectOrStaticCallProxyMethodName
+import org.scalaide.debug.internal.expression.Names.Debugger.valueProxyMethodName
+import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
+import org.scalaide.debug.internal.expression.context.NestedMethodImplementation
 import org.scalaide.logging.HasLogger
 
-import com.sun.jdi._
+import com.sun.jdi.Location
+import com.sun.jdi.Method
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.StackFrame
 
 /** Responsible for handling all context extension and provide aggregated results for expression context */
 case class ExtendedContext(currentFrame: StackFrame)
@@ -28,9 +34,9 @@ case class ExtendedContext(currentFrame: StackFrame)
     currentTransformation.flatMap(_.elementMap.get(name)).map(_.referenceType)
 
   /** List of variables that mock this */
-  final def thisFields: Seq[universe.TermName] = currentTransformation match {
+  final def thisFields: Seq[Variable] = currentTransformation match {
     case Some(transformation) =>
-      transformation.thisHistory.map(transformation.nameMap).reverse
+      transformation.thisHistory.map(transformation.nameMap).reverse.map(Variable(_))
     case _ => Nil
   }
 

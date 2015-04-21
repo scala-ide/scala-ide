@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 package context
@@ -18,6 +18,7 @@ import org.scalaide.debug.internal.expression.context.invoker.JavaStaticMethod
 import org.scalaide.debug.internal.expression.context.invoker.JavaStaticVarArgMethod
 import org.scalaide.debug.internal.expression.context.invoker.JavaVarArgConstructorMethod
 import org.scalaide.debug.internal.expression.context.invoker.JavaVarArgMethod
+import org.scalaide.debug.internal.expression.context.invoker.LocalVariableInvoker
 import org.scalaide.debug.internal.expression.context.invoker.MethodInvoker
 import org.scalaide.debug.internal.expression.context.invoker.ScalaVarArgMethod
 import org.scalaide.debug.internal.expression.context.invoker.StandardConstructorMethod
@@ -158,6 +159,21 @@ private[context] trait JdiMethodInvoker {
       throw new NoSuchFieldError(s"type ${classType.name} has no static field named $fieldName")
     }
     valueProxy(value).asInstanceOf[UnitJdiProxy]
+  }
+
+  /**
+   * Sets value for local variable.
+   *
+   * @param variableName name of variable
+   * @param newValue new value (as instance of JdiProxy)
+   * @return UnitJdiProxy
+   */
+  final def setLocalVariable(variableName: String, newValue: JdiProxy): UnitJdiProxy = {
+    val invoker = new LocalVariableInvoker(variableName, newValue, this, () => this.currentFrame())
+    val result = invoker().getOrElse {
+      throw new NoSuchFieldError(s"field $variableName not found in current frame")
+    }
+    valueProxy(result).asInstanceOf[UnitJdiProxy]
   }
 
   /**

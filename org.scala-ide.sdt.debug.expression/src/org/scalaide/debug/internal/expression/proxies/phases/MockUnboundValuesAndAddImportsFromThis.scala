@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 package proxies.phases
@@ -15,10 +15,35 @@ import org.scalaide.debug.internal.expression.sources.GenericTypes
 import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
 import org.scalaide.logging.HasLogger
 
-class MockVariables(val toolbox: ToolBox[universe.type],
+/**
+ * This phase generates mocks for all unbound values (and variables)
+ * and import from multiple kinds of `this` (local instance, parent classes etc).
+ *
+ * Transforms:
+ * {{{
+ *   list.map(i => i + int)
+ * }}}
+ *
+ * to:
+ * {{{
+ *   val list: List[Int] = JdiContext.placeholder
+ *   val int: scala.Int = JdiContext.placeholder
+ *   val __this: test.Values.type = JdiContext.placeholder
+ *   import __this._
+ *
+ *   list.map(i => i + int)
+ * }}}
+ *
+ * This phase runs before `typecheck`.
+ *
+ * @param context gives access to imports, local variables etc. from current scope
+ * @param unboundVariables variables for which mocks should be generated
+ */
+class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type],
   context: VariableContext,
-  unboundVariables: => Set[universe.TermName])
+  unboundVariables: => Set[UnboundVariable])
     extends TransformationPhase
+    with BeforeTypecheck
     with HasLogger {
 
   import toolbox.u.{ Try => _, _ }
@@ -35,11 +60,10 @@ class MockVariables(val toolbox: ToolBox[universe.type],
      */
     final def prependMockProxyCode(code: Tree): Tree = {
       val mockProxiesCode = generateProxies(unboundVariables, context)
-      if (mockProxiesCode.isEmpty) {
+      if (mockProxiesCode.isEmpty)
         code
-      } else {
+      else
         Block(mockProxiesCode, code)
-      }
     }
 
     /**
@@ -59,13 +83,14 @@ class MockVariables(val toolbox: ToolBox[universe.type],
      * @param context variable context
      * @return tree representing proxy definitions for each name in names and according to types from context
      */
-    private def generateProxies(names: Set[TermName], context: VariableContext): List[Tree] = {
-      val namesWithThis: Seq[TermName] = (names.toSeq ++ context.syntheticVariables).distinct //order matter in case of this values
+    private def generateProxies(unboundVariables: Set[UnboundVariable], context: VariableContext): List[Tree] = {
+      // order matters in case of those values
+      val namesWithThis: Seq[Variable] = (unboundVariables.toSeq ++ context.syntheticVariables).distinct
       val genericProvider = new GenericProvider
       val proxiesAndImports =
         namesWithThis.flatMap(buildProxyDefinition(context, genericProvider)) ++
           context.syntheticImports ++
-          names.toSeq.flatMap(buildNestedMethodDefinition(genericProvider))
+          unboundVariables.flatMap(buildNestedMethodDefinition(genericProvider))
 
       val proxiesAndImportsParsed = toolbox.parse(proxiesAndImports.mkString("\n"))
       breakBlock(proxiesAndImportsParsed).toList
@@ -76,19 +101,25 @@ class MockVariables(val toolbox: ToolBox[universe.type],
      * @param name variable name
      * @return String representing proxy variable definition
      */
-    private def buildProxyDefinition(context: VariableContext, genericProvider: GenericProvider)(name: TermName): Option[String] = {
+    private def buildProxyDefinition(context: VariableContext, genericProvider: GenericProvider)(variable: Variable): Option[String] = {
       import Debugger._
 
-      context.typeOf(name).map {
+      val tpe = variable match {
+        case UnboundVariable(name, /* isLocal = */ true) => "var"
+        case _ => "val"
+      }
+
+      context.typeOf(variable.name).map {
         case GenericVariableType(typeName, genericSignature) =>
-          genericProvider.typeForField(name.toString).getOrElse(generateProxiedGenericName(typeName, genericSignature))
+          genericProvider.typeForField(variable.name.toString)
+            .getOrElse(generateProxiedGenericName(typeName, genericSignature))
         case PlainVariableType(typeName) =>
           typeName
-      }.map(typeSig => s"""val $name: $typeSig = $contextName.$placeholderName""")
+      }.map(typeSig => s"""$tpe ${variable.name}: $typeSig = $contextName.$placeholderName""")
     }
 
-    private def buildNestedMethodDefinition(genericsProvider: GenericProvider)(name: TermName): Option[String] =
-      genericsProvider.typeForNestedMethod(name.toString).map(generateLocalFunctionSignature)
+    private def buildNestedMethodDefinition(genericsProvider: GenericProvider)(variable: Variable): Option[String] =
+      genericsProvider.typeForNestedMethod(variable.name.toString).map(generateLocalFunctionSignature)
 
     private def generateLocalFunctionSignature(entry: GenericTypes.GenericEntry): String = {
       import entry._
