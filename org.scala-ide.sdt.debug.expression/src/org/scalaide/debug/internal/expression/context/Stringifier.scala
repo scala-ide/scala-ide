@@ -4,24 +4,20 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
-import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
-import com.sun.jdi.ClassType
-import com.sun.jdi.ObjectReference
 import com.sun.jdi.StringReference
 import com.sun.jdi.Type
-import com.sun.jdi.Value
 
 import Names.Debugger
-import Names.Java
 import Names.Scala
 
 /**
@@ -31,14 +27,18 @@ trait Stringifier {
   self: JdiContext =>
 
   /** Calls `toString` on given proxy, returns jdi String reference. */
-  final def callToString(proxy: JdiProxy): StringReference =
+  final def callToString(proxy: ObjectJdiProxy): StringReference =
     invokeUnboxed[StringReference](proxy, None, "toString", Seq.empty)
 
   /** Calls `scala.runtime.ScalaRunTime.stringOf` on given proxy, returns jdi String reference. */
   final def callScalaRuntimeStringOf(proxy: JdiProxy): StringReference = {
+    val boxed = proxy match {
+      case primitive: PrimitiveJdiProxy[_,_,_] => primitive.boxed
+      case other => other.__value
+    }
     val scalaRuntime = objectByName("scala.runtime.ScalaRunTime")
     val stringOf = methodOn(scalaRuntime, "stringOf", arity = 1)
-    scalaRuntime.invokeMethod(currentThread(), stringOf, List(proxy.__underlying)).asInstanceOf[StringReference]
+    scalaRuntime.invokeMethod(currentThread(), stringOf, List(boxed)).asInstanceOf[StringReference]
   }
 
   /**
@@ -58,7 +58,7 @@ trait Stringifier {
 
     case _: UnitJdiProxy => formatString(Scala.unitLiteral, Scala.unitType)
 
-    case nulledProxy if nulledProxy.__underlying == null => formatString(Scala.nullLiteral, Scala.nullType)
+    case nulledProxy if nulledProxy.__value == null => formatString(Scala.nullLiteral, Scala.nullType)
 
     case array: ArrayJdiProxy[_] => handleArray(array)
 
@@ -83,7 +83,7 @@ trait Stringifier {
         TypeNames.javaNameToScalaName(other.name)
     }
 
-    innerTpe(array.__underlying.`type`)
+    innerTpe(array.__value.`type`)
   }
 
   def isLambda(name: String): Boolean = {
@@ -96,7 +96,7 @@ trait Stringifier {
   }
 
   private def typeOfProxy(proxy: JdiProxy): String = {
-    val underlyingType = proxy.__underlying.referenceType.name
+    val underlyingType = proxy.__type.name
     val typeDecoded = NameTransformer.decode(underlyingType)
     if (isLambda(typeDecoded)) Debugger.lambdaType else typeDecoded
   }

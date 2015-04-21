@@ -10,9 +10,8 @@ import scala.util.Success
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.ArrayType
@@ -37,10 +36,14 @@ trait MethodInvoker extends HasLogger {
    * @param tpe type to check
    */
   protected final def conformsTo(proxy: JdiProxy, tpe: Type): Boolean = {
-    if (proxy.__underlying == null) tpe.isInstanceOf[ClassType]
-    else (tpe, proxy, proxy.referenceType) match {
-      case (primitive: PrimitiveType, boxed: BoxedJdiProxy[_, _], _) =>
-        primitive.name == boxed.primitiveName
+    def isBoxedPrimitive(name: String) = Names.Java.boxed.all.contains(name)
+    if (proxy.__value == null) tpe.isInstanceOf[ClassType]
+    else (tpe, proxy, proxy.__type) match {
+      // check for boxed types
+      case (classType: ClassType, primitiveProxy: PrimitiveJdiProxy[_, _, _], _) if isBoxedPrimitive(classType.name) =>
+        classType.name == primitiveProxy.boxedName
+      case (primitive: PrimitiveType, primitiveProxy: PrimitiveJdiProxy[_, _, _], _) =>
+        primitive == primitiveProxy.__type
       case (parentArrayType: ArrayType, _, thisArrayType: ArrayType) =>
         isSuperClassOf(parentArrayType.componentType)(thisArrayType.componentType)
       case (parentType: Type, _, thisType: Type) =>
@@ -76,11 +79,12 @@ trait MethodInvoker extends HasLogger {
     }
   }
 
-  /** Gets underlying primitive from proxy or object if primitive is not needed. */
-  protected def getValue(ofType: Type, fromProxy: JdiProxy): Value = (ofType, fromProxy) match {
-    case (_: PrimitiveType, value: BoxedJdiProxy[_, _]) => value.primitive
-    case (_, proxy) => proxy.__underlying
+  /** Boxes proxy value if type is a `ReferenceType`. */
+  protected def autobox(tpe: Type, proxy: JdiProxy): Value = (proxy, tpe) match {
+    case (primitive: PrimitiveJdiProxy[_, _, _], objectType: ReferenceType) => primitive.boxed
+    case (other, _) => other.__value
   }
+
 }
 
 /**
@@ -100,8 +104,8 @@ trait BaseMethodInvoker extends MethodInvoker {
   // method match for this call
   private def matchesSignature(method: Method): Boolean =
     !method.isAbstract &&
-    method.arity == args.length &&
-      checkTypes(argumentTypesLoaded(method, args.head.proxyContext))
+      method.arity == args.length &&
+      checkTypes(argumentTypesLoaded(method, args.head.__context))
 
   private final def checkTypes(types: Seq[Type], arguments: Seq[JdiProxy]): Boolean =
     arguments.zip(types).forall((conformsTo _).tupled)
@@ -112,17 +116,17 @@ trait BaseMethodInvoker extends MethodInvoker {
   protected final def checkTypesRight(types: Seq[Type]): Boolean =
     checkTypes(types.reverse, args.reverse)
 
-  private final def generateArguments(types: List[Type], arguments: Seq[JdiProxy]): Seq[Value] =
-   types.zip(arguments).map((getValue _).tupled)
+  private final def generateArguments(types: Seq[Type], arguments: Seq[JdiProxy]): Seq[Value] =
+    types.zip(arguments).map { case (tpe, arg) => autobox(tpe, arg) }
 
   /**
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
    */
   protected final def generateArguments(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes.toList, args)
+    generateArguments(method.argumentTypes, args)
 
   protected final def generateArgumentsRight(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes.toList.reverse, args.reverse).reverse
+    generateArguments(method.argumentTypes.reverse, args.reverse).reverse
 
   // search for all visible methods
   protected final def allMethods: Seq[Method] = referenceType.visibleMethods.filter(_.name == methodName)

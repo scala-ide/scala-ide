@@ -31,6 +31,6 @@ class JavaStaticFieldSetter(val referenceType: ClassType, val fieldName: String,
 
   def apply(): Option[Value] = field.map { f =>
     context.mirrorOf(
-      referenceType.setValue(f, getValue(f.`type`, newValue)))
+      referenceType.setValue(f, newValue.__value))
   }
 }

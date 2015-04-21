@@ -10,7 +10,7 @@ import scala.collection.JavaConversions._
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
@@ -54,10 +54,10 @@ private[context] trait InstanceOf {
       false
     case unitProxy: UnitJdiProxy =>
       typeName == fixScalaPrimitives(Scala.unitType)
-    case _ if proxy.referenceType.name == Scala.boxedUnitType =>
+    case _ if proxy.__type.name == Scala.boxedUnitType =>
       typeName == fixScalaPrimitives(Scala.unitType)
-    case boxedProxy: BoxedJdiProxy[_, _] =>
-      val scalaPrimitiveName = fixScalaPrimitives(javaNameToScalaName(boxedProxy.primitive.`type`.name))
+    case boxedProxy: PrimitiveJdiProxy[_, _, _] =>
+      val scalaPrimitiveName = fixScalaPrimitives(javaNameToScalaName(boxedProxy.primitiveName))
       scalaPrimitiveName == typeName
     case other => handleObject(other, typeName)
   }
@@ -66,7 +66,7 @@ private[context] trait InstanceOf {
    * Checks if proxy matches given type.
    * Handles Classes, Interfaces and Arrays (no variance support for now).
    */
-  private def handleObject(proxy: JdiProxy, typeName: String): Boolean = proxy.referenceType match {
+  private def handleObject(proxy: JdiProxy, typeName: String): Boolean = proxy.__type match {
     case array: ArrayType =>
       val scalaComponentType = fixScalaPrimitives(javaNameToScalaName(array.componentTypeName))
       // TODO add support for variance - this needs some integration with `MethodInvoker.conformsTo`

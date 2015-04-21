@@ -24,13 +24,11 @@ class LocalVariableInvoker(
     val frame = currentFrame()
     for {
       variable <- Option(frame.visibleVariableByName(variableName))
-      result = frame.setValue(
-        variable,
-        getValue(variable.`type`, newValue))
+      result = frame.setValue(variable, autobox(variable.`type`, newValue))
     } yield context.mirrorOf(result)
   } catch {
     case isfe: InvalidStackFrameException =>
-      // TODO - O-8559 - this does not work now
+      // TODO - O-8559 - assignment to local var of primitive type does not work now
       throw new UnsupportedFeature("assignment to local var of primitive type")
   }
 }

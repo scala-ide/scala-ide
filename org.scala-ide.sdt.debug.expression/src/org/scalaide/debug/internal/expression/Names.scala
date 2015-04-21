@@ -223,7 +223,7 @@ object Names {
     /** Type used to show for custom user-defined lambdas */
     val lambdaType = "<custom_lambda>"
 
-    val primitiveValueOfProxyMethodName = "__value"
+    val primitiveValueOfProxyMethodName = "__primitiveValue"
 
     /** JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName

@@ -5,19 +5,15 @@ package org.scalaide.debug.internal.expression
 package context
 
 import scala.annotation.implicitNotFound
-import scala.collection.JavaConversions._
 
 import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.SimpleJdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallClassJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StaticCallInterfaceJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxy
-import org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxyCompanion
 import org.scalaide.debug.internal.expression.proxies.primitives.ByteJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.CharJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.DoubleJdiProxy
@@ -31,8 +27,8 @@ import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.BooleanValue
 import com.sun.jdi.ByteValue
-import com.sun.jdi.ClassType
 import com.sun.jdi.CharValue
+import com.sun.jdi.ClassType
 import com.sun.jdi.DoubleValue
 import com.sun.jdi.FloatValue
 import com.sun.jdi.IntegerValue
@@ -56,7 +52,7 @@ private[context] trait Proxyfier {
    */
   def objectOrStaticCallProxy(name: String): JdiProxy =
     tryObjectByName(name) match {
-      case Some(objRef) => SimpleJdiProxy(this, objRef)
+      case Some(objRef) => ObjectJdiProxy(this, objRef)
       case None => staticCallProxy(name)
     }
 
@@ -116,50 +112,43 @@ private[context] trait Proxyfier {
   /** Creates a proxy for a given value. */
   final def valueProxy(value: Value): JdiProxy = value match {
     case null => NullJdiProxy(this)
-
-    case arrayReference: ArrayReference =>
-      ArrayJdiProxy(this, arrayReference)
-    case objectReference: ObjectReference =>
-      val name = objectReference.`type`.name
-      javaBoxedMap
-        .get(name)
-        .map(_.apply(this, objectReference))
-        .getOrElse(SimpleJdiProxy(this, objectReference))
-
-    case value: ByteValue => ByteJdiProxy.fromPrimitiveValue(value, this)
-    case value: ShortValue => ShortJdiProxy.fromPrimitiveValue(value, this)
-    case value: IntegerValue => IntJdiProxy.fromPrimitiveValue(value, this)
-    case value: FloatValue => FloatJdiProxy.fromPrimitiveValue(value, this)
-    case value: DoubleValue => DoubleJdiProxy.fromPrimitiveValue(value, this)
-    case value: CharValue => CharJdiProxy.fromPrimitiveValue(value, this)
-    case value: BooleanValue => BooleanJdiProxy.fromPrimitiveValue(value, this)
-    case value: LongValue => LongJdiProxy.fromPrimitiveValue(value, this)
+    case arrayReference: ArrayReference => ArrayJdiProxy(this, arrayReference)
+    case objectReference: ObjectReference => unbox(objectReference)
+    case value: ByteValue => ByteJdiProxy(this, value)
+    case value: ShortValue => ShortJdiProxy(this, value)
+    case value: IntegerValue => IntJdiProxy(this, value)
+    case value: FloatValue => FloatJdiProxy(this, value)
+    case value: DoubleValue => DoubleJdiProxy(this, value)
+    case value: CharValue => CharJdiProxy(this, value)
+    case value: BooleanValue => BooleanJdiProxy(this, value)
+    case value: LongValue => LongJdiProxy(this, value)
     case value: VoidValue => UnitJdiProxy(this)
 
     case v => throw new UnsupportedOperationException("not supported primitive class: " + v.getClass.getName)
   }
 
-  /**
-   * Creates a proxy for boxed primitive from value.
-   * See also [[org.scalaide.debug.internal.expression.proxies.primitives.BoxedJdiProxyCompanion]].
-   *
-   * @param value to proxy
-   * @param companion used for choosing right primitive type
-   */
-  final def fromPrimitiveValue[Primitive, Proxy <: BoxedJdiProxy[Primitive, Proxy]](value: Value,
-    companion: BoxedJdiProxyCompanion[Primitive, Proxy]): Proxy = {
+  /** Unboxes boxed primitives if needed. */
+  private def unbox(objectReference: ObjectReference): JdiProxy = {
+    val name = objectReference.`type`.name
 
-    val boxedClass = this.classByName(companion.boxedName)
+    def primitiveValue = {
+      import TypeNames._
+      val unboxedName = convert(name, from = JavaBoxed, to = JavaPrimitive).get
+      val method = methodOn(objectReference.referenceType, unboxedName + "Value", arity = 0)
+      objectReference.invokeMethod(currentThread(), method, Seq())
+    }
 
-    val boxingMethod = boxedClass
-      .methodsByName("valueOf")
-      .filter(_.argumentTypeNames().toSeq == Seq(companion.unboxedName))
-      .head
-
-    val boxedValue: ObjectReference =
-      boxedClass.invokeMethod(this.currentThread, boxingMethod, List(value)).asInstanceOf[ObjectReference]
-
-    companion.apply(this, boxedValue)
+    name match {
+      case Java.boxed.Boolean => BooleanJdiProxy(this, primitiveValue.asInstanceOf[BooleanValue])
+      case Java.boxed.Byte => ByteJdiProxy(this, primitiveValue.asInstanceOf[ByteValue])
+      case Java.boxed.Short => ShortJdiProxy(this, primitiveValue.asInstanceOf[ShortValue])
+      case Java.boxed.Integer => IntJdiProxy(this, primitiveValue.asInstanceOf[IntegerValue])
+      case Java.boxed.Double => DoubleJdiProxy(this, primitiveValue.asInstanceOf[DoubleValue])
+      case Java.boxed.Float => FloatJdiProxy(this, primitiveValue.asInstanceOf[FloatValue])
+      case Java.boxed.Character => CharJdiProxy(this, primitiveValue.asInstanceOf[CharValue])
+      case Java.boxed.Long => LongJdiProxy(this, primitiveValue.asInstanceOf[LongValue])
+      case other => ObjectJdiProxy(this, objectReference)
+    }
   }
 
   /**
@@ -168,13 +157,12 @@ private[context] trait Proxyfier {
    * WARNING - this method is used in reflective compilation.
    * If you change its name, package or behavior, make sure to change it also.
    */
-  final def thisObjectProxy(): JdiProxy = valueProxy(currentFrame().thisObject())
+  final def thisObjectProxy(): ObjectJdiProxy =
+    ObjectJdiProxy(this, currentFrame().thisObject())
 
   /**
    * Creates a proxy for given value (typed by user, not `com.sun.jdi.Value`).
    * Works for all Java boxed primitives and `java.lang.String`.
-   *
-   * Implementation uses `ValueProxifier` type class.
    *
    * WARNING - this method is used in reflective compilation.
    * If you change its name, package or behavior, make sure to change it also.
@@ -213,24 +201,11 @@ private[context] trait Proxyfier {
    * @param name - name of value
    * @throws NoSuchFieldError if field is not found.
    */
-  final def proxyForField(proxy: JdiProxy, name: String): JdiProxy = {
-    val underlying = proxy.__underlying
-
-    def noSuchFieldError = s"Object of type ${underlying.referenceType()} has no field named $name"
-    val field = Option(underlying.referenceType().fieldByName(name))
+  final def proxyForField(proxy: ObjectJdiProxy, name: String): JdiProxy = {
+    def noSuchFieldError = s"Object of type ${proxy.__type} has no field named $name"
+    val field = Option(proxy.__type.fieldByName(name))
       .getOrElse(throw new NoSuchFieldError(noSuchFieldError))
-    valueProxy(underlying.getValue(field))
+    valueProxy(proxy.__value.getValue(field))
   }
 
-  /** Maps java types to corresponding proxies */
-  private val javaBoxedMap = Map(
-    Java.boxed.String -> StringJdiProxy,
-    Java.boxed.Boolean -> BooleanJdiProxy,
-    Java.boxed.Byte -> ByteJdiProxy,
-    Java.boxed.Short -> ShortJdiProxy,
-    Java.boxed.Integer -> IntJdiProxy,
-    Java.boxed.Double -> DoubleJdiProxy,
-    Java.boxed.Float -> FloatJdiProxy,
-    Java.boxed.Character -> CharJdiProxy,
-    Java.boxed.Long -> LongJdiProxy)
 }

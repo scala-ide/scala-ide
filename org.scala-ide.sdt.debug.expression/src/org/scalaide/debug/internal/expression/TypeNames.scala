@@ -20,18 +20,19 @@ object TypeNames {
   def arraySignatureToName(javaArrayTpe: String): String =
     TypeImpl.arraySignatureToName(javaArrayTpe)
 
-  case class Primitive(java: String, scala: String, javaBoxed: String)
+  case class Primitive(java: String, scala: String, javaBoxed: String, scalaRich: String)
 
-  private val primitives = Seq(
-    Primitive(Java.primitives.boolean, Scala.primitives.Boolean, Java.boxed.Boolean),
-    Primitive(Java.primitives.byte, Scala.primitives.Byte, Java.boxed.Byte),
-    Primitive(Java.primitives.char, Scala.primitives.Char, Java.boxed.Character),
-    Primitive(Java.primitives.double, Scala.primitives.Double, Java.boxed.Double),
-    Primitive(Java.primitives.float, Scala.primitives.Float, Java.boxed.Float),
-    Primitive(Java.primitives.int, Scala.primitives.Int, Java.boxed.Integer),
-    Primitive(Java.primitives.long, Scala.primitives.Long, Java.boxed.Long),
-    Primitive(Java.primitives.short, Scala.primitives.Short, Java.boxed.Short),
-    Primitive(Java.primitives.void, Scala.unitType, Java.boxed.Void))
+  val Boolean = Primitive(Java.primitives.boolean, Scala.primitives.Boolean, Java.boxed.Boolean, Scala.rich.Boolean)
+  val Byte = Primitive(Java.primitives.byte, Scala.primitives.Byte, Java.boxed.Byte, Scala.rich.Byte)
+  val Char = Primitive(Java.primitives.char, Scala.primitives.Char, Java.boxed.Character, Scala.rich.Char)
+  val Double = Primitive(Java.primitives.double, Scala.primitives.Double, Java.boxed.Double, Scala.rich.Double)
+  val Float = Primitive(Java.primitives.float, Scala.primitives.Float, Java.boxed.Float, Scala.rich.Float)
+  val Int = Primitive(Java.primitives.int, Scala.primitives.Int, Java.boxed.Integer, Scala.rich.Int)
+  val Long = Primitive(Java.primitives.long, Scala.primitives.Long, Java.boxed.Long, Scala.rich.Long)
+  val Short = Primitive(Java.primitives.short, Scala.primitives.Short, Java.boxed.Short, Scala.rich.Short)
+  val Unit = Primitive(Java.primitives.void, Scala.unitType, Java.boxed.Void, "n/a")
+
+  private val primitives: Seq[Primitive] = Seq(Boolean, Byte, Char, Double, Float, Int, Long, Short, Unit)
 
   type Convert = Primitive => String
   val JavaPrimitive: Convert = _.java

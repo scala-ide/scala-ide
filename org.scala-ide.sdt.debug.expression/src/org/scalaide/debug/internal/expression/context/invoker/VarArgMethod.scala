@@ -6,6 +6,7 @@ package context.invoker
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.Value
@@ -33,7 +34,12 @@ trait VarArgSupport {
 
     proxies.foldRight(emptyListRef) {
       (proxy, current) =>
-        val args = List(proxy.__underlying, canBuildFrom)
+        // always box arguments to pack in sequence
+        val value = proxy match {
+          case primitive: PrimitiveJdiProxy[_, _, _] => primitive.boxed
+          case other => other.__value
+        }
+        val args = List(value, canBuildFrom)
         current.invokeMethod(context.currentThread(), addMethod, args).asInstanceOf[ObjectReference]
     }
   }
