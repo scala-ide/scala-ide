@@ -18,13 +18,13 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
   def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.String)
 
   @Test
-  def toStringWithoutParentheses(): Unit = disableOnJava8 { eval("int.toString", int, Java.String) }
+  def toStringWithoutParentheses(): Unit = eval("int.toString", int, Java.String)
 
   @Test
-  def toStringOnObject(): Unit = disableOnJava8 { eval("list.toString", list, Java.String) }
+  def toStringOnObject(): Unit = eval("list.toString", list, Java.String)
 
   @Test
-  def toStringOnString(): Unit = disableOnJava8 { eval("string.toString", string, Java.String) }
+  def toStringOnString(): Unit = eval("string.toString", string, Java.String)
 
   @Test
   def equalsWithNull(): Unit = {
@@ -35,10 +35,10 @@ class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
   }
 
   @Test
-  def hashCodeWithoutParens(): Unit = disableOnJava8 { eval("int.hashCode", int, Java.primitives.int) }
+  def hashCodeWithoutParens(): Unit = eval("int.hashCode", int, Java.primitives.int)
 
   @Test
-  def hashCodeWithParens(): Unit = disableOnJava8 { eval("int.hashCode()", int, Java.primitives.int) }
+  def hashCodeWithParens(): Unit = eval("int.hashCode()", int, Java.primitives.int)
 
 }
 

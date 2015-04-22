@@ -18,7 +18,7 @@ class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
   def testChar(): Unit = eval("char", 'c', Java.primitives.char)
 
   @Test
-  def testDouble(): Unit = disableOnJava8 { eval("double", 1.1, Java.primitives.double) }
+  def testDouble(): Unit = eval("double", 1.1, Java.primitives.double)
 
   @Test
   def testFloat(): Unit = eval("float", 1.1f, Java.primitives.float)
@@ -27,16 +27,16 @@ class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
   def testBoolean(): Unit = eval("boolean", false, Java.primitives.boolean)
 
   @Test
-  def testString(): Unit = disableOnJava8 { eval("string", "Ala", Java.String) }
+  def testString(): Unit = eval("string", "Ala", Java.String)
 
   @Test
   def testLong(): Unit = eval("long", 1L, Java.primitives.long)
 
   @Test
-  def testStringMethod(): Unit = disableOnJava8 { eval("string.toLowerCase", "ala", Java.String) }
+  def testStringMethod(): Unit = eval("string.toLowerCase", "ala", Java.String)
 
   @Test
-  def testObjectList(): Unit = disableOnJava8 { eval("list", List("1", "2", "3"), Scala.::) }
+  def testObjectList(): Unit = eval("list", List("1", "2", "3"), Scala.::)
 
   @Test
   def testObjectListMethod(): Unit = eval("list.mkString", "123", Java.String)

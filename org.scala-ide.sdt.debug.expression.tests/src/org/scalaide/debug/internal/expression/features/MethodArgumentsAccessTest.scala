@@ -22,7 +22,7 @@ class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAcces
   def testDoubleArgument(): Unit = eval("double", 230.0, Java.primitives.double)
 
   @Test
-  def testListArgument(): Unit = disableOnJava8 { eval("list", List(5, 10, 15), Scala.::) }
+  def testListArgument(): Unit = eval("list", List(5, 10, 15), Scala.::)
 
 }
 

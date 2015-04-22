@@ -25,14 +25,12 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
   def testClassField: Unit = eval("implicitField[ClassField]", "ClassField", Java.String)
 
   @Test
-  def `scala collections implicits: List(1, 2).filter(_ > 1).head`(): Unit = disableOnJava8 {
+  def `scala collections implicits: List(1, 2).filter(_ > 1).head`(): Unit =
     eval("List(1, 2).filter(_ >= 2)", "List(2)", Scala.::)
-  }
 
   @Test
-  def `scala collections implicits: List(1 -> 2, 2 -> 3).toMap`(): Unit = disableOnJava8 {
+  def `scala collections implicits: List(1 -> 2, 2 -> 3).toMap`(): Unit =
     eval("List((1, 2), (2, 3)).toMap", "Map(1 -> 2, 2 -> 3)", "scala.collection.immutable.Map$Map2")
-  }
 
   def testWildcardClassImport: Unit = eval("implicitField[WildcardClassImport]", "WildcardClassImport", Java.String)
 

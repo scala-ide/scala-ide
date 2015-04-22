@@ -22,54 +22,43 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
     eval(" (x : Int) => int + x", "<function1>", Debugger.lambdaType)
 
   @Test
-  def `(x: Int) => int.toString.mkString `(): Unit = disableOnJava8 {
+  def `(x: Int) => int.toString.mkString `(): Unit =
     eval(" (x : Int) => x.toString.mkString ", "<function1>", Debugger.lambdaType)
-  }
 
   @Test
   def `(x: Int, y: Int) => x + y `(): Unit =
     eval(" (x: Int, y: Int) => x + y ", "<function2>", Debugger.lambdaType)
 
   @Test
-  def `((x: Int) => x.toString.mkString)(2) `(): Unit = disableOnJava8 {
+  def `((x: Int) => x.toString.mkString)(2) `(): Unit =
     eval(" ((x: Int) => x.toString.mkString)(2) ", "2", Java.String)
-  }
 
   @Test
-  def higherOrderFunctionWithMultipleParameterLists(): Unit = disableOnJava8 {
+  def higherOrderFunctionWithMultipleParameterLists(): Unit =
     eval("List(1, 2, 3).fold(0)(_ + _)", 6, Java.primitives.int)
-  }
 
   @Test
-  def simpleLambdaWithWrittenTypes(): Unit = disableOnJava8 {
+  def simpleLambdaWithWrittenTypes(): Unit =
     eval("list.map((_: Int) + 1)", list.map((_: Int) + 1), Scala.::)
-  }
 
   @Test
-  def `function and primitives: list.filter(_ >= 2) `(): Unit = disableOnJava8 {
+  def `function and primitives: list.filter(_ >= 2) `(): Unit =
     eval("list.filter(_ >= 2)", list.filter(_ >= 2), Scala.::)
-  }
 
   @Test
-  def `function and primitives: list.filter(1 <) `(): Unit = disableOnJava8 {
+  def `function and primitives: list.filter(1 <) `(): Unit =
     eval("list.filter(1 <)", list.filter(1 <), Scala.::)
-  }
 
   @Test
   def `libClass.perform(_ + 2) `(): Unit =
     eval("libClass.perform(_ + 2)", 3, Java.primitives.int)
 
   @Test
-  def `libClass.performByName(1 + 2) `(): Unit = disableOnJava8 {
+  def `libClass.performByName(1 + 2) `(): Unit =
     eval("libClass.performByName(1 + 2)", 4, Java.primitives.int)
-  }
 
   @Test
-  def `libClass.performTwice(libClass.incrementAndGet()) `(): Unit =
-    eval(" libClass.performTwice(libClass.incrementAndGet()) ", 5, Java.primitives.int)
-
-  @Test
-  def mappingOnFullType(): Unit = disableOnJava8 {
+  def mappingOnFullType(): Unit = {
     eval("multilist.map( (_: collection.immutable.List[Any]).toString)",
       multilist.map((_: collection.immutable.List[Any]).toString), Scala.::)
     eval("multilist.map( (list: collection.immutable.List[_]) => list.toString)",
