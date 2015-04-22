@@ -13,7 +13,6 @@
   <build>
     <plugins>
       <plugin>
-        <!-- copy the sbtrc jars, so they can be used in eclipse and embedded in the bundle -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
@@ -26,80 +25,76 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>com.typesafe.sbtrc</groupId>
-                  <artifactId>client</artifactId>
+                  <groupId>com.typesafe.sbt</groupId>
+                  <artifactId>client-all-2-11</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.typesafe.sbt</groupId>
+                  <artifactId>client-all-2-11</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-pickling_2.11</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-pickling_2.11</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-actor_2.10</artifactId>
+                  <artifactId>akka-actor_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>control</artifactId>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-actor_2.11</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>io</artifactId>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-osgi_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>collections</artifactId>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-osgi_2.11</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>interface</artifactId>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-stream-experimental_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-sbt</groupId>
-                  <artifactId>launcher-interface</artifactId>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-stream-experimental_2.11</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                 <groupId>org.scala-sbt</groupId>
-                 <artifactId>sbt-launch</artifactId>
+                  <groupId>org.reactivestreams</groupId>
+                  <artifactId>reactive-streams</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-json_2.10</artifactId>
+                  <groupId>org.reactivestreams</groupId>
+                  <artifactId>reactive-streams</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-iteratees_2.10</artifactId>
+                  <groupId>com.typesafe</groupId>
+                  <artifactId>config</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-functional_2.10</artifactId>
+                  <groupId>com.typesafe</groupId>
+                  <artifactId>config</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>com.typesafe.play</groupId>
-                  <artifactId>play-datacommons_2.10</artifactId>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-parser-combinators_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-stm</groupId>
-                  <artifactId>scala-stm_2.10</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>joda-time</groupId>
-                  <artifactId>joda-time</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.fasterxml.jackson.core</groupId>
-                  <artifactId>jackson-annotations</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.fasterxml.jackson.core</groupId>
-                  <artifactId>jackson-core</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.fasterxml.jackson.core</groupId>
-                  <artifactId>jackson-databind</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.netflix.rxjava</groupId>
-                  <artifactId>rxjava-core</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.netflix.rxjava</groupId>
-                  <artifactId>rxjava-scala</artifactId>
+                  <groupId>org.scala-lang.modules</groupId>
+                  <artifactId>scala-parser-combinators_2.11</artifactId>
+                  <classifier>sources</classifier>
                 </artifactItem>
               </artifactItems>
               <stripVersion>true</stripVersion>

@@ -1,27 +1,37 @@
 package org.scalaide.sbt.core
 
 import java.io.File
-import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IWorkspace
 import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.core.ClasspathEntry
 import org.eclipse.jdt.ui.PreferenceConstants
-import sbt.Attributed
-import org.eclipse.jdt.core.IClasspathEntry
+import org.scalaide.core.SdtConstants
+import org.scalaide.sbt.util.PicklingUtils._
+
+import sbt.protocol.Attributed
 
 object SbtProjectSupport {
 
-  def createWorkspaceProject(build: SbtBuild, projectName: String, builderName: String, monitor: IProgressMonitor): Future[IProject] = {
-
-    val progress = SubMonitor.convert(monitor, 100);
+  /**
+   * Creates a project with a given `projectName` in the workspace based on the
+   * information of a sbt build. `builderName` is set as the default builder of
+   * the project.
+   */
+  def createWorkspaceProject(build: SbtBuild, projectName: String, builderName: String, monitor: IProgressMonitor)(implicit ctx: ExecutionContext): Future[IProject] = {
+    val progress = SubMonitor.convert(monitor, 100)
 
     // create the project in the workspace
     progress.beginTask(s"$projectName: create project", 10)
@@ -42,7 +52,7 @@ object SbtProjectSupport {
       // add the Scala nature
       progress.beginTask(s"$projectName: finalize configuration", 20)
       val description = project.getDescription()
-      description.setNatureIds(Array("org.scala-ide.sdt.core.scalanature", "org.eclipse.jdt.core.javanature"))
+      description.setNatureIds(Array(SdtConstants.NatureId, JavaCore.NATURE_ID))
       project.setDescription(description, IResource.FORCE, monitor)
       // sync all data back to the file system
       progress.beginTask(s"$projectName: sync data", 20)
@@ -58,14 +68,14 @@ object SbtProjectSupport {
     res
   }
 
-  private def createJavaProjectDescription(build: SbtBuild, projectName: String, builderName: String, workspace: IWorkspace): Future[IProjectDescription] = {
+  private def createJavaProjectDescription(build: SbtBuild, projectName: String, builderName: String, workspace: IWorkspace)(implicit ctx: ExecutionContext): Future[IProjectDescription] = {
     for {
-      projectRoot <- build.getSettingValue[File](projectName, "baseDirectory")
+      projectRoot <- build.setting[File](projectName, "baseDirectory")
     } yield {
       val description = workspace.newProjectDescription(projectName)
 
       description.setLocation(new Path(projectRoot.getAbsolutePath()))
-      description.setNatureIds(Array("org.eclipse.jdt.core.javanature"))
+      description.setNatureIds(Array(JavaCore.NATURE_ID))
 
       val newBuilderCommand = description.newCommand;
       newBuilderCommand.setBuilderName(builderName);
@@ -75,37 +85,37 @@ object SbtProjectSupport {
     }
   }
 
-  private def configureClassPath(build: SbtBuild, projectName: String, project: IProject, monitor: IProgressMonitor): Future[Unit] = {
-    val compileSourceDirectoriesFuture = build.getSettingValue[Seq[File]](projectName, "sourceDirectories", Some("compile"))
-    val compileClassDirectioryFuture = build.getSettingValue[File](projectName, "classDirectory", Some("compile"))
-    val compileClasspathFuture = build.getSettingValue[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile"))
-    val testSourceDirectoriesFuture = build.getSettingValue[Seq[File]](projectName, "sourceDirectories", Some("test"))
-    val testClassDirectoryFuture = build.getSettingValue[File](projectName, "classDirectory", Some("test"))
-    val testClasspathFuture = build.getSettingValue[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test"))
+  private def configureClassPath(build: SbtBuild, projectName: String, project: IProject, monitor: IProgressMonitor)(implicit ctx: ExecutionContext): Future[Unit] = {
+    val srcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("compile"))
+    val clsDirs = build.setting[File](projectName, "classDirectory", Some("compile"))
+    val classpath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("compile"))
+    val testSrcDirs = build.setting[Seq[File]](projectName, "sourceDirectories", Some("test"))
+    val testClsDirs = build.setting[File](projectName, "classDirectory", Some("test"))
+    val testClasspath = build.setting[Seq[Attributed[File]]](projectName, "externalDependencyClasspath", Some("test"))
 
     for {
-      compileSourceDirectories <- compileSourceDirectoriesFuture
-      compileClassDirectory <- compileClassDirectioryFuture
-      compileClasspath <- compileClasspathFuture
-      testSourceDirectories <- testSourceDirectoriesFuture
-      testClassDirectory <- testClassDirectoryFuture
-      testClasspath <- testClasspathFuture
+      srcDir <- srcDirs
+      clsDir <- clsDirs
+      cp <- classpath
+      testSrcDir <- testSrcDirs
+      testClsDir <- testClsDirs
+      testCp <- testClasspath
     } yield {
       val javaProject = JavaCore.create(project)
 
-      val compileClassOutput = pathInProject(project, compileClassDirectory)
-      val sourcePaths = compileSourceDirectories.filter(_.exists).map { d =>
+      val compileClassOutput = pathInProject(project, clsDir)
+      val sourcePaths = srcDir.filter(_.exists).map { d =>
         JavaCore.newSourceEntry(pathInProject(project, d), ClasspathEntry.EXCLUDE_NONE, compileClassOutput)
       }
 
-      val testClassOutput = pathInProject(project, testClassDirectory)
-      val testSourcePaths = testSourceDirectories.filter(_.exists).map { d =>
+      val testClassOutput = pathInProject(project, testClsDir)
+      val testSourcePaths = testSrcDir.filter(_.exists).map { d =>
         JavaCore.newSourceEntry(pathInProject(project, d), ClasspathEntry.EXCLUDE_NONE, testClassOutput)
       }
 
-      val fullClasspath = (compileClasspath ++ testClasspath).distinct
+      val fullClasspath = (cp ++ testCp).distinct
 
-      val referencedJars = fullClasspath.flatMap(j => createEclipseClasspathEntry(j.data))
+      val referencedJars = fullClasspath.flatMap(cp ⇒ createEclipseClasspathEntry(cp.data))
 
       val classpath = sourcePaths ++ testSourcePaths ++ referencedJars ++ PreferenceConstants.getDefaultJRELibrary()
 
@@ -113,25 +123,24 @@ object SbtProjectSupport {
     }
   }
 
-  val ScalaLibraryRegex = ".*org\\.scala-lang/scala-library.*".r
-  val ScalaCompilerRegex = ".*org\\.scala-lang/scala-compiler.*".r
-  val ScalaReflectRegex = ".*org\\.scala-lang/scala-reflect.*".r
+  private val ScalaLibraryRegex = ".*org\\.scala-lang/scala-library.*".r
+  private val ScalaCompilerRegex = ".*org\\.scala-lang/scala-compiler.*".r
+  private val ScalaReflectRegex = ".*org\\.scala-lang/scala-reflect.*".r
 
-  def createEclipseClasspathEntry(file: File): Option[IClasspathEntry] = {
-    val path = file.getAbsolutePath()
-    path match {
+  private def createEclipseClasspathEntry(file: File): Option[IClasspathEntry] = {
+    file.getAbsolutePath() match {
       case ScalaLibraryRegex() =>
-        Some(JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_CONTAINER")))
+        Some(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
       case ScalaCompilerRegex() =>
-        Some(JavaCore.newContainerEntry(Path.fromPortableString("org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER")))
+        Some(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaCompilerContId)))
       case ScalaReflectRegex() =>
         None
-      case _ =>
+      case path =>
         Some(JavaCore.newLibraryEntry(Path.fromOSString(path), null, null))
     }
   }
 
-  private def pathInProject(project: IProject, file: File) = {
+  private def pathInProject(project: IProject, file: File): IPath = {
     project.getFullPath().append(Path.fromOSString(file.getAbsolutePath()).makeRelativeTo(project.getLocation()))
   }
 

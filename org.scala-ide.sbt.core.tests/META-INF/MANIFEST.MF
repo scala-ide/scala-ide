@@ -5,10 +5,9 @@ Bundle-SymbolicName: org.scala-ide.sbt.core.tests
 Bundle-Version: 0.1.0.qualifier
 Bundle-Vendor: Scala IDE
 Fragment-Host: org.scala-ide.sbt.core
-Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
- org.junit
-Import-Package: org.aspectj.weaver.loadtime.definition,
- org.scalaide.core.testsetup
+ org.junit,
+ org.aspectj.weaver
 Bundle-ClassPath: .

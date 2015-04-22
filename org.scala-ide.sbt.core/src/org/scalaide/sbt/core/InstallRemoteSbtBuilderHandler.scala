@@ -1,7 +1,5 @@
 package org.scalaide.sbt.core
 
-import org.scalaide.util.internal.Utils
-
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.core.resources.IProject
@@ -9,6 +7,7 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.viewers.TreeSelection
 import org.eclipse.ui.handlers.HandlerUtil
+import org.scalaide.util.eclipse.EclipseUtils
 
 class InstallRemoteSbtBuilderHandler extends AbstractHandler{
 
@@ -31,13 +30,12 @@ class InstallRemoteSbtBuilderHandler extends AbstractHandler{
     }
     null // from javadoc spec
   }
-  
-  private def switchBuilder(project: IProject) {
-     Utils tryExecute {
-      
+
+  private def switchBuilder(project: IProject): Unit = {
+    EclipseUtils.withSafeRunner("Couldn't switch builder") {
       val builderToRemove = "org.scala-ide.sdt.core.scalabuilder"
       val builderToAdd = "org.scala-ide.sbt.core.remoteBuilder"
-       
+
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(builderToRemove == _.getBuilderName)

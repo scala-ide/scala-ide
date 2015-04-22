@@ -21,7 +21,7 @@ class ProjectBuildImportWizard extends Wizard with IImportWizard {
 
   override def performFinish(): Boolean = mainPage.createProjects()
 
-  override def addPages() {
+  override def addPages(): Unit = {
     super.addPages()
     mainPage = new ProjectsImportPage(currentSelection)
     addPage(mainPage)

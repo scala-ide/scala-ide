@@ -2,15 +2,12 @@ package org.scalaide.sbt.ui.wizard
 
 import java.io.File
 import java.lang.reflect.InvocationTargetException
-
 import scala.collection._
-import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.concurrent.duration._
-
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.CoreException
@@ -54,8 +51,9 @@ import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin
 import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages
 import org.scalaide.sbt.core.SbtBuild
 import org.scalaide.sbt.core.SbtProjectSupport
-
 import sbt.protocol.ProjectReference
+import org.scalaide.sbt.core.SbtRemotePlugin
+import org.scalaide.core.internal.ScalaPlugin
 
 object ProjectsImportPage {
 
@@ -139,7 +137,6 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   private var directoryPathField: Combo = _
   private var browseDirectoriesButton: Button = _
   private var projectsList: CheckboxTreeViewer = _
-  private var copyCheckbox: Button = _
 
   override def createControl(parent: Composite): Unit = {
 
@@ -207,7 +204,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     val dialog = new DirectoryDialog(directoryPathField.getShell(), SWT.SHEET)
     dialog.setMessage(DataTransferMessages.WizardProjectsImportPage_SelectDialogTitle)
 
-    var dirName = directoryPathField.getText().trim()
+    val dirName = directoryPathField.getText().trim()
 
     if (dirName.isEmpty)
       dialog.setFilterPath(workbenchLocation.toOSString())
@@ -259,7 +256,8 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
       val element = event.getElement().asInstanceOf[ProjectRecord]
       if (element.hasConflicts)
         projectsList.setChecked(element, false)
-      model.selectedProjects = projectsList.getCheckedElements().asInstanceOf[Array[ProjectRecord]].to[Seq]
+      val checkedElems = projectsList.getCheckedElements()
+      model.selectedProjects = checkedElems.map(_.asInstanceOf[ProjectRecord])(collection.breakOut)
       setPageComplete(model.selectedProjects.nonEmpty)
     })
 
@@ -339,7 +337,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     setAllDisabled(composite)
   }
 
-  private def setAllDisabled(control: Control) {
+  private def setAllDisabled(control: Control): Unit = {
     control match {
       case composite: Composite =>
         composite.getChildren().foreach(setAllDisabled(_))
@@ -405,16 +403,15 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
   private def collectProjectsReferencesFromDirectory(directory: File, monitor: IProgressMonitor): Seq[ProjectRecord] = {
     if (!monitor.isCanceled()) {
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
-      val promise = Promise[Seq[ProjectReference]]
 
-      import scala.concurrent.ExecutionContext.Implicits.global
-
-      val build = SbtBuild.buildFor(directory)
-      val projects = SbtBuild.buildFor(directory).projects()
-      val projectRecords = projects.map {
-        _.map(new ProjectRecord(build, _))
+      val projectRecords = SbtBuild.buildFor(directory)(SbtRemotePlugin.system) map { build ⇒
+        val projects = build.projects()
+        val projectRecords = projects.map {
+          _.map(new ProjectRecord(build, _))
+        }
+        Await.result(projectRecords, Duration.Inf)
       }
-      Await.result(projectRecords, scala.concurrent.duration.Duration.Inf)
+      projectRecords.getOrElse(Seq())
     } else {
       Seq.empty
     }
@@ -437,7 +434,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
           monitor.beginTask("", selected.length)
           if (monitor.isCanceled()) throw new OperationCanceledException()
           val createdProjects = selected.map(r => SbtProjectSupport.createWorkspaceProject(r.build, r.ref.name, "org.scala-ide.sbt.core.remoteBuilder", monitor))
-          Await.result(Future.sequence(createdProjects), 20.seconds)
+          Await.result(Future.sequence(createdProjects), if (ScalaPlugin().noTimeoutMode) Duration.Inf else 20.seconds)
           ResourcesPlugin.getWorkspace().save(true, monitor)
         } finally monitor.done()
       }
@@ -458,18 +455,6 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     }
 
     true
-  }
-
-  private def addToWorkingSets(projects: immutable.Seq[IProject]): Unit = {
-    // TODO: make working set support working. sbt-11
-    //    lazy val workingSetManager = PlatformUI.getWorkbench().getWorkingSetManager()
-    //
-    //    for {
-    //      workingGroup <- model.workingSetGroup
-    //      selectedWorkingSets <- Option(workingGroup.getSelectedWorkingSets)
-    //      if selectedWorkingSets.nonEmpty
-    //      project <- projects
-    //    } workingSetManager.addToWorkingSets(project, selectedWorkingSets)
   }
 
 }

@@ -6,10 +6,12 @@ import org.eclipse.jface.viewers.CheckStateChangedEvent
 import org.eclipse.jface.viewers.ICheckStateListener
 
 object Implicits {
+  import scala.language.implicitConversions
+
   implicit def traverserEvent2Listener(f: TraverseEvent => Unit): TraverseListener = new TraverseListener {
     override def keyTraversed(e: TraverseEvent): Unit = f(e)
   }
-  
+
   implicit def checkStateChangedEvent2Listener(f: CheckStateChangedEvent => Unit): ICheckStateListener = new ICheckStateListener {
     override def checkStateChanged(e: CheckStateChangedEvent): Unit = f(e)
   }

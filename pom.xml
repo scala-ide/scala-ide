@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>plugin-profiles</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.9</version>
   </parent>
 
   <groupId>org.scala-ide</groupId>
@@ -19,114 +19,55 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>1.0-2ed540099de878afad149a1b86d395ab13f92f53</sbtrc.version>
-    <sbtrc.repo>http://download.scala-ide.org/sbt-integration/m2repo/</sbtrc.repo>
-    <akka.version>2.2.0</akka.version>
-    <config.version>1.0.0</config.version>
-    <sbt.version>0.13.2-M2</sbt.version>
-    <sbtlaunch.version>0.13.2-M2</sbtlaunch.version>
-    <play-lib.version>2.2.1</play-lib.version>
-    <scala-stm.version>0.7</scala-stm.version>
-    <joda-time.version>2.2</joda-time.version>
-    <jackson.version>2.2.2</jackson.version>
-    <rxjava.version>0.17.0-RC7</rxjava.version>
+    <sbtrc.version>0.3.4</sbtrc.version>
+    <pickling.version>0.10.0</pickling.version>
+    <akka.version>2.3.9</akka.version>
+    <akka.stream.version>1.0-M3</akka.stream.version>
+    <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
+    <config.version>1.2.1</config.version>
+    <parser.combinators.version>1.0.2</parser.combinators.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.sbtrc</groupId>
-      <artifactId>client</artifactId>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>client-all-2-11</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-pickling_2.11</artifactId>
+      <version>${pickling.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_2.10</artifactId>
+      <artifactId>akka-stream-experimental_2.11</artifactId>
+      <version>${akka.stream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.11</artifactId>
       <version>${akka.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>launcher-interface</artifactId>
-      <version>${sbt.version}</version>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-osgi_2.11</artifactId>
+      <version>${akka.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>control</artifactId>
-      <version>${sbt.version}</version>
+      <groupId>org.reactivestreams</groupId>
+      <artifactId>reactive-streams</artifactId>
+      <version>${reactive.stream.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>io</artifactId>
-      <version>${sbt.version}</version>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>${config.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>interface</artifactId>
-      <version>${sbt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>collections</artifactId>
-      <version>${sbt.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-sbt</groupId>
-      <artifactId>sbt-launch</artifactId>
-      <version>${sbtlaunch.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.play</groupId>
-      <artifactId>play-json_2.10</artifactId>
-      <version>${play-lib.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.play</groupId>
-      <artifactId>play-iteratees_2.10</artifactId>
-      <version>${play-lib.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.play</groupId>
-      <artifactId>play-functional_2.10</artifactId>
-      <version>${play-lib.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.play</groupId>
-      <artifactId>play-datacommons_2.10</artifactId>
-      <version>${play-lib.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-stm</groupId>
-      <artifactId>scala-stm_2.10</artifactId>
-      <version>${scala-stm.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>${joda-time.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-core</artifactId>
-      <version>${rxjava.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.netflix.rxjava</groupId>
-      <artifactId>rxjava-scala</artifactId>
-      <version>${rxjava.version}</version>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-parser-combinators_2.11</artifactId>
+      <version>${parser.combinators.version}</version>
     </dependency>
   </dependencies>
 
@@ -138,42 +79,58 @@
     <module>org.scala-ide.sbt.update-site</module>
   </modules>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- configuration of the scala compiler -->
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>${scala.plugin.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <args>
+              <arg>-deprecation</arg>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-Xlint</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Xfatal-warnings</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
   <repositories>
     <repository>
-      <id>sbtrc</id>
-      <name>repository with the sbtrc binaries</name>
-      <url>${sbtrc.repo}</url>
+      <id>typesafe releases</id>
+      <name>typesafe releases</name>
+      <url>http://repo.typesafe.com/typesafe/releases</url>
       <releases>
         <updatePolicy>always</updatePolicy>
       </releases>
     </repository>
     <repository>
-      <id>play</id>
-      <name>play repository</name>
+      <id>typesafe maven releases</id>
+      <name>typesafe maven releases</name>
       <url>http://private-repo.typesafe.com/typesafe/maven-releases</url>
     </repository>
-  </repositories>
-</project>
-    <dependency>
-      <groupId>org.scala-stm</groupId>
-      <artifactId>scala-stm</artifactId>
-      <version>${scala-stm.version}</version>
-    </dependency>
-  </dependencies>
-
-  <modules>
-    <module>org.scala-ide.sbt.core</module>
-    <module>org.scala-ide.sbt.core.tests</module>
-    <module>org.scala-ide.sbt.feature</module>
-    <module>org.scala-ide.sbt.source.feature</module>
-    <module>org.scala-ide.sbt.update-site</module>
-  </modules>
-
-  <repositories>
     <repository>
-      <id>sbtrc</id>
-      <name>repository with the sbtrc binaries</name>
-      <url>${sbtrc.repo}</url>
+      <id>sonatype releases</id>
+      <name>sonatype releases</name>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
     </repository>
   </repositories>
 </project>
