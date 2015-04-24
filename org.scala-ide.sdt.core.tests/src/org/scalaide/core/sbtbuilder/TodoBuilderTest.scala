@@ -1,23 +1,17 @@
 package org.scalaide.core
 package sbtbuilder
 
-import org.junit.Test
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.jdt.core.IJavaModelMarker
-import org.eclipse.core.resources.IResource
-import org.junit.Assert
 import org.eclipse.core.resources.IMarker
-import testsetup._
-import org.eclipse.core.resources.IFile
-import org.junit.Ignore
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.Assert._
 import org.junit.Before
-import org.mockito.Matchers.any
-import org.eclipse.jdt.core.IProblemRequestor
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.util.matching.Regex
+import org.junit.Test
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.testsetup.CustomAssertion
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.TestProjectSetup
 
 object TodoBuilderTest extends TestProjectSetup("todobuilder") with CustomAssertion
 
@@ -26,29 +20,28 @@ class TodoBuilderTest {
   import TodoBuilderTest._
 
   @Before
-  def setupWorkspace() {
+  def setupWorkspace(): Unit =
     SDTTestUtils.enableAutoBuild(false)
+
+  private def markers(inFile: String): Seq[IMarker] =
+    compilationUnit(inFile)
+      .getUnderlyingResource()
+      .findMarkers(SdtConstants.TaskMarkerId, false, IResource.DEPTH_INFINITE)
+
+  private def checkTasks(inFile: String, expectedMsgs: String*): Unit = {
+    val markerMsgs = markers(inFile).map(_.getAttribute(IMarker.MESSAGE).toString)
+    expectedMsgs.foreach { expectedMsg =>
+      assertTrue(s"'$expectedMsg' not found in: ${markerMsgs.mkString(", ")}", markerMsgs.contains(expectedMsg))
+    }
   }
 
-  @Test def testTODOSearch() {
-    println("building " + project)
-    project.clean(new NullProgressMonitor())
+  private def cleanBuild(): Unit = {
+    project.clean(new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
-
-    val units = compilationUnits("test/foo/ClassA.scala")
-    val allTasks = units.map { unit =>
-      val tasks = unit.getUnderlyingResource().findMarkers(SdtConstants.TaskMarkerId, false, IResource.DEPTH_INFINITE)
-      println("tasks: %s: %s".format(unit, tasks.toList))
-      tasks
-    }.flatten
-
-    Assert.assertTrue("No valid TODO was found", allTasks.exists(p => similarMessage(p.getAttribute(IMarker.MESSAGE).toString)(expectedTODO)))
   }
 
-  /** Returns true if the expected regular expression matches the given message. */
-  private def similarMessage(msg: String)(expected: String): Boolean = {
-    msg.matches(expected)
+  @Test def todoInScalaFile(): Unit = {
+    cleanBuild()
+    checkTasks(inFile = "test/foo/ClassA.scala", expectedMsgs = "TODO todo in Scala file", "FIXME fixme in Scala file")
   }
-
-  lazy val expectedTODO = "TODO : this works"
 }
