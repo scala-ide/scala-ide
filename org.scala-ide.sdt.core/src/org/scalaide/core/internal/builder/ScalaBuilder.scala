@@ -125,6 +125,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     } else {
       logger.info("Building project " + project)
       project.build(addedOrUpdated, removed, subMonitor)
+      TaskManager.updateTasks(project, addedOrUpdated)
     }
 
     val depends = project.transitiveDependencies
