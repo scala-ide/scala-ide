@@ -5,6 +5,7 @@ object MainObject extends App {
     case class NestedClass(intFromCtor: Int) {
       def classMethod = {
         val classLocalInt = 7
+        val classLocalIntReceivedFromJava = JavaClass.javaClassMethod
         100 + intFromCtor // change this with manual drop to frame
       }
     }
@@ -20,7 +21,7 @@ object MainObject extends App {
       recursiveMethodLocalInt
   }
 
-  def mainMethod() : Unit = {
+  def mainMethod(): Unit = {
     val unused = "unused string"
     recursiveMethod(2) // change this to have frames dropped automatically
   }
