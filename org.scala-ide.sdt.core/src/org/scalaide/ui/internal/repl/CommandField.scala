@@ -3,11 +3,13 @@
  */
 package org.scalaide.ui.internal.repl
 
-import org.eclipse.swt.custom.StyledText
-import org.eclipse.swt.widgets.Composite
+import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
-import org.eclipse.swt.graphics.Color
+import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.custom.VerifyKeyListener
+import org.eclipse.swt.events.FocusEvent
+import org.eclipse.swt.events.FocusListener
+import org.eclipse.swt.widgets.Composite
 
 object CommandField {
   /** Common interface for command evaluator.*/
@@ -59,7 +61,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       history += expr
       // every time a new command is pushed in the history, the
       // currently tracked history position (used for history navigation
-      // via ARROW_UP/DOWN keys) is resetted.
+      // via ARROW_UP/DOWN keys) has been reset.
       resetHistoryPos()
     }
 
@@ -133,15 +135,12 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
    *                    }
    */
   private class FieldHelpText(textWidget: StyledText, helpText: String) {
-    private lazy val codeBgColor = new Color(parent.getDisplay, 150, 150, 150) // gray
-    private val defaultBgColor = textWidget.getForeground()
+    private lazy val codeFgColor = JFaceResources.getColorRegistry.get(InterpreterConsoleView.ForegroundColor)
 
     private var helpTextDisplayed = false
 
     maybeShowHelpText()
 
-    import org.eclipse.swt.events.FocusListener
-    import org.eclipse.swt.events.FocusEvent
     textWidget.addFocusListener(new FocusListener {
       override def focusGained(e: FocusEvent): Unit = hideHelpText()
 
@@ -153,7 +152,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     def hideHelpText() {
       if (helpTextDisplayed) {
         helpTextDisplayed = false
-        textWidget.setForeground(defaultBgColor)
+        textWidget.setForeground(codeFgColor)
         textWidget.setText("")
       }
     }
@@ -161,14 +160,9 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     def maybeShowHelpText() {
       if (textWidget.getText().isEmpty) {
         helpTextDisplayed = true
-        textWidget.setForeground(codeBgColor)
+        textWidget.setForeground(codeFgColor)
         textWidget.setText(helpText)
       }
-    }
-
-    def dispose(): Unit = {
-      codeBgColor.dispose()
-      defaultBgColor.dispose()
     }
   }
 
@@ -196,9 +190,4 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   def maybeShowHelpText(): Unit = fieldHelp.maybeShowHelpText()
 
   def isHelpTextDisplayed: Boolean = fieldHelp.isHelpTextDisplayed
-
-  override def dispose() {
-    fieldHelp.dispose()
-    super.dispose()
-  }
 }
