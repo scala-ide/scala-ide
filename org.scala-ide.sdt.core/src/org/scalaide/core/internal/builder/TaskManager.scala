@@ -8,8 +8,10 @@ import java.io.InputStream
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.SourceFile
 
+import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
+import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.compiler.IProblem
@@ -24,6 +26,15 @@ import scalariform.lexer.ScalaLexer
 object TaskManager {
 
   private case class Comment(msg: String, pos: Position)
+
+  /**
+   * Removes all task markers from this file.
+   */
+  def clearTasks(file: IFile) = try {
+    file.deleteMarkers(SdtConstants.TaskMarkerId, true, IResource.DEPTH_INFINITE)
+  } catch {
+    case _: ResourceException => // Ignore
+  }
 
   /**
    * Updates all tasks (`TODO`s and `FIXME`s) for given project in given files.

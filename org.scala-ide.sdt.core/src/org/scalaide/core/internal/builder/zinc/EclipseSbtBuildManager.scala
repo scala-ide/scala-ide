@@ -126,7 +126,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
   }
 
   private def clearTasks(included: scala.collection.Set[IFile]) {
-    included foreach { FileUtils.clearTasks(_, monitor) }
+    included foreach TaskManager.clearTasks
   }
 
   private def runCompiler(sources: Seq[File]) {
@@ -231,7 +231,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings0: Settings) ex
       if (phaseName == "parser") {
         val file = FileUtils.resourceForPath(unitIPath, project.underlying.getFullPath)
         file.foreach { f =>
-          FileUtils.clearTasks(f, null)
+          TaskManager.clearTasks(f)
           compiledFiles += f
         }
       }
