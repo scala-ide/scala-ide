@@ -60,16 +60,6 @@ object FileUtils {
     }
 
   /**
-   * Removes all task markers from this file.
-   */
-  def clearTasks(file: IFile, monitor: IProgressMonitor) =
-    try {
-      file.deleteMarkers(SdtConstants.TaskMarkerId, true, IResource.DEPTH_INFINITE)
-    } catch {
-      case _: ResourceException =>
-    }
-
-  /**
    * Returns all problem markers for a given file.
    */
   def findBuildErrors(file: IResource): Seq[IMarker] =

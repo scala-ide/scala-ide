@@ -228,7 +228,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     if (intp != null) {
       client.doing(e)
       val r = intp.interpret(e)
-      val o = b.toString ; b.reset()
+      val o = b.toString.trim ; b.reset()
       client.done(e, r, o)
     }
   }
@@ -249,7 +249,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
       try work(r, b)
       catch { case t: Throwable =>
         try {
-          val o = b.toString ; b.reset()
+          val o = b.toString.trim ; b.reset()
           client.failed(r, t, o)
           term(r, b)
         } finally

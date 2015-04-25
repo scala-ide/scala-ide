@@ -45,6 +45,9 @@ object ScalaDebugTestSession {
     debugEventListener
   }
 
+  def removeDebugEventListener(debugEventListener: IDebugEventSetListener): Unit =
+    DebugPlugin.getDefault.removeDebugEventListener(debugEventListener)
+
   def apply(launchConfiguration: ILaunchConfiguration): ScalaDebugTestSession = {
     val session = new ScalaDebugTestSession(launchConfiguration)
     session.skipAllBreakpoints(false)
@@ -132,6 +135,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
 
   // ----
 
+  @volatile
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
@@ -272,15 +276,15 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
 
-  def resumetoSuspension() {
-    assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
+  def resumeToSuspension() {
+    assertEquals("Bad state before resumeToSuspension", SUSPENDED, state)
 
     setActionRequested
     currentStackFrame.resume
 
     waitUntilSuspended
 
-    assertEquals("Bad state after resumeToCompletion", SUSPENDED, state)
+    assertEquals("Bad state after resumeToSuspension", SUSPENDED, state)
   }
 
   def disconnect() {
@@ -342,9 +346,17 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   def checkStackFrame(typeName: String, methodFullSignature: String, line: Int) {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)
 
-    assertEquals("Wrong typeName", typeName, currentStackFrame.stackFrame.location.declaringType.name)
-    assertEquals("Wrong method/line" + currentStackFrame.getLineNumber, methodFullSignature, currentStackFrame.stackFrame.location.method.name + currentStackFrame.stackFrame.location.method.signature)
-    assertEquals("Wrong line", line, currentStackFrame.getLineNumber)
+    val currentLocation = currentStackFrame.stackFrame.location
+    val currentTypeName = currentLocation.declaringType.name
+    val currentMethodFullSignature = currentLocation.method.name + currentLocation.method.signature
+    val currentLineNumber = currentStackFrame.getLineNumber
+
+    def frameInfo(typeName: String, methodSignature: String, lineNumber: Int) =
+      s"type: $typeName, method: $methodSignature, line: $lineNumber"
+
+    val currentFrameInfo = frameInfo(currentTypeName, currentMethodFullSignature, currentLineNumber)
+    val expectedFrameInfo = frameInfo(typeName, methodFullSignature, line)
+    assertEquals("Wrong frame", expectedFrameInfo, currentFrameInfo)
   }
 
   // access data in the current stackframe
@@ -355,7 +367,13 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   def getLocalVariable(name: String): ScalaValue = {
     assertEquals("Bad state before getLocalVariable", SUSPENDED, state)
 
-    currentStackFrame.getVariables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
+    val variables = currentStackFrame.getVariables
+    val variable = variables.find(_.getName == name).getOrElse {
+      val availableVariables = variables.map(_.getName).mkString(", ")
+      throw new AssertionError(s"Variable with name $name not found. Available variables: $availableVariables")
+    }
+
+    variable.getValue.asInstanceOf[ScalaValue]
   }
 
   def skipAllBreakpoints(enabled: Boolean): Unit =

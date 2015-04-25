@@ -12,9 +12,8 @@ import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.console.IConsoleFactory
 import org.scalaide.core.internal.repl.InterpreterLaunchConstants
 
-
 /**
- * This is the factory defintion that supplies a scala interpreter facotry
+ * This is the factory definition that supplies a Scala interpreter factory.
  */
 class Factory extends IConsoleFactory {
   override def openConsole() = {

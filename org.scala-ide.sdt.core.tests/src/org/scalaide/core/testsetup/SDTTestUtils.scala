@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.TimeoutException
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -254,13 +255,15 @@ object SDTTestUtils extends HasLogger {
   }
 
   /** Wait until `pred` is true, or timeout (in ms). */
-  def waitUntil(timeout: Int)(pred: => Boolean): Unit = {
+  def waitUntil(timeout: Int, withTimeoutException: Boolean = false)(pred: => Boolean): Unit = {
     val start = System.currentTimeMillis()
     var cond = pred
     while ((System.currentTimeMillis() < start + timeout) && !cond) {
       Thread.sleep(100)
       cond = pred
     }
+    if (!cond && withTimeoutException)
+      throw new TimeoutException(s"Predicate is not fulfiled after declared time limit ($timeout millis).")
   }
 
   /**

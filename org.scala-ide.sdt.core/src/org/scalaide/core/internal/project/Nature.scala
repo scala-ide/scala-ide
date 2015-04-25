@@ -57,7 +57,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(JavaCore.BUILDER_ID), SdtConstants.BuilderId)
 
-    EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath.") {
+    EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath") {
       Nature.addScalaLibAndSave(getProject)
     }
   }
@@ -68,7 +68,7 @@ class Nature extends IProjectNature {
 
     updateBuilders(project, List(SdtConstants.BuilderId), JavaCore.BUILDER_ID)
 
-    EclipseUtils.withSafeRunner("Error occurred while trying to remove Scala library from classpath.") {
+    EclipseUtils.withSafeRunner("Error occurred while trying to remove Scala library from classpath") {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
@@ -76,7 +76,7 @@ class Nature extends IProjectNature {
   }
 
   private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    EclipseUtils.withSafeRunner(s"Error occurred while trying to update builder of project '$project'.") {
+    EclipseUtils.withSafeRunner(s"Error occurred while trying to update builder of project '$project'") {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

@@ -52,6 +52,9 @@ private object BreakpointSupportActor {
   // specific events
   case class Changed(delta: IMarkerDelta)
 
+  /** The message used to reenable breakpoint requests managed by the given actor. */
+  case object ReenableBreakpointAfterHcr
+
   val eventHandlerMappings = EventHandlerMapping.mappings
 
   /**
@@ -64,7 +67,7 @@ private object BreakpointSupportActor {
   }
 
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
-    val typeName= breakpoint.typeName
+    val typeName = breakpoint.typeName
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
@@ -174,6 +177,8 @@ private class BreakpointSupportActor private (
       reply(None)
     case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
       reply(requestsEnabled)
+    case BreakpointSupportActor.ReenableBreakpointAfterHcr =>
+      reenableBreakpointRequestsAfterHcr()
   }
 
   /**
@@ -218,5 +223,18 @@ private class BreakpointSupportActor private (
    */
   private def breakpointHit(location: Location, thread: ThreadReference) {
     debugTarget.threadSuspended(thread, DebugEvent.BREAKPOINT)
+  }
+
+  /**
+   * After hcr often we don't get events related to breakpoint requests.
+   * Reenabling them seems to help in most of cases.
+   */
+  private def reenableBreakpointRequestsAfterHcr(): Unit = {
+    breakpointRequests.foreach { breakpointRequest =>
+      if (breakpointRequest.isEnabled()) {
+        breakpointRequest.disable()
+        breakpointRequest.enable()
+      }
+    }
   }
 }

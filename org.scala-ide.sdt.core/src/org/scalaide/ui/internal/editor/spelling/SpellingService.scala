@@ -40,7 +40,7 @@ final class SpellingService(store: IPreferenceStore, engine: ISpellingEngine) ex
       collector.beginCollecting()
 
       if (store.getBoolean(ESpellingService.PREFERENCE_SPELLING_ENABLED)) {
-        EclipseUtils.withSafeRunner("Error occurred while executing spelling engine.") {
+        EclipseUtils.withSafeRunner("Error occurred while executing spelling engine") {
           engine.check(document, regions, context, collector, monitor)
         }
       }

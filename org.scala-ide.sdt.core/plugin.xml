@@ -1847,6 +1847,42 @@
           The font used for all Scala hovers.
        </description>
     </fontDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterForeground"
+          label="Interpreter foreground color"
+          value="60,0,128">
+       <description>
+          The color used for the Scala Interpreter foreground.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterBackground"
+          label="Interpreter background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter background.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterErrorForeground"
+          label="Interpreter error foreground color"
+          value="128,0,64">
+       <description>
+          The color used for the Scala Interpreter foreground to display errors.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.lineNumberBackground"
+          label="Interpreter line number background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter line number background.
+       </description>
+    </colorDefinition>
  </extension>
  <extension
        point="org.scala-ide.sdt.core.semanticHighlightingParticipants">

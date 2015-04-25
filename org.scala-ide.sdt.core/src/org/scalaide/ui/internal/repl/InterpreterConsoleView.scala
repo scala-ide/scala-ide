@@ -21,6 +21,13 @@ import org.eclipse.ui.part.ViewPart
 
 import scalariform.lexer.ScalaLexer
 
+object InterpreterConsoleView {
+  val BackgroundColor = "org.scalaide.ui.color.interpreterBackground"
+  val ForegroundColor = "org.scalaide.ui.color.interpreterForeground"
+  val ErrorForegroundColor = "org.scalaide.ui.color.interpreterErrorForeground"
+  val LineNumberBackgroundColor = "org.scalaide.ui.color.lineNumberBackground"
+}
+
 /**
  * A split horizontal view for enter scala commands and displaying REPL output.
  *
@@ -28,6 +35,8 @@ import scalariform.lexer.ScalaLexer
  * and the bottom view being an instance of `CommandField` for entering scala expressions.
  */
 trait InterpreterConsoleView extends ViewPart {
+  import InterpreterConsoleView._
+
   protected var interpreterPanel: SashForm = null
   protected var resultsTextWidget: StyledTextWithSimpleMenu = null
   protected var inputCommandField: CommandFieldWithLineNumbersAndMenu = null
@@ -56,9 +65,11 @@ trait InterpreterConsoleView extends ViewPart {
    */
   protected def createInterpreterPartControl(parent: Composite): Unit = {
     display = parent.getDisplay()
-    codeBgColor = new Color(display, 230, 230, 230) // light gray
-    codeFgColor = new Color(display, 60, 0, 128) // eggplant
-    errorFgColor = new Color(display, 128, 0, 64) // maroon
+
+    val reg = JFaceResources.getColorRegistry
+    codeBgColor = reg.get(BackgroundColor)
+    codeFgColor = reg.get(ForegroundColor)
+    errorFgColor = reg.get(ErrorForegroundColor)
 
     interpreterPanel = new SashForm(parent, SWT.VERTICAL)
     interpreterPanel.setLayout(new FillLayout)
@@ -69,6 +80,7 @@ trait InterpreterConsoleView extends ViewPart {
     resultsTextWidget.setEditable(false)
     resultsTextWidget.setCaret(new Caret(resultsTextWidget, SWT.NONE))
     resultsTextWidget.setAlwaysShowScrollBars(false)
+    resultsTextWidget.setBackground(reg.get(BackgroundColor))
 
     val editorFont = JFaceResources.getFont(PreferenceConstants.EDITOR_TEXT_FONT)
     resultsTextWidget.setFont(editorFont) // java editor font
@@ -95,28 +107,27 @@ trait InterpreterConsoleView extends ViewPart {
     appendText("\n", codeFgColor, codeBgColor, SWT.NORMAL, insertNewline = false)
   }
 
-  protected def displayOutput(text: String) = displayPadded(null) {
-    appendText(text, null, null, SWT.NORMAL)
+  protected def displayOutput(text: String) = displayPadded(codeBgColor) {
+    appendText(text + "\n", codeFgColor, codeBgColor, SWT.NORMAL)
   }
 
-  protected def displayError(text: String) = displayPadded(null) {
-    appendText(text, errorFgColor, null, SWT.NORMAL)
+  protected def displayError(text: String) = displayPadded(codeBgColor) {
+    appendText(text + "\n", errorFgColor, codeBgColor, SWT.NORMAL)
   }
 
-  protected def displayPadded(bgColor: Color)(display: => Unit) {
-    insertSpacing(bgColor, true)
+  protected def displayPadded(bgColor: Color)(display: => Unit) = {
+    insertSpacing(bgColor)
     display
-    insertSpacing(bgColor, false)
   }
 
-  private def insertSpacing(bgColor: Color, isTop: Boolean) {
+  private def insertSpacing(bgColor: Color) = {
     val fontData = resultsTextWidget.getFont().getFontData()
     fontData.foreach(_.setHeight(4))
     val font = new Font(display, fontData)
-    appendText(if (isTop) "\n " else " \n", null, bgColor, SWT.NORMAL, font = font)
+    appendText("\n ", null, bgColor, SWT.NORMAL, font = font)
   }
 
-  protected def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, font: Font = null, insertNewline: Boolean = false) {
+  protected def appendText(text: String, fgColor: Color, bgColor: Color, fontStyle: Int, font: Font = null, insertNewline: Boolean = false) = {
     val lastOffset = resultsTextWidget.getCharCount
     val oldLastLine = resultsTextWidget.getLineCount
 
@@ -139,9 +150,6 @@ trait InterpreterConsoleView extends ViewPart {
   }
 
   override def dispose(): Unit = {
-    if (codeBgColor != null) codeBgColor.dispose()
-    if (codeFgColor != null) codeFgColor.dispose()
-    if (errorFgColor != null) errorFgColor.dispose()
     if (interpreterPanel != null) interpreterPanel.dispose()
     if (inputCommandField != null) inputCommandField.dispose()
     if (resultsTextWidget != null) resultsTextWidget.dispose()

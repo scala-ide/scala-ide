@@ -6,6 +6,7 @@ package org.scalaide.debug.internal
 import org.junit.runners.Suite
 import org.junit.runner.RunWith
 import org.scalaide.debug.internal.editor.StackFrameVariableOfTreeFinderTest
+import org.scalaide.debug.internal.hcr.HotCodeReplaceTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
 import org.scalaide.debug.internal.model.ScalaThreadTest
 import org.scalaide.debug.internal.model.ScalaStackFrameTest
@@ -36,6 +37,7 @@ import org.scalaide.debug.internal.model.ScalaDebugCacheTest
     classOf[RemoteConnectorTest],
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
-    classOf[StackFrameVariableOfTreeFinderTest]
+    classOf[StackFrameVariableOfTreeFinderTest],
+    classOf[HotCodeReplaceTest]
     ))
 class ScalaDebugTestSuite

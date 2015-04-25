@@ -27,7 +27,7 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   override def selectionChanged(action: IAction, selection: ISelection) {  }
 
   override def run(action: IAction) {
-    EclipseUtils.withSafeRunner("Error occurred while trying to create diagnostic dialog.") {
+    EclipseUtils.withSafeRunner("Error occurred while trying to create diagnostic dialog") {
       action.getId match {
         case RUN_DIAGNOSTICS =>
           val shell = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell

@@ -88,7 +88,7 @@ class ScalaSourceFileEditor
 
     val exts = getSourceViewer() match {
       case jsv: JavaSourceViewer => SemanticHighlightingParticipants.extensions flatMap { ext =>
-        EclipseUtils.withSafeRunner(s"Error occurred while creating semantic action of '${nameOf(ext)}'.") {
+        EclipseUtils.withSafeRunner(s"Error occurred while creating semantic action of '${nameOf(ext)}'") {
           ext.participant(jsv)
         }
       }
@@ -98,7 +98,7 @@ class ScalaSourceFileEditor
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
       getInteractiveCompilationUnit() match {
         case scu: ScalaCompilationUnit => exts foreach { ext =>
-          EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'.") {
+          EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'") {
             ext(scu)
           }
         }
