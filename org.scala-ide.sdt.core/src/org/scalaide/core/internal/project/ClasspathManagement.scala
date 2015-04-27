@@ -501,9 +501,9 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
    *  Unlike regular dependencies, compiler plugins must be cross-compiled with the exact compiler
    *  version used for building.
    */
-  private def validateCompilerPlugins(): Seq[ClasspathErrorMarker] = if (!isUsingCompatibilityMode()) Seq() else {
+  private def validateCompilerPlugins(): Seq[ClasspathErrorMarker] = {
     def paths(p: String) =
-      p.split(File.pathSeparator).toSeq.filterNot(_.isEmpty).distinct
+      p.split(",").toSeq.filterNot(_.isEmpty).distinct
 
     def scanDir(d: String) = {
       val entries = Option(new File(d).listFiles).getOrElse(Array.empty[File])
