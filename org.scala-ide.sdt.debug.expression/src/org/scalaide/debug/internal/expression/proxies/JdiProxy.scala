@@ -8,11 +8,16 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.primitives.BooleanJdiProxy
+import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
+import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
+import com.sun.jdi.Type
+import com.sun.jdi.Value
 
 /**
  * The base for all proxies using JDI. Extends `scala.Dynamic` to proxy all method calls to debugged jvm using
@@ -21,7 +26,7 @@ import com.sun.jdi.ReferenceType
 trait JdiProxy extends Dynamic {
 
   /**
-   * Method for calling special methods (that are not simply translated to the method invocation) like update on arrays
+   * Method for calling special methods (that are not simply translated to the method invocation) like update on arrays.
    * @return Some(result) if special method is called, None otherwise
    */
   protected def callSpecialMethod(name: String, args: Seq[Any]): Option[JdiProxy] = None
@@ -30,63 +35,67 @@ trait JdiProxy extends Dynamic {
    * Context in which debug is running.
    * See [[org.scalaide.debug.internal.expression.proxies.JdiContext]] for more information.
    */
-  protected[expression] def proxyContext: JdiContext
+  protected[expression] def __context: JdiContext
 
-  /** Reference that lies under this proxy. */
-  protected[expression] def __underlying: ObjectReference
+  /** Value that lies under this proxy. */
+  protected[expression] def __value: Value
 
-  /** Type of underlying reference. */
-  protected[expression] def referenceType: ReferenceType = __underlying.referenceType
+  /** Type of underlying value. */
+  protected[expression] def __type: Type = __value.`type`
 
   /** Applies mostly to primitives that are of Rich* class and should be boxed for some methods */
   protected def genericThisType: Option[String] = None
 
   /** Implementation of method application. */
-  def applyDynamic(name: String)(args: Any*): JdiProxy =
+  def applyDynamic(name: String)(args: Any*): JdiProxy = applyWithGenericType(name, genericThisType, args: _*)
+
+  /** Implementation of method application. */
+  def applyWithGenericType(name: String, thisType: Option[String], args: Any*): JdiProxy =
     callSpecialMethod(name, args).getOrElse {
-      proxyContext.invokeMethod(this, genericThisType, name, args.map(_.asInstanceOf[JdiProxy]))
+      __context.invokeMethod(this, thisType.orElse(genericThisType), name, args.map(_.asInstanceOf[JdiProxy]))
     }
 
   /** Implementation of field selection. */
   def selectDynamic(name: String): JdiProxy =
     callSpecialMethod(name, Seq()).getOrElse {
-      proxyContext.invokeMethod(this, genericThisType, name, Seq())
+      __context.invokeMethod(this, genericThisType, name, Seq())
     }
 
   /** Implementation of variable mutation. */
-  def updateDynamic(name: String)(value: Any): Unit =
-    proxyContext.invokeMethod(this, genericThisType, s"${name}_=", Seq(value.asInstanceOf[JdiProxy]))
+  def updateDynamic(name: String)(value: Any): UnitJdiProxy =
+    __context.invokeMethod(this, genericThisType, s"${name}_=", Seq(value.asInstanceOf[JdiProxy])).asInstanceOf[UnitJdiProxy]
 
   /** Forwards equality to debugged jvm */
   def ==(other: JdiProxy): JdiProxy =
-    proxyContext.invokeMethod(this, genericThisType, "equals", Seq(other))
+    __context.invokeMethod(this, genericThisType, "equals", Seq(other))
 
   /** Forwards inequality to debugged jvm */
   def !=(other: JdiProxy): JdiProxy =
-    proxyContext.proxy(!(this == other).__value[Boolean])
-
-  //TODO O-7468 Add proper support for implicit conversion from Predef
-  def ->(a: JdiProxy): JdiProxy = {
-    val wrapped = proxyContext.newInstance("scala.Predef$ArrowAssoc", Seq(this))
-    proxyContext.invokeMethod(wrapped, None, "->", Seq(a))
-  }
-
+    __context.proxy(!(this == other).__primitiveValue[Boolean])
 
   /**
    *  Method added to override standard "+" method that is defied for all objects and takes String as argument
    *  (compiler does not convert '+' to apply dynamic - it only complains about argument that is JdiProxy not String)
    */
-  def +(v: JdiProxy): JdiProxy =
-    proxyContext.invokeMethod(this, genericThisType, "+", Seq(v))
+  def +(v: JdiProxy): JdiProxy = {
+    val invoker = new StringConcatenationMethod(this, "+", Seq(v), __context)
+    __context.valueProxy(invoker().get)
+  }
 
   /** Obtain primitive value from proxy of given type - implemented only in primitives */
-  def __value[I]: I = throw new UnsupportedOperationException(s"$this is not a primitive.")
+  def __primitiveValue[I]: I = throw new UnsupportedOperationException(s"$this is not a primitive.")
+
+  /** Wraps this proxy in ObjectJdiProxy if it refers to primitive type. */
+  def __autoboxed: ObjectJdiProxy = this match {
+    case primitive: PrimitiveJdiProxy[_, _, _] => ObjectJdiProxy(primitive.__context, primitive.boxed)
+    case obj: ObjectJdiProxy => obj
+  }
 }
 
 /**
  * Base for companion objects for [[org.scalaide.debug.internal.expression.proxies.JdiProxy]].
  */
-trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
+trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: Value] {
 
   /** Creates a JdiProxy for object using context */
   def apply(proxyContext: JdiContext, underlying: Underlying): Proxy
@@ -94,12 +103,11 @@ trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: ObjectReference] {
   /**
    * Creates JdiProxy based on given one. Handles following cases:
    * - for `NullJdiProxy` returns instance of `Proxy` type with null as underlying
-   * - for `JdiProxyWrapper` returns inside of wrapper
    * - for `Proxy` just returns it
    * - otherwise throws IllegalArgumentException
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   def apply(on: JdiProxy)(implicit tag: ClassTag[Proxy]): Proxy = JdiProxyCompanion.unwrap(on)(this.apply)
 }
@@ -109,9 +117,8 @@ object JdiProxyCompanion {
   /**
    * Private implementation for reducing code duplication in `JdiProxyCompanion` and `ArrayJdiProxy`.
    */
-  private[proxies] def unwrap[Proxy <: JdiProxy : ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
-    case np: NullJdiProxy => apply(np.proxyContext, np.__underlying.asInstanceOf[Underlying])
-    case wrapper: JdiProxyWrapper => unwrap(wrapper.__outer)(apply)
+  private[proxies] def unwrap[Proxy <: JdiProxy: ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
+    case np: NullJdiProxy => apply(np.__context, np.__value.asInstanceOf[Underlying])
     case proxy: Proxy => proxy
     case _ =>
       val className = classTag[Proxy].runtimeClass.getSimpleName
@@ -122,28 +129,14 @@ object JdiProxyCompanion {
 /**
  * Simplest implementation of [[org.scalaide.debug.internal.expression.proxies.JdiProxy]].
  */
-case class SimpleJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference) extends JdiProxy
+class ObjectJdiProxy(val __context: JdiContext, val __value: ObjectReference) extends JdiProxy {
+  override def __type: com.sun.jdi.ReferenceType = __value.referenceType
+}
 
-/**
- * Implementation of wrapper on JdiProxies. Stubs generated during reflective compilation extends from it.
- *
- * WARNING - this class is used in reflective compilation.
- * If you change it's name, package or behavior, make sure to change it also.
- */
-class JdiProxyWrapper(protected[expression] val __outer: JdiProxy) extends JdiProxy {
-  override protected[expression] val proxyContext: JdiContext = __outer.proxyContext
+object ObjectJdiProxy {
+  def apply(proxyContext: JdiContext, __value: ObjectReference): ObjectJdiProxy =
+    new ObjectJdiProxy(proxyContext, __value)
 
-  override protected[expression] def __underlying: ObjectReference = __outer.__underlying
-
-  /** Implementation of method application. */
-  override def applyDynamic(name: String)(args: Any*): JdiProxy = __outer.applyDynamic(name)(args: _*)
-
-  /** Implementation of field selection. */
-  override def selectDynamic(name: String): JdiProxy = __outer.selectDynamic(name)
-
-  /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit = __outer.updateDynamic(name)(value)
-
-  /** Forwards equality to debugged jvm */
-  override def ==(other: JdiProxy): JdiProxy = __outer.==(other)
+  def unapply(proxy: ObjectJdiProxy): Option[(JdiContext, ObjectReference)] =
+    Some(proxy.__context, proxy.__value)
 }

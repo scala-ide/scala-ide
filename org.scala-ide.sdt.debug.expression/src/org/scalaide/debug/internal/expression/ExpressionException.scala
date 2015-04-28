@@ -3,7 +3,17 @@
  */
 package org.scalaide.debug.internal.expression
 
+import scala.tools.reflect.ToolBoxError
+import scala.util.Failure
+import scala.util.Try
 import scala.util.control.NoStackTrace
+
+import org.scalaide.debug.internal.expression.ExpressionManager.NonexisitngFieldEqualError
+import org.scalaide.debug.internal.expression.context.JdiContext
+import org.scalaide.logging.Logger
+
+import com.sun.jdi.ClassNotLoadedException
+import com.sun.jdi.InvocationException
 
 /**
  * Marker for all known exceptions from expression evaluator.
@@ -14,8 +24,7 @@ sealed trait ExpressionException extends Throwable with NoStackTrace
 /** Long messages are placed here for readability */
 object ExpressionException {
 
-  val nothingTypeInferredMessage =
-    "scala.Nothing was inferred as a result of an expression, which makes no sense and thus is not supported."
+  val throwDetected = "Throwing exception from evaluated code is not possible."
 
   val functionProxyArgumentTypeNotInferredMessage =
     """You used a lambda expression for which we could not infer its type parameters.
@@ -45,7 +54,78 @@ object ExpressionException {
   def notExistingField(name: String) =
     s"Field $name does not exist in current scope."
 
+  def lambdaCompilationFailure(lambdaSource: String): String =
+    s"Could not compile lambda expression: \n$lambdaSource\nSee underlying message for more details."
+
+  def multipleMethodsMatchNestedOneMessage(methodName: String, candidates: Seq[String]) =
+    s"""We cannot determine real name of nested method: $methodName}.
+       |Candidates: ${candidates.mkString(", ")}
+       |Nested methods are not fully supported in expression evaluator.")""".stripMargin
+
+  /**
+   * Recovers from errors after expression compilation and evaluation.
+   * Provides nice, user-readable descriptions for all known problems.
+   */
+  private[expression] def recoverFromErrors[A](result: Try[A], context: JdiContext, logger: Logger): Try[A] = result.recoverWith {
+    case noInfo: com.sun.jdi.AbsentInformationException =>
+      logger.error("Absent information exception", noInfo)
+      Failure(NotAtBreakpointException)
+    case notAtBreakPoint: com.sun.jdi.IncompatibleThreadStateException =>
+      logger.error("Incompatible thread state", notAtBreakPoint)
+      Failure(NotAtBreakpointException)
+    case ie: InvocationException =>
+      logger.error("JDI invocation exception", ie)
+      val underlying = context.valueProxy(ie.exception)
+      Failure(new MethodInvocationException(context.show(underlying, withType = false), ie))
+    case unsupportedFeature: UnsupportedFeature =>
+      logger.warn(s"Unsupported feature was used: ${unsupportedFeature.name}", unsupportedFeature)
+      Failure(unsupportedFeature)
+    case lambdaCompilationException: LambdaCompilationFailure =>
+      logger.warn(lambdaCompilationException.getMessage, lambdaCompilationException.getCause)
+      Failure(lambdaCompilationException)
+    // WARNING - this case catches ALL ExpressionExceptions, do not add it's subclasses below it
+    case expressionException: ExpressionException =>
+      logger.error("Exception during expression evaluation", expressionException)
+      Failure(expressionException)
+    case NonexisitngFieldEqualError(name) =>
+      Failure(MissingField(name))
+    case tb: ToolBoxError if tb.getMessage.contains("not found: type") =>
+      Failure(new ReflectiveCompilationFailedWithClassNotFound(tb.getMessage))
+    case tb: ToolBoxError =>
+      Failure(new ReflectiveCompilationFailure(tb.getMessage))
+    case nsme: NoSuchMethodError =>
+      Failure(new RuntimeException(nsme.getMessage, nsme))
+    case cnl: ClassNotLoadedException =>
+      logger.error(s"Class with name: ${cnl.className} was not loaded.", cnl)
+      handleUnknownException(cnl)
+    case e: Throwable =>
+      logger.error("Unknown exception during evaluation", e)
+      handleUnknownException(e)
+  }
+
+  /** Handles unknown exceptions with nice message for users */
+  private def handleUnknownException(e: Throwable) = {
+    val currentMessage = s"Exception message: ${e.getMessage}"
+    val newMessage = s"Exception was thrown during expression evaluation. To see more details check scala-ide error log.\n$currentMessage"
+    Failure(new RuntimeException(newMessage, e))
+  }
+
 }
+
+/**
+ * Raised when user uses `throw` inside expression which makes little sense.
+ */
+class ThrowDetected
+  extends RuntimeException(ExpressionException.throwDetected)
+  with ExpressionException
+
+class LambdaCompilationFailure(lambdaSource: String, reason: Throwable)
+  extends RuntimeException(ExpressionException.lambdaCompilationFailure(lambdaSource), reason)
+  with ExpressionException
+
+case class JavaStaticInvocationProblem(description: String)
+  extends RuntimeException(description)
+  with ExpressionException
 
 case class MissingField(name: String)
   extends RuntimeException(ExpressionException.notExistingField(name))
@@ -85,16 +165,6 @@ class MethodInvocationException(reason: String, underlying: Throwable)
   with ExpressionException
 
 /**
- * Raised when `Nothing` is inferred as return type from expression.
- *
- * Evaluating Nothing-returning methods in evaluator is pretty useless, or even harmful if they recurse indefinitely,
- * and will require extra work to support.
- */
-object NothingTypeInferredException
-  extends RuntimeException(ExpressionException.nothingTypeInferredMessage)
-  with ExpressionException
-
-/**
  * Raised when not all types of arguments to lambda was inferred.
  */
 object FunctionProxyArgumentTypeNotInferredException
@@ -115,3 +185,9 @@ class UnsupportedFeature(val name: String)
   extends RuntimeException(ExpressionException.unsupportedFeatureMessage(name))
   with ExpressionException
 
+/**
+ * Raised when we cannot determine which method match nested one
+ */
+class MultipleMethodsMatchNestedOne(methodName: String, candidates: Seq[String])
+  extends RuntimeException(ExpressionException.multipleMethodsMatchNestedOneMessage(methodName, candidates))
+  with ExpressionException

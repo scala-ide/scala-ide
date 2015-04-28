@@ -12,25 +12,24 @@ import org.scalaide.debug.internal.expression.TestValues
 class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
-  def `!boolean`(): Unit = eval("!boolean", !boolean, Java.boxed.Boolean)
+  def `!boolean`(): Unit = eval("!boolean", !boolean, Java.primitives.boolean)
 
   @Test
-  def `boolean || boolean`(): Unit = eval("boolean || boolean2", boolean || boolean2, Java.boxed.Boolean)
+  def `boolean || boolean`(): Unit = eval("boolean || boolean2", boolean || boolean2, Java.primitives.boolean)
 
   @Test
-  def `boolean && boolean`(): Unit = eval("boolean && boolean2", boolean && boolean2, Java.boxed.Boolean)
+  def `boolean && boolean`(): Unit = eval("boolean && boolean2", boolean && boolean2, Java.primitives.boolean)
 
   @Test
-  def `boolean | boolean`(): Unit = eval("boolean | boolean2", boolean | boolean2, Java.boxed.Boolean)
+  def `boolean | boolean`(): Unit = eval("boolean | boolean2", boolean | boolean2, Java.primitives.boolean)
 
   @Test
-  def `boolean & boolean`(): Unit = eval("boolean & boolean2", boolean & boolean2, Java.boxed.Boolean)
+  def `boolean & boolean`(): Unit = eval("boolean & boolean2", boolean & boolean2, Java.primitives.boolean)
 
   @Test
-  def `boolean ^ boolean`(): Unit = eval("boolean ^ boolean2", boolean ^ boolean2, Java.boxed.Boolean)
+  def `boolean ^ boolean`(): Unit = eval("boolean ^ boolean2", boolean ^ boolean2, Java.primitives.boolean)
 }
 
 object LogicalOperationsTest extends BaseIntegrationTestCompanion

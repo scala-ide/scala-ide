@@ -12,39 +12,38 @@ import org.scalaide.debug.internal.expression.TestValues
 class UnaryOperatorsTest extends BaseIntegrationTest(UnaryOperatorsTest) {
 
   import TestValues.ValuesTestCase._
-  import TestValues.any2String
 
   @Test
   def `unary -`(): Unit = {
-    eval("-float", -float, Java.boxed.Float)
-    eval("-double", -double, Java.boxed.Double)
-    eval("-int", -int, Java.boxed.Integer)
-    eval("-long", -long, Java.boxed.Long)
-    eval("-byte", -byte, Java.boxed.Integer)
-    eval("-short", -short, Java.boxed.Integer)
-    eval("-char", -char, Java.boxed.Integer)
+    eval("-float", -float, Java.primitives.float)
+    eval("-double", -double, Java.primitives.double)
+    eval("-int", -int, Java.primitives.int)
+    eval("-long", -long, Java.primitives.long)
+    eval("-byte", -byte, Java.primitives.int)
+    eval("-short", -short, Java.primitives.int)
+    eval("-char", -char, Java.primitives.int)
   }
 
   @Test
   def `unary +`(): Unit = {
-    eval("+float", +float, Java.boxed.Float)
-    eval("+double", +double, Java.boxed.Double)
-    eval("+int", +int, Java.boxed.Integer)
-    eval("+long", +long, Java.boxed.Long)
-    eval("+byte", +byte, Java.boxed.Integer)
-    eval("+short", +short, Java.boxed.Integer)
-    eval("+char", +char, Java.boxed.Integer)
+    eval("+float", +float, Java.primitives.float)
+    eval("+double", +double, Java.primitives.double)
+    eval("+int", +int, Java.primitives.int)
+    eval("+long", +long, Java.primitives.long)
+    eval("+byte", +byte, Java.primitives.int)
+    eval("+short", +short, Java.primitives.int)
+    eval("+char", +char, Java.primitives.int)
   }
 
   @Test
   def `unary ~ (bitwise negation)`(): Unit = {
-    evalWithToolboxError("~float")
-    evalWithToolboxError("~double")
-    eval("~int", ~int, Java.boxed.Integer)
-    eval("~long", ~long, Java.boxed.Long)
-    eval("~byte", ~byte, Java.boxed.Integer)
-    eval("~short", ~short, Java.boxed.Integer)
-    eval("~char", ~char, Java.boxed.Integer)
+    expectReflectiveCompilationError("~float")
+    expectReflectiveCompilationError("~double")
+    eval("~int", ~int, Java.primitives.int)
+    eval("~long", ~long, Java.primitives.long)
+    eval("~byte", ~byte, Java.primitives.int)
+    eval("~short", ~short, Java.primitives.int)
+    eval("~char", ~char, Java.primitives.int)
   }
 }
 

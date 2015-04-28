@@ -12,6 +12,10 @@ import org.junit.runners.Suite
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[NamedParametersTest],
+    classOf[OperatorsTest],
+    classOf[AsInstanceOfTest],
+    classOf[IsInstanceOfTest],
     classOf[GenericsTest],
     classOf[TraitsTest],
     classOf[ArrayTest],
@@ -40,10 +44,15 @@ import org.junit.runners.Suite
     classOf[VarargsTest],
     classOf[PartialFunctionLambdaTest],
     classOf[AnyValTest],
-    classOf[InnerMethodsTest],
-    classOf[NamedParameterTest],
+    classOf[MethodsAsFunctionsInnerTraitTest],
+    classOf[MethodsAsFunctionsInnerClassTest],
+    classOf[MethodsAsFunctionsInnerObjectTest],
     classOf[AppObjectTest],
     classOf[NestedClassTest],
     classOf[ImportsTest],
-    classOf[ControlStructuresTest]))
+    classOf[NestedMethodsTest],
+    classOf[ControlStructuresTest],
+    classOf[ClassOfTest],
+    classOf[SuperTest],
+    classOf[ToolBoxBugsTest]))
 class FeaturesTestSuite

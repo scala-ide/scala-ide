@@ -1,47 +1,61 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
-import scala.reflect.runtime.universe._
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 
+import Names.Debugger
 import Names.Scala
 
 /**
- * Abstract representation of transformation phase, just transform expression tree to another tree
+ * Sealed hierarchy for defining where `TransformationPhase` is
+ * relative to [[org.scalaide.debug.internal.expression.proxies.phases.TypeCheck]].
  */
-trait TransformationPhase {
+sealed trait TypecheckRelation
+class BeforeTypecheck extends TypecheckRelation
+class IsTypecheck extends TypecheckRelation
+class AfterTypecheck extends TypecheckRelation
+
+/**
+ * Abstract representation of transformation phase, just transform expression tree to another tree
+ *
+ * @tparam Tpe where this phase is placed relative to `TypeCheck` phase
+ */
+trait TransformationPhase[+Tpe <: TypecheckRelation] {
 
   /**
    * Transforms current tree to new form.
    * It is called only once per object lifetime.
+   *
    * Result of this method is passed to another TransformationPhase instance.
-   * @param baseTree tree to transform
+   *
+   * @param data data for transformation. Contains tree and metadata.
    */
-  def transform(baseTree: universe.Tree): universe.Tree
-}
+  def transform(data: TransformationPhaseData): TransformationPhaseData
 
-trait BeforeTypecheck {
-  self: AstTransformer =>
-  override protected def beforeTypecheck: Boolean = true
+  /** Name of this phase - by default just simpleName of class */
+  def phaseName = this.getClass.getSimpleName
 }
 
 /**
  * This is proxy-aware transformer.
  * It works like TransformationPhase but skip all part of tree that is dynamic or is not a part of original expression.
+ *
+ * @tparam Tpe where this phase is placed relative to `TypeCheck` phase
  */
-abstract class AstTransformer
-  extends TransformationPhase {
+abstract class AstTransformer[+Tpe <: TypecheckRelation]
+    extends TransformationPhase[Tpe]
+    with AstHelpers {
 
-  private var _wholeTree: Tree = EmptyTree
+  import universe._
 
-  protected def beforeTypecheck: Boolean = false
+  private var _data: TransformationPhaseData = _
 
-  /** gets whole tree for this transformer - transformation starts with this tree */
-  final def wholeTree = _wholeTree
+  /** Initial data passed to this transformer */
+  protected final def data: TransformationPhaseData = _data
 
   /**
    * Basic method for transforming a tree
@@ -51,37 +65,46 @@ abstract class AstTransformer
    */
   protected def transformSingleTree(baseTree: universe.Tree, transformFurther: universe.Tree => universe.Tree): universe.Tree
 
-  /** Main method for transformer, applies transformation */
-  final override def transform(baseTree: universe.Tree): universe.Tree = {
-    _wholeTree = baseTree
-    transformer.transform(baseTree)
+  /**
+   * Main method for transformer, applies transformation.
+   *
+   * To modify the result (for example to add some meta-data) override it and use `super.transform`.
+   */
+  override def transform(data: TransformationPhaseData): TransformationPhaseData = {
+    _data = data
+    val newTree = transformer.transform(data.tree)
+    data.after(phaseName, newTree)
   }
 
   /** Checks if symbol corresponds to some of methods on `scala.Dynamic`. */
   private def isDynamicMethod(methodName: String) =
     Scala.dynamicTraitMethods.contains(methodName)
 
-  private def isContextMethod(on: Tree, name: String): Boolean = {
-    on.toString() == Names.Debugger.contextParamName && name == Names.Debugger.newInstance
+  /** Construction/destruction for `__context.newInstance` */
+  object NewInstanceCall {
+    import Debugger._
+
+    def apply(className: Tree, argList: Tree): Tree =
+      Apply(SelectMethod(contextParamName, newInstance), List(className, argList))
+
+    def unapply(tree: Tree): Option[(Tree, Tree)] = tree match {
+      case Apply(Select(Ident(TermName(`contextParamName`)), TermName(`newInstance`)), List(className, argList)) =>
+        Some(className, argList)
+      case _ => None
+    }
   }
 
   /** Transformer that skip all part of tree that is dynamic and it is not a part of original expression */
   private val transformer = new universe.Transformer {
     override def transform(baseTree: universe.Tree): universe.Tree = baseTree match {
-      //dynamic calls
-      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isDynamicMethod(name.toString) =>
-        universe.Apply(universe.Select(transformSingleTree(on, tree => super.transform(tree)), name), args)
-      case tree @ universe.Apply(select @ universe.Select(on, name), args) if isContextMethod(on, name.toString) =>
-        tree
+      // dynamic calls
+      case Apply(Select(on, name), args) if isDynamicMethod(name.toString) =>
+        Apply(Select(transformSingleTree(on, super.transform), name), args)
+      // on calls to `__context.newInstance` do not process the first argument
+      case NewInstanceCall(className, argList) =>
+        NewInstanceCall(className, transformSingleTree(argList, super.transform))
       case tree =>
         transformSingleTree(tree, super.transform)
     }
   }
-
-  /** Helper for creating Select on 'apply' method */
-  protected def SelectApplyMethod(typeName: String): Select = SelectMethod(typeName, "apply")
-
-  /** Helper for creating Select on given method */
-  protected def SelectMethod(typeName: String, methodName: String): Select =
-    Select(Ident(TermName(typeName)), TermName(methodName))
 }

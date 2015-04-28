@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -11,7 +11,7 @@ object TestValues {
   object AppObjectTestCase extends IntegrationTestCaseSettings {
     val projectName = ValuesTestCase.projectName
     val fileName = ValuesTestCase.fileName
-    val breakpointLine = 49
+    val breakpointLine = 53
   }
 
   object ArgumentsTestCase extends IntegrationTestCaseSettings {
@@ -44,6 +44,61 @@ object TestValues {
     val arrayIdentity = "arrayIdentity"
   }
 
+  object InstanceOfTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-instance-of"
+    val fileName = "InstanceOf"
+    val breakpointLine = 58
+
+    trait A1
+    class A2 extends A1
+    object A3 extends A2
+
+    trait B1
+    class B2 extends B1
+    class B3 extends B2
+
+    trait C1
+    trait C2 extends C1
+    class C3 extends C2
+
+    trait D1
+    trait D2
+    class D3 extends D2 with D1
+
+    class Foo
+    class Bar extends Foo
+
+    def A1: Any = new A1 {}
+    def A2: Any = new A2
+    def B2: Any = new B2
+    def B3: Any = new B3
+    def C2: Any = new C2 {}
+    def C3: Any = new C3
+    def D3: Any = new D3
+
+    def byte: Any = (4: Byte)
+    def short: Any = (6: Short)
+    def int: Any = 1
+    def long: Any = 1l
+    def char: Any = 'c'
+    def double: Any = 1.1
+    def float: Any = 1.1f
+    def boolean: Any = false
+    def string: Any = "Ala"
+    def intList: Any = List(1, 2, 3)
+    def stringList: Any = List("a", "b", "c")
+    def unit: Any = ()
+
+    def nullVal: Any = null
+
+    def intArray: Any = Array(1, 2, 3)
+    def doubleArray: Any = Array(1.0, 2.0, 3.0)
+    def objectArray: Any = Array("a", "b", "c")
+
+    def fooArray: Any = Array(new Foo)
+    def barArray: Any = Array(new Bar)
+  }
+
   object CodeCompletionTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-code-completion"
     val fileName = "CodeCompletion"
@@ -71,13 +126,21 @@ object TestValues {
   object ImplicitsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "Implicits"
-    val breakpointLine = 15
+    val breakpointLine = 39
   }
 
-  object InnerMethodsTestCase extends IntegrationTestCaseSettings {
-    val projectName = "expr-eval-inner-methods"
-    val fileName = "InnerMethods"
-    val breakpointLine = 10
+  object MethodsAsFunctions {
+
+    class MethodsAsFunctionsTestCaseBase(val breakpointLine: Int) extends IntegrationTestCaseSettings {
+      val projectName = "expr-eval-methods-as-functions"
+      val fileName = "MethodsAsFunctions"
+    }
+
+    object MethodsAsFunctionsInnerTraitTestCase extends MethodsAsFunctionsTestCaseBase(19)
+
+    object MethodsAsFunctionsInnerClassTestCase extends MethodsAsFunctionsTestCaseBase(23)
+
+    object MethodsAsFunctionsInnerObjectTestCase extends MethodsAsFunctionsTestCaseBase(27)
   }
 
   object JavaTestCase extends IntegrationTestCaseSettings {
@@ -134,7 +197,7 @@ object TestValues {
   object NewInstancesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "NewInstances"
-    val breakpointLine = 8
+    val breakpointLine = 15
   }
 
   object TraitsTestCase extends IntegrationTestCaseSettings {
@@ -146,7 +209,7 @@ object TestValues {
   object ThisTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-this"
     val fileName = "This"
-    val breakpointLine = 23
+    val breakpointLine = 25
 
     val traitParam = 1
     val traitMethod = 1
@@ -168,7 +231,7 @@ object TestValues {
   object ValuesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-values"
     val fileName = "Values"
-    val breakpointLine = 44
+    val breakpointLine = 48
 
     val byte: Byte = 4
     val byte2: Byte = 3
@@ -186,31 +249,53 @@ object TestValues {
     val boolean2 = true
     val string = "Ala"
     val list = List(1, 2, 3)
+    val multilist = List(List(1), List(2, 3))
+    val intArray = list.toArray
     val * = 1
     val long = 1l
     val long2 = 2l
   }
 
+  object NamedParametersTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "NamedParameters"
+    val breakpointLine = 13
+  }
+
+  object NestedMethodsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-values"
+    val fileName = "NestedMethods"
+    val breakpointLine = 43
+  }
+
+  object OperatorsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-operators"
+    val fileName = "Operators"
+    val breakpointLine = 41
+  }
+
+  object SuperTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-super"
+    val fileName = "Super"
+    val breakpointLine = 39
+  }
+
+  object ToolBoxBugsTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-toolbox-bugs"
+    val fileName = "ToolBoxBugs"
+    val breakpointLine = 6
+  }
+
   object VarargsTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-varargs"
     val fileName = "Varargs"
-    val breakpointLine = 43
-
-    val x = 13
-    val y = 17
-    val i1 = 1
-    val i2 = 2
-    val i3 = 3
-    val i4 = 4
-    val l1 = 1L
-    val l2 = 2L
-    val l4 = 4L
+    val breakpointLine = 45
   }
 
   object VariablesTestCase extends IntegrationTestCaseSettings {
     val projectName = "expr-eval-variables"
     val fileName = "Variables"
-    val breakpointLine = 17
+    val breakpointLine = 19
   }
 
   object VisibilityTestCase extends IntegrationTestCaseSettings {
@@ -225,17 +310,4 @@ object TestValues {
     val objectParam = 3
     val objectMethod = 3
   }
-
-  import scala.language.implicitConversions
-
-  /**
-   * To enable tests like:
-   *
-   * import TestValues.any2String
-   * import TestValues.Values._
-   *
-   * @Test
-   * def testSomething(): Unit = eval("int + double * long", int + double * long, Names.Java.boxed.Double)
-   */
-  implicit def any2String(x: Any) = x.toString()
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -23,7 +23,7 @@ object ExpressionEvaluator {
    * @param compiledFunc expression code
    * @param newClasses new classes that must be loaded to debugged JVM
    */
-  case class JdiExpression(compiledFunc: ExpressionFunc, newClasses: Iterable[ClassData]) extends ExpressionFunc {
+  case class JdiExpression(compiledFunc: ExpressionFunc, newClasses: Iterable[ClassData], code: universe.Tree) extends ExpressionFunc {
     //class are loaded?
     private var classLoaded: Boolean = false
 
@@ -41,6 +41,55 @@ object ExpressionEvaluator {
     }
   }
 
+  private[expression] case class Context(
+    toolbox: ToolBox[universe.type],
+    context: VariableContext)
+
+  type Phases[A <: TypecheckRelation] = Seq[Context => TransformationPhase[A]]
+
+  private[expression] def phases: Phases[TypecheckRelation] = {
+
+    val beforeTypeCheck: Phases[BeforeTypecheck] = Seq(
+      ctx => new FailFast,
+      ctx => new SingleValDefWorkaround,
+      ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.context.localVariablesNames()),
+      ctx => new MockAssignment,
+      ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context),
+      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage),
+      ctx => new MockThis,
+      ctx => new MockSuper(ctx.toolbox),
+      ctx => MockTypedLambda(ctx.toolbox))
+
+    val typecheck: Phases[IsTypecheck] = Seq(
+      ctx => TypeCheck(ctx.toolbox))
+
+    val afterTypecheck: Phases[AfterTypecheck] = Seq(
+      ctx => FixClassTags(ctx.toolbox),
+      ctx => new RemoveImports,
+      // function should be first because this transformer needs tree as clean as possible
+      ctx => MockLambdas(ctx.toolbox),
+      ctx => ImplementTypedLambda(ctx.toolbox),
+      ctx => new AfterTypecheckFailFast,
+      ctx => new ImplementMockedNestedMethods(ctx.context),
+      ctx => new MockLiteralsAndConstants,
+      ctx => new MockPrimitivesOperations,
+      ctx => new MockToString,
+      ctx => new MockLocalAssignment,
+      ctx => new MockIsInstanceOf,
+      ctx => new RemoveAsInstanceOf,
+      ctx => new MockHashCode,
+      ctx => new MockMethodsCalls,
+      ctx => new MockObjectsAndStaticCalls,
+      ctx => new MockNewOperator,
+      ctx => new FlattenMultiArgListMethods,
+      ctx => new RemoveTypeArgumentsFromMethods,
+      ctx => ImplementValues(ctx.toolbox, ctx.context.implementValue),
+      ctx => new ResetTypeInformation,
+      ctx => new AddImports[AfterTypecheck](ctx.toolbox, ctx.context.thisPackage),
+      ctx => new PackInFunction(ctx.toolbox))
+
+    beforeTypeCheck ++ typecheck ++ afterTypecheck
+  }
 }
 
 /**
@@ -51,7 +100,7 @@ object ExpressionEvaluator {
 abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader,
   monitor: ProgressMonitor,
   compilerOptions: Seq[String] = Seq.empty)
-  extends HasLogger {
+    extends HasLogger {
 
   import ExpressionEvaluator._
 
@@ -67,31 +116,57 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
 
   /**
    * Main entry point for this class, compiles given expression in given context to `JdiExpression`.
+   *
+   * @return tuple (expression, tree) with compiled expression and tree used for compilation
    */
   final def compileExpression(context: VariableContext)(code: String): Try[JdiExpression] = Try {
     val parsed = parse(code)
 
-    val typesContext = new TypesContext()
-
-    val phases = genPhases(context, typesContext)
+    val phases = genPhases(context)
 
     val transformed = transform(parsed, phases)
 
     try {
-      compile(transformed, typesContext.classesToLoad)
+      val (compiled, time) = measure {
+        compile(transformed.tree, transformed.classesToLoad)
+      }
+      logTimesToFile(transformed.withTime("Compilation", time))
+      compiled
     } catch {
       case exception: Throwable =>
+        val codeAfterPhases = stringifyTreesAfterPhases(transformed.history)
         val message =
           s"""Reflective compilation failed
-             |Tree to compile:
-             |$transformed
+             |Trees transformation history:
+             |$codeAfterPhases
              |""".stripMargin
         logger.error(message, exception)
         throw exception
     }
   }
 
-  private def recompileFromStrigifiedTree(tree: u.Tree): () => Any ={
+  // measure execution time in microseconds
+  private def measure[A](block: => A): (A, Long) = {
+    val now = System.nanoTime()
+    val result = block
+    val micros = (System.nanoTime - now) / 1000
+    (result, micros)
+  }
+
+  // Writes data about execution times to file. Use for debugging.
+  // Runs only when environment property `scalaide.ee-time-log` is defined.
+  private def logTimesToFile(data: TransformationPhaseData): Unit =
+    if (Option(System.getProperty("scalaide.eelogtimes")).isDefined) {
+      val logFile = new java.io.File(".ee-time-log.csv")
+      val pw = new java.io.FileWriter(logFile, /* append = */ true)
+      try {
+        pw.write("Phases:\t" + data.times.map(_.name).mkString("\t") + "\n")
+        val code = data.history.head.code.toString.replace("\n", " ").replace("\r", " ")
+        pw.write("Expression: " + code + "\t" + data.times.map(_.time).mkString("\t") + "\n")
+      } finally pw.close()
+    }
+
+  private def recompileFromStrigifiedTree(tree: u.Tree): () => Any = {
     toolbox.compile(toolbox.parse(tree.toString()))
   }
 
@@ -101,73 +176,51 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
       toolbox.compile(tree)
     } catch {
       case e: UnsupportedOperationException =>
-        //Workaround for "No position error"
-        //Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
+        // Workaround for "No position error"
+        // Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
+        logger.warn("Compilation failed - stringifying and recompilig whole tree.")
         recompileFromStrigifiedTree(tree)
     }).apply() match {
       case function: ExpressionFunc @unchecked =>
-        JdiExpression(function, newClasses)
+        JdiExpression(function, newClasses, tree)
       case other =>
         throw new IllegalArgumentException(s"Bad compilation result: '$other'")
     }
   }
 
-  // WARNING if you add/remove phase here, remember to update ExpressionManager.numberOfPhases with correct count
-  private def genPhases(context: VariableContext, typesContext: TypesContext): Seq[TransformationPhase] = Seq(
-    FailFast(toolbox),
-    SearchForUnboundVariables(toolbox, typesContext),
-    new MockAssignment(toolbox, typesContext.unboundVariables),
-    new MockVariables(toolbox, projectClassLoader, context, typesContext.unboundVariables),
-    new AddImports(toolbox, context.thisPackage),
-    MockThis(toolbox),
-    MockTypedLambda(toolbox, typesContext),
-    TypeCheck(toolbox),
-    DetectNothingTypedExpression(toolbox),
-    RemoveImports(toolbox),
-    // function should be first cos this transformer needs tree as clean as possible
-    MockLambdas(toolbox, typesContext),
-    ImplementTypedLambda(toolbox, typesContext),
-    MockLiteralsAndConstants(toolbox, typesContext),
-    MockPrimitivesOperations(toolbox),
-    MockToString(toolbox),
-    MockHashCode(toolbox),
-    MockObjectsAndStaticCalls(toolbox, typesContext),
-    MockNewOperator(toolbox),
-    FlattenFunctions(toolbox),
-    ImplementValues(toolbox, context.implementValue),
-    CleanUpValDefs(toolbox),
-    ResetTypeInformation(toolbox),
-    new AddImports(toolbox, context.thisPackage),
-    new PackInFunction(toolbox))
+  private def genPhases(context: VariableContext) = {
+    val ctx = Context(toolbox, context)
+    phases.map(_(ctx))
+  }
 
-  private def transform(code: universe.Tree, phases: Seq[TransformationPhase]): universe.Tree = {
-    val (_, finalTree) = phases.foldLeft(Vector(("Initial code", code))) {
-      case (treesAfterPhases, phase) =>
-        val phaseName = phase.getClass.getSimpleName
-        monitor.startNamedSubTask(s"Applying transformation phase:")
+  private def transform(code: universe.Tree, phases: Seq[TransformationPhase[TypecheckRelation]]): TransformationPhaseData = {
+    val parse = PhaseCode("Parse", code)
+    val data = TransformationPhaseData(tree = code, history = Vector(parse))
+    phases.foldLeft(data) {
+      case (lastData, phase) =>
+        monitor.startNamedSubTask("Applying transformation phase: " + phase.phaseName)
         try {
-          val (_, previousTree) = treesAfterPhases.last
-          val current = (phaseName, phase.transform(previousTree))
-          val result = treesAfterPhases :+ current
+          val (newData, time) = measure {
+            phase.transform(lastData)
+          }
           monitor.reportProgress(1)
-          result
+          newData.withTime(phase.phaseName, time)
         } catch {
           case e: Throwable =>
-            val codeAfterPhases = stringifyTreesAfterPhases(treesAfterPhases)
+            val codeAfterPhases = stringifyTreesAfterPhases(lastData.history)
             val message =
-              s"""Applying phase: $phaseName failed
+              s"""Applying phase: ${phase.phaseName} failed
                |Trees before current transformation:
                |$codeAfterPhases
                |""".stripMargin
             logger.error(message, e)
             throw e
         }
-    }.last
-    finalTree
+    }
   }
 
-  private def stringifyTreesAfterPhases(treesAfterPhases: Seq[(String, universe.Tree)]): String =
+  private def stringifyTreesAfterPhases(treesAfterPhases: Vector[PhaseCode]): String =
     treesAfterPhases.map {
-      case (phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
+      case PhaseCode(phaseName, tree) => s" After phase '$phaseName': ------------\n\n$tree"
     } mkString ("------------", "\n\n------------ ", "\n------------")
 }

@@ -11,11 +11,11 @@ import com.sun.jdi.ObjectReference
 /**
  * JdiProxy implementation for `null`.
  */
-case class NullJdiProxy(proxyContext: JdiContext) extends JdiProxy {
+case class NullJdiProxy(__context: JdiContext) extends JdiProxy {
 
   private def fail(methodName: String): Nothing = throw new NullPointerException(s"Cannot call $methodName method on null.")
 
-  override def __underlying: ObjectReference = null
+  override def __value: ObjectReference = null
 
   /** Implementation of method application. */
   override def applyDynamic(name: String)(args: Any*): JdiProxy = fail(name)
@@ -24,5 +24,5 @@ case class NullJdiProxy(proxyContext: JdiContext) extends JdiProxy {
   override def selectDynamic(name: String): JdiProxy = fail(name)
 
   /** Implementation of variable mutation. */
-  override def updateDynamic(name: String)(value: Any): Unit = fail(name)
+  override def updateDynamic(name: String)(value: Any): UnitJdiProxy = fail(name)
 }

@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
+import scala.reflect.NameTransformer
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
@@ -15,6 +17,7 @@ import com.sun.jdi.InterfaceType
 import com.sun.jdi.InvocationException
 import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.Value
 import com.sun.jdi.VirtualMachine
@@ -27,16 +30,14 @@ trait Seeker {
 
   protected def jvm: VirtualMachine
 
-  /** real name of class - replace object name prefix and handles arrays */
-  private def realClassName(name: String): String = name match {
-    case Debugger.PrefixedObjectOrStaticCall(realName) => realName
-    case Scala.Array(typeArg) => Java.primitives.Array(realClassName(scalaToJavaTypeName(typeArg)))
+  private def handleArray(name: String): String = name match {
+    case Scala.Array(typeArg) => Java.primitives.Array(handleArray(scalaToJavaTypeName(typeArg)))
     case other => other
   }
 
   /** converts some Scala names to java ones */
   private def scalaToJavaTypeName(scalaName: String): String = scalaName match {
-    case "String" => Java.boxed.String
+    case "String" => Java.String
     case "Boolean" => Java.primitives.boolean
     case "Byte" => Java.primitives.byte
     case "Char" => Java.primitives.char
@@ -48,32 +49,30 @@ trait Seeker {
     case other => other
   }
 
-  final def arrayClassByName(name: String): ArrayType =
-    jvm.classesByName(realClassName(name)).head match {
-      case arrayType: ArrayType => arrayType
-      case other => throw new IllegalArgumentException(s"Returned type is not an array: $other")
-    }
+  /** Looks up an array type for given name and returns jdi reference to it. */
+  final def arrayByName(name: String): ArrayType =
+    tryByName[ArrayType](name)
+      .getOrElse(throw new IllegalArgumentException(s"Returned type is not an array: $name"))
 
   /** Looks up a class for given name and returns jdi reference to it. */
   final def classByName(name: String): ClassType =
-    tryClassByName(name)
-      .getOrElse(throw new RuntimeException("Class or object not found: " + realClassName(name)))
+    tryByName[ClassType](name)
+      .getOrElse(throw new ClassNotFoundException("Class or object not found: " + handleArray(name)))
 
-  final def tryClassByName(name: String): Option[ClassType] = {
-    val className = realClassName(name)
-    def getClassType() = jvm.classesByName(className).collectFirst {
-      case classType: ClassType => classType
+  final def tryByName[Type <: com.sun.jdi.ReferenceType : scala.reflect.ClassTag](name: String): Option[Type] = {
+    val className = handleArray(name)
+    def getType() = jvm.classesByName(className).collectFirst {
+      case tpe: Type => tpe
     }
 
-    getClassType().orElse {
+    getType().orElse {
       loadClass(className)
-      getClassType()
+      getType()
     }
   }
 
   /** Looks up an interface for given name and returns jdi reference to it. */
-  final def interfaceByName(name: String, onNotFound: String => InterfaceType): InterfaceType = {
-    val interfaceName = realClassName(name)
+  final def interfaceByName(interfaceName: String, onNotFound: String => InterfaceType): InterfaceType = {
     jvm.classesByName(interfaceName).collectFirst {
       case interfaceType: InterfaceType => interfaceType
     } getOrElse onNotFound(interfaceName)
@@ -81,33 +80,66 @@ trait Seeker {
 
   /** Looks up for a Scala object with given name and returns jdi reference to it. */
   final def objectByName(name: String): ObjectReference = {
-    val classType = tryClassByName(name + "$")
-      .getOrElse(throw new ClassNotFoundException("Class not found: " + realClassName(name) + "$"))
-    val field = Option(classType.fieldByName("MODULE$"))
-      .getOrElse(throw new NoSuchMethodError(s"No field named `MODULE$$` found in class $name"))
+    val classType = tryByName[ClassType](name + "$")
+      .getOrElse(throw new ClassNotFoundException("Class not found: " + handleArray(name) + "$"))
+    val field = Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
+      .getOrElse(throw new NoSuchMethodError(s"No field named `${NameTransformer.MODULE_INSTANCE_NAME}` found in class $name"))
     classType.getValue(field).asInstanceOf[ObjectReference]
   }
 
-  private[expression] final def tryObjectByName(name: String): Option[ObjectReference] =
-    try {
-      for {
-        classType <- tryClassByName(name + "$")
-        field <- Option(classType.fieldByName("MODULE$"))
-      } yield classType.getValue(field).asInstanceOf[ObjectReference]
-    } catch {
-      // thrown when trying to force loading nonexistent class
-      case _: InvocationException => None
-    }
-
-  /** Helper for getting methods from given class name */
-  protected final def methodOn(className: String, methodName: String): Method = {
-    val classRef = jvm.classesByName(className).head
-    classRef.methodsByName(methodName).head
+  private[expression] final def tryObjectByName(name: String): Option[ObjectReference] = try {
+    for {
+      classType <- tryByName[ClassType](name + "$")
+      field <- Option(classType.fieldByName(NameTransformer.MODULE_INSTANCE_NAME))
+    } yield classType.getValue(field).asInstanceOf[ObjectReference]
+  } catch {
+    // thrown when trying to force loading nonexistent class
+    case _: InvocationException => None
   }
 
-  /** Helper for getting method (static) from ObjectReference */
-  protected final def methodOn(obj: ObjectReference, methodName: String): Method =
-    obj.referenceType().methodsByName(methodName).head
+  /**
+   * Helper for getting methods from given class name.
+   * `methodName` is encoded if needed (like `+:` is changed to `$plus$colon`).
+   *
+   * @param className name of class to load method from
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws ClassNotFoundException when class does not exist
+   * @throws NoSuchMethodError when method is not found
+   */
+  final def methodOn(className: String, methodName: String, arity: Int): Method = {
+    val classRef = jvm.classesByName(className).headOption.getOrElse(
+      throw new ClassNotFoundException(s"Class with name $className not found."))
+    methodOn(classRef, methodName, arity)
+  }
+
+  /**
+   * Helper for getting methods from given class reference.
+   * `methodName` is encoded if needed (like `+:` is changed to `$plus$colon`).
+   *
+   * @param tpe type to load method from
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws NoSuchMethodError when method is not found
+   */
+  final def methodOn(tpe: ReferenceType, methodName: String, arity: Int): Method = {
+    tpe.methodsByName(NameTransformer.encode(methodName)).find(_.arity == arity).getOrElse(
+      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${tpe.name}"))
+  }
+
+  /**
+   * Helper for getting method from ObjectReference
+   *
+   * @param obj reference on which method is looked
+   * @param methodName name of method
+   * @param arity arity of method
+   * @throws NoSuchMethodError when method is not found
+   */
+  final def methodOn(obj: ObjectReference, methodName: String, arity: Int): Method = {
+    val methods = obj.referenceType().methodsByName(NameTransformer.encode(methodName))
+    methods.find(_.arity == arity).getOrElse(
+      throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${obj.`type`}"))
+  }
 
   /**
    * Extracts value from debug frame.

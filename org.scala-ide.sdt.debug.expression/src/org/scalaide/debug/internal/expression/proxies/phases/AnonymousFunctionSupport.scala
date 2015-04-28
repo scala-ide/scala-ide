@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import java.io.File
 
 import scala.io.Source
+import scala.reflect.runtime.universe
+import scala.tools.reflect.ToolBox
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.FunctionProxyArgumentTypeNotInferredException
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.NestedLambdaException
-import org.scalaide.debug.internal.expression.TypesContext
+import Names.Debugger
 
 object AnonymousFunctionSupport {
   /** Pass this to toolbox as arguments to enable listening for new classes. */
   def toolboxOptions = s"-d $tempDir"
 
-  case class NewClassContext(newClassName: String, newClassCode: Array[Byte])
+  case class NewClassContext(newClassName: String, newClassCode: Array[Byte], nested: Seq[NewClassContext])
 
   // tmp dir for compiled classes
   protected lazy val tempDir = {
@@ -37,26 +36,27 @@ object AnonymousFunctionSupport {
    *
    * @param className part of class name that should define required class
    */
-  protected class ClassListener(className: String)(compile: () => Any) {
+  protected class ClassListener(className: String, lambdaCode: String)(compile: () => Any) {
     private val parentDirFile = new File(AnonymousFunctionSupport.tempDir)
 
-    private def findNewClassDirectory() = {
+    private def findNewClassDirectory(): String = {
       val filesBeforeCompilation = parentDirFile.list().toSet
-      compile()
+      try {
+        compile()
+      } catch {
+        case t: Throwable => throw new LambdaCompilationFailure(lambdaCode, t)
+      }
       val filesAfterCompilation = parentDirFile.list().toSet
 
       (filesAfterCompilation diff filesBeforeCompilation).toSeq match {
         case Seq(newClassDir) => newClassDir
-        case _ => throw new RuntimeException("Multiple package created for one compile method call")
+        case _ => throw new RuntimeException("Multiple packages were created during single lambda compilation.")
       }
     }
 
-    private def findNewClassFile(newClassDir: String) = {
+    private def findNewClassFile(newClassDir: String): Seq[File] = {
       new File(parentDirFile, newClassDir).listFiles()
-        .filter(_.getName.contains("$" + className)) match {
-          case Array(classFile) => classFile
-          case _ => throw NestedLambdaException
-        }
+        .filter(_.getName.contains("$" + className)).sortBy(_.getName.size) //nested functions names are always longer
     }
 
     private def newClassName(newClassDir: String, classFile: File) = {
@@ -79,18 +79,56 @@ object AnonymousFunctionSupport {
      */
     def collectNewClassFiles: NewClassContext = ClassListenerLock.synchronized {
       val newClassDir = findNewClassDirectory()
-      val requiredClassFile = findNewClassFile(newClassDir)
+      val requiredClassFile +: nested = findNewClassFile(newClassDir)
 
-      NewClassContext(
-        newClassName = newClassName(newClassDir, requiredClassFile),
-        newClassCode = newClassBytes(requiredClassFile))
+      def contextFromFile(file: File, nested: Seq[NewClassContext]) =
+        NewClassContext(
+          newClassName = newClassName(newClassDir, file),
+          newClassCode = newClassBytes(file), nested)
+
+      contextFromFile(requiredClassFile, nested.map(file => contextFromFile(file, Nil)))
     }
   }
 
 }
 
-trait AnonymousFunctionSupport extends UnboundValuesSupport {
-  self: AstTransformer =>
+/**
+ * Contains data about new classes to load on debugged JVM.
+ * Populated during lambda-related phases (mostly from `AnonymousFunctionSupport`).
+ *
+ * WARNING - this class have mutable (append-only) internal state
+ */
+final class NewTypesContext() {
+
+  /** Maps function names to it's stubs */
+  private var _newCodeClasses: Set[ClassData] = Set.empty
+
+  /** Classes to be loaded on debugged jvm. */
+  def classesToLoad: Iterable[ClassData] = _newCodeClasses
+
+  /**
+   * Creates a new type that will be loaded in debugged jvm.
+   *
+   * @param className name of class in jvm - must be same as in compiled code
+   * @param jvmCode code of compiled class
+   * @param constructorArgsTypes
+   */
+  def createNewType(className: String,
+    jvmCode: Array[Byte],
+    constructorArgsTypes: Seq[String]): Unit =
+    _newCodeClasses += ClassData(className, jvmCode, constructorArgsTypes)
+}
+
+trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
+  extends AstTransformer[Tpe]
+  with UnboundValuesSupport {
+
+  val toolbox: ToolBox[universe.type]
+
+  protected val typesContext = new NewTypesContext()
+
+  override def transform(data: TransformationPhaseData): TransformationPhaseData =
+    super.transform(data).withClasses(typesContext.classesToLoad.toSeq)
 
   import toolbox.u.{ Try => _, _ }
 
@@ -138,15 +176,9 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     }
   }
 
-  //requirements
-  protected val typesContext: TypesContext
-
-  // for function naming
-  private var functionsCount = 0
-
   private val ContextParamName = TermName(Debugger.contextParamName)
 
-  // we should exlude start function -> it must stay function cos it is not a part of original expression
+  // we should exclude start function -> it must stay function cos it is not a part of original expression
   protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
     case List(ValDef(_, name, typeTree, _)) if name == ContextParamName => true
     case _ => false
@@ -156,19 +188,22 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   protected final def getClosureParamsNames(body: Tree, vparams: List[ValDef]): Set[TermName] = {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
 
-    new VariableProxyTraverser(body).findUnboundNames() -- vparamsName
+    new VariableProxyTraverser(body).findUnboundVariables().map(_.name) -- vparamsName
   }
 
   /** Search for names (with types) that are from outside of given tree - must be closure parameters */
   protected final def getClosureParamsNamesAndType(body: Tree, vparams: List[ValDef]): Map[TermName, String] = {
     val vparamsName: Set[TermName] = vparams.map(_.name)(collection.breakOut)
-    new VariableProxyTraverser(body, typesContext.treeTypeName)
+    new VariableProxyTraverser(body, tree => TypeNames.fromTree(tree))
       .findUnboundValues().filterNot {
-        case (name, _) => vparamsName.contains(name)
-      }.map {
-        case (name, Some(valueType)) => name -> valueType
-        case (name, _) => name -> Debugger.proxyName
-      }
+      case (variable, _) => vparamsName.contains(variable.name)
+    }.flatMap {
+      case (variable, Some(valueType)) =>
+        val isFunctionImport = valueType.contains("$$")
+        val fixedType = if (isFunctionImport) valueType else valueType.replace("$", ".")
+        Some(variable.name -> fixedType)
+      case _ => None
+    }
   }
 
   /**
@@ -178,7 +213,7 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
    * @param closuresParams map of (closureParamName, closureArgumentType) for this function
    */
   protected def compileFunction(params: List[ValDef], body: Tree, closuresParams: Map[TermName, String]): NewClassContext = {
-    val parametersTypes = params.map(_.tpt.tpe.toString)
+    val parametersTypes = params.map(v => TypeNames.getFromTree(v.tpt))
 
     parametersTypes.foreach { elem =>
       if (elem == Debugger.proxyFullName) throw FunctionProxyArgumentTypeNotInferredException
@@ -187,21 +222,27 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     val functionGenericTypes = (parametersTypes ++ Seq("Any")).mkString(", ")
     val constructorParams = closuresParams.map { case (name, paramType) => s"$name: $paramType" }.mkString(",")
     val arity = params.size
+
+    val lambdaParams = params.zip(parametersTypes).map{
+      case (ValDef(mods, name, _, impl), typeName) =>
+        s"$name: $typeName"
+    }.mkString(", ")
+
     import Debugger.newClassName
     val classCode =
       s"""class $newClassName($constructorParams) extends Function$arity[$functionGenericTypes]{
-         |  override def apply(v1: Any) = ???
+         |  override def apply($lambdaParams) = ???
          |}""".stripMargin
     val newClass = toolbox.parse(classCode)
 
     val ClassDef(mods, name, tparams, Template(parents, self, impl)) = newClass
 
-    val DefDef(functionMods, functionName, _, _, retType, _) = impl.last
-    val newApplyFunction = DefDef(functionMods, functionName, Nil, List(params), retType, body)
+    val DefDef(functionMods, functionName, _, applyParams, retType, _) = impl.last
+    val newApplyFunction = DefDef(functionMods, functionName, Nil, applyParams, retType, body)
     val newFunctionClass = ClassDef(mods, name, tparams, Template(parents, self, impl.dropRight(1) :+ newApplyFunction))
-    val functionReseted = ResetTypeInformation(toolbox).transform(newFunctionClass)
+    val functionReseted = new ResetTypeInformation().transform(TransformationPhaseData(newFunctionClass)).tree
 
-    new ClassListener(newClassName)(() => {
+    new ClassListener(newClassName, functionReseted.toString)(() => {
       toolbox.compile(functionReseted)
     }).collectNewClassFiles
   }
@@ -209,17 +250,16 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
   // creates and compiles new function class
   protected def createAndCompileNewFunction(params: List[ValDef], body: Tree): Tree = {
     val closuresParams = getClosureParamsNamesAndType(body, params)
-    val NewClassContext(jvmClassName, classCode) = compileFunction(params, body, closuresParams)
+    val NewClassContext(jvmClassName, classCode, nested) = compileFunction(params, body, closuresParams)
 
-    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
-    val proxyClassName = s"$customLambdaPrefix$functionsCount"
-    functionsCount += 1
-    val newFunctionType =
-      typesContext.newType(proxyClassName, jvmClassName, classCode, closuresParams.values.toSeq)
+    nested.foreach(nestedFunction =>
+      typesContext.createNewType(nestedFunction.newClassName, nestedFunction.newClassCode, Nil))
+
+    typesContext.createNewType(jvmClassName, classCode, closuresParams.values.toSeq)
 
     val closureParamTrees: List[Tree] = closuresParams.map { case (name, _) => Ident(name) }(collection.breakOut)
 
-    lambdaProxy(newFunctionType, closureParamTrees)
+    lambdaProxy(jvmClassName, closureParamTrees)
   }
 
   /** creates proxy for given lambda with given closure arguments */
@@ -230,7 +270,10 @@ trait AnonymousFunctionSupport extends UnboundValuesSupport {
     Apply(Select(Ident(TermName(Debugger.contextParamName)), TermName(Debugger.newInstance)), constructorArgs)
   }
 
-  /** Extract by name params for function as Seq of Boolean. This Seq might be shorter then param list - due to varargs */
+  /**
+   * Extracts by-name params for function as `Seq[Boolean]`.
+   * This Seq might be shorter then param list - due to varargs.
+   */
   protected def extractByNameParams(select: Tree): Option[Seq[Boolean]] = Try {
 
     def innerArgs(tpe: Type): Seq[Boolean] =

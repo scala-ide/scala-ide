@@ -16,13 +16,13 @@ import org.scalaide.debug.internal.expression.TestValues.ArgumentsTestCase
 class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAccessTest) {
 
   @Test
-  def testIntArgument(): Unit = eval("int", "123", Java.boxed.Integer)
+  def testIntArgument(): Unit = eval("int", 123, Java.primitives.int)
 
   @Test
-  def testDoubleArgument(): Unit = eval("double", "230.0", Java.boxed.Double)
+  def testDoubleArgument(): Unit = eval("double", 230.0, Java.primitives.double)
 
   @Test
-  def testListArgument(): Unit = disableOnJava8 { eval("list", "List(5, 10, 15)", Scala.::) }
+  def testListArgument(): Unit = eval("list", List(5, 10, 15), Scala.::)
 
 }
 

@@ -12,34 +12,33 @@ import org.scalaide.debug.internal.expression.TestValues
 
 class JavaObjectMethodsTest extends BaseIntegrationTest(JavaObjectMethodsTest) {
 
-  import TestValues.any2String
   import TestValues.ValuesTestCase._
 
   @Test
-  def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.boxed.String)
+  def toStringWithParentheses(): Unit = eval("int.toString()", int, Java.String)
 
   @Test
-  def toStringWithoutParentheses(): Unit = disableOnJava8 { eval("int.toString", int, Java.boxed.String) }
+  def toStringWithoutParentheses(): Unit = eval("int.toString", int, Java.String)
 
   @Test
-  def toStringOnObject(): Unit = disableOnJava8 { eval("list.toString", list, Java.boxed.String) }
+  def toStringOnObject(): Unit = eval("list.toString", list, Java.String)
 
   @Test
-  def toStringOnString(): Unit = disableOnJava8 { eval("string.toString", string, Java.boxed.String) }
+  def toStringOnString(): Unit = eval("string.toString", string, Java.String)
 
   @Test
   def equalsWithNull(): Unit = {
-    eval("libClass == null", false, Java.boxed.Boolean)
-    eval("libClass != null", true, Java.boxed.Boolean)
-    eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
-    eval("libClass.selfRef() != null", true, Java.boxed.Boolean)
+    eval("libClass == null", false, Java.primitives.boolean)
+    eval("libClass != null", true, Java.primitives.boolean)
+    eval("libClass.selfRef() != null", true, Java.primitives.boolean)
+    eval("libClass.selfRef() != null", true, Java.primitives.boolean)
   }
 
   @Test
-  def hashCodeWithoutParens(): Unit = disableOnJava8 { eval("int.hashCode", int, Java.boxed.Integer) }
+  def hashCodeWithoutParens(): Unit = eval("int.hashCode", int, Java.primitives.int)
 
   @Test
-  def hashCodeWithParens(): Unit = disableOnJava8 { eval("int.hashCode()", int, Java.boxed.Integer) }
+  def hashCodeWithParens(): Unit = eval("int.hashCode()", int, Java.primitives.int)
 
 }
 

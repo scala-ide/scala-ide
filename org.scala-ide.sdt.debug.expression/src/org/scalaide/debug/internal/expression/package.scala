@@ -1,7 +1,13 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal
+
+import scala.language.implicitConversions
+
+import com.sun.jdi.Method
+import com.sun.jdi.ClassType
+import com.sun.jdi.ObjectReference
 
 /**
  * Main entry point into expression evaluation in Scala IDE debugger.
@@ -16,7 +22,7 @@ package org.scalaide.debug.internal
  * In [[org.scalaide.debug.internal.expression.ConditionManager]] sits the logic for evaluating conditions for
  * conditional expressions.
  *
- * [[org.scalaide.debug.internal.expression.TypesContext]] contains append only mutable state about types encountered
+ * [[org.scalaide.debug.internal.expression.NewTypesContext]] contains append only mutable state about types encountered
  * during transformation, it's updated by multiple transformation phases and passed over.
  *
  * Several helpers exists here also:
@@ -25,4 +31,13 @@ package org.scalaide.debug.internal
  *
  * Special names used by debugger resides in [[org.scalaide.debug.internal.expression.DebuggerSpecific]].
  */
-package object expression
+package object expression extends JdiHelpers {
+
+  import JdiHelpers._
+
+  implicit def Arity(method: Method): Arity = new Arity(method)
+
+  implicit def SimpleInvokeOnClassType(ref: ClassType): SimpleInvokeOnClassType = new SimpleInvokeOnClassType(ref)
+
+  implicit def SimpleInvokeOnObjectRef(ref: ObjectReference): SimpleInvokeOnObjectRef = new SimpleInvokeOnObjectRef(ref)
+}

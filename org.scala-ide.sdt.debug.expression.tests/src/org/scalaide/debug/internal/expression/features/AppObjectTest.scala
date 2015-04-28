@@ -13,7 +13,7 @@ class AppObjectTest extends BaseIntegrationTest(AppObjectTest) {
 
   @Test
   def testField(): Unit =
-    eval("outer", "ala", Names.Java.boxed.String)
+    eval("outer", "ala", Names.Java.String)
 
   @Test
   def testThis(): Unit =
@@ -21,7 +21,7 @@ class AppObjectTest extends BaseIntegrationTest(AppObjectTest) {
 
   @Test
   def testMethod(): Unit =
-    eval("alaMethod(2)", "ala 2", Names.Java.boxed.String)
+    eval("alaMethod(2)", "ala 2", Names.Java.String)
 }
 
 object AppObjectTest extends BaseIntegrationTestCompanion(AppObjectTestCase)

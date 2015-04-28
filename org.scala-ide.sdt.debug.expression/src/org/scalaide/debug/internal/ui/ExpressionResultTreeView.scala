@@ -31,7 +31,7 @@ import org.eclipse.ui.ISharedImages
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
-import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
+import org.scalaide.debug.internal.expression.TypeNames.javaNameToScalaName
 import org.scalaide.debug.internal.model.ScalaArrayElementVariable
 import org.scalaide.debug.internal.model.ScalaArrayReference
 import org.scalaide.debug.internal.model.ScalaFieldVariable
@@ -279,7 +279,7 @@ class ExpressionResultTreeView(parent: Composite) {
  * Contains model for tree view which uses partially model for variables view so we have consistent names etc.
  */
 object ExpressionResultTreeView extends HasLogger {
-  import org.scalaide.debug.internal.expression.TypeNameMappings.javaNameToScalaName
+  import org.scalaide.debug.internal.expression.TypeNames.javaNameToScalaName
 
   private val sessionDisconnectedText = "Session disconnected"
   private val cannotCreateLogicalStructureText = "Cannot create logical structure"

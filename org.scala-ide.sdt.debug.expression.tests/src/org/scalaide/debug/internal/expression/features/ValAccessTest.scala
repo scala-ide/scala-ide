@@ -12,43 +12,43 @@ import org.scalaide.debug.internal.expression.Names.Scala
 class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
 
   @Test
-  def testInt(): Unit = eval("int", "1", Java.boxed.Integer)
+  def testInt(): Unit = eval("int", 1, Java.primitives.int)
 
   @Test
-  def testChar(): Unit = eval("char", "c", Java.boxed.Character)
+  def testChar(): Unit = eval("char", 'c', Java.primitives.char)
 
   @Test
-  def testDouble(): Unit = disableOnJava8 { eval("double", "1.1", Java.boxed.Double) }
+  def testDouble(): Unit = eval("double", 1.1, Java.primitives.double)
 
   @Test
-  def testFloat(): Unit = eval("float", "1.1", Java.boxed.Float)
+  def testFloat(): Unit = eval("float", 1.1f, Java.primitives.float)
 
   @Test
-  def testBoolean(): Unit = eval("boolean", "false", Java.boxed.Boolean)
+  def testBoolean(): Unit = eval("boolean", false, Java.primitives.boolean)
 
   @Test
-  def testString(): Unit = disableOnJava8 { eval("string", "Ala", Java.boxed.String) }
+  def testString(): Unit = eval("string", "Ala", Java.String)
 
   @Test
-  def testLong(): Unit = eval("long", "1", Java.boxed.Long)
+  def testLong(): Unit = eval("long", 1L, Java.primitives.long)
 
   @Test
-  def testStringMethod(): Unit = disableOnJava8 { eval("string.toLowerCase", "ala", Java.boxed.String) }
+  def testStringMethod(): Unit = eval("string.toLowerCase", "ala", Java.String)
 
   @Test
-  def testObjectList(): Unit = disableOnJava8 { eval("list", "List(1, 2, 3)", Scala.::) }
+  def testObjectList(): Unit = eval("list", List("1", "2", "3"), Scala.::)
 
   @Test
-  def testObjectListMethod(): Unit = eval("list.mkString", "123", Java.boxed.String)
+  def testObjectListMethod(): Unit = eval("list.mkString", "123", Java.String)
 
   @Test
-  def testStrangeMethodsNamesMethod(): Unit = eval("*", "1", Java.boxed.Integer)
+  def testStrangeMethodsNamesMethod(): Unit = eval("*", 1, Java.primitives.int)
 
   @Test
-  def testPlusOnVals(): Unit = eval("int + int", "2", Java.boxed.Integer)
+  def testPlusOnVals(): Unit = eval("int + int", 2, Java.primitives.int)
 
   @Test
-  def testOuterScopedVal(): Unit = eval("outer", "ala", Java.boxed.String)
+  def testOuterScopedVal(): Unit = eval("outer", "ala", Java.String)
 
   @Test
   def testLibClassVal(): Unit = eval("libClass", "LibClass(1)", "debug.LibClass")
