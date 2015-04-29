@@ -1,6 +1,7 @@
 package org.scalaide.core
 package sbtbuilder
 
+import org.junit.Ignore
 import org.junit.Test
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathEntry
@@ -98,6 +99,7 @@ class ProjectDependenciesTest {
     }
   }
 
+  @Ignore
   @Test def transitive_dep_indirect() {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
