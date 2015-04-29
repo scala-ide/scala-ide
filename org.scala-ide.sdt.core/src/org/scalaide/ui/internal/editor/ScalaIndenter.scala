@@ -1517,7 +1517,7 @@ class ScalaIndenter(
    */
   private def isStringOrCharLiteralAssignment(referenceTokenPos: Int, offset: Int) = {
     val restOfTheLine = document.get(referenceTokenPos, Math.max(offset - referenceTokenPos, 0))
-    val charLit = "'.'"
+    val charLit = """'(\\?.|\\u[\da-fA-F]{4})'"""
     val stringLit = "\".*\""
     val regex = s"($charLit|$stringLit)".r
     regex.findFirstIn(restOfTheLine.trim).isDefined
