@@ -534,7 +534,6 @@ class ScalaIndenter(
     val maxCopyLength = if (tabSize > 0) minLength - minLength % tabSize else minLength // maximum indent to copy
     stripExceedingChars(buffer, maxCopyLength)
 
-
     def safeDivision(num: Int, denom: Int): (Int,Int) = if (denom > 0) (num / denom, num % denom) else (0, num)
 
     // add additional indent
@@ -1518,10 +1517,9 @@ class ScalaIndenter(
    */
   private def isStringOrCharLiteralAssignment(referenceTokenPos: Int, offset: Int) = {
     val restOfTheLine = document.get(referenceTokenPos, Math.max(offset - referenceTokenPos, 0))
-    val charLit = """'(.|\\\w|\\\\)'"""
-    val stringLit = """"(\\"|[^"])*")"""
-
-    val regex = s"(${charLit}|${stringLit}$$".r
+    val charLit = """'(\\?.|\\u[\da-fA-F]{4})'"""
+    val stringLit = "\".*\""
+    val regex = s"($charLit|$stringLit)".r
     regex.findFirstIn(restOfTheLine.trim).isDefined
   }
 }
