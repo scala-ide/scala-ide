@@ -91,7 +91,7 @@
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
     <repo.scalariform>${repo.scala-ide.root}/scalariform-${scala.short.version}x</repo.scalariform>
-    <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-${scala.minor.version}</repo.typesafe>
+    <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>
 
@@ -249,7 +249,7 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://private-repo.typesafe.com/typesafe/ide-2.11</url>
+          <url>https://proxy-ch.typesafe.com:8082/artifactory/ide-2.11</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
