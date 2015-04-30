@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression.sources
 
@@ -19,7 +19,7 @@ trait SPCIntegration {
   /**
    * Obtain scala presentation compiler for current stack frame
    */
-  protected def forCurrentStackFrame[T](fun: PCFunction[T], onError: String => T): T = {
+  protected def forCurrentStackFrame[T](fun: PCFunction[T], onError: String => T): T = try {
     val ssf = ScalaStackFrame(ScalaDebugger.currentThread, ScalaDebugger.currentFrame().get)
     ScalaDebugger.currentThread.getDebugTarget.getLaunch
       .getSourceLocator.getSourceElement(ssf) match {
@@ -34,6 +34,8 @@ trait SPCIntegration {
 
       case _ => onError("Source file not found for: " + ssf.getSourcePath())
     }
+  } catch {
+    case error: Throwable => onError(error.getMessage)
   }
 
 }
