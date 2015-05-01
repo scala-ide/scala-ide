@@ -34,7 +34,6 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.ITextEditorExtension3
 import org.scalaide.core.lexical.ScalaCodePartitioner
 
-
 /**
  * Auto indent strategy sensitive to brackets.
  *
@@ -48,9 +47,6 @@ class ScalaAutoIndentStrategy(
     val fViewer : ISourceViewer,
     val preferencesProvider : PreferenceProvider
   ) extends DefaultIndentLineAutoEditStrategy {
-
-  // The line comment introducer. Value is "{@value}"
-  private val LINE_COMMENT= "//"
 
   private class CompilationUnitInfo(
     var buffer : Array[Char],
@@ -111,7 +107,6 @@ class ScalaAutoIndentStrategy(
     return bracketCount
   }
 
-
   /**
    * Find the end of a comment
    */
@@ -126,7 +121,6 @@ class ScalaAutoIndentStrategy(
     }
     return endOffset
   }
-
 
   private def getIndentOfLine(d : IDocument, line : Int) : String = {
     if (line > -1) {
@@ -367,7 +361,6 @@ class ScalaAutoIndentStrategy(
     return -1
   }
 
-
   /**
    * Finds a closing parenthesis to the left of <code>position</code> in document, where that parenthesis is only
    * separated by whitespace from <code>position</code>. If no such parenthesis can be found, <code>position</code> is returned.
@@ -385,7 +378,6 @@ class ScalaAutoIndentStrategy(
 
     return position
   }
-
 
   /**
    * Checks whether the content of <code>document</code> in the range (<code>offset</code>, <code>length</code>)
@@ -426,7 +418,6 @@ class ScalaAutoIndentStrategy(
     return false
   }
 
-
   /**
    * Checks whether the content of <code>document</code> at <code>position</code> looks like an
    * anonymous class definition. <code>position</code> must be to the left of the opening
@@ -448,7 +439,6 @@ class ScalaAutoIndentStrategy(
 
     return false
   }
-
 
   /**
    * Checks whether <code>position</code> resides in a default (Java) partition of <code>document</code>.
@@ -568,334 +558,6 @@ class ScalaAutoIndentStrategy(
     return true
   }
 
-
-  /**
-   * Installs a java partitioner with <code>document</code>.
-   *
-   * @param document the document
-   */
-  private def installJavaStuff(document : Document) : Unit = {
-    val partitioner = ScalaCodePartitioner.documentPartitioner()
-    partitioner.connect(document)
-    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
-  }
-
-  /**
-   * Removes a java partitioner from <code>document</code>.
-   *
-   * @param document the document
-   */
-  private def removeJavaStuff(document : Document) : Unit = {
-    document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, null)
-  }
-
-  private def smartPaste(document : IDocument, command : DocumentCommand) : Unit = {
-    // TODO Implement me
-    /*
-    int newOffset= command.offset;
-    int newLength= command.length;
-    String newText= command.text;
-
-    try {
-      JavaHeuristicScanner scanner= new JavaHeuristicScanner(document);
-      ScalaIndenter indenter= new ScalaIndenter(document, scanner, fProject);
-      int offset= newOffset;
-
-      // reference position to get the indent from
-      int refOffset= indenter.findReferencePosition(offset);
-      if (refOffset == JavaHeuristicScanner.NOT_FOUND)
-        return;
-      int peerOffset= getPeerPosition(document, command);
-      peerOffset= indenter.findReferencePosition(peerOffset);
-      refOffset= Math.min(refOffset, peerOffset);
-
-      // eat any WS before the insertion to the beginning of the line
-      int firstLine= 1; // don't format the first line per default, as it has other content before it
-      IRegion line= document.getLineInformationOfOffset(offset);
-      String notSelected= document.get(line.getOffset(), offset - line.getOffset());
-      if (notSelected.trim().length() == 0) {
-        newLength += notSelected.length();
-        newOffset= line.getOffset();
-        firstLine= 0;
-      }
-
-      // prefix: the part we need for formatting but won't paste
-      IRegion refLine= document.getLineInformationOfOffset(refOffset);
-      String prefix= document.get(refLine.getOffset(), newOffset - refLine.getOffset());
-
-      // handle the indentation computation inside a temporary document
-      Document temp= new Document(prefix + newText);
-      DocumentRewriteSession session= temp.startRewriteSession(DocumentRewriteSessionType.STRICTLY_SEQUENTIAL);
-      scanner= new JavaHeuristicScanner(temp);
-      indenter= new ScalaIndenter(temp, scanner, fProject);
-      installJavaStuff(temp);
-
-      // indent the first and second line
-      // compute the relative indentation difference from the second line
-      // (as the first might be partially selected) and use the value to
-      // indent all other lines.
-      boolean isIndentDetected= false;
-      StringBuffer addition= new StringBuffer();
-      int insertLength= 0;
-      int first= document.computeNumberOfLines(prefix) + firstLine; // don't format first line
-      int lines= temp.getNumberOfLines();
-      int tabLength= getVisualTabLengthPreference();
-      boolean changed= false;
-      for (int l= first; l < lines; l++) { // we don't change the number of lines while adding indents
-
-        IRegion r= temp.getLineInformation(l);
-        int lineOffset= r.getOffset();
-        int lineLength= r.getLength();
-
-        if (lineLength == 0) // don't modify empty lines
-          continue;
-
-        if (!isIndentDetected) {
-
-          // indent the first pasted line
-          String current= getCurrentIndent(temp, l);
-          StringBuffer correct= indenter.computeIndentation(lineOffset);
-          if (correct == null)
-            return; // bail out
-
-          insertLength= subtractIndent(correct, current, addition, tabLength);
-          if (l != first && temp.get(lineOffset, lineLength).trim().length() != 0) {
-            isIndentDetected= true;
-            if (insertLength == 0) {
-               // no adjustment needed, bail out
-              if (firstLine == 0) {
-                // but we still need to adjust the first line
-                command.offset= newOffset;
-                command.length= newLength;
-                if (changed)
-                  break; // still need to get the leading indent of the first line
-              }
-              return;
-            }
-            removeJavaStuff(temp);
-          } else {
-            changed= insertLength != 0;
-          }
-        }
-
-        // relatively indent all pasted lines
-        if (insertLength > 0)
-          addIndent(temp, l, addition, tabLength);
-        else if (insertLength < 0)
-          cutIndent(temp, l, -insertLength, tabLength);
-
-      }
-
-      temp.stopRewriteSession(session);
-      newText= temp.get(prefix.length(), temp.getLength() - prefix.length());
-
-      command.offset= newOffset;
-      command.length= newLength;
-      command.text= newText;
-
-    } catch (BadLocationException e) {
-      JavaPlugin.log(e);
-    }
-    */
-  }
-
-
-  /**
-   * Returns the indentation of the line <code>line</code> in <code>document</code>.
-   * The returned string may contain pairs of leading slashes that are considered
-   * part of the indentation. The space before the asterisk in a javadoc-like
-   * comment is not considered part of the indentation.
-   *
-   * @param document the document
-   * @param line the line
-   * @return the indentation of <code>line</code> in <code>document</code>
-   * @throws BadLocationException if the document is changed concurrently
-   */
-  private def getCurrentIndent(document : Document, line : Int) : String = {
-    val region = document.getLineInformation(line)
-    val from = region.getOffset()
-    val endOffset = region.getOffset() + region.getLength()
-
-    // go behind line comments
-    var to = from
-    while (to < endOffset - 2 && document.get(to, 2).equals(LINE_COMMENT))
-      to += 2
-
-    var done = false
-    while (to < endOffset && !done) {
-      val ch = document.getChar(to)
-      if (!Character.isWhitespace(ch))
-        done = true
-      else
-        to += 1
-    }
-
-    // don't count the space before javadoc like, asterisk-style comment lines
-    if (to > from && to < endOffset - 1 && document.get(to - 1, 2).equals(" *")) {
-      val textType = TextUtilities.getContentType(document, IJavaPartitions.JAVA_PARTITIONING, to, true)
-      if (textType.equals(IJavaPartitions.JAVA_DOC) || textType.equals(IJavaPartitions.JAVA_MULTI_LINE_COMMENT))
-        to -= 1
-    }
-
-    return document.get(from, to - from)
-  }
-
-
-  /**
-   * Computes the difference of two indentations and returns the difference in
-   * length of current and correct. If the return value is positive, <code>addition</code>
-   * is initialized with a substring of that length of <code>correct</code>.
-   *
-   * @param correct the correct indentation
-   * @param current the current indentation (might contain non-whitespace)
-   * @param difference a string buffer - if the return value is positive, it will be cleared and set to the substring of <code>current</code> of that length
-   * @param tabLength the length of a tab
-   * @return the difference in length of <code>correct</code> and <code>current</code>
-   */
-  private def subtractIndent(correct : CharSequence, current : CharSequence, difference : StringBuffer, tabLength : Int) : Int = {
-    val c1 = computeVisualLength(correct, tabLength)
-    val c2 = computeVisualLength(current, tabLength)
-    val diff = c1 - c2
-    if (diff <= 0)
-      return diff
-
-    difference.setLength(0)
-    var len = 0
-    var i = 0
-    while (len < diff) {
-      val c = correct.charAt(i)
-      i += 1
-      difference.append(c)
-      len += computeVisualLength(c, tabLength)
-    }
-
-    return diff
-  }
-
-
-  /**
-   * Indents line <code>line</code> in <code>document</code> with <code>indent</code>.
-   * Leaves leading comment signs alone.
-   *
-   * @param document the document
-   * @param line the line
-   * @param indent the indentation to insert
-   * @param tabLength the length of a tab
-   * @throws BadLocationException on concurrent document modification
-   */
-  private def addIndent(document : Document, line : Int, indent : CharSequence, tabLength : Int) : Unit = {
-    val region = document.getLineInformation(line)
-    var insert = region.getOffset()
-    val endOffset = region.getOffset() + region.getLength()
-
-    // Compute insert after all leading line comment markers
-    var newInsert = insert
-    while (newInsert < endOffset - 2 && document.get(newInsert, 2).equals(LINE_COMMENT))
-      newInsert += 2
-
-    // Heuristic to check whether it is commented code or just a comment
-    if (newInsert > insert) {
-      var whitespaceCount = 0;
-      var i = newInsert;
-      while (i < endOffset - 1) {
-         val ch = document.get(i, 1).charAt(0)
-         if (!Character.isWhitespace(ch)) {
-           i = endOffset - 1
-         } else {
-           whitespaceCount = whitespaceCount + computeVisualLength(ch, tabLength)
-           i += 1
-         }
-      }
-
-      if (whitespaceCount != 0 && whitespaceCount >= CodeFormatterUtil.getIndentWidth(fProject))
-        insert = newInsert
-    }
-
-    // Insert indent
-    document.replace(insert, 0, indent.toString())
-  }
-
-
-  /**
-   * Cuts the visual equivalent of <code>toDelete</code> characters out of the
-   * indentation of line <code>line</code> in <code>document</code>. Leaves
-   * leading comment signs alone.
-   *
-   * @param document the document
-   * @param line the line
-   * @param toDelete the number of space equivalents to delete
-   * @param tabLength the length of a tab
-   * @throws BadLocationException on concurrent document modification
-   */
-  private def cutIndent(document : Document, line : Int, ptoDelete : Int, tabLength : Int) : Unit = {
-    val region = document.getLineInformation(line)
-    var from = region.getOffset()
-    val endOffset = region.getOffset() + region.getLength()
-    var toDelete = ptoDelete
-
-    // go behind line comments
-    while (from < endOffset - 2 && document.get(from, 2).equals(LINE_COMMENT))
-      from += 2
-
-    var to = from
-    while (toDelete > 0 && to < endOffset) {
-      val ch = document.getChar(to)
-      if (!Character.isWhitespace(ch)) {
-        toDelete = 0
-      } else {
-        toDelete -= computeVisualLength(ch, tabLength)
-        if (toDelete >= 0)
-          to += 1;
-        else
-          toDelete = 0
-      }
-    }
-
-    document.replace(from, to - from, "")
-  }
-
-
-  /**
-   * Returns the visual length of a given <code>CharSequence</code> taking into
-   * account the visual tabulator length.
-   *
-   * @param seq the string to measure
-   * @param tabLength the length of a tab
-   * @return the visual length of <code>seq</code>
-   */
-  private def computeVisualLength(seq : CharSequence, tabLength : Int) : Int = {
-    var size= 0
-
-    for (i <- 0 until seq.length()) {
-      val ch = seq.charAt(i)
-      if (ch == '\t') {
-        if (tabLength != 0)
-          size += tabLength - size % tabLength
-        // else: size stays the same
-      } else {
-        size += 1
-      }
-    }
-    return size
-  }
-
-
-  /**
-   * Returns the visual length of a given character taking into
-   * account the visual tabulator length.
-   *
-   * @param ch the character to measure
-   * @param tabLength the length of a tab
-   * @return the visual length of <code>ch</code>
-   */
-  private def computeVisualLength(ch : Char, tabLength : Int) : Int = {
-    if (ch == '\t')
-      return tabLength
-    else
-      return 1
-  }
-
-
   /**
    * The preference setting for the visual tabulator display.
    *
@@ -912,137 +574,6 @@ class ScalaAutoIndentStrategy(
    */
   private def isInsertingSpacesForTab: Boolean =
     preferencesProvider.getBoolean(ScalaIndenter.INDENT_WITH_TABS)
-
-  /**
-   * Returns the possibly <code>project</code>-specific core preference defined under
-   * <code>key</code>.
-   *
-   * @param project the project to get the preference from, or <code>null</code> to get the global
-   *            preference
-   * @param key the key of the preference
-   * @return the value of the preference
-   * @since 3.5
-   */
-  private def getCoreOption(project : IJavaProject, key : String) : String = {
-    if (project == null)
-      return JavaCore.getOption(key)
-    return project.getOption(key, true)
-  }
-
-  private def getPeerPosition(document : IDocument, command : DocumentCommand) : Int = {
-
-    if (document.getLength() == 0)
-      return 0
-
-    // Search for scope closers in the pasted text and find their opening peers
-    // in the document.
-    val pasted = new Document(command.text)
-    installJavaStuff(pasted)
-    var firstPeer = command.offset
-
-    val pScanner = new JavaHeuristicScanner(pasted)
-    val dScanner = new JavaHeuristicScanner(document)
-
-    // add scope relevant after context to peer search
-    val afterToken = dScanner.nextToken(command.offset + command.length, JavaHeuristicScanner.UNBOUND)
-    afterToken match {
-      case Symbols.TokenRBRACE =>
-        pasted.replace(pasted.getLength(), 0, "}")
-      case Symbols.TokenRPAREN =>
-        pasted.replace(pasted.getLength(), 0, ")")
-      case Symbols.TokenRBRACKET =>
-        pasted.replace(pasted.getLength(), 0, "]")
-      case _ =>
-    }
-
-    var pPos = 0 // paste text position (increasing from 0)
-    var dPos = Math.max(0, command.offset - 1) // document position (decreasing from paste offset)
-    while (true) {
-      val token = pScanner.nextToken(pPos, JavaHeuristicScanner.UNBOUND)
-      pPos = pScanner.getPosition()
-      token match {
-        case Symbols.TokenLBRACE | Symbols.TokenLBRACKET | Symbols.TokenLPAREN =>
-          pPos = skipScope(pScanner, pPos, token)
-          if (pPos == JavaHeuristicScanner.NOT_FOUND)
-            return firstPeer
-          // closed scope -> keep searching
-        case Symbols.TokenRBRACE =>
-          val peer = dScanner.findOpeningPeer(dPos, '{', '}')
-          dPos = peer - 1
-          if (peer == JavaHeuristicScanner.NOT_FOUND)
-            return firstPeer
-          firstPeer = peer
-          // keep searching
-        case Symbols.TokenRBRACKET =>
-          val peer = dScanner.findOpeningPeer(dPos, '[', ']')
-          dPos = peer - 1
-          if (peer == JavaHeuristicScanner.NOT_FOUND)
-            return firstPeer
-          firstPeer = peer
-          // keep searching
-        case Symbols.TokenRPAREN =>
-          val peer = dScanner.findOpeningPeer(dPos, '(', ')')
-          dPos = peer - 1
-          if (peer == JavaHeuristicScanner.NOT_FOUND)
-            return firstPeer
-          firstPeer = peer
-          // keep searching
-        case Symbols.TokenCASE | Symbols.TokenDEFAULT =>
-          val indenter = createIndenter(document, pScanner)
-          val peer = indenter.findReferencePosition(dPos, false, false, false, true, false)
-          if (peer == JavaHeuristicScanner.NOT_FOUND)
-            return firstPeer
-          firstPeer = peer
-          // keep searching
-
-        case Symbols.TokenEOF =>
-          return firstPeer
-
-        case _ =>
-          // keep searching
-      }
-    }
-
-    return 0 // Won't happen
-  }
-
-
-  /**
-   * Skips the scope opened by <code>token</code>.
-   *
-   * @param scanner the scanner
-   * @param start the start position
-   * @param token the token
-   * @return the position after the scope or <code>JavaHeuristicScanner.NOT_FOUND</code>
-   */
-  private def skipScope(scanner : JavaHeuristicScanner, start : Int, token : Int) : Int = {
-    val openToken = token
-    val tokenMap = Map(
-        Symbols.TokenLPAREN -> Symbols.TokenRPAREN,
-        Symbols.TokenLBRACKET -> Symbols.TokenRBRACKET,
-        Symbols.TokenLBRACE -> Symbols.TokenRBRACE
-    )
-    val closeToken = tokenMap(token)
-
-    var depth= 1
-    var p = start
-
-    while (true) {
-      val tok = scanner.nextToken(p, JavaHeuristicScanner.UNBOUND)
-      p = scanner.getPosition()
-
-      if (tok == openToken) {
-        depth += 1
-      } else if (tok == closeToken) {
-        depth -= 1
-        if (depth == 0)
-          return p + 1
-      } else if (tok == Symbols.TokenEOF) {
-        return JavaHeuristicScanner.NOT_FOUND
-      }
-    }
-    return 0 // Won't happen
-  }
 
   private def isLineDelimiter(document : IDocument, text : String) : Boolean = {
     val delimiters = document.getLegalLineDelimiters()
@@ -1157,7 +688,6 @@ class ScalaAutoIndentStrategy(
     }
   }
 
-
   /*
    * @see org.eclipse.jface.text.IAutoIndentStrategy#customizeDocumentCommand(org.eclipse.jface.text.IDocument, org.eclipse.jface.text.DocumentCommand)
    */
@@ -1180,12 +710,7 @@ class ScalaAutoIndentStrategy(
       smartIndentAfterNewLine(d, c)
     else if (c.text.length() == 1)
       smartIndentOnKeypress(d, c)
-    else if (c.text.length() > 1 && getPreferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_PASTE) &&
-      (fViewer == null || fViewer.getTextWidget() == null || !fViewer.getTextWidget().getBlockSelection()))
-        smartPaste(d, c) // no smart backspace for paste
-
   }
-
 
   /**
    * Tells whether the given inserted string represents hitting the Tab key.
@@ -1209,8 +734,6 @@ class ScalaAutoIndentStrategy(
     } else
       return text.length() == 1 && text.charAt(0) == '\t'
   }
-
-  private def getPreferenceStore = JavaPlugin.getDefault().getCombinedPreferenceStore()
 
   private def closeBrace : Boolean = fCloseBrace
 
@@ -1257,7 +780,6 @@ class ScalaAutoIndentStrategy(
 
     return null
   }
-
 
   /**
    * Returns the block balance, i.e. zero if the blocks are balanced at <code>offset</code>, a
