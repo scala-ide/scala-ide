@@ -87,7 +87,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
-      logger.info("suppressed error in Java file: %s".format(msg))
+      logger.error(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
 
     // if we couldn't determine what file/offset to put this marker on, create one on the project
     if (!marker.isDefined) {
