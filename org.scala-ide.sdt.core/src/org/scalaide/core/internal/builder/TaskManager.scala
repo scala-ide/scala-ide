@@ -57,7 +57,10 @@ object TaskManager {
   }
 
   private def extractComments(sourceFile: SourceFile, contentStream: InputStream, charset: String): Seq[Comment] = {
-    val contents = scala.io.Source.fromInputStream(contentStream)(charset).mkString
+    val contents = try {
+      scala.io.Source.fromInputStream(contentStream)(charset).mkString
+    } finally contentStream.close()
+
     for {
       token <- ScalaLexer.rawTokenise(contents, forgiveErrors = true)
       if (token.tokenType.isComment)
