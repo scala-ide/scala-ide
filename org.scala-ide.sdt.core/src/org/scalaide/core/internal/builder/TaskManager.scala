@@ -46,7 +46,7 @@ object TaskManager {
       iFile <- files
       scalaFile <- ScalaSourceFile.createFromPath(iFile.getFullPath.toOSString)
       sourceFile = scalaFile.lastSourceMap.sourceFile
-      Comment(msg, pos) <- extractComments(sourceFile, iFile.getContents)
+      Comment(msg, pos) <- extractComments(sourceFile, iFile.getContents, iFile.getCharset)
       if pos.isDefined
       task <- taskScanner.extractTasks(msg, pos)
       if task.pos.isDefined
@@ -56,8 +56,8 @@ object TaskManager {
     }
   }
 
-  private def extractComments(sourceFile: SourceFile, contentStream: InputStream): Seq[Comment] = {
-    val contents = scala.io.Source.fromInputStream(contentStream).mkString
+  private def extractComments(sourceFile: SourceFile, contentStream: InputStream, charset: String): Seq[Comment] = {
+    val contents = scala.io.Source.fromInputStream(contentStream)(charset).mkString
     for {
       token <- ScalaLexer.rawTokenise(contents, forgiveErrors = true)
       if (token.tokenType.isComment)
