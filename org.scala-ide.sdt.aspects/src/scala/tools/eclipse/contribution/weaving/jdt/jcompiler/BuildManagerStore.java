@@ -1,7 +1,11 @@
 package scala.tools.eclipse.contribution.weaving.jdt.jcompiler;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import static java.util.Arrays.asList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
@@ -9,6 +13,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
+import org.eclipse.jdt.internal.core.builder.JavaBuilder;
+import org.eclipse.jdt.internal.core.builder.SourceFile;
 
 /**
  * Class used to store java files to be compile per projects
@@ -73,4 +80,43 @@ public class BuildManagerStore {
     }
   }
 
+  private IProject project(AbstractImageBuilder imageBuilder) {
+	Field[] fields = AbstractImageBuilder.class.getDeclaredFields();
+	Field javaBuilderField = null;
+	for (Field f: fields) {
+	  if ("javaBuilder".equals(f.getName())) {
+	    javaBuilderField = f;
+	    javaBuilderField.setAccessible(true);
+	  } 
+	}
+	JavaBuilder builder = null;
+	try {
+	  builder = (JavaBuilder)javaBuilderField.get(imageBuilder);
+	  if (builder == null) {
+	    throw new IllegalArgumentException("java builder of image builder is null");
+	  }
+	} catch(Exception e) {
+	  throw new IllegalArgumentException("image builder met problems with retrieving java builder", e);
+	}
+    return builder.getProject();
+  }
+
+  /**
+   * Defensively filters <code>SourceFile</code> of current project in given scope.<br/>
+   * @param sources
+   * @param imageBuilder
+   * @return these <code>SourceFile</code> which resources belong to current compilation scope
+   */
+  public List<SourceFile> filterProjectSources(List<SourceFile> sources, AbstractImageBuilder imageBuilder) {
+	List<SourceFile> sourcesToCompile = new ArrayList<SourceFile>();
+	File[] scopeProjectSources = projectToJavaSourceFiles.get(project(imageBuilder));
+	List<File> projectFiles = scopeProjectSources != null ? asList(scopeProjectSources) : new ArrayList<File>();
+	for (SourceFile source: sources) {
+	  File file = source.resource.getRawLocation().makeAbsolute().toFile();
+	  if (projectFiles.contains(file)) {
+		sourcesToCompile.add(source);
+	  }
+	}
+	return sourcesToCompile;
+  }
 }
