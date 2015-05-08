@@ -14,13 +14,13 @@ import org.eclipse.core.runtime.Path
  *
  * There are defined (as a convention) 3 scopes (can be changed in future so following
  * can be treated as example in scopes defining):
- * - macros with default source path: <project root>/src/macros* and
- *   especially for Play projects <project root>/conf*
- * - tests with default source path: <project root>/src/test* and (because of
- *   Play projects) <project root>/test*
- * - main which gets all source paths which don't match macros and tests scopes
- *   (* is a wildcard so for example to tests scope are assigned sources from
- *   folders src/test, src/test-my-special)
+ *  - macros with default source path: <project root>/src/macros* and
+ *    especially for Play projects <project root>/conf*
+ *  - tests with default source path: <project root>/src/test* and (because of
+ *    Play projects) <project root>/test*
+ *  - main which gets all source paths which don't match macros and tests scopes
+ *    (* is a wildcard so for example to tests scope are assigned sources from
+ *    folders src/test, src/test-my-special)
  *
  * The scopes are compiled in order: macros, main, tests. The compilation is
  * conditional so if any scope compilation fails then further scopes are not
@@ -30,10 +30,10 @@ import org.eclipse.core.runtime.Path
  * When given eclipse project (let name it B) depends on other project (let
  * call it A) then there are introduced additional dependencies between
  * projects' scopes:
- * - macros of B depends on macros and main of A. So macros of B requires the
- *   correct compilations of macros and main scopes in project A
- * - main of B depends on macros and main of A
- * - tests of B depends on macros, main and tests of A
+ *  - macros of B depends on macros and main of A. So macros of B requires the
+ *    correct compilations of macros and main scopes in project A
+ *  - main of B depends on macros and main of A
+ *  - tests of B depends on macros, main and tests of A
  *
  * Refer to [[SbtScopesBuildManager]] implementation for
  * implementation details.
