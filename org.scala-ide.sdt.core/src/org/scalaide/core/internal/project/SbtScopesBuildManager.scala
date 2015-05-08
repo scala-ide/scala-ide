@@ -19,9 +19,8 @@ import org.scalaide.util.internal.SettingConverterUtil
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
 
-/**
- * Manages of source compilation for all scopes.
- * @see CompileScope scopes
+/** Manages of source compilation for all scopes.
+ *  Refer to [[CompileScope]]
  */
 class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: Settings)
     extends EclipseBuildManager {

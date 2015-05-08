@@ -13,9 +13,8 @@ import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
-/**
- * Build manager which compiles sources without dividing on scopes.
- * @see CompileScope scopes
+/** Build manager which compiles sources without dividing on scopes.
+ *  Refer to [[CompileScope]]
  */
 class ProjectsDependentSbtBuildManager(project: IScalaProject, settings: Settings)
     extends EclipseSbtBuildManager(project, settings) {
