@@ -605,6 +605,21 @@
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
           <version>${scala.plugin.version}</version>
+          <configuration>
+            <args>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-deprecation:false</arg>
+              <arg>-language:_</arg>
+              <arg>-Xlint:-missing-interpolator,_</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Xfatal-warnings</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
         </plugin>
         <!-- git hash extractor -->
         <plugin>
