@@ -20,14 +20,10 @@ import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
-import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.internal.SbtUtils.m2o
 
-import EclipseSbtBuildManager.FileHelper
-import sbt.Logger.xlog2Log
 import sbt.compiler.AggressiveCompile
 import sbt.compiler.CompileFailed
 import sbt.compiler.IC
@@ -50,7 +46,6 @@ import xsbti.compile.CompileProgress
 class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
   addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
     extends CachedAnalysisBuildManager with HasLogger {
-  import EclipseSbtBuildManager._
 
   /** Initialized in `build`, used by the SbtProgress. */
   private var monitor: SubMonitor = _
@@ -124,8 +119,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     clearTasks(added)
     removeFiles(removed)
     sources ++= added
-    runCompiler(sources.asJFiles)
+    runCompiler(asJFiles(sources))
   }
+
+  private def asJFiles(files: scala.collection.Set[IFile]): Seq[File] =
+    files.map(ifile => ifile.getLocation.toFile).toSeq
 
   private def clearTasks(included: scala.collection.Set[IFile]) {
     included foreach TaskManager.clearTasks
@@ -198,13 +196,13 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     val options = in.options; import options.{ options => scalacOptions, _ }
     val compilers = in.compilers
     val agg = new AggressiveCompile(cacheFile)
-    val aMap = (f: File) => m2o(in.analysisMap(f))
+    val aMap = (f: File) => SbtUtils.m2o(in.analysisMap(f))
     val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
 
     compilers match {
       case Right(comps) =>
         import comps._
-        agg(scalac, javac, options.sources, classpath, output, in.cache, m2o(in.progress), scalacOptions, javacOptions, aMap,
+        agg(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress), scalacOptions, javacOptions, aMap,
           defClass, sbtReporter, order, skip = false, in.incOptions)(log)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
@@ -264,11 +262,5 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         }
         true
       }
-  }
-}
-
-object EclipseSbtBuildManager {
-  private implicit class FileHelper(val files: scala.collection.Set[IFile]) extends AnyVal {
-    def asJFiles: Seq[File] = files.map(ifile => ifile.getLocation.toFile).toSeq
   }
 }

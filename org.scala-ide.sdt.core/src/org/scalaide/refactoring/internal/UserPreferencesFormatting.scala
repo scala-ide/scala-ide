@@ -1,9 +1,6 @@
 package org.scalaide.refactoring.internal
 
-import org.scalaide.core.internal.formatter.FormatterPreferences
 import scala.tools.refactoring.Refactoring
-
-import scalariform.formatter.preferences.SpaceInsideParentheses
 
 /**
  * Enables passing the user's source formatting preferences to the refactoring library's

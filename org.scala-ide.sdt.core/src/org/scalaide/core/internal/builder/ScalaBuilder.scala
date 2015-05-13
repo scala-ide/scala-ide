@@ -49,8 +49,6 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     import zinc.EclipseSbtBuildManager
 
     val project = IScalaPlugin().getScalaProject(this.project)
-    val stopBuildOnErrors =
-      project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.stopBuildOnErrors.name))
 
     // check the classpath
     if (!project.isClasspathValid()) {

@@ -28,7 +28,6 @@ import java.net.URLClassLoader
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.IPath
 
