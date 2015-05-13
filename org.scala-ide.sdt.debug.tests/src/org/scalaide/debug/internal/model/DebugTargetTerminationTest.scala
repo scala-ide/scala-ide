@@ -40,9 +40,6 @@ import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
 import com.sun.jdi.event.VMDisconnectEvent
 
-import scala.language.implicitConversions
-import scala.language.reflectiveCalls
-
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
 

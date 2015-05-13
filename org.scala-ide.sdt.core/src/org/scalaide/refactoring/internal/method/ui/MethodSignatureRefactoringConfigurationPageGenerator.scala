@@ -67,7 +67,6 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   def mkConfigPage(method: DefDef, paramsObs: MSRefactoringParameters => Unit): UserInputWizardPage
 
   private object ImplicitConversions {
-    import scala.language.implicitConversions
 
     /** Converts a function to an ``MouseAdapter`` whose ``mouseUp`` method is called */
     implicit def mouseUpListener(f: () => Unit): MouseAdapter = new MouseAdapter {

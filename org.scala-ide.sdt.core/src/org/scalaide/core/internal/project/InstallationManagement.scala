@@ -1,7 +1,5 @@
 package org.scalaide.core.internal.project
 
-import language.implicitConversions
-
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.internal.CompilerUtils

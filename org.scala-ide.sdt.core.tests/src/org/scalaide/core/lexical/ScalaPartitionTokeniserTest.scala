@@ -181,7 +181,6 @@ class ScalaPartitionTokeniserTest {
 }
 
 object ScalaPartitionTokeniserTest {
-  import scala.language.implicitConversions
   implicit def string2RichString(from: String): RichString = new RichString(from)
   implicit def element2RichString(from: Elem): RichString = new RichString(from.text)
 

@@ -95,8 +95,6 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
 class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
-  import scala.language.reflectiveCalls
-
   @Test
   def javaClassExtendingScalaClassWithConcreteMethodsInSuperTrait_NoErrorIsReportedInJavaEditor_t1000594_pos() {
     whenOpening("t1000594_pos/C.java").verifyThat(no).errors.are.reported

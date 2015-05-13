@@ -15,7 +15,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import scala.language.reflectiveCalls
 import org.scalaide.core.internal.launching.ScalaLaunchDelegate
 import org.scalaide.core.internal.launching.MainClassVerifier
 

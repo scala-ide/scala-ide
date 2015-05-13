@@ -11,7 +11,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
       object X {
         (new D).field
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic(name: String) = ???
       }
@@ -19,7 +18,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
       object X {
         (new D).$VAR$
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic(name: String) = ???
       }
@@ -35,7 +33,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.field = 10
         d.field
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic(name: String) = ???
         def updateDynamic(name: String)(value: Any) = ???
@@ -46,7 +43,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.$VAR$ = 10
         d.$SEL$
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic(name: String) = ???
         def updateDynamic(name: String)(value: Any) = ???
@@ -63,7 +59,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.method(10)
         d(10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def applyDynamic(name: String)(value: Any) = ???
       }
@@ -73,7 +68,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.$METH$(10)
         d(10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def applyDynamic(name: String)(value: Any) = ???
       }
@@ -88,7 +82,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         val d = new D
         d.method(value = 10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def applyDynamicNamed(name: String)(value: (String, Any)) = ???
       }
@@ -97,7 +90,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         val d = new D
         d.$METH$($ARG$ = 10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def applyDynamicNamed(name: String)(value: (String, Any)) = ???
       }
@@ -114,7 +106,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.method[Int](10)
         d.method[Int](value = 10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic[A](name: String): A = ???
         def applyDynamic[A](name: String)(value: Any): A = ???
@@ -127,7 +118,6 @@ class DynamicTest extends AbstractSymbolClassifierTest {
         d.$METH$[$C$](10)
         d.$DAN $[$C$](10)
       }
-      import language.dynamics
       class D extends Dynamic {
         def selectDynamic[A](name: String): A = ???
         def applyDynamic[A](name: String)(value: Any): A = ???

@@ -214,7 +214,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   def dispose(): Unit = {
-    import scala.language.reflectiveCalls
     disposables foreach { _.dispose() }
   }
 
