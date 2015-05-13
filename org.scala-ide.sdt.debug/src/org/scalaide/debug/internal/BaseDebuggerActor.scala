@@ -39,20 +39,6 @@ trait BaseDebuggerActor extends Actor with HasLogger {
     Stack(initialBehavior)
   }
 
-  /** This method allows to log all messages processed by `this`.
-    * One important requirement is that logging doesn't affect the actor's behavior (note how
-    * `isDefinedAt` has been implemented, it uses the `currentBehavior` to know if the message
-    * can be processed by `this` actor.
-    */
-  private def loggingBehavior: PartialFunction[Any, Any] = new PartialFunction[Any, Any] {
-    override def isDefinedAt(msg: Any): Boolean = currentBehavior.isDefinedAt(msg)
-    override def apply(msg: Any): Any = {
-      // this should be moved to logger.trace, once it is available
-      logger.debug("Processing message " + msg + " from " + sender)
-      msg
-    }
-  }
-
   override final def act(): Unit = {
     postStart()
     //FIXME: Re-enable this the moment we have TRACE log level available (ticket #1001307)
