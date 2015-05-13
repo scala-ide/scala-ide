@@ -8,7 +8,6 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.context.invoker.StandardMethod
 import org.scalaide.debug.internal.expression.context.invoker.StringConcatenationMethod
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
@@ -95,10 +94,10 @@ trait JdiProxy extends Dynamic {
 /**
  * Base for companion objects for [[org.scalaide.debug.internal.expression.proxies.JdiProxy]].
  */
-trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: Value] {
+trait JdiProxyCompanion[ProxyType <: JdiProxy, Underlying <: Value] {
 
   /** Creates a JdiProxy for object using context */
-  def apply(proxyContext: JdiContext, underlying: Underlying): Proxy
+  def apply(proxyContext: JdiContext, underlying: Underlying): ProxyType
 
   /**
    * Creates JdiProxy based on given one. Handles following cases:
@@ -109,7 +108,7 @@ trait JdiProxyCompanion[Proxy <: JdiProxy, Underlying <: Value] {
    * WARNING - this method is used in reflective compilation.
    * If you change its name, package or behavior, make sure to change it also.
    */
-  def apply(on: JdiProxy)(implicit tag: ClassTag[Proxy]): Proxy = JdiProxyCompanion.unwrap(on)(this.apply)
+  def apply(on: JdiProxy)(implicit tag: ClassTag[ProxyType]): ProxyType = JdiProxyCompanion.unwrap(on)(this.apply)
 }
 
 object JdiProxyCompanion {
@@ -117,11 +116,11 @@ object JdiProxyCompanion {
   /**
    * Private implementation for reducing code duplication in `JdiProxyCompanion` and `ArrayJdiProxy`.
    */
-  private[proxies] def unwrap[Proxy <: JdiProxy: ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => Proxy): Proxy = from match {
+  private[proxies] def unwrap[ProxyType <: JdiProxy: ClassTag, Underlying <: ObjectReference](from: JdiProxy)(apply: (JdiContext, Underlying) => ProxyType): ProxyType = from match {
     case np: NullJdiProxy => apply(np.__context, np.__value.asInstanceOf[Underlying])
-    case proxy: Proxy => proxy
+    case proxy: ProxyType => proxy
     case _ =>
-      val className = classTag[Proxy].runtimeClass.getSimpleName
+      val className = classTag[ProxyType].runtimeClass.getSimpleName
       throw new IllegalArgumentException(s"Cannot create proxy of type: '$className' from: '$from'")
   }
 }
@@ -138,5 +137,5 @@ object ObjectJdiProxy {
     new ObjectJdiProxy(proxyContext, __value)
 
   def unapply(proxy: ObjectJdiProxy): Option[(JdiContext, ObjectReference)] =
-    Some(proxy.__context, proxy.__value)
+    Some(proxy.__context → proxy.__value)
 }

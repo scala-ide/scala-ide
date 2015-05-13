@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression.proxies.phases {
 
   import scala.reflect.runtime.universe
-  import scala.tools.reflect.ToolBox
 
   import org.scalaide.debug.internal.expression.AfterTypecheck
   import org.scalaide.debug.internal.expression.TransformationPhase
