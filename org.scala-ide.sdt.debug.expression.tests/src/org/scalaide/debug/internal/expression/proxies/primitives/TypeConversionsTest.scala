@@ -3,12 +3,9 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives
 
-import org.junit.Assert._
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
 

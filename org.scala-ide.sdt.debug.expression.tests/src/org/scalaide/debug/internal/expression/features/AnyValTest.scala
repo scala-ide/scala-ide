@@ -7,7 +7,6 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.junit.Ignore
 
 class AnyValTest extends BaseIntegrationTest(AnyValTest) {
 

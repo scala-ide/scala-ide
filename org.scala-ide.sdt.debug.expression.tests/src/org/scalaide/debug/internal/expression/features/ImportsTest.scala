@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression.features
 
 import org.junit.Test
-import org.junit.Ignore
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java

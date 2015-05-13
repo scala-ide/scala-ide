@@ -65,11 +65,11 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
 
   @Test
   def genericIsInstanceOf(): Unit =
-    eval("intList.isInstanceOf[List[Int]]", intList.isInstanceOf[List[Int]], Java.primitives.boolean)
+    eval("intList.isInstanceOf[List[Int]]", intList.isInstanceOf[List[_]], Java.primitives.boolean)
 
   @Test
   def erasureGenericIsInstanceOf(): Unit =
-    eval("intList.isInstanceOf[List[String]]", intList.isInstanceOf[List[String]], Java.primitives.boolean)
+    eval("intList.isInstanceOf[List[String]]", intList.isInstanceOf[List[_]], Java.primitives.boolean)
 
   @Test
   def wildcardGenericIsInstanceOf(): Unit =
