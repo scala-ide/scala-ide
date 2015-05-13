@@ -6,6 +6,7 @@ import org.eclipse.e4.ui.model.application.ui.advanced.MPerspective
 import org.eclipse.e4.ui.workbench.modeling.EModelService
 import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
+import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
@@ -21,17 +22,17 @@ import org.scalaide.util.eclipse.SWTUtils
  */
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with HasLogger {
 
-  private lazy val window = SWTUtils.getWorkbenchWindow.get
-
   override def initializeDefaultPreferences(): Unit = {
     // do not run in an UI less environment
     if (!IScalaPlugin().headlessMode) {
-      copyKeyBindings()
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ClassCreatorWizId)
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.TraitCreatorWizId)
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ObjectCreatorWizId)
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.PackageObjectCreatorWizId)
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.AppCreatorWizId)
+      SWTUtils.getWorkbenchWindow.foreach { window =>
+        copyKeyBindings(window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ClassCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.TraitCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ObjectCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.PackageObjectCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.AppCreatorWizId, window)
+      }
     }
   }
 
@@ -50,7 +51,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
    * by Eclipse but this doesn't work anymore in Kepler and Luna, the relevant
    * ticket is: https://bugs.eclipse.org/bugs/show_bug.cgi?id=191256
    */
-  private def activateNewWizardShortcut(perspId: String, wizardId: String) = {
+  private def activateNewWizardShortcut(perspId: String, wizardId: String, window: IWorkbenchWindow) = {
     val prefStore = IScalaPlugin().getPreferenceStore()
     val prefId = s"org.scalaide.ui.wizardActivated_$wizardId"
 
@@ -76,7 +77,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     }
   }
 
-  private def copyKeyBindings() = {
+  private def copyKeyBindings(window: IWorkbenchWindow) = {
     val service = window.serviceOf[IBindingService]
 
     /**
