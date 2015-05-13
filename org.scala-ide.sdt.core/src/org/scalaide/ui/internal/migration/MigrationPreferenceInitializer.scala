@@ -63,7 +63,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
 
       perspectives.asScala.headOption foreach { persp =>
         val tags = persp.getTags().asScala
-        val tag = ModeledPageLayout.NEW_WIZARD_TAG+wizardId
+        val tag = ModeledPageLayout.NEW_WIZARD_TAG + wizardId
         val alreadyActivated = tags.contains(tag)
 
         if (!alreadyActivated) {
@@ -82,7 +82,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     /**
      * This copies the old preference value and set it as default value for the
      * new preference. This is only done when the new preference is not already
-     * set, i.e exaclty once when a new version of the IDE is started and all
+     * set, i.e exactly once when a new version of the IDE is started and all
      * values are copied.
      *
      * Furthermore, the old preference value is set to an undefined state, which
