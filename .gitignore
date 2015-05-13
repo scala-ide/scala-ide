@@ -1,4 +1,4 @@
-**/.cache
+**/.cache*
 **/*.tmpBin
 target/
 org.scala-ide.sdt.core/META-INF/MANIFEST.MF
