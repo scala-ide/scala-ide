@@ -17,63 +17,65 @@ import org.scalaide.debug.internal.expression.TestValues.VarargsTestCase
  */
 class VarargsTest extends BaseIntegrationTest(VarargsTest) {
 
-  import TestValues.any2String
   import VarargsTestCase._
 
   @Test
-  def `fun()`(): Unit = eval("fun()", x, Java.boxed.Integer)
+  def simpleVararg(): Unit = {
+    eval(""" vararg.f("1", "2") """, "s*", Java.String)
+    eval(""" vararg.g(1, "2") """, "i,s*", Java.String)
+    eval(""" vararg.h("1", 2, "3") """, "s,i,s*", Java.String)
+  }
 
   @Test
-  def `fun(Int)`(): Unit = eval("fun(i1)", i1 + x, Java.boxed.Integer)
+  def simpleVarargWithStrangeName(): Unit = {
+    eval(""" vararg.f_+("1", "2") """, "s*", Java.String)
+    eval(""" vararg.g_+(1, "2") """, "i,s*", Java.String)
+  }
 
   @Test
-  def `fun(Long)`(): Unit = eval("fun(l1)", l1 + y, Java.boxed.Long)
+  def simpleVarargWithNoArgs(): Unit = eval(""" vararg.f() """, "s*", Java.String)
 
   @Test
-  def `fun(Int, Int)`(): Unit = eval("fun(i1, i2)", i1 + i2 + x * 3, Java.boxed.Integer)
+  def varargWithOneArgWithNoArgs(): Unit = eval(""" vararg.g(1) """, "i,s*", Java.String)
+
+  @Ignore("TODO - O-4581 - proper method with varargs should be chosen when erased signature is the same")
+  @Test
+  def sameErasedSignatureVararg(): Unit = {
+    eval(""" sameErasedSignature.f(1, 2, 3) """, 6, Java.boxed.Integer)
+    eval(""" sameErasedSignature.f("1", "2", "3") """, "123", Java.String)
+  }
 
   @Test
-  def `fun(Long, Long)`(): Unit = eval("fun(l1, l2)", l1 + l2 + y * 3, Java.boxed.Long)
+  def argumentAndVararg(): Unit = {
+    eval(""" argumentAndVarArg.f("1") """, "s", Java.String)
+    eval(""" argumentAndVarArg.f("1", "2") """, "s,s*", Java.String)
+  }
 
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
   @Test
-  def `fun(Int, Int, Int*) with 1`(): Unit = eval("fun(i1, i2, i3)", i1 + i2 + i3 + x * 4, Java.boxed.Integer)
+  def varargWithSimpleOverloads(): Unit = {
+    eval(""" varargWithSimpleOverloads.f() """, s(""), Java.String)
+    eval(""" varargWithSimpleOverloads.f("1") """, "s", Java.String)
+    eval(""" varargWithSimpleOverloads.f("1", "2") """, "s*", Java.String)
+  }
 
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
+  @Ignore("TODO - O-4581 - proper method with varargs should be chosen with subtypes")
   @Test
-  def `fun(Int, Int, Int*) with 2`(): Unit = eval("fun(i1, i2, i3, i4)", i1 + i2 + i3 + i4 + x * 4, Java.boxed.Integer)
+  def varargWithSubtyping(): Unit = {
+    eval(""" varargsAndSubtyping.f(new A) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f(new B) """, "2", Java.String)
+    eval(""" varargsAndSubtyping.f(new B, new A) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f(new A, new B) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndSubtyping.f() """, "2", Java.String)
+  }
 
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
+  @Ignore("TODO - O-4581 - proper method with varargs should be chosen with primitives coercion")
   @Test
-  def `fun(Long*) with 4`(): Unit = eval("fun(i1, i2, i3, l4)", i1 + i2 + i3 + l4 + y * 2, Java.boxed.Long)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun(Long, Int, Int*) with 1`(): Unit = eval("fun(l1, i2, i3)", l1 + i2 + i3 + y * 4, Java.boxed.Long)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun(Long, Int, Int*) with 2`(): Unit = eval("fun(l1, i2, i3, i4)", l1 + i2 + i3 + i4 + y * 4, Java.boxed.Long)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun2(Int*) with 0`(): Unit = eval("fun2()", x * 5, Java.boxed.Integer)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun2(Int*) with 1`(): Unit = eval("fun2(i1)", i1 + x * 5, Java.boxed.Integer)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun2(Long, Int*) with 0`(): Unit = eval("fun2(l1)", l1 + y * 5, Java.boxed.Long)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun2(Int*) with 2`(): Unit = eval("fun2(i1, i2)", i1 + i2 + x * 5, Java.boxed.Integer)
-
-  @Ignore("TODO - O-4581 - proper method with varargs should be chosen")
-  @Test
-  def `fun2(Long, Int*) with 1`(): Unit = eval("fun2(l1, i2)", l1 + i2 + y * 5, Java.boxed.Long)
+  def varargWithPrimitiveCoercion(): Unit = {
+    eval(""" varargsAndPrimitiveCoercion.f(1) """, 1, Java.boxed.Integer)
+    eval(""" varargsAndPrimitiveCoercion.f(1.0) """, 1.0, Java.boxed.Double)
+    eval(""" varargsAndPrimitiveCoercion.f(1, 1.0) """, 2.0, Java.boxed.Double)
+    expectReflectiveCompilationError(""" varargsAndPrimitiveCoercion.f() """)
+  }
 }
 
 object VarargsTest extends BaseIntegrationTestCompanion(VarargsTestCase)

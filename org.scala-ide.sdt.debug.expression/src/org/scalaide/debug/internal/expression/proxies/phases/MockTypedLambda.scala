@@ -1,25 +1,30 @@
-package org.scalaide.debug.internal.expression.proxies.phases
+/*
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
+ */
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.BeforeTypecheck
-import org.scalaide.debug.internal.expression.Names
-import org.scalaide.debug.internal.expression.TypesContext
-
 /**
- * Mock all lambdas that has arguments with explicit types
+ * Mock all lambdas that has arguments with explicit types.
+ *
+ * Transforms:
+ * {{{
+ *   list.map(((x$1: Int) => (x$1: Int).$minus(int)))
+ * }}}
+ * into:
+ * {{{
+ *   list.map(JdiContext.placeholderFunction1[scala.Int](
+ *     <random-name-of-compiled-lambda>, Seq(int)
+ *   ))
+ * }}}
  */
-case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesContext)
-  extends AstTransformer
-  with BeforeTypecheck
-  with AnonymousFunctionSupport {
+case class MockTypedLambda(toolbox: ToolBox[universe.type])
+    extends AnonymousFunctionSupport[BeforeTypecheck] {
 
   import toolbox.u._
-
-  // for function naming
-  private var functionsCount = 0
 
   //should we mock this lambda?
   private def allParamsTyped(params: Seq[ValDef]): Boolean = !params.isEmpty && params.forall(!_.tpt.isEmpty)
@@ -43,8 +48,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
     def unapply(tree: Tree): Option[Map[TermName, String]] = tree match {
       case Apply(on, args) if on.toString() == onString =>
         Some(args.map {
-          case ident @ Ident(name: TermName) => name -> typesContext.treeTypeName(ident)
-            .getOrElse(throw new RuntimeException("Parameters must have type!"))
+          case ident @ Ident(name: TermName) => name -> TypeNames.getFromTree(ident)
         }(collection.breakOut))
       case _ => None
     }
@@ -103,21 +107,20 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
                 ret
           }
       }
-    }.transform(wholeTree)
-
+    }.transform(data.tree)
 
   private def closureTypesForTypedLambda(body: Tree, vparams: List[ValDef]): Map[TermName, String] = {
     val names = getClosureParamsNames(body, vparams)
 
     if (names.isEmpty) Map()
     else {
-      //If we have closure args - then replace last expression with them and typecheck it. You just got the types.
+      // If we have closure args - then replace last expression with them and typecheck it. You just got the types.
       import Names.Debugger._
       val replaceTree = toolbox.parse(names.mkString(s"$contextName.$placeholderArgsName(", ", ", ")"))
 
-      //in partial function is better to search for first case -> match can change during the processing
+      // In partial function is better to search for first case -> match can change during the processing
       val stopTree = body match {
-        case Match(_, cases) => cases.head
+        case Match(_, first :: cases) => first
         case _ => body
       }
 
@@ -128,8 +131,8 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   }
 
   private def prepareLambdaForCompilation(body: Tree,
-                                          vparams: List[ValDef],
-                                          closuresTypes: Map[TermName, String]): Function = {
+    vparams: List[ValDef],
+    closuresTypes: Map[TermName, String]): Function = {
     val closuresArs = toolbox.parse(closuresTypes.map {
       case (name, typeName) =>
         s"val $name: $typeName = ???"
@@ -153,25 +156,22 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
 
   /** Common code for stub creation. */
   private def createAnyStubbedFunction(body: Tree,
-                                       vparams: List[ValDef],
-                                       stubName: String): Tree = {
+    vparams: List[ValDef],
+    stubName: String): Tree = {
 
     val closuresTypes: Map[TermName, String] = closureTypesForTypedLambda(body, vparams)
 
-    val typeCheckedFucntion: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
+    val typeCheckedFunction: Function = prepareLambdaForCompilation(body, vparams, closuresTypes)
 
-    val retType = typesContext.treeTypeName(typeCheckedFucntion.body)
-      .getOrElse(throw new RuntimeException("Function must have a return type!"))
+    val retType = TypeNames.getFromTree(typeCheckedFunction.body)
 
-    val compiled = compileFunction(typeCheckedFucntion.vparams,
-      typeCheckedFucntion.body,
+    val compiled = compileFunction(typeCheckedFunction.vparams,
+      typeCheckedFunction.body,
       closuresTypes)
 
-    import org.scalaide.debug.internal.expression.Names.Debugger.customLambdaPrefix
-    val proxyClassName = s"$customLambdaPrefix${functionsCount}_typed"
-    functionsCount += 1
-    val newFunctionType = typesContext.newType(proxyClassName,
-      compiled.newClassName,
+    val newFunctionType = compiled.newClassName
+
+    typesContext.createNewType(newFunctionType,
       compiled.newClassCode,
       closuresTypes.values.toSeq)
 
@@ -187,24 +187,19 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
   private def createStubedPartialFunction(function: Match): Tree = {
     val stubVarName = "__x"
 
-    //recreate body for this function - currently we support only Function1 //TODO O-5330
+    // TODO - O-5330 - recreate body for this function - currently we support only Function1
     val params = List(ValDef(Modifiers(NoFlags | Flag.PARAM), TermName(stubVarName), Ident(TypeName("Any")), EmptyTree))
     val body = Match(Ident(TermName(stubVarName)), function.cases)
 
-    val travereser = new universe.Traverser()
-    travereser.traverse(body)
-
     createAnyStubbedFunction(body, params,
       Names.Debugger.placeholderPartialFunctionName)
-
   }
 
   /** Compiles lambda, creates new class for it and creates mock that represents this lambda */
   private def createStubedFunction(function: Function): Tree = {
     val argsCount = function.vparams.size
     createAnyStubbedFunction(function.body, function.vparams,
-      Names.Debugger.placeholderFunctionName + argsCount
-    )
+      Names.Debugger.placeholderFunctionName + argsCount)
   }
 
   /**
@@ -213,9 +208,9 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type], typesContext: TypesC
    * @param transformFurther call it on tree node to recursively transform it further
    */
   protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
-    case fun@Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
+    case fun @ Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
       createStubedFunction(fun)
-    case fun@Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
+    case fun @ Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
       createStubedPartialFunction(fun)
     case _ => transformFurther(baseTree)
   }

@@ -37,16 +37,16 @@ class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesT
     4: compute()
     ...
      */
-    eval("input", "0", Names.Java.boxed.Integer)
+    eval("input", 0, Names.Java.primitives.int)
     changeFrame(1)
-    eval("input", "1", Names.Java.boxed.Integer)
+    eval("input", 1, Names.Java.primitives.int)
     changeFrame(2)
-    eval("input", "2", Names.Java.boxed.Integer)
+    eval("input", 2, Names.Java.primitives.int)
     changeFrame(4)
-    eval("input", "5", Names.Java.boxed.Integer)
+    eval("input", 5, Names.Java.primitives.int)
 
     changeFrame(0)
-    eval("input", "0", Names.Java.boxed.Integer)
+    eval("input", 0, Names.Java.primitives.int)
   }
 
   @Test
@@ -60,7 +60,7 @@ class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesT
     }
 
     changeThread(DifferentStackFramesTestCase.mainThread)
-    eval("input", "0", Names.Java.boxed.Integer)
+    eval("input", 0, Names.Java.primitives.int)
 
     companion.session.disconnect()
   }

@@ -33,7 +33,7 @@ class BaseConditionalBreakpointTest(val companion: BaseConditionalBreakpointTest
       evc =>
         assertTrue(resOpt.isDefined)
         val res = resOpt.get
-        val stringValue = res.proxyContext.show(res)
+        val stringValue = res.__context.show(res)
         val expected = s"${evc.value} (of type: ${evc.`type`})"
         assertEquals("Result value differs:", expected, stringValue)
         logger.debug(s"Supported: ${code}\n\n")

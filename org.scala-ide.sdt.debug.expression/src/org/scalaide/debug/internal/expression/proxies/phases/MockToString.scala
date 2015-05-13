@@ -1,25 +1,29 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
 
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.TypesContext
+import Names.Debugger
 
 /**
  * Transformer for converting `toString` method invocations on proxies.
+ *
+ * Transforms:
+ * {{{
+ *   list.toString
+ * }}}
+ * into:
+ * {{{
+ *   __context.stringify(list)
+ * }}}
  */
-case class MockToString(toolbox: ToolBox[universe.type])
-  extends AstTransformer {
+class MockToString
+  extends AstTransformer[AfterTypecheck] {
 
-  import toolbox.u._
-
-  /** Matches `toString` method call. */
-  private def isToString(name: Name): Boolean = name.toString == "toString"
+  import universe._
 
   /** Creates a proxy to replace `toString` call. */
   private def createProxy(proxy: Tree): Tree =
@@ -28,7 +32,7 @@ case class MockToString(toolbox: ToolBox[universe.type])
       List(proxy))
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case Apply(Select(on, name), _) if isToString(name) => createProxy(on)
+    case q"$on.toString()" => createProxy(on)
     case other => transformFurther(other)
   }
 }

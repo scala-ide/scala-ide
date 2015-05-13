@@ -122,6 +122,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
     try {
       val (scalaCandidates, javaCandidates) = filteredTestResources(scalaProject, element, progress.newChild(2)).partition(_.getFileExtension == "scala")
 
+      logger.debug(s"Scala test candidates:\n${scalaCandidates.mkString("\n")}")
       result ++= scalaMatches(scalaCandidates, progress.newChild(1))
       result ++= ((new JavaJUnit4TestFinder).javaMatches(scalaProject.javaProject, javaCandidates, progress.newChild(1)))
     } finally
@@ -142,6 +143,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
     val pm = SubMonitor.convert(_pm, "Textual search for likely sources that contain tests", roots.size)
     val scope = TextSearchScope.newSearchScope(roots.toArray, FILE_NAME_PATTERN.pattern, /* visitDerivedResoures = */ false)
 
+    logger.info(s"Searching test resources in ${roots.map(_.getName)}")
     if (pm.isCanceled()) Seq()
     else {
       val engine = TextSearchEngine.createDefault()
@@ -199,7 +201,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
  *  the test class is because he has to fix all compilation errors. Therefore, it is better to always return the
  *  set of executable JUnit4 test classes and let the user figure out the cause why the test class cannot be run.
  */
-object JUnit4TestFinder {
+object JUnit4TestFinder extends HasLogger {
   private val MARKER_STRINGS = Set("@Test", "@RunWith")
 
   /** Textual filter, used to find candidate resources for JUnit tests. */
@@ -218,6 +220,7 @@ object JUnit4TestFinder {
 
     for {
       cdef <- JUnit4TestClasses.collect(trees)
+      _ = logger.debug(s"Found test class ${cdef.name}")
       jdtElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
       jdtType <- jdtElement.asInstanceOfOpt[IType]
     } yield jdtType

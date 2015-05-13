@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression
 
@@ -68,8 +68,6 @@ object Names {
      */
     object boxed {
 
-      val String = classOf[java.lang.String].getName
-
       val Boolean = classOf[java.lang.Boolean].getName
 
       val Integer = classOf[java.lang.Integer].getName
@@ -86,9 +84,14 @@ object Names {
 
       val Short = classOf[java.lang.Short].getName
 
-      val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Unit)
+      val Void = classOf[java.lang.Void].getName
+
+      val all = Set(Integer, Double, Float, Long, Character, Boolean, Byte, Short, Void)
     }
 
+    val Object = classOf[java.lang.Object].getName
+
+    val String = classOf[java.lang.String].getName
   }
 
   /**
@@ -112,6 +115,8 @@ object Names {
 
     val simpleNothingType = "Nothing"
 
+    val boxedUnitType = classOf[scala.runtime.BoxedUnit].getName
+
     val unitType = "scala.Unit"
 
     val unitLiteral = "()"
@@ -132,6 +137,8 @@ object Names {
 
     val :: = "scala.collection.immutable.::"
 
+    val seq = "scala.collection.Seq"
+
     val rangeInclusive = "scala.collection.immutable.Range$Inclusive"
     val range = "scala.collection.immutable.Range"
 
@@ -141,7 +148,9 @@ object Names {
      */
     val Array = """(?:scala\.)?Array\[(.+)\]""".r
 
-    def Array(typeName: String) = s"scala.Array[$typeName]"
+    def Array(typeName: String) = s"$ArrayRoot[$typeName]"
+
+    val ArrayRoot = "scala.Array"
 
     val nil = "scala.collection.immutable.Nil"
     // strange value that shows up instead of above one
@@ -175,6 +184,8 @@ object Names {
       val Unit = "scala.Unit"
 
       val all = Set(Int, Double, Float, Long, Char, Boolean, Byte, Short, Unit)
+
+      val allShorten = all.map(_.drop("scala.".size))
     }
 
     /**
@@ -208,33 +219,28 @@ object Names {
    */
   object Debugger {
 
-    /** Prefix for object or type used for static call in generated stubs. */
-    val objectOrStaticCallTypeNamePrefix = "$o_"
-
     /** Type used to show for custom user-defined lambdas */
     val lambdaType = "<custom_lambda>"
 
-    /** Matches names that starts with objNamePrefix and extracts name without prefix. */
-    object PrefixedObjectOrStaticCall {
-      def unapply(name: String): Option[String] =
-        if (name.startsWith(objectOrStaticCallTypeNamePrefix)) Some(name.drop(objectOrStaticCallTypeNamePrefix.length))
-        else None
-    }
+    val primitiveValueOfProxyMethodName = "__primitiveValue"
 
-    /*  JdiProxy - in all variants */
+    /** JdiProxy - in all variants */
     val proxyName = classOf[JdiProxy].getSimpleName
     val proxyFullName = classOf[JdiProxy].getName
-    val proxyObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(proxyFullName)
+    val proxySpecialMethods = Scala.dynamicTraitMethods ++ List("$eq$eq", "$bang$eq", "$plus", "apply", primitiveValueOfProxyMethodName)
+    val proxyGenericApplyMethodName = "applyWithGenericType"
 
     def ArrayJdiProxy(typeName: String) = s"ArrayJdiProxy[$typeName]"
 
-    /* JdiContext in all variants */
+    /** JdiContext in all variants */
     val contextName = classOf[JdiContext].getSimpleName
     val contextFullName = classOf[JdiContext].getName
-    val contextObjectOrStaticCallFullName = JdiContext.toObjectOrStaticCall(contextFullName)
 
     /** Name of placeholder method, used in reflective compilation. */
     val placeholderName = "placeholder"
+
+    /** Name of placeholder method for nested method, used in reflective compilation. */
+    val placeholderNestedMethodName = "placeholderNestedMethod"
 
     /** Name of placeholder function method, used in reflective compilation. */
     val placeholderPartialFunctionName = "placeholderPartialFunction"
@@ -245,6 +251,9 @@ object Names {
     /** Name of placeholder function for obtaining arguments types */
     val placeholderArgsName = "placeholderArgs"
 
+    /** Name of placeholder function for handling `super` */
+    val placeholderSuperName = "placeholderSuper"
+
     /** Name of proxy method, used in reflective compilation. */
     val proxyMethodName = "proxy"
 
@@ -254,11 +263,20 @@ object Names {
     /** Name of proxy method, used in reflective compilation. */
     val objectOrStaticCallProxyMethodName = "objectOrStaticCallProxy"
 
+    /** Name of proxy method, used in reflective compilation. */
+    val classOfProxyMethodName = "classOfProxy"
+
     /** Name of stringify method, used in reflective compilation. */
     val stringifyMethodName = "stringify"
 
+    /** Name of `isInstanceOf` method, used in reflective compilation. */
+    val isInstanceOfMethodName = "isInstanceOfCheck"
+
     /** Name of generateHashCode method, used in reflective compilation. */
     val hashCodeMethodName = "generateHashCode"
+
+    /** Name of method for setting local variables values, used in reflective compilation. */
+    val setLocalVariable = "setLocalVariable"
 
     /** Name of context val on top level function for expression. */
     val contextParamName = "__context"
@@ -290,11 +308,7 @@ object Names {
       classOf[ShortJdiProxy])
       .map(_.getSimpleName)
 
-    val primitiveValueOfProxyMethodName = "__value"
-
     val newClassName = "CustomFunction"
-
-    val customLambdaPrefix = "FunctionNo"
   }
 
 }

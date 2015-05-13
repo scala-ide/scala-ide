@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context.extensions
+package org.scalaide.debug.internal.expression
+package context.extensions
 
 import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe
@@ -9,8 +10,12 @@ import scala.reflect.runtime.universe
 import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
 import org.scalaide.debug.internal.expression.Names.Debugger.objectOrStaticCallProxyMethodName
 import org.scalaide.debug.internal.expression.Names.Debugger.valueProxyMethodName
+import org.scalaide.debug.internal.expression.context.NestedMethodDeclaration
+import org.scalaide.debug.internal.expression.context.NestedMethodImplementation
 import org.scalaide.logging.HasLogger
 
+import com.sun.jdi.Location
+import com.sun.jdi.Method
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
@@ -22,17 +27,53 @@ case class ExtendedContext(currentFrame: StackFrame)
   // aggregated current transformation
   private lazy val currentTransformation: Option[ThisTransformation] =
     createInitialTransformationContext
-      .map(parentClasses).map(parentObjects)
+      .map(parentClasses)
 
   /** Get type for variable - if variable is one of 'this' variables returns its type */
   final def typeFor(name: universe.TermName): Option[ReferenceType] =
     currentTransformation.flatMap(_.elementMap.get(name)).map(_.referenceType)
 
   /** List of variables that mock this */
-  final def thisFields: Seq[universe.TermName] = currentTransformation match {
+  final def thisFields: Seq[Variable] = currentTransformation match {
     case Some(transformation) =>
-      transformation.thisHistory.map(transformation.nameMap).reverse
+      transformation.thisHistory.map(transformation.nameMap).reverse.map(Variable(_))
     case _ => Nil
+  }
+
+  /**
+   * Find implementation information about nested methods.
+   * Returns None when we have cannot determine this object context.
+   */
+  final def nestedMethod(declaration: NestedMethodDeclaration): Option[NestedMethodImplementation] = {
+
+    def isLocationInMethodDeclaration(location: Location): Boolean =
+      declaration.startLine <= location.lineNumber() && location.lineNumber() <= declaration.endLine
+
+    lazy val currentExecutionLine = currentFrame.location().lineNumber()
+
+    def isCandidate(m: Method): Boolean = {
+      def nameMatch = m.name().startsWith(declaration.name + '$')
+      def placementCorrect = !m.allLineLocations().isEmpty && m.allLineLocations().forall(isLocationInMethodDeclaration)
+      def declaredBeforeCurrentLine = m.location().lineNumber() < currentExecutionLine
+
+      nameMatch && placementCorrect && declaredBeforeCurrentLine
+    }
+    currentTransformation.map {
+      transformation =>
+        val nestedMethodsImplementations = for {
+          thisEntry <- transformation.thisHistory
+          candidateMethod <- thisEntry.referenceType.methods() if isCandidate(candidateMethod)
+        } yield NestedMethodImplementation(transformation.nameMap(thisEntry),
+            candidateMethod.name(),
+            candidateMethod.arguments().map(_.name()))
+
+        nestedMethodsImplementations match {
+          case Seq(onlyCandidate) =>
+            onlyCandidate
+          case candidates =>
+            throw new MultipleMethodsMatchNestedOne(declaration.name, candidates.map(_.jvmName))
+        }
+    }
   }
 
   /** List of variables that mock this */
@@ -92,7 +133,7 @@ case class ExtendedContext(currentFrame: StackFrame)
     }
   }
 
-  /** class existing in VM*/
+  /** class existing in VM */
   private object ExistingClass {
     def unapply(name: String): Option[ReferenceType] =
       currentFrame.virtualMachine().classesByName(name).headOption

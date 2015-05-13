@@ -1,39 +1,51 @@
 /*
  * Copyright (c) 2014 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
-import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
+import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.NullJdiProxy
+import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
-import org.scalaide.debug.internal.expression.TypeNameMappings
 
-import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.StringReference
-import com.sun.jdi.Value
+import com.sun.jdi.Type
+
+import Names.Debugger
+import Names.Scala
 
 /**
  * Part of JdiContext responsible for converting proxies to their string representations.
  */
 trait Stringifier {
-  self: JdiMethodInvoker =>
+  self: JdiContext =>
 
   /** Calls `toString` on given proxy, returns jdi String reference. */
-  final def callToString(proxy: JdiProxy): StringReference =
+  final def callToString(proxy: ObjectJdiProxy): StringReference =
     invokeUnboxed[StringReference](proxy, None, "toString", Seq.empty)
+
+  /** Calls `scala.runtime.ScalaRunTime.stringOf` on given proxy, returns jdi String reference. */
+  final def callScalaRuntimeStringOf(proxy: JdiProxy): StringReference = {
+    val boxed = proxy match {
+      case primitive: PrimitiveJdiProxy[_,_,_] => primitive.boxed
+      case other => other.__value
+    }
+    val scalaRuntime = objectByName("scala.runtime.ScalaRunTime")
+    val stringOf = methodOn(scalaRuntime, "stringOf", arity = 1)
+    scalaRuntime.invokeMethod(currentThread(), stringOf, List(boxed)).asInstanceOf[StringReference]
+  }
 
   /**
    * Calls `toString` on given proxy, returns StringJdiProxy.
    *
    * WARNING - this method is used in reflective compilation.
-   * If you change it's name, package or behavior, make sure to change it also.
+   * If you change its name, package or behavior, make sure to change it also.
    */
   final def stringify(proxy: JdiProxy): JdiProxy =
     this.invokeMethod(proxy, None, "toString")
@@ -41,12 +53,12 @@ trait Stringifier {
   /**
    * String representation of given proxy. Contains value and type.
    */
-  def show(proxy: JdiProxy, withType: Boolean = true): String = proxy match {
+  final def show(proxy: JdiProxy, withType: Boolean = true): String = proxy match {
     case _: NullJdiProxy => formatString(Scala.nullLiteral, Scala.nullType)
 
     case _: UnitJdiProxy => formatString(Scala.unitLiteral, Scala.unitType)
 
-    case nulledProxy if nulledProxy.__underlying == null => formatString(Scala.nullLiteral, Scala.nullType)
+    case nulledProxy if nulledProxy.__value == null => formatString(Scala.nullLiteral, Scala.nullType)
 
     case array: ArrayJdiProxy[_] => handleArray(array)
 
@@ -55,33 +67,23 @@ trait Stringifier {
 
   private def formatString(value: String, typeName: String) = s"$value (of type: $typeName)"
 
-  private def handleArray(array: ArrayJdiProxy[_]): String = {
-    // responsible for converting value to its string rep
-    def inner(value: Value): String = {
-      var x = Option(value).fold("null")(_.toString)
-      val isString = x.head == '\"' && x.last == '\"'
-      // remove " from strings
-      if (isString) x = x.drop(1).dropRight(1)
-      val haveTrailingWhitespace = x.head.isWhitespace || x.last.isWhitespace
-      // if elements starts/ends with whitespace add them back
-      if (haveTrailingWhitespace) "\"" + x + "\"" else x
-    }
+  /**
+   * Prints Arrays - it is pretty complicated, as arrays are reifiable on JVM and we have to handle nested array types.
+   */
+  private def handleArray(array: ArrayJdiProxy[_]): String =
+    formatString(callScalaRuntimeStringOf(array).value, handleArrayTpe(array))
 
-    // workaround for a crappy Eclipse's implementation of getValues which throws exceptions in the case of
-    // empty arrays instead of returning empty list
-    def handleEmptyArray(arrayRef: ArrayReference): List[Value] =
-      if (arrayRef.length() != 0) arrayRef.getValues().toList else Nil
-
-    val stringValue = handleEmptyArray(array.__underlying)
-      .map(inner)
-      .mkString("Array(", ", ", ")")
-
-    val typeString = array.__underlying.`type` match {
+  private def handleArrayTpe(array: ArrayJdiProxy[_]): String = {
+    // handle nested array types
+    def innerTpe(tpe: Type): String = tpe match {
       case arrayType: ArrayType =>
-        val argumentType = TypeNameMappings.javaNameToScalaName(arrayType.componentTypeName)
-        Scala.Array(argumentType)
+        val argumentType = innerTpe(arrayType.componentType)
+        Scala.Array(TypeNames.javaNameToScalaName(argumentType))
+      case other =>
+        TypeNames.javaNameToScalaName(other.name)
     }
-    formatString(stringValue, typeString)
+
+    innerTpe(array.__value.`type`)
   }
 
   def isLambda(name: String): Boolean = {
@@ -89,18 +91,18 @@ trait Stringifier {
     val nameArray = name.split('$')
     def lenghtOk = nameArray.length > 3
     def startsWithWrapper = nameArray(0) == "__wrapper"
-    def containsNewClassName = nameArray(nameArray.length - 2) == Names.Debugger.newClassName
+    def containsNewClassName = nameArray(nameArray.length - 2) == Debugger.newClassName
     lenghtOk && startsWithWrapper && containsNewClassName
   }
 
   private def typeOfProxy(proxy: JdiProxy): String = {
-    val underlyingType = proxy.__underlying.referenceType.name
+    val underlyingType = proxy.__type.name
     val typeDecoded = NameTransformer.decode(underlyingType)
-    if (isLambda(typeDecoded)) Names.Debugger.lambdaType else typeDecoded
+    if (isLambda(typeDecoded)) Debugger.lambdaType else typeDecoded
   }
 
   private def handle(proxy: JdiProxy, withType: Boolean): String = {
-    val stringValue = callToString(proxy).value
+    val stringValue = callScalaRuntimeStringOf(proxy).value
     if (withType) formatString(stringValue, typeOfProxy(proxy)) else stringValue
   }
 

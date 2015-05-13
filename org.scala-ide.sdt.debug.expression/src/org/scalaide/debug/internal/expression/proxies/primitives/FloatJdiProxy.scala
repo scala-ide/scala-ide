@@ -1,26 +1,24 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.primitives
+package org.scalaide.debug.internal.expression
+package proxies.primitives
 
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.context.JdiContext
 
 import com.sun.jdi.FloatValue
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.Value
 
 /**
  * JdiProxy implementation for `float`, `scala.Float`, `java.lang.Float`.
  */
-case class FloatJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends BoxedJdiProxy[Float, FloatJdiProxy](FloatJdiProxy) {
+case class FloatJdiProxy(__context: JdiContext, __value: FloatValue)
+    extends PrimitiveJdiProxy[Float, FloatJdiProxy, FloatValue](FloatJdiProxy) {
 
-  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichFloat")
-
-  override def __value[I] = this.primitive.asInstanceOf[FloatValue].value().asInstanceOf[I]
+  override def __primitiveValue[I] = __value.value.asInstanceOf[I]
 }
 
-object FloatJdiProxy extends BoxedJdiProxyCompanion[Float, FloatJdiProxy](Java.boxed.Float, Java.primitives.float) {
-  protected def mirror(value: Float, context: JdiContext): Value = context.mirrorOf(value)
+object FloatJdiProxy extends PrimitiveJdiProxyCompanion[Float, FloatJdiProxy, FloatValue](TypeNames.Float) {
+  protected def mirror(value: Float, context: JdiContext): FloatValue = context.mirrorOf(value)
 }

@@ -12,6 +12,8 @@ object Variables extends App {
 
   def foo() {
     var localInt: Int = 2
+    var localBoxedInt: java.lang.Integer = 2
+    var localString: String = "qwe"
     val state = new State()
     // number of bottom line must be specified in org.scalaide.debug.internal.expression.integration.TestValues object because a lot of tests use this line
     val debug = 1

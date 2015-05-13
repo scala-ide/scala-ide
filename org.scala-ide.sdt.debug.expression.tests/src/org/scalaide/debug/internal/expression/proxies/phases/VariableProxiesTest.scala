@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
-import scala.reflect.runtime.universe._
+import scala.reflect.runtime.universe
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import org.scalaide.debug.internal.expression.TypesContext
 
 @RunWith(classOf[JUnit4])
 class VariableProxiesTest extends HasEvaluator {
@@ -16,14 +16,13 @@ class VariableProxiesTest extends HasEvaluator {
   private def testVariables(variables: String*)(in: String) {
     val code = Evaluator.parse(in)
 
-    val typesContext = new TypesContext()
-    SearchForUnboundVariables(Evaluator.toolbox, typesContext).transform(code)
-    val foundVariables = typesContext.unboundVariables
+    val phase = new SearchForUnboundVariables(Evaluator.toolbox, Set.empty)
+    val foundVariables = phase.transform(TransformationPhaseData(code)).unboundVariables
 
     assertEquals(
-      s"mismatch variables in: $in \n tree: ${Evaluator.toolbox.u.showRaw(code)}  \n",
+      s"mismatch variables in: $in \n tree: ${universe.showRaw(code)}  \n",
       variables.toSet,
-      foundVariables.map(_.toString))
+      foundVariables.map(_.name.toString))
   }
 
   @Test

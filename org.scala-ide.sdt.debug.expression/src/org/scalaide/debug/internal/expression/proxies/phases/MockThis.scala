@@ -1,26 +1,39 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.phases
+package org.scalaide.debug.internal.expression
+package proxies.phases
 
 import scala.reflect.runtime.universe
-import scala.tools.reflect.ToolBox
-import org.scalaide.debug.internal.expression.AstTransformer
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.TypesContext
-import org.scalaide.debug.internal.expression.BeforeTypecheck
+
+import Names.Debugger
 
 /**
  * Transformer for converting `this` usages into special variable that stubs calls to `this`.
+ *
+ * Transforms:
+ * {{{
+ *   this.foo(a, b)
+ * }}}
+ *
+ * to:
+ * {{{
+ *   __this.foo(a, b)
+ * }}}
+ *
+ * This transformation runs before `typecheck`.
  */
-case class MockThis(toolbox: ToolBox[universe.type])
-  extends AstTransformer
-  with BeforeTypecheck {
+class MockThis
+  extends AstTransformer[BeforeTypecheck] {
 
-  import toolbox.u._
+  import universe._
 
   override final def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case This(thisName) => Ident(TermName(Debugger.thisValName))
-    case other => transformFurther(other)
+    case Select(This(_), name) =>
+      Ident(name)
+    case This(_) =>
+      Ident(TermName(Debugger.thisValName))
+    case other =>
+      transformFurther(other)
   }
 }

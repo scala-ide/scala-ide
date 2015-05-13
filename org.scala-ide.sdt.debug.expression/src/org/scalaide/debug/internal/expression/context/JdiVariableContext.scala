@@ -1,34 +1,44 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
+import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe.TermName
 import scala.util.Try
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TypeNameMappings
+import org.scalaide.debug.internal.expression.TypeNames
+import org.scalaide.debug.internal.expression.Variable
 
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 
+import Names.Debugger
+import Names.Scala
+import extensions.ExtendedContext
+
 /**
  * Implementation of VariableContext based on ThreadReference.
  */
 private[context] trait JdiVariableContext
-  extends VariableContext {
+    extends VariableContext {
   self: JdiContext =>
 
   protected def expressionClassLoader: ClassLoader
 
-  override def syntheticVariables: Seq[TermName] = transformationContext.thisFields
+  private val transformationContext = ExtendedContext(currentFrame())
+
+  override def syntheticVariables: Seq[Variable] = transformationContext.thisFields
 
   override def syntheticImports: Seq[String] = transformationContext.imports
 
   override def implementValue(name: TermName): Option[String] = transformationContext.implementValue(name)
+
+  override final def localVariablesNames(): Set[String] =
+    currentFrame().visibleVariables.map(_.name)(collection.breakOut)
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
   override def thisPackage: Option[String] = thisObject.flatMap { obj =>
@@ -49,7 +59,7 @@ private[context] trait JdiVariableContext
           .filter(_.startsWith("<")) // If there are any generic parameters generic looks like <A:...
         case _ => None
       }
-      val primitivesMocked = TypeNameMappings.javaNameToScalaName(typeName.toString)
+      val primitivesMocked = TypeNames.javaNameToScalaName(typeName.toString)
 
       val scalaType = if (onClassPath(expressionClassLoader, primitivesMocked))
         getScalaNameFromType(primitivesMocked)
@@ -72,6 +82,9 @@ private[context] trait JdiVariableContext
 
     value.map(nameAndGenericName)
   }
+
+  override def nestedMethodImplementation(method: NestedMethodDeclaration): Option[NestedMethodImplementation] =
+    transformationContext.nestedMethod(method)
 
   /** Changes all `$` and `_` to `.`, if type ends with `$` changes it to `.type` */
   private def escape(name: String): String = {

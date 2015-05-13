@@ -186,7 +186,11 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
       }
     }
 
-  def refreshStackFrames(): Unit = companionActor ! RebindStackFrames
+  /**
+   * @param shouldFireChangeEvent fire an event after refreshing frames to refresh also UI elements
+   */
+  def refreshStackFrames(shouldFireChangeEvent: Boolean): Unit =
+    companionActor ! RebindStackFrames(shouldFireChangeEvent)
 
   private[internal] def updateStackFramesAfterHcr(msg: ScalaDebugTarget.UpdateStackFramesAfterHcr): Unit = companionActor ! msg
 
@@ -298,7 +302,7 @@ private[model] object ScalaThreadActor {
   case class InvokeStaticMethod(classType: ClassType, method: Method, args: List[Value])
   case class DropToFrame(frame: ScalaStackFrame)
   case object TerminatedFromScala
-  case object RebindStackFrames
+  case class RebindStackFrames(shouldFireChangeEvent: Boolean)
 
   def apply(thread: ScalaThread): BaseDebuggerActor = {
     val actor = new ScalaThreadActor(thread)
@@ -330,8 +334,11 @@ private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseD
       thread.threadRef.resume()
     case DropToFrame(frame) =>
       thread.dropToFrameInternal(frame)
-    case RebindStackFrames =>
-      if (thread.isSuspended) thread.rebindScalaStackFrames()
+    case RebindStackFrames(shouldFireChangeEvent) =>
+      if (thread.isSuspended) {
+        thread.rebindScalaStackFrames()
+        if (shouldFireChangeEvent) thread.fireChangeEvent(DebugEvent.CONTENT)
+      }
     case ScalaDebugTarget.UpdateStackFramesAfterHcr(dropAffectedFrames) =>
       if (thread.isSuspended) thread.updateScalaStackFramesAfterHcr(dropAffectedFrames)
     case InvokeMethod(objectReference, method, args) =>

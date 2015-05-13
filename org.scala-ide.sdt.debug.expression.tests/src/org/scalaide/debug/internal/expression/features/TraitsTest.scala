@@ -17,19 +17,19 @@ class TraitsTest extends BaseIntegrationTest(TraitsTest) {
 
   @Test
   def testTraitValue(): Unit =
-    eval("valInTrait", "valInTrait", Names.Java.boxed.String)
+    eval("valInTrait", "valInTrait", Names.Java.String)
 
   @Test
   def testTraitMethod(): Unit =
-    eval("defInTrait()", "defInTrait", Names.Java.boxed.String)
+    eval("defInTrait()", "defInTrait", Names.Java.String)
 
   @Test
   def testClassValue(): Unit =
-    eval("valInClass", "valInClass", Names.Java.boxed.String)
+    eval("valInClass", "valInClass", Names.Java.String)
 
   @Test
   def testClassMethod(): Unit =
-    eval("defInClass()", "defInClass", Names.Java.boxed.String)
+    eval("defInClass()", "defInClass", Names.Java.String)
 }
 
 object TraitsTest extends BaseIntegrationTestCompanion(TestValues.TraitsTestCase) {

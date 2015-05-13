@@ -89,7 +89,7 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
   def testDisplayIntResult(): Unit = withExpressionManager(
     code = "int",
     expectedError = None,
-    expectedResult = Some(s"${TestValues.ValuesTestCase.int} (of type: ${Names.Java.boxed.Integer})"))
+    expectedResult = Some(s"${TestValues.ValuesTestCase.int} (of type: ${Names.Java.primitives.int})"))
 
   @Test
   def testDisplayEmptyExpressionError(): Unit = withExpressionManager(
@@ -125,18 +125,6 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
   def testDisplayExceptionMessage(): Unit = withExpressionManager(
     code = "Seq(1, 2, 3).apply(4)",
     expectedError = Some("java.lang.IndexOutOfBoundsException: 4"),
-    expectedResult = None)
-
-  @Test
-  def testDisplayIllegalNothingTypeInferred(): Unit = withExpressionManager(
-    code = "None.get",
-    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
-    expectedResult = None)
-
-  @Test
-  def testDisplayIllegalNothingTypeInferredInCondition(): Unit = evalConditionWithManager(
-    code = "None.get",
-    expectedError = Some(ExpressionException.nothingTypeInferredMessage),
     expectedResult = None)
 
   @Test

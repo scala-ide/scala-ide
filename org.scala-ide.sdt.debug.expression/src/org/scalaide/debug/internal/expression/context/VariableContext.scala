@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.context
+package org.scalaide.debug.internal.expression
+package context
 
 import scala.reflect.runtime.universe.TermName
 
@@ -17,14 +18,28 @@ object VariableType {
       case Some(genericType) => GenericVariableType(plainType, genericType)
     }
 }
+
 /**
- *
  * @param plainType type like collection.immutable.List (class name without generics)
  * @param genericType generic signature of type from JDI
  */
 case class GenericVariableType(plainType: String, genericType: String) extends VariableType
 
 case class PlainVariableType(plainType: String) extends VariableType
+
+/**
+ * Contains information required to run nested method
+ * @param on - object that contains required method
+ * @param jvmName - name real jvm methods (like name$1)
+ * @param argsNames - names of arguments
+ */
+case class NestedMethodImplementation(on: TermName, jvmName: String, argsNames: Seq[String])
+
+/**
+ * All information about nested method from presentation compiler used to match this method to real runtime version
+ * @param parametersListsCount
+ */
+case class NestedMethodDeclaration(name: String, startLine: Int, endLine: Int, argumentsCount: Int, parametersListsCount: Int)
 
 /**
  * Represents variables in context of suspended debugging.
@@ -49,9 +64,9 @@ trait VariableContext extends Any {
 
   /**
    * Get list of all synthetic variables for given expression.
-   *  They are e.g. different version of this
+   * They are e.g. different version of `this`.
    */
-  def syntheticVariables: Seq[TermName]
+  def syntheticVariables: Seq[Variable]
 
   /**
    * Get list of all synthetic imports for given expression.
@@ -65,4 +80,13 @@ trait VariableContext extends Any {
    *  @param name name of variable to implement
    */
   def implementValue(name: TermName): Option[String]
+
+  /** Try to implement nested method base on it's declaration */
+  def nestedMethodImplementation(method: NestedMethodDeclaration): Option[NestedMethodImplementation]
+
+  /**
+   * Set of names of variables local to frame in which thread is suspended.
+   * This contains `val`s and `var`s defined in current method.
+   */
+  def localVariablesNames(): Set[String]
 }

@@ -1,25 +1,30 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
 package org.scalaide.debug.internal.expression.proxies.phases {
 
   import scala.reflect.runtime.universe
   import scala.tools.reflect.ToolBox
 
+  import org.scalaide.debug.internal.expression.AfterTypecheck
   import org.scalaide.debug.internal.expression.TransformationPhase
+  import org.scalaide.debug.internal.expression.TransformationPhaseData
 
   /**
-   * Used for 2.11-2.10 source compatibility.
+   * Removes all type information from given tree.
+   *
+   * This should work with just `toolbox.untypecheck`, but it did not work in our case.
    */
-  case class ResetTypeInformation(toolbox: ToolBox[universe.type]) extends TransformationPhase {
+  class ResetTypeInformation extends TransformationPhase[AfterTypecheck] {
 
-    override def transform(tree: universe.Tree): universe.Tree = {
+    override def transform(data: TransformationPhaseData): TransformationPhaseData = {
       import scala.tools.nsc.ast.Brutal
       val runtimeUniverse = universe.asInstanceOf[scala.reflect.runtime.JavaUniverse]
       val brutal = new Brutal(runtimeUniverse)
-      val brutalTree = tree.asInstanceOf[brutal.u.Tree]
+      val brutalTree = data.tree.asInstanceOf[brutal.u.Tree]
       val resetTree = brutal.brutallyResetAttrs(brutalTree)
-      resetTree.asInstanceOf[universe.Tree]
+      val newTree = resetTree.asInstanceOf[universe.Tree]
+      data.after(phaseName, newTree)
     }
   }
 

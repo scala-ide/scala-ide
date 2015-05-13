@@ -1,26 +1,24 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved.
+ * Copyright (c) 2014 - 2015 Contributor. All rights reserved.
  */
-package org.scalaide.debug.internal.expression.proxies.primitives
+package org.scalaide.debug.internal.expression
+package proxies.primitives
 
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.context.JdiContext
 
-import com.sun.jdi.ObjectReference
 import com.sun.jdi.ShortValue
-import com.sun.jdi.Value
 
 /**
  * JdiProxy implementation for `short` and `scala.Short` and `java.lang.Short`.
  */
-case class ShortJdiProxy(proxyContext: JdiContext, __underlying: ObjectReference)
-  extends BoxedJdiProxy[Short, ShortJdiProxy](ShortJdiProxy) {
+case class ShortJdiProxy(__context: JdiContext, __value: ShortValue)
+    extends PrimitiveJdiProxy[Short, ShortJdiProxy, ShortValue](ShortJdiProxy) {
 
-  override protected[expression] def genericThisType: Option[String] = Some("scala.runtime.RichShort")
-
-  override def __value[I] = this.primitive.asInstanceOf[ShortValue].value().asInstanceOf[I]
+  override def __primitiveValue[I] = this.__value.value().asInstanceOf[I]
 }
 
-object ShortJdiProxy extends BoxedJdiProxyCompanion[Short, ShortJdiProxy](Java.boxed.Short, Java.primitives.short) {
-  protected def mirror(value: Short, context: JdiContext): Value = context.mirrorOf(value)
+object ShortJdiProxy extends PrimitiveJdiProxyCompanion[Short, ShortJdiProxy, ShortValue](TypeNames.Short) {
+  protected def mirror(value: Short, context: JdiContext): ShortValue = context.mirrorOf(value)
 }
