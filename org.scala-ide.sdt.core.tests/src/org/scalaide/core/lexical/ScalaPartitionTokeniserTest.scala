@@ -7,7 +7,6 @@ import org.junit.Before
 import org.scalaide.core.lexical.ScalaPartitions._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import org.eclipse.jdt.ui.text.IJavaPartitions._
-import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.eclipse.jface.text.TypedRegion
 
 class ScalaPartitionTokeniserTest {

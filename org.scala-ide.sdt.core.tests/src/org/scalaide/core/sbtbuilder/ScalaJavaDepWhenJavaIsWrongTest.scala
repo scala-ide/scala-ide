@@ -31,7 +31,6 @@ class ScalaJavaDepWhenJavaIsWrongTest {
 
   @Test def shouldCreateProjectFromWrongJava(): Unit = {
     val TypeCMustImplementFoo = 1
-    val SIsNotAType = 1
     val BarIsNotMemberOfJ = 1
     cleanProject()
 
@@ -62,10 +61,6 @@ class ScalaJavaDepWhenJavaIsWrongTest {
     rebuild()
     val problems3 = findProblems()
     assertTrue("Build errors found: " + markersMessages(problems3), problems3.isEmpty)
-  }
-
-  private def clearProject(): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
   }
 
   private def rebuild(): Unit = {

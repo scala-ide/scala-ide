@@ -28,7 +28,7 @@ class DirectoryScalaInstallationTest {
   import DirectoryScalaInstallationTest._
 
   @Test
-  def filenamesWithoutVersion_210 {
+  def filenamesWithoutVersion_210() {
 
     checkScalaInstallation(
         "lib/2.10.x/",
@@ -37,7 +37,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def filenamesWithVersion_210 {
+  def filenamesWithVersion_210() {
     checkScalaInstallation(
         "lib/2.10.x-withVersion/",
         SpecificScalaVersion(2, 10, 0, Development("filenamesWithVersion")),
@@ -45,7 +45,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def libraryCompilerCompatibleVersions_210 {
+  def libraryCompilerCompatibleVersions_210() {
     checkScalaInstallation(
         "lib/2.10.x-libraryCompilerCompatibleVersions",
         SpecificScalaVersion(2, 10, 2, Development("libraryCompilerCompatibleVersions")),
@@ -53,7 +53,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def noExtraJars_210 {
+  def noExtraJars_210() {
     checkScalaInstallation(
         "lib/2.10.x-noExtraJars/",
         SpecificScalaVersion(2, 10, 0, Development("filenamesWithoutVersion")),
@@ -64,7 +64,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def filenamesWithoutVersion_211 {
+  def filenamesWithoutVersion_211() {
     checkScalaInstallation(
         "lib/2.11.x/",
         SpecificScalaVersion(2, 11, 1, Development("filenamesWithoutVersion")),
@@ -72,7 +72,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def filenamesWithVersion_211 {
+  def filenamesWithVersion_211() {
 
     checkScalaInstallation(
         "lib/2.11.x-withVersion/",
@@ -81,7 +81,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def libraryCompilerCompatibleVersions_211 {
+  def libraryCompilerCompatibleVersions_211() {
     checkScalaInstallation(
         "lib/2.11.x-libraryCompilerCompatibleVersions",
         SpecificScalaVersion(2, 11, 0, Development("libraryCompilerCompatibleVersions")),
@@ -89,7 +89,7 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test
-  def noExtraJars_211 {
+  def noExtraJars_211() {
     checkScalaInstallation(
         "lib/2.11.x-noExtraJars/",
         SpecificScalaVersion(2, 11, 1, Development("filenamesWithoutVersion")),
@@ -100,13 +100,13 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test(expected=classOf[IllegalArgumentException])
-  def libraryCompilerIncompatibleVersions {
+  def libraryCompilerIncompatibleVersions() {
     val basePath = project.underlying.getLocation().append("lib/libraryCompilerIncompatibleVersions")
 
     new DirectoryScalaInstallation(basePath)
   }
 
-  def extraJarsIncompatibleVersions {
+  def extraJarsIncompatibleVersions() {
     checkScalaInstallation(
         "lib/extraJarsIncompatibleVersions/",
         SpecificScalaVersion(2, 11, 1, Development("filenamesWithoutVersion")),
@@ -117,14 +117,14 @@ class DirectoryScalaInstallationTest {
   }
 
   @Test(expected=classOf[IllegalArgumentException])
-  def missingLibrary {
+  def missingLibrary() {
     val basePath = project.underlying.getLocation().append("lib/missingLibrary")
 
     new DirectoryScalaInstallation(basePath)
   }
 
   @Test(expected=classOf[IllegalArgumentException])
-  def missingCompiler {
+  def missingCompiler() {
     val basePath = project.underlying.getLocation().append("lib/missingCompiler")
 
     new DirectoryScalaInstallation(basePath)
@@ -132,7 +132,7 @@ class DirectoryScalaInstallationTest {
 
   /** best effort to find some jars, any jars and the associated sources */
   @Test
-  def mixedCompatibleVersionsWithSources {
+  def mixedCompatibleVersionsWithSources() {
     val basePath = project.underlying.getLocation().append("lib/mixedCompatibleVersionsWithSources")
 
     val si = new DirectoryScalaInstallation(basePath)

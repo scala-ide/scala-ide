@@ -196,7 +196,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000524_pos/opttest/java/OT.java")
 
@@ -205,7 +205,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -215,7 +215,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000524_1/opttest/java/OT.java")
 
@@ -224,7 +224,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -234,7 +234,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000524_2/opttest/java/OT.java")
 
@@ -243,7 +243,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -253,7 +253,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("generic_signature/akka/Actor.java")
 
@@ -262,7 +262,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -272,7 +272,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("method_with_type_contravariance/Foo.java")
 
@@ -281,7 +281,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -291,7 +291,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000625/MyFoo.java")
 
@@ -300,7 +300,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -310,7 +310,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678/JTest.java")
 
@@ -319,7 +319,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -329,7 +329,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_1/JavaTest.java")
 
@@ -338,7 +338,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -348,7 +348,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_2/JavaTest.java")
 
@@ -357,7 +357,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -367,7 +367,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_3/JavaTest.java")
 
@@ -376,7 +376,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -408,7 +408,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_5/JTest.java")
 
@@ -417,7 +417,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -427,7 +427,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_6/JTest.java")
 
@@ -436,7 +436,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -446,7 +446,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_7/JTest.java")
 
@@ -455,7 +455,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -465,7 +465,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_8/JTest.java")
 
@@ -474,7 +474,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -484,7 +484,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000678_9/JTest.java")
 
@@ -493,7 +493,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -533,7 +533,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1001005/Caller.java")
 
@@ -542,7 +542,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -552,7 +552,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000707/Bar.java")
 
@@ -561,7 +561,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 
   @Test
@@ -571,7 +571,7 @@ class StructureBuilderTest {
     when(requestor.isActive()).thenReturn(true)
 
     val owner = mock(classOf[WorkingCopyOwner])
-    when(owner.getProblemRequestor(any())).thenReturn(requestor)
+    when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
     val unit = compilationUnit("t1000800/ThrowingClass.java")
 
@@ -580,6 +580,6 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
 
     // verify
-    verify(requestor, times(0)).acceptProblem(any())
+    verify(requestor, times(0)).acceptProblem(any[IProblem]())
   }
 }

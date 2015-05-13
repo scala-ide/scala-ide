@@ -163,7 +163,6 @@ class ClasspathContainersTests {
 
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)
     project.setDesiredSourceLevel(IScalaPlugin().scalaVersion, reversalReason)
-    val new_classpath = project.javaProject.getRawClasspath()
     val container_after = getLibraryContainer(project)
 
     assertTrue("Going to an older source level and back again should set the original container", extensionallyEqual(container_before, container_after))

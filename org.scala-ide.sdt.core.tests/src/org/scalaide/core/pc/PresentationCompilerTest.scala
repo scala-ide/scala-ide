@@ -176,8 +176,8 @@ class FreshFile {
   }
 
   @Test
-  def libraryDocumentation(): Unit =
-    project.presentationCompiler{ compiler =>
+  def libraryDocumentation(): Unit = {
+    val res = project.presentationCompiler { compiler =>
       import PresentationCompilerTest._
       import compiler.{ reload => _, _ }
       import definitions.ListClass
@@ -207,8 +207,9 @@ class FreshFile {
           }
         }
       }
-    } getOrElse {
-      Assert.fail("shouldn't happen")
     }
+    if (res.isEmpty)
+      Assert.fail("shouldn't happen")
+  }
 
 }

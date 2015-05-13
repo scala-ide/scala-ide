@@ -1,7 +1,6 @@
 package org.scalaide.core.pc
 
 import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.CompilerTestUtils
 import org.junit.Test
 import org.junit.Assert

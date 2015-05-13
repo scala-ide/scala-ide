@@ -40,14 +40,14 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
             when(requestor.isActive()).thenReturn(true)
 
             val owner = mock(classOf[WorkingCopyOwner])
-            when(owner.getProblemRequestor(any())).thenReturn(requestor)
+            when(owner.getProblemRequestor(any[ICompilationUnit]())).thenReturn(requestor)
 
             //then
             // this will trigger the java reconciler so that the problems will be reported in the ProblemReporter
             unit.getWorkingCopy(owner, new NullProgressMonitor)
 
             // verify
-            verify(requestor, mode).acceptProblem(any())
+            verify(requestor, mode).acceptProblem(any[IProblem]())
           }
         }
       }
