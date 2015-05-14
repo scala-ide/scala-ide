@@ -63,15 +63,15 @@ class StringInterpolationTest extends AbstractSymbolClassifierTest {
       object A {
         val templateVal = "abc"
         def someMethod = "abc"
-        val str = s"Here is ${templateVal.toUpperCase()}"
-        val str2 = s"$someMethod ${someMethod.toUpperCase}"
-      }""", """
+        val str = s"Here is ?{templateVal.toUpperCase()}"
+        val str2 = s"$someMethod ?{someMethod.toUpperCase}"
+      }""".replace('?', '$'), """
       object A {
         val templateVal = "abc"
         def someMethod = "abc"
-        val str = s"Here is ${@ STR_VAL @.@  METHOD @()}"
-        val str2 = s"$@STR_METH@ ${@STR_METH@.@TO_UPPER @}"
-      }""",
+        val str = s"Here is ?{@ STR_VAL @.@  METHOD @()}"
+        val str2 = s"$@STR_METH@ ?{@STR_METH@.@TO_UPPER @}"
+      }""".replace('?', '$'),
       Map("STR_VAL" -> SymbolInfo(TemplateVal, Nil, deprecated = false, inInterpolatedString = true),
           "METHOD" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = true),
           "STR_METH" -> SymbolInfo(Method, Nil, deprecated = false, inInterpolatedString = true),

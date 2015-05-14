@@ -234,8 +234,8 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def braces_macro() {
-    val res = tokenize("/**${abc}d*/")
+  def braces_macro(): Unit = {
+    val res = tokenize("/**?{abc}d*/".replace('?', '$'))
     res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 6), (scaladocAtt, 9, 3))
   }
 

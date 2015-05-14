@@ -54,11 +54,11 @@ class ScalaWordFinderTest {
   }
 
   @Test
-  def interpolated() {
-    test(""" s"$fo|o" """, (4, 3))
-    test(""" s"${fo|o}" """, (5, 3))
-    test(""" s"${|foo}" """, (5, 3))
-    test(""" s"${foo|}" """, (5, 3))
+  def interpolated(): Unit = {
+    test(""" s"?fo|o" """.replace('?', '$'), (4, 3))
+    test(""" s"?{fo|o}" """.replace('?', '$'), (5, 3))
+    test(""" s"?{|foo}" """.replace('?', '$'), (5, 3))
+    test(""" s"?{foo|}" """.replace('?', '$'), (5, 3))
   }
 
   @Test
