@@ -7,7 +7,6 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
 import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.internal.decorators.semantichighlighting.Position
@@ -18,10 +17,12 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
  */
 class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
   ScalaSyntaxClasses.categories,
-  scalaSyntacticCategory,
+  ScalaSyntaxClasses.scalaSyntacticCategory,
   IScalaPlugin().getPreferenceStore,
   SyntaxColoringPreferencePage.PreviewText,
   SemanticPreviewerFactoryConfiguration) {
+
+  import ScalaSyntaxClasses._
 
   private var enableSemanticHighlightingCheckBox: Button = _
   private var extraAccuracyCheckBox: Button = _

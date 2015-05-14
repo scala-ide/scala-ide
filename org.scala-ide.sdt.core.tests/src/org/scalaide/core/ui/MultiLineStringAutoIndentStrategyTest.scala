@@ -318,15 +318,15 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
   def add_strip_margin_in_string_interpolation_with_braces() = """
     |class X {
     |  val x = 0
-    |  val str = s```|^test ${x*2} test```
+    |  val str = s```|^test ?{x*2} test```
     |}
-    |""".mls becomes """
+    |""".replace('?', '$').mls becomes """
     |class X {
     |  val x = 0
     |  val str = s```|
-    |                |^test ${x*2} test```.stripMargin
+    |                |^test ?{x*2} test```.stripMargin
     |}
-    |""".mls after (newline, marker = '#')
+    |""".replace('?', '$').mls after (newline, marker = '#')
 
   @Test
   def add_strip_margin_in_string_interpolation_with_multiple_lines() = """

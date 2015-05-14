@@ -39,14 +39,14 @@ class ScalaDebugCacheTest {
   def getNestedTypesNotCached(): Unit = {
     val BaseName = "test01.a.Test"
 
-    val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a$b", BaseName + "$Test", BaseName + "$Test2", "test01.a.TestTest", "test01.b.Test", "a." + BaseName)
+    val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a$b", BaseName + "$" + "Test", BaseName + "$Test2", "test01.a.TestTest", "test01.b.Test", "a." + BaseName)
 
     SDTTestUtils.waitUntil(1000)(debugCache.running)
     assertTrue("The debugger cache is not running", debugCache.running)
 
     val actual = debugCache.getLoadedNestedTypes(BaseName)
 
-    assertEquals("Wrong set of loaded nested types", Seq(BaseName, BaseName + "$", BaseName + "$Test", BaseName + "$Test2", BaseName + "$a$b"), toSortedListOfTypeName(actual))
+    assertEquals("Wrong set of loaded nested types", Seq(BaseName, BaseName + "$", BaseName + "$" + "Test", BaseName + "$Test2", BaseName + "$a$b"), toSortedListOfTypeName(actual))
 
     verifyNestedTypesCalls(debugCache, classPrepareRequest1, classPrepareRequest2, BaseName)
 
