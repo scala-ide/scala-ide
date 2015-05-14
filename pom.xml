@@ -611,7 +611,7 @@
               <arg>-unchecked</arg>
               <arg>-deprecation:false</arg>
               <arg>-language:_</arg>
-              <arg>-Xlint:-missing-interpolator,_</arg>
+              <arg>-Xlint</arg>
               <arg>-Xfuture</arg>
               <arg>-Xfatal-warnings</arg>
               <arg>-Yno-adapted-args</arg>
