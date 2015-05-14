@@ -115,7 +115,7 @@ class IndentGuidePainter(viewer: ISourceViewer)
  *   some other lines which contain only whitespace have to be invalidated. One
  *   possible case is
  *
- *     def f {
+ *     def f: Unit = {
  *
  *     def g = 0
  *     }

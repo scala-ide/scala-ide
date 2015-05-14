@@ -61,7 +61,7 @@ object ScalaPluginSettings extends Settings {
 
     def tryToSet(args: List[String]) = { value = true; Some(args) }
     def unparse: List[String] = if (value) List(name) else Nil
-    override def tryToSetFromPropertyValue(s: String) { // used from ide
+    override def tryToSetFromPropertyValue(s: String): Unit = { // used from ide
       value = s.equalsIgnoreCase("true")
     }
     override def tryToSetColon(args: List[String]) = args match {

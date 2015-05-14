@@ -50,17 +50,17 @@ private[logging] object StreamRedirect {
     new PrintStream(new Redirect(to), /*autoFlush = */true)
 
   private class Redirect(to: Any => Unit) extends OutputStream {
-    override def write(b: Int) {
+    override def write(b: Int): Unit = {
       to(String.valueOf(b.toChar))
     }
 
-    override def write(b: Array[Byte], off: Int, len: Int) {
+    override def write(b: Array[Byte], off: Int, len: Int): Unit = {
       val str = new String(b, off, len).trim
       if (str.length > 0)
         to(str);
     }
 
-    override def write(b: Array[Byte]) {
+    override def write(b: Array[Byte]): Unit = {
       write(b, 0, b.size);
     }
   }

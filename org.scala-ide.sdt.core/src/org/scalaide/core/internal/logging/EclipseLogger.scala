@@ -33,47 +33,47 @@ object EclipseLogger extends Logger {
 
   private val lastCrash: AtomicReference[Throwable] = new AtomicReference
 
-  def debug(message: => Any) {
+  def debug(message: => Any): Unit = {
     info(message)
   }
 
-  def debug(message: => Any, t: Throwable) {
+  def debug(message: => Any, t: Throwable): Unit = {
     info(message, t)
   }
 
-  def info(message: => Any) {
+  def info(message: => Any): Unit = {
     info(message, null)
   }
 
-  def info(message: => Any, t: Throwable) {
+  def info(message: => Any, t: Throwable): Unit = {
     log(IStatus.INFO, message, t)
   }
 
-  def warn(message: => Any) {
+  def warn(message: => Any): Unit = {
     warn(message, null)
   }
 
-  def warn(message: => Any, t: Throwable) {
+  def warn(message: => Any, t: Throwable): Unit = {
     log(IStatus.WARNING, message, t)
   }
 
-  def error(message: => Any) {
+  def error(message: => Any): Unit = {
     error(message, null)
   }
 
-  def error(message: => Any, t: Throwable) {
+  def error(message: => Any, t: Throwable): Unit = {
     log(IStatus.ERROR, message, t)
   }
 
-  def fatal(message: => Any) {
+  def fatal(message: => Any): Unit = {
     error(message)
   }
 
-  def fatal(message: => Any, t: Throwable) {
+  def fatal(message: => Any, t: Throwable): Unit = {
     error(message, t)
   }
 
-  private def log(severity: Int, message: => Any, t: Throwable) {
+  private def log(severity: Int, message: => Any, t: Throwable): Unit = {
     if (t == null) logInUiThread(severity, message, t)
     else {
       // this is an optimization to log the exception at most once if the same exception is being re-thrown several times.

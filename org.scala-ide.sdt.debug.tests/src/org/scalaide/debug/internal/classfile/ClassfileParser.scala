@@ -13,7 +13,7 @@ class ClassfileParser(classFile: File) {
   val file = AbstractFile.getFile(classFile)
   val reader = new AbstractFileReader(file)
 
-  def parseHeader() {
+  def parseHeader(): Unit = {
     if (!(reader.nextInt == 0xCAFEBABE))
       throw new IllegalArgumentException("Invalid classfile: " + classFile.getName())
   }
@@ -55,7 +55,7 @@ class ClassfileParser(classFile: File) {
     }).toMap
   }
 
-  private def skipAttributes() {
+  private def skipAttributes(): Unit = {
     val attrCount = reader.nextChar
     for (i <- 0 until attrCount) {
       reader.skip(2); reader.skip(reader.nextInt)

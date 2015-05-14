@@ -19,7 +19,7 @@ class ProjectDependenciesTest {
 
   import SDTTestUtils._
 
-  @Test def transitive_dependencies_no_export() {
+  @Test def transitive_dependencies_no_export(): Unit = {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
     try {
@@ -35,7 +35,7 @@ class ProjectDependenciesTest {
     }
   }
 
-  @Test def transitive_dependencies_with_export() {
+  @Test def transitive_dependencies_with_export(): Unit = {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
     try {
@@ -51,7 +51,7 @@ class ProjectDependenciesTest {
     }
   }
 
-  @Test def transitive_dep_with_error_stops_build() {
+  @Test def transitive_dep_with_error_stops_build(): Unit = {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
     try {
@@ -98,7 +98,7 @@ class ProjectDependenciesTest {
     }
   }
 
-  @Test def transitive_dep_indirect() {
+  @Test def transitive_dep_indirect(): Unit = {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
     try {

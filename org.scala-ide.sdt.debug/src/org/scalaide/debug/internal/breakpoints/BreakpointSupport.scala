@@ -184,7 +184,7 @@ private class BreakpointSupportActor private (
   /**
    * Remove all created requests for this breakpoint
    */
-  override protected def preExit() {
+  override protected def preExit(): Unit = {
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
@@ -202,13 +202,13 @@ private class BreakpointSupportActor private (
    *        can be installed *only* after/when the class is loaded, and that might happen while this
    *        breakpoint is disabled.
    */
-  private def changed(delta: IMarkerDelta) {
+  private def changed(delta: IMarkerDelta): Unit = {
     if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
   }
 
   /** Create the line breakpoint for the newly loaded class.
    */
-  private def classPrepared(referenceType: ReferenceType) {
+  private def classPrepared(referenceType: ReferenceType): Unit = {
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)
 
     breakpointRequest.foreach { br =>
@@ -221,7 +221,7 @@ private class BreakpointSupportActor private (
   /**
    * On line breakpoint hit, set the thread as suspended
    */
-  private def breakpointHit(location: Location, thread: ThreadReference) {
+  private def breakpointHit(location: Location, thread: ThreadReference): Unit = {
     debugTarget.threadSuspended(thread, DebugEvent.BREAKPOINT)
   }
 

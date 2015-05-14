@@ -33,7 +33,7 @@ class ScalaTemplateContextTest {
   }
 
   @Test
-  def basicTest() {
+  def basicTest(): Unit = {
     val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
@@ -44,7 +44,7 @@ class ScalaTemplateContextTest {
   }
 
   @Test
-  def testMultilineTemplateWithLinuxLineEndings() {
+  def testMultilineTemplateWithLinuxLineEndings(): Unit = {
     val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
@@ -55,7 +55,7 @@ class ScalaTemplateContextTest {
   }
 
   @Test
-  def testMultilineTemplateWithCarriageReturnLineEndings() {
+  def testMultilineTemplateWithCarriageReturnLineEndings(): Unit = {
     val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +
@@ -66,7 +66,7 @@ class ScalaTemplateContextTest {
   }
 
   @Test
-  def testMultilineTemplateWithWindowsLineEndings() {
+  def testMultilineTemplateWithWindowsLineEndings(): Unit = {
     val textSoFar =
       "class TestOuterClass { \n" +
       "  " + CARET + "\n" +

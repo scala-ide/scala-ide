@@ -11,7 +11,7 @@ object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") wi
 class PresentationCompilerRefreshTest {
   import PresentationCompilerRefreshTest._
 
-  @Test def removeExistingFileAndChangeReferenceToNewFile() {
+  @Test def removeExistingFileAndChangeReferenceToNewFile(): Unit = {
     val unitA = scalaCompilationUnit("a/A.scala")
 
     unitA.scalaProject.presentationCompiler { comp =>

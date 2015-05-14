@@ -93,7 +93,7 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
     Option(SWTUtils.getShell).map(_.addShellListener(activationListener))
   }
 
-  override def uninstall() {
+  override def uninstall(): Unit = {
     super.uninstall()
 
     compilerProxy.asInstanceOfOpt[PresentationCompilerProxy].map(_.removeSubscription(compilerListener))

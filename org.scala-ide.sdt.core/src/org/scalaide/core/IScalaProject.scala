@@ -139,7 +139,7 @@ trait IScalaProject extends Publisher[IScalaProjectEvent] {
    * Initializes compiler settings from an instance of the compiler's scala.tools.nsc.Settings
    * and a filter for settings that should be taken into account. Has various side-effects.
    */
-  def initializeCompilerSettings(settings: Settings, filter:Settings#Setting => Boolean)
+  def initializeCompilerSettings(settings: Settings, filter:Settings#Setting => Boolean): Unit
 
   /** Return the current project's preference store.
    *  @return A project-specific store if the project is set to use project-specific settings,

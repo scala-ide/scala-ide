@@ -51,7 +51,7 @@ class ScalaCompletions extends HasLogger {
     def isAlreadyListed(fullyQualifiedName: String, display: String) =
       listedTypes.entryExists(fullyQualifiedName, _.display == display)
 
-    def addCompletions(completions: List[compiler.Member], matchName: String, start: Int, prefixMatch: Boolean, contextType: ContextType) {
+    def addCompletions(completions: List[compiler.Member], matchName: String, start: Int, prefixMatch: Boolean, contextType: ContextType): Unit = {
       def nameMatches(sym: compiler.Symbol) = {
         val name = sym.decodedName
         if (prefixMatch) {
@@ -89,7 +89,7 @@ class ScalaCompletions extends HasLogger {
     }
 
     def fillTypeCompletions(pos: Int, contextType: ContextType,
-      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true): Unit = {
       def typeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
         val completed = compiler.askTypeCompletion(cpos)
@@ -99,7 +99,7 @@ class ScalaCompletions extends HasLogger {
     }
 
     def fillScopeCompletions(pos: Int, contextType: ContextType,
-      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
+      matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true): Unit = {
       def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
         val completed = compiler.askScopeCompletion(cpos)
@@ -124,7 +124,7 @@ class ScalaCompletions extends HasLogger {
         // requestor receives JDT search results
         val requestor = new TypeNameRequestor() {
           override def acceptType(modifiers: Int, packageNameArray: Array[Char], simpleTypeName: Array[Char],
-            enclosingTypeName: Array[Array[Char]], path: String) {
+            enclosingTypeName: Array[Array[Char]], path: String): Unit = {
             val packageName = new String(packageNameArray)
             def stripEndingDollar(str: String) = if (str.endsWith("$")) str.init else str
             val enclosingName = for {

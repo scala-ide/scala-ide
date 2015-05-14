@@ -21,7 +21,7 @@ import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
 class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends SelectionDispatchAction(editor.getSite) {
   initGui()
 
-  override def run() {
+  override def run(): Unit = {
     val qname = {
       for (cu <- compilationUnit) yield {
         val selection = editor.getViewer.getSelectedRange
@@ -34,7 +34,7 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends S
       copyToClipboard(qname.get)
   }
 
-  private def copyToClipboard(str: String) {
+  private def copyToClipboard(str: String): Unit = {
     val data: Array[Object] = Array(str)
     val dataTypes: Array[Transfer] = Array(TextTransfer.getInstance)
     val clipboard = new Clipboard(getShell().getDisplay())
@@ -55,7 +55,7 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends S
     }
   }
 
-  private def initGui() {
+  private def initGui(): Unit = {
     setText(ActionMessages.CopyQualifiedNameAction_ActionName);
     setToolTipText(ActionMessages.CopyQualifiedNameAction_ToolTipText);
     setDisabledImageDescriptor(JavaPluginImages.DESC_DLCL_COPY_QUALIFIED_NAME);

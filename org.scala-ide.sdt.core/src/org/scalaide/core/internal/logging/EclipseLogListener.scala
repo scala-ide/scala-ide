@@ -17,9 +17,9 @@ class EclipseLogListener(log: ILog, logger: Logger) extends ILogListener {
   log.addLogListener(this)
 
   /** Remove {{{this}}} listener from the Eclipse logging framework. */
-  def dispose() { log.removeLogListener(this) }
+  def dispose(): Unit = { log.removeLogListener(this) }
 
-  override def logging(status: IStatus, plugin: String) {
+  override def logging(status: IStatus, plugin: String): Unit = {
 
     lazy val message = "%s - %s - %s - %s".format(plugin, status.getPlugin, status.getCode, status.getMessage)
 

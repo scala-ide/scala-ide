@@ -26,7 +26,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def project = p
 
-  def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
+  def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger): Unit = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
 
     val allSourceFiles = scalaProject.allSourceFiles()

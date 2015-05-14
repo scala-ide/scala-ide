@@ -6,7 +6,7 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
 class DynamicTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def selectDynamic() {
+  def selectDynamic(): Unit = {
     checkSymbolClassification("""
       object X {
         (new D).field
@@ -26,7 +26,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def updateDynamic() {
+  def updateDynamic(): Unit = {
     checkSymbolClassification("""
       object X {
         val d = new D
@@ -52,7 +52,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def applyDynamic() {
+  def applyDynamic(): Unit = {
     checkSymbolClassification("""
       object X {
         val d = new D
@@ -76,7 +76,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def applyDynamicNamed() {
+  def applyDynamicNamed(): Unit = {
     checkSymbolClassification("""
       object X {
         val d = new D
@@ -98,7 +98,7 @@ class DynamicTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def dynamicWithTypeParameter() {
+  def dynamicWithTypeParameter(): Unit = {
     checkSymbolClassification("""
       object X {
         val d = new D

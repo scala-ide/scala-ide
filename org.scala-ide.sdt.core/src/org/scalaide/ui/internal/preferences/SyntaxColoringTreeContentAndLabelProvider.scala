@@ -20,7 +20,7 @@ class SyntaxColoringTreeContentAndLabelProvider(categories: List[Category]) exte
 
   def hasChildren(element: AnyRef) = getChildren(element).nonEmpty
 
-  def inputChanged(viewer: Viewer, oldInput: AnyRef, newInput: AnyRef) {}
+  def inputChanged(viewer: Viewer, oldInput: AnyRef, newInput: AnyRef): Unit = {}
 
   override def getText(element: AnyRef) = element match {
     case Category(name, _) => name

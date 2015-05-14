@@ -13,7 +13,7 @@ import Names.Java
 @RunWith(classOf[JUnit4])
 class TypeExtractionTest extends HasEvaluator {
 
-  def testTypes(code: String, resultType: String) {
+  def testTypes(code: String, resultType: String): Unit = {
     val toolbox = Evaluator.toolbox
     val compiled = toolbox.typecheck(Evaluator.parse(code))
     val extracted = TypeNames.getFromTree(compiled)

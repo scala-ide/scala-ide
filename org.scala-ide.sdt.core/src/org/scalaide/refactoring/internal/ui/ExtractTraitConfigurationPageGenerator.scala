@@ -44,7 +44,7 @@ trait ExtractTraitConfigurationPageGenerator {
     selectedMembersObs: List[ValOrDefDef] => Unit,
     extractedNameObs: String => Unit) extends UserInputWizardPage("Extract trait") {
 
-    def createControl(parent: Composite) {
+    def createControl(parent: Composite): Unit = {
       initializeDialogUnits(parent)
 
       val composite = new Composite(parent, SWT.NONE)
@@ -77,8 +77,8 @@ trait ExtractTraitConfigurationPageGenerator {
           val elems = members.asInstanceOf[List[ValOrDefDef]]
           Array(elems: _*)
         }
-        override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any) {}
-        override def dispose {}
+        override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
+        override def dispose: Unit = {}
       }
 
       def mkTableViewerColumn(title: String) = {
@@ -126,7 +126,7 @@ trait ExtractTraitConfigurationPageGenerator {
       val rows = List(table.getItems: _*)
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-        override def selectionChanged(event: SelectionChangedEvent) {
+        override def selectionChanged(event: SelectionChangedEvent): Unit = {
           val selectedMembersIndices = rows.map(_.getChecked).zipWithIndex.collect { case (true, index) => index }
           val selectedMembers = selectedMembersIndices.map(members)
           selectedMembersObs(selectedMembers)

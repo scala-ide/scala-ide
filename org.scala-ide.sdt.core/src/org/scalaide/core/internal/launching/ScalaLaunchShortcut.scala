@@ -74,7 +74,7 @@ class ScalaLaunchShortcut extends JavaLaunchShortcut {
   /** Find or create, and launch a launch configuration for the given type, in
    *  the specified mode.
    */
-  override protected def launch(t: IType, mode: String) {
+  override protected def launch(t: IType, mode: String): Unit = {
     val configuration = findCandidates(t, getConfigurationType()) match {
       case Nil =>
         createConfiguration(t)

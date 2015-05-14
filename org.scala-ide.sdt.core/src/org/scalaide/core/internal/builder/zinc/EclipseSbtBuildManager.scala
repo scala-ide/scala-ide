@@ -73,7 +73,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
 
   private lazy val sbtReporter = new SbtBuildReporter(project)
 
-  override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], pm: SubMonitor) {
+  override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], pm: SubMonitor): Unit = {
     sbtReporter.reset()
     val toBuild = addedOrUpdated -- removed
     monitor = pm
@@ -92,7 +92,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     hasInternalErrors = sbtReporter.hasErrors || hasInternalErrors
   }
 
-  override def clean(implicit monitor: IProgressMonitor) {
+  override def clean(implicit monitor: IProgressMonitor): Unit = {
     analysisStore.refreshLocal(IResource.DEPTH_ZERO, null)
     analysisStore.delete(true, false, monitor)
     clearCached()
@@ -105,7 +105,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   def findInstallation(project: IScalaProject): IScalaInstallation = project.effectiveScalaInstallation()
 
   /** Remove the given files from the managed build process. */
-  private def removeFiles(files: scala.collection.Set[IFile]) {
+  private def removeFiles(files: scala.collection.Set[IFile]): Unit = {
     if (!files.isEmpty)
       sources --= files
   }
@@ -113,7 +113,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   /** The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
-  private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]) {
+  private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]): Unit = {
     if (added.isEmpty && removed.isEmpty)
       logger.info("No changes in project, running the builder for potential transitive changes.")
     clearTasks(added)
@@ -125,11 +125,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   private def asJFiles(files: scala.collection.Set[IFile]): Seq[File] =
     files.map(ifile => ifile.getLocation.toFile).toSeq
 
-  private def clearTasks(included: scala.collection.Set[IFile]) {
+  private def clearTasks(included: scala.collection.Set[IFile]): Unit = {
     included foreach TaskManager.clearTasks
   }
 
-  private def runCompiler(sources: Seq[File]) {
+  private def runCompiler(sources: Seq[File]): Unit = {
     val scalaInstall = findInstallation(project)
     logger.info(s"Running compiler using $scalaInstall")
     val progress = new SbtProgress
@@ -222,7 +222,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     /** Return the set of files that were reported as being compiled during this session */
     def actualCompiledFiles: Set[IFile] = compiledFiles
 
-    override def startUnit(phaseName: String, unitPath: String) {
+    override def startUnit(phaseName: String, unitPath: String): Unit = {
       def unitIPath: IPath = Path.fromOSString(unitPath)
 
       if (monitor.isCanceled)

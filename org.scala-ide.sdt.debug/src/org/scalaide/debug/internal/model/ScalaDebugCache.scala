@@ -80,7 +80,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *
    *  Does nothing if the actor has already been added for the same outer type.
    */
-  def addClassPrepareEventListener(listener: Actor, typeName: String) {
+  def addClassPrepareEventListener(listener: Actor, typeName: String): Unit = {
     syncSend(actor, AddClassPrepareEventListener(listener, extractOuterTypeName(typeName)))
   }
 
@@ -92,7 +92,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *  This method is asynchronous. There might be residual ClassPrepareEvents being
    *  sent to this listener.
    */
-  def removeClassPrepareEventListener(listener: Actor, typeName: String) {
+  def removeClassPrepareEventListener(listener: Actor, typeName: String): Unit = {
     actor ! RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
   }
 
@@ -224,7 +224,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   private def sameBytecode(m1: Method, m2: Method): Boolean = m1.bytecodes.sameElements(m2.bytecodes)
 
-  def dispose() {
+  def dispose(): Unit = {
     actor ! PoisonPill
   }
 
@@ -253,12 +253,12 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
       reply(true)
   }
 
-  override protected def postStart() {
+  override protected def postStart(): Unit = {
     link(scalaDebugTargetActor)
     debugCache.running = true
   }
 
-  private def classLoaded(event: ClassPrepareEvent) {
+  private def classLoaded(event: ClassPrepareEvent): Unit = {
     val refType = event.referenceType()
     val topLevelTypeName = ScalaDebugCache.extractOuterTypeName(refType.name())
     nestedTypesCache.get(topLevelTypeName) match {
@@ -308,7 +308,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     cache
   }
 
-  private def addClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+  private def addClassPreparedEventListener(listener: Actor, outerTypeName: String): Unit = {
     val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache
@@ -318,13 +318,13 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
   }
 
-  private def removeClassPreparedEventListener(listener: Actor, outerTypeName: String) {
+  private def removeClassPreparedEventListener(listener: Actor, outerTypeName: String): Unit = {
     nestedTypesCache.get(outerTypeName) foreach { cache =>
       nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
     }
   }
 
-  override protected def preExit() {
+  override protected def preExit(): Unit = {
     // no need to disable the requests. This actor is shutdown only when the debug session is shut down
     unlink(scalaDebugTargetActor)
     debugCache.running = false

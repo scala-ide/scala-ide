@@ -5,41 +5,41 @@ trait Logger {
 
   /** Logs a message at the INFO level.
    */
-  def info(message: => Any)
+  def info(message: => Any): Unit
 
   /** Logs a message with exception at the INFO level.
    */
-  def info(message: => Any, t: Throwable)
+  def info(message: => Any, t: Throwable): Unit
 
   /** Logs a message at the DEBUG level.
    */
-  def debug(message: => Any)
+  def debug(message: => Any): Unit
 
   /** Logs a message with exception at the DEBUG level.
    */
-  def debug(message: => Any, t: Throwable)
+  def debug(message: => Any, t: Throwable): Unit
 
   /** Logs a message at the WARN level.
    */
-  def warn(message: => Any)
+  def warn(message: => Any): Unit
 
   /** Logs a message with exception at the WARN level.
    */
-  def warn(message: => Any, t: Throwable)
+  def warn(message: => Any, t: Throwable): Unit
 
   /** Logs a message at the ERROR level.
    */
-  def error(message: => Any)
+  def error(message: => Any): Unit
 
   /** Logs a message with exception at the ERROR level.
    */
-  def error(message: => Any, t: Throwable)
+  def error(message: => Any, t: Throwable): Unit
 
   /** Logs a message at the FATAL level.
    */
-  def fatal(message: => Any)
+  def fatal(message: => Any): Unit
 
   /** Logs a message with exception at the FATAL level.
    */
-  def fatal(message: => Any, t: Throwable)
+  def fatal(message: => Any, t: Throwable): Unit
 }

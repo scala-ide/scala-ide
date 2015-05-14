@@ -13,33 +13,33 @@ class ScalaWordFinderTest {
     ScalaWordFinder.findWord(filteredDoc.toIndexedSeq, pos)
   }
 
-  private def test(doc: String, r: (Int, Int)) {
+  private def test(doc: String, r: (Int, Int)): Unit = {
     val range = findWord(doc)
     val expected = new Region(r._1, r._2)
     Assert.assertEquals(s"Unexpected region for $doc", expected, range)
   }
 
   @Test
-  def atEndOfDoc() {
+  def atEndOfDoc(): Unit = {
     test("word|", (0, 4))
     test("|word", (0, 4))
   }
 
   @Test
-  def middleWords() {
+  def middleWords(): Unit = {
     test("wor|d", (0, 4))
     test("w|ord", (0, 4))
     test(" wor|d  ", (1, 4))
   }
 
   @Test
-  def delimiters() {
+  def delimiters(): Unit = {
     test("ref.sel|ection", (4, 9))
     test("ref.sel|ection.other", (4, 9))
   }
 
   @Test
-  def delimitersArg() {
+  def delimitersArg(): Unit = {
     test("ref(arg|ument", (4, 8))
     test("ref(|argument)", (4, 8))
     test("ref(argument|)", (4, 8))
@@ -47,14 +47,14 @@ class ScalaWordFinderTest {
   }
 
   @Test
-  def zeroLen() {
+  def zeroLen(): Unit = {
     test("|", (0, 0))
     test("ref(|)", (4, 0))
     test("ref.|", (4, 0))
   }
 
   @Test
-  def interpolated() {
+  def interpolated(): Unit = {
     test(""" s"$fo|o" """, (4, 3))
     test(""" s"${fo|o}" """, (5, 3))
     test(""" s"${|foo}" """, (5, 3))
@@ -62,14 +62,14 @@ class ScalaWordFinderTest {
   }
 
   @Test
-  def middleOperators() {
+  def middleOperators(): Unit = {
     test("==|==", (0, 4))
     test("=|-~/", (0, 4))
     test(" <|<<=  ", (1, 4))
   }
 
   @Test
-  def delimitersAndOperators() {
+  def delimitersAndOperators(): Unit = {
     test("foo(==|==)", (4, 4))
     test("foo(|=-~/)", (4, 4))
     test("foo(<<<=|)  ", (4, 4))

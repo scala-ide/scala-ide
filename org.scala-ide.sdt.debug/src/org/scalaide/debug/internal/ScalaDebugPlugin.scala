@@ -20,13 +20,13 @@ object ScalaDebugPlugin {
 
 class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
 
-  override def start(context: BundleContext) {
+  override def start(context: BundleContext): Unit = {
     super.start(context)
     ScalaDebugPlugin.plugin = this
     ScalaDebugger.init()
   }
 
-  override def stop(context: BundleContext) {
+  override def stop(context: BundleContext): Unit = {
     try super.stop(context)
     finally ScalaDebugPlugin.plugin = null
   }
@@ -34,7 +34,7 @@ class ScalaDebugPlugin extends AbstractUIPlugin with IStartup {
   /*
    * TODO: to move in start when launching a Scala application trigger the activation of this plugin.
    */
-  override def earlyStartup() {
+  override def earlyStartup(): Unit = {
     ScalaDebugger.init()
   }
 

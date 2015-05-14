@@ -65,38 +65,38 @@ object EclipseRepl
   trait Client
   {
     /** Called just before initialization of a new Interpreter. */
-    def starting(init: Init) {} // after `halt` on entry to `boot` : `Init`
+    def starting(init: Init): Unit = {} // after `halt` on entry to `boot` : `Init`
 
     /** Called after successful initialization of a new Interpreter. */
-    def started(init: Init) {} // at successful exit from `boot` : `Init`
+    def started(init: Init): Unit = {} // at successful exit from `boot` : `Init`
 
     /** Called whenever an Interpreter is stopped. */
-    def stopped() {} // by `halt` : `Init`, `Stop`, `Quit`
+    def stopped(): Unit = {} // by `halt` : `Init`, `Stop`, `Quit`
 
     /** Called after initialization before replaying of the history. */
-    def replaying() {} // on entry to `redo` : `Init`
+    def replaying(): Unit = {} // on entry to `redo` : `Init`
 
     /** Called upon completion of the replaying of the history. */
-    def replayed() {} // at exit from `redo` : `Init`
+    def replayed(): Unit = {} // at exit from `redo` : `Init`
 
     /** Called whenever the history is cleared. */
-    def dropped() {} // by `zap` : `Drop`, `Quit`
+    def dropped(): Unit = {} // by `zap` : `Drop`, `Quit`
 
     /** Called when a line of code is added to the history. */
-    def added(exec: Exec) {} // by `add` : `Exec`
+    def added(exec: Exec): Unit = {} // by `add` : `Exec`
 
     /** Called just before the interpretation of a line of code. */
-    def doing(exec: Exec) {} // on entry to `doit` : `Init`, `Exec`
+    def doing(exec: Exec): Unit = {} // on entry to `doit` : `Init`, `Exec`
 
     /** Called after interpretation of a line of code. */
-    def done(exec: Exec, result: Result, output: String) {}
+    def done(exec: Exec, result: Result, output: String): Unit = {}
     // at exit from `doit` : `Init`, `Exec`
 
     /** Called just before the `Actor` enters its `Terminated` state. */
-    def terminating() {} // at exit from the handler for `Quit`, in catch
+    def terminating(): Unit = {} // at exit from the handler for `Quit`, in catch
 
     /** Called for any unrecognized message. */
-    def unknown(request:Any) {}
+    def unknown(request:Any): Unit = {}
 
     /** Called when something is thrown. The `Actor` responds to any exception
       * by behaving as if `Quit` had been called.
@@ -108,7 +108,7 @@ object EclipseRepl
       *
       * @param request the `Init`, `Exec`, etc. message
       */
-    def failed(request: Any, thrown: Throwable, output: String) {}
+    def failed(request: Any, thrown: Throwable, output: String): Unit = {}
   }
 
   // implementation note: request and status messages were originally like:
@@ -131,7 +131,7 @@ object EclipseRepl
   trait Builder
   {
     /** Called by `EclipseRepl` constructor, calls its `Actor.start`. */
-    def constructed(a: EclipseRepl) { a.start() }
+    def constructed(a: EclipseRepl): Unit = { a.start() }
 
     /** Returns a new `Interpreter`. */
     def interpreter(i: Init): Interpreter
@@ -175,17 +175,17 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
 {
   def this(client: Client) = this(client, DefaultBuilder)
 
-  def init(settings: Init) { this ! settings }
-  def exec(line: Exec) { this ! line }
-  def drop() { this ! Drop }
-  def stop() { this ! Stop }
-  def quit() { this ! Quit }
+  def init(settings: Init): Unit = { this ! settings }
+  def exec(line: Exec): Unit = { this ! line }
+  def drop(): Unit = { this ! Drop }
+  def stop(): Unit = { this ! Stop }
+  def quit(): Unit = { this ! Quit }
 
   import java.io.{ByteArrayOutputStream => BAOS}
 
   private var intp: Interpreter = null
 
-  private def boot(i: Init, b: BAOS) {
+  private def boot(i: Init, b: BAOS): Unit = {
     halt(i, b)
     client.starting(i)
     intp = builder.interpreter(i)
@@ -194,7 +194,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     client.started(i)
   }
 
-  private def halt(r: Any, b:BAOS) {
+  private def halt(r: Any, b:BAOS): Unit = {
     if (intp != null) {
       intp = null
       client.stopped()
@@ -203,20 +203,20 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
 
   private val hist = new ListBuffer[Exec]
 
-  private def add(e:Exec, b: BAOS) {
+  private def add(e:Exec, b: BAOS): Unit = {
     hist += e
     client.added(e)
     doit(e, b)
   }
 
-  private def zap(r: Any, b:BAOS) {
+  private def zap(r: Any, b:BAOS): Unit = {
     if (!hist.isEmpty) {
       hist.clear()
       client.dropped()
     }
   }
 
-  private def redo(b: BAOS) {
+  private def redo(b: BAOS): Unit = {
     if (!hist.isEmpty) {
       client.replaying()
       hist foreach { doit(_, b) }
@@ -224,7 +224,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     }
   }
 
-  private def doit(e: Exec, b: BAOS) {
+  private def doit(e: Exec, b: BAOS): Unit = {
     if (intp != null) {
       client.doing(e)
       val r = intp.interpret(e)
@@ -233,17 +233,17 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     }
   }
 
-  private def term(r: Any, b: BAOS) {
+  private def term(r: Any, b: BAOS): Unit = {
     halt(r, b)
     zap(r, b)
     client.terminating()
   }
 
-  private def unkn(r: Any, b: BAOS) {
+  private def unkn(r: Any, b: BAOS): Unit = {
     client.unknown(r)
   }
 
-  private def safely[T](work: (T, BAOS) => Unit, r: T, loop: Boolean) {
+  private def safely[T](work: (T, BAOS) => Unit, r: T, loop: Boolean): Unit = {
     val b = new BAOS
     Console.withOut(b) { Console.withErr(b) {
       try work(r, b)
@@ -259,7 +259,7 @@ class EclipseRepl(client: Client, builder: Builder) extends Actor
     if (loop) act() // must be outside try/catch
   }
 
-  def act() { react {
+  def act(): Unit = { react {
     case e: Exec => safely(add, e, true)
     case i: Init => safely(boot, i, true)
     case Stop =>    safely(halt, Stop, true)

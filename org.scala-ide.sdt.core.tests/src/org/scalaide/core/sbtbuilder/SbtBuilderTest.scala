@@ -29,7 +29,7 @@ object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
 object closedProject extends TestProjectSetup("closed-project-test") {
 
-  def closeProject() {
+  def closeProject(): Unit = {
     project.underlying.close(null)
   }
 }
@@ -39,11 +39,11 @@ class SbtBuilderTest {
   import SbtBuilderTest._
 
   @Before
-  def setupWorkspace() {
+  def setupWorkspace(): Unit = {
     SDTTestUtils.enableAutoBuild(true)
   }
 
-  @Test def testSimpleBuild() {
+  @Test def testSimpleBuild(): Unit = {
     println("building " + project)
     project.clean(new NullProgressMonitor())
     depProject // initialize
@@ -62,7 +62,7 @@ class SbtBuilderTest {
   /**
    * See #1002070
    */
-  @Test def testBuildErrorRemove() {
+  @Test def testBuildErrorRemove(): Unit = {
      import SDTTestUtils._
      SDTTestUtils.enableAutoBuild(false)
 
@@ -97,7 +97,7 @@ class SbtBuilderTest {
        deleteProjects(prj)
    }
 
-  @Test def testSimpleBuildWithResources() {
+  @Test def testSimpleBuildWithResources(): Unit = {
     println("building " + depProject)
     depProject.project.clean(new NullProgressMonitor())
     depProject.project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -108,7 +108,7 @@ class SbtBuilderTest {
     Assert.assertTrue("Resource has been copied to the output directory and exists", file.exists())
   }
 
-  @Test def dependent_projects_are_rebuilt_and_PC_notified() {
+  @Test def dependent_projects_are_rebuilt_and_PC_notified(): Unit = {
 
     def rebuild(prj: IScalaProject): List[IMarker] = {
       println("building " + prj)
@@ -167,7 +167,7 @@ class SbtBuilderTest {
     unitsToWatch.flatMap(SDTTestUtils.findProblemMarkers)
   }
 
-  @Test def dependentProject_should_restart_PC_after_build() {
+  @Test def dependentProject_should_restart_PC_after_build(): Unit = {
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     val changedErrors = SDTTestUtils.buildWith(fooCU.getResource, changedFooScala, unitsToWatch)
 
@@ -183,7 +183,7 @@ class SbtBuilderTest {
     assertNoErrors(fooClientCU)
   }
 
-  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
+  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath(): Unit = {
     import SDTTestUtils._
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
@@ -220,7 +220,7 @@ class SbtBuilderTest {
    *  - we do *not* test that a different JDK is honored by Sbt (couldn't find a way to
    *  fake a JDK install), but we do test that the JDK is put in `-javabootclasspath`.
    */
-  @Test def bootLibrariesAreOnClasspath() {
+  @Test def bootLibrariesAreOnClasspath(): Unit = {
     import SDTTestUtils._
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
@@ -271,7 +271,7 @@ class SbtBuilderTest {
     }
   }
 
-   @Test def bootLibrariesCanBeUnorderedOnClasspath() {
+   @Test def bootLibrariesCanBeUnorderedOnClasspath(): Unit = {
     import SDTTestUtils._
 
     val Seq(prjClient) = createProjects("client")
@@ -299,7 +299,7 @@ class SbtBuilderTest {
     }
   }
 
-  @Test def checkClosedProject() {
+  @Test def checkClosedProject(): Unit = {
     closedProject.closeProject()
     Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
     Assert.assertEquals("sourceFolders", Nil, closedProject.project.sourceFolders)

@@ -65,7 +65,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       import EclipseRepl._
       import scala.tools.nsc.interpreter.Results._
 
-      override def done(exec: Exec, result: Result, output: String) {
+      override def done(exec: Exec, result: Result, output: String): Unit = {
         run {
           if (exec ne ReplConsoleView.HideBareExit) {
             view.displayCode(exec)
@@ -79,7 +79,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
           }
         }
       }
-      override def failed(req: Any, thrown: Throwable, output: String) {
+      override def failed(req: Any, thrown: Throwable, output: String): Unit = {
         run {
           val b = new java.io.StringWriter
           val p = new java.io.PrintWriter(b)
@@ -93,7 +93,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       }
     })
 
-  override def evaluate(text: String) {
+  override def evaluate(text: String): Unit = {
     if (isStopped) {
       setStarted
     }
@@ -108,7 +108,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_TERMINATE))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_LCL_TERMINATE))
 
-    override def run() {
+    override def run(): Unit = {
       repl.drop()
       // TODO: uncomment to fix #1000816
       //repl.exec(ReplConsoleView.HideBareExit)
@@ -122,7 +122,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setDisabledImageDescriptor(ConsolePluginImages.getImageDescriptor(IInternalConsoleConstants.IMG_DLCL_CLEAR));
     setHoverImageDescriptor(ConsolePluginImages.getImageDescriptor(IConsoleConstants.IMG_LCL_CLEAR));
 
-    override def run() {
+    override def run(): Unit = {
       resultsTextWidget.setText("")
       setEnabled(false)
     }
@@ -136,7 +136,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_TERMINATE_AND_RELAUNCH))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_TERMINATE_AND_RELAUNCH))
 
-    override def run() {
+    override def run(): Unit = {
       clearConsoleAction.run
       setStarted
     }
@@ -149,7 +149,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
     setDisabledImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_DLCL_RESTART))
     setHoverImageDescriptor(DebugPluginImages.getImageDescriptor(IMG_ELCL_RESTART))
-    override def run() {
+    override def run(): Unit = {
       // NOTE: change in behavior - interpreter always reset
       displayError("\n------ Resetting Interpreter and Replaying Command History ------\n")
       setStarted
@@ -162,12 +162,12 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
     setHoverImageDescriptor(ScalaImages.REFRESH_REPL_TOOLBAR)
 
-    override def run() {
+    override def run(): Unit = {
       if (isChecked) scalaProject.subscribe(this)
       else scalaProject.removeSubscription(this)
     }
 
-    def notify(pub:Publisher[IScalaProjectEvent], event:IScalaProjectEvent) {
+    def notify(pub:Publisher[IScalaProjectEvent], event:IScalaProjectEvent): Unit = {
       event match { case e: BuildSuccess =>
         DisplayThread.asyncExec {
           if (!isStopped) {
@@ -179,7 +179,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
   }
 
-  private def setStarted() {
+  private def setStarted(): Unit = {
     val settings = ScalaPresentationCompiler.defaultScalaSettings()
     scalaProject.initializeCompilerSettings(settings, _ => true)
     // TODO ? move into ScalaPlugin.getScalaProject or ScalaProject.classpath
@@ -201,7 +201,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setContentDescription("Scala Interpreter (Project: " + projectName + ")")
   }
 
-  private def setStopped() {
+  private def setStopped(): Unit = {
     repl.stop()
     isStopped = true
 
@@ -210,7 +210,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setContentDescription("<terminated> " + getContentDescription)
   }
 
-  override def createPartControl(parent: Composite) {
+  override def createPartControl(parent: Composite): Unit = {
     // if the view has no secondary id, display UI to choose a project
     projectName = getViewSite.getSecondaryId
     if (projectName == null) {
@@ -243,7 +243,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
    * projects are opened or closed
    */
   val resourceChangeListener = new IResourceChangeListener() {
-    def resourceChanged(event: IResourceChangeEvent) {
+    def resourceChanged(event: IResourceChangeEvent): Unit = {
       val resourceDeltaVisitor = new ResourceDeltaVisitor()
       if (event.getDelta() != null) {
         event.getDelta().accept(resourceDeltaVisitor)
@@ -259,7 +259,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   /**
    * Create the project chooser UI
    */
-  def createProjectChooserPartControl(parent: Composite) {
+  def createProjectChooserPartControl(parent: Composite): Unit = {
     val panel = new Composite(parent, SWT.NONE)
     panel.setLayout(new GridLayout(1, false))
 
@@ -282,21 +282,21 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
 
     // listeners
     projectList.addSelectionListener(new SelectionListener() {
-      override def widgetSelected(e: SelectionEvent) {
+      override def widgetSelected(e: SelectionEvent): Unit = {
         okButton.setEnabled(true)
       }
 
-      override def widgetDefaultSelected(e: SelectionEvent) {
+      override def widgetDefaultSelected(e: SelectionEvent): Unit = {
         projectSelected(projectList.getSelection()(0))
       }
     })
 
     okButton.addSelectionListener(new SelectionListener() {
-      override def widgetSelected(e: SelectionEvent) {
+      override def widgetSelected(e: SelectionEvent): Unit = {
         projectSelected(projectList.getSelection()(0))
       }
 
-      override def widgetDefaultSelected(e: SelectionEvent) {
+      override def widgetDefaultSelected(e: SelectionEvent): Unit = {
       }
     })
   }
@@ -304,7 +304,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   /**
    * Reset the project list to the current set of open projects
    */
-  def refreshProjectList() {
+  def refreshProjectList(): Unit = {
     val scalaProjectNames = for {
       project <- ResourcesPlugin.getWorkspace().getRoot().getProjects()
       if project.isOpen && project.hasNature(org.eclipse.jdt.core.JavaCore.NATURE_ID)
@@ -315,7 +315,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   /**
    * A project has been selected, close the current view and open the right one.
    */
-  def projectSelected(selectedProjectName: String) {
+  def projectSelected(selectedProjectName: String): Unit = {
     val workbenchPage = getViewSite().getPage()
     workbenchPage.hideView(this)
 
@@ -326,7 +326,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
   /**
    * Create the interpreter UI
    */
-  override def createInterpreterPartControl(parent: Composite) {
+  override def createInterpreterPartControl(parent: Composite): Unit = {
     super.createInterpreterPartControl(parent)
     val toolbarManager = getViewSite.getActionBars.getToolBarManager
     toolbarManager.add(replayAction)
@@ -346,9 +346,9 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     setStarted
   }
 
-  override def setFocus() {}
+  override def setFocus(): Unit = {}
 
-  override def dispose() {
+  override def dispose(): Unit = {
     super.dispose()
     view = null
     if (projectName == null) {

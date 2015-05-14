@@ -80,32 +80,32 @@ class EclipseReplTest
 
   // start with the Echopreter testing the state machine ...
 
-  @Test def allTransitions_Echopreter() {
+  @Test def allTransitions_Echopreter(): Unit = {
     test(STScheduler, Echopreter.steal(allTransitions)) }
 
-  @Test def failures_Failpreter() {
+  @Test def failures_Failpreter(): Unit = {
     test(STScheduler, failures :_*) }
 
-  @Test def unknowns_Echopreter() {
+  @Test def unknowns_Echopreter(): Unit = {
     test(STScheduler, Echopreter.steal(unknowns)) }
 
   // next use multiple EclipseRepls in parallel to test the Actor stuff ...
 
-  @Test def multiple_RTPScheduler() {
+  @Test def multiple_RTPScheduler(): Unit = {
     test(RTPScheduler, multiple(6) :_*) }
 
-  @Test def multiple_FJScheduler() {
+  @Test def multiple_FJScheduler(): Unit = {
     test(FJScheduler, multiple(8) :_*) }
 
   // last rerun allTransitions with the real NSC Interpreter ...
 
-  @Test def allTransitions_RealNSC() {
+  @Test def allTransitions_RealNSC(): Unit = {
     test(STScheduler, allTransitions) }
 }
 
 object EclipseReplTest
 {
-  def test(s:Scheduler, ses:Seq[Expect] *) {
+  def test(s:Scheduler, ses:Seq[Expect] *): Unit = {
     val rs = ses map { new Recorder(_, s) }
     rs foreach { _.sendRequests() }
     s.complete()
@@ -274,37 +274,37 @@ object EclipseReplTest
   class Recorder(val expected:Seq[Expect], sked:Scheduler)
   {
     private val buffer = new collection.mutable.ListBuffer[Expect]
-    def add(e: Expect) {synchronized{ buffer += e }}
+    def add(e: Expect): Unit = {synchronized{ buffer += e }}
     def record = {synchronized{ buffer.toList }}
 
     val client = new Client
     {
-      override def starting(i:Init) {                     add(Starting(i)) }
-      override def started(i:Init) {                      add(Started(i)) }
-      override def stopped() {                            add(Stopped) }
-      override def replaying() {                          add(Replaying) }
-      override def replayed() {                           add(Replayed) }
-      override def dropped() {                            add(Dropped) }
-      override def added(e:Exec) {                        add(Added(e)) }
-      override def doing(e:Exec) {                        add(Doing(e)) }
-      override def done(e:Exec, r:Result, o:String) {     add(Done(e,r,o)) }
-      override def terminating() {                        add(Terminating) }
-      override def failed(r:Any, t:Throwable, o:String) { add(Failed(r,t,o)) }
-      override def unknown(m:Any) {                       add(Unknown(m)) }
+      override def starting(i:Init): Unit = {                     add(Starting(i)) }
+      override def started(i:Init): Unit = {                      add(Started(i)) }
+      override def stopped(): Unit = {                            add(Stopped) }
+      override def replaying(): Unit = {                          add(Replaying) }
+      override def replayed(): Unit = {                           add(Replayed) }
+      override def dropped(): Unit = {                            add(Dropped) }
+      override def added(e:Exec): Unit = {                        add(Added(e)) }
+      override def doing(e:Exec): Unit = {                        add(Doing(e)) }
+      override def done(e:Exec, r:Result, o:String): Unit = {     add(Done(e,r,o)) }
+      override def terminating(): Unit = {                        add(Terminating) }
+      override def failed(r:Any, t:Throwable, o:String): Unit = { add(Failed(r,t,o)) }
+      override def unknown(m:Any): Unit = {                       add(Unknown(m)) }
     }
 
     val actor = new EclipseRepl(client, TestBuilder)
     {
       override def scheduler = sked.scheduler
-      override def send(msg: Any, replyTo: scala.actors.OutputChannel[Any]) {
+      override def send(msg: Any, replyTo: scala.actors.OutputChannel[Any]): Unit = {
         add(messageToRequest(msg))
         super.send(msg, replyTo) }
     }
 
-    def sendRequests() {
+    def sendRequests(): Unit = {
       filterRequests(expected) foreach { actor ! _.msg } }
 
-    def assertMatches() {
+    def assertMatches(): Unit = {
       val actual = record
       assertEquals("requests",
           filterRequests(expected),filterRequests(actual))
@@ -323,17 +323,17 @@ object EclipseReplTest
   def STScheduler = new Scheduler
   {
     val scheduler = new SingleThreadedScheduler
-    def complete() { scheduler.shutdown() }
+    def complete(): Unit = { scheduler.shutdown() }
   }
   def RTPScheduler = new Scheduler
   {
     val scheduler = new ResizableThreadPoolScheduler
-    def complete() { scheduler.run() }
+    def complete(): Unit = { scheduler.run() }
   }
   def FJScheduler = new Scheduler
   {
     val scheduler = new ForkJoinScheduler
-    def complete() { scheduler.run() }
+    def complete(): Unit = { scheduler.run() }
   }
 }
 

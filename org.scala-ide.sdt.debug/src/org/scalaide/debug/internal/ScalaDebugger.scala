@@ -41,8 +41,8 @@ object ScalaDebugger {
   def currentStackFrame: ScalaStackFrame = _currentStackFrame
   def currentFrame(): Option[StackFrame] = Option(currentThread).map(_.threadRef.frame(_currentFrameIndex))
 
-  private[debug] def updateCurrentThread(selection: ISelection) {
-    def setValues(thread: ScalaThread, frame: ScalaStackFrame, frameIndex: Int = 0) {
+  private[debug] def updateCurrentThread(selection: ISelection): Unit = {
+    def setValues(thread: ScalaThread, frame: ScalaStackFrame, frameIndex: Int = 0): Unit = {
       _currentThread = thread
       _currentStackFrame = frame
       _currentFrameIndex = frameIndex
@@ -63,7 +63,7 @@ object ScalaDebugger {
     }
   }
 
-  def init() {
+  def init(): Unit = {
     if (!IScalaPlugin().headlessMode) {
       ScalaDebuggerContextListener.register()
     }
@@ -76,11 +76,11 @@ object ScalaDebugger {
    */
   private object ScalaDebuggerContextListener extends IDebugContextListener {
 
-    def register() {
+    def register(): Unit = {
       DebugContextManager.getDefault().addDebugContextListener(this)
     }
 
-    override def debugContextChanged(event: DebugContextEvent) {
+    override def debugContextChanged(event: DebugContextEvent): Unit = {
       ScalaDebugger.updateCurrentThread(event.getContext())
     }
   }

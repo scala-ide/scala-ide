@@ -30,7 +30,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
   @volatile
   private var running = true
 
-  override def run() {
+  override def run(): Unit = {
     // the polling loop runs until the VM is disconnected, or it is told to stop.
     // The events which have been already read will still be processed by the actor.
     val eventQueue = virtualMachine.eventQueue
@@ -56,7 +56,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
   /**
    * release all resources
    */
-  private[model] def dispose() {
+  private[model] def dispose(): Unit = {
     running = false
     companionActor ! PoisonPill
   }
@@ -66,14 +66,14 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
    * TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
    *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
    */
-  def setActorFor(actor: Actor, request: EventRequest) {
+  def setActorFor(actor: Actor, request: EventRequest): Unit = {
     companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
   }
 
   /**
    * Remove the call back target for the given request
    */
-  def unsetActorFor(request: EventRequest) {
+  def unsetActorFor(request: EventRequest): Unit = {
     companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
   }
 }

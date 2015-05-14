@@ -97,17 +97,17 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
       terminate()
   }
 
-  private def step() {
+  private def step(): Unit = {
     enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_INTO)
   }
 
-  private def terminate() {
+  private def terminate(): Unit = {
     disable()
     poison()
   }
 
-  private def enable() {
+  private def enable(): Unit = {
     if (!enabled) {
       val eventDispatcher = debugTarget.eventDispatcher
 
@@ -118,7 +118,7 @@ private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget
     }
   }
 
-  private def disable() {
+  private def disable(): Unit = {
     if (enabled) {
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager

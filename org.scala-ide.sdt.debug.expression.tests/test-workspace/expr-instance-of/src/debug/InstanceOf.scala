@@ -23,7 +23,7 @@ object InstanceOf extends App {
 
   def check[A](a: A): A = a
 
-  def foo() {
+  def foo(): Unit = {
     def byte: Any = (4: Byte)
     def short: Any = (6: Short)
     def int: Any = 1

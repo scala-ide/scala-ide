@@ -4,7 +4,7 @@ object Arrays extends App {
 
   def arrayIdentity[A](array: Array[A]) = array
 
-  def foo() {
+  def foo(): Unit = {
     val emptyArray = Array[Int]()
 
     val intArray = Array(1, 2, 3)

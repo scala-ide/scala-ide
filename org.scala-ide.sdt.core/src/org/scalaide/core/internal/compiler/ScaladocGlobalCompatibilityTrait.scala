@@ -24,7 +24,7 @@ trait ScaladocGlobalCompatibilityTrait extends Global
     // therefore, it will rummage through the classpath triggering errors whenever it encounters package objects
     // that are not in their correct place (see bug for details)
     // (see also the symmetric comment in s.t.nsc.doc.ScaladocGlobalTrait)
-    override protected def signalError(root: Symbol, ex: Throwable) {
+    override protected def signalError(root: Symbol, ex: Throwable): Unit = {
       log(s"Suppressing error involving $root: $ex")
     }
   }

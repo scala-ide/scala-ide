@@ -66,7 +66,7 @@ class ScalaInstallationAction extends IObjectActionDelegate {
    override def getText(element: Any): String = PartialFunction.condOpt(element){case si: ScalaInstallationChoice => getDecoration(si)}.getOrElse("")
   }
 
-  def run(action: IAction) {
+  def run(action: IAction): Unit = {
     if (!currSelected.isEmpty) {
       val chosenScalaInstallation = chooseScalaInstallation()
       chosenScalaInstallation foreach { (sic) =>
@@ -103,7 +103,7 @@ class ScalaInstallationAction extends IObjectActionDelegate {
 
   private def getShell() = if (parentWindow == null) SWTUtils.getShell else parentWindow.getShell
 
-  def init(window: IWorkbenchWindow) {
+  def init(window: IWorkbenchWindow): Unit = {
     parentWindow = window
   }
 

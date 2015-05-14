@@ -111,9 +111,9 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   override def getAdditionalProposalInfo(monitor: IProgressMonitor): AnyRef = proposal.documentation().orNull
 
   override def getSelection(d: IDocument): Point = null
-  override def apply(d: IDocument) { throw new IllegalStateException("Shouldn't be called") }
+  override def apply(d: IDocument): Unit = { throw new IllegalStateException("Shouldn't be called") }
 
-  override def apply(d: IDocument, trigger: Char, offset: Int) {
+  override def apply(d: IDocument, trigger: Char, offset: Int): Unit = {
     throw new IllegalStateException("Shouldn't be called")
   }
 
@@ -148,7 +148,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
 
   /** Highlight the part of the text that would be overwritten by the current selection
    */
-  override def selected(viewer: ITextViewer, smartToggle: Boolean) {
+  override def selected(viewer: ITextViewer, smartToggle: Boolean): Unit = {
     repairPresentation(viewer)
     if (!insertCompletion() ^ smartToggle) {
       cachedStyleRange = createStyleRange(viewer)
@@ -165,7 +165,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
     }
   }
 
-  override def unselected(viewer: ITextViewer) {
+  override def unselected(viewer: ITextViewer): Unit = {
     viewer.asInstanceOf[ITextViewerExtension4].removeTextPresentationListener(presListener)
     repairPresentation(viewer)
     cachedStyleRange = null
@@ -193,12 +193,12 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
     }
 
     model.addLinkingListener(new ILinkedModeListener() {
-      override def left(environment: LinkedModeModel, flags: Int) {
+      override def left(environment: LinkedModeModel, flags: Int): Unit = {
         document.removePositionCategory(ScalaProposalCategory)
       }
 
-      override def suspend(environment: LinkedModeModel) {}
-      override def resume(environment: LinkedModeModel, flags: Int) {}
+      override def suspend(environment: LinkedModeModel): Unit = {}
+      override def resume(environment: LinkedModeModel, flags: Int): Unit = {}
     })
 
     model.forceInstall()
@@ -238,7 +238,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   override def getPrefixCompletionStart(d: IDocument, offset: Int): Int = startPos
   override def getPrefixCompletionText(d: IDocument, offset: Int): CharSequence = null
 
-  private def repairPresentation(viewer: ITextViewer) {
+  private def repairPresentation(viewer: ITextViewer): Unit = {
     if (cachedStyleRange != null) viewer match {
       case viewer2: ITextViewerExtension2 =>
         // attempts to reduce the redraw area
@@ -278,7 +278,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   }
 
   private object presListener extends ITextPresentationListener {
-    override def applyTextPresentation(textPresentation: TextPresentation) {
+    override def applyTextPresentation(textPresentation: TextPresentation): Unit = {
       if (viewer ne null) {
         cachedStyleRange = createStyleRange(viewer)
         if (cachedStyleRange != null)

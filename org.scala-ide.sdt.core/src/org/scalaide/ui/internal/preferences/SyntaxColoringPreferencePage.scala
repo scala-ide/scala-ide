@@ -32,7 +32,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     new OverlayKey(BOOLEAN, USE_SYNTACTIC_HINTS),
     new OverlayKey(BOOLEAN, STRIKETHROUGH_DEPRECATED))
 
-  override def additionalPerformDefaults() {
+  override def additionalPerformDefaults(): Unit = {
     enableSemanticHighlightingCheckBox.setSelection(overlayStore getBoolean ENABLE_SEMANTIC_HIGHLIGHTING)
     extraAccuracyCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)
     strikethroughDeprecatedCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)
@@ -40,7 +40,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     strikethroughDeprecatedCheckBox.setSelection(overlayStore getBoolean STRIKETHROUGH_DEPRECATED)
   }
 
-  override def additionalCreateContent(parent: Composite) {
+  override def additionalCreateContent(parent: Composite): Unit = {
     enableSemanticHighlightingCheckBox = new Button(parent, SWT.CHECK)
     enableSemanticHighlightingCheckBox.setText("Enable semantic highlighting")
     enableSemanticHighlightingCheckBox.setLayoutData(gridData(horizontalSpan = 2))

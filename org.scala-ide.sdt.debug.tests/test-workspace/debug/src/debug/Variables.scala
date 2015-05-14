@@ -4,7 +4,7 @@ import Helper.noop
 
 object Variables {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val a = true
     val b = 'c'
     val c = 3.asInstanceOf[Short]

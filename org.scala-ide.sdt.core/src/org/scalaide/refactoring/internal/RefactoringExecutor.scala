@@ -51,7 +51,7 @@ trait RefactoringExecutor extends RefactoringHandler {
    * Some of the refactoring implementations don't run in a wizard but make use of the
    * linked mode ui. These refactorings call `enterLinkedModeUi` directly.
    */
-  def runRefactoring(wizard: RefactoringWizard, shell: Shell) {
+  def runRefactoring(wizard: RefactoringWizard, shell: Shell): Unit = {
     new RefactoringWizardOpenOperation(wizard).run(shell, "Scala Refactoring")
   }
 }

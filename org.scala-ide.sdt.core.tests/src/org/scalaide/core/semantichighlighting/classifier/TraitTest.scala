@@ -6,7 +6,7 @@ import org.junit._
 class TraitTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_trait() {
+  def basic_trait(): Unit = {
     checkSymbolClassification("""
       trait Trait
       trait `Trait2` {
@@ -22,7 +22,7 @@ class TraitTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_scala_trait() {
+  def import_scala_trait(): Unit = {
     checkSymbolClassification("""
       import scala.concurrent.Promise
       """, """
@@ -32,7 +32,7 @@ class TraitTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def an_imported_java_interface_is_classified_as_a_trait() {
+  def an_imported_java_interface_is_classified_as_a_trait(): Unit = {
     checkSymbolClassification("""
       import java.lang.Runnable
       """, """
@@ -43,7 +43,7 @@ class TraitTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Enable when ticket #1001176 is fixed")
-  def imported_self_reference_is_classified_as_trait() {
+  def imported_self_reference_is_classified_as_trait(): Unit = {
     checkSymbolClassification("""
         package ab {
           trait TheTrait

@@ -24,7 +24,7 @@ class BaseDebuggerActorTest {
   var sut: BaseDebuggerActor = null
 
   @After
-  def actorCleanup() {
+  def actorCleanup(): Unit = {
     if (sut != null) {
       sut ! PoisonPill
     }
@@ -32,7 +32,7 @@ class BaseDebuggerActorTest {
   }
 
   @Test(timeout = 1000)
-  def postStartIsAlwaysExecutedBeforeTheActorProcessesTheFirstMessage() {
+  def postStartIsAlwaysExecutedBeforeTheActorProcessesTheFirstMessage(): Unit = {
     //setting up test
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
@@ -51,7 +51,7 @@ class BaseDebuggerActorTest {
   }
 
   @Test(timeout = 1000)
-  def preExitIsAlwaysExecutedBeforeTheActorIsStopped() {
+  def preExitIsAlwaysExecutedBeforeTheActorIsStopped(): Unit = {
     //setting up test
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
@@ -65,7 +65,7 @@ class BaseDebuggerActorTest {
   }
 
   @Test(timeout = 1000)
-  def itIsNotPossibleToRemoveTheInitialActorBehavior() {
+  def itIsNotPossibleToRemoveTheInitialActorBehavior(): Unit = {
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
       override def postStart(): Unit = unbecome()
@@ -80,7 +80,7 @@ class BaseDebuggerActorTest {
   }
 
   @Test(timeout = 1000)
-  def callingBecomeChangesTheActorBehavior() {
+  def callingBecomeChangesTheActorBehavior(): Unit = {
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
       override def behavior: Behavior = {
@@ -97,7 +97,7 @@ class BaseDebuggerActorTest {
   }
 
   @Test(timeout = 1000)
-  def poisonedActorIsNoLongerAllowedToModifyItsBehavior() {
+  def poisonedActorIsNoLongerAllowedToModifyItsBehavior(): Unit = {
     val latch = new CountDownLatch(1)
     sut = new BaseDebuggerActor {
       override def behavior: Behavior = {

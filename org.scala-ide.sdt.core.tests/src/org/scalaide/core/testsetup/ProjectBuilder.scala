@@ -12,11 +12,11 @@ trait ProjectBuilder {
 
   def project: IScalaProject
 
-  def cleanProject() {
+  def cleanProject(): Unit = {
     project.clean(new NullProgressMonitor())
   }
 
-  def fullProjectBuild() {
+  def fullProjectBuild(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
   }
 

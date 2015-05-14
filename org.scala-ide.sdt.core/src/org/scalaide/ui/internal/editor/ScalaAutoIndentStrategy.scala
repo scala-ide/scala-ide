@@ -737,7 +737,7 @@ class ScalaAutoIndentStrategy(
 
   private def closeBrace : Boolean = fCloseBrace
 
-  private def clearCachedValues() {
+  private def clearCachedValues(): Unit = {
     preferencesProvider.updateCache
     fIsSmartMode = computeSmartMode
   }

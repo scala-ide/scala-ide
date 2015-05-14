@@ -17,37 +17,37 @@ class ScalaJavaMapperTest {
   import ScalaJavaMapperTest._
 
   @Test
-  def intDescriptor() {
+  def intDescriptor(): Unit = {
     withTargetTree("abstract class Target { val target: Int }") ("I")
   }
 
   @Test
-  def listDescriptor() {
+  def listDescriptor(): Unit = {
     withTargetTree("abstract class Target { val target: List[Int] }") ("Lscala/collection/immutable/List;")
   }
 
   @Test
-  def primitiveArrayDescriptor() {
+  def primitiveArrayDescriptor(): Unit = {
     withTargetTree("abstract class Target { val target: Array[Array[Char]] }") ("[[C")
   }
 
   @Test
-  def refArrayDescriptor() {
+  def refArrayDescriptor(): Unit = {
     withTargetTree("abstract class Target { val target: Array[Object] }") ("[Ljava/lang/Object;")
   }
 
   @Test
-  def innerClassDescriptor() {
+  def innerClassDescriptor(): Unit = {
     withTargetTree("abstract class Target { class Inner; val target: Inner }") ("LTarget/Inner;")
   }
 
   @Test
-  def typeVarClassDescriptor() {
+  def typeVarClassDescriptor(): Unit = {
     withTargetTree("abstract class Target[T] { val target: T }") ("Ljava/lang/Object;")
   }
 
   @Test
-  def errorClassDescriptor() {
+  def errorClassDescriptor(): Unit = {
     withTargetTree("abstract class Target { val target: NotFount }") ("Ljava/lang/Object;")
   }
 
@@ -90,5 +90,5 @@ class ScalaJavaMapperTest {
  *  in anonymous functions.
  */
 trait TypeTest {
-  def apply(compiler: IScalaPresentationCompiler)(tree: compiler.Type)
+  def apply(compiler: IScalaPresentationCompiler)(tree: compiler.Type): Unit
 }

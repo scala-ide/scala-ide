@@ -117,7 +117,7 @@ class ScaladocTokenScannerTest {
   }
 
   implicit class Assert_===[A](actual: A) {
-    def ===(expected: A) {
+    def ===(expected: A): Unit = {
       if (actual != expected)
         throw new ComparisonFailure("actual != expected,",
           expected.toString(),
@@ -126,49 +126,49 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def no_annotation() {
+  def no_annotation(): Unit = {
     val res = tokenize("""/***/""")
     res === Seq((scaladocAtt, 0, 5))
   }
 
   @Test
-  def single_annotation() {
+  def single_annotation(): Unit = {
     val res = tokenize("""/**@param world desc*/""")
     res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 6), (scaladocAtt, 9, 13))
   }
 
   @Test
-  def single_annotation_without_text() {
+  def single_annotation_without_text(): Unit = {
     val res = tokenize("""/**@param*/""")
     res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 6), (scaladocAtt, 9, 2))
   }
 
   @Test
-  def consecutive_annotations_should_not_be_handled_as_single_annotation() {
+  def consecutive_annotations_should_not_be_handled_as_single_annotation(): Unit = {
     val res = tokenize("""/**@pa@pa*/""")
     res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 3), (scaladocAtt, 6, 5))
   }
 
   @Test
-  def consecutive_macros_should_not_be_handled_as_single_macro() {
+  def consecutive_macros_should_not_be_handled_as_single_macro(): Unit = {
     val res = tokenize("""/**$pa$pa*/""")
     res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 3), (scaladocAtt, 6, 5))
   }
 
   @Test
-  def identifier_as_name_in_annotation() {
+  def identifier_as_name_in_annotation(): Unit = {
     val res = tokenize("""/**@azAZ09_*/""")
     res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 8), (scaladocAtt, 11, 2))
   }
 
   @Test
-  def identifier_as_name_in_macro() {
+  def identifier_as_name_in_macro(): Unit = {
     val res = tokenize("""/**$azAZ09_*/""")
     res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 8), (scaladocAtt, 11, 2))
   }
 
   @Test
-  def multiple_annotation() {
+  def multiple_annotation(): Unit = {
     val res = tokenize("""/**@pa abc @param @param */""")
     res === Seq(
       (scaladocAtt, 0, 3), (annotationAtt, 3, 3), (scaladocAtt, 6, 5),
@@ -177,7 +177,7 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def multiple_macros() {
+  def multiple_macros(): Unit = {
     val res = tokenize("""/**$def $def text $def*/""")
     res === Seq(
       (scaladocAtt, 0, 3), (macroAtt, 3, 4), (scaladocAtt, 7, 1),
@@ -186,25 +186,25 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def single_line_in_scaladoc_should_not_produce_an_out_of_bound_error() {
+  def single_line_in_scaladoc_should_not_produce_an_out_of_bound_error(): Unit = {
     val res = tokenize(" * @param")
     res === Seq((scaladocAtt, 0, 3), (annotationAtt, 3, 6))
   }
 
   @Test
-  def no_highlighting_of_a_single_start_symbol() {
+  def no_highlighting_of_a_single_start_symbol(): Unit = {
     val res = tokenize("a @ b $")
     res === Seq((scaladocAtt, 0, 7))
   }
 
   @Test
-  def start_symbol_between_identifiers_should_handled_as_scaladoc() {
+  def start_symbol_between_identifiers_should_handled_as_scaladoc(): Unit = {
     val res = tokenize("a@b a$b")
     res === Seq((scaladocAtt, 0, 7))
   }
 
   @Test
-  def no_highlighting_of_start_symbol_before_another_start_symbol() {
+  def no_highlighting_of_start_symbol_before_another_start_symbol(): Unit = {
     val res = tokenize("@@ab $$ab")
     res === Seq(
       (scaladocAtt, 0, 1), (annotationAtt, 1, 3), (scaladocAtt, 4, 2),
@@ -212,7 +212,7 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def no_highlighting_of_start_symbol_after_non_scaladoc() {
+  def no_highlighting_of_start_symbol_after_non_scaladoc(): Unit = {
     val res = tokenize("@ab@ $ab$")
     res === Seq(
       (annotationAtt, 0, 3), (scaladocAtt, 3, 2), (macroAtt, 5, 3),
@@ -220,7 +220,7 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def part_of_source_code_snippet() {
+  def part_of_source_code_snippet(): Unit = {
     val res = tokenize("val i = 0; /**@param $def*/ def meth = 0", 11, 16)
     res === Seq(
       (scaladocAtt, 11, 3), (annotationAtt, 14, 6), (scaladocAtt, 20, 1),
@@ -228,19 +228,19 @@ class ScaladocTokenScannerTest {
   }
 
   @Test
-  def single_task_tag() {
+  def single_task_tag(): Unit = {
     val res = tokenize("/**TODO*/")
     res === Seq((scaladocAtt, 0, 3), (taskTagAtt, 3, 4), (scaladocAtt, 7, 2))
   }
 
   @Test
-  def braces_macro() {
+  def braces_macro(): Unit = {
     val res = tokenize("/**${abc}d*/")
     res === Seq((scaladocAtt, 0, 3), (macroAtt, 3, 6), (scaladocAtt, 9, 3))
   }
 
   @Test
-  def task_tag_that_starts_with_a_special_sign() {
+  def task_tag_that_starts_with_a_special_sign(): Unit = {
     val res = tokenize("/**@todo$todo!todo@param*/")
     res === Seq((scaladocAtt, 0, 3), (taskTagAtt, 3, 15), (scaladocAtt, 18, 8))
   }

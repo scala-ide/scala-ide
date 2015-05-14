@@ -6,7 +6,7 @@ import org.junit._
 class TypeTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def type_alias_in_extends_clause() {
+  def type_alias_in_extends_clause(): Unit = {
     checkSymbolClassification("""
       class Bob extends RuntimeException("foo")
       """, """
@@ -16,7 +16,7 @@ class TypeTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_type() {
+  def import_type(): Unit = {
     checkSymbolClassification("""
         object X { type Type = Int }
         object Y { import X.Type }
@@ -28,32 +28,32 @@ class TypeTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def path_dependent_type() {
+  def path_dependent_type(): Unit = {
     checkSymbolClassification("""
       trait MTrait { trait KTrait[A] }
       trait X {
-        def xs(m: MTrait)(k: m.KTrait[Int])
+        def xs(m: MTrait)(k: m.KTrait[Int]): Unit
       }
       """, """
       trait MTrait { trait KTrait[A] }
       trait X {
-        def xs(m: $TT  $)(k: m.$TT  $[$C$])
+        def xs(m: $TT  $)(k: m.$TT  $[$C$]): Unit
       }
       """,
       Map("C" -> Class, "TT" -> Trait))
   }
 
   @Test
-  def type_projection() {
+  def type_projection(): Unit = {
     checkSymbolClassification("""
       trait MTrait { trait KTrait[A] }
       trait X {
-        def xs(m: MTrait#KTrait[Int])
+        def xs(m: MTrait#KTrait[Int]): Unit
       }
       """, """
       trait MTrait { trait KTrait[A] }
       trait X {
-        def xs(m: $TT  $#$TT  $[$C$])
+        def xs(m: $TT  $#$TT  $[$C$]): Unit
       }
       """,
       Map("C" -> Class, "TT" -> Trait))
@@ -61,16 +61,16 @@ class TypeTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Enable when ticket #1001239 is fixed")
-  def deep_type_projection() {
+  def deep_type_projection(): Unit = {
     checkSymbolClassification("""
       trait MTrait { trait KTrait[A] { trait HTrait } }
       trait X {
-        def xs(m: MTrait#KTrait[Int]#HTrait)
+        def xs(m: MTrait#KTrait[Int]#HTrait): Unit
       }
       """, """
       trait MTrait { trait KTrait[A] { trait HTrait } }
       trait X {
-        def xs(m: $TT  $#$TT  $[$C$]#$TT  $)
+        def xs(m: $TT  $#$TT  $[$C$]#$TT  $): Unit
       }
       """,
       Map("C" -> Class, "TT" -> Trait))
@@ -78,7 +78,7 @@ class TypeTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Enable when ticket #1001046 is fixed")
-  def classify_type_in_abstract_val() {
+  def classify_type_in_abstract_val(): Unit = {
     checkSymbolClassification("""
       trait X {
         val s: String
@@ -92,7 +92,7 @@ class TypeTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def singleton_type() {
+  def singleton_type(): Unit = {
     checkSymbolClassification("""
       object X {
         def s: Obj.type = null

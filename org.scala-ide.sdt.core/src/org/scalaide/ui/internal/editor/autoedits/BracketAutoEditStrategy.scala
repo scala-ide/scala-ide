@@ -12,7 +12,7 @@ import org.eclipse.jface.text.IDocument
  */
 class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+  def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
 
     /*
      * Checks if it is necessary to insert a closing brace. Normally this is
@@ -50,7 +50,7 @@ class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
-    def addClosingBrace() {
+    def addClosingBrace(): Unit = {
       val isAutoClosingEnabled = prefStore.getBoolean(
           EditorPreferencePage.P_ENABLE_AUTO_CLOSING_BRACES)
 
@@ -61,14 +61,14 @@ class BracketAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       command.shiftsCaret = false
     }
 
-    def jumpOverClosingBrace() {
+    def jumpOverClosingBrace(): Unit = {
       if (ch(0, '}')) {
         command.text = ""
         command.caretOffset = command.offset + 1
       }
     }
 
-    def removeClosingBrace() {
+    def removeClosingBrace(): Unit = {
       if (ch(0, '{') && ch(1, '}')) {
         command.length = 2
       }

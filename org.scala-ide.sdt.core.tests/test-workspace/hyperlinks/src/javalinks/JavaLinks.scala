@@ -3,7 +3,7 @@ package javalinks
 import util.JavaMethods
 
 class JavaLinks {
-  def foo {
+  def foo: Unit = {
     val x = JavaMethods.nArray/*^*/(Array("2", "3"))
     val y = JavaMethods.nArray/*^*/(Array(2, 3))
     val over = new JavaMethods[Integer]

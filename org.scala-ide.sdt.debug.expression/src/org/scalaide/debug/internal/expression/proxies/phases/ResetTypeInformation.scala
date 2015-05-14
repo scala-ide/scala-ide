@@ -61,7 +61,7 @@ package scala.tools.nsc.ast {
 
       val locals = util.HashSet[Symbol](8)
       val orderedLocals = scala.collection.mutable.ListBuffer[Symbol]()
-      def registerLocal(sym: Symbol) {
+      def registerLocal(sym: Symbol): Unit = {
         if (sym != null && sym != NoSymbol) {
           if (debug && !(locals contains sym)) orderedLocals append sym
           locals addEntry sym
@@ -69,7 +69,7 @@ package scala.tools.nsc.ast {
       }
 
       class MarkLocals extends Traverser {
-        def markLocal(tree: Tree) {
+        def markLocal(tree: Tree): Unit = {
           if (tree.symbol != null && tree.symbol != NoSymbol) {
             val sym = tree.symbol
             registerLocal(sym)

@@ -14,7 +14,7 @@ class CustomMethodHighlightingTest
   with CustomHighlightingTest {
 
   @Test
-  def customMethodHighlighting() {
+  def customMethodHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Methods.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(
@@ -38,7 +38,7 @@ class CustomMethodHighlightingTest
   }
 
   @Test
-  def customMethodHighlightingWithInheritance() {
+  def customMethodHighlightingWithInheritance(): Unit = {
     withCompilationUnitAndCompiler("custom/MethodsInheritance.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(
@@ -65,7 +65,7 @@ class CustomMethodHighlightingTest
   }
 
   @Test
-  def mixingMethodsAndAnnotations() {
+  def mixingMethodsAndAnnotations(): Unit = {
     withCompilationUnitAndCompiler("custom/Mix.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(

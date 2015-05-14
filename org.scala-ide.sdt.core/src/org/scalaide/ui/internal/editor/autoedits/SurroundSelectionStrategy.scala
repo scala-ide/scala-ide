@@ -30,7 +30,7 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
    *  automatically generated closing angle bracket that the Java editor
    *  always appends, leading to <> in the code.
    */
-  override def verifyKey(event: VerifyEvent) {
+  override def verifyKey(event: VerifyEvent): Unit = {
     val selection = sourceViewer.getSelectedRange
     val doc = sourceViewer.getDocument
     val chr = event.character
@@ -59,7 +59,7 @@ class SurroundSelectionStrategy(sourceViewer: ISourceViewer) extends VerifyKeyLi
     for ((option, mapping) <- optionToMapping if store.getBoolean(option)) yield mapping
   }
 
-  def propertyChange(event: PropertyChangeEvent) {
+  def propertyChange(event: PropertyChangeEvent): Unit = {
     activeChars = getConfiguredActiveChars
   }
 }

@@ -23,12 +23,12 @@ class PresentationCompilerTest {
   import PresentationCompilerTest._
 
   @Before
-  def reset() {
+  def reset(): Unit = {
     project.presentationCompiler.shutdown()
   }
 
   @Test
-  def creatingOverrideIndicator_ShouldNotReportError_t1000531() {
+  def creatingOverrideIndicator_ShouldNotReportError_t1000531(): Unit = {
     // when
     val unit = open("t1000531/A.scala")
     val mockLogger = mock(classOf[Logger])
@@ -56,7 +56,7 @@ class PresentationCompilerTest {
   @Test
   // garillot: deactivated pending replication of a platform test architecture
   @Ignore("Enable this test once headless triggering of Reconciler is possible")
-  def freshFileReportsErrors() {
+  def freshFileReportsErrors(): Unit = {
     val contentsWithErrors = """
 package t1001094
 
@@ -74,7 +74,7 @@ class FreshFile {
   }
 
   @Test
-  def implicitConversionFromPackageObjectShouldBeInScope_t1000647() {
+  def implicitConversionFromPackageObjectShouldBeInScope_t1000647(): Unit = {
     //when
     open("t1000647/foo/package.scala")
 
@@ -89,7 +89,7 @@ class FreshFile {
   }
 
   @Test
-  def illegalCyclicReferenceInvolvingObject_t1000658() {
+  def illegalCyclicReferenceInvolvingObject_t1000658(): Unit = {
     //when
     val unit = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
     //then
@@ -99,7 +99,7 @@ class FreshFile {
   }
 
   @Test
-  def notEnoughArgumentsForCconstructorError_ShouldNotBeReported_t1000692() {
+  def notEnoughArgumentsForCconstructorError_ShouldNotBeReported_t1000692(): Unit = {
     //when
     val unit = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val oracle = List(Link("class t1000692.akka.config.ModuleNotAvailableException"))
@@ -112,7 +112,7 @@ class FreshFile {
   }
 
   @Test
-  def pcShouldReportTheCorrectCompilationUnitsItKnowsAbout() {
+  def pcShouldReportTheCorrectCompilationUnitsItKnowsAbout(): Unit = {
     // should be empty
     Assert.assertTrue("Presentation compiler should not maintain any units after a shutdown request", managedUnits().isEmpty)
 
@@ -128,7 +128,7 @@ class FreshFile {
   }
 
   @Test
-  def pcShouldReportTheCorrectCompilationUnitsOnShutdown() {
+  def pcShouldReportTheCorrectCompilationUnitsOnShutdown(): Unit = {
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
@@ -144,7 +144,7 @@ class FreshFile {
   }
 
   @Test
-  def pcShouldReloadAllUnitsOnReset() {
+  def pcShouldReloadAllUnitsOnReset(): Unit = {
     val cu = scalaCompilationUnit("t1000692/akka/util/ReflectiveAccess.scala")
     val cu1 = scalaCompilationUnit("t1000658/ThreadPoolConfig.scala")
 
@@ -159,7 +159,7 @@ class FreshFile {
   }
 
   @Test
-  def correctlyTypecheckClassesWithDefaultArguments_t1000976() {
+  def correctlyTypecheckClassesWithDefaultArguments_t1000976(): Unit = {
     def openUnitAndTypecheck(path: String): ScalaSourceFile = {
       val unit = scalaCompilationUnit(path).asInstanceOf[ScalaSourceFile]
       unit.reload()

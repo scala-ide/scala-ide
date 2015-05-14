@@ -40,7 +40,7 @@ import org.scalaide.core.SdtConstants
 
 class ScalaLaunchDelegate extends AbstractJavaLaunchConfigurationDelegate {
   /** This code is very heavily inspired from `JavaLaunchDelegate`. */
-  def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor) {
+  def launch(configuration: ILaunchConfiguration, mode: String, launch: ILaunch, monitor0: IProgressMonitor): Unit = {
 
     val monitor = if (monitor0 == null) new NullProgressMonitor() else monitor0
 

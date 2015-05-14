@@ -26,7 +26,7 @@ class LibraryJarInBootstrapTest {
   import LibraryJarInBootstrapTest._
 
   @Before
-  def initializeTests() {
+  def initializeTests(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
@@ -37,7 +37,7 @@ class LibraryJarInBootstrapTest {
    * to the boot classpath for test execution (nor the classpath) and the launch would fail.
    */
   @Test
-  def checkTestIsCorrectlyExecutedWhenLibraryJarAfterJRE() {
+  def checkTestIsCorrectlyExecutedWhenLibraryJarAfterJRE(): Unit = {
 
     val launchConfigurationName = "t1000919.ScalaTest"
 

@@ -108,14 +108,14 @@ class ScalaStackFrameTest {
   import ScalaStackFrameTest._
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @Test
-  def getFullMethodNameNoParameters() {
+  def getFullMethodNameNoParameters(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("Lpackage/name/TypeName;", "methodName", "()V")
@@ -126,7 +126,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameDefaultPackage() {
+  def getFullMethodNameDefaultPackage(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LDefaultPackageTypeName;", "methodName", "()V")
@@ -137,7 +137,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameBooleanParameter() {
+  def getFullMethodNameBooleanParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Z)V")
@@ -148,7 +148,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameByteParameter() {
+  def getFullMethodNameByteParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(B)V")
@@ -159,7 +159,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameCharParameter() {
+  def getFullMethodNameCharParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(C)V")
@@ -170,7 +170,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameDoubleParameter() {
+  def getFullMethodNameDoubleParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(D)V")
@@ -181,7 +181,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameFloatParameter() {
+  def getFullMethodNameFloatParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(F)V")
@@ -192,7 +192,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameIntParameter() {
+  def getFullMethodNameIntParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(I)V")
@@ -203,7 +203,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameLongParameter() {
+  def getFullMethodNameLongParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(J)V")
@@ -214,7 +214,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameShortParameter() {
+  def getFullMethodNameShortParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(S)V")
@@ -225,7 +225,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameReferenceParameter() {
+  def getFullMethodNameReferenceParameter(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Lsome/package/ATypeName;)V")
@@ -236,7 +236,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameArrayParameterReferenceElement() {
+  def getFullMethodNameArrayParameterReferenceElement(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "([Lsome/package/SomeTypeName;)V")
@@ -247,7 +247,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameArrayParameterPrimitiveElement() {
+  def getFullMethodNameArrayParameterPrimitiveElement(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "([I)V")
@@ -258,7 +258,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameMixedParameters() {
+  def getFullMethodNameMixedParameters(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("LTypeName;", "methodName", "(Z[IFLsome/package/SomeTypeA;[[Lpackage/SomeTypeB;)V")
@@ -269,7 +269,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getFullMethodNameWithEncoding() {
+  def getFullMethodNameWithEncoding(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     val jdiStackFrame = createJDIStackFrame("Lpackage/name/TypeName;", "$colon$plus$minus$qmark", "()V")
@@ -280,7 +280,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getVariableNonStaticMethod() {
+  def getVariableNonStaticMethod(): Unit = {
     import scala.collection.JavaConverters._
 
     val scalaThread = mock(classOf[ScalaThread])
@@ -306,7 +306,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getVariableStaticMethod() {
+  def getVariableStaticMethod(): Unit = {
     import scala.collection.JavaConverters._
 
     val scalaThread = mock(classOf[ScalaThread])
@@ -331,7 +331,7 @@ class ScalaStackFrameTest {
   }
 
   @Test
-  def getVariableNativeMethod() {
+  def getVariableNativeMethod(): Unit = {
     import scala.collection.JavaConverters._
 
     val scalaThread = mock(classOf[ScalaThread])
@@ -358,42 +358,42 @@ class ScalaStackFrameTest {
   // Signature reading tests
 
   @Test
-  def BooleanSignatureParsing() {
+  def BooleanSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Boolean", ScalaStackFrame.getSimpleName("Z"))
   }
 
   @Test
-  def ByteSignatureParsing() {
+  def ByteSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Byte", ScalaStackFrame.getSimpleName("B"))
   }
 
   @Test
-  def CharSignatureParsing() {
+  def CharSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Char", ScalaStackFrame.getSimpleName("C"))
   }
 
   @Test
-  def DoubleSignatureParsing() {
+  def DoubleSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Double", ScalaStackFrame.getSimpleName("D"))
   }
 
   @Test
-  def FloatSignatureParsing() {
+  def FloatSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Float", ScalaStackFrame.getSimpleName("F"))
   }
 
   @Test
-  def IntegerSignatureParsing() {
+  def IntegerSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Int", ScalaStackFrame.getSimpleName("I"))
   }
 
   @Test
-  def LongSignatureParsing() {
+  def LongSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Long", ScalaStackFrame.getSimpleName("J"))
   }
 
   @Test
-  def ShortSignatureParsing() {
+  def ShortSignatureParsing(): Unit = {
     assertEquals("Wrong name", "Short", ScalaStackFrame.getSimpleName("S"))
   }
 

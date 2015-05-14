@@ -14,7 +14,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   import TestValues.ValuesTestCase._
 
   @Test
-  def testByteConversions() {
+  def testByteConversions(): Unit = {
     eval("byte.toByte", byte.toByte, Java.primitives.byte)
     eval("byte.toShort", byte.toShort, Java.primitives.short)
     eval("byte.toChar", byte.toChar, Java.primitives.char)
@@ -25,7 +25,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testShortConversions() {
+  def testShortConversions(): Unit = {
     eval("short.toByte", short.toByte, Java.primitives.byte)
     eval("short.toShort", short.toShort, Java.primitives.short)
     eval("short.toChar", short.toChar, Java.primitives.char)
@@ -36,7 +36,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testCharConversions() {
+  def testCharConversions(): Unit = {
     eval("char.toByte", char.toByte, Java.primitives.byte)
     eval("char.toShort", char.toShort, Java.primitives.short)
     eval("char.toChar", char.toChar, Java.primitives.char)
@@ -47,7 +47,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testIntConversions() {
+  def testIntConversions(): Unit = {
     eval("int.toByte", int.toByte, Java.primitives.byte)
     eval("int.toShort", int.toShort, Java.primitives.short)
     eval("int.toChar", int.toChar, Java.primitives.char)
@@ -58,7 +58,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testLongConversions() {
+  def testLongConversions(): Unit = {
     eval("long.toByte", long.toByte, Java.primitives.byte)
     eval("long.toShort", long.toShort, Java.primitives.short)
     eval("long.toChar", long.toChar, Java.primitives.char)
@@ -69,7 +69,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testFloatConversions() {
+  def testFloatConversions(): Unit = {
     eval("float.toByte", float.toByte, Java.primitives.byte)
     eval("float.toShort", float.toShort, Java.primitives.short)
     eval("float.toChar", float.toChar, Java.primitives.char)
@@ -80,7 +80,7 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 
   @Test
-  def testDoubleConversions() {
+  def testDoubleConversions(): Unit = {
     eval("double.toByte", double.toByte, Java.primitives.byte)
     eval("double.toShort", double.toShort, Java.primitives.short)
     eval("double.toChar", double.toChar, Java.primitives.char)

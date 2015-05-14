@@ -28,7 +28,7 @@ trait PreferenceProvider {
 
   def updateCache(): Unit
 
-  def put(key: String, value: String) {
+  def put(key: String, value: String): Unit = {
     preferences(key) = value
   }
 

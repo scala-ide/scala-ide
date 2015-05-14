@@ -65,7 +65,7 @@ class DesiredScalaInstallationTests {
   }
 
   @After
-  def deleteProjects() {
+  def deleteProjects(): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
@@ -76,7 +76,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def install_for_default_container_is_platform() {
+  def install_for_default_container_is_platform(): Unit = {
     val project = createProject()
     val cc = getLibraryJar(project)
     val v = cc flatMap (lib => extractVersion(lib.getPath()))
@@ -84,24 +84,24 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def configured_install_for_default_container_is_platform() {
+  def configured_install_for_default_container_is_platform(): Unit = {
     val project = createProject()
     val dsi = project.effectiveScalaInstallation()
     assertTrue(s"The default scala installation should be the platform. Found ${project.desiredinstallationChoice()}", dsi == ScalaInstallation.platformInstallation)
   }
 
   @Test
-  def at_least_two_available_installs() {
+  def at_least_two_available_installs(): Unit = {
     assertTrue("There should be at least two scala installations (current and legacy)", ScalaInstallation.availableInstallations.size >= 2)
   }
 
   @Test
-  def at_least_two_available_bundled_installs() {
+  def at_least_two_available_bundled_installs(): Unit = {
     assertTrue("There should be at least two bundled scala installations (current and legacy)", ScalaInstallation.availableBundledInstallations.size >= 2)
   }
 
   @Test
-  def legacy_is_not_current() {
+  def legacy_is_not_current(): Unit = {
     val project = createProject()
     val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -109,7 +109,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def legacy_is_not_binary_compatible(){
+  def legacy_is_not_binary_compatible(): Unit ={
     val project = createProject()
     val current_dsi  = project.effectiveScalaInstallation()
     val current_choice_before = project.desiredinstallationChoice()
@@ -120,7 +120,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def change_to_legacy_registers_choice_constant(){
+  def change_to_legacy_registers_choice_constant(): Unit ={
     val project = createProject()
     val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -130,7 +130,7 @@ class DesiredScalaInstallationTests {
   }
 
    @Test
-  def change_to_legacy_registers_choice_dynamic(){
+  def change_to_legacy_registers_choice_dynamic(): Unit ={
     val project = createProject()
     val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -140,7 +140,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def change_to_legacy_registers_constant(){
+  def change_to_legacy_registers_constant(): Unit ={
     val project = createProject()
     val current_dsi  = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -150,7 +150,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def change_to_legacy_registers_dynamic(){
+  def change_to_legacy_registers_dynamic(): Unit ={
     val project = createProject()
     val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -160,7 +160,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def change_to_legacy_registers_on_classpath(){
+  def change_to_legacy_registers_on_classpath(): Unit ={
     val project = createProject()
     val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)
@@ -173,7 +173,7 @@ class DesiredScalaInstallationTests {
   }
 
   @Test
-  def change_to_legacy_registers_on_compiler_classpath(){
+  def change_to_legacy_registers_on_compiler_classpath(): Unit ={
     val project = createProject()
     val current_dsi = project.effectiveScalaInstallation()
     val otherInstallation = anotherBundle(current_dsi)

@@ -57,13 +57,13 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def getHandleFromMemento(token : String, memento : MementoTokenizer, owner : WorkingCopyOwner) : IJavaElement =
     classFile.getHandleFromMemento(token, memento, owner)
 
-  override def bufferChanged(e : BufferChangedEvent) { classFile.bufferChanged(e) }
+  override def bufferChanged(e : BufferChangedEvent): Unit = { classFile.bufferChanged(e) }
   override def buildStructure(info : OpenableElementInfo, pm : IProgressMonitor, newElements : JMap[_, _], underlyingResource : IResource) : Boolean =
     classFile.buildStructure(info, pm, newElements, underlyingResource)
   override def canBeRemovedFromCache() : Boolean = classFile.canBeRemovedFromCache()
   override def canBufferBeRemovedFromCache(buffer : IBuffer) : Boolean = classFile.canBufferBeRemovedFromCache(buffer)
-  override def closeBuffer() { classFile.closeBuffer0() }
-  override def closing(info : AnyRef) { classFile.closing0(info) }
+  override def closeBuffer(): Unit = { classFile.closeBuffer0() }
+  override def closing(info : AnyRef): Unit = { classFile.closing0(info) }
   override def codeComplete(
     cu : env.ICompilationUnit,
     unitToSkip : env.ICompilationUnit,
@@ -71,7 +71,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
     requestor : CompletionRequestor,
     owner : WorkingCopyOwner,
     typeRoot : ITypeRoot,
-    monitor : IProgressMonitor) {
+    monitor : IProgressMonitor): Unit = {
     classFile.codeComplete(cu, unitToSkip, position, requestor, owner, typeRoot, monitor)
   }
   override def codeSelect(cu : env.ICompilationUnit, offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
@@ -89,7 +89,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def resourceExists(underlyingResource : IResource) : Boolean = classFile.resourceExists0(underlyingResource)
   override def getPackageFragmentRoot() : PackageFragmentRoot = classFile.getPackageFragmentRoot()
   override def validateExistence(underlyingResource : IResource) : IStatus = classFile.validateExistence0(underlyingResource)
-  override def openAncestors(newElements : JHashMap[_, _], monitor : IProgressMonitor) { classFile.openAncestors0(newElements, monitor) }
+  override def openAncestors(newElements : JHashMap[_, _], monitor : IProgressMonitor): Unit = { classFile.openAncestors0(newElements, monitor) }
 
   override def exists() = classFile.exists()
   override def getAncestor(ancestorType : Int) : IJavaElement = classFile.getAncestor(ancestorType)
@@ -113,26 +113,26 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def getChildren() : Array[IJavaElement] = classFile.getChildren()
   override def hasChildren() : Boolean = classFile.hasChildren()
 
-  override def close() { classFile.close() }
+  override def close(): Unit = { classFile.close() }
   override def findRecommendedLineSeparator() : String = classFile.findRecommendedLineSeparator()
   override def getBuffer() : IBuffer = classFile.getBuffer()
   override def hasUnsavedChanges() : Boolean = classFile.hasUnsavedChanges()
   override def isConsistent() : Boolean = classFile.isConsistent()
   override def isOpen() : Boolean = classFile.isOpen()
-  override def makeConsistent(progress : IProgressMonitor) { classFile.makeConsistent(progress) }
-  override def open(progress : IProgressMonitor) { classFile.open(progress) }
-  override def save(progress : IProgressMonitor, force : Boolean) { classFile.save(progress, force) }
+  override def makeConsistent(progress : IProgressMonitor): Unit = { classFile.makeConsistent(progress) }
+  override def open(progress : IProgressMonitor): Unit = { classFile.open(progress) }
+  override def save(progress : IProgressMonitor, force : Boolean): Unit = { classFile.save(progress, force) }
 
   def getSource() : String = classFile.getSource()
   def getSourceRange() : ISourceRange = classFile.getSourceRange()
 
-  def codeComplete(offset : Int, requestor : ICodeCompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : ICompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, monitor : IProgressMonitor) { classFile.codeComplete(offset, requestor, monitor) }
-  def codeComplete(offset : Int, requestor : ICompletionRequestor, owner : WorkingCopyOwner) { classFile.codeComplete(offset, requestor, owner) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner) { classFile.codeComplete(offset, requestor, owner) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner, monitor : IProgressMonitor) { classFile.codeComplete(offset, requestor, owner, monitor) }
+  def codeComplete(offset : Int, requestor : ICodeCompletionRequestor): Unit = { classFile.codeComplete(offset, requestor) }
+  def codeComplete(offset : Int, requestor : ICompletionRequestor): Unit = { classFile.codeComplete(offset, requestor) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor): Unit = { classFile.codeComplete(offset, requestor) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, monitor : IProgressMonitor): Unit = { classFile.codeComplete(offset, requestor, monitor) }
+  def codeComplete(offset : Int, requestor : ICompletionRequestor, owner : WorkingCopyOwner): Unit = { classFile.codeComplete(offset, requestor, owner) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner): Unit = { classFile.codeComplete(offset, requestor, owner) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner, monitor : IProgressMonitor): Unit = { classFile.codeComplete(offset, requestor, owner, monitor) }
   def codeSelect(offset : Int, length : Int) : Array[IJavaElement] = classFile.codeSelect(offset, length)
   def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] = classFile.codeSelect(offset, length, owner)
 
@@ -140,8 +140,8 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def getElementAt(position : Int) : IJavaElement = classFile.getElementAt(position)
   def getWorkingCopy(owner : WorkingCopyOwner, monitor : IProgressMonitor) : ICompilationUnit = classFile.getWorkingCopy(owner, monitor)
 
-  def commit(force : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def destroy() { throw new UnsupportedOperationException }
+  def commit(force : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def destroy(): Unit = { throw new UnsupportedOperationException }
   def findSharedWorkingCopy(bufferFactory : IBufferFactory) : IJavaElement = { throw new UnsupportedOperationException }
   def getOriginal(workingCopyElement : IJavaElement) : IJavaElement = { throw new UnsupportedOperationException }
   def getOriginalElement() : IJavaElement = throw new UnsupportedOperationException
@@ -158,23 +158,23 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def isBasedOn(resource : IResource) : Boolean = throw new UnsupportedOperationException
   def isWorkingCopy() : Boolean = false
   def reconcile() : Array[IMarker] = throw new UnsupportedOperationException
-  def reconcile(forceProblemDetection : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def restore() { throw new UnsupportedOperationException }
+  def reconcile(forceProblemDetection : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def restore(): Unit = { throw new UnsupportedOperationException }
 
-  def copy(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def delete(force : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def move(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def rename(name : String, replace : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
+  def copy(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def delete(force : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def move(container : IJavaElement, sibling : IJavaElement, rename : String, replace : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def rename(name : String, replace : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
 
   def applyTextEdit(edit : TextEdit, monitor : IProgressMonitor) : UndoEdit = throw new UnsupportedOperationException
-  def becomeWorkingCopy(problemRequestor : IProblemRequestor, monitor : IProgressMonitor) { classFile.becomeWorkingCopy(problemRequestor, null, monitor) }
-  def becomeWorkingCopy(monitor : IProgressMonitor) { classFile.becomeWorkingCopy(null, null, monitor) }
-  def commitWorkingCopy(force : Boolean, monitor : IProgressMonitor) {}
+  def becomeWorkingCopy(problemRequestor : IProblemRequestor, monitor : IProgressMonitor): Unit = { classFile.becomeWorkingCopy(problemRequestor, null, monitor) }
+  def becomeWorkingCopy(monitor : IProgressMonitor): Unit = { classFile.becomeWorkingCopy(null, null, monitor) }
+  def commitWorkingCopy(force : Boolean, monitor : IProgressMonitor): Unit = {}
   def createImport(name : String, sibling : IJavaElement, monitor : IProgressMonitor) : IImportDeclaration = throw new UnsupportedOperationException
   def createImport(name : String, sibling : IJavaElement, flags : Int, monitor : IProgressMonitor) : IImportDeclaration = throw new UnsupportedOperationException
   def createPackageDeclaration(name : String, monitor : IProgressMonitor) : IPackageDeclaration = throw new UnsupportedOperationException
   def createType(contents : String, sibling : IJavaElement, force : Boolean, monitor : IProgressMonitor) : IType = throw new UnsupportedOperationException
-  def discardWorkingCopy() {}
+  def discardWorkingCopy(): Unit = {}
   def findWorkingCopy(owner : WorkingCopyOwner) : ICompilationUnit = null
   def getAllTypes() : Array[IType] = Array(classFile.getType())
   def getImport(name : String) : IImportDeclaration = throw new UnsupportedOperationException

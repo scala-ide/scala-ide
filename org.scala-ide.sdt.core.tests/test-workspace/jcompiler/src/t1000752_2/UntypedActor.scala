@@ -25,15 +25,15 @@ abstract class UntypedActor extends Actor {
   def become(behavior: Procedure[Any], discardOld: Boolean): Unit =
     super.become(null, discardOld)
 
-  override def preStart() {}
+  override def preStart(): Unit = {}
 
-  override def postStop() {}
+  override def postStop(): Unit = {}
 
-  override def preRestart(reason: Throwable, lastMessage: Option[Any]) {}
+  override def preRestart(reason: Throwable, lastMessage: Option[Any]): Unit = {}
 
-  override def postRestart(reason: Throwable) {}
+  override def postRestart(reason: Throwable): Unit = {}
 
-  override def unhandled(msg: Any) {
+  override def unhandled(msg: Any): Unit = {
     throw new Exception
   }
 
