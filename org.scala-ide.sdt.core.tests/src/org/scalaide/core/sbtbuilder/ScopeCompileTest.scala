@@ -2,7 +2,6 @@ package org.scalaide.core
 package sbtbuilder
 
 import java.io.File
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -29,17 +28,19 @@ import org.scalaide.core.testsetup.SDTTestUtils.sourceWorkspaceLoc
 import org.scalaide.core.testsetup.SDTTestUtils.markersMessages
 import org.scalaide.core.testsetup.SDTTestUtils.workspace
 import org.scalaide.util.eclipse.EclipseUtils
-
 import ScopeCompileTest.projectA
 import ScopeCompileTest.projectB
+import java.util.concurrent.locks.ReentrantLock
+import org.scalaide.core.testsetup.Bdd
+import org.scalaide.core.testsetup.Before
 
-object ScopeCompileTest {
+object ScopeCompileTest extends Before {
   import org.scalaide.core.testsetup.SDTTestUtils._
-  val projectAName = "scopeCompileProjectA"
-  val projectBName = "scopeCompileProjectB"
+  private val projectAName = "scopeCompileProjectA"
+  private val projectBName = "scopeCompileProjectB"
   var projectA: IScalaProject = _
   var projectB: IScalaProject = _
-  val bundleName = "org.scala-ide.sdt.core.tests"
+  private val bundleName = "org.scala-ide.sdt.core.tests"
 
   private val withSrcOutputStructure: SrcPathOutputEntry = (project, jProject) => {
     val macrosSourceFolder = project.getFolder("/src/macros")
@@ -61,23 +62,11 @@ object ScopeCompileTest {
   }
 
   @BeforeClass def setup(): Unit = {
-    SDTTestUtils.enableAutoBuild(false)
-    var done = false
-    List(projectAName, projectBName).foreach { name =>
-      EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
-        val wspaceLoc = workspace.getRoot.getLocation
-        val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
-        val dst = new File(wspaceLoc.toFile().getAbsolutePath + File.separatorChar + name)
-        FileUtils.copyDirectory(src, dst)
-        done = true
-      }
+    initializeProjects(bundleName, Seq(projectAName, projectBName)) {
+      projectA = createProjectInWorkspace(projectAName, withSrcOutputStructure)
+      projectB = createProjectInWorkspace(projectBName, withSrcOutputStructure)
+      addToClasspath(projectB, JavaCore.newProjectEntry(projectA.underlying.getFullPath, false))
     }
-    while (!done) { Thread.sleep(0) }
-    projectA = createProjectInWorkspace("scopeCompileProjectA", withSrcOutputStructure)
-    projectB = createProjectInWorkspace("scopeCompileProjectB", withSrcOutputStructure)
-    addToClasspath(projectB, JavaCore.newProjectEntry(projectA.underlying.getFullPath, false))
-    projectA.underlying.refreshLocal(IResource.DEPTH_INFINITE, null)
-    projectB.underlying.refreshLocal(IResource.DEPTH_INFINITE, null)
   }
 
   @AfterClass def cleanup(): Unit = {
@@ -85,16 +74,10 @@ object ScopeCompileTest {
   }
 }
 
-class ScopeCompileTest {
+class ScopeCompileTest extends Bdd {
   import org.scalaide.core.testsetup.SDTTestUtils._
   import ScopeCompileTest._
-
-  def givenCleanWorkspaceForProjects(projects: IScalaProject*): Unit = {
-    workspace.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    projects.foreach { project =>
-      Assert.assertTrue(getErrorMessages(project.underlying).isEmpty)
-    }
-  }
+  import Bdd._
 
   def whenFileInScopeIsDamaged(project: IScalaProject, scopeRootPath: String, packageName: String, fileName: String)(thenAssertThat: => Unit): Unit = {
     val toChangeRoot = project.javaProject.findPackageFragmentRoot(new Path("/" + project.underlying.getName + scopeRootPath))
