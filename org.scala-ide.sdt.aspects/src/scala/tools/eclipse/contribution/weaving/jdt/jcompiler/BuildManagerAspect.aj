@@ -1,12 +1,11 @@
 package scala.tools.eclipse.contribution.weaving.jdt.jcompiler;
 
+import java.util.ArrayList;
+
 import org.eclipse.core.internal.events.BuildManager;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.jdt.internal.core.builder.AbstractImageBuilder;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Weaving on the BuildManager, to be able to replace and update
@@ -47,8 +46,6 @@ public aspect BuildManagerAspect {
   void around(AbstractImageBuilder aib, ArrayList sourceFiles):
     addAllSourceFiles(aib, sourceFiles) {
     proceed(aib, sourceFiles);
-    List sourcesToCompile = BuildManagerStore.INSTANCE.filterProjectSources(sourceFiles, aib);
-    sourceFiles.clear();
-    sourceFiles.addAll(sourcesToCompile);
+    BuildManagerStore.INSTANCE.filterProjectSources(sourceFiles, aib);
   }
 }

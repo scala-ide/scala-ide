@@ -52,6 +52,7 @@ import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAt
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
+import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -107,6 +108,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[CallByNameParamAtCreationPresenterTest],
     classOf[ScalaJavaDepTicket_1000607Test],
     classOf[ScalaJavaDepWhenJavaIsWrongTest],
-    classOf[ScopeCompileTest]
+    classOf[ScopeCompileTest],
+    classOf[ScalaProjectDependedOnJavaProjectTest]
 ))
 class TestsSuite
