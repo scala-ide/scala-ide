@@ -8,14 +8,14 @@ import org.eclipse.jface.text.TextUtilities
 
 class MultiLineStringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+  def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
 
     def ch(i: Int, c: Char) = {
       val o = command.offset + i
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
-    def removeClosingLiteral() {
+    def removeClosingLiteral(): Unit = {
       val isLiteralEmpty = -2 to 3 forall (ch(_, '"'))
 
       if (isLiteralEmpty) {
@@ -24,12 +24,12 @@ class MultiLineStringAutoEditStrategy(partitioning: String, prefStore: IPreferen
       }
     }
 
-    def jumpOverClosingLiteral() {
+    def jumpOverClosingLiteral(): Unit = {
       command.text = ""
       command.caretOffset = command.offset + 1
     }
 
-    def handleClosingLiteral() {
+    def handleClosingLiteral(): Unit = {
       val cs = -2 to 2 map (ch(_, '"'))
       val existThreeConsecutiveApostrophes = cs sliding 3 exists (_ forall identity)
       if (existThreeConsecutiveApostrophes)

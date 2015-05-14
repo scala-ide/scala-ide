@@ -9,7 +9,7 @@ class OuterClass {
 
     testFields
 
-    def testFields {
+    def testFields: Unit = {
       val fff = "Local Shadower"
 
       fff /*{method-local var shadowing field}*/                   // Should show "Local Shadower"

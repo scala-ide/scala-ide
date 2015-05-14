@@ -46,11 +46,11 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
 
   private val fieldEditors = collection.mutable.ListBuffer[FieldEditor]()
 
-  override def init(workbench: IWorkbench) {
+  override def init(workbench: IWorkbench): Unit = {
     isWorkbenchPage = true
   }
 
-  private def initUnderlyingPreferenceStore() {
+  private def initUnderlyingPreferenceStore(): Unit = {
     val pluginId = SdtConstants.PluginId
     val scalaPrefStore = IScalaPlugin().getPreferenceStore()
     setPreferenceStore(getElement match {

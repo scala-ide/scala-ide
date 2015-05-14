@@ -12,7 +12,7 @@ class CustomClassHighlightingTest
   with CustomHighlightingTest {
 
   @Test
-  def scalaCollectionMutableHighlighting() {
+  def scalaCollectionMutableHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/ScalaCollectionMutable.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(
@@ -31,7 +31,7 @@ class CustomClassHighlightingTest
 
   // TODO - flaky test :(
   @Test
-  def customTypeHighlighting() {
+  def customTypeHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Types.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(

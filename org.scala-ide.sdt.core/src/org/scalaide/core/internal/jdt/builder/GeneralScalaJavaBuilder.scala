@@ -15,7 +15,7 @@ class GeneralScalaJavaBuilder extends ScalaJavaBuilder {
   // (Indigo) this sets a dummy BuildConfiguration and avoids an NPE in InternalBuilder.getProject
   setProject0(null)
 
-  override def setProject0(project: IProject) {
+  override def setProject0(project: IProject): Unit = {
     ScalaJavaBuilderUtils.setBuildConfig(this, project)
   }
 }
@@ -31,7 +31,7 @@ object ScalaJavaBuilderUtils extends ReflectionUtils {
 
   def initializeBuilder(builder : ScalaJavaBuilder, kind : Int, forBuild : Boolean) = initializeBuilderMethod.invoke(builder, int2Integer(kind), boolean2Boolean(forBuild))
 
-  def setBuildConfig(builder: ScalaJavaBuilder, project: IProject) {
+  def setBuildConfig(builder: ScalaJavaBuilder, project: IProject): Unit = {
     val buildConfig = new BuildConfiguration(project)
     setBuildConfigMethod.invoke(builder, buildConfig)
   }

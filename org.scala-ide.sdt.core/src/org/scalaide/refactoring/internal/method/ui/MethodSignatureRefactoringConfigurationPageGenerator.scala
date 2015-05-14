@@ -70,7 +70,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
     /** Converts a function to an ``MouseAdapter`` whose ``mouseUp`` method is called */
     implicit def mouseUpListener(f: () => Unit): MouseAdapter = new MouseAdapter {
-      override def mouseUp(me: MouseEvent) {
+      override def mouseUp(me: MouseEvent): Unit = {
         f()
       }
     }
@@ -95,7 +95,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
     val firstBtnText: String = "Split"
     val secondBtnText: String = "Merge"
 
-    def createControl(parent: Composite) {
+    def createControl(parent: Composite): Unit = {
       initializeDialogUnits(parent)
 
       // this represents all parameter lists of the method
@@ -139,7 +139,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       // Observer for selection changed events from the parameter table.
       // Calls setBtnStatesForParameter or setBtnStatesForSeparator to update
       // the button states when a parameter or a separator is selected, respectively.
-      def selectionObs(structuredSel: IStructuredSelection) {
+      def selectionObs(structuredSel: IStructuredSelection): Unit = {
         if(structuredSel.size > 0) {
           structuredSel.getFirstElement match {
             case Left(param: ValDef) => {
@@ -163,7 +163,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       methodPreview.getControl.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1))
 
       // triggers an update of the parameter table and everything that depends on it
-      def updateParamsAndSeparators() {
+      def updateParamsAndSeparators(): Unit = {
         paramsTable.updateTable()
         methodPreview.getDocument.set(previewString(method, paramsWithSeparators))
 
@@ -339,7 +339,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
     setup()
 
-    private def setup() {
+    private def setup(): Unit = {
 
       def mkTableViewerColumn(title: String) = {
         val viewerColumn = new TableViewerColumn(viewer, SWT.NONE)
@@ -356,8 +356,8 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
           val elems = paramsWithSeparators.asInstanceOf[List[ParamOrSeparator]]
           Array(elems: _*)
         }
-        override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any) {}
-        override def dispose {}
+        override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = {}
+        override def dispose: Unit = {}
       }
 
       val gridLayout = new GridLayout
@@ -399,7 +399,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       updateTable()
 
       viewer.addSelectionChangedListener(new ISelectionChangedListener {
-        override def selectionChanged(event: SelectionChangedEvent) {
+        override def selectionChanged(event: SelectionChangedEvent): Unit = {
           event.getSelection match {
             case structuredSel: IStructuredSelection => selectionObs(structuredSel)
             case _ => // can't handle unstructured selections
@@ -408,7 +408,7 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
       })
     }
 
-    private[method] def updateTable() {
+    private[method] def updateTable(): Unit = {
       viewer.setInput(methodProvider.apply)
       viewer.refresh()
     }

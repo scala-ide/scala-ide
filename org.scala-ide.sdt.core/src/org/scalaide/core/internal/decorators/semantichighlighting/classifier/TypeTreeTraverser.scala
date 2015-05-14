@@ -26,7 +26,7 @@ private[classifier] trait TypeTreeTraverser {
       case _                 => false
     }
 
-    def foreach(f: Tree => Unit) {
+    def foreach(f: Tree => Unit): Unit = {
       new ForeachTypeTreeTraverser(f).traverse(tree)
     }
 
@@ -40,7 +40,7 @@ private[classifier] trait TypeTreeTraverser {
 
   //Note [mirco]: The implementation was copied from {{{Trees.ForeachTreeTraverser}}}. Can this be avoided?
   private class ForeachTypeTreeTraverser(f: Tree => Unit) extends TypeTreeTraverser {
-    override def traverse(t: Tree) {
+    override def traverse(t: Tree): Unit = {
       f(t)
       super.traverse(t)
     }
@@ -49,7 +49,7 @@ private[classifier] trait TypeTreeTraverser {
   //Note [mirco]: The implementation was copied from {{{Trees.ForeachTreeTraverser}}}. Can this be avoided?
   private class FilterTypeTreeTraverser(p: Tree => Boolean) extends TypeTreeTraverser {
     val hits = new ListBuffer[Tree]
-    override def traverse(t: Tree) {
+    override def traverse(t: Tree): Unit = {
       if (p(t)) hits += t
       super.traverse(t)
     }

@@ -6,7 +6,7 @@ import org.junit._
 class MethodParamTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_parameter() {
+  def basic_parameter(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -22,7 +22,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def function_param() {
+  def function_param(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -38,7 +38,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def named_arguments() {
+  def named_arguments(): Unit = {
     checkSymbolClassification("""
       object A {
            def foo(ppppppp: String) = 42
@@ -58,7 +58,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def annotation_arguments() {
+  def annotation_arguments(): Unit = {
     checkSymbolClassification("""
       @SuppressWarnings(value = Array("all"))
       class A
@@ -70,7 +70,7 @@ class MethodParamTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_constructor_arguments() {
+  def case_constructor_arguments(): Unit = {
     checkSymbolClassification("""
       case class Bob(param: Int) {
         Bob(param = 42)

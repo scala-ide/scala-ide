@@ -13,7 +13,7 @@ import org.junit.runners.JUnit4
 @RunWith(classOf[JUnit4])
 class VariableProxiesTest extends HasEvaluator {
 
-  private def testVariables(variables: String*)(in: String) {
+  private def testVariables(variables: String*)(in: String): Unit = {
     val code = Evaluator.parse(in)
 
     val phase = new SearchForUnboundVariables(Evaluator.toolbox, Set.empty)

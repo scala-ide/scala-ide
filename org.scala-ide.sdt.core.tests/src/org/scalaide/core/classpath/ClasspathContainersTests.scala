@@ -70,7 +70,7 @@ class ClasspathContainersTests {
   }
 
   @After
-  def deleteProjects() {
+  def deleteProjects(): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach { project =>
         project.underlying.delete(true, null)
@@ -81,14 +81,14 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def kind_for_default_container() {
+  def kind_for_default_container(): Unit = {
     val project = createProject()
     val cc = getLibraryContainer(project)
     assertTrue("The default scala lib container should be of sys library type", cc.getKind() == IClasspathContainer.K_SYSTEM)
   }
 
   @Test
-  def default_containers_same() {
+  def default_containers_same(): Unit = {
     val project1 = createProject()
     val project2 = createProject()
     val projectC1 = getLibraryContainer(project1)
@@ -97,7 +97,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def container_after_sourcelevel_same_kind() {
+  def container_after_sourcelevel_same_kind(): Unit = {
     val project = createProject()
     val container_before = getLibraryContainer(project)
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call container_after_sourcelevel_same_kind")
@@ -106,7 +106,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def default_is_current_Version() {
+  def default_is_current_Version(): Unit = {
     val project = createProject()
     val container = getLibraryContainer(project)
     val desc = container.getDescription()
@@ -114,7 +114,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def only_one_default() {
+  def only_one_default(): Unit = {
     val project = createProject()
     val container = getLibraryContainer(project)
     val containerSize = (project.javaProject.getRawClasspath() filter (_.getPath() == container.getPath())).size
@@ -122,7 +122,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def only_one_after_sourcelevel() {
+  def only_one_after_sourcelevel(): Unit = {
     val project = createProject()
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call only_one_after_sourcelevel")
     val container = getLibraryContainer(project)
@@ -130,7 +130,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def source_level_doesnt_pollute_neighboring_classpaths() {
+  def source_level_doesnt_pollute_neighboring_classpaths(): Unit = {
     val project1 = createProject()
     val container_before = getLibraryContainer(project1)
     val project2 = createProject()
@@ -140,7 +140,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def classpath_container_kept_after_close() {
+  def classpath_container_kept_after_close(): Unit = {
     val project1 = createProject()
     // make sure we don't keep the default container here
     project1.setDesiredSourceLevel(ScalaVersion(previousScalaVer), "explicit call : classpath container kept after close")
@@ -154,7 +154,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def source_level_reversal_reverses_container_to_older() {
+  def source_level_reversal_reverses_container_to_older(): Unit = {
     val project = createProject()
     // making this independent of whatever the default is
     project.setDesiredSourceLevel(IScalaPlugin().scalaVersion, "explicit initialization of source_level_reversal_to_older")
@@ -169,7 +169,7 @@ class ClasspathContainersTests {
   }
 
   @Test
-  def source_level_reversal_reverses_container_to_newer() {
+  def source_level_reversal_reverses_container_to_newer(): Unit = {
     if (IScalaPlugin().scalaVersion >= ScalaVersion("2.11.0")) {val project = createProject()
     val reversalReason = "explicit call : source level reversal to newer"
     project.setDesiredSourceLevel(ScalaVersion(previousScalaVer), reversalReason)

@@ -15,7 +15,7 @@ import org.junit.BeforeClass
 
 object HyperlinkDetectorTests extends TestProjectSetup("hyperlinks") with HyperlinkTester {
   @BeforeClass
-  def initializeSubProject() {
+  def initializeSubProject(): Unit = {
     SDTTestUtils.enableAutoBuild(false) // make sure no auto-building is happening
 
     object hyperlinksSubProject extends TestProjectSetup("hyperlinks-sub")
@@ -67,7 +67,7 @@ class HyperlinkDetectorTests {
   }
 
   @Test
-  def bug1000560() {
+  def bug1000560(): Unit = {
     val oracle = List(Link("object bug1000560.Outer"),
                 Link("value bug1000560.Outer.bbb"),
                 Link("value bug1000560.Outer.a"),
@@ -78,7 +78,7 @@ class HyperlinkDetectorTests {
   }
 
   @Test @Ignore
-  def bug1000560_2() {
+  def bug1000560_2(): Unit = {
     val oracle = List(Link("value bug1000560.Test2.foo"),
                       Link("method bug1000560.Foo.bar"))
 
@@ -86,13 +86,13 @@ class HyperlinkDetectorTests {
   }
 
   @Test
-  def test1000656() {
+  def test1000656(): Unit = {
     val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
 
   @Test @Ignore("This test is flaky because of askTypeAt's issues with overloading. See SI-7548")
-  def testJavaLinks() {
+  def testJavaLinks(): Unit = {
     val oracle = List(Link("util.JavaMethods.nArray"),
         Link("util.JavaMethods.nArray"),
         Link("util.JavaMethods.typeparam"),
@@ -101,7 +101,7 @@ class HyperlinkDetectorTests {
   }
 
   @Test
-  def hyperlinkOnList_t1001215() {
+  def hyperlinkOnList_t1001215(): Unit = {
     val oracle = List(Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"))
 
     loadTestUnit("t1001215/A.scala").andCheckAgainst(oracle)
@@ -109,7 +109,7 @@ class HyperlinkDetectorTests {
 
   @Ignore("Enable this once Scalac ticket SI-7915 is fixed")
   @Test
-  def t1001921() {
+  def t1001921(): Unit = {
     val oracle = List(Link("method t1001921.Bar.bar"))
 
     loadTestUnit("t1001921/Ticket1001921.scala", forceTypeChecking = true).andCheckAgainst(oracle)

@@ -82,14 +82,14 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     SDTTestUtils.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
-  def reload(unit: InteractiveCompilationUnit) {
+  def reload(unit: InteractiveCompilationUnit): Unit = {
     // first, 'open' the file by telling the compiler to load it
     unit.withSourceFile { (src, compiler) =>
       compiler.askReload(List(unit)).get
     }
   }
 
-  def parseAndEnter(unit: InteractiveCompilationUnit) {
+  def parseAndEnter(unit: InteractiveCompilationUnit): Unit = {
     unit.withSourceFile { (src, compiler) =>
       val dummy = new compiler.Response[compiler.Tree]
       compiler.askParsedEntered(src, false, dummy)
@@ -112,7 +112,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /** Open a working copy of the passed `unit` */
-  private def openWorkingCopyFor(unit: ScalaSourceFile) {
+  private def openWorkingCopyFor(unit: ScalaSourceFile): Unit = {
     val requestor = mock(classOf[IProblemRequestor])
     // the requestor must be active, or unit.getWorkingCopy won't trigger the Scala
     // structure builder
@@ -127,7 +127,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /** Wait until the passed `unit` is entirely typechecked. */
-  def waitUntilTypechecked(unit: ScalaCompilationUnit) {
+  def waitUntilTypechecked(unit: ScalaCompilationUnit): Unit = {
     // give a chance to the background compiler to report the error
     unit.withSourceFile { (source, compiler) =>
       compiler.askLoadedTyped(source, true).get // wait until unit is typechecked
@@ -135,7 +135,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /** Open the passed `source` and wait until it has been fully typechecked.*/
-  def openAndWaitUntilTypechecked(source: ScalaSourceFile) {
+  def openAndWaitUntilTypechecked(source: ScalaSourceFile): Unit = {
     val sourcePath = source.getPath()
     val projectSrcPath = project.underlying.getFullPath() append "src"
     val path = sourcePath.makeRelativeTo(projectSrcPath)

@@ -120,7 +120,7 @@ object TextPresentationEditorHighlighter {
       }
     }
 
-    private def invalidateSymTypes(symTypes: SymbolTypes.SymbolType*) {
+    private def invalidateSymTypes(symTypes: SymbolTypes.SymbolType*): Unit = {
       for (symType <- symTypes) {
         semanticCategory2style += symType -> HighlightingStyle(preferences, symType)
         positionsTracker.deletesPositionsOfType(symType)

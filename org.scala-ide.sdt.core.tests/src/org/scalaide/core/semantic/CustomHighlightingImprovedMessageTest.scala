@@ -12,7 +12,7 @@ class CustomHighlightingImprovedMessageTest
   with CustomHighlightingTest {
 
   @Test
-  def scalaCollectionMutableHighlighting() {
+  def scalaCollectionMutableHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/ScalaCollectionMutable.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(

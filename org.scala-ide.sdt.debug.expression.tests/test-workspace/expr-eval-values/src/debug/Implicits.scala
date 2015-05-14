@@ -24,7 +24,7 @@ object Implicits extends App {
 
   implicit val stringContextBounds: ContextBound[String] = new ContextBound[String]
 
-  def foo() {
+  def foo(): Unit = {
     import LocalWildcard._
     import ImplicitClasses._
     import ImplicitImport.local

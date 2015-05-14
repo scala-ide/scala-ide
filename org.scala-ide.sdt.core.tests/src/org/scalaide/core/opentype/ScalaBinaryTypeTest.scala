@@ -12,13 +12,13 @@ object ScalaBinaryTypeTest {
   var prj: IScalaProject = _
 
   @BeforeClass
-  def setUp() {
+  def setUp(): Unit = {
     val Seq(prj) = createProjects("bintest")
     this.prj = prj
   }
 
   @AfterClass
-  def tearDown() {
+  def tearDown(): Unit = {
     deleteProjects(prj)
   }
 }
@@ -27,21 +27,21 @@ class ScalaBinaryTypeTest {
   import ScalaBinaryTypeTest._
 
   @Test
-  def topLevelObjectIsFound() {
+  def topLevelObjectIsFound(): Unit = {
     testForPath("scala/collection/immutable/Nil.class")
   }
 
   @Test
-  def topLevelTraitIsFound() {
+  def topLevelTraitIsFound(): Unit = {
     testForPath("scala/collection/parallel/mutable/ParSeq.class")
   }
 
   @Test
-  def innerClassInTraitIsFound() {
+  def innerClassInTraitIsFound(): Unit = {
     testForPath("scala/collection/parallel/ParSeqLike$Elements.class")
   }
 
-  private def testForPath(path: String) {
+  private def testForPath(path: String): Unit = {
     val elementsCf = prj.javaProject.findElement(new Path(path)).asInstanceOf[IClassFile]
     Assert.assertNotNull("Couldn't find classfile " + path, elementsCf)
     val elementsClass = elementsCf.getType()

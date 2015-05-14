@@ -59,13 +59,13 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
 
   // ------------
 
-  def init() {
+  def init(): Unit = {
     // need to wait for all existing breakpoint to be initialized before continuing, the caller will resume the VM
     companionActor !? Initialize // FIXME: This could block forever
     DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
   }
 
-  def dispose() {
+  def dispose(): Unit = {
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
     companionActor ! PoisonPill
   }
@@ -76,7 +76,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
    *
    * @note Use this for test purposes only!
    */
-  protected[debug] def waitForAllCurrentEvents() {
+  protected[debug] def waitForAllCurrentEvents(): Unit = {
     companionActor !? ScalaDebugBreakpointManager.ActorDebug
   }
 

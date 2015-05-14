@@ -28,7 +28,7 @@ class ScalaDebugCacheTest {
   val toShutdown = scala.collection.mutable.ListBuffer[() => Unit]()
 
   @After
-  def shutdownRegistered() {
+  def shutdownRegistered(): Unit = {
     toShutdown.foreach(_())
   }
 
@@ -36,7 +36,7 @@ class ScalaDebugCacheTest {
    *  Check a few possible false-positive in the regex match.
    */
   @Test
-  def getNestedTypesNotCached() {
+  def getNestedTypesNotCached(): Unit = {
     val BaseName = "test01.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a$b", BaseName + "$" + "Test", BaseName + "$Test2", "test01.a.TestTest", "test01.b.Test", "a." + BaseName)
@@ -55,7 +55,7 @@ class ScalaDebugCacheTest {
   /** Test the returned nested class when a new nested class has been loaded after an initial request filled in the cache.
    */
   @Test
-  def getNestedTypesUpdateCache() {
+  def getNestedTypesUpdateCache(): Unit = {
     val BaseName = "test02.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a")
@@ -77,7 +77,7 @@ class ScalaDebugCacheTest {
   /** Test that ClassPrepareEvent events are sent when needed, and not when no requested.
    */
   @Test
-  def addAndRemoveListener() {
+  def addAndRemoveListener(): Unit = {
     val BaseName = "test03.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a")
@@ -96,7 +96,7 @@ class ScalaDebugCacheTest {
         latch.await(time, TimeUnit.MILLISECONDS)
       }
 
-      def resetLatch() {
+      def resetLatch(): Unit = {
         latch = new CountDownLatch(1)
       }
     }
@@ -129,7 +129,7 @@ class ScalaDebugCacheTest {
   /** Checks that the information about existing anon function method is correctly cached.
    */
   @Test
-  def getAnonFunctionSome() {
+  def getAnonFunctionSome(): Unit = {
     val BaseName = "test04.a.Test"
     val MethodName = "applyOneMethod"
 
@@ -151,7 +151,7 @@ class ScalaDebugCacheTest {
   /** Checks that the information about non-existing anon function method is correctly cached.
    */
   @Test
-  def getAnonFunctionNone() {
+  def getAnonFunctionNone(): Unit = {
     val BaseName = "test05.a.Test"
     val MethodName = "notApplyMethod"
 
@@ -173,7 +173,7 @@ class ScalaDebugCacheTest {
   /** Checks that method flags with 'true' value are correctly cached.
    */
   @Test
-  def methodFlagsAllTrue() {
+  def methodFlagsAllTrue(): Unit = {
     val BaseName = "test06.a.Test"
     val MethodName = "someMethod6"
 
@@ -196,7 +196,7 @@ class ScalaDebugCacheTest {
   /** Checks that method flags with 'false' value are correctly cached.
    */
   @Test
-  def methodFlagsAllFalse() {
+  def methodFlagsAllFalse(): Unit = {
     val BaseName = "test07.a.Test"
     val MethodName = "someMethod7"
 
@@ -261,7 +261,7 @@ class ScalaDebugCacheTest {
 
   /** Check that the expected calls where made, and not too often.
    */
-  private def verifyNestedTypesCalls(debugCache: ScalaDebugCache, classPrepareRequest1: ClassPrepareRequest, classPrepareRequest2: ClassPrepareRequest, baseName: String) {
+  private def verifyNestedTypesCalls(debugCache: ScalaDebugCache, classPrepareRequest1: ClassPrepareRequest, classPrepareRequest2: ClassPrepareRequest, baseName: String): Unit = {
     val virtualMachine = debugCache.debugTarget.virtualMachine
     // allClasses should be called only once
     verify(virtualMachine, times(1)).allClasses()
@@ -304,7 +304,7 @@ class ScalaDebugCacheTest {
 
   /** Check that the expected calls where made, and not too often.
    */
-  private def verifyAnonFunctionCalls(refType: ReferenceType) {
+  private def verifyAnonFunctionCalls(refType: ReferenceType): Unit = {
     verify(refType, times(1)).methods()
   }
 
@@ -340,7 +340,7 @@ class ScalaDebugCacheTest {
 
   /** Check that the expected calls where made, and not too often.
    */
-  private def verifyMethodFlagsCalls(method: Method) {
+  private def verifyMethodFlagsCalls(method: Method): Unit = {
     verify(method, times(1)).isBridge()
     verify(method, times(1)).isConstructor()
   }

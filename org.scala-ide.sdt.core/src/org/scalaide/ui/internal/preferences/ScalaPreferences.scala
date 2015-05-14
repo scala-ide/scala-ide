@@ -21,7 +21,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     IScalaPlugin().getPreferenceStore()
   }
 
-  override def init(wb: IWorkbench) {}
+  override def init(wb: IWorkbench): Unit = {}
 
   /** Returns the id of what preference page we use */
   override val eclipseBoxes: List[EclipseSetting.EclipseBox] = Nil
@@ -61,7 +61,7 @@ class ScalaPreferences extends PropertyPage with IWorkbenchPreferencePage with E
     case ex: Throwable => eclipseLog.error(ex); false
   }
 
-  def updateApply() {
+  def updateApply(): Unit = {
     updateApplyButton
   }
 

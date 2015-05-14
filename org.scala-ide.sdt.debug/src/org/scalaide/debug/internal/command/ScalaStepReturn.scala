@@ -50,17 +50,17 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
     case ScalaStep.Stop => terminate() // step is terminated
   }
 
-  private def step() {
+  private def step(): Unit = {
     enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_RETURN)
   }
 
-  private def terminate() {
+  private def terminate(): Unit = {
     disable()
     poison()
   }
 
-  private def enable() {
+  private def enable(): Unit = {
     if (!enabled) {
       debugTarget.eventDispatcher.setActorFor(this, stepReturnRequest)
       stepReturnRequest.enable()
@@ -68,7 +68,7 @@ private[command] abstract class ScalaStepReturnActor(debugTarget: ScalaDebugTarg
     }
   }
 
-  private def disable() {
+  private def disable(): Unit = {
     if (enabled) {
 
       stepReturnRequest.disable()

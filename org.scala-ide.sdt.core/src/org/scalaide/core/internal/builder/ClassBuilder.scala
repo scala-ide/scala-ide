@@ -15,7 +15,7 @@ trait JDTBuilderFacade {
   /** The underlying project. */
   protected def project: IProject
 
-  protected def refresh() {
+  protected def refresh(): Unit = {
     val modelManager = JavaModelManager.getJavaModelManager
     val state = modelManager.getLastBuiltState(project, null).asInstanceOf[State]
     val newState =
@@ -31,7 +31,7 @@ trait JDTBuilderFacade {
     JDTUtils.refreshPackageExplorer
   }
 
-  protected def ensureProject() {
+  protected def ensureProject(): Unit = {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(project)
   }

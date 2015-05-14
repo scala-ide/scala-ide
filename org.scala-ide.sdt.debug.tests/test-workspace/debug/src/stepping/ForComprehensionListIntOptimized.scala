@@ -4,7 +4,7 @@ import debug.Helper._
 
 object ForComprehensionListIntOptimized {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
     val l = List(1, 2, 3, 4)
 
@@ -16,7 +16,7 @@ object ForComprehensionListIntOptimized {
     new ForComprehensionListIntOptimized(l).bar
   }
 
-  def foo(l: List[Int]) {
+  def foo(l: List[Int]): Unit = {
 
     for (n <- l) {
       noop(n)
@@ -32,7 +32,7 @@ class ForComprehensionListIntOptimized(l: List[Int]) {
     noop(n)
   }
 
-  def bar() {
+  def bar(): Unit = {
 
     for (n <- l) {
       noop(n)

@@ -20,7 +20,7 @@ object StructureBuilderTest extends testsetup.TestProjectSetup("simple-structure
 class StructureBuilderTest {
   import StructureBuilderTest._
 
-  def setupWorkspace() {
+  def setupWorkspace(): Unit = {
     // auto-building is off
     val desc = SDTTestUtils.workspace.getDescription
     desc.setAutoBuilding(false)
@@ -39,7 +39,7 @@ class StructureBuilderTest {
     buf.toString.trim
   }
 
-  @Test def testAnnotations() {
+  @Test def testAnnotations(): Unit = {
     val annotsPkg = srcPackageRoot.getPackageFragment("annots");
     assertNotNull(annotsPkg)
     val cu = annotsPkg.getCompilationUnit("ScalaTestSuite.scala").asInstanceOf[ITypeRoot]
@@ -57,7 +57,7 @@ class StructureBuilderTest {
     assertTrue(m2.getAnnotation("Test").exists)
   }
 
-  @Test def testSearchIndexAnnotations() {
+  @Test def testSearchIndexAnnotations(): Unit = {
     import IJavaSearchConstants._
     val pattern = SearchPattern.createPattern("org.junit.Test", TYPE, ANNOTATION_TYPE_REFERENCE, SearchPattern.R_EXACT_MATCH)
     val scope = SearchEngine.createJavaSearchScope(Array(srcPackageRoot.getPackageFragment("annots"): IJavaElement))
@@ -65,7 +65,7 @@ class StructureBuilderTest {
     var elems = Set[IMethod]()
 
     val requestor = new SearchRequestor {
-      def acceptSearchMatch(m: SearchMatch) {
+      def acceptSearchMatch(m: SearchMatch): Unit = {
         m.getElement match {
           case method: IMethod => elems += method
           case elem =>
@@ -85,7 +85,7 @@ class StructureBuilderTest {
    *  is run again on the document, this time with attributed trees. Type-checked trees
    *  move annotations from the tree to the symbol, hence this test.
    */
-  @Test def testSearchAnnotationsAfterReconcile() {
+  @Test def testSearchAnnotationsAfterReconcile(): Unit = {
     val unit = compilationUnit("annots/ScalaTestSuite.scala")
     unit.becomeWorkingCopy(null)
     unit.getBuffer().append("  ")
@@ -96,7 +96,7 @@ class StructureBuilderTest {
     testSearchIndexAnnotations()
   }
 
-  @Test def junit4TestRunnerSearch() {
+  @Test def junit4TestRunnerSearch(): Unit = {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
     val set = new java.util.HashSet[Object]()
@@ -105,7 +105,7 @@ class StructureBuilderTest {
     Assert.assertEquals("Should find tests using the JUnit 4 test finder", 1, set.size())
   }
 
-  @Test def testStructureForGenericInnerClass() {
+  @Test def testStructureForGenericInnerClass(): Unit = {
     val cunit = compilationUnit("traits/T1.scala")
     val innerCls = cunit.getAllTypes().find(_.getElementName() == "InnerWithGenericParams")
     innerCls match {
@@ -131,7 +131,7 @@ class StructureBuilderTest {
     assertEquals(TraitsTestOracle.expectedFragment, jdtStructure)
   }
 
-  @Test def correctlyExposeToJDT_ScalaArray_1000586() {
+  @Test def correctlyExposeToJDT_ScalaArray_1000586(): Unit = {
     // when
     val fragment = srcPackageRoot.getPackageFragment("t1000586")
     // then
@@ -140,7 +140,7 @@ class StructureBuilderTest {
     assertEquals(T1000586TestOracle.expectedFragment, jdtStructure)
   }
 
-  @Test def correctlyExposeToJDT_ScalaMethodReturnType_WithTypeParameters_1000568() {
+  @Test def correctlyExposeToJDT_ScalaMethodReturnType_WithTypeParameters_1000568(): Unit = {
     // when
     val fragment = srcPackageRoot.getPackageFragment("t1000568")
     // then
@@ -150,7 +150,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def abstractMembers() {
+  def abstractMembers(): Unit = {
     // when
     val fragment = srcPackageRoot.getPackageFragment("abstract_members")
     // then
@@ -161,14 +161,14 @@ class StructureBuilderTest {
 
   import org.eclipse.jdt.core.compiler.IProblem
   private class ProblemReporterAdapter extends IProblemRequestor {
-    def acceptProblem(problem: IProblem) {}
-    def beginReporting() {}
-    def endReporting() {}
+    def acceptProblem(problem: IProblem): Unit = {}
+    def beginReporting(): Unit = {}
+    def endReporting(): Unit = {}
     def isActive(): Boolean = true
   }
 
   @Test
-  def t1000524_neg_JavaCodeCannotCall_ScalaModuleMethodThatIsDefinedWithTheSameSignatureInTheCompanionClass() {
+  def t1000524_neg_JavaCodeCannotCall_ScalaModuleMethodThatIsDefinedWithTheSameSignatureInTheCompanionClass(): Unit = {
     val expectedProblem = "Pb(201) Cannot make a static reference to the non-static method getOpt1(Option<T>) from the type OptTest"
 
     //when
@@ -177,7 +177,7 @@ class StructureBuilderTest {
     val owner = new WorkingCopyOwner() {
       override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
         new ProblemReporterAdapter {
-          override def acceptProblem(problem: IProblem) {
+          override def acceptProblem(problem: IProblem): Unit = {
             //verify
             assertEquals(expectedProblem, problem.toString())
           }
@@ -190,7 +190,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def t1000524_pos_JavaCodeCanCall_ScalaMethodWithParametricTypes() {
+  def t1000524_pos_JavaCodeCanCall_ScalaMethodWithParametricTypes(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -209,7 +209,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def t1000524_1_JavaCodeCanCall_ScalaMethodWithParametricBoundedType() {
+  def t1000524_1_JavaCodeCanCall_ScalaMethodWithParametricBoundedType(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -228,7 +228,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def t1000524_2_JavaCodeCanCall_ScalaMethodWithParametricBoundedType() {
+  def t1000524_2_JavaCodeCanCall_ScalaMethodWithParametricBoundedType(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -247,7 +247,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def genericSignature_ofScalaMember_is_correctlyExposedToJDT() {
+  def genericSignature_ofScalaMember_is_correctlyExposedToJDT(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -266,7 +266,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCalls_ScalaMethod_withContravariantArgumentType() {
+  def javaCalls_ScalaMethod_withContravariantArgumentType(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -285,7 +285,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def exposeJavaGenericSigOfScalaClass() {
+  def exposeJavaGenericSigOfScalaClass(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -304,7 +304,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeShouldBeAbleToReferToInnerClassedDeclInAnObject_t1000678() {
+  def javaCodeShouldBeAbleToReferToInnerClassedDeclInAnObject_t1000678(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -323,7 +323,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_1() {
+  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_1(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -342,7 +342,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeReferenceInnerClasses_t1000678_2() {
+  def javaCodeReferenceInnerClasses_t1000678_2(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -361,7 +361,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeReferenceInnerClassOfModule_t1000678_3() {
+  def javaCodeReferenceInnerClassOfModule_t1000678_3(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -380,14 +380,14 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCannotReferenceModuleInnerInAModule_t1000678_4() {
+  def javaCodeCannotReferenceModuleInnerInAModule_t1000678_4(): Unit = {
     val expectedProblem = "Pb(70) B cannot be resolved or is not a field"
 
     //when
     val owner = new WorkingCopyOwner() {
       override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
         new ProblemReporterAdapter {
-          override def acceptProblem(problem: IProblem) {
+          override def acceptProblem(problem: IProblem): Unit = {
             //verify
             assertEquals(expectedProblem, problem.toString())
           }
@@ -402,7 +402,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_5() {
+  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_5(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -421,7 +421,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_6() {
+  def javaCodeCanCallStaticForwardersOfScalaModule_t1000678_6(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -440,7 +440,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeReferenceInnerClassOfModule_t1000678_7() {
+  def javaCodeReferenceInnerClassOfModule_t1000678_7(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -459,7 +459,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeReferenceInnerTraitsOfModule_t1000678_8() {
+  def javaCodeReferenceInnerTraitsOfModule_t1000678_8(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -478,7 +478,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeReferenceClassesInsideTrait_t1000678_9() {
+  def javaCodeReferenceClassesInsideTrait_t1000678_9(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -497,7 +497,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def javaCodeCannotInstantiateScalaClassesInsideTrait_t1000678_10() {
+  def javaCodeCannotInstantiateScalaClassesInsideTrait_t1000678_10(): Unit = {
     val expectedProblem = "Pb(23) Illegal enclosing instance specification for type Loggable.A.B"
     //when
     val unit = compilationUnit("t1000678_10/JTest.java")
@@ -505,7 +505,7 @@ class StructureBuilderTest {
     val owner = new WorkingCopyOwner() {
       override def getProblemRequestor(unit: org.eclipse.jdt.core.ICompilationUnit): IProblemRequestor =
         new ProblemReporterAdapter {
-          override def acceptProblem(problem: IProblem) {
+          override def acceptProblem(problem: IProblem): Unit = {
             //verify
             assertEquals(expectedProblem, problem.toString())
           }
@@ -517,7 +517,7 @@ class StructureBuilderTest {
     unit.getWorkingCopy(owner, new NullProgressMonitor)
   }
 
-  @Test def buildStructureOfModuleWithNestedTypeDefinitions_1000711() {
+  @Test def buildStructureOfModuleWithNestedTypeDefinitions_1000711(): Unit = {
     // when
     val fragment = srcPackageRoot.getPackageFragment("t1000711")
     // then
@@ -527,7 +527,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def throwsAnnotationOfClassConstructorsAndMethodsAreAvailableInJava_t100105() {
+  def throwsAnnotationOfClassConstructorsAndMethodsAreAvailableInJava_t100105(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -546,7 +546,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000707() {
+  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000707(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)
@@ -565,7 +565,7 @@ class StructureBuilderTest {
   }
 
   @Test
-  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000800() {
+  def throwsAnnotationOfTraitMethodsAreAvailableInJava_t1000800(): Unit = {
     //when
     val requestor = mock(classOf[IProblemRequestor])
     when(requestor.isActive()).thenReturn(true)

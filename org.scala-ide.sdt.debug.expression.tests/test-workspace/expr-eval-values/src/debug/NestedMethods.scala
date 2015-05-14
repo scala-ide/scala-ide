@@ -2,7 +2,7 @@ package debug
 
 object NestedMethods extends App {
 
-  def foo() {
+  def foo(): Unit = {
     val closureParam = "closureParam"
 
     def simpleNested(i: Int) = s"simpleNested: $i"
@@ -60,7 +60,7 @@ object NestedMethods extends App {
 
   val objectList = List(1,2)
 
-  def foo2() {
+  def foo2(): Unit = {
     def nestedInMultipleMethods(i: Int) = "Error: nestedInMultipleMethods from different function"
     nestedInMultipleMethods(1)
   }

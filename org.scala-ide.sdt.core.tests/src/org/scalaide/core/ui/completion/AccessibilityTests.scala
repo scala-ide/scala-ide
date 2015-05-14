@@ -75,14 +75,14 @@ class AccessibilityTests {
     val pkgName = "noAccessToPrivateInSubclass"
     mkTestObj(pkgName, additionInPackage = """
       class AccessibilityChecks extends Foo {
-        def someTests {
+        def someTests: Unit = {
           this.secr^
         }
       }
     """) becomes
     mkTestObj(pkgName, additionInPackage = """
       class AccessibilityChecks extends Foo {
-        def someTests {
+        def someTests: Unit = {
           this.secretProtected()^
         }
       }
@@ -99,14 +99,14 @@ class AccessibilityTests {
     val pkgName = "noAccessToPrivateInUnrelatedClass"
     mkTestObj(pkgName, additionInPackage = """
       class UnrelatedClass {
-        def someTests(foo: Foo) {
+        def someTests(foo: Foo): Unit = {
           foo.secr^
         }
       }
     """) becomes
     mkTestObj(pkgName, additionInPackage = """
       class UnrelatedClass {
-        def someTests(foo: Foo) {
+        def someTests(foo: Foo): Unit = {
           foo.secretPublic()^
         }
       }
@@ -123,7 +123,7 @@ class AccessibilityTests {
     mkTestObj(pkgName, additionOutsideOfPackage = s"""
       package other {
         class SomeChecsk {
-          def foo(o: $pkgName.Foo) {
+          def foo(o: $pkgName.Foo): Unit = {
             o.secr^
           }
         }
@@ -132,7 +132,7 @@ class AccessibilityTests {
     mkTestObj(pkgName, additionOutsideOfPackage = s"""
       package other {
         class SomeChecsk {
-          def foo(o: $pkgName.Foo) {
+          def foo(o: $pkgName.Foo): Unit = {
             o.secretPublic()^
           }
         }

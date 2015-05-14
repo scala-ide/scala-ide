@@ -1,7 +1,7 @@
 package scalalinks
 
 class Foo {
-  def bar {
+  def bar: Unit = {
     val xs = List/*^*/(1, 2, 3)
     List/*^*/
     Seq/*^*/()

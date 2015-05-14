@@ -17,7 +17,7 @@ class DeclarationPrinterTest {
   import DeclarationPrinterTest._
 
   @Test
-  def simpleTypes() {
+  def simpleTypes(): Unit = {
     runTest(
       """import java.io._
          val target1: java.io.File
@@ -34,7 +34,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def existentialTests() {
+  def existentialTests(): Unit = {
     runTest(
       """import java.io.File
          val target4: Class[_]
@@ -48,7 +48,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def typeTests() {
+  def typeTests(): Unit = {
     runTest(
       """type targetPair = (java.io.File, Int)
          type targetGenericPair[+T] = (T, T)
@@ -63,7 +63,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def innerTypeTests() {
+  def innerTypeTests(): Unit = {
     runTest("""import java.io.File
         class Inner1
         trait targetInner2 extends Inner1
@@ -78,7 +78,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def functionTests() {
+  def functionTests(): Unit = {
     runTest(
       """val target4: (Int, Int) => Option[String]
          val target5: (java.io.File) => String => String => java.io.File
@@ -90,7 +90,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def modifierTests() {
+  def modifierTests(): Unit = {
     runTest(
       """import java.io._
          private val target1: java.io.File
@@ -105,7 +105,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def refinedTypeTests() {
+  def refinedTypeTests(): Unit = {
     runTest(
       """type targetRefined = String {
             def refinedMethod[T](x: T*): java.io.File
@@ -116,13 +116,13 @@ class DeclarationPrinterTest {
 
   @Test
   @Ignore("Current implementation does not print annotations")
-  def annotationsTest() {
+  def annotationsTest(): Unit = {
     runTest("""
       @deprecated val target3: (File, List[java.io.File])""",
       List("@deprecated val target3: (File, List[File])"))
   }
 
-  private def runTest(in: String, expected: List[String]) {
+  private def runTest(in: String, expected: List[String]): Unit = {
     val fullUnit = s"""|package pack
                        |
                        |trait Foo {

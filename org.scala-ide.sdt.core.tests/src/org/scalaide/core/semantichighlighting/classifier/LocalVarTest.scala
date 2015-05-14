@@ -6,7 +6,7 @@ import org.junit._
 class LocalVarTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_var_decl() {
+  def basic_var_decl(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -22,7 +22,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def basic_var_decl_and_ref() {
+  def basic_var_decl_and_ref(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -40,7 +40,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def increment() {
+  def increment(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -58,7 +58,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def var_defined_in_pattern() {
+  def var_defined_in_pattern(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -76,7 +76,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def vars_defined_in_pattern() {
+  def vars_defined_in_pattern(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -92,7 +92,7 @@ class LocalVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def assignment_is_not_classified_as_a_named_argument() {
+  def assignment_is_not_classified_as_a_named_argument(): Unit = {
     checkSymbolClassification("""
 object A {
   {

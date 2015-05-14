@@ -53,7 +53,7 @@ trait HyperlinkTester extends TestProjectSetup {
     }
   }
 
-  def checkScalaLinks(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+  def checkScalaLinks(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link): Unit = {
     val resolver = new ScalaDeclarationHyperlinkComputer
     val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
 
@@ -65,7 +65,7 @@ trait HyperlinkTester extends TestProjectSetup {
     assertEquals("text", oracle.text.toList.toString, linkResults.toString)
   }
 
-  def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+  def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link): Unit = {
     val elements = JavaSelectionEngine.getJavaElements(unit, unit.asInstanceOf[Openable], wordRegion)
 
     // Verify Expectations

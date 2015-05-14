@@ -57,17 +57,17 @@ class SemanticHighlightingPositionsTest {
     mock(classOf[InteractiveCompilationUnitEditor])
 
   @Before
-  def createProject() {
+  def createProject(): Unit = {
     project = SDTTestUtils.createProjectInWorkspace("semantic-highlighting-positions-update", true)
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
   @Before
-  def setupMocks() {
+  def setupMocks(): Unit = {
     sourceView = mock(classOf[ISourceViewer])
     document = new SynchronizableDocument
     when(sourceView.getDocument()).thenReturn(document)
@@ -181,7 +181,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_not_affected_by_edition() {
+  def highlighted_positions_not_affected_by_edition(): Unit = {
     runTest(AddText("\n\n")) {
       """
         |class A {
@@ -193,7 +193,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def existing_highlighted_positions_are_shifted() {
+  def existing_highlighted_positions_are_shifted(): Unit = {
     runTest(AddText("\n\n")) {
       """
         |class A {
@@ -205,7 +205,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def new_highlighted_positions_are_reported() {
+  def new_highlighted_positions_are_reported(): Unit = {
     runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false, inInterpolatedString = false)))) {
       """
         |class A {
@@ -217,7 +217,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_in_the_document_are_removed_on_deletion() {
+  def highlighted_positions_in_the_document_are_removed_on_deletion(): Unit = {
     runTest(RemoveText) {
       """
         |class A {
@@ -230,7 +230,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_around_deletion_action_are_correct() {
+  def highlighted_positions_around_deletion_action_are_correct(): Unit = {
     runTest(RemoveText) {
       """
         |class A {
@@ -243,7 +243,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def correctly_compute_damagedRegion_whenDeletingText() {
+  def correctly_compute_damagedRegion_whenDeletingText(): Unit = {
     runTest(RemoveText) {
       """
         |object A {

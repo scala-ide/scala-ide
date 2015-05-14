@@ -20,7 +20,7 @@ class PresentationCompilerDocTest {
   def tearDown(): Unit = project.presentationCompiler.shutdown()
 
   @Test
-  def basicComment() {
+  def basicComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "This is a basic comment")
     }
@@ -28,7 +28,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def packagedComment() {
+  def packagedComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "This is another basic comment")
     }
@@ -36,7 +36,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def parametricComment() {
+  def parametricComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.todo, "implement me")
     }
@@ -44,7 +44,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def variableExpansion() {
+  def variableExpansion(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "correctly got derived comment")
     }
@@ -52,7 +52,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def inheritedDoc() {
+  def inheritedDoc(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.todo, "implement me")
     }
@@ -68,7 +68,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def returnValueDoc() {
+  def returnValueDoc(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.result, "some value")
     }
@@ -79,7 +79,7 @@ class PresentationCompilerDocTest {
  * @parameter preload compilation units expected to be loaded by the PC before the test
  * @parameter unit the compilation unit containing the position mark
  */
-  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil) {
+  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil): Unit = {
     for (u <- preload) { reload(u) }
     unit.withSourceFile { (src, compiler) =>
       val pos = docPosition(src, compiler)

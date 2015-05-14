@@ -15,7 +15,7 @@ import testsetup.TestProjectSetup
  */
 object UiQuickAssistTests extends TestProjectSetup("quickassist") {
 
-  def assertNumberOfProblems(nProblems: Int, problems: Array[IProblem]) {
+  def assertNumberOfProblems(nProblems: Int, problems: Array[IProblem]): Unit = {
     if (problems.length != nProblems) {
       val buf = new StringBuffer("Wrong number of problems, is: ")
       buf.append(problems.length).append(", expected: ").append(nProblems).append('\n')
@@ -29,11 +29,11 @@ object UiQuickAssistTests extends TestProjectSetup("quickassist") {
     }
   }
 
-  def withQuickFixes(pathToSource: String)(expectedQuickFixes: String*) {
+  def withQuickFixes(pathToSource: String)(expectedQuickFixes: String*): Unit = {
     withManyQuickFixesPerLine(pathToSource)(expectedQuickFixes.map(List(_)).toList)
   }
 
-  def withManyQuickFixesPerLine(pathToSource: String)(expectedQuickFixesList: List[List[String]]) {
+  def withManyQuickFixesPerLine(pathToSource: String)(expectedQuickFixesList: List[List[String]]): Unit = {
     val unit = compilationUnit(pathToSource).asInstanceOf[ScalaCompilationUnit]
 
     unit.withSourceFile { (src, compiler) =>

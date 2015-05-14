@@ -63,7 +63,7 @@ class TestScalaIndenter {
   val CARET = "_|_"
 
   @Before
-  def initialiseClass() {
+  def initialiseClass(): Unit = {
     // Initialisation fluff
     if (JavaPlugin.getDefault() == null) {
       new JavaPlugin()
@@ -76,7 +76,7 @@ class TestScalaIndenter {
     }
   }
 
-  def runTest(textSoFar : String, insert : String, expectedResultWithCaret : String) {
+  def runTest(textSoFar : String, insert : String, expectedResultWithCaret : String): Unit = {
     def nrOfCarets(str: String): Int = s"\\Q$CARET\\E".r.findAllIn(str).size
 
     val document = new Document(textSoFar.replace(CARET, ""))
@@ -149,7 +149,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testClassIndent() {
+  def testClassIndent(): Unit = {
 
     val textSoFar =
       "class x {" + CARET
@@ -173,7 +173,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testTraitIndent() {
+  def testTraitIndent(): Unit = {
 
     val textSoFar =
       "trait x {" + CARET
@@ -201,7 +201,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testDefIndent() {
+  def testDefIndent(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  def y = {" + CARET + "\n" +
@@ -232,7 +232,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def defWithType() {
+  def defWithType(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  def y : Int = {" + CARET + "\n" +
@@ -262,7 +262,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testGenericsIndent() {
+  def testGenericsIndent(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  val xs = List[x]" + CARET + "\n" +
@@ -291,7 +291,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def genericsIndentOverMultipleLines() {
+  def genericsIndentOverMultipleLines(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  val xs = List[" + CARET + "\n" +
@@ -319,7 +319,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def afterFunctionCall() {
+  def afterFunctionCall(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  y()" + CARET + "\n" +
@@ -335,7 +335,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefNoRhs() {
+  def afterValDefNoRhs(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = $CARET
@@ -351,7 +351,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDef() {
+  def afterValDef(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = "abc"$CARET
@@ -367,7 +367,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefEmptySpace() {
+  def afterValDefEmptySpace(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = "abc"
@@ -385,7 +385,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLit() {
+  def afterValDefCharLit(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = 'a'$CARET
@@ -401,7 +401,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLitEscaped() {
+  def afterValDefCharLitEscaped(): Unit = {
     val textSoFar = raw"""|
                         |class x {
                         |  val x = '\n'$CARET
@@ -417,7 +417,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLitEscapedBackSlash() {
+  def afterValDefCharLitEscapedBackSlash(): Unit = {
     val textSoFar = raw"""|
                         |class x {
                         |  val x = '\\'$CARET
@@ -433,7 +433,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefRawString() {
+  def afterValDefRawString(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = \"\"\"abcdef\"\"\"$CARET
@@ -449,7 +449,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefMiddleCaret() {
+  def afterValDefMiddleCaret(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = $CARET"abc"
@@ -465,7 +465,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefWithEscape() {
+  def afterValDefWithEscape(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  val x = "a\"bc"$CARET
@@ -481,7 +481,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterIfElse() {
+  def afterIfElse(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  if (true)
@@ -499,7 +499,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterIfElseNoChange() {
+  def afterIfElseNoChange(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  if (true)

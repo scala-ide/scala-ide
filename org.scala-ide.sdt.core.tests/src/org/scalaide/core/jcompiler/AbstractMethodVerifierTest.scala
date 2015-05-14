@@ -81,8 +81,8 @@ object AbstractMethodVerifierTest extends TestProjectSetup("jcompiler") {
     class ProblemsCollector extends IProblemRequestor {
       val problems: ListBuffer[String] = new ListBuffer
       override def acceptProblem(problem: IProblem): Unit = problems += problem.toString
-      def beginReporting() {}
-      def endReporting() {}
+      def beginReporting(): Unit = {}
+      def endReporting(): Unit = {}
       def isActive(): Boolean = true
     }
   }
@@ -96,74 +96,74 @@ class AbstractMethodVerifierTest {
   import AbstractMethodVerifierTest._
 
   @Test
-  def javaClassExtendingScalaClassWithConcreteMethodsInSuperTrait_NoErrorIsReportedInJavaEditor_t1000594_pos() {
+  def javaClassExtendingScalaClassWithConcreteMethodsInSuperTrait_NoErrorIsReportedInJavaEditor_t1000594_pos(): Unit = {
     whenOpening("t1000594_pos/C.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreReportedInJavaEditor_t1000594_neg() {
+  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreReportedInJavaEditor_t1000594_neg(): Unit = {
     whenOpening("t1000594_neg/C.java").verifyThat(one).error.is.reported
   }
 
   @Test
-  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreReportedInJavaEditor_t1000607() {
+  def javaClassExtendingScalaClassWithDeferredMethodsInSuperTrait_ErrorsAreReportedInJavaEditor_t1000607(): Unit = {
     whenOpening("t1000607/C.java").verifyThat(one).error.is.reported
   }
 
   @Test
-  def javaClassExtendingPureScalaInterface_JavaEditorShouldReportErrorsForUnimplementedDeferredMethod_t1000670() {
+  def javaClassExtendingPureScalaInterface_JavaEditorShouldReportErrorsForUnimplementedDeferredMethod_t1000670(): Unit = {
     whenOpening("t1000670/JFoo.java").verifyThat(one).error.is.reported
   }
 
   @Test
-  def javaClassExtendingAbstractScalaClassWithMixedDeferredAndConcreteMembersWithSameSignature_JavaEditorShouldNotReportErrorsForUnimplementedDeferredMethod_t1000670_1() {
+  def javaClassExtendingAbstractScalaClassWithMixedDeferredAndConcreteMembersWithSameSignature_JavaEditorShouldNotReportErrorsForUnimplementedDeferredMethod_t1000670_1(): Unit = {
     whenOpening("t1000670_1/JFoo.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def javaClassExtendingAbstractScalaClassWithMixedDeferredAndConcreteMembersWithSameSignature_JavaEditorShouldNotReportErrorsForUnimplementedDeferredMethod_t1000670_2() {
+  def javaClassExtendingAbstractScalaClassWithMixedDeferredAndConcreteMembersWithSameSignature_JavaEditorShouldNotReportErrorsForUnimplementedDeferredMethod_t1000670_2(): Unit = {
     whenOpening("t1000670_2/JFoo.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def scalaMethodVerifierProvider_isNotExecutedOnJavaSources_t1000660() {
+  def scalaMethodVerifierProvider_isNotExecutedOnJavaSources_t1000660(): Unit = {
     val expectedProblem = "Pb(400) The type ScalaTest must implement the inherited abstract method Runnable.run()"
 
     whenOpening("t1000660/ScalaTest.java").verifyThat(expectedProblem).is.reported
   }
 
   @Test
-  def t1000741() {
+  def t1000741(): Unit = {
     whenOpening("t1000741/FooImpl.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def protectedScalaEntitiesNeedToBeExposedToJDTAsPublic_t1000751() {
+  def protectedScalaEntitiesNeedToBeExposedToJDTAsPublic_t1000751(): Unit = {
     whenOpening("t1000751/J.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def scalaAnyRefNeedToBeMappedIntoJavaLangObject_ToBeCorrectlyExposedToJDT_1000752() {
+  def scalaAnyRefNeedToBeMappedIntoJavaLangObject_ToBeCorrectlyExposedToJDT_1000752(): Unit = {
     whenOpening("t1000752/J.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def scalaArrayNeedToBeMappedIntoJavaArray_ToBeCorrectlyExposedToJDT_t1000752_1() {
+  def scalaArrayNeedToBeMappedIntoJavaArray_ToBeCorrectlyExposedToJDT_t1000752_1(): Unit = {
     whenOpening("t1000752_1/J.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def simplifiedExampleFromAkkaSources_ThatWasCausingWrongErrorsToBeReportedInTheJavaEditor_t1000752_2() {
+  def simplifiedExampleFromAkkaSources_ThatWasCausingWrongErrorsToBeReportedInTheJavaEditor_t1000752_2(): Unit = {
     whenOpening("t1000752_2/JavaAPITestActor.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def wideningAccessModifiersOfInherithedMethod_t1000752_3() {
+  def wideningAccessModifiersOfInherithedMethod_t1000752_3(): Unit = {
     whenOpening("t1000752_3/J.java").verifyThat(no).errors.are.reported
   }
 
   @Test
-  def unimplementedAbstractMembersAreCorrectlyReportedInJavaSources() {
+  def unimplementedAbstractMembersAreCorrectlyReportedInJavaSources(): Unit = {
     val expectedProblems = Seq("Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj2()",
                                "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj2_$eq(Object)",
                                "Pb(400) The type FooImpl must implement the inherited abstract method Foo.obj3()",

@@ -30,7 +30,7 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
   protected def scalaPrefStore = IScalaPlugin().getPreferenceStore()
   def javaPrefStore = super.getPreferenceStore
 
-  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
+  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration): Unit = {
     super.setSourceViewerConfiguration(
       configuration match {
         case svc: ScalaSourceViewerConfiguration => svc
@@ -38,16 +38,16 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
       })
   }
 
-  protected override def createActions() {
+  protected override def createActions(): Unit = {
     super.createActions()
     installScalaAwareCopyQualifiedNameAction()
   }
 
-  private def installScalaAwareCopyQualifiedNameAction() {
+  private def installScalaAwareCopyQualifiedNameAction(): Unit = {
     setAction(IJavaEditorActionConstants.COPY_QUALIFIED_NAME, new ScalaCopyQualifiedNameAction(this))
   }
 
-  override def createPartControl(parent: Composite) {
+  override def createPartControl(parent: Composite): Unit = {
     super.createPartControl(parent)
 
     val sv = sourceViewer
@@ -84,7 +84,7 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   private def isScalaSemanticHighlightingEnabled: Boolean = semanticHighlightingPreferences.isEnabled
 
-  override def dispose() {
+  override def dispose(): Unit = {
     super.dispose()
     scalaPrefStore.removePropertyChangeListener(preferenceListener)
     uninstallScalaSemanticHighlighting(removesHighlights = false)

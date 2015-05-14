@@ -42,7 +42,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
    *  (unknown to the JDT, such as inner objects inside objects). Breakpoints could be set
    *  by giving only the line number.
    */
-  private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection) {
+  private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection): Unit = {
     val job = new Job("Toggle Line Breakpoint") {
       override def run(monitor : IProgressMonitor) : IStatus = {
         val editor = getTextEditor(part)
@@ -113,7 +113,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
    *
    *  TODO: Rewrite to use the presentation compiler for finding the position.
    */
-  override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection) {
+  override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection): Unit = {
     val sel = translateToMembers(part, selection)
 
     sel match {
@@ -135,7 +135,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
     }
   }
 
-  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection) {
+  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection): Unit = {
     toggleLineBreakpointsImpl(part, selection)
   }
 

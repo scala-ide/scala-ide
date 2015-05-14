@@ -29,7 +29,7 @@ object SourceFileProviderRegistry extends HasLogger {
     record.map(_._2).getOrElse(null)
   }
 
-  private def registerProviders() {
+  private def registerProviders(): Unit = {
     val extensionPoint = Platform.getExtensionRegistry().getExtensionPoint(EXTENSION_POINT)
     if (extensionPoint != null) {
       val extensions = extensionPoint.getExtensions()

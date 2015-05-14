@@ -27,13 +27,13 @@ class ScalaDebugComputeDetailTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def refreshBinaryFiles() {
+  def refreshBinaryFiles(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
@@ -44,7 +44,7 @@ class ScalaDebugComputeDetailTest {
    * test for object reference
    */
   @Test
-  def computeDetailObject() {
+  def computeDetailObject(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -60,7 +60,7 @@ class ScalaDebugComputeDetailTest {
    * test for array reference containing object references
    */
   @Test
-  def computeDetailArrayOfMixedElements() {
+  def computeDetailArrayOfMixedElements(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -76,7 +76,7 @@ class ScalaDebugComputeDetailTest {
    * test for a <code>null</code> value.
    */
   @Test
-  def computeDetailNullReference() {
+  def computeDetailNullReference(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -92,7 +92,7 @@ class ScalaDebugComputeDetailTest {
    * Check that we can read the version of Scala running on the debugged VM.
    */
   @Test
-  def checkVersionAvailable() {
+  def checkVersionAvailable(): Unit = {
     session = ScalaDebugTestSession(file("HelloWorld.launch"))
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 7)
@@ -104,7 +104,7 @@ class ScalaDebugComputeDetailTest {
    * Check the logical structure returned for a List[Int]
    */
   @Test
-  def logicalStructureStringList() {
+  def logicalStructureStringList(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)

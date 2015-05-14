@@ -37,7 +37,7 @@ object ScalaDebugTestSession {
 
   def addDebugEventListener(f: PartialFunction[DebugEvent, Unit]): IDebugEventSetListener = {
     val debugEventListener = new IDebugEventSetListener {
-      def handleDebugEvents(events: Array[DebugEvent]) {
+      def handleDebugEvents(events: Array[DebugEvent]): Unit = {
         events.foreach(f orElse { case _ => })
       }
     }
@@ -83,25 +83,25 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
       setTerminated()
   }
 
-  def setLaunched(target: ScalaDebugTarget) {
+  def setLaunched(target: ScalaDebugTarget): Unit = {
     this.synchronized {
       debugTarget = target
       setRunning()
     }
   }
 
-  def setActionRequested() {
+  def setActionRequested(): Unit = {
     state = ACTION_REQUESTED
   }
 
-  def setRunning() {
+  def setRunning(): Unit = {
     this.synchronized {
       state = RUNNING
       currentStackFrame = null
     }
   }
 
-  def setSuspended(stackFrame: ScalaStackFrame) {
+  def setSuspended(stackFrame: ScalaStackFrame): Unit = {
     this.synchronized {
       currentStackFrame = stackFrame
       val selection = new StructuredSelection(stackFrame)
@@ -112,21 +112,21 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     }
   }
 
-  def setTerminated() {
+  def setTerminated(): Unit = {
     this.synchronized {
       state = TERMINATED
       this.notify()
     }
   }
 
-  def waitUntilSuspended() {
+  def waitUntilSuspended(): Unit = {
     this.synchronized {
       while (state != SUSPENDED && state != TERMINATED)
         this.wait()
     }
   }
 
-  def waitUntilTerminated() {
+  def waitUntilTerminated(): Unit = {
     this.synchronized {
       if (state != TERMINATED)
         this.wait()
@@ -208,11 +208,11 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   /**
    * Remove the given breakpoint
    */
-  def removeBreakpoint(breakpoint: IBreakpoint) {
+  def removeBreakpoint(breakpoint: IBreakpoint): Unit = {
     breakpoint.delete()
   }
 
-  def stepOver() {
+  def stepOver(): Unit = {
     assertEquals("Bad state before stepOver", SUSPENDED, state)
 
     setActionRequested
@@ -223,7 +223,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after stepOver", SUSPENDED, state)
   }
 
-  def stepInto() {
+  def stepInto(): Unit = {
     assertEquals("Bad state before stepIn", SUSPENDED, state)
 
     setActionRequested
@@ -234,7 +234,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after stepIn", SUSPENDED, state)
   }
 
-  def stepReturn() {
+  def stepReturn(): Unit = {
     assertEquals("Bad state before stepReturn", SUSPENDED, state)
 
     setActionRequested
@@ -245,7 +245,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after stepReturn", SUSPENDED, state)
   }
 
-  def resumeToCompletion() {
+  def resumeToCompletion(): Unit = {
     assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
 
     setActionRequested
@@ -256,7 +256,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after resumeToCompletion", TERMINATED, state)
   }
 
-  def dropToFrame(stackFrame: ScalaStackFrame) {
+  def dropToFrame(stackFrame: ScalaStackFrame): Unit = {
     assertEquals("Bad state before dropToFrame", SUSPENDED, state)
 
     setActionRequested
@@ -267,7 +267,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after dropToFrame", SUSPENDED, state)
   }
 
-  def terminate() {
+  def terminate(): Unit = {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.terminate()
       waitUntilTerminated
@@ -276,7 +276,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
 
-  def resumeToSuspension() {
+  def resumeToSuspension(): Unit = {
     assertEquals("Bad state before resumeToSuspension", SUSPENDED, state)
 
     setActionRequested
@@ -287,7 +287,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     assertEquals("Bad state after resumeToSuspension", SUSPENDED, state)
   }
 
-  def disconnect() {
+  def disconnect(): Unit = {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.disconnect()
       waitUntilTerminated
@@ -295,7 +295,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     }
   }
 
-  def launch() {
+  def launch(): Unit = {
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
 
@@ -304,7 +304,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
    * while running test.
    * This method make sure there are no outstanding requests
    */
-  def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean) {
+  def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean): Unit = {
     import org.scalaide.core.testsetup.SDTTestUtils._
 
     if (state ne NOT_LAUNCHED) {
@@ -321,11 +321,11 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     }
   }
 
-  def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*) {
+  def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*): Unit = {
     breakpoint.foreach(waitForBreakpointToBe(_, true))
   }
 
-  def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*) {
+  def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*): Unit = {
     breakpoint.foreach(waitForBreakpointToBe(_, false))
   }
 
@@ -334,7 +334,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   /**
    * Check that all threads have a suspended count of 0, except the one of the current thread, which should be 1
    */
-  def checkThreadsState() {
+  def checkThreadsState(): Unit = {
     assertEquals("Bad state before checkThreadsState", SUSPENDED, state)
 
     val currentThread = currentStackFrame.stackFrame.thread
@@ -343,7 +343,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
       assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount))
   }
 
-  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int) {
+  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int): Unit = {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)
 
     val currentLocation = currentStackFrame.stackFrame.location

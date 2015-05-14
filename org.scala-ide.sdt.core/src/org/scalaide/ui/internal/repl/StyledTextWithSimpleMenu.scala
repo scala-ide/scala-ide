@@ -26,7 +26,7 @@ trait CopyAndClearMenu extends StyledText {
 
   def clear() = setText("")
 
-  private def initContextMenu() {
+  private def initContextMenu(): Unit = {
     val contextMenu = new Menu(this)
 
     val copyTextItem = new MenuItem(contextMenu, SWT.NORMAL)
@@ -42,7 +42,7 @@ trait CopyAndClearMenu extends StyledText {
     setMenu(contextMenu)
 
     contextMenu.addListener(SWT.Show, new Listener() {
-      override def handleEvent(event: Event) {
+      override def handleEvent(event: Event): Unit = {
         val selection = getSelection()
 
         val textSelected = selection.x != selection.y

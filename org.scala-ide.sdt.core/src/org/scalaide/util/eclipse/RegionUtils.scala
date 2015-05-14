@@ -261,7 +261,7 @@ object RegionUtils {
     merge[TypedRegion](a, b, ((x, y) => x.getOffset() < y.getOffset()))
   }
 
-  private def checkInput(a: List[TypedRegion], b: List[TypedRegion]) {
+  private def checkInput(a: List[TypedRegion], b: List[TypedRegion]): Unit = {
     if (!orderedAndNonOverlapping(a))
       throw new IllegalArgumentException("The regions of the first list are not ordered and non-ovelapping")
     if (!orderedAndNonOverlapping(b))

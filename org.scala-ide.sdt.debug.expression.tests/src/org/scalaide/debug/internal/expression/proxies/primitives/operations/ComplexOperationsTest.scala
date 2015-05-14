@@ -39,7 +39,7 @@ class ComplexOperationsTest extends BaseIntegrationTest(ComplexOperationsTest) {
       Java.primitives.long)
 
   @Test
-  def testMixedBitwiseAndNumericalOperators() {
+  def testMixedBitwiseAndNumericalOperators(): Unit = {
     eval("int << 2 + int", int << 2 + int, Java.primitives.int)
     eval("int + 2 << int", int + 2 << int, Java.primitives.int)
     eval("int & 2 + int", int & 2 + int, Java.primitives.int)

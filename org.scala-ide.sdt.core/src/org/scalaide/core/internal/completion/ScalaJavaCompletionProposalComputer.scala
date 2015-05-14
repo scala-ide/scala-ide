@@ -58,8 +58,8 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
  * The //test comments reference the test cases from <code>ScalaJavaCompletionTests</code>
  */
 class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalComputer {
-  def sessionStarted() {}
-  def sessionEnded() {}
+  def sessionStarted(): Unit = {}
+  def sessionEnded(): Unit = {}
   def getErrorMessage() = null
 
   def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) =
@@ -189,7 +189,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Get the string to complete, and the referenced type form the
    * found enclosing node
    */
-  override def endVisit(compilationUnit: CompilationUnit) {
+  override def endVisit(compilationUnit: CompilationUnit): Unit = {
     enclosingNode match {
       case block: Block =>
         contextString = ""
@@ -376,7 +376,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Set the value of contextString from a SimpleName node containing
    * the offset.
    */
-  private def setContextStringFrom(simpleName: SimpleName) {
+  private def setContextStringFrom(simpleName: SimpleName): Unit = {
     contextString = simpleName.getIdentifier().substring(0, offset - simpleName.getStartPosition())
   }
 
