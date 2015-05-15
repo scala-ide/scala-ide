@@ -41,6 +41,7 @@ import org.eclipse.jdt.internal.core.util.MementoTokenizer
 import org.eclipse.text.edits.TextEdit
 import org.eclipse.text.edits.UndoEdit
 import org.eclipse.jdt.internal.core.PackageDeclaration
+import org.scalaide.util.internal.Suppress
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {
   override def getAdapter(adapter : Class[_]) : AnyRef = (classFile : IAdaptable).getAdapter(adapter)
@@ -79,7 +80,7 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   override def createElementInfo() : AnyRef = classFile.createElementInfo0()
   override def generateInfos(info : AnyRef, newElements : JHashMap[_, _], monitor : IProgressMonitor) =
     classFile.generateInfos0(info, newElements, monitor)
-  override def getBufferFactory() : IBufferFactory = classFile.getBufferFactory()
+  override def getBufferFactory() : Suppress.DeprecatedWarning.IBufferFactory = Suppress.DeprecatedWarning.getBufferFactory(classFile)
   override def getBufferManager() : BufferManager = classFile.getBufferManager0()
   override def hasBuffer() : Boolean = classFile.hasBuffer0()
   override def isSourceElement() : Boolean = classFile.isSourceElement0()
@@ -126,13 +127,13 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def getSource() : String = classFile.getSource()
   def getSourceRange() : ISourceRange = classFile.getSourceRange()
 
-  def codeComplete(offset : Int, requestor : ICodeCompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : ICompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor) { classFile.codeComplete(offset, requestor) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, monitor : IProgressMonitor) { classFile.codeComplete(offset, requestor, monitor) }
-  def codeComplete(offset : Int, requestor : ICompletionRequestor, owner : WorkingCopyOwner) { classFile.codeComplete(offset, requestor, owner) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner) { classFile.codeComplete(offset, requestor, owner) }
-  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner, monitor : IProgressMonitor) { classFile.codeComplete(offset, requestor, owner, monitor) }
+  def codeComplete(offset : Int, requestor : Suppress.DeprecatedWarning.ICodeCompletionRequestor): Unit = { Suppress.DeprecatedWarning.codeComplete(classFile, offset, requestor) }
+  def codeComplete(offset : Int, requestor : Suppress.DeprecatedWarning.ICompletionRequestor): Unit = { Suppress.DeprecatedWarning.codeComplete(classFile, offset, requestor) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor): Unit = { classFile.codeComplete(offset, requestor) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, monitor : IProgressMonitor): Unit = { classFile.codeComplete(offset, requestor, monitor) }
+  def codeComplete(offset : Int, requestor : Suppress.DeprecatedWarning.ICompletionRequestor, owner : WorkingCopyOwner): Unit = { Suppress.DeprecatedWarning.codeComplete(classFile, offset, requestor, owner) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner): Unit = { classFile.codeComplete(offset, requestor, owner) }
+  def codeComplete(offset : Int, requestor : CompletionRequestor, owner : WorkingCopyOwner, monitor : IProgressMonitor): Unit = { classFile.codeComplete(offset, requestor, owner, monitor) }
   def codeSelect(offset : Int, length : Int) : Array[IJavaElement] = classFile.codeSelect(offset, length)
   def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] = classFile.codeSelect(offset, length, owner)
 
@@ -140,21 +141,21 @@ class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classF
   def getElementAt(position : Int) : IJavaElement = classFile.getElementAt(position)
   def getWorkingCopy(owner : WorkingCopyOwner, monitor : IProgressMonitor) : ICompilationUnit = classFile.getWorkingCopy(owner, monitor)
 
-  def commit(force : Boolean, monitor : IProgressMonitor) { throw new UnsupportedOperationException }
-  def destroy() { throw new UnsupportedOperationException }
-  def findSharedWorkingCopy(bufferFactory : IBufferFactory) : IJavaElement = { throw new UnsupportedOperationException }
+  def commit(force : Boolean, monitor : IProgressMonitor): Unit = { throw new UnsupportedOperationException }
+  def destroy(): Unit = { throw new UnsupportedOperationException }
+  def findSharedWorkingCopy(bufferFactory : Suppress.DeprecatedWarning.IBufferFactory) : IJavaElement = { throw new UnsupportedOperationException }
   def getOriginal(workingCopyElement : IJavaElement) : IJavaElement = { throw new UnsupportedOperationException }
   def getOriginalElement() : IJavaElement = throw new UnsupportedOperationException
   def findElements(element : IJavaElement) : Array[IJavaElement] = throw new UnsupportedOperationException
   def getSharedWorkingCopy(
     monitor : IProgressMonitor,
-    factory : IBufferFactory,
+    factory : Suppress.DeprecatedWarning.IBufferFactory,
     problemRequestor : IProblemRequestor) : IJavaElement = classFile.getWorkingCopy(null, null : IProgressMonitor)
   def getWorkingCopy() : IJavaElement = classFile.getWorkingCopy(null, null : IProgressMonitor)
   def getWorkingCopy(
     monitor : IProgressMonitor,
-    factory : IBufferFactory,
-    problemRequestor : IProblemRequestor) : IJavaElement = classFile.getWorkingCopy(monitor, factory)
+    factory : Suppress.DeprecatedWarning.IBufferFactory,
+    problemRequestor : IProblemRequestor) : IJavaElement = Suppress.DeprecatedWarning.getWorkingCopy(classFile, monitor, factory)
   def isBasedOn(resource : IResource) : Boolean = throw new UnsupportedOperationException
   def isWorkingCopy() : Boolean = false
   def reconcile() : Array[IMarker] = throw new UnsupportedOperationException

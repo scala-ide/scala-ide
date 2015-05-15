@@ -5,6 +5,9 @@ import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.interpreter.Results.Result
 import scala.tools.nsc.Settings
 
+import EclipseRepl._
+import org.scalaide.util.internal.Suppress
+
 /** An `EclipseRepl` is a simple Finite State Machine with 4 states based on
   * whether the REPL is running/not and whether the history `isEmpty`/not.
   *   - Z = {stopped,isEmpty} (the zero state)
@@ -153,8 +156,6 @@ object EclipseRepl
   }
 }
 
-import EclipseRepl._
-
 /** Wraps a Scala interpreter in an `Actor` so it can work on a background
   * thread. Because the results from executing a line of code depend upon the
   * previous lines, each `EclipseRepl` should be used only by a single entity.
@@ -171,7 +172,7 @@ import EclipseRepl._
   * These five convenience methods are available: `init`, `exec`, `drop`,
   * `stop`, and `quit`. All they do is send the corresponding request message.
   */
-class EclipseRepl(client: Client, builder: Builder) extends Actor
+class EclipseRepl(client: Client, builder: Builder) extends Suppress.DeprecatedWarning.Actor
 {
   def this(client: Client) = this(client, DefaultBuilder)
 

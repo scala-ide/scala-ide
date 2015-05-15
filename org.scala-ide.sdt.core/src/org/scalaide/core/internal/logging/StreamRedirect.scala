@@ -1,5 +1,7 @@
 package org.scalaide.core.internal.logging
 
+import org.scalaide.util.internal.Suppress
+
 private[logging] object StreamRedirect {
   import java.io.OutputStream
   import java.io.PrintStream
@@ -15,7 +17,7 @@ private[logging] object StreamRedirect {
       val logger = LogManager.getLogger("System.out")
       val outStream = redirect(msg => logger.debug(msg))
       System.setOut(outStream)
-      Console.setOut(outStream)
+      Suppress.DeprecatedWarning.`Console.setOut`(outStream)
       isStdOutRedirected = true
     }
   }
@@ -23,7 +25,7 @@ private[logging] object StreamRedirect {
   def disableRedirectStdOutput(): Unit = synchronized {
     if(isStdOutRedirected) {
       System.setOut(defaultStdOut)
-      Console.setOut(defaultStdOut)
+      Suppress.DeprecatedWarning.`Console.setOut`(defaultStdOut)
       isStdOutRedirected = false
     }
   }
@@ -33,7 +35,7 @@ private[logging] object StreamRedirect {
       val logger = LogManager.getLogger("System.err")
       val errStream = redirect(msg => logger.error(msg))
       System.setErr(errStream)
-      Console.setErr(errStream)
+      Suppress.DeprecatedWarning.`Console.setErr`(errStream)
       isStdErrRedirected = true
     }
   }
@@ -41,7 +43,7 @@ private[logging] object StreamRedirect {
   def disableRedirectStdError(): Unit = synchronized {
     if(isStdErrRedirected) {
       System.setErr(defaultStdErr)
-      Console.setErr(defaultStdErr)
+      Suppress.DeprecatedWarning.`Console.setErr`(defaultStdErr)
       isStdErrRedirected = false
     }
   }

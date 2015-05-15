@@ -7,6 +7,7 @@ import scala.tools.nsc.interpreter.Results._
 import org.scalaide.core.internal.repl.EclipseRepl._
 import EclipseReplTest._
 import org.scalaide.core.internal.repl.EclipseRepl
+import org.scalaide.util.internal.Suppress
 
 // This test is not a regular part of org.scalaide.core.TestsSuite because
 // when running under Maven the environment isn't set up quite right for the
@@ -296,7 +297,7 @@ object EclipseReplTest
     val actor = new EclipseRepl(client, TestBuilder)
     {
       override def scheduler = sked.scheduler
-      override def send(msg: Any, replyTo: scala.actors.OutputChannel[Any]) {
+      override def send(msg: Any, replyTo: Suppress.DeprecatedWarning.OutputChannel[Any]): Unit = {
         add(messageToRequest(msg))
         super.send(msg, replyTo) }
     }
@@ -312,28 +313,24 @@ object EclipseReplTest
           filterReplies(expected),filterReplies(actual)) }
   }
 
-  import scala.actors.IScheduler
-  import scala.actors.scheduler._
-
   trait Scheduler
   {
-    def scheduler: IScheduler
+    def scheduler: Suppress.DeprecatedWarning.IScheduler
     def complete(): Unit
   }
   def STScheduler = new Scheduler
   {
-    val scheduler = new SingleThreadedScheduler
-    def complete() { scheduler.shutdown() }
+    val scheduler = new Suppress.DeprecatedWarning.SingleThreadedScheduler
+    def complete(): Unit = { scheduler.shutdown() }
   }
   def RTPScheduler = new Scheduler
   {
-    val scheduler = new ResizableThreadPoolScheduler
-    def complete() { scheduler.run() }
+    val scheduler = new Suppress.DeprecatedWarning.ResizableThreadPoolScheduler
+    def complete(): Unit = { scheduler.run() }
   }
   def FJScheduler = new Scheduler
   {
-    val scheduler = new ForkJoinScheduler
-    def complete() { scheduler.run() }
+    val scheduler = new Suppress.DeprecatedWarning.ForkJoinScheduler
+    def complete(): Unit = { scheduler.run() }
   }
 }
-
