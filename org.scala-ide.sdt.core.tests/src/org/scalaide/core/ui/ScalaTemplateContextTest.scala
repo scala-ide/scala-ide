@@ -25,7 +25,7 @@ class ScalaTemplateContextTest {
 
     val context = new ScalaTemplateContext(contextType, document, textSoFar.indexOf(CARET), document.getLength)
 
-    val templateObject = new Template("Test Template", "", contextType.getId, template)
+    val templateObject = new Template("Test Template", "", contextType.getId, template, /*isAutoInsertable =*/ true)
 
     val buffer = context.evaluate(templateObject)
 

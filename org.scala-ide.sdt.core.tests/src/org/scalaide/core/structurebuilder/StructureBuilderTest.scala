@@ -42,7 +42,7 @@ class StructureBuilderTest {
   @Test def testAnnotations() {
     val annotsPkg = srcPackageRoot.getPackageFragment("annots");
     assertNotNull(annotsPkg)
-    val cu = annotsPkg.getCompilationUnit("ScalaTestSuite.scala")
+    val cu = annotsPkg.getCompilationUnit("ScalaTestSuite.scala").asInstanceOf[ITypeRoot]
     assertTrue(cu.exists)
     val tpe = cu.findPrimaryType()
     assertNotNull("Primary type should not be null", tpe)
