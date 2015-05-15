@@ -28,6 +28,7 @@ import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.sbtbuilder.MultipleErrorsTest
+import org.scalaide.core.sbtbuilder.NameHashingVulnerabilityTest
 import org.scalaide.core.sbtbuilder.NestedProjectsTest
 import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
@@ -36,6 +37,7 @@ import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
+import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
 import org.scalaide.core.sbtbuilder.ScopeCompileTest
 import org.scalaide.core.sbtbuilder.TodoBuilderTest
 import org.scalaide.core.semantic.HighlightingTestsSuite
@@ -52,7 +54,6 @@ import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAt
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
-import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -109,6 +110,7 @@ import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
     classOf[ScalaJavaDepTicket_1000607Test],
     classOf[ScalaJavaDepWhenJavaIsWrongTest],
     classOf[ScopeCompileTest],
-    classOf[ScalaProjectDependedOnJavaProjectTest]
+    classOf[ScalaProjectDependedOnJavaProjectTest],
+    classOf[NameHashingVulnerabilityTest]
 ))
 class TestsSuite

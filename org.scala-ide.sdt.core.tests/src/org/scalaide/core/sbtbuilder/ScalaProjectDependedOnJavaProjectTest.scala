@@ -1,7 +1,8 @@
 package org.scalaide.core.sbtbuilder
 
-import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IPath
+import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.junit.AfterClass
@@ -10,29 +11,26 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.testsetup.Bdd
-import org.scalaide.core.testsetup.Bdd.jProjectToIProject
-import org.scalaide.core.testsetup.Bdd.sProjectToIProject
-import org.scalaide.core.testsetup.Before
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.testsetup.SDTTestUtils.SrcPathOutputEntry
+import org.scalaide.core.testsetup.IProjectHelpers
+import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils.addToClasspath
+import org.scalaide.core.testsetup.SDTTestUtils.buildWorkspace
 import org.scalaide.core.testsetup.SDTTestUtils.createJavaProjectInWorkspace
 import org.scalaide.core.testsetup.SDTTestUtils.createProjectInWorkspace
+import org.scalaide.core.testsetup.SDTTestUtils.findProjectProblemMarkers
+import org.scalaide.core.testsetup.SDTTestUtils.markersMessages
 import org.scalaide.util.eclipse.EclipseUtils
+
 import ScalaProjectDependedOnJavaProjectTest.projectJ
 import ScalaProjectDependedOnJavaProjectTest.projectS
-import org.eclipse.jdt.core.compiler.IProblem
-import org.eclipse.core.resources.IProject
-import org.eclipse.jdt.core.IClasspathEntry
 
-object ScalaProjectDependedOnJavaProjectTest extends Before {
+object ScalaProjectDependedOnJavaProjectTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
-  val projectJName = "scalaDependedOnJavaJ"
-  val projectSName = "scalaDependedOnJavaS"
-  var projectJ: IJavaProject = _
-  var projectS: IScalaProject = _
-  val bundleName = "org.scala-ide.sdt.core.tests"
+  private val projectJName = "scalaDependedOnJavaJ"
+  private val projectSName = "scalaDependedOnJavaS"
+  private var projectJ: IJavaProject = _
+  private var projectS: IScalaProject = _
+  private val bundleName = "org.scala-ide.sdt.core.tests"
 
   private def withSrcOutputStructure(project: IProject, jProject: IJavaProject): Seq[IClasspathEntry] = {
     val mainSourceFolder = project.getFolder("/src/main")
@@ -59,17 +57,16 @@ object ScalaProjectDependedOnJavaProjectTest extends Before {
   }
 }
 
-class ScalaProjectDependedOnJavaProjectTest extends Bdd with SDTTestUtils {
+class ScalaProjectDependedOnJavaProjectTest extends IProjectOperations with IProjectHelpers {
   import ScalaProjectDependedOnJavaProjectTest._
-  import Bdd._
 
   @Test def shouldCorrectlyBuildScalaProjectWhichDependsOnJavaOne(): Unit = {
     givenCleanWorkspaceForProjects(projectJ, projectS)
 
     buildWorkspace()
 
-    val errors = markersMessages(findProjectProblemMarkers(projectS.underlying, SdtConstants.ProblemMarkerId).toList)
+    val errors = markersMessages(findProjectProblemMarkers(projectS, SdtConstants.ProblemMarkerId).toList)
 
-    Assert.assertTrue("what's up?: " + errors.mkString(", "), errors.isEmpty)
+    Assert.assertTrue("no error expected: " + errors.mkString(", "), errors.isEmpty)
   }
 }

@@ -1,9 +1,7 @@
 package org.scalaide.core
 package sbtbuilder
 
-import java.io.File
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -16,31 +14,29 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.testsetup.FileUtils
+import org.scalaide.core.testsetup.IProjectHelpers
+import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.SDTTestUtils.SrcPathOutputEntry
 import org.scalaide.core.testsetup.SDTTestUtils.addToClasspath
 import org.scalaide.core.testsetup.SDTTestUtils.changeContentOfFile
 import org.scalaide.core.testsetup.SDTTestUtils.createProjectInWorkspace
 import org.scalaide.core.testsetup.SDTTestUtils.findProjectProblemMarkers
-import org.scalaide.core.testsetup.SDTTestUtils.getErrorMessages
-import org.scalaide.core.testsetup.SDTTestUtils.sourceWorkspaceLoc
 import org.scalaide.core.testsetup.SDTTestUtils.markersMessages
 import org.scalaide.core.testsetup.SDTTestUtils.workspace
-import org.scalaide.util.eclipse.EclipseUtils
+
+import ScopeCompileTest.errorTypes
 import ScopeCompileTest.projectA
 import ScopeCompileTest.projectB
-import java.util.concurrent.locks.ReentrantLock
-import org.scalaide.core.testsetup.Bdd
-import org.scalaide.core.testsetup.Before
 
-object ScopeCompileTest extends Before {
+object ScopeCompileTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
   private val projectAName = "scopeCompileProjectA"
   private val projectBName = "scopeCompileProjectB"
-  var projectA: IScalaProject = _
-  var projectB: IScalaProject = _
+  private var projectA: IScalaProject = _
+  private var projectB: IScalaProject = _
   private val bundleName = "org.scala-ide.sdt.core.tests"
+  private val errorTypes = Array(SdtConstants.ProblemMarkerId, IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER)
 
   private val withSrcOutputStructure: SrcPathOutputEntry = (project, jProject) => {
     val macrosSourceFolder = project.getFolder("/src/macros")
@@ -74,10 +70,9 @@ object ScopeCompileTest extends Before {
   }
 }
 
-class ScopeCompileTest extends Bdd {
+class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   import org.scalaide.core.testsetup.SDTTestUtils._
   import ScopeCompileTest._
-  import Bdd._
 
   def whenFileInScopeIsDamaged(project: IScalaProject, scopeRootPath: String, packageName: String, fileName: String)(thenAssertThat: => Unit): Unit = {
     val toChangeRoot = project.javaProject.findPackageFragmentRoot(new Path("/" + project.underlying.getName + scopeRootPath))
@@ -98,8 +93,7 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectB, "/src/test", "acme", "AcmeRefTest.scala") {
       val expectedOneError =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
       Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
     }
@@ -110,8 +104,7 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectB, "/src/main", "acme", "AcmeMainRef.scala") {
       val expectedTwoErrors =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
       Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 2 == expectedTwoErrors.length)
     }
@@ -122,8 +115,7 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectB, "/src/macros", "acme", "AcmeMacroRef.scala") {
       val expectedThreeErrors =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
       Assert.assertTrue("See what's wrong: " + expectedThreeErrors.mkString(", "), 3 == expectedThreeErrors.length)
     }
@@ -134,11 +126,9 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectA, "/src/test", "acme", "AcmeTest.scala") {
       val expectedOneError =
-        markersMessages(findProjectProblemMarkers(projectA.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedOneErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
       val errors = expectedOneError ++ expectedOneErrorInB
       Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 2 == errors.length)
@@ -150,11 +140,9 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectA, "/src/main", "acme", "AcmeMain.scala") {
       val expectedTwoErrors =
-        markersMessages(findProjectProblemMarkers(projectA.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedThreeErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
       val errors = expectedTwoErrors ++ expectedThreeErrorInB
 
       Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 5 == errors.length)
@@ -166,11 +154,9 @@ class ScopeCompileTest extends Bdd {
 
     whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala") {
       val expectedThreeErrors =
-        markersMessages(findProjectProblemMarkers(projectA.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedThreeErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB.underlying, SdtConstants.ProblemMarkerId,
-          IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER).toList)
+        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
       val errors = expectedThreeErrors ++ expectedThreeErrorInB
 
