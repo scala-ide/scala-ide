@@ -380,7 +380,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   // TODO Per-file encodings
   private def encoding: Option[String] =
     sourceFolders.headOption flatMap { path =>
-      EclipseUtils.workspaceRoot.findContainersForLocation(path) match {
+      EclipseUtils.workspaceRoot.findContainersForLocationURI(path.toFile.toURI) match {
         case Array(container) => Some(container.getDefaultCharset)
         case _ => None
       }

@@ -1,17 +1,17 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.junit.Before
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.After
-import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
-import org.scalaide.debug.internal.model.ScalaCollectionLogicalStructureType
-import org.scalaide.debug.internal.model.ScalaArrayReference
-import org.scalaide.debug.internal.model.ScalaPrimitiveValue
+import org.junit.Before
+import org.junit.Test
 import org.junit.matchers.JUnitMatchers
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.model.ScalaArrayReference
+import org.scalaide.debug.internal.model.ScalaCollectionLogicalStructureType
+import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
+import org.hamcrest.CoreMatchers
 
 object ScalaDebugComputeDetailTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
 
@@ -113,12 +113,12 @@ class ScalaDebugComputeDetailTest {
 
     val logicalStructure= ScalaCollectionLogicalStructureType.getLogicalStructure(session.getLocalVariable("j"))
 
-    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), JUnitMatchers.containsString("Array[Object](3)"))
+    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), CoreMatchers.containsString("Array[Object](3)"))
 
     val elements = logicalStructure.asInstanceOf[ScalaArrayReference].getVariables()
-    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), JUnitMatchers.containsString("Integer 4"))
-    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), JUnitMatchers.containsString("Integer 5"))
-    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), JUnitMatchers.containsString("Integer 6"))
+    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), CoreMatchers.containsString("Integer 4"))
+    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), CoreMatchers.containsString("Integer 5"))
+    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), CoreMatchers.containsString("Integer 6"))
   }
 
 }

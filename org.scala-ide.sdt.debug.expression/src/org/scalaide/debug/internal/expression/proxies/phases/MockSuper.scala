@@ -15,7 +15,7 @@ object MockSuper {
 
   val SuperTypeMarker = "super"
 
-  private val MockSuperSelect = Select(Ident(TermName(s"$contextName")), s"$placeholderSuperName")
+  private val MockSuperSelect = Select(Ident(TermName(s"$contextName")), TermName(s"$placeholderSuperName"))
 
   def apply(methodCall: Tree, tpe: String): Apply =
     Apply(MockSuperSelect, List(methodCall, Literal(Constant(tpe))))
