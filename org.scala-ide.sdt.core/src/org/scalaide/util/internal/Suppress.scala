@@ -30,6 +30,11 @@ object Suppress {
     type ICodeCompletionRequestor = org.eclipse.jdt.core.ICodeCompletionRequestor
     type ICompletionRequestor = org.eclipse.jdt.core.ICompletionRequestor
     type Actor = scala.actors.Actor
+    val Actor = scala.actors.Actor
+    type DaemonActor = scala.actors.DaemonActor
+    type AbstractActor = scala.actors.AbstractActor
+    type Exit = scala.actors.Exit
+    val State = scala.actors.Actor.State
     type OutputChannel[A] = scala.actors.OutputChannel[A]
     type IScheduler = scala.actors.IScheduler
     type SingleThreadedScheduler = scala.actors.scheduler.SingleThreadedScheduler

@@ -7,6 +7,7 @@ import scala.collection.mutable.Stack
 import org.scalaide.logging.HasLogger
 import com.sun.jdi.VMDisconnectedException
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.util.internal.Suppress
 
 /** A generic message to inform that an actor should terminate. */
 object PoisonPill
@@ -23,7 +24,7 @@ object PoisonPill
   * to its `behavior` implementation. If an `Exit` or `PoisonPill` message is processed by `this` actor,
   * the actor is guaranteed to execute `preExit` before terminating.
   */
-trait BaseDebuggerActor extends Actor with HasLogger {
+trait BaseDebuggerActor extends Suppress.DeprecatedWarning.Actor with HasLogger {
   // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this,
   // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for
   // graceful termination of all linked actors.
@@ -135,7 +136,7 @@ object BaseDebuggerActor {
    *
    *  @see ScalaPlugin.noTimeoutMode
    */
-  def timedSend(timeout: Int)(a: Actor, msg: Any): Option[Any] = {
+  def timedSend(timeout: Int)(a: Suppress.DeprecatedWarning.Actor, msg: Any): Option[Any] = {
     if (IScalaPlugin().noTimeoutMode)
       Some(a !? msg)
     else

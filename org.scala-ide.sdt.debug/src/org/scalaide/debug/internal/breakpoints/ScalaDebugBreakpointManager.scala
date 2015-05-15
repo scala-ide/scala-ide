@@ -6,9 +6,9 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
-import scala.actors.Actor
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.util.internal.Suppress
 
 object ScalaDebugBreakpointManager {
   /** A debug message used to wait until all required messages have been processed.
@@ -33,7 +33,7 @@ object ScalaDebugBreakpointManager {
  *       actor. This seems useless (listeners are run in their own thread) and makes things somewhat harder to test.
  *       Maybe we should remove the companion actor in this case.
  */
-class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Actor) extends IBreakpointListener {
+class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Suppress.DeprecatedWarning.Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
 
   // from org.eclipse.debug.core.IBreakpointsListener
@@ -101,7 +101,7 @@ private[debug] object ScalaDebugBreakpointManagerActor {
 
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
-  def apply(debugTarget: ScalaDebugTarget): Actor = {
+  def apply(debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     val actor = new ScalaDebugBreakpointManagerActor(debugTarget)
     actor.start()
     actor
@@ -113,7 +113,7 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
   import BreakpointSupportActor.Changed
   import BreakpointSupportActor.ReenableBreakpointAfterHcr
 
-  private var breakpoints = Map[IBreakpoint, Actor]()
+  private var breakpoints = Map[IBreakpoint, Suppress.DeprecatedWarning.Actor]()
 
   override protected def postStart(): Unit = link(debugTarget.companionActor)
 
