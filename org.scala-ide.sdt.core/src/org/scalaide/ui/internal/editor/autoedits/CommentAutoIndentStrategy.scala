@@ -156,7 +156,6 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     }
   }
 
-
   /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
    *  inside a Scaladoc that runs to the end of the document or if the line
    *  containing the end of the Scaladoc section contains a quotation mark. This
@@ -166,10 +165,10 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
     def isProbablyString = {
       val p = TextUtilities.getPartition(doc, partitioning, offset, true)
-      val start = doc.getLineInformationOfOffset(p.getOffset()).getOffset()
-      val end = p.getOffset() + p.getLength() - start
+      val start = doc.getLineInformationOfOffset(p.getOffset + p.getLength).getOffset()
+      val len = p.getOffset() + p.getLength() - start
 
-      val containsSingleQuote = doc.get(start, end).reverse.exists(_ == '"')
+      val containsSingleQuote = doc.get(start, len).indexOf('"') >= 0
       scaladocPartitions(p.getType()) && containsSingleQuote
     }
 
