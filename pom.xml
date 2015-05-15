@@ -609,7 +609,7 @@
             <args>
               <arg>-feature</arg>
               <arg>-unchecked</arg>
-              <arg>-deprecation:false</arg>
+              <arg>-deprecation</arg>
               <arg>-language:_</arg>
               <arg>-Xlint</arg>
               <arg>-Xfuture</arg>
