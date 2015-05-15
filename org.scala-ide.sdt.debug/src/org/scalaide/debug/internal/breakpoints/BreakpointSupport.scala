@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.breakpoints
 
-import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
 
 import org.eclipse.core.resources.IMarkerDelta
@@ -21,6 +20,7 @@ import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
@@ -43,7 +43,7 @@ private[debug] object BreakpointSupport {
    *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
    *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
    */
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     BreakpointSupportActor(breakpoint, debugTarget)
   }
 }
@@ -66,7 +66,7 @@ private object BreakpointSupportActor {
     handlerResults.filter(_ != NoCommand).toSet
   }
 
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     val typeName = breakpoint.typeName
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
