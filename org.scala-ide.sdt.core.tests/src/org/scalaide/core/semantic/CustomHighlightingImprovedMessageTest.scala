@@ -20,7 +20,7 @@ class CustomHighlightingImprovedMessageTest
           typeDefinition = TypeDefinition("scala" :: "collection" :: "mutable" :: Nil, "Traversable")))
 
       val expected = List(
-        "'scala.collection.mutable' call type found on map.foreach [266, 3]",
+        "'scala.collection.mutable' call type found on map.foreach [274, 3]",
         "'scala.collection.mutable' call type found on mySeq.foreach [195, 5]",
         "'scala.collection.mutable' call type found on mySeq.head [181, 5]")
       val actual = annotations("scalaCollectionMutable")(traversers)(spc, scu)
