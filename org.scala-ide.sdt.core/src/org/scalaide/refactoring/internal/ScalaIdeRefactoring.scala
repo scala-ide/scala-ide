@@ -77,6 +77,14 @@ abstract class ScalaIdeRefactoring(val feature: Feature, val getName: String, va
   def getPages: List[RefactoringWizardPage] = Nil
 
   /**
+   * Set this flag to true if you want changes from this refactoring to be marked as dirty in the editor.
+   *
+   * '''Warning''': Don't set this flag to true for refactorings that might affect files that are not
+   * currently open in the editor, as changes for these files would be lost. See ticket #1002079.
+   */
+  protected def leaveDirty: Boolean = false
+
+  /**
    * Holds the result of preparing this refactoring. We can keep this
    * in a lazy var because it will only be evaluated once.
    */
@@ -142,7 +150,7 @@ abstract class ScalaIdeRefactoring(val feature: Feature, val getName: String, va
     textChanges.groupBy(_.sourceFile.file).map {
       case (file, fileChanges) =>
         FileUtils.toIFile(file) map { file =>
-          TextEditUtils.createTextFileChange(file, fileChanges)
+          TextEditUtils.createTextFileChange(file, fileChanges, leaveDirty)
         } getOrElse {
           val msg = "Could not find the corresponding IFile for "+ file.path
           throw new CoreException(new Status(IStatus.ERROR, SdtConstants.PluginId, 0, msg, null))

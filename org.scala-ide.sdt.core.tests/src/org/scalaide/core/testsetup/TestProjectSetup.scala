@@ -1,7 +1,9 @@
 package org.scalaide.core.testsetup
 
 import scala.tools.nsc.interactive.Response
+
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.ICompilationUnit
@@ -9,6 +11,7 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.text.edits.ReplaceEdit
 import org.junit.Assert.assertNotNull
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
@@ -139,4 +142,31 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
     open(path.toOSString())
     waitUntilTypechecked(source)
   }
+
+  /**
+   * Allows to modify sources in test workspace.
+   *
+   * @param compilationUnitPath path to file which we'll change
+   * @param lineNumber line which will be removed (line numbers start from 1)
+   * @param newLine code inserted in place of line with lineNumber
+   */
+  def modifyLine(compilationUnitPath: String, lineNumber: Int, newLine: String): Unit = {
+    val lineIndex = lineNumber - 1
+    val cu = compilationUnit(compilationUnitPath)
+    val code = cu.getSource
+    val lines = code.split('\n').toList
+    val newLines = lines.updated(lineIndex, newLine)
+    val newCode = newLines.mkString("\n")
+
+    val textEdit = new ReplaceEdit(0, code.length(), newCode)
+    cu.applyTextEdit(textEdit, new NullProgressMonitor)
+    cu.save(new NullProgressMonitor, true)
+  }
+
+  /**
+   * Be aware that it can be heavy. Moreover, it's needed to ensure that
+   * events are already properly propagated after the build.
+   */
+  def buildIncrementally(): Unit =
+    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 }

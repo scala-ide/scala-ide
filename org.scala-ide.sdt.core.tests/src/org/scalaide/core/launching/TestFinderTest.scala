@@ -25,6 +25,7 @@ class TestFinderTest {
     val possibleMatches = finder.filteredTestResources(project, project.javaProject, new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"),
       getResource("/src/packa/FakeTest.scala"),
+      getResource("/src/packa/TestScalaDoc.scala"),
       getResource("/src/packc/TestC.scala"),
       getResource("/src/jpacka/JTestA.java"),
       getResource("/src/jpacka/RunWithTest.java"),
@@ -40,7 +41,7 @@ class TestFinderTest {
     val finder = new JUnit4TestFinder
 
     val possibleMatches = finder.filteredTestResources(project, project.javaProject.findPackageFragment("/test-finder/src/packa"), new NullProgressMonitor)
-    val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"))
+    val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"), getResource("/src/packa/TestScalaDoc.scala"))
     assertEqualsSets("wrong filtered files", expected, possibleMatches.toSet)
   }
 
@@ -51,7 +52,7 @@ class TestFinderTest {
     val result = new mutable.HashSet[IType]
     finder.findTestsInContainer(project.javaProject.findPackageFragment("/test-finder/src/packa"), result, new NullProgressMonitor)
 
-    val expected = Set(getType("packa.TestA"), getType("packa.TestA1"))
+    val expected = Set(getType("packa.TestA"), getType("packa.TestA1"), getType("packa.TestScalaDoc"))
     assertEqualsSets("wrong tests found", expected, result)
   }
 
@@ -90,6 +91,7 @@ class TestFinderTest {
       getType("jpackb.JTestB"),
       getType("packa.TestA"),
       getType("packa.TestA1"),
+      getType("packa.TestScalaDoc"),
       getType("packb.TestB"),
       getType("packc.TestC"),
       getType("packc.TestCInherited1"),
@@ -108,6 +110,7 @@ class TestFinderTest {
     val expected = Set(
       getType("jpacka.JTestA"),
       getType("jpacka.RunWithTest"),
+      getType("packa.TestScalaDoc"),
       getType("jpackb.JTestB"),
       getType("packa.TestA"),
       getType("packa.TestA1"),
@@ -163,6 +166,15 @@ class TestFinderTest {
     val testClass = getType("packa.TestA1")
     val result = finder.getTestMethods(project.javaProject, testClass)
     val expected = Set("testMethod1", "testMethod2")
+    assertEqualsSets("wrong test methods", expected, result.asScala)
+  }
+
+  @Test
+  def search_test_methods_in_scaladoc_class() {
+    val finder = new JUnit4TestFinder
+    val testClass = getType("packa.TestScalaDoc")
+    val result = finder.getTestMethods(project.javaProject, testClass)
+    val expected = Set("testMethod")
     assertEqualsSets("wrong test methods", expected, result.asScala)
   }
 

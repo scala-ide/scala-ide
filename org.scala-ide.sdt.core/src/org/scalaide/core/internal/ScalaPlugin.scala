@@ -86,7 +86,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   import org.scalaide.core.SdtConstants._
 
-   /** Check if the given version is compatible with the current plug-in version.
+ /** Check if the given version is compatible with the current plug-in version.
    *  Check on the major/minor number, discard the maintenance number.
    *
    *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas

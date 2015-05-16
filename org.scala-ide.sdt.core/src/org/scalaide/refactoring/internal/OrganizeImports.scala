@@ -221,6 +221,8 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
 
     val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { val global = c })
 
+    override protected def leaveDirty = true
+
     override def checkInitialConditions(pm: IProgressMonitor) = {
       val status = super.checkInitialConditions(pm)
       if(compilationUnitHasProblems) {

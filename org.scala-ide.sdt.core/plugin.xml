@@ -333,61 +333,6 @@
             id="org.scala-ide.sdt.core.wizards.newProject">
             <description>Create a Scala project</description>
       </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewClassWizard"
-            icon="icons/full/etool16/newclass_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Class"
-            id="org.scala-ide.sdt.core.wizards.newClass">
-            <description>Create a Scala class</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewObjectWizard"
-            icon="icons/full/etool16/newobject_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Object"
-            id="org.scala-ide.sdt.core.wizards.newObject">
-            <description>Create a Scala object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewPackageObjectWizard"
-            icon="icons/full/etool16/newpackage_object_wiz.png"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Package Object"
-            id="org.scala-ide.sdt.core.wizards.newPackageObject">
-            <description>Create a Scala Package Object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewTraitWizard"
-            icon="icons/full/etool16/newtrait_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Trait"
-            id="org.scala-ide.sdt.core.wizards.newTrait">
-            <description>Create a Scala trait</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewApplicationWizard"
-            icon="icons/full/etool16/scala_app.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Application"
-            id="org.scala-ide.sdt.core.wizards.newApplication">
-            <description>Create a Scala application</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
    </extension>
    <extension
          point="org.eclipse.ui.ide.projectNatureImages">
@@ -1188,7 +1133,7 @@
          name="Toggle Implicits Display"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
-         id="org.scalaide.core.handler.RunSelection"
+         id="org.scalaide.core.handler.RunSelectionInInterpreter"
          name="Send Selection to Scala Interpreter"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1420,7 +1365,7 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
-       commandId="org.scalaide.core.handler.RunSelection"
+       commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>
@@ -1521,10 +1466,10 @@
           class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
           commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
     </handler>
-    <handler
-          class="org.scalaide.ui.internal.actions.RunSelection"
-          commandId="org.scalaide.core.handler.RunSelection">
-    </handler>
+	<handler
+		class="org.scalaide.ui.internal.actions.RunSelectionInInterpreter"
+		commandId="org.scalaide.core.handler.RunSelectionInInterpreter">
+	</handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1560,7 +1505,7 @@
                 style="toggle">
           </command>
           <command
-                commandId="org.scalaide.core.handler.RunSelection"
+                commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
                 disabledIcon="icons/full/dtool16/run_interpreter.gif"
                 icon="icons/full/etool16/run_interpreter.gif"
                 label="Run Selection in Scala Interpreter"
@@ -1884,14 +1829,6 @@
           name="Empty File"
           templateId="org.scalaide.core.templates.wizards.empty">
     </fileCreator>
-    <fileCreator
-          class="org.scalaide.ui.wizards.ClassCreator"
-          description="Create a Scala File"
-          icon="icons/full/etool16/newclass_wiz.gif"
-          id="org.scalaide.ui.wizards.scalaCreator"
-          name="New Scala File"
-          templateId="org.scalaide.core.templates.wizards.class">
-    </fileCreator>
  </extension>
  <extension
        point="org.eclipse.ui.themes">
@@ -1910,6 +1847,42 @@
           The font used for all Scala hovers.
        </description>
     </fontDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterForeground"
+          label="Interpreter foreground color"
+          value="60,0,128">
+       <description>
+          The color used for the Scala Interpreter foreground.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterBackground"
+          label="Interpreter background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter background.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterErrorForeground"
+          label="Interpreter error foreground color"
+          value="128,0,64">
+       <description>
+          The color used for the Scala Interpreter foreground to display errors.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.lineNumberBackground"
+          label="Interpreter line number background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter line number background.
+       </description>
+    </colorDefinition>
  </extension>
  <extension
        point="org.scala-ide.sdt.core.semanticHighlightingParticipants">

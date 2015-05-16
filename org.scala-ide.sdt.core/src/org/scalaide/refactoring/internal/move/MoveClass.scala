@@ -130,6 +130,8 @@ class MoveClass extends RefactoringExecutorWithWizard {
             (change :: textChanges, newFiles)
           case (change: NewFileChange, (textChanges, newFilesChanges)) =>
             (textChanges, change :: newFilesChanges)
+          case (unexpected, _) =>
+            throw new AssertionError(s"Unexpected change $unexpected; please make sure that 'MoveClass' in scalaide and 'MoveClass' in the refactoring library are in sync")
         }
       }
 

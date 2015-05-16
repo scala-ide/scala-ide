@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.TimeoutException
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -63,8 +64,17 @@ object SDTTestUtils extends HasLogger {
   }
 
   /** Return the Java problem markers corresponding to the given compilation unit. */
-  def findProblemMarkers(unit: ICompilationUnit) =
+  def findProblemMarkers(unit: ICompilationUnit): Array[IMarker] =
     unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+
+  def findProjectProblemMarkers(project: IProject, types: String*): Seq[IMarker] =
+    for {
+      typ <- types
+      markers <- project.findMarkers(typ, false, IResource.DEPTH_INFINITE)
+    } yield markers
+
+  def markersMessages(markers: List[IMarker]): List[String] =
+    markers.map(_.getAttribute(IMarker.MESSAGE).asInstanceOf[String])
 
   /** Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
@@ -72,7 +82,7 @@ object SDTTestUtils extends HasLogger {
   def setupProject(name: String, bundleName: String): IScalaProject =
     internalSetupProject(name, bundleName)
 
-  private [core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
+  private[core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
@@ -245,7 +255,7 @@ object SDTTestUtils extends HasLogger {
     names map (n => createProjectInWorkspace(n, true))
 
   private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
-    names map (n => internalCreateProjectInWorkspace(n, true))
+    names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
 
   def deleteProjects(projects: IScalaProject*): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
@@ -254,13 +264,15 @@ object SDTTestUtils extends HasLogger {
   }
 
   /** Wait until `pred` is true, or timeout (in ms). */
-  def waitUntil(timeout: Int)(pred: => Boolean): Unit = {
+  def waitUntil(timeout: Int, withTimeoutException: Boolean = false)(pred: => Boolean): Unit = {
     val start = System.currentTimeMillis()
     var cond = pred
     while ((System.currentTimeMillis() < start + timeout) && !cond) {
       Thread.sleep(100)
       cond = pred
     }
+    if (!cond && withTimeoutException)
+      throw new TimeoutException(s"Predicate is not fulfiled after declared time limit ($timeout millis).")
   }
 
   /**
@@ -290,17 +302,33 @@ object SDTTestUtils extends HasLogger {
         override lazy val project = scalaProject
       }
       projectSetup.project.presentationCompiler { c => f(c) }
-    }
-    finally deleteProjects(projectSetup.project)
+    } finally deleteProjects(projectSetup.project)
   }
 
   /** Create a project in the current workspace. If `withSourceRoot` is true,
    *  it creates a source folder called `src`.
    */
   def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): IScalaProject =
-    internalCreateProjectInWorkspace(projectName, withSourceRoot)
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
 
-  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): ScalaProject = {
+  def createProjectInWorkspace(projectName: String, withSrcOutputStructure: SrcPathOutputEntry): IScalaProject =
+    internalCreateProjectInWorkspace(projectName, withSrcOutputStructure)
+
+  type SrcPathOutputEntry = (IProject, IJavaProject) => Seq[IClasspathEntry]
+
+  private def withNoSourceRoot: SrcPathOutputEntry = (_, _) => Seq.empty[IClasspathEntry]
+
+  private def withSourceRootOnly: SrcPathOutputEntry = (thisProject, correspondingJavaProject) => {
+    val sourceFolder = thisProject.getFolder("/src")
+    sourceFolder.create(/* force = */ false, /* local = */ true, /* monitor = */ null)
+    val root = correspondingJavaProject.getPackageFragmentRoot(sourceFolder)
+    Seq(JavaCore.newSourceEntry(root.getPath()))
+  }
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean): ScalaProject =
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): ScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
     val workspaceRoot = workspace.getRoot()
     val project = workspaceRoot.getProject(projectName)
@@ -317,12 +345,7 @@ object SDTTestUtils extends HasLogger {
     val entries = new ArrayBuffer[IClasspathEntry]()
     entries += JavaRuntime.getDefaultJREContainerEntry()
 
-    if (withSourceRoot) {
-      val sourceFolder = project.getFolder("/src")
-      sourceFolder.create(false, true, null)
-      val root = javaProject.getPackageFragmentRoot(sourceFolder)
-      entries += JavaCore.newSourceEntry(root.getPath())
-    }
+    entries ++= withSourceFolders(project, javaProject)
 
     entries += JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId))
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)

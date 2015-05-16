@@ -104,6 +104,25 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
+  def openDocComment_topLevel_with_stringLitCommon() {
+    """
+    /**
+     * ""^
+     */
+    class Foo {
+    }
+    """ becomes
+    """
+    /**
+     * ""
+     * ^
+     */
+    class Foo {
+    }
+    """ after newline
+  }
+
+  @Test
   def openDocComment_nested() {
     """
     /** blah */

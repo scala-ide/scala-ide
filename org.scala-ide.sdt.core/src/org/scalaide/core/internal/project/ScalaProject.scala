@@ -419,28 +419,35 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   }
 
   private def prepareCompilerSettings(): Settings = {
-     val settings = ScalaPresentationCompiler.defaultScalaSettings()
-     initializeCompilerSettings(settings, isPCSetting(settings))
-     settings
+    val settings = ScalaPresentationCompiler.defaultScalaSettings()
+    initializeCompilerSettings(settings, isPCSetting(settings))
+    settings
   }
 
   /** Compiler settings that are honored by the presentation compiler. */
   private def isPCSetting(settings: Settings): Set[Settings#Setting] = {
     import settings.{ plugin => pluginSetting, _ }
-    Set(deprecation,
+
+    val compilerPluginSettings: Set[Settings#Setting] = Set(pluginOptions,
+      pluginSetting,
+      pluginsDir)
+
+    val generalSettings: Set[Settings#Setting] = Set(deprecation,
       unchecked,
-      pluginOptions,
       verbose,
       Xexperimental,
       future,
       Ylogcp,
-      pluginSetting,
-      pluginsDir,
       YpresentationDebug,
       YpresentationVerbose,
       YpresentationLog,
       YpresentationReplay,
       YpresentationDelay)
+
+    if (effectiveScalaInstallation().version == ScalaInstallation.platformInstallation.version)
+      generalSettings ++ compilerPluginSettings
+    else
+      generalSettings
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String) {
@@ -507,13 +514,13 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
         try {
           super.save()
         } catch {
-          case e:IOException =>
+          case e: IOException =>
             logger.error(s"An Exception occured saving the project-specific preferences for ${underlying.getName()} ! Your settings will not be persisted. Please report !")
-            throw(e)
-          }
+            throw e
         }
-
       }
+
+    }
     p.addPropertyChangeListener(compilerSettingsListener)
     p
   }
@@ -553,7 +560,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       val settings = ScalaPresentationCompiler.defaultScalaSettings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
       clearSettingsErrors()
       initializeCompilerSettings(settings, _ => true)
-      // source path should be emtpy. The build manager decides what files get recompiled when.
+      // source path should be empty. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
       // that file, using an AbstractFile/PlainFile instead of the EclipseResource instance. This later
       // causes problems if errors are reported against that file. Anyway, it's wrong to have a sourcepath
@@ -561,13 +568,21 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       settings.sourcepath.value = ""
 
       logger.info("BM: SBT enhanced Build Manager for " + IScalaPlugin().scalaVersion + " Scala library")
-      buildManager0 = new builder.zinc.EclipseSbtBuildManager(this, settings)
+
+      buildManager0 = {
+        val useScopeCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useScopesCompiler.name)
+        if (storage.getBoolean(useScopeCompilerProperty))
+          new SbtScopesBuildManager(this, settings)
+        else new ProjectsDependentSbtBuildManager(this, settings)
+      }
     }
     buildManager0
   }
 
   /* If true, then it means that all source files have to be reloaded */
-  def prepareBuild(): Boolean = if (!hasBeenBuilt) buildManager.invalidateAfterLoad else false
+  def prepareBuild(): Boolean = if (!hasBeenBuilt)
+    buildManager.invalidateAfterLoad
+  else false
 
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
     hasBeenBuilt = true
@@ -604,8 +619,8 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     clearAllBuildProblemMarkers()
     resetClasspathCheck()
 
-    if (buildManager0 != null)
-      buildManager0.clean(monitor)
+    if (buildManager != null)
+      buildManager.clean(monitor)
     cleanOutputFolders
     logger.info("Resetting compilers due to Project.clean")
     resetCompilers // reset them only after the output directory is emptied

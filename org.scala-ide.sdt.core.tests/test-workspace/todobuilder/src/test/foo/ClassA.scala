@@ -1,7 +1,8 @@
 package test.foo
 
+// FIXME fixme in Scala file
 class ClassFoo {
-  //TODO: this works
+  // TODO todo in Scala file
   def callMe() {
     println("Hello, world from Scala")
   }
