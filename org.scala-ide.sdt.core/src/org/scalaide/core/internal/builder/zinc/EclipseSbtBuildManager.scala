@@ -180,8 +180,13 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   }
 
   // take by-name argument because we need incOptions only when we have a cache miss
-  def latestAnalysis(incOptions: => IncOptions): Analysis =
+  override def latestAnalysis(incOptions: => IncOptions): Analysis =
     Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile, incOptions))
+
+  /**
+   * Knows nothing about output files.
+   */
+  override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] = None
 
   /** Inspired by IC.compile
    *

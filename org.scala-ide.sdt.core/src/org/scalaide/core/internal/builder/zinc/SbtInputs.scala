@@ -3,14 +3,19 @@ package org.scalaide.core.internal.builder.zinc
 import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.SubMonitor
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
 import sbt.ClasspathOptions
-import sbt.ScalaInstance
+import sbt.Logger.xlog2Log
 import sbt.classpath.ClasspathUtilities
 import sbt.compiler.AnalyzingCompiler
 import sbt.compiler.CompilerCache
@@ -54,13 +59,9 @@ class SbtInputs(installation: IScalaInstallation,
     if (f.isFile)
       Maybe.just(Analysis.Empty)
     else {
-      def containsProduct(project: IScalaProject): Boolean =
-        project.sourceOutputFolders exists {
-          case (_, outputFolder) => outputFolder.getLocation.toFile == f
-        }
-
       val analysis = allProjects.collectFirst {
-        case project if containsProduct(project) => project.buildManager.latestAnalysis(incOptions)
+        case project if project.buildManager.buildManagerOf(f).nonEmpty =>
+          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
       }
       Maybe.just(analysis.getOrElse(Analysis.Empty))
     }

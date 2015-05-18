@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.project
 
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
@@ -15,9 +14,9 @@ import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.project.scopes.BuildScopeUnit
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
-
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
+import java.io.File
 
 /** Manages of source compilation for all scopes.
  *  Refer to [[CompileScope]]
@@ -84,9 +83,10 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     }
   }
 
-  override def latestAnalysis(incOptions: => IncOptions): Analysis = {
-    Analysis.merge(buildScopeUnits.map { _.latestAnalysis(incOptions) })
-  }
+  override def latestAnalysis(incOptions: => IncOptions): Analysis = Analysis.Empty
+
+  override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
+    buildScopeUnits.find { _.buildManagerOf(outputFile).nonEmpty }
 }
 
 private case class ScopeUnitWithProjectsInError(owner: BuildScopeUnit, projectsInError: Seq[IProject])

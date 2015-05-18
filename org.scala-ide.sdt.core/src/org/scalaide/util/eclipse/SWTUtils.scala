@@ -25,11 +25,9 @@ object SWTUtils {
    */
   def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
 
-  /** Returns the currently active window for this workbench (if any). Returns
-   *  `null` if there is no active workbench window. Returns
-   *  `null` if called from a non-UI thread.
+  /** Returns the currently active window for this workbench (if any).
    *
-   *  @return the active workbench window, or `null` if there is
+   *  @return the active workbench window, or `None` if there is
    *         no active workbench window or if called from a non-UI thread
    */
   def getWorkbenchWindow: Option[IWorkbenchWindow] = {
