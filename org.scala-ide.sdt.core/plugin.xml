@@ -185,6 +185,14 @@
             id="scala.tools.eclipse.ScalaClassFileEditor">
             <contentTypeBinding contentTypeId="scala.tools.eclipse.scalaClass"/>
       </editor>
+      <editor
+            class="org.scalaide.ui.internal.editor.sbt.SbtEditor"
+            default="false"
+            filenames="*.sbt"
+            id="org.scala-ide.sdt.core.SbtEditor"
+            name="Sbt file editor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont">
+      </editor>
    </extension>
 
    <!-- Breakpoints for scala source/class editors -->
@@ -1011,6 +1019,10 @@
     <provider
       class="org.scalaide.core.internal.jdt.model.ScalaSourceFileProvider"
       file_extension="scala">
+    </provider>
+    <provider
+          class="org.scalaide.ui.internal.editor.sbt.SbtSourceFileProvider"
+          file_extension="sbt">
     </provider>
   </extension>
 
@@ -1884,6 +1896,13 @@
     </participant>
     <participant
           class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
+    </participant>
+ </extension>
+ <extension
+       point="org.eclipse.core.filebuffers.documentSetup">
+    <participant
+          class="org.scalaide.ui.internal.editor.sbt.SbtDocumentSetupParticipant"
+          extensions="sbt">
     </participant>
  </extension>
 </plugin>
