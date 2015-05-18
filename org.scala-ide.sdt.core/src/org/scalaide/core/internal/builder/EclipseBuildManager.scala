@@ -5,6 +5,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import sbt.inc.IncOptions
 import sbt.inc.Analysis
+import java.io.File
 
 /**
  * Abstraction which exposes sbt compiler to eclipse.
@@ -29,6 +30,12 @@ trait EclipseBuildManager {
 
   /** Gives back the latest dependencies analysis done by underlying compiler. */
   def latestAnalysis(incOptions: => IncOptions): Analysis
+
+  /**
+   * Finds build manager which built given file
+   * @return `Option[EclipseBuildManager]` when found or `None` otherwise
+   */
+  def buildManagerOf(outputFile: File): Option[EclipseBuildManager]
 }
 
 /** Keeps collected analysis persistently in store. This store is exposed outdoor. */

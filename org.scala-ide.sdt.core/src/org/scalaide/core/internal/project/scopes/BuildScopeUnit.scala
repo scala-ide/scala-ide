@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.project.scopes
 
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -15,9 +14,9 @@ import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.CompileScope
-
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
+import java.io.File
 
 /**
  * Manages compilation of sources for given scope.
@@ -71,14 +70,21 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
     } else true
   }
 
-  private def toCompile(sources: Set[IFile]) =
-    sources.filter { source =>
-      scope.isValidSourcePath(source.getProjectRelativePath)
-    }
+  private def toCompile(sources: Set[IFile]) = (for {
+    (src, _) <- srcOutputs
+    source <- sources if src.getProjectRelativePath.isPrefixOf(source.getProjectRelativePath)
+  } yield source).toSet
 
   override def canTrackDependencies: Boolean = delegate.canTrackDependencies
   override def invalidateAfterLoad: Boolean = delegate.invalidateAfterLoad
-  override def latestAnalysis(incOptions: => IncOptions): Analysis = delegate.latestAnalysis(incOptions)
+  override def latestAnalysis(incOptions: => IncOptions): Analysis =
+    delegate.latestAnalysis(incOptions)
+
+  override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
+    owningProject.sourceOutputFolders collectFirst {
+      case (sourceFolder, outputFolder) if outputFolder.getLocation.toFile == outputFile &&
+        scope.isValidSourcePath(sourceFolder.getProjectRelativePath) => this
+    }
 }
 
 private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owningProject: IScalaProject) {
