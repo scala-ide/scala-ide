@@ -17,6 +17,13 @@ private class Log4JAdapter private (logger: Log4JLogger) extends Logger {
   // is enabled to avoid the cost of constructing the {{{message}}}. And that is the
   // reason for passing {{{message}}} by-name.
 
+  def trace(message: => Any): Unit = {
+    if(logger.isTraceEnabled) logger.trace(message)
+  }
+
+  def trace(message: => Any, t: Throwable): Unit = {
+    if(logger.isTraceEnabled) logger.trace(message, t)
+  }
 
   def info(message: => Any) {
     if(logger.isInfoEnabled) logger.info(message)

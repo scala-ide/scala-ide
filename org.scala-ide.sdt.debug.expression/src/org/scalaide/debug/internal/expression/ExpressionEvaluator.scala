@@ -136,11 +136,13 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
       case exception: Throwable =>
         val codeAfterPhases = stringifyTreesAfterPhases(transformed.history)
         val message =
-          s"""Reflective compilation failed
-             |Trees transformation history:
+          s"Reflective compilation of: '$code' failed, full transformation history logged at 'TRACE' level"
+        val allHistory =
+          s"""Trees transformation history:
              |$codeAfterPhases
              |""".stripMargin
-        logger.error(message, exception)
+        logger.error(message)
+        logger.debug(allHistory, exception)
         throw exception
     }
   }
@@ -209,11 +211,13 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
           case e: Throwable =>
             val codeAfterPhases = stringifyTreesAfterPhases(lastData.history)
             val message =
-              s"""Applying phase: ${phase.phaseName} failed
-               |Trees before current transformation:
-               |$codeAfterPhases
-               |""".stripMargin
-            logger.error(message, e)
+              s"Applying phase: ${phase.phaseName} failed, full transformation history logged at 'TRACE' level"
+            val allHistory =
+              s"""Trees before current transformation:
+                 |$codeAfterPhases
+                 |""".stripMargin
+            logger.error(message)
+            logger.trace(allHistory, e)
             throw e
         }
     }
