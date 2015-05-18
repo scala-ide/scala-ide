@@ -71,6 +71,7 @@ import org.scalaide.ui.internal.editor.ScalaDocumentProvider
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.jdt.core.IClassFile
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.core.internal.statistics.Statistics
 
 object ScalaPlugin {
 
@@ -153,6 +154,10 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
+
+  private lazy val stats = new Statistics
+
+  def statistics = stats
 
   override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
     def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])

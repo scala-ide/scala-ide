@@ -188,4 +188,14 @@ object SWTUtils {
     mkLink(parent, """<a href="org.eclipse.ui.editors.preferencePages.Annotations">Text Editors/Annotations</a>""", style)(anchorToLinkText)
   }
 
+  /**
+   * Creates a label on a given `parent` whose layout is `GridLayout`.
+   */
+  def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
+    val lb = new Label(parent, SWT.NONE)
+    lb.setText(text)
+    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
+    lb
+  }
+
 }

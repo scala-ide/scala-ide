@@ -11,9 +11,12 @@ import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.statistics.Features.CreateMethod
 
-case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], override val defName: String,
-  override val target: AddMethodTarget, icu: InteractiveCompilationUnit, offset: Int, length: Int) extends AddValOrDefProposal with AddMethodProposal {
+case class CreateMethodProposal(
+  fullyQualifiedEnclosingType: Option[String], override val defName: String,
+  override val target: AddMethodTarget, icu: InteractiveCompilationUnit, offset: Int, length: Int)
+    extends AddValOrDefProposal(CreateMethod) with AddMethodProposal {
 
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 

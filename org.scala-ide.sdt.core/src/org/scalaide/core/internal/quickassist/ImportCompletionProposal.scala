@@ -7,13 +7,15 @@ import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.statistics.Features.ImportMissingMember
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
-case class ImportCompletionProposal(val importName: String)
+case class ImportCompletionProposal(importName: String)
     extends BasicCompletionProposal(
+        ImportMissingMember,
         relevance = RelevanceValues.ImportCompletionProposal,
         displayString = s"Import $importName",
         image = JavaUI.getSharedImages().getImage(ISharedImages.IMG_OBJS_IMPDECL))
@@ -24,7 +26,7 @@ case class ImportCompletionProposal(val importName: String)
    *
    * @param document the document into which to insert the proposed completion
    */
-  override def apply(document: IDocument): Unit = {
+  override def applyProposal(document: IDocument): Unit = {
     // First, try to insert with an AST transformation, if that fails, use the (old) method
     try {
       applyByASTTransformation(document)

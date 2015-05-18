@@ -1,19 +1,17 @@
 package org.scalaide.refactoring.internal
 package rename
 
+import scala.language.reflectiveCalls
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.analysis.NameValidation
 import scala.tools.refactoring.implementations
-import org.eclipse.core.resources.IFile
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
-import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.FullProjectIndex
-import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
-import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.refactoring.internal.ui.NewNameWizardPage
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.GlobalRename
+import org.scalaide.refactoring.internal.ui.NewNameWizardPage
 
 /**
  * This refactoring is used for all global rename refactorings and also from
@@ -27,7 +25,7 @@ class GlobalRename extends RefactoringExecutorWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 
   class RenameScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ScalaIdeRefactoring("Rename", file, start, end) with FullProjectIndex {
+    extends ScalaIdeRefactoring(GlobalRename, "Rename", file, start, end) with FullProjectIndex {
 
     val project = file.scalaProject
 

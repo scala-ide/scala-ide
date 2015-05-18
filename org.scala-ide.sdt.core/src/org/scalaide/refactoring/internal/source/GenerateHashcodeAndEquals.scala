@@ -5,6 +5,7 @@ import scala.tools.refactoring.implementations
 
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.GenerateHashcodeAndEquals
 import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
 
 import ui.GenerateHashcodeAndEqualsConfigurationPageGenerator
@@ -19,7 +20,7 @@ class GenerateHashcodeAndEquals extends RefactoringExecutorWithWizard {
   def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) = new GenerateHashcodeAndEqualsScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class GenerateHashcodeAndEqualsScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ClassParameterDrivenIdeRefactoring("Generate hashCode and equals", start, end, file) with GenerateHashcodeAndEqualsConfigurationPageGenerator {
+    extends ClassParameterDrivenIdeRefactoring(GenerateHashcodeAndEquals, "Generate hashCode and equals", start, end, file) with GenerateHashcodeAndEqualsConfigurationPageGenerator {
 
     val refactoring = withCompiler { c =>
       new implementations.GenerateHashcodeAndEquals {

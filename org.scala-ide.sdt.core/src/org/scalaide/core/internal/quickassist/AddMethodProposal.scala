@@ -6,7 +6,6 @@ import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddField
 import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-
 import org.eclipse.jface.text.IDocument
 import org.eclipse.text.edits.ReplaceEdit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
@@ -17,8 +16,10 @@ import org.scalaide.core.internal.quickassist.createmethod.TypeParameterList
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.core.internal.statistics.Features.Feature
 
-abstract class AddValOrDefProposal extends BasicCompletionProposal(
+abstract class AddValOrDefProposal(feature: Feature) extends BasicCompletionProposal(
+    feature,
     relevance = 90,
     displayString = "",
     image = ScalaImages.ADD_METHOD_PROPOSAL) {
@@ -29,7 +30,7 @@ abstract class AddValOrDefProposal extends BasicCompletionProposal(
   protected val className: Option[String]
   protected val defName: String
 
-  override def apply(document: IDocument): Unit = {
+  override def applyProposal(document: IDocument): Unit = {
     for {
       icu <- targetSourceFile
       //we must open the editor before doing the refactoring on the compilation unit:
