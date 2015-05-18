@@ -13,7 +13,7 @@ object Main {
 
   mySeq.foreach { a => println(a) }
 
-  def print(map: mutable.Map) {
+  def print(map: mutable.Map): Unit = {
     map.foreach { case (a, b) => println(s"$a: $b") }
   }
 }

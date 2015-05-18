@@ -6,7 +6,7 @@ trait T {
 
   def defInTrait() = "defInTrait"
 
-  def foo() {
+  def foo(): Unit = {
     // following line contains breakpoint, defined in TestValues.TraitsTestCase
     val bp = 1
   }

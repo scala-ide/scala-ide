@@ -12,7 +12,7 @@ private[log4j] class Log4JConfig(logManager: Log4JFacade) {
   private val layout = new PatternLayout("%d %5p [%t] - %c - %m%n")
   private val consoleAppender = new ConsoleAppender(layout, ConsoleAppender.SYSTEM_OUT)
 
-  def configure(logFile: File, preferredLogLevel: Log4JLevel) {
+  def configure(logFile: File, preferredLogLevel: Log4JLevel): Unit = {
     val appender = new RollingFileAppender(layout, logFile.getAbsolutePath, /*append*/ true)
 
     val rootLogger = logManager.getRootLogger
@@ -23,12 +23,12 @@ private[log4j] class Log4JConfig(logManager: Log4JFacade) {
       addConsoleAppender()
   }
 
-  def addConsoleAppender() {
+  def addConsoleAppender(): Unit = {
     val rootLogger = logManager.getRootLogger
     rootLogger.addAppender(consoleAppender)
   }
 
-  def removeConsoleAppender() {
+  def removeConsoleAppender(): Unit = {
     val rootLogger = logManager.getRootLogger
     rootLogger.removeAppender(consoleAppender)
   }

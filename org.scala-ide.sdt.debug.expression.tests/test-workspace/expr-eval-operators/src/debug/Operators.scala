@@ -34,7 +34,7 @@ object Operators extends App {
 
   val list = List(1, 2, 3)
 
-  def foo() {
+  def foo(): Unit = {
     val -- = 123
     var -:- = "456"
     // breakpoint here

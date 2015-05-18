@@ -18,43 +18,43 @@ private class Log4JAdapter private (logger: Log4JLogger) extends Logger {
   // reason for passing {{{message}}} by-name.
 
 
-  def info(message: => Any) {
+  def info(message: => Any): Unit = {
     if(logger.isInfoEnabled) logger.info(message)
   }
 
-  def info(message: => Any, t: Throwable) {
+  def info(message: => Any, t: Throwable): Unit = {
     if(logger.isInfoEnabled) logger.info(message, t)
   }
 
-  def debug(message: => Any) {
+  def debug(message: => Any): Unit = {
     if(logger.isDebugEnabled) logger.debug(message)
   }
 
-  def debug(message: => Any, t: Throwable) {
+  def debug(message: => Any, t: Throwable): Unit = {
     if(logger.isDebugEnabled) logger.debug(message, t)
   }
 
-  def warn(message: => Any) {
+  def warn(message: => Any): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.WARN)) logger.warn(message)
   }
 
-  def warn(message: => Any, t: Throwable) {
+  def warn(message: => Any, t: Throwable): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.WARN)) logger.warn(message, t)
   }
 
-  def error(message: => Any) {
+  def error(message: => Any): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.ERROR)) logger.error(message)
   }
 
-  def error(message: => Any, t: Throwable) {
+  def error(message: => Any, t: Throwable): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.ERROR)) logger.error(message, t)
   }
 
-  def fatal(message: => Any) {
+  def fatal(message: => Any): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.FATAL)) logger.fatal(message)
   }
 
-  def fatal(message: => Any, t: Throwable) {
+  def fatal(message: => Any, t: Throwable): Unit = {
     if(logger.isEnabledFor(org.apache.log4j.Level.FATAL)) logger.fatal(message, t)
   }
 }

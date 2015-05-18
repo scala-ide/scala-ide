@@ -18,12 +18,12 @@ object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlightin
 class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlightingTest) {
 
   @Before
-  def setPreferences() {
+  def setPreferences(): Unit = {
     IScalaPlugin().getPreferenceStore.setValue(ImplicitsPreferencePage.PConversionsOnly, false)
   }
 
   @Test
-  def implicitConversion() {
+  def implicitConversion(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
 
       val expected = List(
@@ -37,7 +37,7 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
   }
 
   @Test
-  def implicitConversionsFromPredef() {
+  def implicitConversionsFromPredef(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
 
       val expected = List(
@@ -50,11 +50,11 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
   }
 
   @Test
-  def implicitArguments() {
+  def implicitArguments(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
 
       val expected = List (
-        "Implicit arguments found: `takesImplArg` => `takesImplArg( implicits.ImplicitArguments.s )` [118, 12]"
+        "Implicit arguments found: `takesImplArg` => `takesImplArg( implicits.ImplicitArguments.s )` [124, 12]"
       )
       val actual = implicits(src, compiler)
 

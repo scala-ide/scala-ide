@@ -98,7 +98,7 @@ trait CompilerSupportTests {
     import org.mockito.Matchers._
 
     val o = mock(classOf[WorkingCopyOwner])
-    when(o.getProblemRequestor(any())).thenReturn(r)
+    when(o.getProblemRequestor(any[ICompilationUnit]())).thenReturn(r)
 
     val p = SDTTestUtils.createSourcePackage(pkgName)(project)
     val u = SDTTestUtils.createCompilationUnit(p, s"$fileName.java", source)

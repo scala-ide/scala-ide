@@ -5,9 +5,9 @@ class StepFilters {
 
   val immutableVal = "val"
 
-  def foo(a: String, b: String) {}
+  def foo(a: String, b: String): Unit = {}
 
-  def mainTest() {
+  def mainTest(): Unit = {
     mutableVar  // line 11
 
     immutableVal
@@ -19,7 +19,7 @@ class StepFilters {
     fors(); bridges()
   }
 
-  def fors() {
+  def fors(): Unit = {
     val lst = List("one", "two", "three")
 
     for (n <- lst) {      // line 25
@@ -28,7 +28,7 @@ class StepFilters {
     }
   }
 
-  def bridges() {
+  def bridges(): Unit = {
     val c: Base[Int] = new Concrete
 
     c.base(10)  // line 34
@@ -54,7 +54,7 @@ class Concrete extends Base[Int] {
 
 object StepFilters {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     new StepFilters().mainTest()
   }
 

@@ -132,7 +132,7 @@ object EditorPreferencePage {
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     store.setDefault(P_ENABLE_SMART_BRACKETS, false)
     store.setDefault(P_ENABLE_SMART_BRACES, false)

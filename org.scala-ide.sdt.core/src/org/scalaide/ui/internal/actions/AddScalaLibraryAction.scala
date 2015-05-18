@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IProject
 import org.scalaide.core.internal.project.Nature
 
 class AddScalaLibraryAction extends AbstractPopupAction {
-  def performAction(project: IProject) {
+  def performAction(project: IProject): Unit = {
     Nature.addScalaLibAndSave(project)
   }
 }

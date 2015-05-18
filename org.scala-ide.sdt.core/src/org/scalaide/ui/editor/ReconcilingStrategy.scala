@@ -12,17 +12,17 @@ import org.eclipse.core.runtime.IProgressMonitor
 class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
   private var document: Option[IDocument] = None
 
-  override def setDocument(doc: IDocument) {
+  override def setDocument(doc: IDocument): Unit = {
     document.foreach(_.removeDocumentListener(documentListener))
     document = Option(doc)
     document.foreach(_.addDocumentListener(documentListener))
   }
 
-  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion) {
+  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
     logger.debug("Incremental reconciliation not implemented.")
   }
 
-  override def reconcile(partition: IRegion) {
+  override def reconcile(partition: IRegion): Unit = {
     for (doc <- document) {
       val errors = sourceEditor.getInteractiveCompilationUnit.forceReconcile()
       sourceEditor.updateErrorAnnotations(errors)

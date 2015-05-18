@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import org.scalaide.debug.internal.expression.SimpleInvokeOnObjectRef
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy

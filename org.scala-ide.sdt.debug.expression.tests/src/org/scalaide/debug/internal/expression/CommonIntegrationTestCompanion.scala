@@ -5,7 +5,7 @@ package org.scalaide.debug.internal.expression
 
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.{NullProgressMonitor ⇒ NPM}
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -39,8 +39,8 @@ class CommonIntegrationTestCompanion(projectName: String)
   }
 
   protected def refreshBinaryFiles(): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NPM)
+    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NPM)
   }
 
   protected def initializeEvaluator(session: ScalaDebugTestSession): JdiExpressionEvaluator = {

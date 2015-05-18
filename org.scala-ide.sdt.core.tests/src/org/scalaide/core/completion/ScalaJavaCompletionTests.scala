@@ -23,7 +23,7 @@ object ScalaJavaCompletionTests extends TestProjectSetup("completion")
 class ScalaJavaCompletionTests {
   import ScalaJavaCompletionTests._
 
-  private def runTest(pathToClass: String, expectedCompletions: List[List[String]]) {
+  private def runTest(pathToClass: String, expectedCompletions: List[List[String]]): Unit = {
     // get the unit
     val unit = compilationUnit(pathToClass)
     // make it a working copy
@@ -61,7 +61,7 @@ class ScalaJavaCompletionTests {
    * Test the completion when trying to call the method on a reference.
    */
   @Test
-  def ticket1000412_reference() {
+  def ticket1000412_reference(): Unit = {
     val oracle = List(
       noCompletion, // outsideTypeDeclaration
       //allCompletions, // var1
@@ -91,7 +91,7 @@ class ScalaJavaCompletionTests {
    * Test the completion when trying to call the method when the class extends the class containing the method.
    */
   @Test
-  def ticket1000412_extends() {
+  def ticket1000412_extends(): Unit = {
     val oracle = List(
       allCompletions, // var11
       oneCompletion, // var12

@@ -50,7 +50,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDef() {
+  def assistAbstrDef(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo: Int
@@ -62,7 +62,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrVal() {
+  def assistAbstrVal(): Unit = {
     assistsFor("""
         trait TestTrait {
           val foo: Int
@@ -74,7 +74,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrVar() {
+  def assistAbstrVar(): Unit = {
     assistsFor("""
         trait TestTrait {
           var foo: Int
@@ -86,7 +86,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithParams1() {
+  def assistAbstrDefWithParams1(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo(x: Double): Int
@@ -98,7 +98,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithParams2() {
+  def assistAbstrDefWithParams2(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo(x: Double, y: Map[Int, Float]): Int
@@ -110,7 +110,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithParams3() {
+  def assistAbstrDefWithParams3(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo(x: Double, y: Int)(z: Int): Int
@@ -122,7 +122,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithParams4() {
+  def assistAbstrDefWithParams4(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo(x: Double, y: Int)(w: Int)(z: String): Int
@@ -134,7 +134,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithParams5() {
+  def assistAbstrDefWithParams5(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo(x: Double, y: Int)()(z: String): Int
@@ -146,7 +146,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithTypeParams1() {
+  def assistAbstrDefWithTypeParams1(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo[T](y: Int): Int
@@ -158,7 +158,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistAbstrDefWithTypeParams2() {
+  def assistAbstrDefWithTypeParams2(): Unit = {
     assistsFor("""
         trait TestTrait {
           def foo[X, Y, Z](y: Int): Int
@@ -170,7 +170,7 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistNoAbstrDef() {
+  def assistNoAbstrDef(): Unit = {
     noAssistsFor("""
         class Test extends TestTrait {
           ^
@@ -202,32 +202,32 @@ class ImplAbstractMemberTest extends QuickAssistTestHelper {
   """.stripMargin
 
   @Test
-  def assistAbstrDefNumInClass() {
+  def assistAbstrDefNumInClass(): Unit = {
     assistsNumFor(testEnv("class"), 8)
   }
 
   @Test
-  def assistAbstrDefNumInAbstrClass() {
+  def assistAbstrDefNumInAbstrClass(): Unit = {
     assistsNumFor(testEnv("abstract class"), 8)
   }
 
   @Test
-  def assistAbstrDefNumInTrait() {
+  def assistAbstrDefNumInTrait(): Unit = {
     assistsNumFor(testEnv("trait"), 8)
   }
 
   @Test
-  def assistAbstrDefNumInClassWithMethod() {
+  def assistAbstrDefNumInClassWithMethod(): Unit = {
     assistsNumFor(testEnv("class", "def foo3 = 42.0"), 7)
   }
 
   @Test
-  def assistAbstrDefNumInAbstrClassWithMethod() {
+  def assistAbstrDefNumInAbstrClassWithMethod(): Unit = {
     assistsNumFor(testEnv("abstract class", "def foo3 = 42.0"), 7)
   }
 
   @Test
-  def assistAbstrDefNumInTraitWithMethod() {
+  def assistAbstrDefNumInTraitWithMethod(): Unit = {
     assistsNumFor(testEnv("trait", "def foo3 = 42.0"), 7)
   }
 }

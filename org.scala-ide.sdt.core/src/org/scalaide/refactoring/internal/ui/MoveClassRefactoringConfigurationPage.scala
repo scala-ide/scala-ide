@@ -43,7 +43,7 @@ class MoveClassRefactoringConfigurationPage(
   private var destinationField: TreeViewer = _
   private var moveSelectedClass: Button = _
 
-  def createControl(parent: Composite) {
+  def createControl(parent: Composite): Unit = {
     initializeDialogUnits(parent)
 
     val composite = new Composite(parent, SWT.NONE)
@@ -59,7 +59,7 @@ class MoveClassRefactoringConfigurationPage(
     button.setText("Create New Package...")
 
     button.addSelectionListener(new SelectionAdapter {
-      override def widgetSelected(e: SelectionEvent) {
+      override def widgetSelected(e: SelectionEvent): Unit = {
         val createTargetQueries = new CreateTargetQueries(parent.getShell)
         val createdTarget = createTargetQueries.createNewPackageQuery.getCreatedTarget(destinationField.getSelection)
         destinationField.refresh()
@@ -99,7 +99,7 @@ class MoveClassRefactoringConfigurationPage(
     destinationField.expandAll
     destinationField.addSelectionChangedListener(new ISelectionChangedListener {
       var subsequentSelection = false
-      def selectionChanged(event: SelectionChangedEvent) {
+      def selectionChanged(event: SelectionChangedEvent): Unit = {
         if (subsequentSelection) {
           validatePage
         } else {
@@ -121,7 +121,7 @@ class MoveClassRefactoringConfigurationPage(
     setControl(composite)
   }
 
-  override def setVisible(visible: Boolean) {
+  override def setVisible(visible: Boolean): Unit = {
     if (visible) {
       destinationField.getTree.setFocus
       setErrorMessage(null) // no error messages until user interacts
@@ -129,7 +129,7 @@ class MoveClassRefactoringConfigurationPage(
     super.setVisible(visible)
   }
 
-  private def validatePage() {
+  private def validatePage(): Unit = {
     val status = new RefactoringStatus
 
     getSelectedPackage match {
@@ -155,7 +155,7 @@ class MoveClassRefactoringConfigurationPage(
     super.getNextPage
   }
 
-  private def initializeRefactoring() {
+  private def initializeRefactoring(): Unit = {
     getSelectedPackage foreach { pkg =>
       setPackageFragment(pkg)
       if (moveSelectedClass != null) {

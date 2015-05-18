@@ -14,7 +14,7 @@ import scala.collection.immutable
 trait QuickAssistTest {
   var project: IScalaProject = _
 
-  def create(name: String) {
+  def create(name: String): Unit = {
     project = SDTTestUtils.createProjectInWorkspace(name)
   }
 
@@ -23,7 +23,7 @@ trait QuickAssistTest {
     SDTTestUtils.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
-  def delete() {
+  def delete(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 }

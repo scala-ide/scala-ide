@@ -9,7 +9,7 @@ import org.scalaide.core.semantichighlighting.classifier.RegionParser.EmbeddedSu
 
 class RegionParserTest {
   @Test
-  def testDelimitedRegions() {
+  def testDelimitedRegions(): Unit = {
     case class TestCase(input: String, expected: Map[IRegion, String])
 
     val testCases = Seq(
@@ -25,7 +25,7 @@ class RegionParserTest {
   }
 
   @Test
-  def testSubstrRegions() {
+  def testSubstrRegions(): Unit = {
     case class TestCase(expected: Map[IRegion, EmbeddedSubstr], input: String, substrs: EmbeddedSubstr*)
     def toRegion(offset: Int, len: Int) = new Region(offset, len)
 

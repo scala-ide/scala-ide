@@ -6,7 +6,7 @@ import org.junit._
 class TemplateValTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_template_val() {
+  def basic_template_val(): Unit = {
     checkSymbolClassification("""
       object A {
         val xxxxxx = 12
@@ -18,7 +18,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def set_in_predef_is_a_val() {
+  def set_in_predef_is_a_val(): Unit = {
     checkSymbolClassification("""
       object A {
         Set(1, 2, 3)
@@ -31,7 +31,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
 
 
   @Test
-  def backticked_identifiers() {
+  def backticked_identifiers(): Unit = {
     checkSymbolClassification("""
       class A {
         val `identifier` = 42
@@ -45,7 +45,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def vals_from_objects() {
+  def vals_from_objects(): Unit = {
     checkSymbolClassification("""
       object X { val objectMember = 42 }
       class A { X.objectMember }""", """
@@ -55,7 +55,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def self_references_are_classified_as_template_vals() {
+  def self_references_are_classified_as_template_vals(): Unit = {
     checkSymbolClassification("""
       class A { self =>
         self
@@ -69,7 +69,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_class_params() {
+  def case_class_params(): Unit = {
     checkSymbolClassification("""
       case class A(xxxxxx: String)
       """, """
@@ -79,7 +79,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def class_params() {
+  def class_params(): Unit = {
     checkSymbolClassification("""
       class A(xxxxxxx: String)
       class B(val xxxxxx: String)
@@ -91,7 +91,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def class_params_passed_into_super_constructor() {
+  def class_params_passed_into_super_constructor(): Unit = {
     checkSymbolClassification("""
       class A(xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
@@ -101,7 +101,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def val_class_params_passed_into_super_constructor() {
+  def val_class_params_passed_into_super_constructor(): Unit = {
     checkSymbolClassification("""
       class A(val xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
@@ -111,7 +111,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def class_params_passed_into_super_constructor_as_expression() {
+  def class_params_passed_into_super_constructor_as_expression(): Unit = {
     checkSymbolClassification("""
       class A(xxxxxx: String) extends RuntimeException(xxxxxx + "")
       """, """
@@ -121,7 +121,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def self_references_with_ascription() {
+  def self_references_with_ascription(): Unit = {
     checkSymbolClassification("""
       class A { self: AnyRef =>
         self
@@ -133,7 +133,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def static_import() {
+  def static_import(): Unit = {
     checkSymbolClassification("""
       import java.io.File.pathSeparator
       object A {
@@ -147,7 +147,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def created_from_pair() {
+  def created_from_pair(): Unit = {
     checkSymbolClassification("""
       class X {
         val (xxxxxx, yyyyyy) = (1, 2)
@@ -159,7 +159,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def created_from_case_deconstruction() {
+  def created_from_case_deconstruction(): Unit = {
     checkSymbolClassification("""
       class X {
         val Some(xxxxxx) = Some(42)
@@ -172,7 +172,7 @@ class TemplateValTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001261)")
-  def in_package_object() {
+  def in_package_object(): Unit = {
     checkSymbolClassification("""
       object X {
         val pv = packageObject.packageVal

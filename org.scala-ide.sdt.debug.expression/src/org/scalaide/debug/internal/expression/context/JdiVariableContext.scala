@@ -72,8 +72,6 @@ private[context] trait JdiVariableContext
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
   override def typeOf(variableName: TermName): Option[VariableType] = {
-    import Debugger._
-
     // null-safe Value.type
     def typeOfValue(value: Value): Type = if (value == null) null else value.`type`()
 

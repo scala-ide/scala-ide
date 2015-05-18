@@ -25,8 +25,8 @@ import org.scalaide.util.ScalaWordFinder
 import org.scalaide.ui.completion.ScalaCompletionProposal
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
-  override def sessionStarted() {}
-  override def sessionEnded() {}
+  override def sessionStarted(): Unit = {}
+  override def sessionEnded(): Unit = {}
   override def getErrorMessage() = null
 
   override def computeContextInformation(context : ContentAssistInvocationContext,

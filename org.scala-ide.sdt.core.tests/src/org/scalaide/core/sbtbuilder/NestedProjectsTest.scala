@@ -57,7 +57,7 @@ class NestedProjectsTest {
    * happening any more.
    */
   @Test
-  def checkJavaCompilesInNestedProject() {
+  def checkJavaCompilesInNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -77,7 +77,7 @@ class NestedProjectsTest {
   }
 
   @Test
-  def checkErrorsAreReported_onTheNestedProject() {
+  def checkErrorsAreReported_onTheNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)

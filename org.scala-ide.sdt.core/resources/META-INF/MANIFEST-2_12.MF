@@ -51,7 +51,9 @@ Require-Bundle:
  org.eclipse.ui.browser,
  org.eclipse.nebula.widgets.tablecombo,
  org.eclipse.e4.ui.workbench,
- org.eclipse.e4.ui.model.workbench
+ org.eclipse.e4.ui.model.workbench,
+ org.eclipse.e4.core.commands,
+ org.eclipse.e4.core.contexts
 Import-Package: 
  org.eclipse.osgi.service.datalocation,
  org.eclipse.core.runtime,

@@ -17,7 +17,7 @@ class StyledTextContentAdapter extends IControlContentAdapter with IControlConte
 
   override def getControlContents(control: Control): String = control.getText()
 
-  override def setControlContents(control: Control, text: String, cursorPosition: Int) {
+  override def setControlContents(control: Control, text: String, cursorPosition: Int): Unit = {
     control.setText(text)
     control.setSelection(cursorPosition, cursorPosition)
   }
@@ -25,7 +25,7 @@ class StyledTextContentAdapter extends IControlContentAdapter with IControlConte
   /**
    * Inserts remaining text from the chosen proposal and moves cursor to the end of it
    */
-  override def insertControlContents(control: Control, text: String, cursorPosition: Int) {
+  override def insertControlContents(control: Control, text: String, cursorPosition: Int): Unit = {
     val selection: Point = control.getSelection()
     control.insert(text)
     control.setSelection(selection.x + text.length(), selection.x + text.length())

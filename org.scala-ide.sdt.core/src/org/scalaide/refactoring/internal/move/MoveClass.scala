@@ -43,7 +43,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
 
     def refactoringParameters = refactoring.RefactoringParameters(target.getElementName, moveSingleImpl)
 
-    def setMoveSingleImpl(moveSingle: Boolean) {
+    def setMoveSingleImpl(moveSingle: Boolean): Unit = {
       if(moveSingle && preparationResult.isRight) {
         // the function is never called if we don't have a value:
         moveSingleImpl = preparationResult.right.get
@@ -115,8 +115,6 @@ class MoveClass extends RefactoringExecutorWithWizard {
         }
         buildFullProjectIndex(pm, toMove)
       }
-
-      import scala.language.reflectiveCalls
 
       refactoring.index = index
 

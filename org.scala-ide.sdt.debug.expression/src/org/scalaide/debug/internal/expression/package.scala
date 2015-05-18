@@ -3,8 +3,6 @@
  */
 package org.scalaide.debug.internal
 
-import scala.language.implicitConversions
-
 import com.sun.jdi.Method
 import com.sun.jdi.ClassType
 import com.sun.jdi.ObjectReference

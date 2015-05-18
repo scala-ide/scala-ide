@@ -22,12 +22,12 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
 
   private var regionOpt: Option[IRegion] = None
 
-  def formatterStarts(context: IFormattingContext) {
+  def formatterStarts(context: IFormattingContext): Unit = {
     this.document = context.getProperty(FormattingContextProperties.CONTEXT_MEDIUM).asInstanceOf[IDocument]
     this.regionOpt = Option(context.getProperty(FormattingContextProperties.CONTEXT_REGION).asInstanceOf[IRegion])
   }
 
-  def format() {
+  def format(): Unit = {
     val preferences = FormatterPreferences.getPreferences(getProject)
     val edits =
       try ScalaFormatter.formatAsEdits(document.get, preferences, Some(getDefaultLineDelimiter(document)))
@@ -67,7 +67,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     (newOffset, newLength)
   }
 
-  private def applyEdits(edits: List[EclipseTextEdit]) {
+  private def applyEdits(edits: List[EclipseTextEdit]): Unit = {
     val multiEdit = new MultiTextEdit
     multiEdit.addChildren(edits.toArray)
 
@@ -77,7 +77,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     undoManager.endCompoundChange()
   }
 
-  def formatterStops() {
+  def formatterStops(): Unit = {
     this.document = null
     this.regionOpt = None
   }
@@ -87,6 +87,6 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
 
   def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null
 
-  def formatterStarts(initialIndentation: String) {}
+  def formatterStarts(initialIndentation: String): Unit = {}
 
 }

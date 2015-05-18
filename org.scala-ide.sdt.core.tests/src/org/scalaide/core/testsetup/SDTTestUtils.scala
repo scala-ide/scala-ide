@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
@@ -46,7 +47,7 @@ object SDTTestUtils extends HasLogger {
 
   enableAutoBuild(false)
   // Be nice to Mac users and use a default encoding other than MacRoman
-  ResourcesPlugin.getPlugin().getPluginPreferences().setValue(ResourcesPlugin.PREF_ENCODING, "UTF-8")
+  InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).put(ResourcesPlugin.PREF_ENCODING, "UTF-8")
 
   lazy val workspace = ResourcesPlugin.getWorkspace
 

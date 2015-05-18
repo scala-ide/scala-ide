@@ -29,11 +29,11 @@ object FormatterPreferences {
 
     def apply(pref: PreferenceDescriptor[Int]) = preferenceStore.getInt(pref.eclipseKey)
 
-    def update(pref: PreferenceDescriptor[Boolean], value: Boolean) { preferenceStore.setValue(pref.eclipseKey, value) }
+    def update(pref: PreferenceDescriptor[Boolean], value: Boolean): Unit = { preferenceStore.setValue(pref.eclipseKey, value) }
 
-    def update(pref: PreferenceDescriptor[Int], value: Int) { preferenceStore.setValue(pref.eclipseKey, value) }
+    def update(pref: PreferenceDescriptor[Int], value: Int): Unit = { preferenceStore.setValue(pref.eclipseKey, value) }
 
-    def importPreferences(preferences: IFormattingPreferences) {
+    def importPreferences(preferences: IFormattingPreferences): Unit = {
       for (preference <- AllPreferences.preferences)
         preference match {
           case bpd: BooleanPreferenceDescriptor =>

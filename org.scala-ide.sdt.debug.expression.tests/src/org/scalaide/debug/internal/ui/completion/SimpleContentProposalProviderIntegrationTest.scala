@@ -44,7 +44,7 @@ class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(S
     checkProposal(proposals.head, "", prefix + """: Cannot load returned type - debug.CodeCompletion$""")
   }
 
-  private def checkProposal(p: IContentProposal, expectedContent: String, expectedLabel: String) {
+  private def checkProposal(p: IContentProposal, expectedContent: String, expectedLabel: String): Unit = {
     assertEquals(expectedContent, p.getContent())
     assertEquals(expectedLabel, p.getLabel())
     assertNull(p.getDescription())

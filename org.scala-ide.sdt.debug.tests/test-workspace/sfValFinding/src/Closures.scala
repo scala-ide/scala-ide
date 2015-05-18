@@ -3,7 +3,7 @@ package valfinding
 class ClosureTest {
   val fieldC = "captured field"
 
-  def useClosures() {
+  def useClosures(): Unit = {
     val localValC = "Local val captured"
     val shadowedInClosure = "This shouldn't be shown"
 
@@ -17,7 +17,7 @@ class ClosureTest {
     }
   }
 
-  def localSimilar {
+  def localSimilar: Unit = {
     val closureParam /*{local of another method named similarly to a local of closure}*/ = "SSS"
   }
 }

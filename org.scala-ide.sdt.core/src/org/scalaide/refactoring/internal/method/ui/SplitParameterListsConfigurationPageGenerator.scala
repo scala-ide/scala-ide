@@ -32,7 +32,7 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
         param: ValDef,
         paramsWithSeparators: List[ParamOrSeparator],
         splitBtn: Button,
-        mergeBtn: Button) {
+        mergeBtn: Button): Unit = {
       mergeBtn.setEnabled(false)
       splitBtn.setEnabled(isInSplitPosition(param, paramsWithSeparators))
     }
@@ -44,7 +44,7 @@ trait SplitParameterListsConfigurationPageGenerator extends MethodSignatureRefac
       separator: ParamListSeparator,
       paramsWithSeparators: List[ParamOrSeparator],
       splitBtn: Button,
-      mergeBtn: Button) {
+      mergeBtn: Button): Unit = {
       separator match {
         case OriginalSeparator(_) => mergeBtn.setEnabled(false)
         case InsertedSeparator(_, _) => mergeBtn.setEnabled(true)

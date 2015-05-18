@@ -11,7 +11,7 @@ import org.junit.AfterClass
 
 object ScalaDebugResumeTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   @AfterClass
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 }
@@ -25,13 +25,13 @@ class ScalaDebugResumeTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def refreshBinaryFiles() {
+  def refreshBinaryFiles(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
@@ -39,7 +39,7 @@ class ScalaDebugResumeTest {
   }
 
   @Test
-  def resumeToBreakpoindAndToCompletion() {
+  def resumeToBreakpoindAndToCompletion(): Unit = {
 
     session = ScalaDebugTestSession(file("ForComprehensionListString.launch"))
 

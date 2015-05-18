@@ -10,7 +10,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
 
-  def withCompilationUnitAndCompiler(path: String)(test: (IScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
+  def withCompilationUnitAndCompiler(path: String)(test: (IScalaPresentationCompiler, ScalaCompilationUnit) => Unit): Unit = {
 
     val unit = projectSetup.scalaCompilationUnit(path)
 
@@ -24,7 +24,7 @@ class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
     }
   }
 
-  def assertSameLists(l1: List[String], l2: List[String]) {
+  def assertSameLists(l1: List[String], l2: List[String]): Unit = {
     Assert.assertEquals(l1.mkString("\n"), l2.mkString("\n"))
   }
 }

@@ -30,7 +30,7 @@ class ConstantPool(bytes: Array[Byte], length: Int) {
   // populate the constant pool
   init()
 
-  def init() {
+  def init(): Unit = {
     var i = 1 // according to the JVM Spec, the constant pool index starts at 1!
     var idx = 0
     while (i < length) {
@@ -132,7 +132,7 @@ object ConstantPool {
     val file = AbstractFile.getFile(classFile)
     val reader = new AbstractFileReader(file)
 
-    def parseHeader() {
+    def parseHeader(): Unit = {
       if (!(reader.nextInt == 0xCAFEBABE))
         throw new IllegalArgumentException("Invalid classfile: " + classFile.getName())
     }

@@ -18,7 +18,7 @@ import org.scalaide.core.internal.builder.ProjectsCleanJob
 
 class ProjectsCleanJobTest {
 
-  @Test def clean_dependent_project_does_not_result_in_exception() {
+  @Test def clean_dependent_project_does_not_result_in_exception(): Unit = {
     // The latch is used to have a deterministic (sequential) execution of the test.
     val latch: CountDownLatch = new CountDownLatch(1)
     // this listener gets called the moment the `ProjectsCleanJob` has finished run
@@ -62,8 +62,6 @@ class ProjectsCleanJobTest {
       util.control.Exception.ignoring(classOf[Exception]) { SDTTestUtils.deleteProjects(prjA, prjB) }
     }
   }
-
-  import scala.language.implicitConversions
 
   private implicit def anonResourceChangeListener(f: IResourceChangeEvent => Unit): IResourceChangeListener = new IResourceChangeListener() {
     override def resourceChanged(event: IResourceChangeEvent): Unit = f(event)

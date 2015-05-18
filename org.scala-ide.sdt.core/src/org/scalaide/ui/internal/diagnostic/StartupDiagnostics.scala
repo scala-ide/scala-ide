@@ -39,7 +39,7 @@ object StartupDiagnostics extends HasLogger {
     suggestDiagnostics(Diagnostics.insufficientHeap, firstInstall, ask)
   }
 
-  def run() {
+  def run(): Unit = {
     val YES_ACTION = 0
     val NO_ACTION = 1
     val NEVER_ACTION = 2

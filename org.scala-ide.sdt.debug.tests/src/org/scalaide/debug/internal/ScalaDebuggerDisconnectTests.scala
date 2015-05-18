@@ -21,7 +21,7 @@ object ScalaDebuggerDisconnectTests extends TestProjectSetup("debug", bundleName
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
   @AfterClass
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 }
@@ -44,7 +44,7 @@ class ScalaDebuggerDisconnectTests {
       case _: InterruptedException => // do nothing
     }
 
-    override def handleDebugEvents(events: Array[DebugEvent]) {
+    override def handleDebugEvents(events: Array[DebugEvent]): Unit = {
       for (e <- events) e.getKind() match {
         case DebugEvent.TERMINATE if e.getSource().isInstanceOf[IProcess] =>
           processTerminated.countDown()
@@ -56,7 +56,7 @@ class ScalaDebuggerDisconnectTests {
   private var processListener: ProcListener = _
 
   @Before
-  def initializeTests() {
+  def initializeTests(): Unit = {
     if (!initialized) {
       project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
       project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
@@ -68,7 +68,7 @@ class ScalaDebuggerDisconnectTests {
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
@@ -76,7 +76,7 @@ class ScalaDebuggerDisconnectTests {
   }
 
   @Test
-  def BreakpointHitAndTerminateWorks() {
+  def BreakpointHitAndTerminateWorks(): Unit = {
     session = initDebugSession("StepFilters")
 
     session.runToLine(TYPENAME_STEP_FILTERS, 37)
@@ -90,7 +90,7 @@ class ScalaDebuggerDisconnectTests {
   }
 
   @Test
-  def NormalTerminationCleansup() {
+  def NormalTerminationCleansup(): Unit = {
     session = initDebugSession("StepFilters")
 
     session.runToLine(TYPENAME_STEP_FILTERS, 37)

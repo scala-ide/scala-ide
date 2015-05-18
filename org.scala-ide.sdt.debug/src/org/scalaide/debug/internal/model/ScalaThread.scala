@@ -212,7 +212,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * release all resources
    */
-  def dispose() {
+  def dispose(): Unit = {
     stackFrames = Nil
     companionActor ! TerminatedFromScala
   }
@@ -241,7 +241,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * Set the this object internal states to resumed.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def resume(eventDetail: Int) {
+  private[model] def resume(eventDetail: Int): Unit = {
     suspended = false
     stackFrames = Nil
     fireResumeEvent(eventDetail)

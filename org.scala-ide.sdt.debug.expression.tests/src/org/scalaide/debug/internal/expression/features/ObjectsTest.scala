@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.Ignore
 import org.junit.Test
 
 import org.scalaide.debug.internal.expression.BaseIntegrationTest

@@ -11,7 +11,7 @@ class ScalaRefactoringWizard(
     flags: Int = RefactoringWizard.DIALOG_BASED_USER_INTERFACE)
       extends RefactoringWizard(refactoring, flags) {
 
-  def addUserInputPages() {
+  def addUserInputPages(): Unit = {
     refactoring.getPages foreach addPage
   }
 }

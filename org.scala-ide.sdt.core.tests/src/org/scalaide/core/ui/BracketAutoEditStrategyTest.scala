@@ -10,60 +10,60 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   val strategy = new BracketAutoEditStrategy(prefStore)
 
   @Before
-  def startUp() {
+  def startUp(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, true)
   }
 
   @Test
-  def auto_closing_opening_brace() {
+  def auto_closing_opening_brace(): Unit = {
     test(input = "^", expectedOutput = "{^}", operation = Add("{"))
   }
 
   @Test
-  def auto_closing_opening_brace_on_disabled_feature() {
+  def auto_closing_opening_brace_on_disabled_feature(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "^", expectedOutput = "{^}", operation = Add("{"))
   }
 
   @Test
-  def remove_brace_pair() {
+  def remove_brace_pair(): Unit = {
     test(input = "{^}", expectedOutput = "^", operation = Remove("{"))
   }
 
   @Test
-  def remove_into_brace_pair() {
+  def remove_into_brace_pair(): Unit = {
     test(input = "{}abc^", expectedOutput = "{^", operation = Remove("}abc"))
   }
 
   @Test
-  def jump_over_closing_brace() {
+  def jump_over_closing_brace(): Unit = {
     test(input = "}^}", expectedOutput = "}}^", operation = Add("}"))
   }
 
   @Test
-  def add_closing_brace() {
+  def add_closing_brace(): Unit = {
     test(input = "^", expectedOutput = "}^", operation = Add("}"))
   }
 
   @Test
-  def remove_opening_brace() {
+  def remove_opening_brace(): Unit = {
     test(input = "{^", expectedOutput = "^", operation = Remove("{"))
   }
 
   @Test
-  def auto_closing_nested_opening_brace() {
+  def auto_closing_nested_opening_brace(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "{^}", expectedOutput = "{{^}}", operation = Add("{"))
   }
 
   @Test
-  def auto_closing_brace_after_pending_closing_brace() {
+  def auto_closing_brace_after_pending_closing_brace(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "} map {^}", expectedOutput = "} map {{^}}", operation = Add("{"))
   }
 
   @Test
-  def prevent_auto_closing_brace_when_caret_before_non_white_space() {
+  def prevent_auto_closing_brace_when_caret_before_non_white_space(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map ^(_+1)",
@@ -72,7 +72,7 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def not_prevent_auto_closing_brace_when_caret_non_white_space() {
+  def not_prevent_auto_closing_brace_when_caret_non_white_space(): Unit = {
     test(
         input = "List(1) map ^(_+1)",
         expectedOutput = "List(1) map {^}(_+1)",
@@ -80,7 +80,7 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def auto_closing_brace_when_caret_before_white_space() {
+  def auto_closing_brace_when_caret_before_white_space(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map^ (_+1)",
@@ -89,13 +89,13 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def auto_closing_brace_before_white_space() {
+  def auto_closing_brace_before_white_space(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(input = "^   ", expectedOutput = "{^}   ", operation = Add("{"))
   }
 
   @Test
-  def no_auto_closing_brace_on_missing_opening_bracket() {
+  def no_auto_closing_brace_on_missing_opening_bracket(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map {^}}",
@@ -104,7 +104,7 @@ class BracketAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def auto_closing_brace_before_matching_braces() {
+  def auto_closing_brace_before_matching_braces(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_BRACES, false)
     test(
         input = "List(1) map {^{}}",

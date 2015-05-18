@@ -58,7 +58,7 @@ import org.scalaide.core.internal.hyperlink.ScalaHyperlink
 import org.eclipse.jface.text.Region
 import org.scalaide.util.eclipse.RegionUtils
 
-class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
+class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -122,7 +122,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   @deprecated("use askReloadManagedUnits instead", "4.0.0")
   def reconcileOpenUnits() = askReloadManagedUnits()
 
-  def askReloadManagedUnits() {
+  def askReloadManagedUnits(): Unit = {
     askReload(compilationUnits)
   }
 
@@ -274,7 +274,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *
    *  If the file has not been 'reloaded' first, it does nothing.
    */
-  def askToDoFirst(scu: InteractiveCompilationUnit) {
+  def askToDoFirst(scu: InteractiveCompilationUnit): Unit = {
     askToDoFirst(scu.lastSourceMap().sourceFile)
   }
 
@@ -297,7 +297,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     super.askReload(sources, response)
   }
 
-  def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
+  def filesDeleted(units: Seq[InteractiveCompilationUnit]): Unit = {
     logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
       askFilesDeleted(units.map(_.lastSourceMap().sourceFile).toList)
@@ -311,7 +311,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /** Tell the presentation compiler to refresh the given files,
    *  if they are not managed by the presentation compiler already.
    */
-  def refreshChangedFiles(files: List[IFile]) {
+  def refreshChangedFiles(files: List[IFile]): Unit = {
     // transform to batch source files
     val freshSources = files.collect {
       // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
@@ -343,7 +343,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   override def logError(msg: String, t: Throwable) =
     eclipseLog.error(msg, t)
 
-  def destroy() {
+  def destroy(): Unit = {
     logger.info("shutting down presentation compiler on project: " + name)
     askShutdown()
   }
@@ -489,9 +489,6 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   }
 
   private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
-
-  override def inform(msg: String): Unit =
-    logger.debug("[%s]: %s".format(name, msg))
 }
 
 object ScalaPresentationCompiler {
@@ -499,7 +496,7 @@ object ScalaPresentationCompiler {
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
-  class PresentationReporter extends InteractiveReporter {
+  class PresentationReporter extends InteractiveReporter with HasLogger {
     var compiler: ScalaPresentationCompiler = null
 
     def nscSeverityToEclipse(severityLevel: Int) =
@@ -555,5 +552,9 @@ object ScalaPresentationCompiler {
       case '\n' | '\r' => ' '
       case c           => c
     }
+
+    override def echo(msg: String): Unit =
+      logger.debug(s"[${compiler.name}]: $msg")
+
   }
 }

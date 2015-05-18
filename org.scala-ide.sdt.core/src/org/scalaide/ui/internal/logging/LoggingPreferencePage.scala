@@ -22,7 +22,7 @@ class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPre
 
   setDescription("General settings for managing logging information in the plugin.")
 
-  override def createFieldEditors() {
+  override def createFieldEditors(): Unit = {
     val sortedLevels = Level.values.toArray.sortBy(_.id)
     val namesAndValues = sortedLevels.map(v => Array(v.toString, v.toString))
 
@@ -41,11 +41,11 @@ class LoggingPreferencePage extends FieldEditorPreferencePage with IWorkbenchPre
     control
   }
 
-  def init(workbench: IWorkbench) {}
+  def init(workbench: IWorkbench): Unit = {}
 }
 
 class LoggingPreferencePageInitializer extends AbstractPreferenceInitializer {
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     if(IScalaPlugin().headlessMode) {
       store.setDefault(LoggingPreferenceConstants.LogLevel, Level.DEBUG.toString)

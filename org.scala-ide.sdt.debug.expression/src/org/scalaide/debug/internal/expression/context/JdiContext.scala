@@ -4,14 +4,10 @@
 package org.scalaide.debug.internal.expression.context
 
 import org.scalaide.debug.internal.expression.DebugState
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.context.extensions.ExtendedContext
 
 import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
-
-import scala.language.dynamics
 
 /**
  * Companion for JdiContext, contains names to be used in reflective compilation.

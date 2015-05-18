@@ -7,7 +7,7 @@ import org.junit._
 class AnnotationTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def class_annotation() {
+  def class_annotation(): Unit = {
     checkSymbolClassification("""
       @Deprecated
       class A
@@ -19,7 +19,7 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def annotation_imports() {
+  def annotation_imports(): Unit = {
     checkSymbolClassification("""
       import scala.annotation.tailrec
       """, """
@@ -29,7 +29,7 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def fully_qualified_annotation() {
+  def fully_qualified_annotation(): Unit = {
     checkSymbolClassification("""
       @scala.annotation.tailrec
       class X
@@ -45,7 +45,7 @@ class AnnotationTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001352)")
-  def annotated_type() {
+  def annotated_type(): Unit = {
     checkSymbolClassification("""
       trait X {
         def f[TPE](a: TPE): TPE @ annotation.unchecked.uncheckedVariance

@@ -1,7 +1,7 @@
 package test
 
 class Foo {
-  def competitors() {
+  def competitors(): Unit = {
     List("foo", "bar") match {
       case Nil => Nil
       case competitors =>

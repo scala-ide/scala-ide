@@ -30,7 +30,7 @@ class MultiScalaVersionTest {
   val sourceCode = "case class InvalidCaseClass" // parameter-less case classes forbidden in 2.11
 
   @Test // Build using the previous version of the Scala library
-  def previousVersionBuildSucceeds() {
+  def previousVersionBuildSucceeds(): Unit = {
     val Seq(proj) = internalCreateProjects("prev-version-build")
     val p = proj
     val projectSpecificStorage = p.projectSpecificStorage

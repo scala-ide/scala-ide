@@ -10,7 +10,7 @@ object Variables extends App {
   var fieldString = "Ala"
   var anotherStringField = "Ola"
 
-  def foo() {
+  def foo(): Unit = {
     var localInt: Int = 2
     var localBoxedInt: java.lang.Integer = 2
     var localString: String = "qwe"

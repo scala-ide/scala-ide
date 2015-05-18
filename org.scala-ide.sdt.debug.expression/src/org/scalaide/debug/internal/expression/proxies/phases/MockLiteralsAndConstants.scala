@@ -68,7 +68,6 @@ class MockLiteralsAndConstants
    * Created code is parsed and literal is replaced by it
    */
   private def literalCode(literal: Literal): Tree = {
-    import Debugger._
     if (ClassOf.findFirstIn(literal.toString()).isDefined) classOfCode(literal)
     else if (constantTransformMap.contains(literal.toString)) literalConstantCode(literal)
     else if (literal.toString == Scala.nullLiteral) nullLiteralCode

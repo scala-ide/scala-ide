@@ -10,7 +10,7 @@ import org.eclipse.jface.text.ITextSelection
 trait HyperlinkOpenActionStrategy {
   protected def detectionStrategy: BaseHyperlinkDetector
 
-  protected def openHyperlink(editor: JavaEditor) {
+  protected def openHyperlink(editor: JavaEditor): Unit = {
     getTextSelection(editor) map { selection =>
       withScalaCompilatioUnit(editor) { scu =>
         scu.followReference(detectionStrategy, editor, selection)

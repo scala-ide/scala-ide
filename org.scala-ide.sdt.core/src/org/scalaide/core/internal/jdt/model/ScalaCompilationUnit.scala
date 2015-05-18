@@ -90,7 +90,7 @@ trait ScalaCompilationUnit extends Openable
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
-  override def bufferChanged(e : BufferChangedEvent) {
+  override def bufferChanged(e : BufferChangedEvent): Unit = {
     if (!e.getBuffer.isClosed)
       scalaProject.presentationCompiler(_.scheduleReload(this, sourceMap(getContents).sourceFile))
 
@@ -102,7 +102,7 @@ trait ScalaCompilationUnit extends Openable
    *
    *  This code is copied from org.eclipse.jdt.internal.core.CompilationUnit
    */
-  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor) {
+  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor): Unit = {
     // ensure buffer is opened
     val buffer = super.getBufferManager().getBuffer(this);
     if (buffer == null) {
@@ -154,7 +154,7 @@ trait ScalaCompilationUnit extends Openable
    *  This avoids crashes if the indexer kicks in on a project that has Scala sources
    *  but no Scala library on the classpath.
    */
-  def addToIndexer(indexer : ScalaSourceIndexer) {
+  def addToIndexer(indexer : ScalaSourceIndexer): Unit = {
     if (scalaProject.hasScalaNature) {
       try scalaProject.presentationCompiler.internal { compiler =>
         val tree = compiler.parseTree(lastSourceMap().sourceFile)
@@ -226,11 +226,11 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,
-                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor): Unit = {
     // This is a no-op. The Scala IDE provides code completions via an extension point
   }
 
-  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch): Unit = {
     scalaProject.presentationCompiler.internal { compiler =>
       compiler.askLoadedTyped(lastSourceMap().sourceFile, false).get match {
         case Left(tree) =>
@@ -243,7 +243,7 @@ trait ScalaCompilationUnit extends Openable
     }
   }
 
-  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+  override def createOverrideIndicators(annotationMap : JMap[_, _]): Unit = {
     if (scalaProject.hasScalaNature)
       scalaProject.presentationCompiler.internal { compiler =>
         try {

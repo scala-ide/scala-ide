@@ -195,7 +195,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   /** Restart all presentation compilers in the workspace. Need to do it in order
    *  for them to pick up the new std out/err streams.
    */
-  def resetAllPresentationCompilers() {
+  def resetAllPresentationCompilers(): Unit = {
     for {
       iProject <- ResourcesPlugin.getWorkspace.getRoot.getProjects
       if iProject.isOpen
@@ -203,7 +203,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     } scalaProject.presentationCompiler.askRestart()
   }
 
-  override def resourceChanged(event: IResourceChangeEvent) {
+  override def resourceChanged(event: IResourceChangeEvent): Unit = {
     (event.getResource, event.getType) match {
       case (project: IProject, IResourceChangeEvent.PRE_CLOSE) =>
         disposeProject(project)
@@ -235,7 +235,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     })))
   }
 
-  override def elementChanged(event: ElementChangedEvent) {
+  override def elementChanged(event: ElementChangedEvent): Unit = {
     import scala.collection.mutable.ListBuffer
     import IJavaElement._
     import IJavaElementDelta._
@@ -264,7 +264,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     val changed = new ListBuffer[ICompilationUnit]
     val projectsToReset = new mutable.HashSet[ScalaProject]
 
-    def findRemovedSources(delta: IJavaElementDelta) {
+    def findRemovedSources(delta: IJavaElementDelta): Unit = {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
       val isAdded = delta.getKind == ADDED

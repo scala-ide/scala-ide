@@ -1,17 +1,17 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.junit.Before
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.After
-import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
-import org.scalaide.debug.internal.model.ScalaCollectionLogicalStructureType
-import org.scalaide.debug.internal.model.ScalaArrayReference
-import org.scalaide.debug.internal.model.ScalaPrimitiveValue
+import org.junit.Before
+import org.junit.Test
 import org.junit.matchers.JUnitMatchers
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.model.ScalaArrayReference
+import org.scalaide.debug.internal.model.ScalaCollectionLogicalStructureType
+import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
+import org.hamcrest.CoreMatchers
 
 object ScalaDebugComputeDetailTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
 
@@ -27,13 +27,13 @@ class ScalaDebugComputeDetailTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def refreshBinaryFiles() {
+  def refreshBinaryFiles(): Unit = {
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
@@ -44,7 +44,7 @@ class ScalaDebugComputeDetailTest {
    * test for object reference
    */
   @Test
-  def computeDetailObject() {
+  def computeDetailObject(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -60,7 +60,7 @@ class ScalaDebugComputeDetailTest {
    * test for array reference containing object references
    */
   @Test
-  def computeDetailArrayOfMixedElements() {
+  def computeDetailArrayOfMixedElements(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -76,7 +76,7 @@ class ScalaDebugComputeDetailTest {
    * test for a <code>null</code> value.
    */
   @Test
-  def computeDetailNullReference() {
+  def computeDetailNullReference(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -92,7 +92,7 @@ class ScalaDebugComputeDetailTest {
    * Check that we can read the version of Scala running on the debugged VM.
    */
   @Test
-  def checkVersionAvailable() {
+  def checkVersionAvailable(): Unit = {
     session = ScalaDebugTestSession(file("HelloWorld.launch"))
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 7)
@@ -104,7 +104,7 @@ class ScalaDebugComputeDetailTest {
    * Check the logical structure returned for a List[Int]
    */
   @Test
-  def logicalStructureStringList() {
+  def logicalStructureStringList(): Unit = {
     session = ScalaDebugTestSession(file("Variables.launch"))
 
     session.runToLine(TYPENAME_VARIABLES + "$", 30)
@@ -113,12 +113,12 @@ class ScalaDebugComputeDetailTest {
 
     val logicalStructure= ScalaCollectionLogicalStructureType.getLogicalStructure(session.getLocalVariable("j"))
 
-    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), JUnitMatchers.containsString("Array[Object](3)"))
+    assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), CoreMatchers.containsString("Array[Object](3)"))
 
     val elements = logicalStructure.asInstanceOf[ScalaArrayReference].getVariables()
-    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), JUnitMatchers.containsString("Integer 4"))
-    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), JUnitMatchers.containsString("Integer 5"))
-    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), JUnitMatchers.containsString("Integer 6"))
+    assertThat("Wrong value for first element", elements(0).getValue().getValueString(), CoreMatchers.containsString("Integer 4"))
+    assertThat("Wrong value for second element", elements(1).getValue().getValueString(), CoreMatchers.containsString("Integer 5"))
+    assertThat("Wrong value for third element", elements(2).getValue().getValueString(), CoreMatchers.containsString("Integer 6"))
   }
 
 }

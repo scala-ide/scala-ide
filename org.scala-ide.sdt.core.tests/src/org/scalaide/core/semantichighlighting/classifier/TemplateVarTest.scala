@@ -6,7 +6,7 @@ import org.junit._
 class TemplateVarTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def method() {
+  def method(): Unit = {
     checkSymbolClassification("""
       object A {
         var xxxxxx = 12
@@ -24,7 +24,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def class_params() {
+  def class_params(): Unit = {
     checkSymbolClassification("""
       class B(var xxxxxx: String)
       """, """
@@ -34,7 +34,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def var_class_params_passed_into_super_constructor() {
+  def var_class_params_passed_into_super_constructor(): Unit = {
     checkSymbolClassification("""
       class A(var xxxxxx: String) extends RuntimeException(xxxxxx)
       """, """
@@ -44,7 +44,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_template_var() {
+  def import_template_var(): Unit = {
     checkSymbolClassification("""
       object A { var xxxxxx: String = _ }
       object B { import A.xxxxxx }
@@ -56,7 +56,7 @@ class TemplateVarTest extends AbstractSymbolClassifierTest {
   }
 
    @Test
-  def structural_type_with_template_var() {
+  def structural_type_with_template_var(): Unit = {
      checkSymbolClassification("""
       object A {
         val deeep = new AnyRef { var deepVar = 1 }

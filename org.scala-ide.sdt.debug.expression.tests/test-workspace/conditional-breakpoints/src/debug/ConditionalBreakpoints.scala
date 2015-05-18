@@ -2,7 +2,7 @@ package debug
 
 object ConditionalBreakpoints extends App {
 
-  def foo() {
+  def foo(): Unit = {
 
     val int = 1
 

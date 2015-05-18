@@ -6,7 +6,7 @@ import org.junit._
 class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_class() {
+  def basic_class(): Unit = {
     checkSymbolClassification("""
       class Class
       class `Class2` {
@@ -23,7 +23,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore
-  def inside_class_of_expressions() {
+  def inside_class_of_expressions(): Unit = {
     checkSymbolClassification("""
       class Class {
         classOf[Class]
@@ -36,7 +36,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore
-  def problem_with_import_and_existential_type() {
+  def problem_with_import_and_existential_type(): Unit = {
     checkSymbolClassification("""
       trait X {
         import java.lang.Class
@@ -50,7 +50,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def java_import() {
+  def java_import(): Unit = {
     checkSymbolClassification("""
       import java.util.Properties
      """, """
@@ -60,7 +60,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def static_java_ref() {
+  def static_java_ref(): Unit = {
     checkSymbolClassification("""
       object Object {
         Integer.parseInt("42")
@@ -72,7 +72,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_a_class() {
+  def import_a_class(): Unit = {
     checkSymbolClassification("""
       import scala.collection.generic.GenMapFactory
         """, """
@@ -83,7 +83,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Packages' symbol seem to take a TransparentPosition, why?")
-  def import_a_renamed_class() {
+  def import_a_renamed_class(): Unit = {
     checkSymbolClassification("""
       import scala.concurrent.{Lock => LOCK}
 
@@ -102,25 +102,25 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("The renamed class doesn't have a symbol and the current classification strategy needs the symbol's name.")
-  def import_a_renamed_class_and_color_it() {
+  def import_a_renamed_class_and_color_it(): Unit = {
     checkSymbolClassification("""
       import scala.concurrent.{ Lock => Alock }
 
       object Foo {
-        def foo( f: Alock ) {}
+        def foo( f: Alock ): Unit = {}
       }
         """, """
       import $PKG$.$   PKG  $.{ $C1$ => $ C2$ }
 
       object Foo {
-        def foo( f: $ C2$ ) {}
+        def foo( f: $ C2$ ): Unit = {}
       }
         """,
       Map("C1" -> Class, "PKG" -> Package, "C2" -> Class))
   }
 
    @Test
-  def import_symbol_which_is_both_a_class_and_an_object() {
+  def import_symbol_which_is_both_a_class_and_an_object(): Unit = {
     checkSymbolClassification("""
       import scala.collection.immutable.List
         """, """
@@ -131,7 +131,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001260)")
-  def early_initializer_in_combination_with_trait() {
+  def early_initializer_in_combination_with_trait(): Unit = {
     checkSymbolClassification("""
       object X extends {
         val o = new Object
@@ -148,7 +148,7 @@ class ClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001334)")
-  def default_arguments() {
+  def default_arguments(): Unit = {
     checkSymbolClassification("""
       class Foo(val f: Int = Bar.value)
       object Bar {

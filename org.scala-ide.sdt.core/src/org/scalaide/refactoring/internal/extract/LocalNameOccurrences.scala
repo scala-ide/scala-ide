@@ -7,7 +7,6 @@ import scala.tools.refactoring.common.InteractiveScalaCompiler
 import org.scalaide.util.eclipse.EditorUtils
 
 case class LocalNameOccurrences(name: String) {
-  import scala.language.reflectiveCalls
   private val os =
     EditorUtils.withCurrentScalaSourceFile { file =>
       file.withSourceFile { (sourceFile, compiler) =>

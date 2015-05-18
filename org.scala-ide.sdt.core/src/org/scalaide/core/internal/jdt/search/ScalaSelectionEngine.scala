@@ -33,7 +33,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
+  def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int): Unit = {
     val src = icu.lastSourceMap().sourceFile
     icu.scalaProject.presentationCompiler { compiler =>
 
@@ -256,7 +256,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
 
         // accept qualified types only if no unqualified type was accepted
         if (!ssr.hasSelection) {
-          def acceptTypes(accepted: ArrayBuffer[(Array[Char], Array[Char], Int)]) {
+          def acceptTypes(accepted: ArrayBuffer[(Array[Char], Array[Char], Int)]): Unit = {
             if (!accepted.isEmpty) {
               for (t <- accepted)
                 requestor.acceptType(t._1, t._2, t._3, false, null, actualSelectionStart, actualSelectionEnd)
@@ -273,7 +273,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     }
   }
 
-  override def acceptType(packageName: Array[Char], simpleTypeName: Array[Char], enclosingTypeNames: Array[Array[Char]], modifiers: Int, accessRestriction: AccessRestriction) {
+  override def acceptType(packageName: Array[Char], simpleTypeName: Array[Char], enclosingTypeNames: Array[Array[Char]], modifiers: Int, accessRestriction: AccessRestriction): Unit = {
     val typeName =
       if (enclosingTypeNames == null)
         simpleTypeName
@@ -319,7 +319,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     throw new UnsupportedOperationException();
   }
 
-  override def acceptPackage(packageName: Array[Char]) {
+  override def acceptPackage(packageName: Array[Char]): Unit = {
     // NOP
   }
 
@@ -334,7 +334,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     packageName: Array[Char],
     extraFlags: Int,
     path: String,
-    accessRestriction: AccessRestriction) {
+    accessRestriction: AccessRestriction): Unit = {
     // NOP
   }
 }

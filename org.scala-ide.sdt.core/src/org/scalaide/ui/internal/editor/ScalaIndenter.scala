@@ -28,7 +28,7 @@ trait PreferenceProvider {
 
   def updateCache(): Unit
 
-  def put(key: String, value: String) {
+  def put(key: String, value: String): Unit = {
     preferences(key) = value
   }
 
@@ -133,8 +133,6 @@ class ScalaIndenter(
 
   private def prefIndentationSize = preferencesProvider.getInt(ScalaIndenter.INDENT_SIZE)
 
-  private def prefArrayDimensionsDeepIndent = true; // sensible default, no formatter setting
-
   private def prefArrayIndent: Int = {
     val option = getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER)
     try {
@@ -166,13 +164,6 @@ class ScalaIndenter(
   }
 
   private def prefAssignmentIndent = prefBlockIndent
-
-  private def prefCaseBlockIndent: Int = {
-    if (DefaultCodeFormatterConstants.TRUE.equals(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_CASES)))
-      return prefBlockIndent
-    else
-      return 0
-  }
 
   private def prefSimpleIndent: Int = {
     if (prefIndentBracesForBlocks && prefBlockIndent == 0)
@@ -274,8 +265,6 @@ class ScalaIndenter(
       Integer.parseInt(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_CONTINUATION_INDENTATION))
     }
   }
-
-  private def hasGenerics: Boolean = true
 
   /** The indentation accumulated by <code>findReferencePosition</code>. */
   private var fIndent: Int = 0

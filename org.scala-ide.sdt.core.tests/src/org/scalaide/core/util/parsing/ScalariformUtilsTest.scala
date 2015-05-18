@@ -7,7 +7,7 @@ import scalariform.lexer._
 import org.scalaide.util.internal.scalariform._
 
 class ScalariformUtilsTest {
-  @Test def depthFirst() {
+  @Test def depthFirst(): Unit = {
     val source = """
 class A {
   class B
@@ -28,7 +28,7 @@ class A {
     offset
   }
 
-  @Test def getParametersWithMultiArgListAndNamed() {
+  @Test def getParametersWithMultiArgListAndNamed(): Unit = {
     val source = """
 class A {
   val a = new ClassA
@@ -50,7 +50,7 @@ class A {
     assertEquals(expected, parameterList)
   }
 
-  @Test def enclosingClassForMethodInvocation() {
+  @Test def enclosingClassForMethodInvocation(): Unit = {
     val source = """
 class A {
   method1()
@@ -72,7 +72,7 @@ class A {
     assertEquals(Some("C"), enclosing("method3"))
   }
 
-  @Test def equalsCallWithoutParameterList() {
+  @Test def equalsCallWithoutParameterList(): Unit = {
     val source = """
 class A {
   val obj = ""
@@ -99,7 +99,7 @@ class A {
     (ScalariformUtils.callingOffsetAndLength(ast, offsetOf(beginningOfCall)).get, offsetOf)
   }
 
-  @Test def simpleCallOnSelf() {
+  @Test def simpleCallOnSelf(): Unit = {
     val source = """
 class A {
   val list = List(1)
@@ -110,7 +110,7 @@ class A {
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, None)), callInfo)
   }
 
-  @Test def namedCallInfoOnSelf() {
+  @Test def namedCallInfoOnSelf(): Unit = {
     val source = """
 class A {
   val list = List(1)
@@ -121,7 +121,7 @@ class A {
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, Some("f"))), callInfo)
   }
 
-  @Test def multipleArgumentListsCallingSelf() {
+  @Test def multipleArgumentListsCallingSelf(): Unit = {
     val source = """
 class A {
   higherOrderFunction(0, 0, 0)(0)(0)(func = method1, e=0, f=0)
@@ -132,7 +132,7 @@ class A {
     assertEquals(MethodCallInfo(offsetOf("higherOrderFunction"), "higherOrderFunction".length, ArgPosition(3, 0, Some("func"))), callInfo)
   }
 
-  @Test def callingOnOther() {
+  @Test def callingOnOther(): Unit = {
     val source = """
 class A {
   val list = List(1)
@@ -143,7 +143,7 @@ class A {
     assertEquals(MethodCallInfo(offsetOf("map"), "map".length, ArgPosition(0, 0, None)), callInfo)
   }
 
-  @Test def namedCallingOnOther() {
+  @Test def namedCallingOnOther(): Unit = {
     val source = """
 class A {
   val list = List(1)
