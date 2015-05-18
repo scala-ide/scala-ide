@@ -1337,7 +1337,7 @@
          commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
          contextId="scala.tools.eclipse.scalaEditorScope"
          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M2+M1+W T"/>
+         sequence="M1+M2+Q"/>
    <key
          commandId="scala.tools.eclipse.editor.OpenImplicit"
          contextId="scala.tools.eclipse.scalaEditorScope"
