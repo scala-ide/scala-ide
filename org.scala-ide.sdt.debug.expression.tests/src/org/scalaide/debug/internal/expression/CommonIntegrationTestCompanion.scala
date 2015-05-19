@@ -14,15 +14,13 @@ import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.logging.HasLogger
 
-class CommonIntegrationTestCompanion(projectName: String)
-  extends TestProjectSetup(projectName, bundleName = "org.scala-ide.sdt.debug.expression.tests")
-  with ScalaDebugRunningTest
-  with HasLogger {
+class CommonIntegrationTestCompanion(projectName: String) extends HasLogger {
 
+  val eclipseProjectContext = EclipseProjectContext.provider.createContext(projectName)
   var session: ScalaDebugTestSession = null
 
-  protected def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession =
-    ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
+  protected def withDebuggingSession[T](launchConfigurationName: String)(operation: ScalaDebugTestSession => T): T =
+    eclipseProjectContext.withDebuggingSession(launchConfigurationName)(operation)
 
   private val testName = getClass.getSimpleName.init
 
@@ -35,13 +33,10 @@ class CommonIntegrationTestCompanion(projectName: String)
   def doCleanup(): Unit = {
     logger.info(s"Test $testName finished")
     cleanDebugSession()
-    deleteProject()
+    eclipseProjectContext.cleanProject()
   }
 
-  protected def refreshBinaryFiles(): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-  }
+  protected def refreshBinaryFiles(): Unit = eclipseProjectContext.refreshBinaries()
 
   protected def initializeEvaluator(session: ScalaDebugTestSession): JdiExpressionEvaluator = {
     val target = session.debugTarget
@@ -53,13 +48,6 @@ class CommonIntegrationTestCompanion(projectName: String)
       session.terminate()
       session = null
     }
-  }
-
-  private def deleteProject(): Unit = {
-    try {
-      SDTTestUtils.deleteProjects(project)
-    } catch {
-      case e: ResourceException => // could not delete resource, but don't you worry ;)
-    }
+    eclipseProjectContext.cleanDebugSession()
   }
 }

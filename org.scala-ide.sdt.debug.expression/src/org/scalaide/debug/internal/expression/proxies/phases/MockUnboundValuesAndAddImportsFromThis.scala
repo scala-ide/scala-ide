@@ -4,13 +4,13 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
+import java.lang.RuntimeException
+
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.context.GenericVariableType
-import org.scalaide.debug.internal.expression.context.PlainVariableType
-import org.scalaide.debug.internal.expression.context.VariableContext
+import org.scalaide.debug.internal.expression.context._
 import org.scalaide.debug.internal.expression.sources.GenericTypes
 import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericEntry
 import org.scalaide.debug.internal.expression.sources.GenericTypes.GenericProvider
@@ -33,6 +33,21 @@ import org.scalaide.logging.HasLogger
  *   import __this._
  *
  *   list.map(i => i + int)
+ * }}}
+ *
+ * Handles also case when we compiling code without classpath.
+ * Than this code:
+ * {{{
+ *    method(value)
+ * }}}
+ * Becomes:
+ * {{{
+ *  val _this: JdiProxy = JdiContext.placeholder
+ *  import __this._
+ *  val value = _this.value
+ *  def method(v1: Any) = _this.method(v1)
+ *
+ *  method(value)
  * }}}
  *
  * @param context gives access to imports, local variables etc. from current scope
@@ -88,11 +103,15 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
       val namesWithThis: Seq[Variable] = (names.toSeq ++ context.syntheticVariables).distinct
         .filterNot(v => implicitsNames.contains(v.name.toString)) //order matter in case of this values
 
+      val (memberVariables, simpleVariables) = namesWithThis.flatMap(context.typed)
+        .partition(_.isInstanceOf[DynamicVariable])
+
       val proxyDefinitions =
-        namesWithThis.flatMap(buildProxyDefinition(context, genericProvider)) ++
+        simpleVariables.map(buildProxyDefinition(context, genericProvider)) ++
           context.syntheticImports ++
           names.toSeq.flatMap(buildNestedMethodDefinition(genericProvider)) ++
-          implicits.map(buildImplicitEntryDefinition)
+          implicits.map(buildImplicitEntryDefinition) ++
+          memberVariables.map(buildDynamicMemberDefinition)
 
       breakBlock(toolbox.parse(proxyDefinitions.mkString("\n"))).toList
     }
@@ -113,13 +132,33 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
      * @param name variable name
      * @return String representing proxy variable definition
      */
-    private def buildProxyDefinition(context: VariableContext, genericProvider: GenericProvider)(variable: Variable): Option[String] = {
-      context.typeOf(variable.name).map {
-        case GenericVariableType(typeName, genericSignature) =>
+    private def buildProxyDefinition(context: VariableContext, genericProvider: GenericProvider)(variable: TypedVariable): String = {
+      val typeName = variable match {
+        case GenericVariable(_, typeName, genericSignature) =>
           genericProvider.typeForField(variable.name.toString).getOrElse(generateProxiedGenericName(typeName, genericSignature))
-        case PlainVariableType(typeName) =>
+        case PlainTypedVariable(_, typeName) =>
           typeName
-      }.map(valueDefinitionCode(variable))
+        case dynamic => throw new RuntimeException("Cannot build static proxy for dynamic variable: " + dynamic)
+      }
+
+      valueDefinitionCode(variable.untyped)(typeName)
+    }
+
+    /**
+     * Build dynamic member variable implementation.
+     * For values "field" is implemented as "val field = from.field"
+     * For methods "method(12)" is implemented as "def method(v1: Any) = from.method(v1)"
+     *
+     * "from" in this case is on of "_thisX" values that are responsible from methods/values from this scope.
+     * Both cases do not need further implementation.
+     */
+    private def buildDynamicMemberDefinition(variable: TypedVariable): String = variable match {
+      case DynamicMemberBasedVariable(v, memberName) => s"val ${v.name} = $memberName.${v.name}"
+      case DynamicMemberBasedMethod(v, memberName, arity) =>
+        val argsNames = (1 to arity).map("v" +)
+        val typedNames = argsNames.map(name => s"$name: Any").mkString(", ")
+        s"def ${v.name}($typedNames) = $memberName.${v.name}(${argsNames.mkString(", ")})"
+     case static => throw new RuntimeException("Cannot build dynamic proxy for static variable: " + static)
     }
 
     private def buildImplicitEntryDefinition(entry: GenericEntry): String = {

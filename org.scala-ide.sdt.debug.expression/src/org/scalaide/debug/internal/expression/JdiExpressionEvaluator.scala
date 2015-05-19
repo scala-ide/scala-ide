@@ -78,7 +78,7 @@ class JdiExpressionEvaluator(
   /**
    * Create new context from this evaluator
    */
-  final def createContext() = JdiContext(projectClassLoader, debugState)
+  final def createContext() = JdiContext(projectClassLoader, debugState, classPath.isDefined)
 }
 
 protected object JdiExpressionEvaluator extends HasLogger {

@@ -254,6 +254,14 @@ object TestValues {
     val * = 1
     val long = 1l
     val long2 = 2l
+
+    def alaMethod(count: Int) = "ala " + count
+
+    object LibObject{
+      val id = 1
+    }
+
+    val outer = "ala"
   }
 
   object NamedParametersTestCase extends IntegrationTestCaseSettings {

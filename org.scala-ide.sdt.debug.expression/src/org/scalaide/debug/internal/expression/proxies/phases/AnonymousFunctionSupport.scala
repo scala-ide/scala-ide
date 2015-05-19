@@ -125,6 +125,8 @@ trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
 
   val toolbox: ToolBox[universe.type]
 
+  override val hasClasspath = true // Lambdas are invoked inside debugged jvm so we don't care about classpath
+
   protected val typesContext = new NewTypesContext()
 
   override def transform(data: TransformationPhaseData): TransformationPhaseData =

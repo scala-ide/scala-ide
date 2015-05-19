@@ -133,8 +133,8 @@ object JdiContext {
   /** see `placeholderFunction1` */
   def placeholderFunction22[Ret](lambdaName: String, closureParams: Seq[Any] = Nil): (Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any, Any) => Ret = (_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _) => ???
 
-  def apply(expressionClassLoader: ClassLoader, debugState: DebugState): JdiContext =
-    new JdiContext(expressionClassLoader, debugState)
+  def apply(expressionClassLoader: ClassLoader, debugState: DebugState, hasClasspath: Boolean): JdiContext =
+    new JdiContext(expressionClassLoader, debugState, hasClasspath)
 
 }
 
@@ -143,10 +143,11 @@ object JdiContext {
  *
  * Allows for mirroring values and creates proxies for them as well as invoking methods in context of debugged JVM.
  *
- * @param currentThread Current thread in debug
  * @param debugState provides state of debug - current frame and thread
  */
-class JdiContext protected (protected val expressionClassLoader: ClassLoader, debugState: DebugState)
+class JdiContext protected(protected val expressionClassLoader: ClassLoader,
+                           debugState: DebugState,
+                           val hasClasspath: Boolean)
   extends JdiMethodInvoker
   with JdiVariableContext
   with JdiClassLoader

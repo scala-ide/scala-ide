@@ -129,11 +129,12 @@ object Names {
 
     val partialFunctionType = classOf[PartialFunction[_, _]].getName
 
+    val SelectDynamicName = "selectDynamic"
+    val ApplyDynamicName = "applyDynamic"
+    val UpdateDynamicName = "updateDynamic"
+
     /** Supported methods from `scala.Dynamic` */
-    val dynamicTraitMethods = Set(
-      "updateDynamic",
-      "selectDynamic",
-      "applyDynamic")
+    val dynamicTraitMethods = Set(SelectDynamicName, ApplyDynamicName, UpdateDynamicName)
 
     val :: = "scala.collection.immutable.::"
 

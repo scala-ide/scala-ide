@@ -16,7 +16,7 @@ class VariableProxiesTest extends HasEvaluator {
   private def testVariables(variables: String*)(in: String) {
     val code = Evaluator.parse(in)
 
-    val phase = new SearchForUnboundVariables(Evaluator.toolbox, Set.empty)
+    val phase = new SearchForUnboundVariables(Evaluator.toolbox, Set.empty, hasClasspath = true)
     val foundVariables = phase.transform(TransformationPhaseData(code)).unboundVariables
 
     assertEquals(

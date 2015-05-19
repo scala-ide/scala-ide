@@ -72,8 +72,9 @@ class BaseConditionalBreakpointTestCompanion(workspace: String = "conditional-br
     refreshBinaryFiles()
   }
 
-  private def doCreateEvaluatorWithBreakpoint(conditionContext: Option[ConditionContext]): Option[JdiExpressionEvaluator] = {
-    session = initDebugSession(fileName)
+  private def doCreateEvaluatorWithBreakpoint(conditionContext: Option[ConditionContext]): Option[JdiExpressionEvaluator] = withDebuggingSession(fileName) {
+    createdSession =>
+    session = createdSession
 
     val objectName = "debug." + fileName + "$"
     session.runToLine(objectName, lineNumber, conditionContext = conditionContext)

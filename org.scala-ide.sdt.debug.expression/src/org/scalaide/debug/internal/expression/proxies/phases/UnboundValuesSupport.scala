@@ -8,6 +8,8 @@ import scala.reflect.runtime.universe
 
 trait UnboundValuesSupport {
 
+  def hasClasspath: Boolean
+
   import universe._
 
   /**
@@ -156,6 +158,7 @@ trait UnboundValuesSupport {
         case assign @ Assign(Ident(name: TermName), value) =>
           // suppressing value extraction from lhs if it's not local
           if (isLocalVar(name)) nameManager.registerUnboundName(name, tree, isLocal = true)
+          else if(!hasClasspath) nameManager.registerUnboundName(name, tree, isLocal = false)
           super.traverse(value)
 
         // all identifiers

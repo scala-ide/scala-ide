@@ -118,6 +118,8 @@ object TypeNames {
         genenericTypeString(typeRef, typeRef.args, withoutGenerics)
       case existentialType @ ExistentialType(_, _) =>
         genenericTypeString(existentialType, existentialType.typeArgs, withoutGenerics)
+      case MethodType(_, resultType) =>
+        throw new MethodTypeInferred
       case any =>
         throw new RuntimeException(s"Unsupported tree shape: $any.")
     }

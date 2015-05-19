@@ -38,7 +38,7 @@ case class ImplementValues(toolbox: ToolBox[universe.type], valueCreationCode: u
     case ValDef(mods, name, tpt, value) if isProxy(value) =>
       val valImpl = proxyImplementation(name, tpt.toString)
       ValDef(mods, name, TypeTree(), valImpl)
-    case ValDef(mods, name, tpt, value) =>
+    case ValDef(mods, name, tpt, value) if !mods.hasFlag(Flag.PARAM) =>
       ValDef(mods, name, TypeTree(), value)
     case other =>
       other

@@ -62,6 +62,10 @@ object ExpressionException {
        |Candidates: ${candidates.mkString(", ")}
        |Nested methods are not fully supported in expression evaluator.")""".stripMargin
 
+  val methodTypeInferred =
+    """Value typed with method type found in transformed code.
+      |This is usually caused by using method as lambda when evaluator has no access to classpath""".stripMargin
+
   /**
    * Recovers from errors after expression compilation and evaluation.
    * Provides nice, user-readable descriptions for all known problems.
@@ -167,9 +171,12 @@ class MethodInvocationException(reason: String, underlying: Throwable)
 /**
  * Raised when not all types of arguments to lambda was inferred.
  */
-object FunctionProxyArgumentTypeNotInferredException
+class FunctionProxyArgumentTypeNotInferredException
   extends RuntimeException(ExpressionException.functionProxyArgumentTypeNotInferredMessage)
   with ExpressionException
+
+object FunctionProxyArgumentTypeNotInferredException
+  extends FunctionProxyArgumentTypeNotInferredException
 
 /**
  * Raised when you nest lambda inside another lambda, which is currently not supported.
@@ -190,4 +197,11 @@ class UnsupportedFeature(val name: String)
  */
 class MultipleMethodsMatchNestedOne(methodName: String, candidates: Seq[String])
   extends RuntimeException(ExpressionException.multipleMethodsMatchNestedOneMessage(methodName, candidates))
+  with ExpressionException
+
+/**
+ * Raised when we cannot determine which method match nested one
+ */
+class MethodTypeInferred
+  extends RuntimeException(ExpressionException.methodTypeInferred)
   with ExpressionException
