@@ -295,7 +295,10 @@ object ScalaSourceFileEditor {
     private val reconcilingListeners = new ConcurrentLinkedQueue[IJavaReconcilingListener]()
 
     /** Return a snapshot of the currently registered `reconcilingListeners`. This is useful to avoid concurrency hazards when iterating on the `reconcilingListeners`. */
-    private def currentReconcilingListeners = reconcilingListeners.toArray.asInstanceOf[Array[IJavaReconcilingListener]]
+    private def currentReconcilingListeners = {
+      import scala.collection.JavaConverters._
+      reconcilingListeners.asScala.toList
+    }
 
     override def aboutToBeReconciled(): Unit =
       for (listener <- currentReconcilingListeners) listener.aboutToBeReconciled()
