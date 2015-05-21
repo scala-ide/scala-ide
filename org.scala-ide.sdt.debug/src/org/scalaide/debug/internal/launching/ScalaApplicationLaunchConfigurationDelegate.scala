@@ -1,6 +1,7 @@
 package org.scalaide.debug.internal.launching
 
 import org.eclipse.debug.core.ILaunchConfiguration
+import org.eclipse.debug.core.ILaunchManager
 import org.eclipse.jdt.launching.IVMRunner
 import org.scalaide.core.internal.launching.ScalaLaunchDelegate
 
@@ -10,8 +11,12 @@ import org.scalaide.core.internal.launching.ScalaLaunchDelegate
 class ScalaApplicationLaunchConfigurationDelegate extends ScalaLaunchDelegate {
 
   override def getVMRunner(configuration: ILaunchConfiguration, mode: String): IVMRunner = {
-    val vm = verifyVMInstall(configuration)
-    new StandardVMScalaDebugger(vm)
+    if (ILaunchManager.DEBUG_MODE == mode) {
+      val vm = verifyVMInstall(configuration)
+      new StandardVMScalaDebugger(vm)
+    } else {
+      super.getVMRunner(configuration, mode)
+    }
   }
 
 }

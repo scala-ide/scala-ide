@@ -17,6 +17,7 @@ import org.scalaide.debug.internal.model.ScalaDebugTargetTest
 import org.scalaide.debug.internal.model.ScalaStackFrameTest
 import org.scalaide.debug.internal.model.ScalaThreadTest
 import org.scalaide.debug.internal.model.ScalaValueTest
+import org.scalaide.debug.internal.launching.ScalaApplicationLaunchConfigurationDelegateTest
 
 /**
  * Junit test suite for the Scala debugger.
@@ -40,6 +41,7 @@ import org.scalaide.debug.internal.model.ScalaValueTest
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
     classOf[StackFrameVariableOfTreeFinderTest],
-    classOf[HotCodeReplaceTest]
+    classOf[HotCodeReplaceTest],
+    classOf[ScalaApplicationLaunchConfigurationDelegateTest]
     ))
 class ScalaDebugTestSuite
