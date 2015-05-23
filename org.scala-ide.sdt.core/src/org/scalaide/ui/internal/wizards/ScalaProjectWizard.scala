@@ -29,6 +29,7 @@ class ScalaProjectWizard extends {
   setDefaultPageImageDescriptor(ScalaImages.SCALA_PROJECT_WIZARD);
 
   pageOne.setTitle("Create a Scala project")
+  pageOne.setDescription("Create a Scala project in the workspace or in an external location.")
   pageTwo.setTitle("Scala Settings")
   pageTwo.setDescription("Define the Scala build settings.")
 }
