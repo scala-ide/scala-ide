@@ -12,15 +12,15 @@ class ApplyTemplateTest extends AutoEditTests {
     override val textChange = tc
 
     val templates = Map(
-      "match" -> """|${value} match {
-                    |  case ${caseValue} => ${cursor}
-                    |}""".stripMargin,
+      "match" -> """|?{value} match {
+                    |  case ?{caseValue} => ?{cursor}
+                    |}""".replace('?', '$').stripMargin,
       "tcatch" -> """|try {
-                     |  ${cursor}
+                     |  ?{cursor}
                      |} catch {
-                     |  case ${t}: ${Throwable} => ${t}.printStackTrace() // TODO: handle error
+                     |  case ?{t}: ?{Throwable} => ?{t}.printStackTrace() // TODO: handle error
                      |}
-                     |""".stripMargin)
+                     |""".replace('?', '$').stripMargin)
 
     // provide templates statically in order to not depend on existing templates
     override def findTemplateByName(name: String): Option[Template] = {

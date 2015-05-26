@@ -28,8 +28,8 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |
        |For example, if there exists the template
        |
-       |    ${value} match {
-       |      case ${caseValue} => ${cursor}
+       |    ?{value} match {
+       |      case ?{caseValue} => ?{cursor}
        |    }
        |
        |whose name is `match`, one can immediately insert the content of this \
@@ -37,10 +37,10 @@ object ApplyTemplateSetting extends AutoEditSetting(
        |the tab key.
        |
        |The editor creates even creates a liked model, which allows to jump between \
-       |the sections marked with ${}. If enter is pressed while the linked model \
+       |the sections marked with ?{}. If enter is pressed while the linked model \
        |is still active, the cursor jumps immediately to the section marked \
-       |by ${cursor}.
-       |"""),
+       |by ?{cursor}.
+       |""".replace('?', '$')),
   partitions = Set(IDocument.DEFAULT_CONTENT_TYPE)
 )
 

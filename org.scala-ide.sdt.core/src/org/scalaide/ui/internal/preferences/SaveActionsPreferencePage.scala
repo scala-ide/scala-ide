@@ -105,7 +105,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
 
     mkLabel(base, "Description:", columnSize = 2)
 
-    descriptionArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
+    descriptionArea = mkTextArea(base, lineHeight = 3, initialText = "", columnSize = 2)
 
     mkLabel(base, "Before:")
     mkLabel(base, "After:")
@@ -143,7 +143,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     super.performDefaults
   }
 
-  private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
+  private def mkTextArea(parent: Composite, lineHeight: Int, initialText: String, columnSize: Int): Text = {
     val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
     t.setText(initialText)
     t.setLayoutData({
