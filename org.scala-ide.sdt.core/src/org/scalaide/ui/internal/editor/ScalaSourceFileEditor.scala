@@ -3,7 +3,6 @@ package org.scalaide.ui.internal.editor
 import java.util.ResourceBundle
 
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.SynchronizedBuffer
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.dom.CompilationUnit
@@ -291,10 +290,15 @@ object ScalaSourceFileEditor {
 
   /** A thread-safe object for keeping track of Java reconciling listeners.*/
   private class ReconcilingListeners extends IJavaReconcilingListener {
-    private val reconcilingListeners = new ArrayBuffer[IJavaReconcilingListener] with SynchronizedBuffer[IJavaReconcilingListener]
+    import java.util.concurrent.ConcurrentLinkedQueue
+
+    private val reconcilingListeners = new ConcurrentLinkedQueue[IJavaReconcilingListener]()
 
     /** Return a snapshot of the currently registered `reconcilingListeners`. This is useful to avoid concurrency hazards when iterating on the `reconcilingListeners`. */
-    private def currentReconcilingListeners: List[IJavaReconcilingListener] = reconcilingListeners.toList
+    private def currentReconcilingListeners = {
+      import scala.collection.JavaConverters._
+      reconcilingListeners.asScala.toList
+    }
 
     override def aboutToBeReconciled(): Unit =
       for (listener <- currentReconcilingListeners) listener.aboutToBeReconciled()
@@ -302,8 +306,8 @@ object ScalaSourceFileEditor {
     override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit =
       for (listener <- currentReconcilingListeners) listener.reconciled(ast, forced, progressMonitor)
 
-    def addReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners += listener
+    def addReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners.add(listener)
 
-    def removeReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners -= listener
+    def removeReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners.remove(listener)
   }
 }

@@ -28,8 +28,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
-import scala.language.reflectiveCalls
-
 @RunWith(classOf[JUnit4])
 class FindReferencesTests extends FindReferencesTester with HasLogger {
   private final val TestProjectName = "find-references"

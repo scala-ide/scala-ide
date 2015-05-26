@@ -20,7 +20,6 @@ import org.junit.Before
 class OutputFoldersTest {
   val NoContent: String = ""
 
-  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
   @Before def setupBuild() {

@@ -4,8 +4,6 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
 import scala.annotation.tailrec
 
-import language.implicitConversions
-
 object RegionParser {
 
   /**
@@ -18,7 +16,6 @@ object RegionParser {
   object EmbeddedSubstr {
     implicit def wrapAsEmbeddedSubstring(str: String) = EmbeddedSubstr(str)
   }
-
 
   /**
    * Extracts the regions marked by the given substrings.

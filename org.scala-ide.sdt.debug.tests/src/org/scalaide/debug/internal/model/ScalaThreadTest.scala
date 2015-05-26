@@ -22,17 +22,6 @@ object ScalaThreadTest {
   }
 
   final private val WaitingStep = 50
-
-  import scala.language.implicitConversions
-
-  private def waitUntil(condition: => Boolean, timeout: Int) {
-    val timeoutEnd = System.currentTimeMillis() + timeout
-    while (!condition) {
-      assertTrue("Timed out before condition was satisfied", System.currentTimeMillis() < timeoutEnd)
-      Thread.sleep(WaitingStep)
-    }
-  }
-
 }
 
 /**

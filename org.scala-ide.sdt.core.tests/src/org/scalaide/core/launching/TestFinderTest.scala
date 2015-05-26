@@ -219,7 +219,6 @@ class TestFinderTest {
   private def getResource(absolutePath: String): IResource =
     project.underlying.findMember(absolutePath)
 
-  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
   def assertEqualsSets[T](msg: String, set1: collection.Set[T], set2: collection.Set[T]) = {

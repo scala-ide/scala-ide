@@ -7,7 +7,6 @@ import org.junit.Before
 import org.scalaide.core.lexical.ScalaPartitions._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import org.eclipse.jdt.ui.text.IJavaPartitions._
-import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.eclipse.jface.text.TypedRegion
 
 class ScalaPartitionTokeniserTest {
@@ -91,12 +90,12 @@ class ScalaPartitionTokeniserTest {
 
     // 000000000011111111112222222222333333333344444444445
     // 012345678901234567890123456789012345678901234567890
-    """s"my name is ${person.name}"""" ==>
+    """s"my name is ?{person.name}"""".replace('?', '$') ==>
       ((DEFAULT_CONTENT_TYPE, 0, 0), (JAVA_STRING, 1, 13), (DEFAULT_CONTENT_TYPE, 14, 26), (JAVA_STRING, 27, 27))
 
     // 0 0 00000001111111111222222222 2 3 33333333344444444445
     // 1 2 34567890123456789012345678 9 0 12345678901234567890
-    "s\"\"\"my name is ${person.name}\"\"\"" ==>
+    "s\"\"\"my name is ?{person.name}\"\"\"".replace('?', '$') ==>
       ((DEFAULT_CONTENT_TYPE, 0, 0), (SCALA_MULTI_LINE_STRING, 1, 15), (DEFAULT_CONTENT_TYPE, 16, 28), (SCALA_MULTI_LINE_STRING, 29, 31))
 
   }
@@ -182,7 +181,6 @@ class ScalaPartitionTokeniserTest {
 }
 
 object ScalaPartitionTokeniserTest {
-  import scala.language.implicitConversions
   implicit def string2RichString(from: String): RichString = new RichString(from)
   implicit def element2RichString(from: Elem): RichString = new RichString(from.text)
 

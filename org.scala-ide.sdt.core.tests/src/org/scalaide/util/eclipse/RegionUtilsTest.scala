@@ -10,7 +10,7 @@ class RegionUtilsTest {
   import RegionUtilsTest._
 
   @Test
-  def substractAContainsB {
+  def substractAContainsB() {
 
     val a = List(new TypedRegion(0, 16, "A"))
     val b = List(new TypedRegion(1, 15, "B"))
@@ -24,7 +24,7 @@ class RegionUtilsTest {
   }
 
   @Test
-  def substractEmtpies {
+  def substractEmtpies() {
     val a = List(new TypedRegion(0, 0, "A"))
     val b = List(new TypedRegion(0, 0, "B"))
 
@@ -36,7 +36,7 @@ class RegionUtilsTest {
   }
 
   @Test
-  def substract_issue_123 {
+  def substract_issue_123() {
     val a = List(new TypedRegion(808, 93, "A"), new TypedRegion(908, 52, "A"))
     val b = List(new TypedRegion(807, 20, "B"), new TypedRegion(881, 13, "B"), new TypedRegion(899, 3, "B"))
 
@@ -49,7 +49,7 @@ class RegionUtilsTest {
   }
 
   @Test(expected = classOf[IllegalArgumentException])
-  def substractWithOverlappingList {
+  def substractWithOverlappingList() {
     val a = List(new TypedRegion(0, 10, "A"), new TypedRegion(9, 2, "B")) // overlapping
     val b = List(new TypedRegion(1, 1, "C"))
 
@@ -57,7 +57,7 @@ class RegionUtilsTest {
   }
 
   @Test(expected = classOf[IllegalArgumentException])
-  def intersectWithNonOrderedList {
+  def intersectWithNonOrderedList() {
     val a = List(new TypedRegion(1, 1, "C"))
     val b = List(new TypedRegion(12, 10, "A"), new TypedRegion(5, 2, "B")) // non-ordered
 
@@ -69,47 +69,47 @@ class RegionUtilsTest {
   }
 
   @Test
-  def overlapBefore {
+  def overlapBefore() {
     test(CaseBefore, testNoOverlap)
   }
 
   @Test
-  def overlapBeforeTouching {
+  def overlapBeforeTouching() {
     test(CaseBeforeTouching, testNoOverlap)
   }
 
   @Test
-  def overlapOverBeginning {
+  def overlapOverBeginning() {
     test(CaseOverBeginning, testOverlap)
   }
 
   @Test
-  def overlapInsideSmaller {
+  def overlapInsideSmaller() {
     test(CaseInsideSmaller, testOverlap)
   }
 
   @Test
-  def overlapSame {
+  def overlapSame() {
     test(CaseSame, testOverlap)
   }
 
   @Test
-  def overlapOverLarger {
+  def overlapOverLarger() {
     test(CaseOverLarger, testOverlap)
   }
 
   @Test
-  def overlapOverEnd {
+  def overlapOverEnd() {
     test(CaseOverEnd, testOverlap)
   }
 
   @Test
-  def overlapAfterTouching {
+  def overlapAfterTouching() {
     test(CaseAfterTouching, testNoOverlap)
   }
 
   @Test
-  def overlapAfter {
+  def overlapAfter() {
     test(CaseAfter, testNoOverlap)
   }
 
@@ -124,17 +124,17 @@ class RegionUtilsTest {
   }
 
   @Test
-  def shiftPositive {
+  def shiftPositive() {
     testShift(14, 8, 5, 19, 8)
   }
 
   @Test
-  def shiftZero {
+  def shiftZero() {
     testShift(15, 7, 0, 15, 7)
   }
 
   @Test
-  def shiftNegative {
+  def shiftNegative() {
     testShift(16, 6, -4, 12, 6)
   }
 
@@ -147,47 +147,47 @@ class RegionUtilsTest {
   }
 
   @Test
-  def coreBefore {
+  def coreBefore() {
     test(CaseBefore, testCrop(0,0))
   }
 
   @Test
-  def coreBeforeTouching {
+  def coreBeforeTouching() {
     test(CaseBeforeTouching, testCrop(0,0))
   }
 
   @Test
-  def coreOverBeginning {
+  def coreOverBeginning() {
     test(CaseOverBeginning, testCrop(13, 3))
   }
 
   @Test
-  def coreInsideSmaller {
+  def coreInsideSmaller() {
     test(CaseInsideSmaller, testCrop(14, 3))
   }
 
   @Test
-  def coreSame {
+  def coreSame() {
     test(CaseSame, testCrop(13, 7))
   }
 
   @Test
-  def coreOverLarger {
+  def coreOverLarger() {
     test(CaseOverLarger, testCrop(13, 7))
   }
 
   @Test
-  def coreOverEnd {
+  def coreOverEnd() {
     test(CaseOverEnd, testCrop(17,3))
   }
 
   @Test
-  def coreAfterTouching {
+  def coreAfterTouching() {
     test(CaseAfterTouching, testCrop(0,0))
   }
 
   @Test
-  def coreAfter {
+  def coreAfter() {
     test(CaseAfter, testCrop(0,0))
   }
 

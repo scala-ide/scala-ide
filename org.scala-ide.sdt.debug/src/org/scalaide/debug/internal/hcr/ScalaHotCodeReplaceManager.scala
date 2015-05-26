@@ -90,8 +90,6 @@ private[internal] object ScalaHotCodeReplaceManager {
  */
 class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebuggerActor) extends IResourceChangeListener {
 
-  import scala.collection.JavaConverters._
-
   private[internal] def init(): Unit = {
     ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_BUILD)
   }

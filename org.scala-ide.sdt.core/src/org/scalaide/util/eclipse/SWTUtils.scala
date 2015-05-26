@@ -18,8 +18,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
 
-  import scala.language.implicitConversions
-
   /** Returns the active workbench window's shell
    *
    *  @return the shell containing this window's controls or `null`

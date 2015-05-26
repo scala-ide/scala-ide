@@ -9,15 +9,12 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
-import org.scalaide.debug.internal.expression.TestValues
 import org.scalaide.debug.internal.expression.TestValues.VarargsTestCase
 
 /**
  * Test uses a class with many overloaded methods containing both constant list of arguments and varargs
  */
 class VarargsTest extends BaseIntegrationTest(VarargsTest) {
-
-  import VarargsTestCase._
 
   @Test
   def simpleVararg(): Unit = {

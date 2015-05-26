@@ -20,6 +20,7 @@ import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.util.internal.Suppress
 
 class SpyView extends ViewPart with HasLogger {
   private var textArea: Text = _
@@ -132,7 +133,7 @@ class SpyView extends ViewPart with HasLogger {
                 frame.setTreeModel(tm)
 
                 // throw-away lock, since we don't need to wait for the frame
-                frame.createFrame(new scala.concurrent.Lock())
+                frame.createFrame(new Suppress.DeprecatedWarning.Lock())
               case Right(ex) =>
                 eclipseLog.warn("Could not retrieve typed tree", ex)
             }

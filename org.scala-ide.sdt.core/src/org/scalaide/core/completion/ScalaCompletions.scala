@@ -88,7 +88,7 @@ class ScalaCompletions extends HasLogger {
       }.getOption()
     }
 
-    def fillTypeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
+    def fillTypeCompletions(pos: Int, contextType: ContextType,
       matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def typeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)
@@ -98,7 +98,7 @@ class ScalaCompletions extends HasLogger {
       addCompletions(typeCompletionsAt(pos), matchName, start, prefixMatch, contextType)
     }
 
-    def fillScopeCompletions(pos: Int, contextType: ContextType = CompletionContext.DefaultContext,
+    def fillScopeCompletions(pos: Int, contextType: ContextType,
       matchName: String = wordAtPosition, start: Int = wordStart, prefixMatch: Boolean = true) {
       def scopeCompletionsAt(pos: Int): List[compiler.Member] = {
         val cpos = compiler.rangePos(sourceFile, pos, pos, pos)

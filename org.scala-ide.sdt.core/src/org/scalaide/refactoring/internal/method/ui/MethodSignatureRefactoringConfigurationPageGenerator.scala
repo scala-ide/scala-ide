@@ -24,6 +24,25 @@ import org.scalaide.ui.internal.preferences.ScalaPreviewerFactoryConfiguration
 import org.scalaide.ui.internal.preferences.PreviewerFactory
 
 /**
+ * Represents a separator of two parameter lists of in a method signature.
+ * The parameter lists will be represented by List[Either[ValDef, ParamListSeparator]]
+ */
+sealed trait ParamListSeparator
+
+/**
+ * Represents a separator that existed before the refactoring.
+ */
+case class OriginalSeparator(number: Int) extends ParamListSeparator
+
+/**
+ * Represents a separator that was inserted by the refactoring.
+ * @param paramListIndex Indicates in which parameter list the separater is inserted
+ * @param splitPosition Indicates the position within the parameter list where the
+ *        separator is inserted
+ */
+case class InsertedSeparator(paramListIndex: Int, splitPosition: Int) extends ParamListSeparator
+
+/**
  * Generates the generic wizard page for method signature refactorings.
  * Subtraits only have to fill in the specific details for actual refactorings.
  */
@@ -34,23 +53,6 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
 
   import refactoring.global.DefDef
   import refactoring.global.ValDef
-
-  /**
-   * Represents a separator of two parameter lists of in a method signature.
-   * The parameter lists will be represented by List[Either[ValDef, ParamListSeparator]]
-   */
-  sealed trait ParamListSeparator
-  /**
-   * Represents a separator that existed before the refactoring.
-   */
-  case class OriginalSeparator(number: Int) extends ParamListSeparator
-  /**
-   * Represents a separator that was inserted by the refactoring.
-   * @param paramListIndex Indicates in which parameter list the separater is inserted
-   * @param splitPosition Indicates the position within the parameter list where the
-   *        separator is inserted
-   */
-  case class InsertedSeparator(paramListIndex: Int, splitPosition: Int) extends ParamListSeparator
 
   /**
    * Convenience type to shorten type notation
@@ -65,7 +67,6 @@ trait MethodSignatureRefactoringConfigurationPageGenerator {
   def mkConfigPage(method: DefDef, paramsObs: MSRefactoringParameters => Unit): UserInputWizardPage
 
   private object ImplicitConversions {
-    import scala.language.implicitConversions
 
     /** Converts a function to an ``MouseAdapter`` whose ``mouseUp`` method is called */
     implicit def mouseUpListener(f: () => Unit): MouseAdapter = new MouseAdapter {

@@ -17,7 +17,6 @@ class ScalaTemplateContext(contextType: TemplateContextType, document: IDocument
   }
 
   def indent(buffer: TemplateBuffer) = {
-    import scala.language.postfixOps
 
     val indentation = indentOfLine(offset)
     val text = buffer.getString()

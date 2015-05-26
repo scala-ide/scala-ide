@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
 import scala.tools.nsc.Settings
-import language.implicitConversions
 
 object IDESettings {
 

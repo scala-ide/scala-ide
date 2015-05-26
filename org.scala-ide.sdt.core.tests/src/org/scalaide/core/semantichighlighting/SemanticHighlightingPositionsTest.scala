@@ -257,7 +257,7 @@ class SemanticHighlightingPositionsTest {
 
 object SemanticHighlightingPositionsTest {
 
-  class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
+  final class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
     @volatile private var reconciler: Job = _
     @volatile var positionsTracker: PositionsTracker = _
     @volatile var damagedRegion: IRegion = _

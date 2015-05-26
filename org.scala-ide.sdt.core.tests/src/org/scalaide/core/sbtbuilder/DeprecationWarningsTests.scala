@@ -12,7 +12,6 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert
 import org.junit.Test
-import scala.language.reflectiveCalls
 import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
 import org.scalaide.core.internal.project.ScalaProject

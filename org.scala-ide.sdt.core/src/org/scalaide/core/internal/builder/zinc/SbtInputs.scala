@@ -25,16 +25,16 @@ import sbt.inc.ClassfileManager
 import sbt.inc.Locate
 import xsbti.Logger
 import xsbti.Maybe
-import xsbti.compile.CompileOrder.JavaThenScala
-import xsbti.compile.CompileOrder.Mixed
-import xsbti.compile.CompileOrder.ScalaThenJava
-import xsbti.compile.CompileProgress
-import xsbti.compile.Compilers
-import xsbti.compile.DefinesClass
-import xsbti.compile.MultipleOutput
-import xsbti.compile.Options
-import xsbti.compile.CompileOrder
-
+import xsbti.Reporter
+import xsbti.compile._
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.tools.nsc.settings.ScalaVersion
+import java.net.URLClassLoader
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *

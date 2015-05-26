@@ -7,7 +7,6 @@ import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.AstTransformer
 import org.scalaide.debug.internal.expression.BeforeTypecheck
-import org.scalaide.debug.internal.expression.UnsupportedFeature
 
 /**
  * If your expression contains only single `val` or `def` wrap it in block (`{}`) as a workaround for bug in toolbox.

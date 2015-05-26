@@ -58,7 +58,7 @@ import org.scalaide.core.internal.hyperlink.ScalaHyperlink
 import org.eclipse.jface.text.Region
 import org.scalaide.util.eclipse.RegionUtils
 
-class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
+class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -489,9 +489,6 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   }
 
   private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
-
-  override def inform(msg: String): Unit =
-    logger.debug("[%s]: %s".format(name, msg))
 }
 
 object ScalaPresentationCompiler {
@@ -499,7 +496,7 @@ object ScalaPresentationCompiler {
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
-  class PresentationReporter extends InteractiveReporter {
+  class PresentationReporter extends InteractiveReporter with HasLogger {
     var compiler: ScalaPresentationCompiler = null
 
     def nscSeverityToEclipse(severityLevel: Int) =
@@ -555,5 +552,9 @@ object ScalaPresentationCompiler {
       case '\n' | '\r' => ' '
       case c           => c
     }
+
+    override def echo(msg: String): Unit =
+      logger.debug(s"[${compiler.name}]: $msg")
+
   }
 }

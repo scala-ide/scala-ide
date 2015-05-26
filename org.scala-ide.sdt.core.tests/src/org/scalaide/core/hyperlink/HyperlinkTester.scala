@@ -15,8 +15,6 @@ import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType
 
-import scala.language.reflectiveCalls
-
 trait HyperlinkTester extends TestProjectSetup {
   trait VerifyHyperlink {
     def andCheckAgainst(expectations: List[Link], checker: (InteractiveCompilationUnit, IRegion, String, Link) => Unit = checkScalaLinks): Unit
