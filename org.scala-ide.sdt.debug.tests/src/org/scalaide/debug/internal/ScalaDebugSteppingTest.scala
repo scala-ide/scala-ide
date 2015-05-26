@@ -17,7 +17,7 @@ object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "or
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
   @AfterClass
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 }
@@ -29,7 +29,7 @@ class ScalaDebugSteppingTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def initializeTests() {
+  def initializeTests(): Unit = {
     if (!initialized) {
       project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
       project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
@@ -38,7 +38,7 @@ class ScalaDebugSteppingTest {
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
@@ -50,7 +50,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverIntoForComprehensionListStringInObjectMain() {
+  def StepOverIntoForComprehensionListStringInObjectMain(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -66,7 +66,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListStringInObjectFoo() {
+  def StepOverIntoForComprehensionListStringInObjectFoo(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -80,7 +80,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListStringInClassConstructor() {
+  def StepOverIntoForComprehensionListStringInClassConstructor(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -94,7 +94,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListStringInClassBar() {
+  def StepOverIntoForComprehensionListStringInClassBar(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -112,7 +112,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverBackInForComprehentionListString() {
+  def StepOverBackInForComprehentionListString(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -130,7 +130,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverOutForComprehentionListString() {
+  def StepOverOutForComprehentionListString(): Unit = {
 
     session = initDebugSession("ForComprehensionListString2")
 
@@ -148,7 +148,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverIntoForComprehensionListObjectInObjectMain() {
+  def StepOverIntoForComprehensionListObjectInObjectMain(): Unit = {
 
     session = initDebugSession("ForComprehensionListObject")
 
@@ -162,7 +162,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListObjectInObjectFoo() {
+  def StepOverIntoForComprehensionListObjectInObjectFoo(): Unit = {
 
     session = initDebugSession("ForComprehensionListObject")
 
@@ -176,7 +176,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListObjectInClassConstructor() {
+  def StepOverIntoForComprehensionListObjectInClassConstructor(): Unit = {
 
     session = initDebugSession("ForComprehensionListObject")
 
@@ -190,7 +190,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListObjectInClassBar() {
+  def StepOverIntoForComprehensionListObjectInClassBar(): Unit = {
 
     session = initDebugSession("ForComprehensionListObject")
 
@@ -209,7 +209,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverIntoForComprehensionListIntInObjectMain() {
+  def StepOverIntoForComprehensionListIntInObjectMain(): Unit = {
 
     session = initDebugSession("ForComprehensionListInt")
 
@@ -223,7 +223,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInObjectFoo() {
+  def StepOverIntoForComprehensionListIntInObjectFoo(): Unit = {
 
     session = initDebugSession("ForComprehensionListInt")
 
@@ -237,7 +237,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInClassConstructor() {
+  def StepOverIntoForComprehensionListIntInClassConstructor(): Unit = {
 
     session = initDebugSession("ForComprehensionListInt")
 
@@ -251,7 +251,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInClassBar() {
+  def StepOverIntoForComprehensionListIntInClassBar(): Unit = {
 
     session = initDebugSession("ForComprehensionListInt")
 
@@ -265,7 +265,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInObjectMainOptimized() {
+  def StepOverIntoForComprehensionListIntInObjectMainOptimized(): Unit = {
 
     session = initDebugSession("ForComprehensionListIntOptimized")
 
@@ -279,7 +279,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInObjectFooOptimized() {
+  def StepOverIntoForComprehensionListIntInObjectFooOptimized(): Unit = {
 
     session = initDebugSession("ForComprehensionListIntOptimized")
 
@@ -293,7 +293,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInClassConstructorOptimized() {
+  def StepOverIntoForComprehensionListIntInClassConstructorOptimized(): Unit = {
 
     session = initDebugSession("ForComprehensionListIntOptimized")
 
@@ -307,7 +307,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoForComprehensionListIntInClassBarOptimized() {
+  def StepOverIntoForComprehensionListIntInClassBarOptimized(): Unit = {
 
     session = initDebugSession("ForComprehensionListIntOptimized")
 
@@ -325,7 +325,7 @@ class ScalaDebugSteppingTest {
    */
 
   @Test
-  def StepOverIntoListStringForEach() {
+  def StepOverIntoListStringForEach(): Unit = {
 
     session = initDebugSession("AnonFunOnListString")
 
@@ -339,7 +339,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoListStringFind() {
+  def StepOverIntoListStringFind(): Unit = {
 
     session = initDebugSession("AnonFunOnListString")
 
@@ -353,7 +353,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoListStringMap() {
+  def StepOverIntoListStringMap(): Unit = {
 
     session = initDebugSession("AnonFunOnListString")
 
@@ -367,7 +367,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverIntoListStringFoldLeft() {
+  def StepOverIntoListStringFoldLeft(): Unit = {
 
     session = initDebugSession("AnonFunOnListString")
 
@@ -383,7 +383,7 @@ class ScalaDebugSteppingTest {
   // Simple stepping into/over/out tests
 
   @Test
-  def StepIntoSimpleTest() {
+  def StepIntoSimpleTest(): Unit = {
     session = initDebugSession("SimpleStepping")
 
     session.runToLine(TYPENAME_SIMPLE_STEPPING, 8)
@@ -396,7 +396,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepOverSimpleTest() {
+  def StepOverSimpleTest(): Unit = {
     session = initDebugSession("SimpleStepping")
 
     session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
@@ -409,7 +409,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepReturnSimpleTest() {
+  def StepReturnSimpleTest(): Unit = {
     session = initDebugSession("SimpleStepping")
 
     session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
@@ -423,7 +423,7 @@ class ScalaDebugSteppingTest {
 
   // stepping out of anonymous functions
   @Test
-  def StepIntoForComprehensionListStringInObjectMain() {
+  def StepIntoForComprehensionListStringInObjectMain(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -438,7 +438,7 @@ class ScalaDebugSteppingTest {
 
   // stepping out of anonymous functions
   @Test
-  def StepReturnForComprehensionListStringInObjectMain() {
+  def StepReturnForComprehensionListStringInObjectMain(): Unit = {
 
     session = initDebugSession("ForComprehensionListString")
 
@@ -455,7 +455,7 @@ class ScalaDebugSteppingTest {
   // correctly cleaned when the step is interrupted by a breakpoint.
   // Otherwise the whole system can hang.
   @Test(timeout = 10000)
-  def StepOverWithBreakpoint_1001201() {
+  def StepOverWithBreakpoint_1001201(): Unit = {
     session = initDebugSession("AnonFunOnListInt")
 
     session.runToLine(TYPENAME_AF_LI + "$", 20)
@@ -480,7 +480,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsSetter() {
+  def StepIntoSkipsSetter(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -492,7 +492,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsGetter() {
+  def StepIntoSkipsGetter(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -504,7 +504,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsGetterAndSetterOnSameLine() {
+  def StepIntoSkipsGetterAndSetterOnSameLine(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -516,7 +516,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsGetterAndSetterInArgList() {
+  def StepIntoSkipsGetterAndSetterInArgList(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -528,7 +528,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsGetterInsideFors() {
+  def StepIntoSkipsGetterInsideFors(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -546,7 +546,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsBridges() {
+  def StepIntoSkipsBridges(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -558,7 +558,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsBridgesWithMultiExpressionsOnLine() {
+  def StepIntoSkipsBridgesWithMultiExpressionsOnLine(): Unit = {
 
     session = initDebugSession("StepFilters")
 
@@ -572,7 +572,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsDefaultArgs() {
+  def StepIntoSkipsDefaultArgs(): Unit = {
     session = initDebugSession("MethodClassifiers")
 
     session.runToLine("stepping.MethodClassifiers", 60)
@@ -581,7 +581,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarder() {
+  def StepIntoSkipsForwarder(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 64)
     session.stepInto
@@ -589,7 +589,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarderWithParams() {
+  def StepIntoSkipsForwarderWithParams(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 67)
     session.stepInto
@@ -597,7 +597,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarderWith22Params() {
+  def StepIntoSkipsForwarderWith22Params(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 69)
     session.stepInto
@@ -605,7 +605,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def canDropToFrame() {
+  def canDropToFrame(): Unit = {
     session = initDebugSession("SimpleStepping")
 
     session.runToLine(TYPENAME_SIMPLE_STEPPING, 12)
@@ -626,7 +626,7 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def dropToFrame() {
+  def dropToFrame(): Unit = {
 
     def checkNumberOfFrames(count: Int): Unit =
       assertEquals("Wrong number of stack frames", count, session.currentStackFrames.size)

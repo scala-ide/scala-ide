@@ -41,7 +41,7 @@
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.6</scala.plugin.version>
+    <scala.plugin.version>3.2.0</scala.plugin.version>
     <aspectj.plugin.version>1.7</aspectj.plugin.version>
     <aspectj.version>1.8.2</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
@@ -605,6 +605,21 @@
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
           <version>${scala.plugin.version}</version>
+          <configuration>
+            <args>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-deprecation</arg>
+              <arg>-language:_</arg>
+              <arg>-Xlint</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Xfatal-warnings</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
         </plugin>
         <!-- git hash extractor -->
         <plugin>

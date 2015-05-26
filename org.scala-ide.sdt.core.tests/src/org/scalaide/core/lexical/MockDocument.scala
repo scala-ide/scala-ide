@@ -19,7 +19,7 @@ class MockDocument(private var s: String) extends IDocument {
 
   def get(offset: Int, length: Int): String = s.substring(offset, offset+length)
 
-  def set(text: String) { s = text }
+  def set(text: String): Unit = { s = text }
 
   def replace(offset: Int, length: Int, text: String) = set(s.patch(offset, text, length))
 

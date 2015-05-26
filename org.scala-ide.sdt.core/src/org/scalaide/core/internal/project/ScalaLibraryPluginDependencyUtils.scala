@@ -34,7 +34,7 @@ object ScalaLibraryPluginDependencyUtils {
   private def getExistingScalaLibraryImport(pluginModelBase: IPluginModelBase): Array[IPluginImport] =
     pluginModelBase.getPluginBase.getImports filter { SdtConstants.LibraryPluginId == _.getId }
 
-  private def editPlugin(project: IProject, editStrategy: IPluginModelBase => Unit) {
+  private def editPlugin(project: IProject, editStrategy: IPluginModelBase => Unit): Unit = {
     val (manifestEditor, alreadyOpen) = findOrOpenManifestEditor(project)
     manifestEditor.setActivePage(DependenciesPage.PAGE_ID) /* According to AJDT, needed to ensure the model will be updated consistently across the pages.
                                                               See org.eclipse.ajdt.internal.utils.AJDTUtils.getAndPrepareToChangePDEModel */

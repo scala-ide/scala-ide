@@ -6,7 +6,7 @@ import java.io.FileWriter
 class ScalaTest {
 
   @Test
-  def f() {
+  def f(): Unit = {
     val writer = new FileWriter("t1000919.result")
     writer.write("t1000919 success")
     writer.close

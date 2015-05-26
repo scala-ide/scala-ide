@@ -10,13 +10,13 @@ import org.scalaide.ui.syntax.ScalaSyntaxClass
 
 class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     if (!IScalaPlugin().headlessMode) {
       doInitializeDefaultPreferences()
     }
   }
 
-  private def doInitializeDefaultPreferences() {
+  private def doInitializeDefaultPreferences(): Unit = {
     val scalaPrefStore = IScalaPlugin().getPreferenceStore()
 
     scalaPrefStore.setDefault(ENABLE_SEMANTIC_HIGHLIGHTING, true)
@@ -26,7 +26,7 @@ class ColorPreferenceInitializer extends AbstractPreferenceInitializer {
     setDefaultsForSyntaxClasses(scalaPrefStore)
   }
 
-  private def setDefaultsForSyntaxClasses(implicit scalaPrefStore: IPreferenceStore) {
+  private def setDefaultsForSyntaxClasses(implicit scalaPrefStore: IPreferenceStore): Unit = {
     // Scala syntactic
     setDefaultsForSyntaxClass(SINGLE_LINE_COMMENT, new RGB(63, 127, 95))
     setDefaultsForSyntaxClass(MULTI_LINE_COMMENT, new RGB(63, 127, 95))

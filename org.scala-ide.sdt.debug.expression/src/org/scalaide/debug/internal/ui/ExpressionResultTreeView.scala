@@ -81,7 +81,7 @@ class ExpressionResultTreeView(parent: Composite) {
    * Shows tree view which allows us to drill down fields of specified object reference
    */
   def reloadWithResult(value: ScalaValue, rootLabel: String): Unit = withVisualizedExceptions {
-    val treeViewModel = TreeViewModel(Some(value, rootLabel))
+    val treeViewModel = TreeViewModel(Some(value → rootLabel))
     treeViewer.setInput(treeViewModel)
     tree.setVisible(true)
     errorText.setVisible(false)
@@ -373,7 +373,7 @@ object ExpressionResultTreeView extends HasLogger {
   }
 
   class ArrayLikeCollectionStructureNode private(collectionRef: ScalaObjectReference, val label: String,
-      val parent: Option[TreeNode] = None, val arrayRef: ScalaArrayReference)
+      val parent: Option[TreeNode], val arrayRef: ScalaArrayReference)
     extends ScalaValueNode(collectionRef)
     with GroupedArrayChildrenView
 
@@ -430,7 +430,7 @@ object ExpressionResultTreeView extends HasLogger {
    * @param realStartIndex index of first child of this node in original collection
    */
   class IncrementalCollectionStructureNode private(traversableLikeRef: ScalaObjectReference, visibleElemsArrayRef: ScalaArrayReference,
-      remainingCollectionPart: ScalaObjectReference, val label: String, val parent: Option[TreeNode] = None, realStartIndex: Int = 0)
+      remainingCollectionPart: ScalaObjectReference, val label: String, val parent: Option[TreeNode], realStartIndex: Int)
     extends ScalaValueNode(traversableLikeRef) {
 
     private val visibleElemsArrayLength = visibleElemsArrayRef.getSize()

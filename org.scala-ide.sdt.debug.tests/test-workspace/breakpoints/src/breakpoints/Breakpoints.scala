@@ -4,7 +4,7 @@ import Helper._
 
 class Breakpoints {
 
-  def simple1() {
+  def simple1(): Unit = {
     var x = 0
 
     while (x < 4) {
@@ -16,7 +16,7 @@ class Breakpoints {
     x = 0
   }
 
-  def fors() {
+  def fors(): Unit = {
     for (i <- 1 to 3) {
       noop(None)
       noop(None)
@@ -28,7 +28,7 @@ class Breakpoints {
     }
   }
 
-  def mainTest() {
+  def mainTest(): Unit = {
     println("in mainTest")
     simple1()
     fors()
@@ -37,7 +37,7 @@ class Breakpoints {
 
 object Breakpoints {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     new Breakpoints().mainTest
   }
 
@@ -45,7 +45,7 @@ object Breakpoints {
 
 object Helper {
 
-  def noop(a: Any) {
+  def noop(a: Any): Unit = {
   }
 
   def ret[B](a: B): B= {

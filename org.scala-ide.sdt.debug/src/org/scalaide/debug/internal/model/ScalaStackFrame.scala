@@ -194,7 +194,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     *  stack frame to compute its value, as it can be checked by looking at the implementation of
     *  `ScalaLocalVariable.getValue`
     */
-  def rebind(newStackFrame: StackFrame) {
+  def rebind(newStackFrame: StackFrame): Unit = {
     stackFrame = newStackFrame
   }
 

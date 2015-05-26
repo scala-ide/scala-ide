@@ -32,7 +32,7 @@ class LabeledTextField(parent: Composite, obs: String => Unit, labelName: String
   textData.grabExcessHorizontalSpace = true
   textField.setLayoutData(textData)
 
-  override def setEnabled(enabled: Boolean) {
+  override def setEnabled(enabled: Boolean): Unit = {
     label.setEnabled(enabled)
     textField.setEnabled(enabled)
   }
@@ -40,7 +40,7 @@ class LabeledTextField(parent: Composite, obs: String => Unit, labelName: String
   obs(textField.getText)
 
   textField.addModifyListener(new ModifyListener {
-    def modifyText(e: ModifyEvent) {
+    def modifyText(e: ModifyEvent): Unit = {
        obs(textField.getText)
     }
   })

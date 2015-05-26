@@ -34,7 +34,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
   override def getRule(kind: Int, args: java.util.Map[String, String]): ISchedulingRule =
     project
 
-  override def clean(monitor: IProgressMonitor) {
+  override def clean(monitor: IProgressMonitor): Unit = {
     super.clean(monitor)
     val project = IScalaPlugin().getScalaProject(this.project)
     project.clean(monitor)
@@ -49,8 +49,6 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     import zinc.EclipseSbtBuildManager
 
     val project = IScalaPlugin().getScalaProject(this.project)
-    val stopBuildOnErrors =
-      project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.stopBuildOnErrors.name))
 
     // check the classpath
     if (!project.isClasspathValid()) {

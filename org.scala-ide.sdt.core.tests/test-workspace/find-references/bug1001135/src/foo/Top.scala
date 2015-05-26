@@ -2,7 +2,7 @@ package foo
 
 private[foo] abstract class Top {
 
-  def configure(s: String) {
+  def configure(s: String): Unit = {
 
   }
 }

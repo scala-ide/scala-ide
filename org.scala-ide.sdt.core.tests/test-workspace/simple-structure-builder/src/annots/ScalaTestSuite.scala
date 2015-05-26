@@ -3,14 +3,14 @@ import org.junit._
 
 class ScalaTestSuite {
 
-  @Before def prepare() {
+  @Before def prepare(): Unit = {
   }
 
   @org.junit.Test
-  def someTestMethod() {
+  def someTestMethod(): Unit = {
   }
 
-  @Test def anotherTestMethod() {
+  @Test def anotherTestMethod(): Unit = {
 
   }
 }

@@ -44,7 +44,7 @@ class SocketListenConnectorScala extends IVMConnector with SocketConnectorScala 
 
   override def getName(): String = "Scala debugger (Socket Listen)"
 
-  override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
+  override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch): Unit = {
     val arguments = generateArguments(params)
 
     // the port number is needed for the process label. It should be available if we got that far
@@ -100,7 +100,7 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
     null
   }
 
-  def setAttribute(id: String, value: String) {
+  def setAttribute(id: String, value: String): Unit = {
     // nothing to do
   }
 
@@ -115,7 +115,7 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
 
   // -- from org.eclipse.debug.core.model.ITerminate
 
-  def terminate() {
+  def terminate(): Unit = {
     // not supported
   }
 
@@ -133,7 +133,7 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
    * Called when no VM connected before the timeout.
    * Set the flag and the label accordingly.
    */
-  def failed(message: String) {
+  def failed(message: String): Unit = {
     label = message
     isTerminatedFlag = true
     fireEvent(DebugEvent.TERMINATE)
@@ -142,7 +142,7 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
   /**
    * Called when a VM has connected. The fake process is destroyed
    */
-  def done() {
+  def done(): Unit = {
     launch.removeProcess(this)
   }
 
@@ -161,7 +161,7 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
   /**
    * Utility method to fire debug events.
    */
-  private def fireEvent(kind: Int) {
+  private def fireEvent(kind: Int): Unit = {
     DebugPlugin.getDefault().fireDebugEventSet(Array(new DebugEvent(this, kind)))
   }
 }
@@ -200,11 +200,11 @@ class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProces
 
   // ------------
 
-  def connectionSuccesful() {
+  def connectionSuccesful(): Unit = {
     process.done()
   }
 
-  def connectionFailed(message: String) {
+  def connectionFailed(message: String): Unit = {
     process.failed(message)
   }
 

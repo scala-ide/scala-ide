@@ -11,7 +11,7 @@ import org.scalaide.ui.internal.preferences.EditorPreferencePage
  */
 class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  override def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+  override def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
 
     val isAutoEscapeSignEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_SIGN)
@@ -23,7 +23,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       o >= 0 && o < document.getLength && document.getChar(o) == c
     }
 
-    def removeLiteral() {
+    def removeLiteral(): Unit = {
       def isEscapeSequence(i: Int) =
         """btnfr"'\""".contains(document.getChar(command.offset + i))
 
@@ -41,38 +41,38 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
         command.length = 2
     }
 
-    def removeEscapedSign() {
+    def removeEscapedSign(): Unit = {
       if (ch(-1, '\\')) {
         command.length = 2
         command.offset -= 1
       }
     }
 
-    def jumpOverClosingLiteral() {
+    def jumpOverClosingLiteral(): Unit = {
       command.text = ""
       command.caretOffset = command.offset + 1
     }
 
-    def handleClosingLiteral() {
+    def handleClosingLiteral(): Unit = {
       val isCharFilled = if (ch(-1, ''')) ch(-2, '\\') else !ch(-1, '\\')
 
       if (ch(0, ''') && isCharFilled)
         jumpOverClosingLiteral()
     }
 
-    def handleEscapeSign() {
+    def handleEscapeSign(): Unit = {
       if (!ch(-1, '\\')) {
         command.text = "\\\\"
       }
     }
 
-    def handleClosingMultiLineLiteral() {
+    def handleClosingMultiLineLiteral(): Unit = {
       command.caretOffset = command.offset + 1
       command.text = command.text * 4
       command.shiftsCaret = false
     }
 
-    def customizeLiteral() {
+    def customizeLiteral(): Unit = {
       command.text match {
         case "\\" if isAutoEscapeSignEnabled      => handleEscapeSign()
         case "'"                                  => handleClosingLiteral()
@@ -84,11 +84,11 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     def isEmptyLiteral =
       ((ch(0, ''') && ch(1, ''')) || (ch(0, '"') && ch(1, '"'))) && !ch(-1, '\\')
 
-    def deleteEmptyLiteral() {
+    def deleteEmptyLiteral(): Unit = {
       command.length = 2
     }
 
-    def customizeChar() {
+    def customizeChar(): Unit = {
       command.text match {
         case "" if isEmptyLiteral                 => deleteEmptyLiteral()
         case "" if isAutoRemoveEscapedSignEnabled => removeLiteral()
@@ -96,7 +96,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       }
     }
 
-    def customizeMultiLineLiteral() {
+    def customizeMultiLineLiteral(): Unit = {
       command.text match {
         case "\"" => handleClosingMultiLineLiteral()
         case _    =>

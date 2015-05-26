@@ -15,11 +15,11 @@ class MultipleErrorsTest {
   import MultipleErrorsTest._
 
   @Before
-  def setupWorkspace() {
+  def setupWorkspace(): Unit = {
     SDTTestUtils.enableAutoBuild(false)
   }
 
-  @Test def test1000735() {
+  @Test def test1000735(): Unit = {
     println("building " + project)
     project.clean(new NullProgressMonitor())
     project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)

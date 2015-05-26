@@ -4,16 +4,7 @@ import java.util.ArrayList
 import java.util.Arrays
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import scala.actors.AbstractActor
-import scala.actors.Actor._
-import scala.actors.Actor
-import scala.actors.DaemonActor
-import scala.actors.Exit
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
-import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.debug.internal.EclipseDebugEvent
-import org.scalaide.logging.HasLogger
+
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IDebugEventSetListener
@@ -22,34 +13,39 @@ import org.eclipse.debug.core.model.IProcess
 import org.eclipse.jdi.internal.VirtualMachineImpl
 import org.eclipse.jdi.internal.event.EventIteratorImpl
 import org.eclipse.jdi.internal.request.EventRequestImpl
-import org.hamcrest.CoreMatchers._
+import org.hamcrest.CoreMatchers.is
+import org.hamcrest.CoreMatchers.not
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito._
 import org.mockito.Matchers.anyLong
+import org.mockito.Mockito._
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.EclipseDebugEvent
+import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.debug.internal.ScalaDebugTestSession
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.Suppress
+
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.Event
 import com.sun.jdi.event.EventQueue
 import com.sun.jdi.event.EventSet
+import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.EventRequestManager
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import com.sun.jdi.event.VMDisconnectEvent
-
-import scala.language.implicitConversions
-import scala.language.reflectiveCalls
 
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
 
   object TerminationListenerActor {
-    private case class LinksTo(actors: Set[Actor])
-    def apply(linkTo: Actor)(onTermination: () => Unit): Actor = apply(Set(linkTo))(onTermination)
-    def apply(linksTo: Set[Actor])(onTermination: () => Unit): Actor = {
+    private case class LinksTo(actors: Set[Suppress.DeprecatedWarning.Actor])
+    def apply(linkTo: Suppress.DeprecatedWarning.Actor)(onTermination: () => Unit): Suppress.DeprecatedWarning.Actor = apply(Set(linkTo))(onTermination)
+    def apply(linksTo: Set[Suppress.DeprecatedWarning.Actor])(onTermination: () => Unit): Suppress.DeprecatedWarning.Actor = {
       val actor = new TerminationListenerActor(onTermination)
       actor.start()
       // Block the current thread and make sure that the `linksTo` actors are linked together with the `actor`.
@@ -59,27 +55,27 @@ object DebugTargetTerminationTest {
       actor
     }
   }
-  private class TerminationListenerActor(onTermination: () => Unit) extends DaemonActor {
+  private class TerminationListenerActor(onTermination: () => Unit) extends Suppress.DeprecatedWarning.DaemonActor {
     import TerminationListenerActor.LinksTo
 
-    var linkedActors: Set[Actor] = _
+    var linkedActors: Set[Suppress.DeprecatedWarning.Actor] = _
     var stopped = false
-    var terminatedLinks: Set[AbstractActor] = Set()
+    var terminatedLinks: Set[Suppress.DeprecatedWarning.AbstractActor] = Set()
 
     override def act() = {
-      self.trapExit = true
+      Suppress.DeprecatedWarning.Actor.self.trapExit = true
       loopWhile(!stopped) {
         react {
           case LinksTo(actors) =>
-            actors foreach { actor => assertThat(actor.toString, actor.getState, is(not(State.Terminated))) }
+            actors foreach { actor => assertThat(actor.toString, actor.getState, is(not(Suppress.DeprecatedWarning.State.Terminated))) }
             actors.foreach(link(_))
             linkedActors = actors
             reply(())
-          case Exit(from, reason) =>
-            terminatedLinks += from
+          case exit: Suppress.DeprecatedWarning.Exit =>
+            terminatedLinks += exit.from
             if (linkedActors.forall(terminatedLinks contains _)) {
               stopped = true
-              linkedActors.foreach(self.unlink(_))
+              linkedActors.foreach(Suppress.DeprecatedWarning.Actor.self.unlink(_))
               onTermination()
             }
         }
@@ -101,14 +97,14 @@ class DebugTargetTerminationTest extends HasLogger {
   var debugTarget: ScalaDebugTarget = _
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @Before
-  def initializeDebugTarget() {
+  def initializeDebugTarget(): Unit = {
     virtualMachine = mock(classOf[VirtualMachineImpl])
     when(virtualMachine.allThreads).thenReturn(new ArrayList[ThreadReference]())
     val eventRequestManager = mock(classOf[EventRequestManager])
@@ -140,14 +136,14 @@ class DebugTargetTerminationTest extends HasLogger {
     override def handleDebugEvents(events: Array[DebugEvent]): Unit = f(events)
   }
 
-  private def checkGracefulTerminationOf(actors: Actor*) = new {
+  private def checkGracefulTerminationOf(actors: Suppress.DeprecatedWarning.Actor*) = new {
     def when(body: => Unit): Unit = {
       withCountDownLatch(1) { latch =>
         // setup test actor that listens for termination
         TerminationListenerActor(actors.toSet) { () =>
           // verify
           for (a <- actors)
-            assertThat(a + "expected to be terminated, but it's alive.", a.getState, is(State.Terminated))
+            assertThat(a + "expected to be terminated, but it's alive.", a.getState, is(Suppress.DeprecatedWarning.State.Terminated))
           latch.countDown()
         }
         body
@@ -162,7 +158,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def abruptTerminationOf_DebugTargetActor_is_gracefully_handled() {
+  def abruptTerminationOf_DebugTargetActor_is_gracefully_handled(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
@@ -172,7 +168,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor() {
+  def normalTerminationOf_DebugTargetActor(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
@@ -181,7 +177,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination() {
+  def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
@@ -191,7 +187,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination() {
+  def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
@@ -201,7 +197,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination() {
+  def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -211,7 +207,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination() {
+  def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -221,7 +217,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination() {
+  def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -232,7 +228,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def throwing_GenericException_in_JdiEventDispatcher_doesNot_terminates_linked_actors() {
+  def throwing_GenericException_in_JdiEventDispatcher_doesNot_terminates_linked_actors(): Unit = {
     // set up a dummy debugger request and event
     val dummyEventRequest: EventRequest = new EventRequestImpl("Dummy Event Request", virtualMachine.asInstanceOf[VirtualMachineImpl]) {
       override protected def eventKind(): Byte = 999.toByte //avoids collision with constants defined in org.eclipse.jdi.internal.event.EventImpl
@@ -247,9 +243,9 @@ class DebugTargetTerminationTest extends HasLogger {
 
     // this is a test actor that terminates its execution when the `dummyEvent` is received
     withCountDownLatch(1) { latch =>
-      val testActor = actor {
-        loop {
-          react {
+      val testActor = Suppress.DeprecatedWarning.Actor.actor {
+        Suppress.DeprecatedWarning.Actor.loop {
+          Suppress.DeprecatedWarning.Actor.react {
             case event if event == dummyEvent => latch.countDown()
           }
         }
@@ -269,7 +265,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors() {
+  def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     val sut = new BaseDebuggerActor {

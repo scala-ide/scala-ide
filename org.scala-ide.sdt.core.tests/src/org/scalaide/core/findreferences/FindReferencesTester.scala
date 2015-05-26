@@ -9,7 +9,6 @@ trait FindReferencesTester {
   import FindReferencesTester._
 
   object Element {
-    import scala.language.implicitConversions
     implicit def element2testBuilder(e: Element): TestDef = new TestDef(e)
   }
 

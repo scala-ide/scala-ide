@@ -8,7 +8,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
-import org.junit.Ignore
 
 class GenericsTest extends BaseIntegrationTest(GenericsTest) {
 

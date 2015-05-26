@@ -23,7 +23,7 @@ class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the hi
     control
   }
 
-  override def createFieldEditors() {
+  override def createFieldEditors(): Unit = {
     addBooleanFieldEditors(
       PActive -> "Enable implicit highlighting",
       PBold -> "Highlight in bold",
@@ -45,7 +45,7 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
 
   import ImplicitsPreferencePage._
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     store.setDefault(PActive, true)
     store.setDefault(PBold, false)

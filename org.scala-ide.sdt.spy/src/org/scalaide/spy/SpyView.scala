@@ -20,15 +20,16 @@ import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.util.internal.Suppress
 
 class SpyView extends ViewPart with HasLogger {
   private var textArea: Text = _
 
-  def setFocus() {
+  def setFocus(): Unit = {
     textArea.setFocus()
   }
 
-  def createPartControl(parent: Composite) {
+  def createPartControl(parent: Composite): Unit = {
     textArea = new Text(parent, SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL)
     textArea.setFont(JFaceResources.getTextFont()) // fixed width font
 
@@ -37,12 +38,12 @@ class SpyView extends ViewPart with HasLogger {
     getSite.getWorkbenchWindow().getSelectionService().addPostSelectionListener(listener)
   }
 
-  override def dispose() {
+  override def dispose(): Unit = {
     super.dispose()
     getSite.getWorkbenchWindow().getSelectionService().removePostSelectionListener(listener)
   }
 
-  private def updateView(selection: ITextSelection, part: IWorkbenchPart) {
+  private def updateView(selection: ITextSelection, part: IWorkbenchPart): Unit = {
     textArea.setText("Offset: \t%s".format(selection.getOffset().toString))
     textArea.append("\nLength: \t%s".format(selection.getLength().toString))
 
@@ -78,7 +79,7 @@ class SpyView extends ViewPart with HasLogger {
   }
 
   object listener extends ISelectionListener {
-    override def selectionChanged(sourcePart: IWorkbenchPart, selection: ISelection) {
+    override def selectionChanged(sourcePart: IWorkbenchPart, selection: ISelection): Unit = {
       selection match {
         case textSelection: ITextSelection =>
           updateView(textSelection, sourcePart)
@@ -112,9 +113,9 @@ class SpyView extends ViewPart with HasLogger {
 
   var browseAction: Action = _
 
-  def createActions() {
+  def createActions(): Unit = {
     browseAction = new Action {
-      override def run() {
+      override def run(): Unit = {
         val editor = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor()
         doWithCompilationUnit(editor) { unit =>
           unit.scalaProject.presentationCompiler { compiler =>
@@ -132,7 +133,7 @@ class SpyView extends ViewPart with HasLogger {
                 frame.setTreeModel(tm)
 
                 // throw-away lock, since we don't need to wait for the frame
-                frame.createFrame(new scala.concurrent.Lock())
+                frame.createFrame(new Suppress.DeprecatedWarning.Lock())
               case Right(ex) =>
                 eclipseLog.warn("Could not retrieve typed tree", ex)
             }

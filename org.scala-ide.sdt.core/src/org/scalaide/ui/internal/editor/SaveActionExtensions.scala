@@ -123,7 +123,13 @@ trait SaveActionExtensions extends HasLogger {
       val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(udoc)
       undoManager.beginCompoundChange()
 
-      try applyDocumentExtensions(udoc)
+      try {
+        applyDocumentExtensions(udoc)
+        // TODO compiler driven save actions first need to get fixed before they can be enabled.
+        // See #1002308
+        if (false)
+          applyCompilerExtensions(udoc)
+      }
       finally {
         updateEditor()
 

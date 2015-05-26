@@ -61,11 +61,11 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     res
   }
 
-  def disposePreviewer() {
+  def disposePreviewer(): Unit = {
     chainedPreferenceStore.removePropertyChangeListener(this)
   }
 
-  def propertyChange(event: PropertyChangeEvent) {
+  def propertyChange(event: PropertyChangeEvent): Unit = {
     // tell configuration to take into account the changes as well
     configuration.propertyChange(event)
     // refreshes the highlighting

@@ -6,7 +6,7 @@ class CreateClassTests {
   import UiQuickAssistTests._
 
   @Test
-  def createClassQuickFixes() {
+  def createClassQuickFixes(): Unit = {
     withQuickFixes("createclass/UsesMissingClass.scala")("Create class 'ThisClassDoesNotExist'")
   }
 }

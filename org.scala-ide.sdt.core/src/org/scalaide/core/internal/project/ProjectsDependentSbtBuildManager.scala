@@ -1,5 +1,7 @@
 package org.scalaide.core.internal.project
 
+import java.io.File
+
 import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IFile
@@ -9,11 +11,13 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
+import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
-/** Build manager which compiles sources without dividing on scopes.
+/**
+ * Build manager which compiles sources without dividing on scopes.
  *  Refer to [[CompileScope]]
  */
 class ProjectsDependentSbtBuildManager(project: IScalaProject, settings: Settings)
@@ -39,5 +43,9 @@ class ProjectsDependentSbtBuildManager(project: IScalaProject, settings: Setting
       project.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
       super.build(addedOrUpdated, removed, pm)
     }
+  }
+
+  override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] = project.sourceOutputFolders.collectFirst {
+    case (_, outputFolder) if outputFolder.getLocation.toFile == outputFile => this
   }
 }

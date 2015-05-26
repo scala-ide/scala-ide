@@ -18,7 +18,7 @@ object CommandField {
   }
 
   class NullEvaluator extends Evaluator {
-    override def eval(command: String) {}
+    override def eval(command: String): Unit = {}
   }
 }
 
@@ -57,7 +57,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
     private val history = new ArrayBuffer[String]
     private var pos: Int = _
 
-    private def appendHistory(expr: String) {
+    private def appendHistory(expr: String): Unit = {
       history += expr
       // every time a new command is pushed in the history, the
       // currently tracked history position (used for history navigation
@@ -65,11 +65,11 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       resetHistoryPos()
     }
 
-    def resetHistoryPos() {
+    def resetHistoryPos(): Unit = {
       pos = history.length
     }
 
-    def clearHistory() {
+    def clearHistory(): Unit = {
       history.clear()
       resetHistoryPos()
     }
@@ -87,7 +87,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
     private def pressedEvaluationKeys(e: org.eclipse.swt.events.KeyEvent) = evaluateKeys.exists(_.matches(e))
 
-    private[repl] def evaluate(command: String) {
+    private[repl] def evaluate(command: String): Unit = {
       if (command.nonEmpty) {
         appendHistory(command)
         evaluator.eval(command)
@@ -95,17 +95,17 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       }
     }
 
-    private def showPreviousExprFromHistory() {
+    private def showPreviousExprFromHistory(): Unit = {
       if (pos > 0) pos -= 1
       updateTextWithCurrentHistory()
     }
 
-    private def showNextExprFromHistory() {
+    private def showNextExprFromHistory(): Unit = {
       if (pos < history.length) pos += 1
       updateTextWithCurrentHistory()
     }
 
-    private def updateTextWithCurrentHistory() {
+    private def updateTextWithCurrentHistory(): Unit = {
       def currentHistoryToken: String =
         if (history.isEmpty || pos >= history.length) ""
         else history(pos)
@@ -115,7 +115,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       setCaretOffset(text.length)
     }
 
-    private[CommandField] def reset() {
+    private[CommandField] def reset(): Unit = {
       resetHistoryPos()
       updateTextWithCurrentHistory()
     }
@@ -149,7 +149,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
 
     def isHelpTextDisplayed: Boolean = helpTextDisplayed
 
-    def hideHelpText() {
+    def hideHelpText(): Unit = {
       if (helpTextDisplayed) {
         helpTextDisplayed = false
         textWidget.setForeground(codeFgColor)
@@ -157,7 +157,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
       }
     }
 
-    def maybeShowHelpText() {
+    def maybeShowHelpText(): Unit = {
       if (textWidget.getText().isEmpty) {
         helpTextDisplayed = true
         textWidget.setForeground(codeFgColor)
@@ -176,7 +176,7 @@ class CommandField(parent: Composite, style: Int) extends StyledText(parent, sty
   addVerifyKeyListener(inputFieldListener)
 
   /** Allows to plug a different evaluation strategy for the typed command. */
-  def setEvaluator(_evaluator: Evaluator) { evaluator = _evaluator }
+  def setEvaluator(_evaluator: Evaluator): Unit = { evaluator = _evaluator }
 
   def clear(): Unit = inputFieldListener.reset()
 

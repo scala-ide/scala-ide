@@ -6,7 +6,7 @@ import org.junit._
 class ObjectTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_object() {
+  def basic_object(): Unit = {
     checkSymbolClassification("""
       object Object
       object `Object2` {
@@ -23,7 +23,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore
-  def package_object() {
+  def package_object(): Unit = {
     checkSymbolClassification("""
       package object packageObject {
         val x = 42
@@ -37,7 +37,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_object() {
+  def import_object(): Unit = {
     checkSymbolClassification("""
       package pack { object Object }
       import pack.Object
@@ -50,7 +50,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore
-  def import_all_members_of_an_object() {
+  def import_all_members_of_an_object(): Unit = {
     checkSymbolClassification("""
       import scala.collection.JavaConverters._
         """, """
@@ -60,7 +60,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def object_member_within_type_param() {
+  def object_member_within_type_param(): Unit = {
     checkSymbolClassification("""
       object TypeA { class TypeB }
       trait Trait extends Seq[TypeA.TypeB]
@@ -73,7 +73,7 @@ class ObjectTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Enable when ticket #1001024 is fixed")
-  def companion_object_should_not_be_treated_as_case_class() {
+  def companion_object_should_not_be_treated_as_case_class(): Unit = {
     checkSymbolClassification("""
       case class FooBar()
       object FooBar

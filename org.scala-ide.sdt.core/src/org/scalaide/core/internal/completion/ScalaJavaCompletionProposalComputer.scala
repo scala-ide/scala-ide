@@ -58,8 +58,8 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
  * The //test comments reference the test cases from <code>ScalaJavaCompletionTests</code>
  */
 class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalComputer {
-  def sessionStarted() {}
-  def sessionEnded() {}
+  def sessionStarted(): Unit = {}
+  def sessionEnded(): Unit = {}
   def getErrorMessage() = null
 
   def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) =
@@ -85,7 +85,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
-    val ast = unit.reconcile(AST.JLS3,
+    val ast = unit.reconcile(AST.JLS8,
       ICompilationUnit.FORCE_PROBLEM_DETECTION | // force the resolution of the type bindings
         ICompilationUnit.ENABLE_STATEMENTS_RECOVERY | // try to make sense of malformed statements
         ICompilationUnit.ENABLE_BINDINGS_RECOVERY, // try to guess binding even if the code is not fully valid
@@ -189,7 +189,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Get the string to complete, and the referenced type form the
    * found enclosing node
    */
-  override def endVisit(compilationUnit: CompilationUnit) {
+  override def endVisit(compilationUnit: CompilationUnit): Unit = {
     enclosingNode match {
       case block: Block =>
         contextString = ""
@@ -376,7 +376,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Set the value of contextString from a SimpleName node containing
    * the offset.
    */
-  private def setContextStringFrom(simpleName: SimpleName) {
+  private def setContextStringFrom(simpleName: SimpleName): Unit = {
     contextString = simpleName.getIdentifier().substring(0, offset - simpleName.getStartPosition())
   }
 

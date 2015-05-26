@@ -7,7 +7,7 @@ import org.junit._
 class CaseClassTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def case_class() {
+  def case_class(): Unit = {
     checkSymbolClassification("""
       case class CaseClass {
         def method(other: CaseClass) = 42
@@ -19,7 +19,7 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_class_creation() {
+  def case_class_creation(): Unit = {
     checkSymbolClassification("""
       case class CaseClass(n: Int) {
         CaseClass(42)
@@ -31,7 +31,7 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_class_in_import() {
+  def case_class_in_import(): Unit = {
     checkSymbolClassification("""
       package foo { case class CaseClass }
       import foo.CaseClass
@@ -43,7 +43,7 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def case_class_pattern_match() {
+  def case_class_pattern_match(): Unit = {
     checkSymbolClassification("""
       object X {
         val Some(x) = Some(42)
@@ -56,7 +56,7 @@ class CaseClassTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Enable when ticket #1001171 is fixed")
-  def infix_notation_for_extractors() {
+  def infix_notation_for_extractors(): Unit = {
     checkSymbolClassification("""
         class X {
           val a Foo b = Foo(1, 2)

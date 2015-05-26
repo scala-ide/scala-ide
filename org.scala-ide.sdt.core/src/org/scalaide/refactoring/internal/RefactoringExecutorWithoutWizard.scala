@@ -22,7 +22,7 @@ trait RefactoringExecutorWithoutWizard extends RefactoringExecutor {
     runRefactoringInUiJob()
   }
 
-  def runRefactoringInUiJob() {
+  def runRefactoringInUiJob(): Unit = {
     ProgressHelpers.runInUiJob { (pm, shell) =>
       createScalaIdeRefactoringForCurrentEditorAndSelection() match {
         case Some(refactoring: ScalaIdeRefactoring) =>

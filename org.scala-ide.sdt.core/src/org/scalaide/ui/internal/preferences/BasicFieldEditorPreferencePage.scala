@@ -15,7 +15,7 @@ abstract class BasicFieldEditorPreferencePage(description: String) extends Field
 
   override def init(workbench: IWorkbench) = Unit
 
-  protected def addBooleanFieldEditors(editors: (String, String)*) {
+  protected def addBooleanFieldEditors(editors: (String, String)*): Unit = {
     for ((name, label) <- editors) {
       addField(new BooleanFieldEditor(name, label, getFieldEditorParent))
     }

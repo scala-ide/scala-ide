@@ -35,7 +35,7 @@
             commandId="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             contextId="scala.tools.eclipse.scalaEditorScope"
-            sequence="M1+M2+Z"/>
+            sequence="M1+M2+K"/>
     </extension>
 	
     <extension

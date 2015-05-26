@@ -6,16 +6,16 @@ import org.scalaide.util.internal.ui.UIThread
 object DisplayThread extends UIThread {
 
   /** Asynchronously run `f` on the UI thread.  */
-  override def asyncExec(f: => Unit) {
+  override def asyncExec(f: => Unit): Unit = {
     Display.getDefault asyncExec new Runnable {
-      override def run() { f }
+      override def run(): Unit = { f }
     }
   }
 
   /** Synchronously run `f` on the UI thread.  */
-  override def syncExec(f: => Unit) {
+  override def syncExec(f: => Unit): Unit = {
     Display.getDefault syncExec new Runnable {
-      override def run() { f }
+      override def run(): Unit = { f }
     }
   }
 

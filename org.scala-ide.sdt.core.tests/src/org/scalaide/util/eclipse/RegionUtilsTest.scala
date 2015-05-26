@@ -10,7 +10,7 @@ class RegionUtilsTest {
   import RegionUtilsTest._
 
   @Test
-  def substractAContainsB {
+  def substractAContainsB(): Unit = {
 
     val a = List(new TypedRegion(0, 16, "A"))
     val b = List(new TypedRegion(1, 15, "B"))
@@ -24,7 +24,7 @@ class RegionUtilsTest {
   }
 
   @Test
-  def substractEmtpies {
+  def substractEmtpies(): Unit = {
     val a = List(new TypedRegion(0, 0, "A"))
     val b = List(new TypedRegion(0, 0, "B"))
 
@@ -36,7 +36,7 @@ class RegionUtilsTest {
   }
 
   @Test
-  def substract_issue_123 {
+  def substract_issue_123(): Unit = {
     val a = List(new TypedRegion(808, 93, "A"), new TypedRegion(908, 52, "A"))
     val b = List(new TypedRegion(807, 20, "B"), new TypedRegion(881, 13, "B"), new TypedRegion(899, 3, "B"))
 
@@ -49,7 +49,7 @@ class RegionUtilsTest {
   }
 
   @Test(expected = classOf[IllegalArgumentException])
-  def substractWithOverlappingList {
+  def substractWithOverlappingList(): Unit = {
     val a = List(new TypedRegion(0, 10, "A"), new TypedRegion(9, 2, "B")) // overlapping
     val b = List(new TypedRegion(1, 1, "C"))
 
@@ -57,7 +57,7 @@ class RegionUtilsTest {
   }
 
   @Test(expected = classOf[IllegalArgumentException])
-  def intersectWithNonOrderedList {
+  def intersectWithNonOrderedList(): Unit = {
     val a = List(new TypedRegion(1, 1, "C"))
     val b = List(new TypedRegion(12, 10, "A"), new TypedRegion(5, 2, "B")) // non-ordered
 
@@ -69,76 +69,76 @@ class RegionUtilsTest {
   }
 
   @Test
-  def overlapBefore {
+  def overlapBefore(): Unit = {
     test(CaseBefore, testNoOverlap)
   }
 
   @Test
-  def overlapBeforeTouching {
+  def overlapBeforeTouching(): Unit = {
     test(CaseBeforeTouching, testNoOverlap)
   }
 
   @Test
-  def overlapOverBeginning {
+  def overlapOverBeginning(): Unit = {
     test(CaseOverBeginning, testOverlap)
   }
 
   @Test
-  def overlapInsideSmaller {
+  def overlapInsideSmaller(): Unit = {
     test(CaseInsideSmaller, testOverlap)
   }
 
   @Test
-  def overlapSame {
+  def overlapSame(): Unit = {
     test(CaseSame, testOverlap)
   }
 
   @Test
-  def overlapOverLarger {
+  def overlapOverLarger(): Unit = {
     test(CaseOverLarger, testOverlap)
   }
 
   @Test
-  def overlapOverEnd {
+  def overlapOverEnd(): Unit = {
     test(CaseOverEnd, testOverlap)
   }
 
   @Test
-  def overlapAfterTouching {
+  def overlapAfterTouching(): Unit = {
     test(CaseAfterTouching, testNoOverlap)
   }
 
   @Test
-  def overlapAfter {
+  def overlapAfter(): Unit = {
     test(CaseAfter, testNoOverlap)
   }
 
-  private def testNoOverlap(cas: UseCase) {
+  private def testNoOverlap(cas: UseCase): Unit = {
     import RegionUtils.RichRegion
     assertFalse(s"(${cas.offsetA}, ${cas.lengthA}) should not overlap with (${cas.offsetB}, ${cas.lengthB})", new Region(cas.offsetA, cas.lengthA).intersects(new Region(cas.offsetB, cas.lengthB)))
   }
 
-  private def testOverlap(cas: UseCase) {
+  private def testOverlap(cas: UseCase): Unit = {
     import RegionUtils.RichRegion
     assertTrue(s"(${cas.offsetA}, ${cas.lengthA}) should not overlap with (${cas.offsetB}, ${cas.lengthB})", new Region(cas.offsetA, cas.lengthA).intersects(new Region(cas.offsetB, cas.lengthB)))
   }
 
   @Test
-  def shiftPositive {
+  def shiftPositive(): Unit = {
     testShift(14, 8, 5, 19, 8)
   }
 
   @Test
-  def shiftZero {
+  def shiftZero(): Unit = {
     testShift(15, 7, 0, 15, 7)
   }
 
   @Test
-  def shiftNegative {
+  def shiftNegative(): Unit = {
     testShift(16, 6, -4, 12, 6)
   }
 
-  private def testShift(startOffset: Int, startLength: Int, shift: Int, expectedOffset: Int, expectedLength: Int) {
+  private def testShift(startOffset: Int, startLength: Int, shift: Int, expectedOffset: Int, expectedLength: Int): Unit = {
     import RegionUtils._
     val startRegion = new TypedRegion(startOffset, startLength, "shift")
     val expectedRegion = new TypedRegion(expectedOffset, expectedLength, "shift")
@@ -147,51 +147,51 @@ class RegionUtilsTest {
   }
 
   @Test
-  def coreBefore {
+  def coreBefore(): Unit = {
     test(CaseBefore, testCrop(0,0))
   }
 
   @Test
-  def coreBeforeTouching {
+  def coreBeforeTouching(): Unit = {
     test(CaseBeforeTouching, testCrop(0,0))
   }
 
   @Test
-  def coreOverBeginning {
+  def coreOverBeginning(): Unit = {
     test(CaseOverBeginning, testCrop(13, 3))
   }
 
   @Test
-  def coreInsideSmaller {
+  def coreInsideSmaller(): Unit = {
     test(CaseInsideSmaller, testCrop(14, 3))
   }
 
   @Test
-  def coreSame {
+  def coreSame(): Unit = {
     test(CaseSame, testCrop(13, 7))
   }
 
   @Test
-  def coreOverLarger {
+  def coreOverLarger(): Unit = {
     test(CaseOverLarger, testCrop(13, 7))
   }
 
   @Test
-  def coreOverEnd {
+  def coreOverEnd(): Unit = {
     test(CaseOverEnd, testCrop(17,3))
   }
 
   @Test
-  def coreAfterTouching {
+  def coreAfterTouching(): Unit = {
     test(CaseAfterTouching, testCrop(0,0))
   }
 
   @Test
-  def coreAfter {
+  def coreAfter(): Unit = {
     test(CaseAfter, testCrop(0,0))
   }
 
-  def testCrop(expectedOffset: Int, expectedLength: Int)(cas: UseCase) {
+  def testCrop(expectedOffset: Int, expectedLength: Int)(cas: UseCase): Unit = {
     import RegionUtils.RichTypedRegion
     val startRegion = new TypedRegion(cas.offsetA, cas.lengthA, "crop")
     val expectedRegion = new TypedRegion(expectedOffset, expectedLength, "crop")

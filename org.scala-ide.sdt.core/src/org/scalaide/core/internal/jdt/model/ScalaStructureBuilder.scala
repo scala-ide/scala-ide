@@ -62,7 +62,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     type OverrideInfo = Int
     val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
 
-    def fillOverrideInfos(c : Symbol) {
+    def fillOverrideInfos(c : Symbol): Unit = {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
         if (!base.isEmpty) {
@@ -110,7 +110,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
       def addFunction(f : Function) : Owner = this
 
-      def resetImportContainer() {}
+      def resetImportContainer(): Unit = {}
 
       def addChild(child : JavaElement) =
         elementInfo match {
@@ -121,8 +121,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty
       def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
 
-      private[ScalaStructureBuilder] def complete(treeTraverser: TreeTraverser) {
-        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo) {
+      private[ScalaStructureBuilder] def complete(treeTraverser: TreeTraverser): Unit = {
+        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo): Unit = {
           for(innerClasses <- treeTraverser.moduleInfo2innerClassDefs.get(mInfo); innerClass <- innerClasses) {
             /* The nested classes are exposed as children of the module's companion class. */
             val classBuilder: Builder = new Builder {
@@ -137,7 +137,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           }
         }
 
-        def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
+        def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol): Unit = {
           def conflictsIn(cls: Symbol, name: Name) =
             if (cls != NoSymbol)
               cls.info.nonPrivateMembers.exists(_.name == name)
@@ -177,7 +177,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             addForwarder(classElem, classElemInfo, module, m)
         }
 
-        def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol) {
+        def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol): Unit = {
           val nm = d.name
 
           val fps = d.paramss.flatten
@@ -357,7 +357,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
         def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
 
-        def addImport(name : String, isWildcard : Boolean) {
+        def addImport(name : String, isWildcard : Boolean): Unit = {
           val path = prefix + (if(isWildcard) "" else "." + name)
 
           val (importContainer, importContainerInfo) = currentImportContainer getOrElse {
@@ -605,7 +605,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         self
       }
 
-      def addBeanAccessors(sym: Symbol) {
+      def addBeanAccessors(sym: Symbol): Unit = {
         val beanName = sym.name.dropLocal.toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
@@ -767,7 +767,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
     }
 
-    def resolveDuplicates(handle : SourceRefElement) {
+    def resolveDuplicates(handle : SourceRefElement): Unit = {
       while (newElements0.containsKey(handle)) {
         handle.occurrenceCount += 1
       }
@@ -872,7 +872,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
 
-    def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position) {
+    def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position): Unit = {
       val pos = sym.pos
       val (start, end) =
         if (pos.isDefined) {
@@ -897,7 +897,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       info.setSourceRangeEnd0(end)
     }
 
-    def traverse(tree: Tree) {
+    def traverse(tree: Tree): Unit = {
       val traverser = new TreeTraverser
       traverser.traverse(tree, new CompilationUnitBuilder)
     }
@@ -907,7 +907,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
        * The map's key refer to the module's symbol (it should really be of type {{{ModuleClassSymbol}}}). */
       val moduleInfo2innerClassDefs = collection.mutable.Map.empty[ScalaElementInfo, List[ClassDef]]
 
-      def traverse(tree: Tree, builder : Owner) {
+      def traverse(tree: Tree, builder : Owner): Unit = {
         val (newBuilder, children) = {
           tree match {
             case _ : Import =>

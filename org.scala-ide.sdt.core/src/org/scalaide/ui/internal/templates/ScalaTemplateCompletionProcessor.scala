@@ -82,7 +82,7 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
  */
 class ScalaTemplateContextType extends TemplateContextType {
 
-  private def addGlobalResolvers() {
+  private def addGlobalResolvers(): Unit = {
     addResolver(new GlobalTemplateVariables.Cursor())
     addResolver(new GlobalTemplateVariables.WordSelection())
     addResolver(new GlobalTemplateVariables.LineSelection())

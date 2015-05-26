@@ -214,7 +214,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   def dispose(): Unit = {
-    import scala.language.reflectiveCalls
     disposables foreach { _.dispose() }
   }
 
@@ -239,7 +238,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
       val tb = ctx.evaluate(template)
       val vars = tb.getVariables()
       val replacements = vars flatMap { v =>
-        val len = v.getName().length() + "${}".length()
+        val len = v.getName().length() + 3 // "${}".length = 3
         val value = v.getDefaultValue()
         v.getOffsets() map (off => (off, len, value))
       }

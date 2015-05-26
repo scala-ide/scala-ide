@@ -18,7 +18,7 @@ class SimpleContentProposalProviderTest {
   import SimpleContentProposalProvider._
 
   @Test
-  def testCurrentNamePrefix() {
+  def testCurrentNamePrefix(): Unit = {
     val provider = new SimpleContentProposalProvider
     val expression = "foo .bar\tbaz\nala.ela.ola"
 
@@ -36,7 +36,7 @@ class SimpleContentProposalProviderTest {
   }
 
   @Test
-  def testGetProposalsForEnabledCodeCompletion() {
+  def testGetProposalsForEnabledCodeCompletion(): Unit = {
     val proposals = createProposalsList
 
     val provider = new SimpleContentProposalProvider {
@@ -53,7 +53,7 @@ class SimpleContentProposalProviderTest {
   }
 
   @Test
-  def testgGetProposalsForDisabledCodeCompletion() {
+  def testgGetProposalsForDisabledCodeCompletion(): Unit = {
     val provider = new SimpleContentProposalProvider {
       override def isCodeCompletionEnabled() = false
       override val proposalsForCurrentContext = createProposalsList
@@ -63,7 +63,7 @@ class SimpleContentProposalProviderTest {
   }
 
   @Test
-  def testCreateContentProposalsForString() {
+  def testCreateContentProposalsForString(): Unit = {
     val seq = Seq(("content1", "label1"), ("content2", "label2"))
     val typeName = "typeName"
 
@@ -79,7 +79,7 @@ class SimpleContentProposalProviderTest {
   }
 
   @Test
-  def testShouldBeProposal() {
+  def testShouldBeProposal(): Unit = {
     assertTrue(shouldBeProposal("unary_-"))
     assertFalse(shouldBeProposal("foo$bar"))
     assertFalse(shouldBeProposal("<init>"))
@@ -93,7 +93,7 @@ class SimpleContentProposalProviderTest {
     new ContentProposal("foo", "label_foo", "description_foo"),
     new ContentProposal("barbarian", "label_barbarian", "description_barbarian"))
 
-  private def compareProposals(currentProposals: Seq[IContentProposal], expectedProposals: Seq[IContentProposal]) {
+  private def compareProposals(currentProposals: Seq[IContentProposal], expectedProposals: Seq[IContentProposal]): Unit = {
     assertEquals(expectedProposals.length, currentProposals.length)
     currentProposals.zip(expectedProposals).foreach {
       case (current, expected) =>

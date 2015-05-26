@@ -24,7 +24,7 @@ trait BaseTrait {
     someArg2
   }
 
-  def abstractMethodWithDefault(someArg3: String = "last default String")
+  def abstractMethodWithDefault(someArg3: String = "last default String"): Unit
 
   val concreteField1: Int = 42
   val abstractField1: String
@@ -37,7 +37,7 @@ class ConcreteClass extends BaseTrait {
   def abstractMethodWithDefault(someArg3: String) = ""
 
   // static call to a Java method, but not a forwarder!
-  def console() {
+  def console(): Unit = {
     System.console()
   }
 
@@ -54,7 +54,7 @@ class ConcreteClass extends BaseTrait {
 
 class MethodClassifiers {
 
-  def mainTest() {
+  def mainTest(): Unit = {
     val d = new Defaults()
 
     d.methWithDefaults()
@@ -72,7 +72,7 @@ class MethodClassifiers {
 
 object MethodClassifiers {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     new MethodClassifiers().mainTest()
   }
 

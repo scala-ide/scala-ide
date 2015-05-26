@@ -1,7 +1,5 @@
 package org.scalaide.core.internal.project
 
-import language.implicitConversions
-
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.internal.CompilerUtils
@@ -97,7 +95,7 @@ trait InstallationManagement { this: ScalaProject =>
     (ScalaInstallation.resolve _).get(desiredinstallationChoice())
   }
 
-  private def turnOnProjectSpecificSettings(reason: String){
+  private def turnOnProjectSpecificSettings(reason: String): Unit ={
     if (!usesProjectSettings) {
       val pName = this.toString
       eclipseLog.debug(s"Turning on project-specific settings for $pName because of $reason")
@@ -105,7 +103,7 @@ trait InstallationManagement { this: ScalaProject =>
     }
   }
 
-  private def turnOffProjectSpecificSettings(reason: String){
+  private def turnOffProjectSpecificSettings(reason: String): Unit ={
     if (usesProjectSettings){
       val pName = this.toString
       eclipseLog.debug(s"Turning off project-specific settings for $pName because of $reason")

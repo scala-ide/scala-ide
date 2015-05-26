@@ -1,4 +1,4 @@
-**/.cache
+**/.cache*
 **/*.tmpBin
 target/
 org.scala-ide.sdt.core/META-INF/MANIFEST.MF
@@ -9,4 +9,3 @@ org.scala-ide.sdt.source.feature/feature.xml
 .idea
 .metadata
 *~
-**/.settings/

@@ -57,7 +57,7 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
   @Test
   def forComprehensionWithVal(): Unit = {
     eval("""for { i <- list; j = i.toString } yield j""", for { i <- list; j = i.toString } yield j, Scala.::)
-    eval("""for { i <- list; val j = i.toString } yield j""", for { i <- list; val j = i.toString } yield j, Scala.::)
+    eval("""for { i <- list; val j = i.toString } yield j""", for { i <- list; j = i.toString } yield j, Scala.::)
   }
 
   @Test

@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.expression.proxies.primitives.operations.numeric
 
-import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest

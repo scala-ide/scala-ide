@@ -22,13 +22,13 @@ import com.sun.jdi.PrimitiveValue
  * Base for all primitive proxies.
  *
  * @tparam Primitive type to proxy
- * @tparam Proxy type of proxy
+ * @tparam ProxyType type of proxy
  * @param companion companion object for this proxy
  */
-abstract class PrimitiveJdiProxy[Primitive, Proxy <: PrimitiveJdiProxy[Primitive, Proxy, ValueType], ValueType <: PrimitiveValue](
-  companion: PrimitiveJdiProxyCompanion[Primitive, Proxy, ValueType])
+abstract class PrimitiveJdiProxy[Primitive, ProxyType <: PrimitiveJdiProxy[Primitive, ProxyType, ValueType], ValueType <: PrimitiveValue](
+  companion: PrimitiveJdiProxyCompanion[Primitive, ProxyType, ValueType])
     extends JdiProxy {
-  self: Proxy =>
+  self: ProxyType =>
 
   /** Underlying primitive value from this proxy. */
   override def __value: ValueType
@@ -59,19 +59,19 @@ abstract class PrimitiveJdiProxy[Primitive, Proxy <: PrimitiveJdiProxy[Primitive
  * It requires one to implement `mirror` method.
  *
  * @tparam Primitive type to proxy
- * @tparam Proxy type of proxy
+ * @tparam ProxyType type of proxy
  * @param boxedName name of boxed type (for example 'java.lang.Character')
  * @param unboxedName name of unboxed type (for example 'char')
  */
-abstract class PrimitiveJdiProxyCompanion[Primitive, Proxy <: PrimitiveJdiProxy[Primitive, Proxy, ValueType], ValueType <: PrimitiveValue](
+abstract class PrimitiveJdiProxyCompanion[Primitive, ProxyType <: PrimitiveJdiProxy[Primitive, ProxyType, ValueType], ValueType <: PrimitiveValue](
   val name: TypeNames.Primitive)
-    extends JdiProxyCompanion[Proxy, ValueType] {
+    extends JdiProxyCompanion[ProxyType, ValueType] {
 
   /** Creates a mirror of primitive value in debug context. */
   protected def mirror(value: Primitive, context: JdiContext): ValueType
 
   /** Creates proxy from primitive using proxy context */
-  final def fromPrimitive(value: Primitive, context: JdiContext): Proxy =
+  final def fromPrimitive(value: Primitive, context: JdiContext): ProxyType =
     apply(context, mirror(value, context))
 }
 

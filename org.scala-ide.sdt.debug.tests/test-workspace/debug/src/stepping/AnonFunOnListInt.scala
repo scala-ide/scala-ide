@@ -4,7 +4,7 @@ import debug.Helper._
 
 object AnonFunOnListInt {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
     val l = List(1, 2, 4, 8)
 

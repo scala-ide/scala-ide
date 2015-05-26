@@ -14,7 +14,7 @@ object `YOLO Obj` {
    *  backticks should be auto-completed without backticks.
    */
 
-  def normalDef() {}
+  def normalDef(): Unit = {}
 
   def `weird/def`(name: String) = println(s"Yo, $name!")
 

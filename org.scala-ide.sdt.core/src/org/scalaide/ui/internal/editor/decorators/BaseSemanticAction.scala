@@ -133,7 +133,7 @@ abstract class BaseSemanticAction(
   }
 
   private val _listener = new IPropertyChangeListener {
-    override def propertyChange(event: PropertyChangeEvent) {
+    override def propertyChange(event: PropertyChangeEvent): Unit = {
       propertiesOpt.foreach { properties =>
         val changed = event.getProperty() match {
           case properties.bold | properties.italic | P_COLOR => true

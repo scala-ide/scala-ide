@@ -25,7 +25,7 @@ object FileUtils {
   /**
    * Copy file from src (path to the original file) to dest (path to the destination file).
    */
-  def copy(src: File, dest: File) {
+  def copy(src: File, dest: File): Unit = {
     val srcBytes = read(src)
 
     val out = new FileOutputStream(dest)
@@ -39,7 +39,7 @@ object FileUtils {
   /**
    * Copy the given source directory (and all its contents) to the given target directory.
    */
-  def copyDirectory(source: File, target: File) {
+  def copyDirectory(source: File, target: File): Unit = {
     def shouldSkip(name: String) = name match {
       case "CVS" | ".svn" | ".git" => true
       case _ => false

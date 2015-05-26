@@ -119,7 +119,7 @@ object EditorPreferencePage {
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
 
     store.setDefault(P_ENABLE_AUTO_CLOSING_COMMENTS, true)

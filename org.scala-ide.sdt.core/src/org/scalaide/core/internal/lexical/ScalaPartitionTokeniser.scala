@@ -48,11 +48,11 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
       text.charAt(offset)
   }
 
-  private def accept() { pos += 1 }
+  private def accept(): Unit = { pos += 1 }
 
-  private def accept(n: Int) { pos += n }
+  private def accept(n: Int): Unit = { pos += n }
 
-  private def setContentType(contentType: String) { contentTypeOpt = Some(contentType) }
+  private def setContentType(contentType: String): Unit = { contentTypeOpt = Some(contentType) }
 
   def tokensRemain = pos < length
 
@@ -85,7 +85,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
     new TypedRegion(tokenStart, tokenLength, contentType)
   }
 
-  private def getScalaToken() {
+  private def getScalaToken(): Unit = {
     (ch: @switch) match {
       case EOF => require(false)
       case '<' => ch(-1) match {
@@ -334,7 +334,7 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
         getSingleLineComment()
     }
 
-  private def getStringInterpolationToken(multiline: Boolean, embeddedIdentifierNext: Boolean) {
+  private def getStringInterpolationToken(multiline: Boolean, embeddedIdentifierNext: Boolean): Unit = {
     if (embeddedIdentifierNext) {
       setContentType(DEFAULT_CONTENT_TYPE)
       stringInterpolationState.embeddedIdentifierNext = false
@@ -369,23 +369,23 @@ class ScalaPartitionTokeniser(text: String) extends TokenTests {
   private def scalaState = modeStack.head.asInstanceOf[ScalaState]
   private def stringInterpolationState = modeStack.head.asInstanceOf[StringInterpolationState]
 
-  private def nestIntoScalaMode() {
+  private def nestIntoScalaMode(): Unit = {
     modeStack.push(ScalaState(nesting = 0))
   }
 
-  private def nestIntoXmlMode() {
+  private def nestIntoXmlMode(): Unit = {
     modeStack.push(XmlState(nesting = 0, inTag = None))
   }
 
-  private def nestIntoStringInterpolationMode(multiline: Boolean) {
+  private def nestIntoStringInterpolationMode(multiline: Boolean): Unit = {
     modeStack.push(StringInterpolationState(multiline, embeddedIdentifierNext = false))
   }
 
-  private def nestIntoScaladocCodeBlockMode(nesting: Int) {
+  private def nestIntoScaladocCodeBlockMode(nesting: Int): Unit = {
     modeStack.push(ScaladocCodeBlockState(nesting))
   }
 
-  private def nestIntoScaladocMode(nesting: Int) {
+  private def nestIntoScaladocMode(nesting: Int): Unit = {
     modeStack.push(ScaladocState(nesting))
   }
 

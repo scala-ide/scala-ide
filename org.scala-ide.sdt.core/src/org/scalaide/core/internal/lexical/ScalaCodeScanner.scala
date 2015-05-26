@@ -25,7 +25,7 @@ class ScalaCodeScanner(
   private var length: Int = _
   private var offset: Int = _
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     ranges = tokenizer.tokenize(document.get(offset, length), offset)
     index = 0
 

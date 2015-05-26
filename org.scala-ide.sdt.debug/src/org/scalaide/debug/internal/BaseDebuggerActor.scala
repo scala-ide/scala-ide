@@ -7,6 +7,7 @@ import scala.collection.mutable.Stack
 import org.scalaide.logging.HasLogger
 import com.sun.jdi.VMDisconnectedException
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.util.internal.Suppress
 
 /** A generic message to inform that an actor should terminate. */
 object PoisonPill
@@ -23,7 +24,7 @@ object PoisonPill
   * to its `behavior` implementation. If an `Exit` or `PoisonPill` message is processed by `this` actor,
   * the actor is guaranteed to execute `preExit` before terminating.
   */
-trait BaseDebuggerActor extends Actor with HasLogger {
+trait BaseDebuggerActor extends Suppress.DeprecatedWarning.Actor with HasLogger {
   // Always send an `Exit` message when a linked actor terminates. Be aware that if you change this,
   // you'll have to revisit the whole system behavior, as the system relies on `Exit` messages for
   // graceful termination of all linked actors.
@@ -37,20 +38,6 @@ trait BaseDebuggerActor extends Actor with HasLogger {
   private val behaviors: Stack[Behavior] = {
     val initialBehavior = behavior orElse exitBehavior
     Stack(initialBehavior)
-  }
-
-  /** This method allows to log all messages processed by `this`.
-    * One important requirement is that logging doesn't affect the actor's behavior (note how
-    * `isDefinedAt` has been implemented, it uses the `currentBehavior` to know if the message
-    * can be processed by `this` actor.
-    */
-  private def loggingBehavior: PartialFunction[Any, Any] = new PartialFunction[Any, Any] {
-    override def isDefinedAt(msg: Any): Boolean = currentBehavior.isDefinedAt(msg)
-    override def apply(msg: Any): Any = {
-      // this should be moved to logger.trace, once it is available
-      logger.debug("Processing message " + msg + " from " + sender)
-      msg
-    }
   }
 
   override final def act(): Unit = {
@@ -149,7 +136,7 @@ object BaseDebuggerActor {
    *
    *  @see ScalaPlugin.noTimeoutMode
    */
-  def timedSend(timeout: Int)(a: Actor, msg: Any): Option[Any] = {
+  def timedSend(timeout: Int)(a: Suppress.DeprecatedWarning.Actor, msg: Any): Option[Any] = {
     if (IScalaPlugin().noTimeoutMode)
       Some(a !? msg)
     else

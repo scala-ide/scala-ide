@@ -37,7 +37,7 @@ object SyntacticInfo {
     var packages: Set[IRegion] = Set()
     var identifiersInStringInterpolations: Set[IRegion] = Set()
 
-    def scan(astNode: AstNode) {
+    def scan(astNode: AstNode): Unit = {
       astNode match {
         case Argument(Expr(List(EqualsExpr(List(CallExpr(None, id, None, Nil, None)), _, _)))) =>
           namedArgs += id.range.toRegion

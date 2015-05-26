@@ -8,7 +8,7 @@ class TypeMismatchTests {
   val stringPattern: String = "Transform expression: %s => %s"
 
   @Test
-  def basicTypeMismatchQuickFixes() {
+  def basicTypeMismatchQuickFixes(): Unit = {
     withManyQuickFixesPerLine("typemismatch/Basic.scala")(
       List(
         List(

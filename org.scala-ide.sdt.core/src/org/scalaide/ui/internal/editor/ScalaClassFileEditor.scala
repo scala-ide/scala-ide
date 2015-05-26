@@ -15,7 +15,7 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
 
   private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
 
-  override def createPartControl(parent: org.eclipse.swt.widgets.Composite) {
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
     super.createPartControl(parent)
 
     if (isMarkingOccurrences())
@@ -41,10 +41,10 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
     }
   }
 
-  override protected def createActions() {
+  override protected def createActions(): Unit = {
     super.createActions()
     val openAction = new Action {
-      override def run {
+      override def run: Unit = {
         Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
          scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }

@@ -12,11 +12,11 @@ abstract class AutoEditStrategyTests extends TextEditTests with EclipseDocumentS
 
   val prefStore = mock(classOf[IPreferenceStore])
 
-  def enable(property: String, enable: Boolean) {
+  def enable(property: String, enable: Boolean): Unit = {
     when(prefStore.getBoolean(property)).thenReturn(enable)
   }
 
-  def setIntPref(property: String, value: Int) {
+  def setIntPref(property: String, value: Int): Unit = {
     when(prefStore.getInt(property)).thenReturn(value)
   }
 
