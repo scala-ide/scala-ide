@@ -6,5 +6,5 @@ import org.junit.Test
 class TestScalaDoc {
 
   @Test
-  def testMethod() {}
+  def testMethod(): Unit = {}
 }

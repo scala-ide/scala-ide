@@ -113,7 +113,7 @@ public class J {
 package test
 
 class S {
-  def foo1(s:String) { println(new J().bar(s)) }
+  def foo1(s:String): Unit = { println(new J().bar(s)) }
 }
 """
 

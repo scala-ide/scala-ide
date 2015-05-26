@@ -12,7 +12,7 @@ class CustomClassHighlightingTest
   with CustomHighlightingTest {
 
   @Test
-  def scalaCollectionMutableHighlighting() {
+  def scalaCollectionMutableHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/ScalaCollectionMutable.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(
@@ -22,7 +22,7 @@ class CustomClassHighlightingTest
       val expected = List(
         "'scala.collection.mutable' call type found [181, 5]",
         "'scala.collection.mutable' call type found [195, 5]",
-        "'scala.collection.mutable' call type found [266, 3]")
+        "'scala.collection.mutable' call type found [274, 3]")
       val actual = annotations("scalaCollectionMutable")(traversers)(spc, scu)
 
       assertSameLists(expected, actual)
@@ -31,7 +31,7 @@ class CustomClassHighlightingTest
 
   // TODO - flaky test :(
   @Test
-  def customTypeHighlighting() {
+  def customTypeHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Types.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(

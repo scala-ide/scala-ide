@@ -55,9 +55,9 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
     }
   }
 
-  def documentAboutToBeChanged(event: DocumentEvent) {}
+  def documentAboutToBeChanged(event: DocumentEvent): Unit = {}
 
-  def documentChanged(event: DocumentEvent) {
+  def documentChanged(event: DocumentEvent): Unit = {
     if (isPainterEnabled) {
       inferredSemis = updateInferredSemis(event)
       typingDelayHelper.scheduleCallback {
@@ -125,7 +125,7 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
         drawSemicolon(gc, documentOffset)
     }
 
-  private def drawSemicolon(gc: GC, modelOffset: Int) {
+  private def drawSemicolon(gc: GC, modelOffset: Int): Unit = {
     val widgetOffset = textViewer.modelOffset2WidgetOffset(modelOffset)
     if (widgetOffset >= 0) {
       val baseline = widget.getBaseline(widgetOffset)

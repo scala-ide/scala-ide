@@ -9,7 +9,7 @@ class ScalaVariableTest {
    * Check the format of the name returned by a scalaArrayElementVariable
    */
   @Test
-  def scalaArrayElementVariableName() {
+  def scalaArrayElementVariableName(): Unit = {
 
     val arrayReference= new ScalaArrayReference(null, null)
 

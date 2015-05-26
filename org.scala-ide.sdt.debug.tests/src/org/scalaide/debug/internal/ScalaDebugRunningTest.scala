@@ -12,7 +12,7 @@ trait ScalaDebugRunningTest {
   // debug tests need this
   disableStatusHandlers()
 
-  def disableStatusHandlers() {
+  def disableStatusHandlers(): Unit = {
     // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
     val prefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, DebugPlugin.getUniqueIdentifier);
     prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)

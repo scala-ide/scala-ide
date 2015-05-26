@@ -145,7 +145,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
   def hasBuffer0() : Boolean = super.hasBuffer()
   def openBuffer0(pm : IProgressMonitor, info : Object) = super.openBuffer(pm, info)
   def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource)
-  def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor) { super.openAncestors(newElements, monitor) }
+  def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor): Unit = { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0() : Boolean = super.isSourceElement()
   def ignoreOptionalProblems() :  Boolean = false

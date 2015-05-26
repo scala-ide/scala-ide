@@ -25,13 +25,13 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   def nullaryMethod =
     (x > 0 && (_y != x))
 
-  def method() {
+  def method(): Unit = {
     System.out.println("Hello, world " + x)
     println(x)
   }
 
   @Test
-  def annotatedMethod {
+  def annotatedMethod: Unit = {
 
   }
 
@@ -41,12 +41,12 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   private def nullaryMethod1 =
     (x > 0 && _y != x)
 
-  private[this] def method1() {
+  private[this] def method1(): Unit = {
     System.out.println("Hello, world " + x)
     println(x)
   }
 
-  private[traits] def method2() {
+  private[traits] def method2(): Unit = {
     System.out.println("Hello, world " + x)
     println(x)
   }
@@ -69,7 +69,7 @@ abstract class C[T](_x: Int, _y: T) extends Ordered[String] {
   def localClass(x: Int) = {
     val t = "abc"
     new Runnable {
-      override def run() {
+      override def run(): Unit = {
         println(t + x)
       }
     }

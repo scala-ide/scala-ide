@@ -35,14 +35,14 @@ class ScalaDebugModelPresentationTest {
   var actor: Option[BaseDebuggerActor] = None
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @After
-  def actorCleanup() {
+  def actorCleanup(): Unit = {
     actor.foreach(_ ! PoisonPill)
     actor = None
   }
@@ -54,7 +54,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def scalaThreadName() {
+  def scalaThreadName(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
     when(jdiThread.name).thenReturn("thread name")
     val jdiThreadGroup = mock(classOf[ThreadGroupReference])
@@ -67,7 +67,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def scalaThreadNameForSystemThread() {
+  def scalaThreadNameForSystemThread(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
     when(jdiThread.name).thenReturn("system thread name")
     val jdiThreadGroup = mock(classOf[ThreadGroupReference])
@@ -80,7 +80,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def scalaStackFrame() {
+  def scalaStackFrame(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     import ScalaStackFrameTest._
@@ -95,7 +95,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def scalaStackFrameLineNotAvailable() {
+  def scalaStackFrameLineNotAvailable(): Unit = {
     val scalaThread = mock(classOf[ScalaThread])
 
     import ScalaStackFrameTest._
@@ -110,7 +110,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def computeDetailNull() {
+  def computeDetailNull(): Unit = {
     val scalaValue = mock(classOf[ScalaNullValue])
 
     val computedDetail = ScalaDebugModelPresentation.computeDetail(scalaValue)
@@ -119,7 +119,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def computeDetailPrimitiveNotString() {
+  def computeDetailPrimitiveNotString(): Unit = {
     val scalaValue = new ScalaPrimitiveValue(null, "a value", null, null)
 
     val computedDetail = ScalaDebugModelPresentation.computeDetail(scalaValue)
@@ -128,7 +128,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def computeDetailString() {
+  def computeDetailString(): Unit = {
     val stringReference = mock(classOf[StringReference])
     when(stringReference.value).thenReturn("a string value")
 
@@ -138,7 +138,7 @@ class ScalaDebugModelPresentationTest {
   }
 
   @Test
-  def computeDetailArrayOfPrimitive() {
+  def computeDetailArrayOfPrimitive(): Unit = {
     val arrayReference = mock(classOf[ArrayReference])
     import scala.collection.JavaConverters._
     val values = List(createIntValue(1), createIntValue(2), createIntValue(4)).asJava
@@ -155,7 +155,7 @@ class ScalaDebugModelPresentationTest {
    * ArrayReference#getValues() return an IndexOutOfBoundsException when called on an empty array.
    */
   @Test
-  def computeDetailEmptyArrayJDIBug() {
+  def computeDetailEmptyArrayJDIBug(): Unit = {
     // simulate JDT/JDI bug
     val arrayReference = mock(classOf[ArrayReference])
     when(arrayReference.length).thenReturn(0)

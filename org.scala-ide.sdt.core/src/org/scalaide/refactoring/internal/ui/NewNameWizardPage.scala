@@ -25,7 +25,7 @@ class NewNameWizardPage(
 
   setMessage("Note that this is a preview release, make sure to check the generated changes.", IMessageProvider.INFORMATION)
 
-  def createControl(parent: Composite) {
+  def createControl(parent: Composite): Unit = {
 
     val main = new Composite(parent, SWT.None)
 
@@ -47,7 +47,7 @@ class NewNameWizardPage(
     }
   }
 
-  def newNameEntered(name: String) {
+  def newNameEntered(name: String): Unit = {
     if(name == defaultName) {
       setPageComplete(false)
       setErrorMessage(null)

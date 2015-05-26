@@ -37,7 +37,7 @@ object compilerProject extends TestProjectSetup("scala-compiler")
 class MemoryLeaksTest extends HasLogger {
   final val mega = 1024 * 1024
 
-  @Test def memoryConsumptionTest() {
+  @Test def memoryConsumptionTest(): Unit = {
     import compilerProject._
     import logger._
 

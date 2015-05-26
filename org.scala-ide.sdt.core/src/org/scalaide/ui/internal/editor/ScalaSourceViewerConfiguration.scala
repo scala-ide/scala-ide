@@ -314,7 +314,7 @@ class ScalaSourceViewerConfiguration(
     formatter
   }
 
-  override def handlePropertyChangeEvent(event: PropertyChangeEvent) {
+  override def handlePropertyChangeEvent(event: PropertyChangeEvent): Unit = {
     super.handlePropertyChangeEvent(event)
     codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
   }

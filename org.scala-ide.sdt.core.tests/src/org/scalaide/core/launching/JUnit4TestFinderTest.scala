@@ -25,7 +25,7 @@ class JUnit4TestFinderTest {
   private var projectSetup: TestProjectSetup = _
 
   @Before
-  def createProject() {
+  def createProject(): Unit = {
     val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
@@ -66,7 +66,7 @@ class JUnit4TestFinderTest {
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
@@ -87,7 +87,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -106,7 +106,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -126,7 +126,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -147,7 +147,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           | // unclosed class
         """.stripMargin
       }
@@ -168,7 +168,7 @@ class JUnit4TestFinderTest {
           |class MyTest {
           |  s //unknown identifier
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -189,12 +189,12 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest1 {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |
           |class MyTest2 {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -214,7 +214,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |object MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -234,7 +234,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |trait SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -254,7 +254,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class AbstractTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -274,7 +274,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |class MyTest extends SuperTest
         """.stripMargin
@@ -296,7 +296,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -322,7 +322,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -348,7 +348,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |trait SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |class MyTest extends SuperTest
         """.stripMargin

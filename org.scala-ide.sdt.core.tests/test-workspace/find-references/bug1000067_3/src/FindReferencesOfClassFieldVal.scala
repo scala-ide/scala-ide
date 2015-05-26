@@ -7,13 +7,13 @@ class Referred {
 class Referring {
   val obj = new Referred
 
-  def anotherMethod {
+  def anotherMethod: Unit = {
     obj.aVar
     obj.aVal
     obj.aMethod
   }
 
-  def yetAnotherMethod {
+  def yetAnotherMethod: Unit = {
     obj.aVar
     obj.aVal
     obj.aMethod

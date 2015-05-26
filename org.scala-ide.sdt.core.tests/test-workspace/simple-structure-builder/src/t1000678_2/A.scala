@@ -3,13 +3,13 @@ package t1000678_2
 class A {
 
   class B {
-    def foo {}
+    def foo: Unit = {}
   }
 
   case class C {
-    def foo {}
+    def foo: Unit = {}
     class D {
-      def foo {}
+      def foo: Unit = {}
     }
   }
 }

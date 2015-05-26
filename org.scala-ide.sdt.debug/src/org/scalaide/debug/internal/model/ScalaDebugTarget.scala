@@ -181,7 +181,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   private def startJdiEventDispatcher() = {
     // start the event dispatcher thread
     DebugPlugin.getDefault.asyncExec(new Runnable() {
-      override def run() {
+      override def run(): Unit = {
         val thread = new Thread(eventDispatcher, "Scala debugger JDI event dispatcher")
         thread.setDaemon(true)
         thread.start()
@@ -192,7 +192,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   /**
    * Callback from the breakpoint manager when a platform breakpoint is hit
    */
-  private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int) {
+  private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int): Unit = {
     companionActor ! ScalaDebugTargetActor.ThreadSuspended(thread, eventDetail)
   }
 
@@ -336,7 +336,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
    *
    *  @note This method has no effect if the actor was already initialized
    */
-  def attached() {
+  def attached(): Unit = {
     companionActor ! ScalaDebugTarget.AttachedToVM
   }
 
@@ -352,7 +352,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
    *   - initializes the breakpoint manager
    *   - fires a change event
    */
-  private[model] def vmStarted() {
+  private[model] def vmStarted(): Unit = {
     // get the current requests
     import scala.collection.JavaConverters._
     initializeThreads(virtualMachine.allThreads.asScala.toList)
@@ -364,7 +364,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   /**
    * Callback from the actor when the connection with the vm as been lost
    */
-  private[model] def vmDisconnected() {
+  private[model] def vmDisconnected(): Unit = {
     running = false
     eventDispatcher.dispose()
     breakpointManager.dispose()
@@ -374,7 +374,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
     fireTerminateEvent()
   }
 
-  private def disposeThreads() {
+  private def disposeThreads(): Unit = {
     threads.foreach {
       _.dispose()
     }
@@ -385,7 +385,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
    * Add a thread to the list of threads.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def addThread(thread: ThreadReference) {
+  private[model] def addThread(thread: ThreadReference): Unit = {
     if (!threads.exists(_.threadRef eq thread))
       threads = threads :+ ScalaThread(this, thread)
   }
@@ -394,7 +394,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
    * Remove a thread from the list of threads
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def removeThread(thread: ThreadReference) {
+  private[model] def removeThread(thread: ThreadReference): Unit = {
     val (removed, remainder) = threads.partition(_.threadRef eq thread)
     threads = remainder
     removed.foreach(_.terminatedFromScala())
@@ -404,7 +404,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
    * Set the initial list of threads.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def initializeThreads(t: List[ThreadReference]) {
+  private[model] def initializeThreads(t: List[ThreadReference]): Unit = {
     threads = t.map(ScalaThread(this, _))
   }
 
@@ -483,7 +483,7 @@ private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartReque
    *   - listen to thread start/death events
    *   - initialize the companion debug target
    */
-  private def initialize() {
+  private def initialize(): Unit = {
     if (!initialized) {
       val eventDispatcher = debugTarget.eventDispatcher
       // enable the thread management requests

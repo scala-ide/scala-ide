@@ -28,11 +28,11 @@ class ScalaCompilerClasspathTest {
   import ScalaCompilerClasspathTest._
 
   @Before
-  def setupWorkspace() {
+  def setupWorkspace(): Unit = {
     SDTTestUtils.enableAutoBuild(false)
   }
 
-  @Test def testWithoutCompilerOnClasspath() {
+  @Test def testWithoutCompilerOnClasspath(): Unit = {
     println("building " + project)
     project.javaProject.setRawClasspath(baseRawClasspath, new NullProgressMonitor)
 
@@ -46,7 +46,7 @@ class ScalaCompilerClasspathTest {
     Assert.assertTrue("Single compiler error expected", errors.length == 1)
   }
 
-  @Test def testWithCompilerOnClasspath() {
+  @Test def testWithCompilerOnClasspath(): Unit = {
     println("building " + project)
     project.clean(new NullProgressMonitor())
     val p = new Path(project.underlying.getLocation().toOSString()).append("/lib/2.10.x/scala-compiler.jar")

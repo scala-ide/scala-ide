@@ -73,7 +73,7 @@ trait ScalaPluginPreferencePage extends HasLogger {
 
   def isChanged: Boolean = eclipseBoxes.exists(_.eSettings.exists(_.isChanged))
 
-  override def performDefaults() {
+  override def performDefaults(): Unit = {
     eclipseBoxes.foreach(_.eSettings.foreach(_.reset()))
   }
 
@@ -127,7 +127,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   protected var isWorkbenchPage = false
   getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach (_.subscribe(this))
 
-  override def init(workbench: IWorkbench) {
+  override def init(workbench: IWorkbench): Unit = {
     isWorkbenchPage = true
   }
 
@@ -220,7 +220,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     scalaProject map (p => preferenceStore0.addPropertyChangeListener(p.compilerSettingsListener))
   }
 
-  def updateApply() {
+  def updateApply(): Unit = {
     updateApplyButton
   }
 
@@ -390,7 +390,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     (dslWidget exists {w => w.isChanged()}) || additionalParamsWidget.isChanged || super.isChanged
   }
 
-  override def performDefaults() {
+  override def performDefaults(): Unit = {
     super.performDefaults
     additionalParamsWidget.reset
   }
@@ -425,7 +425,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     private def getStoreValue() = getPreferenceStore().getBoolean(getPreferenceName())
 
     /** Toggles the use of a property page */
-    def handleToggle() {
+    def handleToggle(): Unit = {
       val selected = Option(getBooleanValue()).getOrElse(false)
       eclipseBoxes.foreach(_.eSettings.foreach(_.setEnabled(selected)))
       additionalParamsWidget.setEnabled(selected)
@@ -482,7 +482,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       }
     }
 
-    override def fireValueChanged(property: String, oldValue: Object, newValue: Object) {
+    override def fireValueChanged(property: String, oldValue: Object, newValue: Object): Unit = {
       import org.scalaide.util.Utils.WithAsInstanceOfOpt
       if (property == FieldEditor.VALUE) {
         val oldVal = oldValue.asInstanceOfOpt[String]
@@ -585,15 +585,15 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     def isChanged: Boolean =
       originalValue != additionalCompParams
 
-    def save() {
+    def save(): Unit = {
       preferenceStore0.setValue(CompilerSettings.ADDITIONAL_PARAMS, additionalCompParams)
     }
 
-    def reset() {
+    def reset(): Unit = {
       additionalParametersControl.setText(preferenceStore0.getString(CompilerSettings.ADDITIONAL_PARAMS))
     }
 
-    def setEnabled(value: Boolean) {
+    def setEnabled(value: Boolean): Unit = {
       additionalParametersControl.setEnabled(value)
     }
   }

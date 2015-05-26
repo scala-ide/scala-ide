@@ -19,7 +19,7 @@ class TestFinderTest {
   import TestFinderTest._
 
   @Test
-  def project_possibleMatches() {
+  def project_possibleMatches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val possibleMatches = finder.filteredTestResources(project, project.javaProject, new NullProgressMonitor)
@@ -37,7 +37,7 @@ class TestFinderTest {
   }
 
   @Test
-  def scala_package_possibleMatches() {
+  def scala_package_possibleMatches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val possibleMatches = finder.filteredTestResources(project, project.javaProject.findPackageFragment("/test-finder/src/packa"), new NullProgressMonitor)
@@ -46,7 +46,7 @@ class TestFinderTest {
   }
 
   @Test
-  def scala_package_matches() {
+  def scala_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new mutable.HashSet[IType]
@@ -57,7 +57,7 @@ class TestFinderTest {
   }
 
   @Test
-  def java_package_matches() {
+  def java_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -68,7 +68,7 @@ class TestFinderTest {
   }
 
   @Test
-  def java_package_matches_inherited() {
+  def java_package_matches_inherited(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -79,7 +79,7 @@ class TestFinderTest {
   }
 
   @Test
-  def project_matches() {
+  def project_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -101,7 +101,7 @@ class TestFinderTest {
   }
 
   @Test
-  def src_folder_matches() {
+  def src_folder_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -123,7 +123,7 @@ class TestFinderTest {
   }
 
   @Test
-  def only_one_type_element_matches() {
+  def only_one_type_element_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -136,7 +136,7 @@ class TestFinderTest {
   }
 
   @Test
-  def empty_package_matches() {
+  def empty_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -148,7 +148,7 @@ class TestFinderTest {
   }
 
   @Test
-  def method_matches() {
+  def method_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -161,7 +161,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_decls() {
+  def search_test_methods_decls(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packa.TestA1")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -170,7 +170,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_in_scaladoc_class() {
+  def search_test_methods_in_scaladoc_class(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packa.TestScalaDoc")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -179,7 +179,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_class() {
+  def search_test_methods_inherited_from_class(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestC")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -188,7 +188,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_trait() {
+  def search_test_methods_inherited_from_trait(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestCInherited1")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -197,7 +197,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_abstract_class() {
+  def search_test_methods_inherited_from_abstract_class(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestCInherited2")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -206,7 +206,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_in_empty_package() {
+  def search_test_methods_in_empty_package(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("TestInEmptyPackage")
     val result = finder.getTestMethods(project.javaProject, testClass)

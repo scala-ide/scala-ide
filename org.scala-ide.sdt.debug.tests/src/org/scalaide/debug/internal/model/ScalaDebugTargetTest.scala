@@ -28,19 +28,19 @@ class ScalaDebugTargetTest {
   var actor: Option[BaseDebuggerActor] = None
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @After
-  def actorCleanup() {
+  def actorCleanup(): Unit = {
     actor.foreach(_ ! PoisonPill)
   }
 
   @Test
-  def threadNotTwiceInList() {
+  def threadNotTwiceInList(): Unit = {
     val ThreadName = "thread name"
     val debugTarget = createDebugTarget()
 
@@ -68,7 +68,7 @@ class ScalaDebugTargetTest {
    * #1001308
    */
   @Test(timeout = 2000)
-  def getThreadsFreeze() {
+  def getThreadsFreeze(): Unit = {
 
     val debugTarget= createDebugTarget
 

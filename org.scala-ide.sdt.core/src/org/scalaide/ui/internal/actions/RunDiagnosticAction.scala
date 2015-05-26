@@ -18,15 +18,15 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
   val REPORT_BUG      = "org.scala-ide.sdt.ui.reportBug.action"
   val OPEN_LOG_FILE   = "org.scala-ide.sdt.ui.openLogFile.action"
 
-  override def init(window: IWorkbenchWindow) {
+  override def init(window: IWorkbenchWindow): Unit = {
     parentWindow = window
   }
 
   override def dispose = { }
 
-  override def selectionChanged(action: IAction, selection: ISelection) {  }
+  override def selectionChanged(action: IAction, selection: ISelection): Unit = {  }
 
-  override def run(action: IAction) {
+  override def run(action: IAction): Unit = {
     EclipseUtils.withSafeRunner("Error occurred while trying to create diagnostic dialog") {
       action.getId match {
         case RUN_DIAGNOSTICS =>
@@ -42,5 +42,5 @@ class RunDiagnosticAction extends IObjectActionDelegate with IWorkbenchWindowAct
     }
   }
 
-  override def setActivePart(action: IAction, targetPart: IWorkbenchPart) { }
+  override def setActivePart(action: IAction, targetPart: IWorkbenchPart): Unit = { }
 }

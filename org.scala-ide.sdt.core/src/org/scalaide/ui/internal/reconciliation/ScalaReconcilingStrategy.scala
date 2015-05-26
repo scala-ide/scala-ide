@@ -30,15 +30,15 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
   private val listeningEditor: Option[IJavaReconcilingListener] =
     icuEditor.asInstanceOfOpt[IJavaReconcilingListener]
 
-  override def setDocument(doc: IDocument) {}
+  override def setDocument(doc: IDocument): Unit = {}
 
-  override def setProgressMonitor(pMonitor: IProgressMonitor) {}
+  override def setProgressMonitor(pMonitor: IProgressMonitor): Unit = {}
 
-  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion) {
+  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
     logger.debug("Incremental reconciliation not implemented.")
   }
 
-  override def reconcile(partition: IRegion) {
+  override def reconcile(partition: IRegion): Unit = {
     listeningEditor.foreach(_.aboutToBeReconciled())
     val errors = icUnit.forceReconcile()
 
@@ -53,7 +53,7 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
     listeningEditor.foreach(_.reconciled(null, false, new NullProgressMonitor()))
   }
 
-  override def initialReconcile() {
+  override def initialReconcile(): Unit = {
     // an askReload there adds the scUnit to the list of managed CUs
     icUnit.initialReconcile()
     reconcile(null)

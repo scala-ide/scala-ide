@@ -20,7 +20,7 @@ import org.eclipse.jface.text.IRegion
  */
 class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends AutoIndentStrategy(prefStore) with HasLogger {
 
-  override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
+  override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand): Unit = {
     try {
       if (TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
         val shouldClose = {

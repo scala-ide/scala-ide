@@ -1,7 +1,7 @@
 package foo
 
 trait Foo {
-  private def configure() {
+  private def configure(): Unit = {
     Bar.configure("")
   }
 }

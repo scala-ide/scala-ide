@@ -46,7 +46,7 @@ class StringTokenScannerTest {
   }
 
   implicit class Assert_===[A](actual: A) {
-    def ===(expected: A) {
+    def ===(expected: A): Unit = {
       if (actual != expected)
         throw new AssertionError("""Expected != Actual
           |Expected: %s
@@ -55,43 +55,43 @@ class StringTokenScannerTest {
   }
 
   @Test
-  def escape_sequence_at_begin_of_string() {
+  def escape_sequence_at_begin_of_string(): Unit = {
     val res = tokenize(""""\nhello"""")
     res === Seq((stringAtt, 0, 1), (escapeAtt, 1, 2), (stringAtt, 3, 6))
   }
 
   @Test
-  def escape_sequence_at_end_of_string() {
+  def escape_sequence_at_end_of_string(): Unit = {
     val res = tokenize(""""hello\n"""")
     res === Seq((stringAtt, 0, 6), (escapeAtt, 6, 2), (stringAtt, 8, 1))
   }
 
   @Test
-  def escape_sequence_in_middle_of_string() {
+  def escape_sequence_in_middle_of_string(): Unit = {
     val res = tokenize(""""hel\nlo"""")
     res === Seq((stringAtt, 0, 4), (escapeAtt, 4, 2), (stringAtt, 6, 3))
   }
 
   @Test
-  def all_possible_escape_sequences() {
+  def all_possible_escape_sequences(): Unit = {
     val res = tokenize(""""\b\t\n\f\r\"\'\\"""")
     res === Seq((stringAtt, 0, 1), (escapeAtt, 1, 16), (stringAtt, 17, 1))
   }
 
   @Test
-  def invalid_escape_sequences() {
+  def invalid_escape_sequences(): Unit = {
     val res = tokenize(""""\m"""")
     res === Seq((stringAtt, 0, 4))
   }
 
   @Test
-  def no_escape_sequence() {
+  def no_escape_sequence(): Unit = {
     val res = tokenize(""""hello"""")
     res === Seq((stringAtt, 0, 7))
   }
 
   @Test
-  def double_backslash() {
+  def double_backslash(): Unit = {
     val res = tokenize(""""h\\el\\lo"""")
     res === Seq(
       (stringAtt, 0, 2), (escapeAtt, 2, 2), (stringAtt, 4, 2),
@@ -99,13 +99,13 @@ class StringTokenScannerTest {
   }
 
   @Test
-  def consecutive_escape_sequences() {
+  def consecutive_escape_sequences(): Unit = {
     val res = tokenize(""""hel\n\n\nlo"""")
     res === Seq((stringAtt, 0, 4), (escapeAtt, 4, 6), (stringAtt, 10, 3))
   }
 
   @Test
-  def multiple_escape_sequences() {
+  def multiple_escape_sequences(): Unit = {
     val res = tokenize(""""hel\n\nl\no"""")
     res === Seq(
       (stringAtt, 0, 4), (escapeAtt, 4, 4), (stringAtt, 8, 1),
@@ -113,37 +113,37 @@ class StringTokenScannerTest {
   }
 
   @Test
-  def string_is_part_of_source_code_snippet() {
+  def string_is_part_of_source_code_snippet(): Unit = {
     val res = tokenize("""object X { val str = "hel\nlo" }""", 21, 9)
     res === Seq((stringAtt, 21, 4), (escapeAtt, 25, 2), (stringAtt, 27, 3))
   }
 
   @Test
-  def single_unicode_sign() {
+  def single_unicode_sign(): Unit = {
     val res = tokenize("\"he\\u006Clo\"")
     res === Seq((stringAtt, 0, 3), (escapeAtt, 3, 6), (stringAtt, 9, 3))
   }
 
   @Test
-  def multiple_unicode_signs() {
+  def multiple_unicode_signs(): Unit = {
     val res = tokenize("\"he\\u006C\\u006Co\"")
     res === Seq((stringAtt, 0, 3), (escapeAtt, 3, 12), (stringAtt, 15, 2))
   }
 
   @Test
-  def invalid_unicode_signs() {
+  def invalid_unicode_signs(): Unit = {
     val res = tokenize("\"\\u0\\u00\\u006\\u\"")
     res === Seq((stringAtt, 0, 16))
   }
 
   @Test
-  def single_octal_sign() {
+  def single_octal_sign(): Unit = {
     val res = tokenize(""""\123"""")
     res === Seq((stringAtt, 0, 1), (escapeAtt, 1, 4), (stringAtt, 5, 1))
   }
 
   @Test
-  def multiple_octal_signs() {
+  def multiple_octal_signs(): Unit = {
     val res = tokenize(""""\0\12\377\38\400"""")
     res === Seq(
       (stringAtt, 0, 1), (escapeAtt, 1, 11), (stringAtt, 12, 1),
@@ -151,7 +151,7 @@ class StringTokenScannerTest {
   }
 
   @Test
-  def invalid_octal_signs() {
+  def invalid_octal_signs(): Unit = {
     val res = tokenize(""""\8\9"""")
     res === Seq((stringAtt, 0, 6))
   }

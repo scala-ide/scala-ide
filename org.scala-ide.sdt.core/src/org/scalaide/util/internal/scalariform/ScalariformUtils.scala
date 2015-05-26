@@ -15,7 +15,7 @@ object ScalariformUtils {
   def toListDepthFirst(cu: AstNode): List[AstNode] = {
     val nodes = mutable.ListBuffer[(AstNode, Int)]()
 
-    def addAll(node: AstNode, depth: Int) {
+    def addAll(node: AstNode, depth: Int): Unit = {
       nodes.append((node, depth))
       for (n <- node.immediateChildren) {
         addAll(n, depth + 1)

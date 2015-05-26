@@ -12,7 +12,7 @@ private[decorators] class ColorManager private () {
   def getColor(rgb: RGB): Color =
     colorTable.get(rgb).getOrElse(new Color(Display.getCurrent, rgb))
 
-  def dispose() {
+  def dispose(): Unit = {
     for (c <- colorTable.values) c.dispose()
   }
 

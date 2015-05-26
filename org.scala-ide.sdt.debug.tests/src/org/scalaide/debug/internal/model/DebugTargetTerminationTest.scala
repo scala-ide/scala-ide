@@ -97,14 +97,14 @@ class DebugTargetTerminationTest extends HasLogger {
   var debugTarget: ScalaDebugTarget = _
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @Before
-  def initializeDebugTarget() {
+  def initializeDebugTarget(): Unit = {
     virtualMachine = mock(classOf[VirtualMachineImpl])
     when(virtualMachine.allThreads).thenReturn(new ArrayList[ThreadReference]())
     val eventRequestManager = mock(classOf[EventRequestManager])
@@ -158,7 +158,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def abruptTerminationOf_DebugTargetActor_is_gracefully_handled() {
+  def abruptTerminationOf_DebugTargetActor_is_gracefully_handled(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
@@ -168,7 +168,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor() {
+  def normalTerminationOf_DebugTargetActor(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     checkGracefulTerminationOf(debugTargetActor) when {
@@ -177,7 +177,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination() {
+  def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
@@ -187,7 +187,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination() {
+  def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val breapointManagerActor = debugTarget.breakpointManager.companionActor
 
@@ -197,7 +197,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination() {
+  def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -207,7 +207,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination() {
+  def normalTerminationOf_JdiEventDispatcherActor_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -217,7 +217,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination() {
+  def throwing_VMDisconnectedException_in_JdiEventDispatcher_triggers_DebugTargetActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor
 
@@ -228,7 +228,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def throwing_GenericException_in_JdiEventDispatcher_doesNot_terminates_linked_actors() {
+  def throwing_GenericException_in_JdiEventDispatcher_doesNot_terminates_linked_actors(): Unit = {
     // set up a dummy debugger request and event
     val dummyEventRequest: EventRequest = new EventRequestImpl("Dummy Event Request", virtualMachine.asInstanceOf[VirtualMachineImpl]) {
       override protected def eventKind(): Byte = 999.toByte //avoids collision with constants defined in org.eclipse.jdi.internal.event.EventImpl
@@ -265,7 +265,7 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors() {
+  def anUnhandledExceptionGrafeullyTerminatesAllLinkedActors(): Unit = {
     val debugTargetActor = debugTarget.companionActor
 
     val sut = new BaseDebuggerActor {

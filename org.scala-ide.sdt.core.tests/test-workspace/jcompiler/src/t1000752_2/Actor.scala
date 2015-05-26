@@ -32,25 +32,25 @@ trait Actor {
 
   protected def receive: Receive
 
-  def preStart() {}
+  def preStart(): Unit = {}
 
-  def postStop() {}
+  def postStop(): Unit = {}
 
-  def preRestart(reason: Throwable, message: Option[Any]) { postStop() }
+  def preRestart(reason: Throwable, message: Option[Any]): Unit = { postStop() }
 
-  def postRestart(reason: Throwable) { preStart() }
+  def postRestart(reason: Throwable): Unit = { preStart() }
 
-  def unhandled(message: Any) {}
+  def unhandled(message: Any): Unit = {}
 
-  def become(behavior: Receive, discardOld: Boolean = true) { }
+  def become(behavior: Receive, discardOld: Boolean = true): Unit = { }
 
-  def unbecome() { }
+  def unbecome(): Unit = { }
 
   def watch(subject: ActorRef): ActorRef = self startsMonitoring subject
 
   def unwatch(subject: ActorRef): ActorRef = self stopsMonitoring subject
 
-  private[this] final def apply(msg: Any) {}
+  private[this] final def apply(msg: Any): Unit = {}
 
   private val processingBehavior = receive
 }

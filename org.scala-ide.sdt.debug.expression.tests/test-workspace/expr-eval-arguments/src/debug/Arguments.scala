@@ -6,7 +6,7 @@ object Arguments extends App {
   val double = 1.1
   val list = List(1, 2, 3)
 
-  def testFunction(int: Int, double: Double, list: List[Int]) {
+  def testFunction(int: Int, double: Double, list: List[Int]): Unit = {
     // number of bottom line must be specified in org.scalaide.debug.internal.expression.integration.TestValues object because a lot of tests use this line
     val debug = "ala"
   }

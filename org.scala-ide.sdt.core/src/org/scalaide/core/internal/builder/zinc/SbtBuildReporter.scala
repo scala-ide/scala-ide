@@ -53,7 +53,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   override def problems: Array[xsbti.Problem] = probs.toArray
   override def comment(pos: xsbti.Position, msg: String): Unit = {}
 
-  override def log(pos: Position, msg: String, sev: Severity) {
+  override def log(pos: Position, msg: String, sev: Severity): Unit = {
     val problem = SbtProblem(sev, msg, pos, "compile")
     if (!probs.contains(problem)) {
       createMarker(pos, msg, sev)

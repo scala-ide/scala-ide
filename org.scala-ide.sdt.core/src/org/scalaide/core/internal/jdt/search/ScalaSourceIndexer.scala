@@ -11,7 +11,7 @@ class ScalaSourceIndexerFactory extends IIndexerFactory {
 }
 
 class ScalaSourceIndexer(document : SearchDocument) extends AbstractIndexer(document) with HasLogger {
-  override def indexDocument() {
+  override def indexDocument(): Unit = {
     logger.info("Indexing document: "+document.getPath)
     ScalaSourceFile.createFromPath(document.getPath).map(_.addToIndexer(this))
   }

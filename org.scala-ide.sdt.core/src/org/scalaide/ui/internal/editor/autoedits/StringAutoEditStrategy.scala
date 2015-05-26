@@ -13,7 +13,7 @@ import org.eclipse.jface.text.TextUtilities
  */
 class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand) {
+  def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
 
     val isAutoEscapeLiteralEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
@@ -35,7 +35,7 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
       isStringTerminated && !isTerminationEscaped
     }
 
-    def removeEscapedSign() {
+    def removeEscapedSign(): Unit = {
       def isEscapeSequence(i: Int) =
         """btnfr"'\""".contains(document.getChar(command.offset + i))
 
@@ -52,12 +52,12 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
       }
     }
 
-    def jumpOverClosingLiteral() {
+    def jumpOverClosingLiteral(): Unit = {
       command.text = ""
       command.caretOffset = command.offset + 1
     }
 
-    def handleClosingLiteral() {
+    def handleClosingLiteral(): Unit = {
       if (ch(0, '"') && ch(-1, '"') && !ch(-2, '\\'))
         jumpOverClosingLiteral()
       else if (isAutoEscapeLiteralEnabled && isStringTerminated) {
@@ -69,7 +69,7 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
       }
     }
 
-    def handleEscapeSign() {
+    def handleEscapeSign(): Unit = {
       if (ch(-1, '\\')) {
         if (ch(-2, '\\'))
           command.text = "\\\\"

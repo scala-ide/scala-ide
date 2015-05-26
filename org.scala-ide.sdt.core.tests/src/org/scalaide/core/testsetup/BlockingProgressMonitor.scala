@@ -28,18 +28,18 @@ class BlockingProgressMonitor extends NullProgressMonitor {
   /**
    * Blocks until done, or the monitor is cancelled.
    */
-  def waitUntilDone() {
+  def waitUntilDone(): Unit = {
     latch.await()
 
     if (isCanceled())
       throw new BlockingProgressMonitor.CancellationException
   }
 
-  override def done() {
+  override def done(): Unit = {
     latch.countDown()
   }
 
-  override def setCanceled(cancelled: Boolean) {
+  override def setCanceled(cancelled: Boolean): Unit = {
     super.setCanceled(cancelled)
 
     if (cancelled)

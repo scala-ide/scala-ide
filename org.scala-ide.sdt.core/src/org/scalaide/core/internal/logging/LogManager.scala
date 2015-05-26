@@ -41,7 +41,7 @@ object LogManager extends Log4JFacade with HasLogger {
 
   override protected def logFileName = "scala-ide.log"
 
-  override def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
+  override def configure(logOutputLocation: String, preferredLogLevel: Level.Value): Unit = {
     import SWTUtils.fnToPropertyChangeListener
 
     super.configure(logOutputLocation, preferredLogLevel)
@@ -57,7 +57,7 @@ object LogManager extends Log4JFacade with HasLogger {
     }
   }
 
-  override protected def setLogLevel(level: Level.Value) {
+  override protected def setLogLevel(level: Level.Value): Unit = {
     super.setLogLevel(level)
     logger.info("Log level is `%s`".format(level))
   }
@@ -73,7 +73,7 @@ object LogManager extends Log4JFacade with HasLogger {
   override def isConsoleAppenderEnabled: Boolean =
     ScalaPlugin().getPreferenceStore.getBoolean(IsConsoleAppenderEnabled)
 
-  private def withoutConsoleRedirects(f: => Unit) {
+  private def withoutConsoleRedirects(f: => Unit): Unit = {
     try {
       disableRedirectStdOutAndStdErr()
       f
@@ -81,12 +81,12 @@ object LogManager extends Log4JFacade with HasLogger {
     finally { redirectStdOutAndStdErr() }
   }
 
-  private def redirectStdOutAndStdErr() {
+  private def redirectStdOutAndStdErr(): Unit = {
     StreamRedirect.redirectStdOutput()
     StreamRedirect.redirectStdError()
   }
 
-  private def disableRedirectStdOutAndStdErr() {
+  private def disableRedirectStdOutAndStdErr(): Unit = {
     StreamRedirect.disableRedirectStdOutput()
     StreamRedirect.disableRedirectStdError()
   }

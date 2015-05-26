@@ -44,10 +44,10 @@ class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer
     /*
      * @see org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer#sessionStarted()
      */
-    def sessionStarted() {}
+    def sessionStarted(): Unit = {}
 
     /*
      * @see org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer#sessionEnded()
      */
-    def sessionEnded() {}
+    def sessionEnded(): Unit = {}
 }

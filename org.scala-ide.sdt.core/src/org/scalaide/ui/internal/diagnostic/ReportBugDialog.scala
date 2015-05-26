@@ -84,7 +84,7 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
     control
   }
 
-  protected override def createButtonsForButtonBar(parent: Composite) {
+  protected override def createButtonsForButtonBar(parent: Composite): Unit = {
     // create only OK button
     createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true)
   }

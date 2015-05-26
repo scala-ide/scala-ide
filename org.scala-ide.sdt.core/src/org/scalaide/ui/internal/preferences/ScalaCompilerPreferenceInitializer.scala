@@ -18,7 +18,7 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
   override def initializeDefaultPreferences(): Unit = {
     val store = new ScopedPreferenceStore(DefaultScope.INSTANCE, SdtConstants.PluginId)
 
-    def defaultPreference(s: Settings#Setting) {
+    def defaultPreference(s: Settings#Setting): Unit = {
       val preferenceName = convertNameToProperty(s.name)
       val default = s match {
           case bswd : ScalaPluginSettings.BooleanSettingWithDefault => bswd.default.toString()

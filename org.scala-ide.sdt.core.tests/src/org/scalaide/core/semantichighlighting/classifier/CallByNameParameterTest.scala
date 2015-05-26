@@ -5,7 +5,7 @@ import org.junit.Test
 
 class CallByNameParameterTest extends AbstractSymbolClassifierTest {
   @Test
-  def simple_method() {
+  def simple_method(): Unit = {
     checkSymbolClassification("""
       object O {
         def test(cbnp0: => Int) = cbnp0
@@ -19,7 +19,7 @@ class CallByNameParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def with_multiple_args() {
+  def with_multiple_args(): Unit = {
     checkSymbolClassification("""
       object O {
         def test(cbnp1: => Int, x: String, cbnp3: => Long): Long = {
@@ -41,7 +41,7 @@ class CallByNameParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def with_ctor() {
+  def with_ctor(): Unit = {
     checkSymbolClassification("""
       class Clazz(s1: String, cbnp1: => Int, s2: String, cbnp2: => Int) {
         lazy val p1 = cbnp1
@@ -56,7 +56,7 @@ class CallByNameParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def with_for_comprehension() {
+  def with_for_comprehension(): Unit = {
     checkSymbolClassification("""
       object O {
         def foo(cbnp0: => Int) = {

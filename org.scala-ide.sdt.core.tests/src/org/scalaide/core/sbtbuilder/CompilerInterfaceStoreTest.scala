@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.Platform
 class CompilerInterfaceStoreTest {
 
   @Test
-  def platformCompilerInterfaceWorks() {
+  def platformCompilerInterfaceWorks(): Unit = {
     val store = ScalaPlugin().compilerInterfaceStore
     store.purgeCache()
 
@@ -18,7 +18,7 @@ class CompilerInterfaceStoreTest {
   }
 
   @Test
-  def platformCompilerInterfaceCachesCompilers() {
+  def platformCompilerInterfaceCachesCompilers(): Unit = {
     val store = ScalaPlugin().compilerInterfaceStore
     store.purgeCache()
 

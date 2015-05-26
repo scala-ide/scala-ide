@@ -21,7 +21,7 @@ private[logging] abstract class Log4JFacade {
 
   protected def logFileName: String
 
-  def configure(logOutputLocation: String, preferredLogLevel: Level.Value) {
+  def configure(logOutputLocation: String, preferredLogLevel: Level.Value): Unit = {
     synchronized {
       _logFile = new File(logOutputLocation + java.io.File.separator + logFileName)
     }
@@ -33,7 +33,7 @@ private[logging] abstract class Log4JFacade {
   def currentLogLevel: Level.Value
 
   /** Programmatically change the root logger's log level. */
-  protected def setLogLevel(level: Level.Value) {
+  protected def setLogLevel(level: Level.Value): Unit = {
     val log4JLevel = toLog4JLevel(level)
     LogManager.getRootLogger.setLevel(log4JLevel)
   }
@@ -46,7 +46,7 @@ private[logging] abstract class Log4JFacade {
     case Level.FATAL => Log4JLevel.FATAL
   }
 
-  protected def updateConsoleAppender(enable: Boolean) {
+  protected def updateConsoleAppender(enable: Boolean): Unit = {
     if (enable) config.addConsoleAppender()
     else config.removeConsoleAppender()
   }

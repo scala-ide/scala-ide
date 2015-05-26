@@ -24,7 +24,7 @@ class StandardPreviewerFactoryConfiguration extends PreviewerFactoryConfiguratio
 object ScalaPreviewerFactoryConfiguration extends StandardPreviewerFactoryConfiguration
 
 object SemanticPreviewerFactoryConfiguration extends StandardPreviewerFactoryConfiguration {
-  override def additionalStyling(viewer: ISourceViewer, store: IPreferenceStore) {
+  override def additionalStyling(viewer: ISourceViewer, store: IPreferenceStore): Unit = {
     val textWidgetOpt = Option(viewer.getTextWidget)
     for {
       textWidget <- textWidgetOpt

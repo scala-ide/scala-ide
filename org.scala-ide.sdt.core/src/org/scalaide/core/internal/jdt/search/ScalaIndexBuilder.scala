@@ -27,7 +27,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
 
-    def addPackageName(p: Tree) {
+    def addPackageName(p: Tree): Unit = {
       p match {
         case i: Ident =>
           packageName.append(i.name)
@@ -62,7 +62,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
      *  If the modifiers are empty, it uses the Symbol for finding them (the type-checker
      *  moves the annotations from the tree to the symbol).
      */
-    def addAnnotations(tree: MemberDef) {
+    def addAnnotations(tree: MemberDef): Unit = {
       if (tree.mods.annotations.isEmpty && tree.symbol.isInitialized) // don't force any symbols
         addAnnotations(tree.symbol)
       else
@@ -78,7 +78,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
         indexer.addAnnotationTypeReference(annotationType)
       }
 
-    private def addAnnotationRef(tree: Tree) {
+    private def addAnnotationRef(tree: Tree): Unit = {
       for (t <- tree) t match {
         case New(tpt) =>
           logger.debug(s"Added annotation ref (from tree): ${tpt.toString}")
@@ -87,7 +87,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       }
     }
 
-    def addClass(c : ClassDef) {
+    def addClass(c : ClassDef): Unit = {
       indexer.addClassDeclaration(
         mapModifiers(c.mods),
         packageName.toString.toCharArray,
@@ -102,7 +102,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       addAnnotations(c)
     }
 
-    def addModule(m: ModuleDef) {
+    def addModule(m: ModuleDef): Unit = {
       val moduleName = m.name
       List(moduleName, moduleName.append('$')) foreach { name =>
         indexer.addClassDeclaration(
@@ -117,7 +117,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       }
     }
 
-    def addVal(v : ValDef) {
+    def addVal(v : ValDef): Unit = {
       indexer.addMethodDeclaration(
         v.name.getterName.toChars,
         Array.empty,
@@ -135,7 +135,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       addAnnotations(v)
     }
 
-    def addDef(d : DefDef) {
+    def addDef(d : DefDef): Unit = {
       val name = if(nme.isConstructorName(d.name)) enclClassNames.head else d.name.toChars
 
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
@@ -150,7 +150,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       addAnnotations(d)
     }
 
-    def addType(td : TypeDef) {
+    def addType(td : TypeDef): Unit = {
       // We don't care what to add, java doesn't see types anyway.
       indexer.addClassDeclaration(
         mapModifiers(td.mods),
@@ -167,7 +167,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
     var enclClassNames = List[Array[Char]]()
 
     override def traverse(tree: Tree): Unit = {
-      def inClass(c : Array[Char])(block : => Unit) {
+      def inClass(c : Array[Char])(block : => Unit): Unit = {
         val old = enclClassNames
         enclClassNames = c::enclClassNames
         block

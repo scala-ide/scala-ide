@@ -3,5 +3,5 @@
 import org.junit.Test
 
 class Foo {
-  @Test def falseTest() {}
+  @Test def falseTest(): Unit = {}
 }

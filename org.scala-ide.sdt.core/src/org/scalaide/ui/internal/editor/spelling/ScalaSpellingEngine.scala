@@ -24,7 +24,7 @@ import org.scalaide.core.lexical.ScalaPartitions._
  */
 class ScalaSpellingEngine extends ISpellingEngine {
 
-  override def check(document: IDocument, regions: Array[IRegion], context: SpellingContext, collector: ISpellingProblemCollector, monitor: IProgressMonitor) {
+  override def check(document: IDocument, regions: Array[IRegion], context: SpellingContext, collector: ISpellingProblemCollector, monitor: IProgressMonitor): Unit = {
     val engine = SpellCheckEngine.getInstance()
     val checker = engine.getSpellChecker()
 
@@ -37,7 +37,7 @@ class ScalaSpellingEngine extends ISpellingEngine {
     }
   }
 
-  private def check(document: IDocument, regions: Array[IRegion], checker: ISpellChecker, collector: ISpellingProblemCollector, monitor: IProgressMonitor) {
+  private def check(document: IDocument, regions: Array[IRegion], checker: ISpellChecker, collector: ISpellingProblemCollector, monitor: IProgressMonitor): Unit = {
     val spellCheckablePartitionTypes = getSpellCheckablePartitionTypes
     val listener = new SpellEventListener(collector, document)
 

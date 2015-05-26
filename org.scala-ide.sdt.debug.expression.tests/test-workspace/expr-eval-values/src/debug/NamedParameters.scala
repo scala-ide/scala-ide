@@ -8,7 +8,7 @@ object NamedParameters extends App {
 
   def defaultArgMethod(s: String = "Ala", a: Int = 1, b: Int = 2, c: Int = 3) = s + a + b + c
 
-  def foo() {
+  def foo(): Unit = {
     // breakpoint here
     val breakpoint = ???
   }

@@ -2,7 +2,7 @@ package debug
 
 object CodeCompletion extends App {
 
-  def foo(mysteriousValue: Int, otherValue: Option[Float] = None) {
+  def foo(mysteriousValue: Int, otherValue: Option[Float] = None): Unit = {
     val byte: Byte = 4
     val short: Short = 6
     val int = 1
