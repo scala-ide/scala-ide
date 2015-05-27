@@ -101,8 +101,6 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     comp.setLayoutData(gd)
     comp.getLayout().asInstanceOf[GridLayout].verticalSpacing = 0
     createProjectEditor(comp)
-    //createVerticalSpacer(comp, 1) // FIXME Why is this code commented out? Should it be removed?
-    //createMainTypeEditor(comp, LauncherMessages.JavaMainTab_Main_cla_ss__4)
     createSeedScriptEditor(comp)
     setControl(comp)
   }
