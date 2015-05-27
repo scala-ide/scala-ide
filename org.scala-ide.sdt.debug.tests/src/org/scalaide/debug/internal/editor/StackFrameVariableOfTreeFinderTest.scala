@@ -1,24 +1,25 @@
 package org.scalaide.debug.internal.editor
 
+import scala.reflect.internal.util.OffsetPosition
 import scala.util.Try
-import scala.reflect.internal.util.{Position, OffsetPosition}
-import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.debug.internal.ScalaDebugRunningTest
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.junit.Test
-import org.junit.Before
-import org.junit.Assert._
-import org.junit.After
-import org.eclipse.core.runtime.NullProgressMonitor
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.Test
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.ScalaDebugRunningTest
+import org.scalaide.debug.internal.ScalaDebugTestSession
+import org.scalaide.debug.internal.ScalaDebugger
 
 object StackFrameVariableOfTreeFinderTest
-extends TestProjectSetup("sfValFinding", bundleName = "org.scala-ide.sdt.debug.tests")
-with ScalaDebugRunningTest {
+  extends TestProjectSetup("sfValFinding", bundleName = "org.scala-ide.sdt.debug.tests")
+  with ScalaDebugRunningTest {
+
   val ScalaClassName = "valfinding.ScalaClass"
   val OuterClassName = "valfinding.OuterClass"
   val BaseClassName = "valfinding.BaseClass"
