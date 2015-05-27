@@ -28,7 +28,9 @@ trait CloseMatchingPair extends AutoEdit {
     /**
      * Searches for all pairing elements leftwards, starting at `startPosition`
      * (inclusive) and ending at `endPosition` (inclusive). If a matching pair
-     * is found, the elements of this pair are not returned.
+     * is found, the elements of this pair are not returned. The only elements
+     * that are returned are the ones which are unpaired and therefore are
+     * important to consider in auto closing.
      */
     def searchPairElemsLeftwards(startPosition: Int, endPosition: Int): List[Char] = {
       @annotation.tailrec
@@ -53,7 +55,9 @@ trait CloseMatchingPair extends AutoEdit {
      * In contrast to [[searchPairElemsLeftwards]] this searches for elements
      * rightwards, starting at `startPosition` (inclusive) and ending at
      * `endPosition` (exclusive). If a matching pair is found, the elements of
-     * this pair are not returned.
+     * this pair are not returned. The only elements that are returned are the
+     * ones which are unpaired and therefore are important to consider in auto
+     * closing.
      */
     def searchPairElemsRightwards(startPosition: Int, endPosition: Int): List[Char] = {
       @annotation.tailrec
