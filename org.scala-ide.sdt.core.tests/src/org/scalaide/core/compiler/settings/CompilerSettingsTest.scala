@@ -63,7 +63,6 @@ class CompilerSettingsTest {
   def import_from_instance_scope_to_project_scope(): Unit = {
     setWorkspaceSettings("deprecation", "true") // in essence writing to an instance-scoped store
     val projectStore = new ScopedPreferenceStore(projectScope, SdtConstants.PluginId)
-    // TODO: This line is done by default in Kepler, remove it when we drop Juno
     projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     assertTrue("Settings should contain deprecation setting fetched from instance scope: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
   }
@@ -73,8 +72,6 @@ class CompilerSettingsTest {
   def import_from_propertystore_to_project_scope(): Unit = {
     setProjectSettings("deprecation", "true")
     val projectStore = new ScopedPreferenceStore(projectScope, SdtConstants.PluginId)
-    // TODO: This line is done by default in Kepler, remove it when we drop Juno
-    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     assertTrue("Settings should contain deprecation setting: " + project.scalacArguments, projectStore.getString("deprecation") == "true")
   }
 
@@ -132,8 +129,6 @@ class CompilerSettingsTest {
 
     // just setProjectSettings("deprecation", "true"), keeping a handle on the store
     val projectStore = new ScopedPreferenceStore(projectScope, SdtConstants.PluginId)
-    // TODO: This line is done by default in Kepler, remove it when we drop Juno
-    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     projectStore.setValue("deprecation", "true")
     projectStore.save()
     checkProjectSettingsEnabled()
@@ -199,8 +194,6 @@ class CompilerSettingsTest {
 
   private def checkProjectSettingsEnabled(): Unit ={
     val projectStore = new ScopedPreferenceStore(projectScope, SdtConstants.PluginId)
-    // TODO: This line is done by default in Kepler, remove it when we drop Juno
-    projectStore.setSearchContexts(Array(projectScope, InstanceScope.INSTANCE, ConfigurationScope.INSTANCE))
     assertTrue("project-specific settings should be enabled at this stage", projectStore.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE))
   }
 
