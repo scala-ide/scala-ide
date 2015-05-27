@@ -49,7 +49,7 @@ private object HotCodeReplaceTest {
       case Success(value) => value
       case Failure(e) =>
         // New exception to have informative stack trace.
-        throw new AssertionError("Unexpected message(s). Check the chained exception(s) for more information.", e)
+        throw new IllegalStateException("Unexpected message(s). Check the chained exception(s) for more information.", e)
     }
 
     override def notify(publisher: Publisher[HCRResult], event: HCRResult): Unit = event match {
