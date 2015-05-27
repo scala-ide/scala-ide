@@ -41,7 +41,7 @@ trait LaunchUtils {
   private def launchConfiguration(project: IProject): ILaunchConfiguration =
     DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(project.getFile(launchConfigurationName + ".launch"))
 
-  def whenApplicationWasLaunchedFor(project: IProject, inMode: String)(then: => Unit): Unit = {
+  def whenApplicationWasLaunchedFor(project: IProject, inMode: String)(inThatCase: => Unit): Unit = {
     val latch = new CountDownLatch(1)
     DebugPlugin.getDefault.getLaunchManager.addLaunchListener(onLaunchTerminates(latch.countDown))
     val lc = launchConfiguration(project)
@@ -51,6 +51,6 @@ trait LaunchUtils {
     if (launch.canTerminate && !launch.isTerminated) {
       throw new IllegalStateException(s"launch did not terminate in ${timeout}s")
     }
-    then
+    inThatCase
   }
 }
