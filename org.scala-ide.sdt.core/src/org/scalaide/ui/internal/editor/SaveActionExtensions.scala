@@ -45,20 +45,10 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 object SaveActionExtensions {
 
   /**
-   * The settings for all existing save actions.
-   */
-  val saveActionSettings: Seq[SaveActionSetting] = Seq(
-    RemoveTrailingWhitespaceSetting,
-    AddNewLineAtEndOfFileSetting,
-    AutoFormattingSetting,
-    RemoveDuplicatedEmptyLinesSetting
-  )
-
-  /**
    * The ID which is used as key in the preference store to identify the actual
    * timeout value for save actions.
    */
-  final val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
+  val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
 
   /**
    * The time a save action gets until the IDE waits no longer on its result.
@@ -77,6 +67,13 @@ object SaveActionExtensions {
     AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
     AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
   )
+
+  /**
+   * The settings for all existing save actions.
+   */
+  val saveActionSettings: Seq[SaveActionSetting] =
+    documentSaveActions.map(_._1) ++ compilerSaveActions.map(_._1)
+
 }
 
 trait SaveActionExtensions extends HasLogger {
@@ -135,10 +132,7 @@ trait SaveActionExtensions extends HasLogger {
 
       try {
         applyDocumentExtensions(udoc)
-        // TODO compiler driven save actions first need to get fixed before they can be enabled.
-        // See #1002308
-        if (false)
-          applyCompilerExtensions(udoc)
+        applyCompilerExtensions(udoc)
       }
       finally {
         updateEditor()
