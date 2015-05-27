@@ -33,7 +33,7 @@ private object SymbolClassification {
 }
 
 class SymbolClassification(protected val sourceFile: SourceFile, val global: IScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends SafeSymbol with TypeTreeTraverser with SymbolTests with HasLogger {
+  extends SafeSymbol with SymbolTests with HasLogger {
 
   import SymbolClassification._
   import global.Symbol
