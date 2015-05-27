@@ -166,7 +166,6 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
       dialog.setElements(scalaProjects)
     } catch {
       case jme: JavaModelException =>
-        //TODO - Log
         eclipseLog.error("Java model exception", jme)
     }
     val scalaProject = getScalaProject()
