@@ -5,7 +5,7 @@ package org.scalaide.debug.internal.expression
 
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.runtime.{NullProgressMonitor ⇒ NPM}
+import org.eclipse.core.runtime.{NullProgressMonitor => NPM}
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.scalaide.core.testsetup.SDTTestUtils
