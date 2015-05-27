@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor
 
-import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
@@ -39,26 +38,17 @@ import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.internal.FutureUtils
 import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions {
 
   /**
-   * The settings for all existing save actions.
-   */
-  val saveActionSettings: Seq[SaveActionSetting] = Seq(
-    RemoveTrailingWhitespaceSetting,
-    AddNewLineAtEndOfFileSetting,
-    AutoFormattingSetting,
-    RemoveDuplicatedEmptyLinesSetting
-  )
-
-  /**
    * The ID which is used as key in the preference store to identify the actual
    * timeout value for save actions.
    */
-  final val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
+  val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
 
   /**
    * The time a save action gets until the IDE waits no longer on its result.
@@ -77,6 +67,13 @@ object SaveActionExtensions {
     AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
     AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
   )
+
+  /**
+   * The settings for all existing save actions.
+   */
+  val saveActionSettings: Seq[SaveActionSetting] =
+    documentSaveActions.map(_._1) ++ compilerSaveActions.map(_._1)
+
 }
 
 trait SaveActionExtensions extends HasLogger {
@@ -135,10 +132,7 @@ trait SaveActionExtensions extends HasLogger {
 
       try {
         applyDocumentExtensions(udoc)
-        // TODO compiler driven save actions first need to get fixed before they can be enabled.
-        // See #1002308
-        if (false)
-          applyCompilerExtensions(udoc)
+        applyCompilerExtensions(udoc)
       }
       finally {
         updateEditor()
@@ -153,31 +147,63 @@ trait SaveActionExtensions extends HasLogger {
   }
 
   /**
-   * Applies all save actions that extends [[DocumentSupport]].
+   * Applies all save actions that extend [[DocumentSupport]].
    */
   private def applyDocumentExtensions(udoc: IDocument): Unit = {
     for ((setting, ext) <- documentSaveActions if isEnabled(setting.id)) {
       val doc = new TextDocument(udoc)
       val instance = ext(doc)
-      performExtension(instance, udoc) {
+      performDocumentExtension(instance, udoc) {
         instance.perform()
       }
     }
   }
 
   /**
-   * Applies all save actions that extends [[CompilerSupport]].
+   * Applies all save actions that extend [[CompilerSupport]].
    */
   private def applyCompilerExtensions(udoc: IDocument): Unit = {
-    for ((setting, ext) <- compilerSaveActions if isEnabled(setting.id)) {
-      createExtensionWithCompilerSupport(ext) foreach { instance =>
-        performExtension(instance, udoc) {
-          instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
-            instance.perform()
-          }.getOrElse(Seq())()
+    val timeout = saveActionTimeout
+
+    def loop(xs: Seq[(SaveActionSetting, CompilerSupportCreator)]): Unit = xs match {
+      case Seq() ⇒
+
+      case (setting, ext) +: xs if isEnabled(setting.id) ⇒
+        val res = FutureUtils.performWithTimeout(timeout) {
+          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'.") {
+            createExtensionWithCompilerSupport(ext) map { instance =>
+              instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
+                instance.perform()
+              }.getOrElse(Seq())()
+            }
+          }.flatten.getOrElse(Seq())
         }
-      }
+
+        res match {
+          case Success(changes) ⇒
+            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'.") {
+              applyChanges(setting.id, changes, udoc)
+            }
+            loop(xs)
+
+          case Failure(_) ⇒
+            eclipseLog.error(s"""|
+               |A save action that relies on compiler support didn't complete in a
+               | given time, it had $timeout time to complete. Because it is
+               | unlikely that further save actions that rely on compiler support will
+               | complete in time, no further save actions are executed. Please consider
+               | to disable save actions that rely on the compiler. The performed save
+               | action itself couldn't be aborted, therefore if you know that it may
+               | never complete in future, you may wish to restart your Eclipse to
+               | clean up your VM.
+               |
+               |""".stripMargin.replaceAll("\n", ""))
+        }
+
+      case _ +: xs ⇒
+        loop(xs)
     }
+    loop(compilerSaveActions)
   }
 
   /**
@@ -191,22 +217,17 @@ trait SaveActionExtensions extends HasLogger {
    * get a sequence of changes. It is executes in a safe environment that
    * catches errors.
    */
-  private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]): Unit = {
+  private def performDocumentExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]): Unit = {
     val id = instance.setting.id
     val timeout = saveActionTimeout
 
-    val futureToUse: Seq[Change] => Future[Seq[Change]] =
-      if (IScalaPlugin().noTimeoutMode)
-        Future(_)
-      else
-        TimeoutFuture(timeout)(_)
-
-    val f = futureToUse {
+    val res = FutureUtils.performWithTimeout(timeout) {
       EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
         ext
       }.getOrElse(Seq())
     }
-    Await.ready(f, Duration.Inf).value.get match {
+
+    res match {
       case Success(changes) =>
         EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
           applyChanges(id, changes, udoc)
