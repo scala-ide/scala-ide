@@ -4,7 +4,7 @@ package autoedits
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.lexical.ScalaPartitions
-import org.scalaide.core.text.Add
+import org.scalaide.core.text.TextChange
 
 object CloseCharSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseChar],
@@ -25,9 +25,9 @@ trait CloseChar extends AutoEdit {
 
   override def perform() = {
     check(textChange) {
-      case Add(start, "'") =>
-        if (autoClosingRequired(start))
-          Some(Add(start, "''") withLinkedModel (start+2, singleLinkedPos(start+1)))
+      case TextChange(start, end, "'") =>
+        if (autoClosingRequired(end))
+          Some(TextChange(start, end, "''") withLinkedModel (start+2, singleLinkedPos(start+1)))
         else
           None
     }

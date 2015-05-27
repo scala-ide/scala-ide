@@ -72,4 +72,11 @@ abstract class AutoEditTests extends TextEditTests {
       applyChange(change)
     }
   }
+
+  case class Replace(start: Int, end: Int, text: String) extends AutoEditOperation {
+    override def execute() = {
+      val change = impl.Replace(start, end, text)
+      applyChange(change)
+    }
+  }
 }

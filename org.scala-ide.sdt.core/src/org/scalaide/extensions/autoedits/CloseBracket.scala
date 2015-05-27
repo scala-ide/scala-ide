@@ -1,7 +1,7 @@
 package org.scalaide.extensions
 package autoedits
 
-import org.scalaide.core.text.Add
+import org.scalaide.core.text.TextChange
 import org.scalaide.util.eclipse.RegionUtils._
 
 object CloseBracketSetting extends AutoEditSetting(
@@ -22,9 +22,9 @@ trait CloseBracket extends CloseMatchingPair {
 
   override def perform() = {
     check(textChange) {
-      case Add(start, "[") =>
-        if (declaresProbablyGenerics(start) || autoClosingRequired(start))
-          Some(Add(start, "[]") withLinkedModel(start+2, singleLinkedPos(start+1)))
+      case TextChange(start, end, "[") =>
+        if (declaresProbablyGenerics(end) || autoClosingRequired(end))
+          Some(TextChange(start, end, "[]") withLinkedModel(start+2, singleLinkedPos(start+1)))
         else
           None
     }

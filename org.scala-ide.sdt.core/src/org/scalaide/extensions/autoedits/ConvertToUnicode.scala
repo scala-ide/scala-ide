@@ -1,7 +1,7 @@
 package org.scalaide.extensions
 package autoedits
 
-import org.scalaide.core.text.Add
+import org.scalaide.core.text.TextChange
 import org.scalaide.core.text.Replace
 
 object ConvertToUnicodeSetting extends AutoEditSetting(
@@ -18,18 +18,18 @@ trait ConvertToUnicode extends AutoEdit {
 
   override def perform() = {
     check(textChange) {
-      case Add(start, text) if text.size == 1 && start > 0 =>
+      case TextChange(start, end, text) if text.size == 1 && start > 0 =>
         subcheck(document(start-1)+text) {
-          case "=>" => Replace(start-1, start, "⇒")
-          case "->" => Replace(start-1, start, "→")
-          case "<-" => Replace(start-1, start, "←")
+          case "=>" => TextChange(start-1, end, "⇒")
+          case "->" => TextChange(start-1, end, "→")
+          case "<-" => TextChange(start-1, end, "←")
         }
 
-      case Add(start, text) =>
+      case TextChange(start, end, text) =>
         subcheck(text) {
-          case "=>" => Add(start, "⇒") withCursorPos start+1
-          case "->" => Add(start, "→") withCursorPos start+1
-          case "<-" => Add(start, "←") withCursorPos start+1
+          case "=>" => TextChange(start, end, "⇒") withCursorPos start+1
+          case "->" => TextChange(start, end, "→") withCursorPos start+1
+          case "<-" => TextChange(start, end, "←") withCursorPos start+1
         }
     }
   }

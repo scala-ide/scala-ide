@@ -56,4 +56,8 @@ class ConvertToUnicodeTest extends AutoEditTests {
   @Test
   def handle_empty_file() =
     "^" becomes "-^" after Add("-")
+
+  @Test
+  def convert_with_replace() =
+    "-^xxx" becomes "→^" after Replace(1, 4, ">")
 }

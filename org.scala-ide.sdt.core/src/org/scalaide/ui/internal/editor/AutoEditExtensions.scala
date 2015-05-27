@@ -18,11 +18,9 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.extensions.autoedits._
 import org.scalaide.core.internal.text.TextDocument
-import org.scalaide.core.text.Add
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
 import org.scalaide.core.text.LinkedModel
-import org.scalaide.core.text.Remove
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
@@ -111,9 +109,7 @@ trait AutoEditExtensions extends HasLogger {
     val start = modelRange.getOffset()
     val end = start+modelRange.getLength()
     val text = event.text
-    val change =
-      if (text.isEmpty()) Remove(start, end)
-      else Add(start, text)
+    val change = TextChange(start, end, text)
 
     val handleTextChange: Handler = {
       case TextChange(start, end, text) =>
