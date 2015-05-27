@@ -1,76 +1,48 @@
 package org.scalaide.core.internal
 
-import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable
-import scala.util.control.ControlThrowable
+import scala.collection.mutable.ListBuffer
+import scala.tools.nsc.settings.ScalaVersion
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
+import org.eclipse.core.resources.IResourceDelta
+import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Platform
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.content.IContentTypeSettings
+import org.eclipse.core.runtime.content.IContentType
 import org.eclipse.jdt.core.ElementChangedEvent
+import org.eclipse.jdt.core.IClassFile
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IElementChangedListener
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.internal.core.JavaModel
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.PackageFragment
-import org.eclipse.jdt.internal.core.PackageFragmentRoot
-import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.swt.graphics.Color
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.ui.IEditorInput
-import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.IPartListener
-import org.eclipse.ui.IWorkbenchPart
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.IPageListener
-import org.eclipse.ui.IEditorPart
-import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.eclipse.OSGiUtils
-import org.scalaide.ui.internal.templates.ScalaTemplateManager
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.core.resources.IResourceDelta
-import org.scalaide.logging.HasLogger
-import org.osgi.framework.Bundle
-import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.core.resources.EclipseResource
-import org.scalaide.logging.PluginLogConfigurator
-import scala.tools.nsc.Settings
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.ui.internal.diagnostic
-import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
-import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
-import org.eclipse.core.runtime.content.IContentType
-import org.scalaide.core.SdtConstants
-import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
-import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.scalaide.util.Utils._
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
-import org.eclipse.jdt.core.IClassFile
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.logging.HasLogger
+import org.scalaide.logging.PluginLogConfigurator
+import org.scalaide.ui.internal.diagnostic
+import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.ui.internal.migration.RegistryExtender
+import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.util.eclipse.OSGiUtils
+import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.FixedSizeCache
 
 object ScalaPlugin {
 
@@ -81,7 +53,9 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
+  import CompilerUtils.ShortScalaVersion
+  import CompilerUtils.isBinaryPrevious
+  import CompilerUtils.isBinarySame
 
   import org.scalaide.core.SdtConstants._
 

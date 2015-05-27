@@ -1,8 +1,16 @@
 package org.scalaide.util.internal
 
-import scala.concurrent._, ExecutionContext.Implicits.global
-import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Promise
+import scala.concurrent.TimeoutException
+import scala.concurrent.blocking
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
+
+import scala.concurrent.Future
 
 object FutureUtils {
 
