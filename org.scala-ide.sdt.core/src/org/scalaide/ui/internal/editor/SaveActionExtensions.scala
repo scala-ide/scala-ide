@@ -166,11 +166,11 @@ trait SaveActionExtensions extends HasLogger {
     val timeout = saveActionTimeout
 
     def loop(xs: Seq[(SaveActionSetting, CompilerSupportCreator)]): Unit = xs match {
-      case Nil ⇒
+      case Seq() ⇒
 
-      case (setting, ext) :: xs if isEnabled(setting.id) ⇒
+      case (setting, ext) +: xs if isEnabled(setting.id) ⇒
         val res = FutureUtils.performWithTimeout(timeout) {
-          EclipseUtils.withSafeRunner(s"An error occurred while executing compiler driven save action.") {
+          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'.") {
             createExtensionWithCompilerSupport(ext) map { instance =>
               instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
                 instance.perform()
@@ -200,7 +200,7 @@ trait SaveActionExtensions extends HasLogger {
                |""".stripMargin.replaceAll("\n", ""))
         }
 
-      case _ :: xs ⇒
+      case _ +: xs ⇒
         loop(xs)
     }
     loop(compilerSaveActions)
