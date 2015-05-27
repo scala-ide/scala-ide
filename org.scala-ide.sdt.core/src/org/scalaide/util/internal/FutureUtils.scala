@@ -10,7 +10,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
-import scala.concurrent.Future
+import org.scalaide.core.IScalaPlugin
 
 object FutureUtils {
 
@@ -50,4 +50,22 @@ object FutureUtils {
       blocking { Try(Await.ready(never[Unit], time)) }
     }
   }
+
+  /**
+   * Performs an operation, but waits not more than `timeout` for a completion
+   * of the operation. Returns a [[Success]] that contains the result of `f` if
+   * it performed in time, otherwise a [[Failure]].
+   *
+   * If `IScalaPlugin.noTimeoutMode` is set, the timeout is not considered.
+   */
+  def performWithTimeout[A](timeout: FiniteDuration)(f: => A): Try[A] = {
+    val futureToUse =
+      if (IScalaPlugin().noTimeoutMode)
+        Future(f)
+      else
+        TimeoutFuture(timeout)(f)
+
+    Await.ready(futureToUse, Duration.Inf).value.get
+  }
+
 }
