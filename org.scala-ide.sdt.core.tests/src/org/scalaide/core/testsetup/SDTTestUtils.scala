@@ -95,6 +95,7 @@ object SDTTestUtils extends HasLogger {
       val project = workspace.getRoot.getProject(name)
       project.create(null)
       project.open(null)
+      project.setDefaultCharset("UTF-8", /*progressMonitor =*/ null)
       JavaCore.create(project)
     }
     ScalaPlugin().getScalaProject(workspace.getRoot.getProject(name))
