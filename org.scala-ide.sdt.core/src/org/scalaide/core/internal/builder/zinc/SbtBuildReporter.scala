@@ -50,7 +50,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
 
   override def hasErrors(): Boolean = seenErrors
   override def hasWarnings(): Boolean = seenWarnings
-  override def printSummary(): Unit = {} //TODO
+  override def printSummary(): Unit = {} // TODO - implement this method
   override def problems: Array[xsbti.Problem] = probs.toArray
   override def comment(pos: xsbti.Position, msg: String): Unit = {}
 

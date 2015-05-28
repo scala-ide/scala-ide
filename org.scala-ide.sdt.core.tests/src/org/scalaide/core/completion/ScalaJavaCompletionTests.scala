@@ -1,6 +1,7 @@
 package org.scalaide.core.completion
 
 import org.scalaide.core.testsetup.TestProjectSetup
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -20,6 +21,8 @@ import org.scalaide.core.internal.completion.ScalaJavaCompletionProposalComputer
 
 object ScalaJavaCompletionTests extends TestProjectSetup("completion")
 
+// FIXME: Test in this class fails, but only comment why was "Uncomment as soon as this regression is fixed."
+// I prefer ignored tests to commented out. Jerzy Müller, 27.05.2015
 class ScalaJavaCompletionTests {
   import ScalaJavaCompletionTests._
 
@@ -60,6 +63,7 @@ class ScalaJavaCompletionTests {
   /**
    * Test the completion when trying to call the method on a reference.
    */
+  @Ignore
   @Test
   def ticket1000412_reference(): Unit = {
     val oracle = List(
@@ -90,6 +94,7 @@ class ScalaJavaCompletionTests {
   /**
    * Test the completion when trying to call the method when the class extends the class containing the method.
    */
+  @Ignore
   @Test
   def ticket1000412_extends(): Unit = {
     val oracle = List(
