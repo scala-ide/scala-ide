@@ -54,7 +54,9 @@ object SaveActionExtensions {
     TabToSpaceConverterSetting -> TabToSpaceConverterCreator.create _
   )
 
-  private val compilerSaveActions = Seq[(SaveActionSetting, CompilerSupportCreator)](
+  private val compilerSaveActions = Seq(
+    AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
+    AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
   )
 
   private type CompilerSupportCreator = (
