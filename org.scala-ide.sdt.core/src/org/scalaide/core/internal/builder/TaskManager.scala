@@ -37,7 +37,7 @@ object TaskManager {
   }
 
   /**
-   * Updates all tasks (`TODO`s and `FIXME`s) for given project in given files.
+   * Updates all tasks (TODOs and FIXMEs) for given project in given files.
    */
   def updateTasks(project: IScalaProject, files: Set[IFile]): Unit = {
     val taskScanner = new TaskScanner(project)
