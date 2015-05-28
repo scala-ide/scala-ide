@@ -1,14 +1,10 @@
 package test
 
 import java.io.FileWriter
-
-object ScalaTest {
-  def main(args: Array[String]): Unit = {
-    (new ScalaTest).foo()
-  }
-}
+import org.junit.Test
 
 class ScalaTest {
+  @Test
   def foo(): Unit = {
     val writer = new FileWriter("launchDelegate.result")
     writer.write("success")
