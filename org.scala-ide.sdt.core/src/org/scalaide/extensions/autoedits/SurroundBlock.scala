@@ -1,10 +1,12 @@
 package org.scalaide.extensions
 package autoedits
 
-import org.scalaide.core.text.Add
-import org.scalaide.util.eclipse.RegionUtils._
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.text.Add
 import org.scalaide.core.text.Replace
+import org.scalaide.util.eclipse.RegionUtils._
+
+import scalariform.lexer._
 
 object SurroundBlockSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[SurroundBlock],
@@ -68,28 +70,37 @@ trait SurroundBlock extends AutoEdit {
     }
     val firstLine = document.lineInformationOfOffset(offset)
     val firstIndent = indentLenOfLine(firstLine)
+    val lexer = ScalaLexer.createRawLexer(document.textRange(offset, document.length-1), forgiveErrors = true)
 
-    def find(offset: Int, isSecondLine: Boolean): Option[(Int, Int)] = {
-      if (offset >= document.length)
+    def loop(): Option[Int] =
+      if (!lexer.hasNext)
         None
       else {
-        val line = document.lineInformationOfOffset(offset)
-        val indent = indentLenOfLine(line)
+        val t = lexer.next()
 
-        if (indent <= firstIndent)
-          if (isSecondLine)
+        if (t.tokenType == Tokens.RBRACE || (Tokens.KEYWORDS contains t.tokenType)) {
+          val line = document.lineInformationOfOffset(t.offset+offset)
+          val indent = indentLenOfLine(line)
+
+          if (t.tokenType == Tokens.RBRACE && indent == firstIndent)
             None
-          else if (indent == firstIndent && document(line.trimLeft(document).start) == '}')
-            None
+          else if (indent <= firstIndent) {
+            val prevLine = document.lineInformationOfOffset(line.start-1)
+
+            if (prevLine.start == firstLine.start || prevLine.trim(document).length == 0)
+              None
+            else
+              Some(line.start)
+          }
           else
-            Some(line.start -> firstIndent)
+            loop()
+        }
         else
-          find(line.end+1, isSecondLine = false)
+          loop()
       }
-    }
 
     if (offset == firstLine.trimRight(document).end+1)
-      find(firstLine.end+1, isSecondLine = true)
+      loop() map (_ → firstIndent)
     else
       None
   }

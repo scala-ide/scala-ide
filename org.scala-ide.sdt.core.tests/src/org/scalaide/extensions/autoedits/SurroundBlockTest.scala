@@ -126,4 +126,39 @@ class SurroundBlockTest extends AutoEditTests {
       0""" becomes """
     def f = {^
       0""" after curlyBrace
+
+  @Test
+  def add_no_ending_in_the_middle_of_a_block() = """
+    class X {
+      def f(i: Int) = i
+      def g = ^
+        f {
+
+          0
+        }
+      def h = 0
+    }
+    """ becomes """
+    class X {
+      def f(i: Int) = i
+      def g = {^
+        f {
+
+          0
+        }
+      }
+      def h = 0
+    }
+    """ after curlyBrace
+
+  @Test
+  def add_no_ending_if_next_line_is_rbrace() = """
+    class X {
+      val a = ^
+    }
+    """ becomes """
+    class X {
+      val a = {^
+    }
+    """ after curlyBrace
 }
