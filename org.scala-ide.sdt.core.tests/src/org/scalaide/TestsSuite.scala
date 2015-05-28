@@ -10,6 +10,7 @@ import org.scalaide.core.compiler.NamePrinterTest
 import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.compiler.settings.CompilerSettingsTest
 import org.scalaide.core.completion.CompletionTests
+import org.scalaide.core.completion.ScalaJavaCompletionTests
 import org.scalaide.core.findreferences.FindReferencesTests
 import org.scalaide.core.hyperlink.HyperlinkDetectorTests
 import org.scalaide.core.hyperlink.ScalaWordFinderTest
@@ -66,7 +67,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[CompletionTests],
     classOf[DesiredScalaInstallationTests],
     classOf[RunAsTest],
-    // classOf[ScalaJavaCompletionTests], FIXME: Uncomment as soon as this regression is fixed.
+    classOf[ScalaJavaCompletionTests],
     classOf[FindReferencesTests],
     classOf[HyperlinkDetectorTests],
     // classOf[scala.tools.eclipse.interpreter.EclipseReplTest], // see comments there

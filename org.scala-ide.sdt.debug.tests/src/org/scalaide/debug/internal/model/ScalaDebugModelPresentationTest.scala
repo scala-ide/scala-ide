@@ -3,6 +3,7 @@ package org.scalaide.debug.internal.model
 import org.eclipse.debug.core.DebugPlugin
 import org.junit.Assert._
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Mockito._
 import com.sun.jdi.ThreadReference
@@ -23,8 +24,8 @@ import org.junit.After
 
 /**
  * More tests related of the ScalaDebugModelPresentation are in ScalaDebugComputeDetailTest.
- *
  */
+@Ignore("TODO - this test apparently uses some UI elements which are disabled in headless mode")
 class ScalaDebugModelPresentationTest {
 
   val modelPres = new ScalaDebugModelPresentation

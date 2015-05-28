@@ -29,7 +29,6 @@ class CustomClassHighlightingTest
     }
   }
 
-  // TODO - flaky test :(
   @Test
   def customTypeHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Types.scala") { (spc, scu) =>
