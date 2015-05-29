@@ -107,53 +107,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
       else currentOwner
     }
-
-    /* simplified from org.eclipse.jdt.internal.core.search.matching.PatternLocator */
-    /*def qualifiedPattern(simpleNamePattern: Array[Char], qualificationPattern: Array[Char]): Array[Char] =
-      // NOTE: if case insensitive search then simpleNamePattern & qualificationPattern are assumed to be lowercase
-      if (qualificationPattern == null)
-        simpleNamePattern
-      else if (simpleNamePattern eq null)
-        CharOp.concat(qualificationPattern, OneStar, '.')
-      else
-        CharOp.concat(qualificationPattern, simpleNamePattern, '.')
-
-    /**
-     * See whether the given type can occur in a pattern (e.g. type vars cannot)
-     */
-    def canMatchPattern(tpe: Type): Boolean = tpe match {
-      case _ : ErrorType | _ : WildcardType | _ : NoType => false
-      case _ => true
-    }
-
-    def resolveLevelForType(qualifiedPattern: Array[Char], tpe: Type): Int = {
-      if (qualifiedPattern eq null) AccurateMatch
-      else if (tpe eq null) InaccurateMatch
-      else if (!canMatchPattern(tpe)) ImpossibleMatch
-      else {
-        tpe match {
-          case ThisType(_) | SingleType(_,_) =>
-          case SingleType(pre, sym) =>
-          // pre.sym.type
-    // int(2)
-  case TypeRef(pre, sym, args) =>
-    // pre.sym[targs]
-  case RefinedType(parents, defs) =>
-    // parent1 with ... with parentn { defs }
-  case AnnotatedType(annots, tp) =>
-    // tp @annots
-          case _ => PatternLocator.INACCURATE_MATCH
-        }
-
-        val qualifiedPackageName = tpe.qualifiedPackageName()
-        val qualifiedSourceName = qualifiedSourceName(tpe)
-        val fullyQualifiedTypeName = if (qualifiedPackageName.length == 0) qualifiedSourceName
-          else CharOp.concat(qualifiedPackageName, qualifiedSourceName, '.')
-        if (CharOp.`match`(qualifiedPattern, fullyQualifiedTypeName, this.isCaseSensitive))
-          AccurateMatch
-        else ImpossibleMatch
-      }
-    }*/
   }
 
   object NoLocator extends MatchLocatorTraverser {
@@ -458,7 +411,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         super.traverse(tree)
       }
     }
-
 
   }*/
 }

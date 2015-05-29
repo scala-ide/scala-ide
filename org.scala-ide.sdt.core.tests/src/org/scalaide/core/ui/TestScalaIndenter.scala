@@ -1,35 +1,30 @@
 package org.scalaide.core.ui
 
-import org.junit.Assert._
-import org.junit.runner.RunWith
-import org.junit.internal.runners.JUnit4ClassRunner
-import org.junit.Test
-import org.junit.Before
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.DocumentCommand
-import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.preference.PreferenceStore
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.{ DefaultCodeFormatterConstants => Dcfc }
 import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
-import org.eclipse.jdt.internal.core.JavaCorePreferenceInitializer
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.ui.internal.editors.text.EditorsPlugin
-import java.util.Hashtable
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.ui.internal.editors.text.EditorsPlugin
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.internal.runners.JUnit4ClassRunner
+import org.junit.runner.RunWith
+import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.scalaide.core.lexical.ScalaCodePartitioner
 
 @RunWith(classOf[JUnit4ClassRunner])
+@Ignore("TODO - this test triggers an eclipse bundle that requires GUI support, which is not available on the build server")
 class TestScalaIndenter {
 
   /**
@@ -84,7 +79,6 @@ class TestScalaIndenter {
     partitioner.connect(document)
     document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
 
-
     // Create the command with all needed information
     val command = new InstantiableDocumentCommands()
     command.text = insert
@@ -138,7 +132,6 @@ class TestScalaIndenter {
     assertEquals(expectedOffset, newOffset)
   }
 
-
   /**
    * Test:
    *   class x {<->
@@ -162,7 +155,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   trait x {<->
@@ -185,7 +177,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
@@ -217,7 +208,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   class x {
@@ -248,7 +238,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   class x {
@@ -277,7 +266,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   class x {
@@ -304,7 +292,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
