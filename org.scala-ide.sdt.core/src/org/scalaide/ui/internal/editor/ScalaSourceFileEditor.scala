@@ -157,9 +157,8 @@ class ScalaSourceFileEditor
 
   /**
    * The tabs to spaces converter of the editor is not partition aware,
-   * therefore we disable it here. There is an auto edit strategy configured in
-   * the [[ScalaSourceViewerConfiguration]] that handles the conversion for each
-   * partition separately.
+   * therefore we disable it here. There is a save action available that handles
+   * the conversion.
    */
   override def isTabsToSpacesConversionEnabled(): Boolean =
     false
@@ -307,8 +306,8 @@ class ScalaSourceFileEditor
           executeSuperImplementation()
 
         // whatever event occurs that leads to the creation of the converter,
-        // we don't want it. We use auto edits to describe the behavior of
-        // tab-space conversions.
+        // we don't want it. We use a save action to describe the behavior of
+        // tab to space conversions.
         sourceViewer.setTabsToSpacesConverter(null)
     }
   }
