@@ -1,23 +1,28 @@
 package org.scalaide.debug.internal.launching
 
-import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.junit.Before
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.junit.Test
-import org.junit.Assert._
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.debug.core.ILaunchManager
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.Path
-import scala.io.Source
-import scala.io.Codec
-import org.eclipse.core.resources.IResource
-import org.eclipse.debug.core.ILaunchesListener2
-import org.eclipse.debug.core.ILaunch
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+
+import scala.io.Codec
+import scala.io.Source
+
+import org.eclipse.core.resources.IResource
+import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.ILaunch
+import org.eclipse.debug.core.ILaunchManager
+import org.eclipse.debug.core.ILaunchesListener2
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
+import org.scalaide.core.testsetup.SdtTestConstants
+import org.scalaide.core.testsetup.TestProjectSetup
+
+import LibraryJarInBootstrapTest.file
+import LibraryJarInBootstrapTest.project
 
 object LibraryJarInBootstrapTest extends TestProjectSetup("launching-1000919", bundleName = "org.scala-ide.sdt.debug.tests")
 
@@ -36,6 +41,7 @@ class LibraryJarInBootstrapTest {
    * Before the fix, if order of the Scala library container and the JRE container was 'wrong', the Scala library was not added
    * to the boot classpath for test execution (nor the classpath) and the launch would fail.
    */
+  @Ignore(SdtTestConstants.TestRequiresGuiSupport)
   @Test
   def checkTestIsCorrectlyExecutedWhenLibraryJarAfterJRE(): Unit = {
 

@@ -7,6 +7,7 @@ import org.junit.runner.RunWith
 import org.junit.runners.Suite
 import org.scalaide.debug.internal.editor.StackFrameVariableOfTreeFinderTest
 import org.scalaide.debug.internal.hcr.HotCodeReplaceTest
+import org.scalaide.debug.internal.launching.LibraryJarInBootstrapTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
 import org.scalaide.debug.internal.model.DebugTargetTerminationTest
 import org.scalaide.debug.internal.model.MethodClassifierUnitTest
@@ -30,7 +31,7 @@ import org.scalaide.debug.internal.model.ScalaValueTest
     classOf[ScalaDebugModelPresentationTest],
     classOf[ScalaStackFrameTest],
     classOf[ScalaValueTest],
-//    classOf[LibraryJarInBootstrapTest], // the test is not running on command line right now
+    classOf[LibraryJarInBootstrapTest],
     classOf[ScalaDebugTargetTest],
     classOf[ScalaDebuggerDisconnectTests],
     classOf[BaseDebuggerActorTest],

@@ -12,19 +12,20 @@ import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.internal.editors.text.EditorsPlugin
-import org.junit.Assert._
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.internal.runners.JUnit4ClassRunner
 import org.junit.runner.RunWith
 import org.scalaide.core.lexical.ScalaCodePartitioner
+import org.scalaide.core.testsetup.SdtTestConstants
 import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
 
 @RunWith(classOf[JUnit4ClassRunner])
-@Ignore("TODO - this test triggers an eclipse bundle that requires GUI support, which is not available on the build server")
+@Ignore(SdtTestConstants.TestRequiresGuiSupport)
 class TestScalaIndenter {
 
   /**
