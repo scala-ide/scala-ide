@@ -264,6 +264,10 @@ class ScalaSourceViewerConfiguration(
    * a ScalaAutoIndentStrategy instead of a JavaAutoIndentStrategy.
    *
    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer, java.lang.String)
+   *
+   * @note The usage of this method in Scala IDE is deprecated. We use auto
+   * edits instead. No new auto edit strategies should be added but the existing
+   * one should be converted to auto edits.
    */
   override def getAutoEditStrategies(sourceViewer: ISourceViewer, contentType: String): Array[IAutoEditStrategy] = {
     def prefProvider = new JdtPreferenceProvider(getProject)
