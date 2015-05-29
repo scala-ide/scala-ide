@@ -212,10 +212,6 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     val innerGroup = newGroup("", radioGroup)
     innerGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1))
 
-    // Note: Mark Occurences is now working properly, so it doesn't need to be recommended to be turned off...
-    //    val markOccurrencesButton =
-    //      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
-
     val completionButton =
       newCheckboxButton(innerGroup, "Use Scala-compatible JDT content assist proposals (recommended)", completionData)
 
@@ -288,7 +284,6 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       }
     }
 
-    //    markOccurrencesButton.addSelectionListener(selectionListener)
     autoActivationButton.addSelectionListener(selectionListener)
     completionButton.addSelectionListener(selectionListener)
 
@@ -383,8 +378,6 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
   }
 
   def turnWeavingOn(): Unit = {
-    //    JDTWeavingPreferences.setAskToEnableWeaving(false)
-
     val changeResult: IStatus = configurer.changeWeavingState(true)
 
     if (changeResult.getSeverity <= IStatus.WARNING) {
