@@ -1,10 +1,12 @@
 package org.scalaide.ui.internal.editor
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
-import scala.tools.refactoring.common.{TextChange => RTextChange}
-import scala.util._
+import scala.tools.refactoring.common.{ TextChange => RTextChange }
+import scala.util.Failure
+import scala.util.Left
+import scala.util.Right
+import scala.util.Success
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
@@ -16,12 +18,15 @@ import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.internal.extensions.saveactions._
+import org.scalaide.core.internal.extensions.ExtensionCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
+import org.scalaide.core.text.Document
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
+import org.scalaide.extensions.DocumentSupport
+import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.saveactions._
@@ -29,10 +34,31 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.FutureUtils
-import org.scalaide.util.internal.FutureUtils.TimeoutFuture
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
-object SaveActionExtensions {
+object SaveActionExtensions extends AnyRef with HasLogger {
+
+  private object SaveActionCreator {
+    import scala.reflect.runtime.universe._
+
+    private def mk[A : TypeTag, B](f: Any ⇒ B): Seq[B] = {
+      val fqn = ExtensionSetting.fullyQualifiedName[A]
+      ExtensionCompiler.loadExtension(fqn) match {
+        case Success(ext) ⇒
+          logger.debug(s"Loading Scala IDE extension '$fqn' was successful.")
+          Seq(f(ext))
+        case Failure(f) ⇒
+          logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
+          Seq()
+      }
+    }
+
+    def mkDocumentExt[A : TypeTag](setting: SaveActionSetting) =
+      mk(ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
+
+    def mkCompilerExt[A : TypeTag](setting: SaveActionSetting) =
+      mk(ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
+  }
 
   /**
    * The ID which is used as key in the preference store to identify the actual
@@ -46,18 +72,29 @@ object SaveActionExtensions {
   private def saveActionTimeout: FiniteDuration =
     IScalaPlugin().getPreferenceStore().getInt(SaveActionTimeoutId).millis
 
-  private val documentSaveActions = Seq(
-    RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
-    AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
-    AutoFormattingSetting -> AutoFormattingCreator.create _,
-    RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _,
-    TabToSpaceConverterSetting -> TabToSpaceConverterCreator.create _
-  )
+  private val documentSaveActions = {
+    import SaveActionCreator.mkDocumentExt
 
-  private val compilerSaveActions = Seq(
-    AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
-    AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
-  )
+    Seq(
+      mkDocumentExt[RemoveTrailingWhitespace](RemoveTrailingWhitespaceSetting),
+      mkDocumentExt[AddNewLineAtEndOfFile](AddNewLineAtEndOfFileSetting),
+      mkDocumentExt[AutoFormatting](AutoFormattingSetting),
+      mkDocumentExt[RemoveDuplicatedEmptyLines](RemoveDuplicatedEmptyLinesSetting),
+      mkDocumentExt[TabToSpaceConverter](TabToSpaceConverterSetting)
+    ).flatten
+  }
+
+  private val compilerSaveActions = {
+    import SaveActionCreator.mkCompilerExt
+
+    Seq(
+      mkCompilerExt[AddMissingOverride](AddMissingOverrideSetting),
+      mkCompilerExt[AddReturnTypeToPublicSymbols](AddReturnTypeToPublicSymbolsSetting)
+    ).flatten
+  }
+
+  private type DocumentSupportCreator =
+    Document ⇒ SaveAction with DocumentSupport
 
   private type CompilerSupportCreator = (
       IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
