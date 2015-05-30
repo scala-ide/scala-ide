@@ -5,11 +5,11 @@ import java.io.File
 import scala.reflect.internal.util.AbstractFileClassLoader
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
-import scala.reflect.io.VirtualDirectory
+import scala.reflect.io.Directory
+import scala.reflect.io.PlainDirectory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.reporters.StoreReporter
-import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.Try
 
@@ -23,26 +23,52 @@ import org.scalaide.logging.HasLogger
 // TODO logger seems not yet be available, we probably have to delay the initialization of this object
 object ExtensionCompiler extends AnyRef with HasLogger {
 
+  /**
+   * The version of the generated source code that is compiled and cached to
+   * disk. If the generated source code changes in any way, this version needs
+   * to be increased, otherwise we risk a broken cache.
+   */
+  private val vGenerated = "v1"
+
+  /**
+   * The version of Scala that is used to compile the generated source code.
+   * Since the Scala compiler and the internals of Scala IDE are binary
+   * incompatible, we have to create a new cache every time the Scala version
+   * changes.
+   */
+  private val vScala = ScalaInstallation.platformInstallation.version
+
+  /**
+   * The reporter used to report any compilation errors and warnings that occur
+   * in the generated source code.
+   */
   private val reporter = new StoreReporter
-  private val outputDir = new VirtualDirectory("(memory)", None)
+
+  /**
+   * The location of the class file cache.
+   */
+  private val outputDir = {
+    val f = new java.io.File(s"${System.getProperty("user.home")}/.scalaide/classes/${vScala.unparse}/$vGenerated")
+    f.mkdirs()
+    new PlainDirectory(new Directory(f))
+  }
+
+  /**
+   * The class loader that is used to access all generated class files.
+   */
   private val classLoader = new AbstractFileClassLoader(outputDir, this.getClass.getClassLoader)
 
   private val settings = {
     val s = new Settings(err ⇒ System.err.println(err))
     s.outputDirs.setSingleOutput(outputDir)
     s.usejavacp.value = true
-    s.YpresentationDebug.value = true
-    s.YpresentationVerbose.value = true
+    // TODO remove debug flag
     s.debug.value = true
-    // TODO we can't continue if no 2.11 installation exists
-    val install = ScalaInstallation.availableInstallations find { _.version match {
-      case SpecificScalaVersion(2, 11, _, _) ⇒ true
-      case _ ⇒ false
-    }}
-    install foreach { install ⇒
-      s.bootclasspath.value = install.allJars.map(_.classJar).mkString(File.pathSeparator)
-    }
-    s.source.value = ScalaVersion("2.11")
+
+    val install = ScalaInstallation.platformInstallation
+    s.bootclasspath.value = install.allJars.map(_.classJar).mkString(File.pathSeparator)
+    s.source.value = vScala
+
     // TODO we have to handle the scala-ide bundles differently for non platform installations
     val scalaIdeClasspath = Seq(
       "/home/antoras/dev/scala/scala-ide/org.scala-ide.sdt.core/target/classes",
