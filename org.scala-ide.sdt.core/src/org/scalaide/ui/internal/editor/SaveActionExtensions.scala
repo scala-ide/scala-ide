@@ -19,6 +19,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.extensions.ExtensionCompiler
+import org.scalaide.core.internal.extensions.ExtensionCreators
 import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
@@ -38,25 +39,25 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions extends AnyRef with HasLogger {
 
-  private type DocumentSupportCreator =
-    Document ⇒ SaveAction with DocumentSupport
-
-  private type CompilerSupportCreator = (
-      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
-      SourceFile, Int, Int
-    ) => SaveAction with CompilerSupport
-
+  /**
+   * Contains all available document save actions. They are cached here
+   * because their creation is expensive.
+   */
   private val documentSaveActions = {
     SaveActions.documentSaveActionsData flatMap {
       case (fqn, setting) ⇒
-        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
+        ExtensionCompiler.savelyLoadExtension[ExtensionCreators.DocumentSaveAction](fqn).map(setting → _)
     }
   }
 
+  /**
+   * Contains all available compiler save actions. They are cached here
+   * because their creation is expensive.
+   */
   private val compilerSaveActions = {
     SaveActions.compilerSaveActionsData flatMap {
       case (fqn, setting) ⇒
-        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
+        ExtensionCompiler.savelyLoadExtension[ExtensionCreators.CompilerSaveAction](fqn).map(setting → _)
     }
   }
 
@@ -156,7 +157,7 @@ trait SaveActionExtensions extends HasLogger {
   private def applyCompilerExtensions(udoc: IDocument): Unit = {
     val timeout = saveActionTimeout
 
-    def loop(xs: Seq[(SaveActionSetting, CompilerSupportCreator)]): Unit = xs match {
+    def loop(xs: Seq[(SaveActionSetting, ExtensionCreators.CompilerSaveAction)]): Unit = xs match {
       case Seq() ⇒
 
       case (setting, ext) +: xs if isEnabled(setting.id) ⇒
@@ -255,7 +256,7 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction with CompilerSupport] = {
+  private def createExtensionWithCompilerSupport(creator: ExtensionCreators.CompilerSaveAction): Option[SaveAction with CompilerSupport] = {
     lastSourceFile.withSourceFile { (sf, compiler) =>
       import compiler._
 

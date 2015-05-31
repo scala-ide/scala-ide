@@ -21,6 +21,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.extensions.AutoEdits
 import org.scalaide.core.internal.extensions.ExtensionCompiler
+import org.scalaide.core.internal.extensions.ExtensionCreators
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
@@ -32,14 +33,18 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 
 object AutoEditExtensions extends AnyRef with HasLogger {
-  private type AutoEditCreator = (Document, TextChange) ⇒ AutoEdit
 
+  /**
+   * Contains all available auto edits. They are cached here because their
+   * creation is expensive.
+   */
   private val autoEdits = {
     AutoEdits.autoEditData flatMap {
       case (fqn, setting) ⇒
-        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
+        ExtensionCompiler.savelyLoadExtension[ExtensionCreators.AutoEdit](fqn).map(setting → _)
     }
   }
+
 }
 
 /**

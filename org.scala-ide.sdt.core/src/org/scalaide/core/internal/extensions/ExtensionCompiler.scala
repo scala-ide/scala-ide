@@ -25,6 +25,40 @@ import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
 import org.scalaide.logging.HasLogger
 
+/**
+ * Represents possible Scala IDE extension creators. A creator is a function
+ * that takes some arguments and creates an instance of an extension that
+ * depends on the passed arguments.
+ */
+object ExtensionCreators {
+
+  /** Represents a Save Action that depends on [[DocumentSupport]]. */
+  type DocumentSaveAction =
+    Document ⇒ SaveAction with DocumentSupport
+
+  /** Represents a Save Action that depends on [[CompilerSupport]]. */
+  type CompilerSaveAction = (
+      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
+      SourceFile, Int, Int
+    ) ⇒ SaveAction with CompilerSupport
+
+  /** Represents an Auto Edit. */
+  type AutoEdit =
+    (Document, TextChange) ⇒ org.scalaide.extensions.AutoEdit
+}
+
+/**
+ * This compiler generates source snippets that allow the creation of Scala IDE
+ * extensions. Because every Scala IDE extension relies on some dependencies it
+ * is not straightforward on how to instantiate them. Therefore this compiler
+ * creates so called "creators", one of the types available in
+ * [[ExtensionCreator]], that return functions, which take the dependencies and
+ * instantiate the extensions.
+ *
+ * Because compilation takes time, the generated source snippets are stored on
+ * disk after their first compilation and for all further uses loaded from
+ * there.
+ */
 object ExtensionCompiler extends AnyRef with HasLogger {
 
   /**
@@ -86,7 +120,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     val textChange = ExtensionSetting.fullyQualifiedName[TextChange]
   }
 
-  private def buildDocumentExt(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
+  private def buildDocumentSaveAction(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
     package $pkg
     class $creatorName {
       def create(doc: ${Types.document}): ${Types.documentSupport} =
@@ -96,7 +130,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     }
   """
 
-  private def buildCompilerExt(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
+  private def buildCompilerSaveAction(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
     package $pkg
     class $creatorName {
       def create(
@@ -142,11 +176,30 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       throw new IllegalStateException(reporter.infos.mkString("Errors occurred during compilation of extension wrapper:\n", "\n", ""))
   }
 
-  private sealed trait ExtensionType
-  private case class UncompiledType(src: String, className: String, fn: (Class[_], Any) ⇒ Any) extends ExtensionType
-  private case class CachedType(cls: Class[_], fn: (Class[_], Any) ⇒ Any) extends ExtensionType
+  /**
+   * Represents the state of the extension creator that is used to instantiate a
+   * concrete extensions.
+   */
+  private sealed trait CreatorState
 
-  private def load(fullyQualifiedName: String): ExtensionType = {
+  /**
+   * Represents an extension creator that has not yet been compiled and therefore
+   * is not yet cached on disk. `src` is the source code that needs to be compiled,
+   * `className` is the name of the creator that exists in `src` and `fn` is a
+   * function that can access an instantiation of `className` through
+   * reflection.
+   */
+  private case class Uncompiled(src: String, className: String, fn: (Class[_], Any) ⇒ Any) extends CreatorState
+
+  /**
+   * Represents an extension creator that has already been compiled and is
+   * therefore stored on disk. `cls` is the class of the creator and `fn` is a
+   * function that can access an instantiation of `className` through
+   * reflection.
+   */
+  private case class Cached(cls: Class[_], fn: (Class[_], Any) ⇒ Any) extends CreatorState
+
+  private def load(fullyQualifiedName: String): CreatorState = {
     val pkg = "org.scalaide.core.internal.generated"
     val creatorName = s"${fullyQualifiedName.split('.').last}Creator"
 
@@ -173,9 +226,9 @@ object ExtensionCompiler extends AnyRef with HasLogger {
           m.invoke(obj, doc)
       }
       if (isCached)
-        CachedType(cachedCls.get, fn)
+        Cached(cachedCls.get, fn)
       else
-        UncompiledType(buildDocumentExt(fullyQualifiedName, creatorName, pkg), className, fn)
+        Uncompiled(buildDocumentSaveAction(fullyQualifiedName, creatorName, pkg), className, fn)
     }
 
     def mkCompilerSaveAction = {
@@ -185,9 +238,9 @@ object ExtensionCompiler extends AnyRef with HasLogger {
           m.invoke(obj, c, t, src, Integer.valueOf(selStart), Integer.valueOf(selEnd))
       }
       if (isCached)
-        CachedType(cachedCls.get, fn)
+        Cached(cachedCls.get, fn)
       else
-        UncompiledType(buildCompilerExt(fullyQualifiedName, creatorName, pkg), className, fn)
+        Uncompiled(buildCompilerSaveAction(fullyQualifiedName, creatorName, pkg), className, fn)
     }
 
     def mkAutoEdit = {
@@ -197,9 +250,9 @@ object ExtensionCompiler extends AnyRef with HasLogger {
           m.invoke(obj, doc, change)
       }
       if (isCached)
-        CachedType(cachedCls.get, fn)
+        Cached(cachedCls.get, fn)
       else
-        UncompiledType(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
+        Uncompiled(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
     }
 
     if (isDocumentSaveAction)
@@ -212,31 +265,51 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' couldn't be qualified as a valid extension.")
   }
 
-  def loadExtension(fullyQualifiedName: String): Try[Any] = Try {
+  /**
+   * Returns a function, which allows the instantiation of an extension
+   * represented by `fullyQualifiedName`. The type of `A` can be one of the
+   * types available in [[ExtensionCreator]].
+   *
+   * This returns a [[Try]] because there are many things that can go wrong. A
+   * [[Failure]] is returned whenever `fullyQualifiedName` doesn't represent an
+   * existing type, `A` is not one of the types available in
+   * [[ExtensionCreator]], the compilation of an extension creator was not
+   * successful, the loading of the cached extension creator failed or the
+   * creation of an extension did not complete normally.
+   *
+   * If one does not care about the failure, [[savelyLoadExtension]] should be
+   * used.
+   */
+  def loadExtension[A](fullyQualifiedName: String): Try[A] = Try {
     load(fullyQualifiedName) match {
-      case UncompiledType(src, className, fn) ⇒
+      case Uncompiled(src, className, fn) ⇒
         compile(Seq(src))
         val cls = classLoader.loadClass(className)
         val obj = cls.newInstance()
-        val res = fn(cls, obj)
+        val res = fn(cls, obj).asInstanceOf[A]
         logger.debug(s"Compiling Scala IDE extension '$fullyQualifiedName' was successful.")
         res
 
-      case CachedType(cls, fn) ⇒
+      case Cached(cls, fn) ⇒
         val obj = cls.newInstance()
-        val res = fn(cls, obj)
+        val res = fn(cls, obj).asInstanceOf[A]
         logger.debug(s"Loading cached Scala IDE extension '$fullyQualifiedName' was successful.")
         res
     }
   }
 
-  def savelyLoadExtension[A](fullyQualifiedName: String)(f: Any ⇒ A): Seq[A] = {
-    loadExtension(fullyQualifiedName) match {
+  /**
+   * See [[loadExtension]] for documentation about behavior of this method. If
+   * anything goes wrong during the loading of an extension, [[None]] is
+   * returned and an error message is logged.
+   */
+  def savelyLoadExtension[A](fullyQualifiedName: String): Option[A] = {
+    loadExtension[A](fullyQualifiedName) match {
       case Success(ext) ⇒
-        Seq(f(ext))
+        Some(ext)
       case Failure(f) ⇒
         logger.error(s"An error occurred while loading Scala IDE extension '$fullyQualifiedName'.", f)
-        Seq()
+        None
     }
   }
 
