@@ -179,7 +179,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     val isCompilerSaveAction = Set(classOf[SaveAction], classOf[CompilerSupport]) forall interfaces.contains
     val isAutoEdit = interfaces contains classOf[AutoEdit]
 
-    if (isDocumentSaveAction) {
+    def mkDocumentSaveAction = {
       val fn = (cls: Class[_], obj: Any) ⇒ {
         val m = cls.getMethod("create", classOf[Document])
         (doc: Document) ⇒
@@ -190,7 +190,8 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       else
         UncompiledType(buildDocumentExt(fullyQualifiedName, creatorName, pkg), className, fn)
     }
-    else if (isCompilerSaveAction) {
+
+    def mkCompilerSaveAction = {
       val fn = (cls: Class[_], obj: Any) ⇒ {
         val m = cls.getMethod("create", classOf[IScalaPresentationCompiler], classOf[IScalaPresentationCompiler#Tree], classOf[SourceFile], classOf[Int], classOf[Int])
         (c: IScalaPresentationCompiler, t: IScalaPresentationCompiler#Tree, src: SourceFile, selStart: Int, selEnd: Int) ⇒
@@ -201,7 +202,8 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       else
         UncompiledType(buildCompilerExt(fullyQualifiedName, creatorName, pkg), className, fn)
     }
-    else if (isAutoEdit) {
+
+    def mkAutoEdit = {
       val fn = (cls: Class[_], obj: Any) ⇒ {
         val m = cls.getMethod("create", classOf[Document], classOf[TextChange])
         (doc: Document, change: TextChange) ⇒
@@ -212,6 +214,13 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       else
         UncompiledType(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
     }
+
+    if (isDocumentSaveAction)
+      mkDocumentSaveAction
+    else if (isCompilerSaveAction)
+      mkCompilerSaveAction
+    else if (isAutoEdit)
+      mkAutoEdit
     else
       throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' couldn't be qualified as a valid extension.")
   }
@@ -223,13 +232,13 @@ object ExtensionCompiler extends AnyRef with HasLogger {
         val cls = classLoader.loadClass(className)
         val obj = cls.newInstance()
         val res = fn(cls, obj)
-        logger.debug(s"Loading of Scala IDE extension '$fullyQualifiedName' was successful.")
+        logger.debug(s"Compiling Scala IDE extension '$fullyQualifiedName' was successful.")
         res
 
       case CachedType(cls, fn) ⇒
         val obj = cls.newInstance()
         val res = fn(cls, obj)
-        logger.debug(s"Loading of cached Scala IDE extension '$fullyQualifiedName' was successful.")
+        logger.debug(s"Loading cached Scala IDE extension '$fullyQualifiedName' was successful.")
         res
     }
   }
