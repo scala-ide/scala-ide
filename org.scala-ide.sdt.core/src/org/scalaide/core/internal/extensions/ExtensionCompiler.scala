@@ -10,14 +10,19 @@ import scala.reflect.io.PlainDirectory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.reporters.StoreReporter
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
 
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.text.Document
 import org.scalaide.core.text.TextChange
-import org.scalaide.extensions._
+import org.scalaide.extensions.AutoEdit
+import org.scalaide.extensions.CompilerSupport
+import org.scalaide.extensions.DocumentSupport
+import org.scalaide.extensions.ExtensionSetting
+import org.scalaide.extensions.SaveAction
 import org.scalaide.logging.HasLogger
 
 object ExtensionCompiler extends AnyRef with HasLogger {
@@ -222,6 +227,16 @@ object ExtensionCompiler extends AnyRef with HasLogger {
         val res = fn(cls, obj)
         logger.debug(s"Loading cached Scala IDE extension '$fullyQualifiedName' was successful.")
         res
+    }
+  }
+
+  def savelyLoadExtension[A](fullyQualifiedName: String)(f: Any ⇒ A): Seq[A] = {
+    loadExtension(fullyQualifiedName) match {
+      case Success(ext) ⇒
+        Seq(f(ext))
+      case Failure(f) ⇒
+        logger.error(s"An error occurred while loading Scala IDE extension '$fullyQualifiedName'.", f)
+        Seq()
     }
   }
 

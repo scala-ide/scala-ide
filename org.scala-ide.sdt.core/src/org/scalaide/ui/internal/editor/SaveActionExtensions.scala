@@ -46,27 +46,17 @@ object SaveActionExtensions extends AnyRef with HasLogger {
       SourceFile, Int, Int
     ) => SaveAction with CompilerSupport
 
-  private def mk[B](fqn: String, f: Any ⇒ B): Seq[B] = {
-    ExtensionCompiler.loadExtension(fqn) match {
-      case Success(ext) ⇒
-        Seq(f(ext))
-      case Failure(f) ⇒
-        logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
-        Seq()
-    }
-  }
-
   private val documentSaveActions = {
     SaveActions.documentSaveActionsData flatMap {
       case (fqn, setting) ⇒
-        mk(fqn, ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
+        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
     }
   }
 
   private val compilerSaveActions = {
     SaveActions.compilerSaveActionsData flatMap {
       case (fqn, setting) ⇒
-        mk(fqn, ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
+        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
     }
   }
 

@@ -34,20 +34,10 @@ import org.scalaide.util.eclipse.EclipseUtils
 object AutoEditExtensions extends AnyRef with HasLogger {
   private type AutoEditCreator = (Document, TextChange) ⇒ AutoEdit
 
-  private def mk[B](fqn: String, f: Any ⇒ B): Seq[B] = {
-    ExtensionCompiler.loadExtension(fqn) match {
-      case Success(ext) ⇒
-        Seq(f(ext))
-      case Failure(f) ⇒
-        logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
-        Seq()
-    }
-  }
-
   private val autoEdits = {
     AutoEdits.autoEditData flatMap {
       case (fqn, setting) ⇒
-        mk(fqn, ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
+        ExtensionCompiler.savelyLoadExtension(fqn)(ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
     }
   }
 }
