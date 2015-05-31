@@ -10,13 +10,13 @@ import scala.reflect.io.PlainDirectory
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.reporters.StoreReporter
-import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.Try
 
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.text.Document
+import org.scalaide.core.text.TextChange
 import org.scalaide.extensions._
 import org.scalaide.logging.HasLogger
 
@@ -59,6 +59,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
   private val classLoader = new AbstractFileClassLoader(outputDir, this.getClass.getClassLoader)
 
   private val settings = {
+    // TODO change to logger
     val s = new Settings(err ⇒ System.err.println(err))
     s.outputDirs.setSingleOutput(outputDir)
     s.usejavacp.value = true
@@ -95,6 +96,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     val compiler = ExtensionSetting.fullyQualifiedName[IScalaPresentationCompiler]
     val compilerSupport = ExtensionSetting.fullyQualifiedName[CompilerSupport]
     val sourceFile = ExtensionSetting.fullyQualifiedName[SourceFile]
+    val textChange = ExtensionSetting.fullyQualifiedName[TextChange]
   }
 
   private def buildDocumentExt(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
@@ -128,6 +130,17 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     }
   """
 
+  private def buildAutoEdit(fullyQualifiedName: String, creatorName: String, pkg: String) = s"""
+    package $pkg
+    class $creatorName {
+      def create(doc: ${Types.document}, change: ${Types.textChange}): $fullyQualifiedName =
+        new $fullyQualifiedName {
+          override val document: ${Types.document} = doc
+          override val textChange: ${Types.textChange} = change
+        }
+    }
+  """
+
   /**
    * Compiles `srcs` and makes defined classes available through [[classLoader]].
    */
@@ -143,8 +156,8 @@ object ExtensionCompiler extends AnyRef with HasLogger {
   }
 
   private sealed trait ExtensionType
-  private case class SaveActionType(src: String, className: String, fn: (Class[_], Any) ⇒ Any) extends ExtensionType
-  private case class CachedSaveActionType(cls: Class[_], fn: (Class[_], Any) ⇒ Any) extends ExtensionType
+  private case class UncompiledType(src: String, className: String, fn: (Class[_], Any) ⇒ Any) extends ExtensionType
+  private case class CachedType(cls: Class[_], fn: (Class[_], Any) ⇒ Any) extends ExtensionType
 
   private def load(fullyQualifiedName: String): ExtensionType = {
     val pkg = "org.scalaide.core.internal.generated"
@@ -164,6 +177,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     }
     val isDocumentSaveAction = Set(classOf[SaveAction], classOf[DocumentSupport]) forall interfaces.contains
     val isCompilerSaveAction = Set(classOf[SaveAction], classOf[CompilerSupport]) forall interfaces.contains
+    val isAutoEdit = interfaces contains classOf[AutoEdit]
 
     if (isDocumentSaveAction) {
       val fn = (cls: Class[_], obj: Any) ⇒ {
@@ -172,9 +186,9 @@ object ExtensionCompiler extends AnyRef with HasLogger {
           m.invoke(obj, doc)
       }
       if (isCached)
-        CachedSaveActionType(cachedCls.get, fn)
+        CachedType(cachedCls.get, fn)
       else
-        SaveActionType(buildDocumentExt(fullyQualifiedName, creatorName, pkg), className, fn)
+        UncompiledType(buildDocumentExt(fullyQualifiedName, creatorName, pkg), className, fn)
     }
     else if (isCompilerSaveAction) {
       val fn = (cls: Class[_], obj: Any) ⇒ {
@@ -183,9 +197,17 @@ object ExtensionCompiler extends AnyRef with HasLogger {
           m.invoke(obj, c, t, src, Integer.valueOf(selStart), Integer.valueOf(selEnd))
       }
       if (isCached)
-        CachedSaveActionType(cachedCls.get, fn)
+        CachedType(cachedCls.get, fn)
       else
-        SaveActionType(buildCompilerExt(fullyQualifiedName, creatorName, pkg), className, fn)
+        UncompiledType(buildCompilerExt(fullyQualifiedName, creatorName, pkg), className, fn)
+    }
+    else if (isAutoEdit) {
+      val fn = (cls: Class[_], obj: Any) ⇒ {
+        val m = cls.getMethod("create", classOf[Document], classOf[TextChange])
+        (doc: Document, change: TextChange) ⇒
+          m.invoke(obj, doc, change)
+      }
+      UncompiledType(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
     }
     else
       throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' couldn't be qualified as a valid extension.")
@@ -193,14 +215,15 @@ object ExtensionCompiler extends AnyRef with HasLogger {
 
   def loadExtension(fullyQualifiedName: String): Try[Any] = Try {
     load(fullyQualifiedName) match {
-      case SaveActionType(src, className, fn) ⇒
+      case UncompiledType(src, className, fn) ⇒
         compile(Seq(src))
         val cls = classLoader.loadClass(className)
         val obj = cls.newInstance()
         val res = fn(cls, obj)
         logger.debug(s"Loading of Scala IDE extension '$fullyQualifiedName' was successful.")
         res
-      case CachedSaveActionType(cls, fn) ⇒
+
+      case CachedType(cls, fn) ⇒
         val obj = cls.newInstance()
         val res = fn(cls, obj)
         logger.debug(s"Loading of cached Scala IDE extension '$fullyQualifiedName' was successful.")
