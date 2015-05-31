@@ -73,8 +73,8 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       "/home/antoras/dev/scala/scala-refactoring/org.scala-refactoring.library/bin"
     )
 
-    val bubndles = IScalaPlugin().getBundle.getBundleContext.getBundles.toList
-    val bundlesClasspath = bubndles.map(_.getLocation).filter(_.endsWith(".jar")) flatMap {
+    val bundles = IScalaPlugin().getBundle.getBundleContext.getBundles.toList
+    val bundlesClasspath = bundles.map(_.getLocation).filter(_.endsWith(".jar")) flatMap {
       _.split(":") match {
         case Array(_, _, ref) ⇒ Seq(ref)
         case _ ⇒ Seq()
