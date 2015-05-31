@@ -129,14 +129,14 @@ object ExtensionCompiler extends AnyRef with HasLogger {
   """
 
   /**
-   * Compiles `src` and makes defined classes available through [[classLoader]].
+   * Compiles `srcs` and makes defined classes available through [[classLoader]].
    */
-  private def compile(src: String): Unit = {
+  private def compile(srcs: Seq[String]): Unit = {
     reporter.reset()
-    val srcFiles = List(new BatchSourceFile("(memory)", src))
+    val srcFiles = srcs map (new BatchSourceFile("<memory>", _))
     val run = new compiler.Run
 
-    compiler ask { () ⇒ run.compileSources(srcFiles) }
+    compiler ask { () ⇒ run.compileSources(srcFiles.toList) }
 
     if (reporter.hasErrors || reporter.hasWarnings)
       throw new IllegalStateException(reporter.infos.mkString("Errors occurred during compilation of extension wrapper:\n", "\n", ""))
@@ -180,7 +180,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
   def loadExtension(fullyQualifiedName: String): Try[Any] = Try {
     load(fullyQualifiedName) match {
       case SaveActionType(src, className, fn) ⇒
-        compile(src)
+        compile(Seq(src))
         val cls = classLoader.loadClass(className)
         val obj = cls.newInstance()
         fn(cls, obj)
