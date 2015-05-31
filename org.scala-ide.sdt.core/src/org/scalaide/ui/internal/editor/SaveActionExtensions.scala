@@ -24,10 +24,8 @@ import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
-import org.scalaide.core.text.Document
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
-import org.scalaide.extensions.DocumentSupport
 import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting

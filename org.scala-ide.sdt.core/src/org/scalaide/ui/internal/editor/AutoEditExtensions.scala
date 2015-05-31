@@ -25,7 +25,6 @@ import org.scalaide.core.internal.extensions.ExtensionCreators
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
-import org.scalaide.core.text.Document
 import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
