@@ -36,8 +36,6 @@ trait EclipseSettings {
           case "-Ypresentation-log" | "-Ypresentation-replay" => new FileSetting(setting)
           case _ => new StringSetting(setting)
         }
-      // TODO What about this commented out code? It should be at least commented, if it's not just removed.
-      //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
       case setting: Settings#MultiStringSetting =>
         setting.name match {
           case "-Xplugin" => new MultiFileSetting(setting)

@@ -85,7 +85,6 @@ trait ScalaCompilationUnit extends Openable
   /** Lock object for operating on `cachedSourceFile` */
   private val sourceFileLock = new Object
 
-  // @GuardedBy("sourceFileLock")
   private var cachedSourceInfo: ISourceMap = _
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
@@ -147,7 +146,6 @@ trait ScalaCompilationUnit extends Openable
       }
     } getOrElse false
   }
-
 
   /** Index this source file, but only if the project has the Scala nature.
    *

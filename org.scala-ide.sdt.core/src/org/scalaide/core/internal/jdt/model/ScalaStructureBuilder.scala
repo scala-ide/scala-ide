@@ -51,7 +51,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
   }
 
   // We cache these names since they are used for each ValDef during structure building
-  private lazy val GET = nme.get //newTermName("get")
+  private lazy val GET = nme.get
   private lazy val IS  = newTermName("is")
   private lazy val SET = newTermName("set")
 
@@ -615,7 +615,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     trait TypeOwner extends Owner { self =>
       override def addType(t : TypeDef) : Owner = {
-        //logger.info("Type defn: >"+t.name.toString+"< ["+this+"]")
 
         val sym = t.symbol
         val name = t.name.toString
@@ -638,11 +637,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         newElements0.put(typeElem, typeElemInfo)
 
         if(t.rhs.symbol == NoSymbol) {
-          //logger.info("Type is abstract")
           val tn = "java.lang.Object".toArray
           typeElemInfo.setTypeName(tn)
         } else {
-          //logger.info("Type has type: "+t.rhs.symbol.fullName)
           val tn = javaTypeName(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }

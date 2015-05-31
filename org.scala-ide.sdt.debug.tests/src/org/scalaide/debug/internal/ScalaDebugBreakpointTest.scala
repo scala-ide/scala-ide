@@ -48,10 +48,12 @@ class ScalaDebugBreakpointTest {
     }
   }
 
+  private val mainBreakpoint = 32
+
   @Test
   def simpleBreakpointEnableDisable(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp11 = session.addLineBreakpoint(BP_TYPENAME, 11)
     val bp13 = session.addLineBreakpoint(BP_TYPENAME, 13)
@@ -94,7 +96,7 @@ class ScalaDebugBreakpointTest {
   @Test
   def breakpointsWithClosures(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp22 = session.addLineBreakpoint(BP_TYPENAME, 22)
@@ -134,7 +136,7 @@ class ScalaDebugBreakpointTest {
     allBps.foreach(_.setEnabled(false))
     session.waitForBreakpointsToBeDisabled(allBps: _*)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
 
@@ -162,7 +164,7 @@ class ScalaDebugBreakpointTest {
     bp22.setEnabled(true)
     session.waitForBreakpointsToBeEnabled(bp22)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
 
@@ -196,7 +198,7 @@ class ScalaDebugBreakpointTest {
     allBps.foreach(_.setEnabled(false))
     session.waitForBreakpointsToBeDisabled(allBps: _*)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
       bp21.setEnabled(true)
@@ -279,7 +281,7 @@ class ScalaDebugBreakpointTest {
   @Test
   def skipAllBreakpoints_entails_breakpointsAreNotHonored(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
@@ -300,7 +302,7 @@ class ScalaDebugBreakpointTest {
   @Test
   def skipAllBreakpointsInTheMiddleOfDebugSession(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
