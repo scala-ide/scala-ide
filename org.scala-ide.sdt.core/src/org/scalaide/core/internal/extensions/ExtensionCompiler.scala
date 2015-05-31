@@ -61,8 +61,6 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     val s = new Settings(err ⇒ logger.error(err))
     s.outputDirs.setSingleOutput(outputDir)
     s.usejavacp.value = true
-    // TODO remove debug flag
-    s.debug.value = true
 
     val install = ScalaInstallation.platformInstallation
     s.bootclasspath.value = install.allJars.map(_.classJar).mkString(File.pathSeparator)
