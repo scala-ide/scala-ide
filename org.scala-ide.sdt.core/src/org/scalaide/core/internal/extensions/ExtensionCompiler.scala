@@ -154,7 +154,12 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     val cachedCls = classLoader.tryToInitializeClass(className)
     val isCached = cachedCls.isDefined
 
-    val interfaces = try classLoader.loadClass(fullyQualifiedName).getInterfaces catch {
+    def allInterfacesOf(cls: Class[_]): Seq[Class[_]] = {
+      val i = cls.getInterfaces
+      i ++ (i flatMap allInterfacesOf)
+    }
+
+    val interfaces = try allInterfacesOf(classLoader.loadClass(fullyQualifiedName)) catch {
       case e: ClassNotFoundException ⇒ throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' doesn't exist.", e)
     }
     val isDocumentSaveAction = Set(classOf[SaveAction], classOf[DocumentSupport]) forall interfaces.contains
