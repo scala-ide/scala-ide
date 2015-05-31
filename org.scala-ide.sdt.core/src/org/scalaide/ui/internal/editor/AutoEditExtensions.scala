@@ -19,6 +19,7 @@ import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.extensions.AutoEdits
 import org.scalaide.core.internal.extensions.ExtensionCompiler
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
@@ -27,69 +28,28 @@ import org.scalaide.core.text.Document
 import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
-import org.scalaide.extensions.AutoEditSetting
-import org.scalaide.extensions.ExtensionSetting
-import org.scalaide.extensions.autoedits._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 
 object AutoEditExtensions extends AnyRef with HasLogger {
+  private type AutoEditCreator = (Document, TextChange) ⇒ AutoEdit
 
-  private object Creator {
-    import scala.reflect.runtime.universe._
-
-    private def mk[A : TypeTag, B](f: Any ⇒ B): Seq[B] = {
-      val fqn = ExtensionSetting.fullyQualifiedName[A]
-      ExtensionCompiler.loadExtension(fqn) match {
-        case Success(ext) ⇒
-          Seq(f(ext))
-        case Failure(f) ⇒
-          logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
-          Seq()
-      }
+  private def mk[B](fqn: String, f: Any ⇒ B): Seq[B] = {
+    ExtensionCompiler.loadExtension(fqn) match {
+      case Success(ext) ⇒
+        Seq(f(ext))
+      case Failure(f) ⇒
+        logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
+        Seq()
     }
-
-    def mkExt[A : TypeTag](setting: AutoEditSetting) =
-      mk(ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
   }
 
   private val autoEdits = {
-    import Creator.mkExt
-
-    Seq(
-      mkExt[ConvertToUnicode](ConvertToUnicodeSetting),
-      mkExt[SmartSemicolonInsertion](SmartSemicolonInsertionSetting),
-      mkExt[CloseCurlyBrace](CloseCurlyBraceSetting),
-      mkExt[JumpOverClosingCurlyBrace](JumpOverClosingCurlyBraceSetting),
-      mkExt[RemoveCurlyBracePair](RemoveCurlyBracePairSetting),
-      mkExt[CloseParenthesis](CloseParenthesisSetting),
-      mkExt[CloseBracket](CloseBracketSetting),
-      mkExt[CloseAngleBracket](CloseAngleBracketSetting),
-      mkExt[RemoveParenthesisPair](RemoveParenthesisPairSetting),
-      mkExt[CreateMultiplePackageDeclarations](CreateMultiplePackageDeclarationsSetting),
-      mkExt[ApplyTemplate](ApplyTemplateSetting),
-      mkExt[RemoveBracketPair](RemoveBracketPairSetting),
-      mkExt[RemoveAngleBracketPair](RemoveAngleBracketPairSetting),
-      mkExt[JumpOverClosingParenthesis](JumpOverClosingParenthesisSetting),
-      mkExt[JumpOverClosingBracket](JumpOverClosingBracketSetting),
-      mkExt[JumpOverClosingAngleBracket](JumpOverClosingAngleBracketSetting),
-      mkExt[CloseString](CloseStringSetting),
-      mkExt[CloseChar](CloseCharSetting),
-      mkExt[SurroundBlock](SurroundBlockSetting),
-      mkExt[SurroundSelectionWithString](SurroundSelectionWithStringSetting),
-      mkExt[SurroundSelectionWithParentheses](SurroundSelectionWithParenthesesSetting),
-      mkExt[SurroundSelectionWithBraces](SurroundSelectionWithBracesSetting),
-      mkExt[SurroundSelectionWithBrackets](SurroundSelectionWithBracketsSetting)
-    ).flatten
+    AutoEdits.autoEditData flatMap {
+      case (fqn, setting) ⇒
+        mk(fqn, ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
+    }
   }
-
-  private type AutoEditCreator = (Document, TextChange) ⇒ AutoEdit
-
-  /**
-   * The settings for all existing auto edits.
-   */
-  val autoEditSettings: Seq[AutoEditSetting] =
-    autoEdits.map(_._1)
 }
 
 /**

@@ -22,8 +22,8 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.extensions.AutoEdits
 import org.scalaide.extensions.AutoEditSetting
-import org.scalaide.ui.internal.editor.AutoEditExtensions
 import org.scalaide.util.internal.Commons
 import org.scalaide.util.eclipse.SWTUtils._
 
@@ -36,7 +36,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
   private var configurationArea: Text = _
   private var viewer: CheckboxTableViewer = _
 
-  private val settings = AutoEditExtensions.autoEditSettings.toArray
+  private val settings = AutoEdits.autoEditSettings.toArray
 
   private var changes = Set[AutoEditSetting]()
   private var configurations = Set[(AutoEditSetting, String)]()
@@ -181,7 +181,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
 class AutoEditsPreferenceInitializer extends AbstractPreferenceInitializer {
 
   override def initializeDefaultPreferences(): Unit = {
-    AutoEditExtensions.autoEditSettings foreach { s =>
+    AutoEdits.autoEditSettings foreach { s =>
       IScalaPlugin().getPreferenceStore().setDefault(s.id, false)
     }
   }

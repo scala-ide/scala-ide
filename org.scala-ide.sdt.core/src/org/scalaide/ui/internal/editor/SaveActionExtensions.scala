@@ -19,6 +19,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.extensions.ExtensionCompiler
+import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
@@ -29,7 +30,6 @@ import org.scalaide.extensions.DocumentSupport
 import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.extensions.saveactions._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
@@ -37,61 +37,6 @@ import org.scalaide.util.internal.FutureUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 object SaveActionExtensions extends AnyRef with HasLogger {
-
-  private object SaveActionCreator {
-    import scala.reflect.runtime.universe._
-
-    private def mk[A : TypeTag, B](f: Any ⇒ B): Seq[B] = {
-      val fqn = ExtensionSetting.fullyQualifiedName[A]
-      ExtensionCompiler.loadExtension(fqn) match {
-        case Success(ext) ⇒
-          logger.debug(s"Loading Scala IDE extension '$fqn' was successful.")
-          Seq(f(ext))
-        case Failure(f) ⇒
-          logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
-          Seq()
-      }
-    }
-
-    def mkDocumentExt[A : TypeTag](setting: SaveActionSetting) =
-      mk(ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
-
-    def mkCompilerExt[A : TypeTag](setting: SaveActionSetting) =
-      mk(ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
-  }
-
-  /**
-   * The ID which is used as key in the preference store to identify the actual
-   * timeout value for save actions.
-   */
-  val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
-
-  /**
-   * The time a save action gets until the IDE waits no longer on its result.
-   */
-  private def saveActionTimeout: FiniteDuration =
-    IScalaPlugin().getPreferenceStore().getInt(SaveActionTimeoutId).millis
-
-  private val documentSaveActions = {
-    import SaveActionCreator.mkDocumentExt
-
-    Seq(
-      mkDocumentExt[RemoveTrailingWhitespace](RemoveTrailingWhitespaceSetting),
-      mkDocumentExt[AddNewLineAtEndOfFile](AddNewLineAtEndOfFileSetting),
-      mkDocumentExt[AutoFormatting](AutoFormattingSetting),
-      mkDocumentExt[RemoveDuplicatedEmptyLines](RemoveDuplicatedEmptyLinesSetting),
-      mkDocumentExt[TabToSpaceConverter](TabToSpaceConverterSetting)
-    ).flatten
-  }
-
-  private val compilerSaveActions = {
-    import SaveActionCreator.mkCompilerExt
-
-    Seq(
-      mkCompilerExt[AddMissingOverride](AddMissingOverrideSetting),
-      mkCompilerExt[AddReturnTypeToPublicSymbols](AddReturnTypeToPublicSymbolsSetting)
-    ).flatten
-  }
 
   private type DocumentSupportCreator =
     Document ⇒ SaveAction with DocumentSupport
@@ -101,11 +46,35 @@ object SaveActionExtensions extends AnyRef with HasLogger {
       SourceFile, Int, Int
     ) => SaveAction with CompilerSupport
 
+  private def mk[B](fqn: String, f: Any ⇒ B): Seq[B] = {
+    ExtensionCompiler.loadExtension(fqn) match {
+      case Success(ext) ⇒
+        Seq(f(ext))
+      case Failure(f) ⇒
+        logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
+        Seq()
+    }
+  }
+
+  private val documentSaveActions = {
+    SaveActions.documentSaveActionsData flatMap {
+      case (fqn, setting) ⇒
+        mk(fqn, ext ⇒ setting → ext.asInstanceOf[DocumentSupportCreator])
+    }
+  }
+
+  private val compilerSaveActions = {
+    SaveActions.compilerSaveActionsData flatMap {
+      case (fqn, setting) ⇒
+        mk(fqn, ext ⇒ setting → ext.asInstanceOf[CompilerSupportCreator])
+    }
+  }
+
   /**
-   * The settings for all existing save actions.
+   * The time a save action gets until the IDE waits no longer on its result.
    */
-  val saveActionSettings: Seq[SaveActionSetting] =
-    documentSaveActions.map(_._1) ++ compilerSaveActions.map(_._1)
+  private def saveActionTimeout: FiniteDuration =
+    IScalaPlugin().getPreferenceStore().getInt(SaveActions.SaveActionTimeoutId).millis
 }
 
 trait SaveActionExtensions extends HasLogger {

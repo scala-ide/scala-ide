@@ -20,7 +20,6 @@ import org.scalaide.core.text.TextChange
 import org.scalaide.extensions._
 import org.scalaide.logging.HasLogger
 
-// TODO logger seems not yet be available, we probably have to delay the initialization of this object
 object ExtensionCompiler extends AnyRef with HasLogger {
 
   /**
@@ -59,8 +58,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
   private val classLoader = new AbstractFileClassLoader(outputDir, this.getClass.getClassLoader)
 
   private val settings = {
-    // TODO change to logger
-    val s = new Settings(err ⇒ System.err.println(err))
+    val s = new Settings(err ⇒ logger.error(err))
     s.outputDirs.setSingleOutput(outputDir)
     s.usejavacp.value = true
     // TODO remove debug flag
