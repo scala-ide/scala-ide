@@ -144,35 +144,44 @@ object ExtensionCompiler extends AnyRef with HasLogger {
 
   private sealed trait ExtensionType
   private case class SaveActionType(src: String, className: String, fn: (Class[_], Any) ⇒ Any) extends ExtensionType
+  private case class CachedSaveActionType(cls: Class[_], fn: (Class[_], Any) ⇒ Any) extends ExtensionType
 
   private def load(fullyQualifiedName: String): ExtensionType = {
+    val pkg = "org.scalaide.core.internal.generated"
+    val creatorName = s"${fullyQualifiedName.split('.').last}Creator"
+
+    val className = s"$pkg.$creatorName"
+    val cachedCls = classLoader.tryToInitializeClass(className)
+    val isCached = cachedCls.isDefined
+
     val interfaces = try classLoader.loadClass(fullyQualifiedName).getInterfaces catch {
       case e: ClassNotFoundException ⇒ throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' doesn't exist.", e)
     }
     val isDocumentSaveAction = Set(classOf[SaveAction], classOf[DocumentSupport]) forall interfaces.contains
     val isCompilerSaveAction = Set(classOf[SaveAction], classOf[CompilerSupport]) forall interfaces.contains
 
-    val pkg = "org.scalaide.internal.generated"
-    val creatorName = s"${fullyQualifiedName.split('.').last}Creator"
-
-    if (isDocumentSaveAction)
-      SaveActionType(
-          src = buildDocumentExt(fullyQualifiedName, creatorName, pkg),
-          className = s"$pkg.$creatorName",
-          fn = (cls, obj) ⇒ {
-            val m = cls.getMethod("create", classOf[Document])
-            (doc: Document) ⇒
-              m.invoke(obj, doc)
-          })
-    else if (isCompilerSaveAction)
-      SaveActionType(
-          src = buildCompilerExt(fullyQualifiedName, creatorName, pkg),
-          className = s"$pkg.$creatorName",
-          fn = (cls, obj) ⇒ {
-            val m = cls.getMethod("create", classOf[IScalaPresentationCompiler], classOf[IScalaPresentationCompiler#Tree], classOf[SourceFile], classOf[Int], classOf[Int])
-            (c: IScalaPresentationCompiler, t: IScalaPresentationCompiler#Tree, src: SourceFile, selStart: Int, selEnd: Int) ⇒
-              m.invoke(obj, c, t, src, Integer.valueOf(selStart), Integer.valueOf(selEnd))
-          })
+    if (isDocumentSaveAction) {
+      val fn = (cls: Class[_], obj: Any) ⇒ {
+        val m = cls.getMethod("create", classOf[Document])
+        (doc: Document) ⇒
+          m.invoke(obj, doc)
+      }
+      if (isCached)
+        CachedSaveActionType(cachedCls.get, fn)
+      else
+        SaveActionType(buildDocumentExt(fullyQualifiedName, creatorName, pkg), className, fn)
+    }
+    else if (isCompilerSaveAction) {
+      val fn = (cls: Class[_], obj: Any) ⇒ {
+        val m = cls.getMethod("create", classOf[IScalaPresentationCompiler], classOf[IScalaPresentationCompiler#Tree], classOf[SourceFile], classOf[Int], classOf[Int])
+        (c: IScalaPresentationCompiler, t: IScalaPresentationCompiler#Tree, src: SourceFile, selStart: Int, selEnd: Int) ⇒
+          m.invoke(obj, c, t, src, Integer.valueOf(selStart), Integer.valueOf(selEnd))
+      }
+      if (isCached)
+        CachedSaveActionType(cachedCls.get, fn)
+      else
+        SaveActionType(buildCompilerExt(fullyQualifiedName, creatorName, pkg), className, fn)
+    }
     else
       throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' couldn't be qualified as a valid extension.")
   }
@@ -183,7 +192,14 @@ object ExtensionCompiler extends AnyRef with HasLogger {
         compile(Seq(src))
         val cls = classLoader.loadClass(className)
         val obj = cls.newInstance()
-        fn(cls, obj)
+        val res = fn(cls, obj)
+        logger.debug(s"Loading of Scala IDE extension '$fullyQualifiedName' was successful.")
+        res
+      case CachedSaveActionType(cls, fn) ⇒
+        val obj = cls.newInstance()
+        val res = fn(cls, obj)
+        logger.debug(s"Loading of cached Scala IDE extension '$fullyQualifiedName' was successful.")
+        res
     }
   }
 
