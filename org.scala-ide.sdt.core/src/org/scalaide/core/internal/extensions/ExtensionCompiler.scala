@@ -207,7 +207,10 @@ object ExtensionCompiler extends AnyRef with HasLogger {
         (doc: Document, change: TextChange) ⇒
           m.invoke(obj, doc, change)
       }
-      UncompiledType(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
+      if (isCached)
+        CachedType(cachedCls.get, fn)
+      else
+        UncompiledType(buildAutoEdit(fullyQualifiedName, creatorName, pkg), className, fn)
     }
     else
       throw new IllegalArgumentException(s"Extension '$fullyQualifiedName' couldn't be qualified as a valid extension.")
