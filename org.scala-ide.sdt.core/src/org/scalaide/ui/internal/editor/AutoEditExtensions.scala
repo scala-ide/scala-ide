@@ -1,5 +1,8 @@
 package org.scalaide.ui.internal.editor
 
+import scala.util.Failure
+import scala.util.Success
+
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager.UndoSpec
 import org.eclipse.jface.text.IDocument
@@ -16,45 +19,71 @@ import org.eclipse.text.edits.DeleteEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.ui.texteditor.link.EditorLinkedModeUI
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.extensions.autoedits._
+import org.scalaide.core.internal.extensions.ExtensionCompiler
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
+import org.scalaide.core.text.Document
 import org.scalaide.core.text.LinkedModel
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.AutoEdit
 import org.scalaide.extensions.AutoEditSetting
+import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.autoedits._
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 
-object AutoEditExtensions {
+object AutoEditExtensions extends AnyRef with HasLogger {
 
-  private val autoEdits = Seq(
-    ConvertToUnicodeSetting -> ConvertToUnicodeCreator.create _,
-    SmartSemicolonInsertionSetting -> SmartSemicolonInsertionCreator.create _,
-    CloseCurlyBraceSetting -> CloseCurlyBraceCreator.create _,
-    JumpOverClosingCurlyBraceSetting -> JumpOverClosingCurlyBraceCreator.create _,
-    RemoveCurlyBracePairSetting -> RemoveCurlyBracePairCreator.create _,
-    CloseParenthesisSetting -> CloseParenthesisCreator.create _,
-    CloseBracketSetting -> CloseBracketCreator.create _,
-    CloseAngleBracketSetting -> CloseAngleBracketCreator.create _,
-    RemoveParenthesisPairSetting -> RemoveParenthesisPairCreator.create _,
-    CreateMultiplePackageDeclarationsSetting -> CreateMultiplePackageDeclarationsCreator.create _,
-    ApplyTemplateSetting -> ApplyTemplateCreator.create _,
-    RemoveBracketPairSetting -> RemoveBracketPairCreator.create _,
-    RemoveAngleBracketPairSetting -> RemoveAngleBracketPairCreator.create _,
-    JumpOverClosingParenthesisSetting -> JumpOverClosingParenthesisCreator.create _,
-    JumpOverClosingBracketSetting -> JumpOverClosingBracketCreator.create _,
-    JumpOverClosingAngleBracketSetting -> JumpOverClosingAngleBracketCreator.create _,
-    CloseStringSetting -> CloseStringCreator.create _,
-    CloseCharSetting -> CloseCharCreator.create _,
-    SurroundBlockSetting -> SurroundBlockCreator.create _,
-    SurroundSelectionWithStringSetting → SurroundSelectionWithStringCreator.create _,
-    SurroundSelectionWithParenthesesSetting → SurroundSelectionWithParenthesesCreator.create _,
-    SurroundSelectionWithBracesSetting → SurroundSelectionWithBracesCreator.create _,
-    SurroundSelectionWithBracketsSetting → SurroundSelectionWithBracketsCreator.create _
-  )
+  private object Creator {
+    import scala.reflect.runtime.universe._
+
+    private def mk[A : TypeTag, B](f: Any ⇒ B): Seq[B] = {
+      val fqn = ExtensionSetting.fullyQualifiedName[A]
+      ExtensionCompiler.loadExtension(fqn) match {
+        case Success(ext) ⇒
+          Seq(f(ext))
+        case Failure(f) ⇒
+          logger.error(s"An error occurred while loading Scala IDE extension '$fqn'.", f)
+          Seq()
+      }
+    }
+
+    def mkExt[A : TypeTag](setting: AutoEditSetting) =
+      mk(ext ⇒ setting → ext.asInstanceOf[AutoEditCreator])
+  }
+
+  private val autoEdits = {
+    import Creator.mkExt
+
+    Seq(
+      mkExt[ConvertToUnicode](ConvertToUnicodeSetting),
+      mkExt[SmartSemicolonInsertion](SmartSemicolonInsertionSetting),
+      mkExt[CloseCurlyBrace](CloseCurlyBraceSetting),
+      mkExt[JumpOverClosingCurlyBrace](JumpOverClosingCurlyBraceSetting),
+      mkExt[RemoveCurlyBracePair](RemoveCurlyBracePairSetting),
+      mkExt[CloseParenthesis](CloseParenthesisSetting),
+      mkExt[CloseBracket](CloseBracketSetting),
+      mkExt[CloseAngleBracket](CloseAngleBracketSetting),
+      mkExt[RemoveParenthesisPair](RemoveParenthesisPairSetting),
+      mkExt[CreateMultiplePackageDeclarations](CreateMultiplePackageDeclarationsSetting),
+      mkExt[ApplyTemplate](ApplyTemplateSetting),
+      mkExt[RemoveBracketPair](RemoveBracketPairSetting),
+      mkExt[RemoveAngleBracketPair](RemoveAngleBracketPairSetting),
+      mkExt[JumpOverClosingParenthesis](JumpOverClosingParenthesisSetting),
+      mkExt[JumpOverClosingBracket](JumpOverClosingBracketSetting),
+      mkExt[JumpOverClosingAngleBracket](JumpOverClosingAngleBracketSetting),
+      mkExt[CloseString](CloseStringSetting),
+      mkExt[CloseChar](CloseCharSetting),
+      mkExt[SurroundBlock](SurroundBlockSetting),
+      mkExt[SurroundSelectionWithString](SurroundSelectionWithStringSetting),
+      mkExt[SurroundSelectionWithParentheses](SurroundSelectionWithParenthesesSetting),
+      mkExt[SurroundSelectionWithBraces](SurroundSelectionWithBracesSetting),
+      mkExt[SurroundSelectionWithBrackets](SurroundSelectionWithBracketsSetting)
+    ).flatten
+  }
+
+  private type AutoEditCreator = (Document, TextChange) ⇒ AutoEdit
 
   /**
    * The settings for all existing auto edits.
