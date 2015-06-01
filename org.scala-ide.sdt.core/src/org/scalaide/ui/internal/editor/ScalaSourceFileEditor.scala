@@ -131,7 +131,7 @@ class ScalaSourceFileEditor
 
     val openAction = new Action {
       private def scalaCompilationUnit: Option[ScalaCompilationUnit] =
-        Option(getInteractiveCompilationUnit) map (_.asInstanceOf[ScalaCompilationUnit])
+        Option(getInteractiveCompilationUnit) map (ScalaCompilationUnit.castFrom)
 
       override def run(): Unit = {
         scalaCompilationUnit foreach { scu =>

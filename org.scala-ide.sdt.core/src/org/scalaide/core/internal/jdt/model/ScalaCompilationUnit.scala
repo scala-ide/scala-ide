@@ -59,6 +59,24 @@ import org.scalaide.core.compiler.ISourceMap
 import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
 import org.scalaide.core.compiler.IPositionInformation
 
+object ScalaCompilationUnit extends HasLogger {
+
+  // This method is overloaded cause we have casts from 2 unrelated types in our codebase.
+  def castFrom(icu: InteractiveCompilationUnit): ScalaCompilationUnit = cast(icu)
+  def castFrom(tr: ITypeRoot): ScalaCompilationUnit = cast(tr)
+
+  // This method provides better error message if cast fails
+  private def cast(a: AnyRef): ScalaCompilationUnit = a match {
+    case scu: ScalaCompilationUnit => scu
+    case other =>
+      val message = """Underlying compilation unit is not a Scala Compilation unit.
+                      |This is most probably caused by disabled JDT weaving.
+                      |Run `Scala -> Run Setup Diagnostics` to enable it.""".stripMargin
+      logger.error(message)
+      throw new RuntimeException(message)
+  }
+}
+
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit
   with ScalaElement

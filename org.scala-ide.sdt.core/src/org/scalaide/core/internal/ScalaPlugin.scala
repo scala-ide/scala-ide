@@ -129,7 +129,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   private val projects = new mutable.HashMap[IProject, ScalaProject]
 
   override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
-    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input)) map (ScalaCompilationUnit.castFrom)
 
     def unitOfClassFile = input.getAdapter(classOf[IClassFile]) match {
       case tr: ScalaClassFile => Some(tr)

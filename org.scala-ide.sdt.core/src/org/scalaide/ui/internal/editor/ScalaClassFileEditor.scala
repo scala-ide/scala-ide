@@ -45,8 +45,8 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
     super.createActions()
     val openAction = new Action {
       override def run: Unit = {
-        Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
-         scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+        Option(getInputJavaElement) map (ScalaCompilationUnit.castFrom) foreach { scu =>
+          scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
       }
     }
