@@ -20,7 +20,7 @@ trait HyperlinkOpenActionStrategy {
 
   private def withScalaCompilatioUnit[T](editor: JavaEditor)(f: ScalaCompilationUnit => T): Option[T] = {
     val inputJavaElement = EditorUtility.getEditorInputJavaElement(editor, false)
-    Option(inputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) map (f)
+    Option(inputJavaElement) map (ScalaCompilationUnit.castFrom) map (f)
   }
 
   protected def isEnabled(editor: JavaEditor): Boolean = getTextSelection(editor) map { textSelection =>
