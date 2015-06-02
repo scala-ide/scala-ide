@@ -54,6 +54,16 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
             type="org.scala-ide.ew.launcher.JunitLaunchConfig">
       </launchDelegate>
+      <launchDelegate
+            delegate="org.scalaide.debug.internal.launching.ScalaJUnitLaunchConfigurationDelegate"
+            delegateDescription="The Scala JVM Launcher supports debugging of JUnit Scala using the new Scala debugger"
+            id="scala.junit.new"
+            modes="debug"
+            name="Scala JUnit (new debugger)"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            type="org.eclipse.jdt.junit.launchconfig">
+      </launchDelegate>
     </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

@@ -9,6 +9,8 @@ import org.scalaide.debug.internal.editor.StackFrameVariableOfTreeFinderTest
 import org.scalaide.debug.internal.hcr.HotCodeReplaceTest
 import org.scalaide.debug.internal.launching.LibraryJarInBootstrapTest
 import org.scalaide.debug.internal.launching.RemoteConnectorTest
+import org.scalaide.debug.internal.launching.ScalaApplicationLaunchConfigurationDelegateTest
+import org.scalaide.debug.internal.launching.ScalaJUnitLaunchConfigurationDelegateTest
 import org.scalaide.debug.internal.model.DebugTargetTerminationTest
 import org.scalaide.debug.internal.model.MethodClassifierUnitTest
 import org.scalaide.debug.internal.model.ScalaDebugCacheTest
@@ -40,6 +42,8 @@ import org.scalaide.debug.internal.model.ScalaValueTest
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
     classOf[StackFrameVariableOfTreeFinderTest],
-    classOf[HotCodeReplaceTest]
+    classOf[HotCodeReplaceTest],
+    classOf[ScalaApplicationLaunchConfigurationDelegateTest],
+    classOf[ScalaJUnitLaunchConfigurationDelegateTest]
     ))
 class ScalaDebugTestSuite

@@ -26,14 +26,13 @@ import LibraryJarInBootstrapTest.project
 
 object LibraryJarInBootstrapTest extends TestProjectSetup("launching-1000919", bundleName = "org.scala-ide.sdt.debug.tests")
 
-class LibraryJarInBootstrapTest {
-
+class LibraryJarInBootstrapTest extends LaunchUtils {
   import LibraryJarInBootstrapTest._
+  override val launchConfigurationName = "t1000919.ScalaTest"
 
   @Before
   def initializeTests(): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    cleanBuild(project.underlying)
   }
 
   /**
@@ -44,49 +43,21 @@ class LibraryJarInBootstrapTest {
   @Ignore(SdtTestConstants.TestRequiresGuiSupport)
   @Test
   def checkTestIsCorrectlyExecutedWhenLibraryJarAfterJRE(): Unit = {
+    whenApplicationWasLaunchedFor(project.underlying, inMode = ILaunchManager.RUN_MODE) {
+      // check the result
+      // refresh the project to be able to see the new file
+      project.underlying.refreshLocal(IResource.DEPTH_ONE, new NullProgressMonitor)
+      val resultFile = file("t1000919.result")
+      assertTrue("No result file, the launched test likely failed to run", resultFile.exists)
 
-    val launchConfigurationName = "t1000919.ScalaTest"
-
-    val latch = new CountDownLatch(1)
-
-    DebugPlugin.getDefault().getLaunchManager.addLaunchListener(onLaunchTerminates(launchConfigurationName, latch.countDown))
-
-    // launch the saved launch configuration
-    val launchConfiguration = DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(file(launchConfigurationName + ".launch"))
-    val launch = launchConfiguration.launch(ILaunchManager.RUN_MODE, null)
-
-    // wait for the launch to terminate
-    latch.await(10, TimeUnit.SECONDS)
-    assertTrue("launch did not terminate in 10s", launch.isTerminated)
-
-    // check the result
-    // refresh the project to be able to see the new file
-    project.underlying.refreshLocal(IResource.DEPTH_ONE, new NullProgressMonitor)
-    val resultFile = file("t1000919.result")
-    assertTrue("No result file, the launched test likely failed to run", resultFile.exists)
-
-    // check the content
-    val source = Source.fromInputStream(resultFile.getContents)(Codec.UTF8)
-    try {
-      assertEquals("Wrong result file content", "t1000919 success", source.mkString)
-    } finally {
-      source.close
-    }
-
-  }
-
-  /**
-   * Create a launch listener for launchTerminated events on a launch of the given launchConfiguration.
-   */
-  private def onLaunchTerminates(launchConfigurationName: String, f: () => Unit) = new ILaunchesListener2() {
-    override def launchesTerminated(launches: Array[ILaunch]): Unit = {
-      if (launches.exists(_.getLaunchConfiguration.getName == launchConfigurationName)) {
-        f()
+      // check the content
+      val source = Source.fromInputStream(resultFile.getContents)(Codec.UTF8)
+      try {
+        assertEquals("Wrong result file content", "t1000919 success", source.mkString)
+      } finally {
+        source.close
       }
     }
-    override def launchesAdded(launches: Array[ILaunch]): Unit = {}
-    override def launchesRemoved(launches: Array[ILaunch]): Unit = {}
-    override def launchesChanged(launches: Array[ILaunch]): Unit = {}
   }
 
 }
