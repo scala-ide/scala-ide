@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.ui
 
 import scala.util.Failure
 import scala.util.Success
-
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.debug.BreakpointContext
@@ -15,8 +14,8 @@ import org.scalaide.debug.SuspendExecution
 import org.scalaide.debug.internal.expression.ExpressionManager
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.Utils.jdiSynchronized
 import org.scalaide.util.ui.DisplayThread
-
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.Event
@@ -25,7 +24,7 @@ class BreakpointEventHandler extends DebugEventHandler {
 
   override def handleEvent(event: Event, context: DebugContext) = (event, context) match {
     case (event: BreakpointEvent, BreakpointContext(breakpoint: JavaLineBreakpoint, debugTarget)) ⇒
-      handleBreakpointEvent(event, breakpoint, debugTarget)
+       jdiSynchronized { handleBreakpointEvent(event, breakpoint, debugTarget) }
     case _ ⇒
       NoCommand
   }

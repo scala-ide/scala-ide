@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.debug.core.DebugException
@@ -12,7 +11,7 @@ import org.eclipse.debug.core.model.IIndexedValue
 import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.core.model.IVariable
 import org.scalaide.debug.internal.ScalaDebugPlugin
-
+import org.scalaide.util.Utils.jdiSynchronized
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.BooleanValue
 import com.sun.jdi.ByteValue
@@ -98,17 +97,21 @@ abstract class ScalaValue(val underlying: Value, target: ScalaDebugTarget) exten
 
   override def isAllocated(): Boolean = true // TODO: should always be true with a JVM, to check. ObjectReference#isCollected ?
 
-  final override def getReferenceTypeName(): String =
+  final override def getReferenceTypeName(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving reference type name") { doGetReferenceTypeName() }
+  }
 
-  final override def getValueString(): String =
+  final override def getValueString(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving value string") { doGetValueString() }
+  }
 
-  final override def getVariables(): Array[IVariable] =
+  final override def getVariables(): Array[IVariable] = jdiSynchronized {
     wrapJDIException("Exception while retrieving variables") { doGetVariables() }
+  }
 
-  final override def hasVariables(): Boolean =
+  final override def hasVariables(): Boolean = jdiSynchronized {
     wrapJDIException("Exception while checking if debug element has variables") { doHasVariables() }
+  }
 
   protected def doGetReferenceTypeName(): String
   protected def doGetValueString(): String

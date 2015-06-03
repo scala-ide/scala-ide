@@ -6,6 +6,7 @@ import com.sun.jdi.Field
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ObjectReference
 import org.eclipse.debug.core.model.IValue
+import org.scalaide.util.Utils.jdiSynchronized
 
 abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IVariable {
 
@@ -19,14 +20,17 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
 
   // Members declared in org.eclipse.debug.core.model.IVariable
 
-  final override def getValue(): IValue =
+  final override def getValue(): IValue = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
+  }
 
-  final override def getName(): String =
+  final override def getName(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's name") { doGetName() }
+  }
 
-  final override def getReferenceTypeName(): String =
+  final override def getReferenceTypeName(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
+  }
 
   override def hasValueChanged: Boolean = false // TODO: need real logic
 

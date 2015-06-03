@@ -7,7 +7,6 @@ import scala.tools.reflect.ToolBoxError
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.model.ScalaDebugTarget
@@ -15,7 +14,7 @@ import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.model.ScalaValue
 import org.scalaide.debug.internal.preferences.ExpressionEvaluatorPreferences
 import org.scalaide.logging.HasLogger
-
+import org.scalaide.util.Utils.jdiSynchronized
 import com.sun.jdi.Location
 import com.sun.jdi.ThreadReference
 
@@ -89,7 +88,7 @@ trait ExpressionManager extends HasLogger {
    * @param monitor progress monitor for user interface
    * @return see [[org.scalaide.debug.internal.expression.ExpressionEvaluatorResult]]
    */
-  final def compute(exp: String, monitor: ProgressMonitor = NullProgressMonitor): ExpressionEvaluatorResult = {
+  final def compute(exp: String, monitor: ProgressMonitor = NullProgressMonitor): ExpressionEvaluatorResult = jdiSynchronized {
     val debugNotRunning = "Expression evaluation works only when debug is running and jvm is suspended"
     val emptyCode = "Expression is empty"
 

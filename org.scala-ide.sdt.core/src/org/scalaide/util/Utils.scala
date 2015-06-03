@@ -1,25 +1,28 @@
 package org.scalaide.util
 
-import org.scalaide.logging.HasLogger
 import scala.reflect.ClassTag
+import scala.tools.eclipse.contribution.weaving.jdt.jdi.JdiInvocationSynchronizer
+
+import org.scalaide.logging.HasLogger
 
 object Utils extends HasLogger {
 
   /** Return the time in ms required to evaluate `f()`. */
-  private [scalaide] def time(f: => Any): Long = {
+  private[scalaide] def time(f: => Any): Long = {
     val start = System.currentTimeMillis()
     f
     System.currentTimeMillis() - start
   }
 
   /** Evaluate 'f' and return its value and the time required to compute it. */
-  private [scalaide] def timed[A](f: => A): (A, Long) = {
+  private[scalaide] def timed[A](f: => A): (A, Long) = {
     val start = System.currentTimeMillis()
     val res = f
     (res, System.currentTimeMillis() - start)
   }
 
-  /** Evaluated `op' and log the time in ms it took to execute it.
+  /**
+   * Evaluated `op' and log the time in ms it took to execute it.
    */
   def debugTimed[A](name: String)(op: => A): A = {
     val start = System.currentTimeMillis
@@ -32,7 +35,8 @@ object Utils extends HasLogger {
 
   implicit class WithAsInstanceOfOpt(obj: AnyRef) {
 
-    /** Half type-safe cast. It uses erasure semantics (like Java casts). For example:
+    /**
+     * Half type-safe cast. It uses erasure semantics (like Java casts). For example:
      *
      *  `xs: List[Int]`
      *
@@ -46,7 +50,22 @@ object Utils extends HasLogger {
      */
     def asInstanceOfOpt[B: ClassTag]: Option[B] = obj match {
       case b: B => Some(b)
-      case _    => None
+      case _ => None
+    }
+  }
+
+  /**
+   * Scala wrapper on [[JdiInvocationSynchronizer]]
+   */
+  object jdiSynchronized {
+    import java.util.concurrent.Callable
+
+    implicit def callable[T](f: () => T): Callable[T] = new Callable[T]() {
+      def call() = f()
+    }
+
+    def apply[T](code: => T): T = {
+      JdiInvocationSynchronizer.instance.runSynchronized(() => code)
     }
   }
 }
