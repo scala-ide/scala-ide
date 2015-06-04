@@ -18,7 +18,6 @@ import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jface.viewers.ILabelProviderListener
 import org.eclipse.ui.IEditorInput
 import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.util.Utils.jdiSynchronized
 
 /**
  * Utility methods for the ScalaDebugModelPresentation class
@@ -174,7 +173,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   /*
    * TODO: support for missing line numbers
    */
-  def getScalaStackFrameText(stackFrame: ScalaStackFrame): String = jdiSynchronized {
+  def getScalaStackFrameText(stackFrame: ScalaStackFrame): String = {
     "%s line: %s".format(stackFrame.getMethodFullName, {
       val lineNumber = stackFrame.getLineNumber
       if (lineNumber == -1) {

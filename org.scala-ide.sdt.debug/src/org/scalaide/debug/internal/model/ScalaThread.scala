@@ -180,14 +180,14 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def dropToFrameInternal(frame: ScalaStackFrame, relatedToHcr: Boolean = false): Unit =
-    (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame")) {
+    (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame"))(jdiSynchronized {
       if (canDropToFrame(frame, relatedToHcr)) {
         val frames = stackFrames
         val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
         threadRef.popFrames(frame.stackFrame)
         stepIntoFrame(startFrameForStepInto)
       }
-    }
+    })
 
   /**
    * @param shouldFireChangeEvent fire an event after refreshing frames to refresh also UI elements
@@ -262,7 +262,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
     rebindFrames()
   }
 
-  private def rebindFrames(): Unit = {
+  private def rebindFrames(): Unit = jdiSynchronized {
     // FIXME: Should check that `threadRef.frames == stackFrames` before zipping
     threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)

@@ -1,6 +1,8 @@
 package org.scalaide.debug.internal.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.BaseDebuggerActor.syncSend
@@ -252,6 +254,8 @@ private[model] case class LoadedNestedTypes(outerTypeName: String)
 private[model] case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
 private[model] case class AddClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
 private[model] case class RemoveClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
+private case class AddClassPrepareEventListenerUpdate(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String, cache: NestedTypesCache)
+private case class LoadedNestedTypesUpdate(outerTypeName: String, cache: NestedTypesCache)
 
 protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor) extends BaseDebuggerActor with HasLogger {
   private var nestedTypesCache = Map[String, NestedTypesCache]()
@@ -261,21 +265,43 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
       classLoaded(e)
       reply(false)
     case LoadedNestedTypes(outerTypeName) =>
-      reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(outerTypeName)))
+      val replyTo = sender
+      become {
+        case LoadedNestedTypesUpdate(outerTypeName, cache) =>
+          updateCacheWith((outerTypeName, cache))
+          replyTo ! LoadedNestedTypesAnswer(cache.types)
+          unbecome()
+      }
+      findCache(outerTypeName).onSuccess {
+        case (typeName, cache) =>
+          ScalaDebugCacheActor.this ! LoadedNestedTypesUpdate(typeName, cache)
+      }
     case AddClassPrepareEventListener(actor, outerTypeName) =>
-      addClassPreparedEventListener(actor, outerTypeName)
-      reply(true)
+      val replyTo = sender
+      become {
+        case AddClassPrepareEventListenerUpdate(actor, outerTypeName, cache) =>
+          updateCacheWith((outerTypeName, cache.copy(listeners = cache.listeners + actor)))
+          replyTo ! true
+          unbecome()
+      }
+      findCache(outerTypeName).onSuccess {
+        case (typeName, cache) =>
+          ScalaDebugCacheActor.this ! AddClassPrepareEventListenerUpdate(actor, typeName, cache)
+      }
     case RemoveClassPrepareEventListener(actor, outerTypeName) =>
       removeClassPreparedEventListener(actor, outerTypeName)
       reply(true)
   }
+
+  private def updateCacheWith(entry: (String, NestedTypesCache)) =
+    nestedTypesCache = nestedTypesCache + entry
 
   override protected def postStart(): Unit = {
     link(scalaDebugTargetActor)
     debugCache.running = true
   }
 
-  private def classLoaded(event: ClassPrepareEvent): Unit = jdiSynchronized {
+  private def classLoaded(event: ClassPrepareEvent): Unit = {
     val refType = event.referenceType()
     val topLevelTypeName = ScalaDebugCache.extractOuterTypeName(refType.name())
     nestedTypesCache.get(topLevelTypeName) match {
@@ -292,16 +318,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
   }
 
-  private def getLoadedNestedTypes(outerTypeName: String): Set[ReferenceType] = {
-    nestedTypesCache.get(outerTypeName) match {
-      case Some(cache) =>
-        cache.types
-      case None =>
-        initializedRequestsAndCache(outerTypeName).types
-    }
-  }
-
-  private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = jdiSynchronized {
+  private def findNestedTypesWithJdi(outerTypeName: String) = {
     val simpleRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName, debugTarget)
     val patternRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName + "$*", debugTarget)
     debugTarget.eventDispatcher.setActorFor(ScalaDebugCacheActor.this, simpleRequest)
@@ -318,22 +335,20 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
 
     import scala.collection.JavaConverters._
-    val types = debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
-
-    val cache = new NestedTypesCache(types, Set())
-    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache))
-    cache
+    debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
   }
 
-  private def addClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
-    val cache = nestedTypesCache.get(outerTypeName) match {
+  private def findCache(outerTypeName: String): scala.concurrent.Future[(String, NestedTypesCache)] =
+    nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
-        cache
+        Future.successful((outerTypeName, cache))
       case None =>
-        initializedRequestsAndCache(outerTypeName)
+        Future {
+          jdiSynchronized {
+            (outerTypeName, NestedTypesCache(findNestedTypesWithJdi(outerTypeName)))
+          }
+        }
     }
-    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
-  }
 
   private def removeClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
     nestedTypesCache.get(outerTypeName) foreach { cache =>
@@ -349,7 +364,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
 }
 
-case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor])
+case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor] = Set.empty)
 
 case class TypeCache(anonMethod: Option[Option[Method]] = None, methods: Map[Method, MethodFlags])
 case class MethodFlags(isTransparent: Boolean, isOpaque: Boolean)

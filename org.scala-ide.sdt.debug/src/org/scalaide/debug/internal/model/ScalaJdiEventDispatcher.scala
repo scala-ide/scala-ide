@@ -1,6 +1,8 @@
 package org.scalaide.debug.internal.model
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
@@ -148,7 +150,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
     object FutureComputed
 
     // Change the actor's behavior to wait for the `futures` to complete
-    become { case FutureComputed => unbecome() }
+    become {
+      case FutureComputed => unbecome()
+    }
 
     var staySuspended = false
     val it = futures.iterator
@@ -162,8 +166,15 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
         case result: Boolean => staySuspended |= result
       }
     }.andThen {
-      try if (!staySuspended) jdiSynchronized { eventSet.resume() }
-      finally ScalaJdiEventDispatcherActor.this ! FutureComputed
+      val resume = !staySuspended
+      val replyTo = this
+      Future {
+        jdiSynchronized {
+          if (resume) eventSet.resume()
+        }
+      } onComplete { _ =>
+        replyTo ! FutureComputed
+      }
     }
     // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above
     //          `loopWhile` never returns normally (i.e., it always throws an exception!).
