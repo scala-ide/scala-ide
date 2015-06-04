@@ -5,7 +5,6 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.Utils.jdiSynchronized
 import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.VMDisconnectedException
@@ -148,7 +147,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
     object FutureComputed
 
     // Change the actor's behavior to wait for the `futures` to complete
-    become { case FutureComputed => unbecome() }
+    become {
+      case FutureComputed => unbecome()
+    }
 
     var staySuspended = false
     val it = futures.iterator
@@ -162,7 +163,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
         case result: Boolean => staySuspended |= result
       }
     }.andThen {
-      try if (!staySuspended) jdiSynchronized { eventSet.resume() }
+      try if (!staySuspended) eventSet.resume()
       finally ScalaJdiEventDispatcherActor.this ! FutureComputed
     }
     // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above

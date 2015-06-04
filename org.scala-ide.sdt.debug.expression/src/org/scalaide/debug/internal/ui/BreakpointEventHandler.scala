@@ -24,34 +24,35 @@ class BreakpointEventHandler extends DebugEventHandler {
 
   override def handleEvent(event: Event, context: DebugContext) = (event, context) match {
     case (event: BreakpointEvent, BreakpointContext(breakpoint: JavaLineBreakpoint, debugTarget)) ⇒
-       jdiSynchronized { handleBreakpointEvent(event, breakpoint, debugTarget) }
+      handleBreakpointEvent(event, breakpoint, debugTarget)
     case _ ⇒
       NoCommand
   }
 
-  private def handleBreakpointEvent(event: BreakpointEvent, breakpoint: JavaLineBreakpoint, debugTarget: ScalaDebugTarget): JdiEventCommand = {
-    val condition = getCondition(breakpoint)
-    val location = event.location()
-    val thread = event.thread()
+  private def handleBreakpointEvent(event: BreakpointEvent, breakpoint: JavaLineBreakpoint, debugTarget: ScalaDebugTarget): JdiEventCommand =
+    jdiSynchronized {
+      val condition = getCondition(breakpoint)
+      val location = event.location()
+      val thread = event.thread()
 
-    ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
-      case Success(true) =>
-        SuspendExecution
-      case Success(false) =>
-        ContinueExecution
-      case Failure(e: VMDisconnectedException) =>
-        // Ok, end of debugging
-        ContinueExecution
-      case Failure(e) =>
-        DisplayThread.asyncExec {
-          MessageDialog.openError(
-            SWTUtils.getShell,
-            "Error",
-            s"Error in conditional breakpoint:\n${e.getMessage}")
-        }
-        SuspendExecution
+      ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
+        case Success(true) =>
+          SuspendExecution
+        case Success(false) =>
+          ContinueExecution
+        case Failure(e: VMDisconnectedException) =>
+          // Ok, end of debugging
+          ContinueExecution
+        case Failure(e) =>
+          DisplayThread.asyncExec {
+            MessageDialog.openError(
+              SWTUtils.getShell,
+              "Error",
+              s"Error in conditional breakpoint:\n${e.getMessage}")
+          }
+          SuspendExecution
+      }
     }
-  }
 
   /**
    * Extracts condition from breakpoint.

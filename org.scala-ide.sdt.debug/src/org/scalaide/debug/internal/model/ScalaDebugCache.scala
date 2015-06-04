@@ -8,7 +8,6 @@ import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.preferences.DebuggerPreferencePage
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.Utils.jdiSynchronized
 import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.Location
@@ -275,7 +274,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     debugCache.running = true
   }
 
-  private def classLoaded(event: ClassPrepareEvent): Unit = jdiSynchronized {
+  private def classLoaded(event: ClassPrepareEvent): Unit = {
     val refType = event.referenceType()
     val topLevelTypeName = ScalaDebugCache.extractOuterTypeName(refType.name())
     nestedTypesCache.get(topLevelTypeName) match {
@@ -301,7 +300,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
   }
 
-  private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = jdiSynchronized {
+  private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = {
     val simpleRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName, debugTarget)
     val patternRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName + "$*", debugTarget)
     debugTarget.eventDispatcher.setActorFor(ScalaDebugCacheActor.this, simpleRequest)
@@ -349,7 +348,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
 }
 
-case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor])
+case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor] = Set.empty)
 
 case class TypeCache(anonMethod: Option[Option[Method]] = None, methods: Map[Method, MethodFlags])
 case class MethodFlags(isTransparent: Boolean, isOpaque: Boolean)
