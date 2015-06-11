@@ -14,6 +14,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.SdtConstants
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.text.Document
@@ -105,17 +107,44 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     s.bootclasspath.value = install.allJars.map(_.classJar).mkString(File.pathSeparator)
     s.source.value = vScala
 
-    // TODO we have to handle the scala-ide bundles differently for non platform installations
-    val scalaIdeClasspath = Seq(
-      "/home/antoras/dev/scala/scala-ide/org.scala-ide.sdt.core/target/classes",
-      "/home/antoras/dev/scala/scala-ide/org.scala-ide.sdt.aspects/target/classes",
-      "/home/antoras/dev/scala/scala-refactoring/org.scala-refactoring.library/bin"
-    )
-
     val bundles = IScalaPlugin().getBundle.getBundleContext.getBundles.toList
+
+    /*
+     * Creates all output directories of the Scala IDE bundles whose classes
+     * should be added to the classpath of the extension compiler. Not all of
+     * the bundles are necessarily required but for safety reasons we add more
+     * of them than less. It may happen that in future that further bundles are
+     * required or that the location of the output directory changes - in these
+     * cases this method needs to be changed accordingly.
+     */
+    def devBundles = {
+      import SdtConstants._
+      val pluginIds = Seq(AspectsPluginId, PluginId, DebuggerPluginId, ExpressionEvaluatorPluginId, ScalaRefactoringPluginId)
+      val devBundles = pluginIds flatMap (id ⇒ bundles.find(_.getSymbolicName == id))
+
+      devBundles.filter(!_.getLocation.endsWith(".jar")).map(_.getLocation.split(':')).map {
+        case Array(_, _, ref) ⇒ s"${ref}target/classes"
+      }
+    }
+
+    /*
+     * The Scala IDE bundles are available through a different path when we use
+     * the IDE in development mode. Development mode means that Scala IDE is run
+     * inside of Eclipse, i.e. the classes of the bundles are located in the
+     * output directories of the build and not inside of the JAR file of the
+     * bundle.
+     */
+    val isInDevelopmentMode = !IScalaPlugin().getBundle.getLocation.endsWith(".jar")
+
+    val scalaIdeClasspath =
+      if (isInDevelopmentMode)
+        devBundles
+      else
+        Seq()
+
     val bundlesClasspath = bundles.map(_.getLocation).filter(_.endsWith(".jar")) flatMap {
       _.split(":") match {
-        case Array(_, _, ref) ⇒ Seq(ref)
+        case Array(_, _, ref) if new java.io.File(ref).exists ⇒ Seq(ref)
         case _ ⇒ Seq()
       }
     }
