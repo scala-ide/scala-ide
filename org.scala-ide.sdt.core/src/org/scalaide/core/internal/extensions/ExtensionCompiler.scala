@@ -88,7 +88,8 @@ object ExtensionCompiler extends AnyRef with HasLogger {
    * The location of the class file cache.
    */
   private val outputDir = {
-    val f = new java.io.File(s"${System.getProperty("user.home")}/.scalaide/classes/${vScala.unparse}/$vGenerated")
+    val ps = File.separator
+    val f = new java.io.File(s"${System.getProperty("user.home")}$ps.scalaide${ps}classes$ps${vScala.unparse}$ps$vGenerated")
     f.mkdirs()
     new PlainDirectory(new Directory(f))
   }
@@ -123,7 +124,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       val devBundles = pluginIds flatMap (id ⇒ bundles.find(_.getSymbolicName == id))
 
       devBundles.filter(!_.getLocation.endsWith(".jar")).map(_.getLocation.split(':')).map {
-        case Array(_, _, ref) ⇒ s"${ref}target/classes"
+        case Array(_, _, ref) ⇒ s"${ref}target${File.separator}classes"
       }
     }
 
