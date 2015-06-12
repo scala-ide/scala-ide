@@ -14,6 +14,7 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import org.eclipse.core.runtime.FileLocator
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.compiler.IScalaPresentationCompiler
@@ -108,7 +109,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
     s.bootclasspath.value = install.allJars.map(_.classJar).mkString(File.pathSeparator)
     s.source.value = vScala
 
-    val bundles = IScalaPlugin().getBundle.getBundleContext.getBundles.toList
+    val bundles = IScalaPlugin().getBundle.getBundleContext.getBundles
 
     /*
      * Creates all output directories of the Scala IDE bundles whose classes
@@ -123,9 +124,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       val pluginIds = Seq(AspectsPluginId, PluginId, DebuggerPluginId, ExpressionEvaluatorPluginId, ScalaRefactoringPluginId)
       val devBundles = pluginIds flatMap (id ⇒ bundles.find(_.getSymbolicName == id))
 
-      devBundles.filter(!_.getLocation.endsWith(".jar")).map(_.getLocation.split(':')).map {
-        case Array(_, _, ref) ⇒ s"${ref}target${File.separator}classes"
-      }
+      devBundles.map(FileLocator.getBundleFile).map(ref ⇒ s"${ref}${File.separator}target${File.separator}classes")
     }
 
     /*
@@ -143,13 +142,12 @@ object ExtensionCompiler extends AnyRef with HasLogger {
       else
         Seq()
 
-    val bundlesClasspath = bundles.map(_.getLocation).filter(_.endsWith(".jar")) flatMap {
-      _.split(":") match {
-        case Array(_, _, ref) if new java.io.File(ref).exists ⇒ Seq(ref)
-        case _ ⇒ Seq()
-      }
-    }
+    val bundlesClasspath = bundles.map(FileLocator.getBundleFile).filter(_.getPath.endsWith(".jar"))
     s.classpath.value = (bundlesClasspath ++ scalaIdeClasspath).mkString(File.pathSeparator)
+
+    logger.debug(s"The extension compiler is created with the following bootclasspath: ${s.bootclasspath.value}")
+    logger.debug(s"The extension compiler is created with the following Scala version: ${s.source.value}")
+    logger.debug(s"The extension compiler is created with the following classpath: ${s.classpath.value}")
     s
   }
 
