@@ -184,4 +184,46 @@ class SurroundBlockTest extends AutoEditTests {
       }
     }
     """ after curlyBrace
+
+  @Test
+  def surround_block_before_ident() = """
+    object X {
+      def f = {
+        val x = ^
+          1
+        x
+      }
+    }
+    """ becomes """
+    object X {
+      def f = {
+        val x = {^
+          1
+        }
+        x
+      }
+    }
+    """ after curlyBrace
+
+  @Test
+  def surround_block_before_empty_line() = """
+    object X {
+      def f = {
+        val x = ^
+          1
+
+        x
+      }
+    }
+    """ becomes """
+    object X {
+      def f = {
+        val x = {^
+          1
+        }
+
+        x
+      }
+    }
+    """ after curlyBrace
 }

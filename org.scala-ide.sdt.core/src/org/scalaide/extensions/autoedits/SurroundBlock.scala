@@ -78,18 +78,22 @@ trait SurroundBlock extends AutoEdit {
       else {
         val t = lexer.next()
 
-        if (t.tokenType == Tokens.RBRACE || (Tokens.KEYWORDS contains t.tokenType)) {
+        if (t.tokenType == Tokens.RBRACE || (Tokens.KEYWORDS contains t.tokenType) || t.tokenType == Tokens.VARID) {
           val line = document.lineInformationOfOffset(t.offset+offset)
           val indent = indentLenOfLine(line)
 
           if (t.tokenType == Tokens.RBRACE && indent == firstIndent)
             None
           else if (indent <= firstIndent) {
-            val prevLine = document.lineInformationOfOffset(line.start-1)
-            val prevIndent = indentLenOfLine(prevLine)
+            var prevLine = document.lineInformationOfOffset(line.start-1)
 
-            if (prevLine.start == firstLine.start || prevLine.trim(document).length == 0 || prevIndent == firstIndent)
+            while (prevLine.trim(document).length == 0)
+              prevLine = document.lineInformationOfOffset(prevLine.start-1)
+
+            if (prevLine.start == firstLine.start)
               None
+            else if (t.tokenType == Tokens.VARID)
+              Some(prevLine.end+1)
             else
               Some(line.start)
           }
