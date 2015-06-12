@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.scala212.feature"
       label="Scala ${scala212.version}"
-      version="4.1.0.qualifier"
+      version="4.2.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-lang.scala-library">
 
