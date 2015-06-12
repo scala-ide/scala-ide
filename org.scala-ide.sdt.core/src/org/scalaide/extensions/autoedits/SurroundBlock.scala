@@ -42,9 +42,9 @@ object SurroundBlockSetting extends AutoEditSetting(
 
 trait SurroundBlock extends AutoEdit {
 
-  def setting = SurroundBlockSetting
+  override def setting = SurroundBlockSetting
 
-  def perform() = {
+  override def perform() = {
     check(textChange) {
       case Add(start, "{") =>
         surroundLocation(start) map {
@@ -86,8 +86,9 @@ trait SurroundBlock extends AutoEdit {
             None
           else if (indent <= firstIndent) {
             val prevLine = document.lineInformationOfOffset(line.start-1)
+            val prevIndent = indentLenOfLine(prevLine)
 
-            if (prevLine.start == firstLine.start || prevLine.trim(document).length == 0)
+            if (prevLine.start == firstLine.start || prevLine.trim(document).length == 0 || prevIndent == firstIndent)
               None
             else
               Some(line.start)

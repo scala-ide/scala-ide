@@ -161,4 +161,27 @@ class SurroundBlockTest extends AutoEditTests {
       val a = {^
     }
     """ after curlyBrace
+
+  @Test
+  def add_no_rbrace_on_the_same_level() = """
+    object X {
+
+      def g(i: Int) = i
+
+      def f = {
+        g(0) ^
+        g(0)
+      }
+    }
+    """ becomes """
+    object X {
+
+      def g(i: Int) = i
+
+      def f = {
+        g(0) {^
+        g(0)
+      }
+    }
+    """ after curlyBrace
 }
