@@ -9,6 +9,10 @@ object SdtConstants {
   // Eclipse ids
 
   final val PluginId = "org.scala-ide.sdt.core"
+  final val AspectsPluginId = "org.scala-ide.sdt.aspects"
+  final val DebuggerPluginId = "org.scala-ide.sdt.debug"
+  final val ExpressionEvaluatorPluginId = "org.scala-ide.sdt.debug.expression"
+  final val ScalaRefactoringPluginId = "org.scala-refactoring.library"
   final val LibraryPluginId = "org.scala-lang.scala-library"
   final val SbtPluginId = "org.scala-ide.sbt.full.library"
   final val SbtCompilerInterfacePluginId = "org.scala-ide.sbt.compiler.interface"

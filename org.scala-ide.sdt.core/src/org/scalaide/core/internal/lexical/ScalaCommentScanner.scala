@@ -34,14 +34,13 @@ import org.scalaide.core.lexical.AbstractScalaScanner
  */
 class ScalaCommentScanner(
     override val preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore,
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
       extends RuleBasedScanner with AbstractScalaScanner {
 
   private val wordMatcher = {
-    val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
-    val isCaseSensitive = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
+    val taskTags = preferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
+    val isCaseSensitive = preferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
     val wm = new WordMatcher
     val cwr = new CombinedWordRule(new IdentifierDetector, wm)
 

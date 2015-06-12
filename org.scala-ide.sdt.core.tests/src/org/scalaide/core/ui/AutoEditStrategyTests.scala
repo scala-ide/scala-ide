@@ -71,7 +71,7 @@ abstract class AutoEditStrategyTests extends TextEditTests with EclipseDocumentS
 
   /** Adds the given string at the position of the caret */
   case class Add(str: String) extends Operation {
-    def execute() = {
+    override def execute() = {
       val cmd = new TestCommand(caretOffset, 0, str, -1)
       strategy.customizeDocumentCommand(doc, cmd)
 
@@ -89,7 +89,7 @@ abstract class AutoEditStrategyTests extends TextEditTests with EclipseDocumentS
 
   /** Removes the given string before the position of the caret */
   case class Remove(str: String) extends Operation {
-    def execute() = {
+    override def execute() = {
       val actual = doc.get().substring(caretOffset - str.length, caretOffset)
       require(str == actual, "removeable content does not equal to the declared content")
 

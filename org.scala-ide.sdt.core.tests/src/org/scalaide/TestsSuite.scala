@@ -50,6 +50,7 @@ import org.scalaide.core.text.TextTestSuite
 import org.scalaide.core.ui.ScalaTemplateContextTest
 import org.scalaide.core.ui.UITestSuite
 import org.scalaide.core.ui.completion.CompletionTestSuite
+import org.scalaide.extensions.autoedits.AutoEditTestSuite
 import org.scalaide.extensions.saveactions.SaveActionTestSuite
 import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationPresenterTest
 import org.scalaide.ui.wizards.WizardTests
@@ -102,6 +103,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[WizardTests],
     classOf[TextTestSuite],
     classOf[SaveActionTestSuite],
+    classOf[AutoEditTestSuite],
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
     classOf[DeclarationPrinterTest],

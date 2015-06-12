@@ -147,6 +147,12 @@
             id="org.scalaide.ui.preferences.editor.saveactions"
             name="Save Actions">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.AutoEditsPreferencePage"
+            id="org.scalaide.ui.preferences.editor.autoedits"
+            name="Auto Edits">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
@@ -878,6 +884,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.AutoEditsPreferenceInitializer">
      </initializer>
   </extension>
 

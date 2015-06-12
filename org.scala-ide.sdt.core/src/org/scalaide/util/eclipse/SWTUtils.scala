@@ -160,6 +160,31 @@ object SWTUtils {
       getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
   }
 
+  /**
+   * Creates a multi line text area, whose layout data interops with the grid
+   * layout.
+   */
+  def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1, style: Int = 0): Text = {
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | style)
+    t.setText(initialText)
+    t.setLayoutData({
+      val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
+      gd.heightHint = lineHeight * t.getLineHeight()
+      gd
+    })
+    t
+  }
+
+  /**
+   * Creates a label, whose layout data interops with the grid layout.
+   */
+  def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
+    val lb = new Label(parent, SWT.NONE)
+    lb.setText(text)
+    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
+    lb
+  }
+
   /** Returns a [[GridData]] configuration, with the given properties.
    *
    *  The possible values for alignment are: [[SWT.BEGINNING]], [[SWT.CENTER]], [[SWT.END]], [[SWT.FILL]]

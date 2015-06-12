@@ -23,8 +23,8 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.ui.internal.editor.SaveActionExtensions
 import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
@@ -39,7 +39,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   private var timeoutValue: Text = _
   private var viewer: CheckboxTableViewer = _
 
-  private val settings = SaveActionExtensions.saveActionSettings.toArray
+  private val settings = SaveActions.saveActionSettings.toArray
 
   private var changes = Set[SaveActionSetting]()
 
@@ -54,7 +54,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     timeout.setLayout(new GridLayout(2, false))
 
     timeoutValue = new Text(timeout, SWT.BORDER | SWT.SINGLE)
-    timeoutValue.setText(prefStore.getString(SaveActionExtensions.SaveActionTimeoutId))
+    timeoutValue.setText(prefStore.getString(SaveActions.SaveActionTimeoutId))
     timeoutValue.addModifyListener { e: ModifyEvent =>
       def error() = {
         setValid(false)
@@ -105,7 +105,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
 
     mkLabel(base, "Description:", columnSize = 2)
 
-    descriptionArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
+    descriptionArea = mkTextArea(base, lineHeight = 3, initialText = "", columnSize = 2)
 
     mkLabel(base, "Before:")
     mkLabel(base, "After:")
@@ -130,7 +130,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
       val previousValue = prefStore.getBoolean(saveAction.id)
       prefStore.setValue(saveAction.id, !previousValue)
     }
-    prefStore.setValue(SaveActionExtensions.SaveActionTimeoutId, timeoutValue.getText())
+    prefStore.setValue(SaveActions.SaveActionTimeoutId, timeoutValue.getText())
     changes = Set()
     super.performOk()
   }
@@ -143,7 +143,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     super.performDefaults
   }
 
-  private def mkTextArea(parent: Composite, lineHeight: Int, initialText: String = "", columnSize: Int): Text = {
+  private def mkTextArea(parent: Composite, lineHeight: Int, initialText: String, columnSize: Int): Text = {
     val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
     t.setText(initialText)
     t.setLayoutData({
@@ -205,9 +205,9 @@ class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
   import SaveActionsPreferenceInitializer._
 
   override def initializeDefaultPreferences(): Unit = {
-    SaveActionExtensions.saveActionSettings foreach { s =>
+    SaveActions.saveActionSettings foreach { s =>
       IScalaPlugin().getPreferenceStore().setDefault(s.id, false)
     }
-    IScalaPlugin().getPreferenceStore().setDefault(SaveActionExtensions.SaveActionTimeoutId, SaveActionDefaultTimeout)
+    IScalaPlugin().getPreferenceStore().setDefault(SaveActions.SaveActionTimeoutId, SaveActionDefaultTimeout)
   }
 }

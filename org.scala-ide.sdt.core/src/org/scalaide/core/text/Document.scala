@@ -22,6 +22,8 @@ trait Document {
 
   def lineInformation(lineNumber: Int): IRegion
 
+  def lineInformationOfOffset(offset: Int): IRegion
+
   def head: Char
 
   def headOpt: Option[Char]

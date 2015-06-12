@@ -8,7 +8,6 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
 import org.eclipse.jdt.internal.ui.javaeditor.ICompilationUnitDocumentProvider
 import org.eclipse.jdt.internal.ui.text.CompositeReconcilingStrategy
-import org.eclipse.jdt.internal.ui.text.java.SmartSemicolonAutoEditStrategy
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jdt.ui.text.JavaSourceViewerConfiguration
 import org.eclipse.jface.internal.text.html.BrowserInformationControl
@@ -76,10 +75,10 @@ class ScalaSourceViewerConfiguration(
   private val combinedPrefStore = new ChainedPreferenceStore(
       Array(scalaPreferenceStore, javaPreferenceStore))
 
-  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(scalaPreferenceStore, javaPreferenceStore)
+  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
-    scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
+    combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 
   /**
    * Indent prefixes are all possible variations of strings of a given
@@ -96,8 +95,8 @@ class ScalaSourceViewerConfiguration(
    * fill a full indent depth.
    */
   override def getIndentPrefixes(sourceViewer: ISourceViewer, contentType: String): Array[String] = {
-    val spaceWidth = scalaPreferenceStore.getInt(IndentSpaces.eclipseKey)
-    val useTabs = scalaPreferenceStore.getBoolean(IndentWithTabs.eclipseKey)
+    val spaceWidth = combinedPrefStore.getInt(IndentSpaces.eclipseKey)
+    val useTabs = combinedPrefStore.getBoolean(IndentWithTabs.eclipseKey)
 
     val spacePrefix = " " * spaceWidth
     val prefixes = 0 until spaceWidth map (i => " " * i + "\t")
@@ -265,46 +264,38 @@ class ScalaSourceViewerConfiguration(
    * a ScalaAutoIndentStrategy instead of a JavaAutoIndentStrategy.
    *
    * @see org.eclipse.jface.text.source.SourceViewerConfiguration#getAutoEditStrategies(org.eclipse.jface.text.source.ISourceViewer, java.lang.String)
+   *
+   * @note The usage of this method in Scala IDE is deprecated. We use auto
+   * edits instead. No new auto edit strategies should be added but the existing
+   * one should be converted to auto edits.
    */
   override def getAutoEditStrategies(sourceViewer: ISourceViewer, contentType: String): Array[IAutoEditStrategy] = {
     def prefProvider = new JdtPreferenceProvider(getProject)
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
 
-    // TODO: why not using the defined scalaPrefStore, javaPrefStore or combinedPrefStore?
-    val prefStore = IScalaPlugin().getPreferenceStore()
-    val tabsToSpacesConverter = new TabsToSpacesConverter(prefStore)
-
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning), tabsToSpacesConverter)
+        Array(new CommentAutoIndentStrategy(combinedPrefStore, partitioning))
 
       case ScalaPartitions.SCALA_MULTI_LINE_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
-          new MultiLineStringAutoIndentStrategy(partitioning, prefStore),
-          new MultiLineStringAutoEditStrategy(partitioning, prefStore),
-          tabsToSpacesConverter)
+          new MultiLineStringAutoIndentStrategy(partitioning, combinedPrefStore),
+          new MultiLineStringAutoEditStrategy(partitioning, combinedPrefStore))
 
       case IJavaPartitions.JAVA_STRING =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
-          new StringAutoEditStrategy(partitioning, prefStore),
-          tabsToSpacesConverter)
+          new StringAutoEditStrategy(partitioning, combinedPrefStore))
 
       case IJavaPartitions.JAVA_CHARACTER | IDocument.DEFAULT_CONTENT_TYPE =>
         Array(
-          new SmartSemicolonAutoEditStrategy(partitioning),
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(prefStore),
-          new BracketAutoEditStrategy(prefStore),
-          new LiteralAutoEditStrategy(prefStore),
-          tabsToSpacesConverter)
+          new AutoIndentStrategy(combinedPrefStore),
+          new LiteralAutoEditStrategy(combinedPrefStore))
 
       case _ =>
         Array(
           new ScalaAutoIndentStrategy(partitioning, getProject, sourceViewer, prefProvider),
-          new AutoIndentStrategy(prefStore),
-          tabsToSpacesConverter)
+          new AutoIndentStrategy(combinedPrefStore))
     }
   }
 
