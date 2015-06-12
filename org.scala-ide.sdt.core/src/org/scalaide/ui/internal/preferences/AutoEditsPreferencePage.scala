@@ -60,7 +60,9 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     viewer = new CheckboxTableViewer(table)
     viewer.setContentProvider(ContentProvider)
     viewer.addSelectionChangedListener { e: SelectionChangedEvent =>
-      selectAutoEdit(table.getSelection().head.getData().asInstanceOf[AutoEditSetting])
+      table.getSelection.headOption foreach { item ⇒
+        selectAutoEdit(item.getData().asInstanceOf[AutoEditSetting])
+      }
     }
     viewer.addCheckStateListener { e: CheckStateChangedEvent =>
       toggleAutoEdit(e.getElement().asInstanceOf[AutoEditSetting])
