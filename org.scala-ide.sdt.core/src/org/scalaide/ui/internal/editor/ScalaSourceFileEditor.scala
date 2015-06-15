@@ -1,9 +1,7 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-
 import scala.collection.mutable.ArrayBuffer
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
@@ -204,27 +202,45 @@ class ScalaSourceFileEditor
       }
     }
 
-    findJdtSourceMenuManager(menu.getItems) foreach { mm =>
-
-      val groups = groupMenuItemsByGroupId(mm.getItems)
-
-      // these contributions won't work on Scala files, so we remove them
-      val blacklist = List("codeGroup", "importGroup", "generateGroup", "externalizeGroup")
-      blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
-
-      def action(h: RefactoringHandler, text: String) = new Action {
-        setText(text)
-        override def run(): Unit = h.perform()
+    def removeBrokenMenuItems(): Unit = {
+      def isBroken(item: IContributionItem) = item.getId match {
+        case "OpenTypeHierarchy" => true
+        case IJavaEditorActionDefinitionIds.OPEN_HIERARCHY => true
+        case _ => false
       }
 
-      // and provide our own organize imports instead
-      mm.appendToGroup("importGroup", action(new OrganizeImports, "Organize Imports"))
-
-      // add GenerateHashcodeAndEquals and IntroductProductN source generators
-      mm.appendToGroup("generateGroup", action(new GenerateHashcodeAndEquals, "Generate hashCode() and equals()..."))
-      mm.appendToGroup("generateGroup", action(new IntroduceProductNTrait, "Introduce ProductN trait..."))
+      menu.getItems.toList.foreach { item =>
+        if (isBroken(item)) {
+          menu.remove(item)
+        }
+      }
     }
 
+    def fixBrokenGroups(): Unit = {
+      findJdtSourceMenuManager(menu.getItems) foreach { mm =>
+
+        val groups = groupMenuItemsByGroupId(mm.getItems)
+
+        // these contributions won't work on Scala files, so we remove them
+        val blacklist = List("codeGroup", "importGroup", "generateGroup", "externalizeGroup")
+        blacklist.flatMap(groups.get).flatten.foreach(mm.remove)
+
+        def action(h: RefactoringHandler, text: String) = new Action {
+          setText(text)
+          override def run(): Unit = h.perform()
+        }
+
+        // and provide our own organize imports instead
+        mm.appendToGroup("importGroup", action(new OrganizeImports, "Organize Imports"))
+
+        // add GenerateHashcodeAndEquals and IntroductProductN source generators
+        mm.appendToGroup("generateGroup", action(new GenerateHashcodeAndEquals, "Generate hashCode() and equals()..."))
+        mm.appendToGroup("generateGroup", action(new IntroduceProductNTrait, "Introduce ProductN trait..."))
+      }
+    }
+
+    removeBrokenMenuItems()
+    fixBrokenGroups()
     RefactoringMenu.fillContextMenu(menu, this)
   }
 
