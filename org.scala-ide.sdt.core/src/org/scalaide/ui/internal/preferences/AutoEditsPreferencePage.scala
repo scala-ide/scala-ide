@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
 import org.eclipse.jface.layout.TableColumnLayout
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.viewers.CheckStateChangedEvent
@@ -30,16 +31,25 @@ import org.scalaide.util.eclipse.SWTUtils._
 /** This class is referenced through plugin.xml */
 class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val prefStore = IScalaPlugin().getPreferenceStore()
-
   private var descriptionArea: Text = _
   private var configurationArea: Text = _
   private var viewer: CheckboxTableViewer = _
 
   private val settings = AutoEdits.autoEditSettings.toArray
 
-  private var changes = Set[AutoEditSetting]()
-  private var configurations = Set[(AutoEditSetting, String)]()
+  private val prefStore = {
+    val ps = IScalaPlugin().getPreferenceStore
+    val keys = settings flatMap { s ⇒
+      import OverlayPreferenceStore._
+      Seq(
+        new OverlayKey(BOOLEAN, s.id),
+        new OverlayKey(STRING, s.configId)
+      )
+    }
+    val store = new OverlayPreferenceStore(ps, keys.toArray)
+    store.load()
+    store
+  }
 
   override def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
@@ -65,7 +75,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
       }
     }
     viewer.addCheckStateListener { e: CheckStateChangedEvent =>
-      toggleAutoEdit(e.getElement().asInstanceOf[AutoEditSetting])
+      prefStore.setValue(e.getElement.asInstanceOf[AutoEditSetting].id, e.getChecked)
     }
 
     val columnEnabled = new TableViewerColumn(viewer, SWT.NONE)
@@ -81,7 +91,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
     configurationArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
     configurationArea.addModifyListener { e: ModifyEvent ⇒
 
-      /**
+      /*
        * Checks if the following properties are hold:
        * - each line contains one key-value pair
        * - a key-value pair is separated by a '=' sign
@@ -110,11 +120,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
         viewer.getSelection() match {
           case s: StructuredSelection ⇒
             Option(s.getFirstElement()).map(_.asInstanceOf[AutoEditSetting]) foreach { aes ⇒
-              val existingConfig = autoEditConfig(aes)
-
-              configurations = configurations.filter(_._1 != aes)
-              if (existingConfig != text)
-                configurations += (aes → text)
+              prefStore.setValue(aes.configId, text)
             }
         }
       }
@@ -129,42 +135,25 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
   override def init(workbench: IWorkbench): Unit = ()
 
   override def performOk(): Boolean = {
-    changes foreach { autoEdit =>
-      val previousValue = prefStore.getBoolean(autoEdit.id)
-      prefStore.setValue(autoEdit.id, !previousValue)
-    }
-    configurations foreach { case (aes, config) =>
-      prefStore.setValue(s"${aes.id}.config", config)
-    }
+    prefStore.propagate()
     super.performOk()
   }
 
   override def performDefaults(): Unit = {
     viewer.setAllChecked(false)
-    changes = Set()
-    settings foreach (changes += _)
-    configurations = Set()
-    settings foreach (configurations += _ → "")
+    prefStore.loadDefaults()
     super.performDefaults
   }
 
   private def autoEditConfig(autoEdit: AutoEditSetting): String =
-    prefStore.getString(s"${autoEdit.id}.config")
+    prefStore.getString(autoEdit.configId)
 
   private def isEnabled(autoEdit: AutoEditSetting): Boolean =
     prefStore.getBoolean(autoEdit.id)
 
-  private def toggleAutoEdit(autoEdit: AutoEditSetting) = {
-    if (changes.contains(autoEdit))
-      changes -= autoEdit
-    else
-      changes += autoEdit
-  }
-
   private def selectAutoEdit(autoEdit: AutoEditSetting) = {
     descriptionArea.setText(autoEdit.description)
-    val changedConfig = configurations.find(_._1 == autoEdit).fold(autoEditConfig(autoEdit))(_._2)
-    configurationArea.setText(changedConfig)
+    configurationArea.setText(autoEditConfig(autoEdit))
   }
 
   private object ContentProvider extends IStructuredContentProvider {
