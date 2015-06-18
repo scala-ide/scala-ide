@@ -1,9 +1,7 @@
 package org.scalaide.extensions
 package autoedits
 
-import org.scalaide.core.text.Add
-import org.scalaide.core.text.Replace
-import org.scalaide.util.eclipse.RegionUtils._
+import org.scalaide.core.text.TextChange
 
 object SurroundSelectionWithStringSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[SurroundSelectionWithString],
@@ -25,8 +23,14 @@ object SurroundSelectionWithBracesSetting extends AutoEditSetting(
 
 object SurroundSelectionWithBracketsSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[SurroundSelectionWithBrackets],
-  name = "Surround selection with [brackets]",
-  description = "Automatically surrounds a selection with brackets when an opening bracket is typed."
+  name = "Surround selection with [square] brackets",
+  description = "Automatically surrounds a selection with square brackets when an opening square bracket is typed."
+)
+
+object SurroundSelectionWithAngleBracketsSetting extends AutoEditSetting(
+  id = ExtensionSetting.fullyQualifiedName[SurroundSelectionWithAngleBrackets],
+  name = "Surround selection with <angle> brackets",
+  description = "Automatically surrounds a selection with angle brackets when an opening angle bracket is typed."
 )
 
 trait SurroundSelection extends AutoEdit {
@@ -34,13 +38,10 @@ trait SurroundSelection extends AutoEdit {
   def opening: String
   def closing: String
 
-  def perform() = {
+  override def perform() = {
     check(textChange) {
-      case Add(start, o) if o == opening ⇒
-        subcheck(textSelection) {
-          case sel if sel.length > 0 ⇒
-            Replace(sel.start, sel.end, opening + sel.getText + closing)
-        }
+      case c @ TextChange(start, end, o) if end > start && o == opening ⇒
+        Some(TextChange(start, end, opening + document.textRange(start, end) + closing))
     }
   }
 }
@@ -67,4 +68,10 @@ trait SurroundSelectionWithBrackets extends SurroundSelection {
   override def opening = "["
   override def closing = "]"
   override def setting = SurroundSelectionWithBracketsSetting
+}
+
+trait SurroundSelectionWithAngleBrackets extends SurroundSelection {
+  override def opening = "<"
+  override def closing = ">"
+  override def setting = SurroundSelectionWithAngleBracketsSetting
 }

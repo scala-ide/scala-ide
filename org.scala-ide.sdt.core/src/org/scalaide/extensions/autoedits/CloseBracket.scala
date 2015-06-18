@@ -17,6 +17,7 @@ trait CloseBracket extends CloseMatchingPair {
 
   override def opening = '['
   override def closing = ']'
+  override def surroundSelectionSetting = SurroundSelectionWithBracketsSetting
 
   override def setting = CloseBracketSetting
 

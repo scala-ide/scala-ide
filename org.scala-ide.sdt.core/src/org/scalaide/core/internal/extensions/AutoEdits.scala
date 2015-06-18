@@ -30,7 +30,8 @@ object AutoEdits {
     fullyQualifiedName[SurroundSelectionWithString] → SurroundSelectionWithStringSetting,
     fullyQualifiedName[SurroundSelectionWithParentheses] → SurroundSelectionWithParenthesesSetting,
     fullyQualifiedName[SurroundSelectionWithBraces] → SurroundSelectionWithBracesSetting,
-    fullyQualifiedName[SurroundSelectionWithBrackets] → SurroundSelectionWithBracketsSetting
+    fullyQualifiedName[SurroundSelectionWithBrackets] → SurroundSelectionWithBracketsSetting,
+    fullyQualifiedName[SurroundSelectionWithAngleBrackets] → SurroundSelectionWithAngleBracketsSetting
   )
 
   /**
