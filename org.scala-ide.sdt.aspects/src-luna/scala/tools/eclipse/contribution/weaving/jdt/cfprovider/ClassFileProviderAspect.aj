@@ -111,11 +111,6 @@ public privileged aspect ClassFileProviderAspect {
     target(hr) &&
     args(suppliedType);
   
-  pointcut remember(HierarchyResolver hr, IType type, ReferenceBinding typeBinding) :
-    execution(void HierarchyResolver.remember(IType, ReferenceBinding)) &&
-    target(hr) &&
-    args(type, typeBinding);
-  
   pointcut acceptType(IType type, int acceptFlags, boolean isSourceType) :
     execution(boolean NameLookup.acceptType(IType, int, boolean)) &&
     args(type, acceptFlags, isSourceType);
@@ -236,61 +231,6 @@ public privileged aspect ClassFileProviderAspect {
     }
       
     proceed(hr, suppliedType);
-  }
-  
-  void around(HierarchyResolver hr, IType type, ReferenceBinding typeBinding) :
-    remember(hr, type, typeBinding) {
-    if (((IOpenable)type.getCompilationUnit()).isOpen()) {
-      try {
-        IGenericType genericType = (IGenericType)((JavaElement)type).getElementInfo();
-        hr.remember(genericType, typeBinding);
-      } catch (JavaModelException e) {
-        // cannot happen since element is open
-        return;
-      }
-    } else {
-      if (typeBinding == null) return;
-
-      TypeDeclaration typeDeclaration = ((SourceTypeBinding)typeBinding).scope.referenceType();
-
-      // simple super class name
-      char[] superclassName = null;
-      TypeReference superclass;
-      boolean anonymous;
-      if ((typeDeclaration.bits & ASTNode.IsAnonymousType) != 0) {
-        superclass = typeDeclaration.allocation.type;
-        anonymous = true;
-      } else {
-        superclass = typeDeclaration.superclass;
-        anonymous = false;
-      }
-      if (superclass != null) {
-        char[][] typeName = superclass.getTypeName();
-        superclassName = typeName == null ? null : typeName[typeName.length-1];
-      }
-
-      // simple super interface names
-      char[][] superInterfaceNames = null;
-      TypeReference[] superInterfaces = typeDeclaration.superInterfaces;
-      if (superInterfaces != null) {
-        int length = superInterfaces.length;
-        superInterfaceNames = new char[length][];
-        for (int i = 0; i < length; i++) {
-          TypeReference superInterface = superInterfaces[i];
-          char[][] typeName = superInterface.getTypeName();
-          superInterfaceNames[i] = typeName[typeName.length-1];
-        }
-      }
-
-      HierarchyType hierarchyType = new HierarchyType(
-        type,
-        typeDeclaration.name,
-        typeDeclaration.binding.modifiers,
-        superclassName,
-        superInterfaceNames,
-        anonymous);
-      hr.remember(hierarchyType, typeDeclaration.binding);
-    }
   }
   
   String around(BinaryType bt) :
