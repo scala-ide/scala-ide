@@ -148,6 +148,14 @@ class ClasspathTests {
   }
 
   @Test
+  def subsequentLibrary(): Unit = {
+    val majorMinor = testShortSubsequentScalaVersion
+    val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
+
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
+  }
+
+  @Test
   def previousLibraryWithXsourceButNoProjectSpecificSettings(): Unit = {
       val majorMinor = testShortPreviousScalaVersion
       projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
@@ -155,6 +163,16 @@ class ClasspathTests {
 
       setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
   }
+
+  @Test
+  def subsequentLibraryWithXsourceButNoProjectSpecificSettings(): Unit = {
+    val majorMinor = testShortSubsequentScalaVersion
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
+    val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
+
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 2)
+  }
+
   /** Std Library is the previous major version of Scala, with Xsource flag activated
    *
    * One warning witnessing a compatible version on classpath, which isnt exactly the one bundled.
@@ -170,6 +188,16 @@ class ClasspathTests {
   }
 
   @Test
+  def subsequentLibraryWithXsource(): Unit = {
+    val majorMinor = testShortSubsequentScalaVersion
+    enableProjectSpecificSettings()
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$majorMinor")
+    val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
+
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 1, expectedErrors = 0)
+  }
+
+  @Test
   def newerLibraryButWithXSource(): Unit = {
       val majorMinor = testShortPreviousScalaVersion
       enableProjectSpecificSettings()
@@ -178,7 +206,16 @@ class ClasspathTests {
       setRawClasspathAndCheckMarkers(baseRawClasspath, expectedWarnings = 0, expectedErrors = 1)
   }
 
-  /** Std Library is the previous major version of Scala, with Xsource flag activated, but binaries on classpath dont match
+  @Test
+  def olderLibraryButWithXSource(): Unit = {
+    val majorMinor = testShortSubsequentScalaVersion
+    enableProjectSpecificSettings()
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$majorMinor")
+
+    setRawClasspathAndCheckMarkers(baseRawClasspath, expectedWarnings = 0, expectedErrors = 1)
+  }
+
+  /** Std Library is the previous major version of Scala, with Xsource flag activated, but binaries on classpath don't match
    *
    * One warning witnessing a compatible version on classpath, one error on classpath validation
    */
@@ -190,6 +227,16 @@ class ClasspathTests {
       val newRawClasspath= cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
       setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+  }
+
+  @Test
+  def subsequentLibraryWithXsourceAndBadBinary(): Unit = {
+    enableProjectSpecificSettings()
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$testShortSubsequentScalaVersion")
+    val majorMinor = getIncompatibleScalaVersion
+    val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
+
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 1, expectedErrors = 1)
   }
 
   /** Check that no incompatibility is reported for low value version (< 2.8.0)
@@ -545,13 +592,18 @@ class ClasspathTests {
     JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
         testShortPreviousScalaVersion + ".x/scala-library.jar"), null, null)
 
-  /** Impossible to give a < 2.8 version i
+  private def createSubsequentScalaLibraryEntry(): IClasspathEntry =
+    JavaCore.newLibraryEntry(new Path("/classpath/lib/" +
+        testShortSubsequentScalaVersion + ".x/scala-library.jar"), null, null)
+
+  /** Impossible to give a < 2.8 version
    */
   private def getIncompatibleScalaVersion: String = {
     if (testShortScalaVersion == "2.10") "2.11" else "2.9"
   }
 
   private val testShortPreviousScalaVersion: String = CompilerUtils.previousShortString(IScalaPlugin().scalaVersion)
+  private val testShortSubsequentScalaVersion: String = CompilerUtils.subsequentShortString(IScalaPlugin().scalaVersion)
 
   // for these tests' purposes of comparing minors, it's enough to get "none" if the plugin version is unparseable
   private val testShortScalaVersion: String = IScalaPlugin().shortScalaVersion

@@ -134,21 +134,24 @@ trait InstallationManagement { this: ScalaProject =>
     publish(ScalaInstallationChange())
   }
 
-  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(desiredSourceLevel()),
+  def setDesiredSourceLevel(
+      scalaVersion: ScalaVersion = ScalaVersion(desiredSourceLevel()),
       slReason: String = "requested Source Level change",
       customBundleUpdater: Option[() => Unit] = None): Unit = {
+
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
+
     // is the required sourceLevel the bundled scala version ?
-    if (isUsingCompatibilityMode()) {
-      if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)) {
+    if (isUsingCompatibilityMode) {
+      if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion))
         unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
-      }
-    } else {
-      if (CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, scalaVersion)) {
-        toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
-      }
     }
+    else {
+      if (CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, scalaVersion) || CompilerUtils.isBinarySubsequent(IScalaPlugin().scalaVersion, scalaVersion))
+        toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
+    }
+
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
     val updater = customBundleUpdater.getOrElse({() =>
@@ -208,24 +211,25 @@ trait InstallationManagement { this: ScalaProject =>
   * idea to cache this one (desired sourcelevel & al. need to sync
   * on it).
   */
-  private def getCompatibilityMode(): Boolean = {
+  private[core] def getCompatibilityMode: CompatibilityMode = {
     val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
     val l = versionInArguments.length
     val specdVersion = versionInArguments.headOption
 
     if (l >= 2)
       eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
-    if (specdVersion exists (ScalaVersion(_) > IScalaPlugin().scalaVersion))
-      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
+
     if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, ScalaVersion(x)))))
-      false
+      Same
+    else if (specdVersion exists (x => CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, ScalaVersion(x))))
+      Previous
     else
-      specdVersion exists (x => CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, ScalaVersion(x)))
+      Subsequent
   }
 
   /** TODO: letting this be a workspace-wide setting.
    */
-  def isUsingCompatibilityMode(): Boolean = getCompatibilityMode()
+  def isUsingCompatibilityMode: Boolean = getCompatibilityMode != Same
 
   /** Does this project use project-specific compiler settings? */
   def usesProjectSettings: Boolean =

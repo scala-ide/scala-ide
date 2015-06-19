@@ -371,11 +371,12 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     val scalaVersion = ScalaPlugin().scalaVersion.unparse
-    val expectedVersion =
-      if (this.isUsingCompatibilityMode())
-        previousShortString(ScalaPlugin().scalaVersion)
-      else
-        scalaVersion
+    val mode = getCompatibilityMode
+    val expectedVersion = mode match {
+      case Same ⇒ scalaVersion
+      case Previous ⇒ previousShortString(ScalaPlugin().scalaVersion)
+      case Subsequent ⇒ subsequentShortString(ScalaPlugin().scalaVersion)
+    }
 
     fragmentRoots.length match {
       case 0 => // unable to find any trace of scala library
@@ -385,7 +386,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
           // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
           Nil
         } else fragmentRoots(0).version match {
-          case Some(v) if (!this.isUsingCompatibilityMode() && v == ScalaPlugin().scalaVersion) =>
+          case Some(v) if (mode == Same && v == ScalaPlugin().scalaVersion) =>
             // exactly the same version, should be from the container. Perfect
             Nil
           case Some(v) if ScalaPlugin().isCompatibleVersion(v, this) =>

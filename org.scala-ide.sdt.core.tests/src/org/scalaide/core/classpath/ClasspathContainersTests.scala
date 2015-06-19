@@ -41,21 +41,8 @@ class ClasspathContainersTests {
     project
   }
 
-  val currentScalaVer = IScalaPlugin().scalaVersion match {
-      case CompilerUtils.ShortScalaVersion(major, minor) => {
-        f"$major%d.$minor%d"
-      }
-      case _ => "none"
-  }
-
-  val previousScalaVer = IScalaPlugin().scalaVersion match {
-      case CompilerUtils.ShortScalaVersion(major, minor) => {
-        // This is technically incorrect for an epoch change, but the Xsource flag won't be enough to cover for that anyway
-        val lesserMinor = minor - 1
-        f"$major%d.$lesserMinor%d"
-      }
-      case _ => "none"
-  }
+  val currentScalaVer = CompilerUtils.shortString(IScalaPlugin().scalaVersion)
+  val previousScalaVer = CompilerUtils.previousShortString(IScalaPlugin().scalaVersion)
 
   def onlyOneContainer(project: IScalaProject, path: IPath) = (project.javaProject.getRawClasspath() filter (_.getPath() == path)).size == 1
 
