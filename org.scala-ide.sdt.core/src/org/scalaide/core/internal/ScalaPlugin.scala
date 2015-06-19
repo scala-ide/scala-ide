@@ -54,13 +54,13 @@ object ScalaPlugin {
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
 
-
- /** Check if the given version is compatible with the current plug-in version.
-   *  Check on the major/minor number, discard the maintenance number.
-   *
-   *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
-   *  2.8.1 and 2.9.0 aren't.
-   */
+ /**
+  * Check if the given version is compatible with the current plug-in version.
+  * Check on the major/minor number, discard the maintenance number.
+  *
+  * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+  * 2.8.1 and 2.9.0 aren't.
+  */
   def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = project.getCompatibilityMode match {
     case Same ⇒
       isBinarySame(ScalaVersion.current, version) // don't treat 2 unknown versions as equal
@@ -181,15 +181,15 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         disposeProject(project)
       case _ =>
     }
-    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
+    Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
         // This is obtained at project opening or closing, meaning the 'openness' state changed
-        if (delta.getFlags == IResourceDelta.OPEN){
+        if (delta.getFlags == IResourceDelta.OPEN) {
           val resource = delta.getResource().asInstanceOfOpt[IProject]
-          resource foreach {(r) =>
+          resource foreach { r =>
             // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
             // setting the Installation triggers a recursive check
-            asScalaProject(r) foreach { (p) =>
+            asScalaProject(r) foreach { p =>
               try {
                 // It's important to save this /before/ checking classpath : classpath
                 // checks create their own preference modifications under some conditions.
@@ -201,10 +201,11 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
             }
           }
           false
-        } else
-        true
+        }
+        else
+          true
       }
-    })))
+    }))
   }
 
   override def elementChanged(event: ElementChangedEvent): Unit = {
@@ -222,9 +223,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         if (innerDelta.getKind() == CHANGED && (innerDelta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0) {
           innerDelta.getElement() match {
             // classpath change should only impact projects
-            case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
-            }
+            case javaProject: IJavaProject =>
+              asScalaProject(javaProject.getProject()) foreach (_.classpathHasChanged(queue = false))
             case _ =>
           }
         }

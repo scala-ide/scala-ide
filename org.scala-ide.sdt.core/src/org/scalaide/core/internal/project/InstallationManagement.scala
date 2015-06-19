@@ -154,12 +154,11 @@ trait InstallationManagement { this: ScalaProject =>
 
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
-    val updater = customBundleUpdater.getOrElse({() =>
+    val updater = customBundleUpdater getOrElse { () =>
       val setter = new ClasspathContainerSetter(javaProject)
       setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaLibContId), scalaVersion)
       setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaCompilerContId), scalaVersion)
-      }
-    )
+    }
     updater()
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
@@ -202,15 +201,16 @@ trait InstallationManagement { this: ScalaProject =>
     }
   }
 
-  /** This compares the bundled version and the Xsource version found
-  * in arguments, and returns false if they are binary-compatible,
-  * and true otherwise.  Since this is the final, observable
-  * setting on the running presentation Compiler (independently of
-  * Eclipse's settings), it's considered to be the reference on
-  * whether the PC is in compatibility mode or not.  It's a bad
-  * idea to cache this one (desired sourcelevel & al. need to sync
-  * on it).
-  */
+  /**
+   * This compares the bundled version and the Xsource version found
+   * in arguments, and returns false if they are binary-compatible,
+   * and true otherwise.  Since this is the final, observable
+   * setting on the running presentation Compiler (independently of
+   * Eclipse's settings), it's considered to be the reference on
+   * whether the PC is in compatibility mode or not.  It's a bad
+   * idea to cache this one (desired sourcelevel & al. need to sync
+   * on it).
+   */
   private[core] def getCompatibilityMode: CompatibilityMode = {
     val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
     val l = versionInArguments.length
@@ -237,19 +237,18 @@ trait InstallationManagement { this: ScalaProject =>
 
   import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
   val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
-    {
-      import org.scalaide.util.Utils.WithAsInstanceOfOpt
-      if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
-        val installString = (event.getNewValue()).asInstanceOfOpt[String]
-        val installChoice = installString flatMap (parseScalaInstallationChoice(_))
-        // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
-        // will not turn on the project settings and depends on them being set right beforehand
-        installChoice foreach (setDesiredInstallation(_, "requested Scala Installation change from settings update"))
-      }
-      if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
-        if (isUnderlyingValid) classpathHasChanged()
-      }
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
+
+    if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
+      val installString = (event.getNewValue()).asInstanceOfOpt[String]
+      val installChoice = installString flatMap (parseScalaInstallationChoice(_))
+      // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
+      // will not turn on the project settings and depends on them being set right beforehand
+      installChoice foreach (setDesiredInstallation(_, "requested Scala Installation change from settings update"))
     }
+    if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+      if (isUnderlyingValid)
+        classpathHasChanged()
   }
 
 }
