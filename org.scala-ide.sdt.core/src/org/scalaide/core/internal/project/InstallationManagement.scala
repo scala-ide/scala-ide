@@ -142,15 +142,10 @@ trait InstallationManagement { this: ScalaProject =>
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
 
-    // is the required sourceLevel the bundled scala version ?
-    if (isUsingCompatibilityMode) {
-      if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion))
-        unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
-    }
-    else {
-      if (CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, scalaVersion) || CompilerUtils.isBinarySubsequent(IScalaPlugin().scalaVersion, scalaVersion))
-        toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
-    }
+    if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion))
+      unsetXSourceAndMaybeTurnOffProjectSettings(slReason)
+    else
+      turnOnProjectSpecificSettingsAndSetXSource(scalaVersion, slReason)
 
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
@@ -164,7 +159,7 @@ trait InstallationManagement { this: ScalaProject =>
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
 
-  private def toggleProjectSpecificSettingsAndSetXsource(scalaVersion: ScalaVersion, reason: String) = {
+  private def turnOnProjectSpecificSettingsAndSetXSource(scalaVersion: ScalaVersion, reason: String) = {
     turnOnProjectSpecificSettings("requested Xsource change")
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
@@ -175,7 +170,7 @@ trait InstallationManagement { this: ScalaProject =>
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }
 
-  private def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
+  private def unsetXSourceAndMaybeTurnOffProjectSettings(reason: String) = {
     if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
       val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
 
