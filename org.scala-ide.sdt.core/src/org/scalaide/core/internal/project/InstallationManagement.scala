@@ -171,7 +171,7 @@ trait InstallationManagement { this: ScalaProject =>
   }
 
   private def unsetXSourceAndMaybeTurnOffProjectSettings(reason: String) = {
-    if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
+    if (usesProjectSettings) {
       val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
 
       val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
@@ -180,17 +180,20 @@ trait InstallationManagement { this: ScalaProject =>
       storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
 
       // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
-      val projectSettingsSameAsWorkSpace = shownSettings(ScalaPresentationCompiler.defaultScalaSettings(), _ => true) forall {
+      def projectSettingsSameAsWorkspace = shownSettings(ScalaPresentationCompiler.defaultScalaSettings(), _ => true) forall {
         case (setting, value) => IScalaPlugin().getPreferenceStore().getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
       }
-      val scalaInstallationIsSameAsDefault = {
+      def scalaInstallationIsSameAsDefault = {
         val desiredInstallChoice = desiredinstallationChoice()
         desiredInstallChoice.marker match {
           case Left(scalaVersion) => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)
           case Right(_) => false
         }
       }
-      if (projectSettingsSameAsWorkSpace && scalaInstallationIsSameAsDefault) {
+      def workspaceAdditionalParams = ScalaPresentationCompiler.defaultScalaSettings().splitParams(IScalaPlugin().getPreferenceStore().getString(CompilerSettings.ADDITIONAL_PARAMS)).toSet
+      def additionalSettingsSameAsWorskspace = curatedArgs forall workspaceAdditionalParams
+
+      if (projectSettingsSameAsWorkspace && scalaInstallationIsSameAsDefault && additionalSettingsSameAsWorskspace) {
         turnOffProjectSpecificSettings("Settings are all identical to workspace after Xsource removal.")
       }
     }
