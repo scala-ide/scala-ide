@@ -382,12 +382,8 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       ClasspathErrorMarker(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.", SdtConstants.ClasspathProblemMarkerId) :: Nil
 
     def singleLibFound(lib: ScalaLibrary) = lib.version match {
-      case Some(v) if mode == Same && v == ScalaPlugin().scalaVersion =>
-        // exactly the same version, should be from the container. Perfect
+      case Some(v) if mode == Same && v == ScalaPlugin().scalaVersion || ScalaPlugin().isCompatibleVersion(v, this) =>
         Nil
-      case Some(v) if ScalaPlugin().isCompatibleVersion(v, this) =>
-        // compatible version (major, minor are the same). Still, add warning message
-        ClasspathErrorMarker(IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path (${v.unparse}) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", SdtConstants.ClasspathProblemMarkerId) :: Nil
       case Some(v) if isBinaryPrevious(ScalaPlugin().scalaVersion, v) =>
         val msg = s"The version of scala library found in the build path of ${underlying.getName()} (${v.unparse}) is prior to the one provided by scala IDE ($scalaVersion). Setting a Scala Installation Choice to match."
         // It's important here to check we're not mistakenly "fixing" the scala installation of a project which already has a scala container on classpath

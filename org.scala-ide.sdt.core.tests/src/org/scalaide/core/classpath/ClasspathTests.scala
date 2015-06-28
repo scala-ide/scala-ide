@@ -180,8 +180,6 @@ class ClasspathTests {
 
   /**
    * Std Library is the previous major version of Scala, with Xsource flag activated
-   *
-   * One warning witnessing a compatible version on classpath, which isnt exactly the one bundled.
    */
   @Test
   def previousLibraryWithXsource(): Unit = {
@@ -190,7 +188,7 @@ class ClasspathTests {
     projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xsource:"+majorMinor)
     val newRawClasspath = cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 0)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
   }
 
   @Test
@@ -200,7 +198,7 @@ class ClasspathTests {
     projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$majorMinor")
     val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 1, expectedErrors = 0)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 0, expectedErrors = 0)
   }
 
   @Test
@@ -224,7 +222,7 @@ class ClasspathTests {
   /**
    * Std Library is the previous major version of Scala, with Xsource flag activated, but binaries on classpath don't match
    *
-   * One warning witnessing a compatible version on classpath, one error on classpath validation
+   * One error on classpath validation
    */
   @Test
   def previousLibraryWithXsourceAndBadBinary(): Unit = {
@@ -233,7 +231,7 @@ class ClasspathTests {
     val majorMinor = getIncompatibleScalaVersion
     val newRawClasspath = cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 1, expectedErrors = 1)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
   }
 
   @Test
@@ -243,7 +241,7 @@ class ClasspathTests {
     val majorMinor = getIncompatibleScalaVersion
     val newRawClasspath = cleanRawClasspath :+ createSubsequentScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 1, expectedErrors = 1)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry(s"specs2_$majorMinor.2-0.12.3.jar"), expectedWarnings = 0, expectedErrors = 1)
   }
 
   /**
@@ -400,7 +398,7 @@ class ClasspathTests {
   def usingClasspathVariable(): Unit = {
     // create a classpath variable
     JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/"+testShortScalaVersion+".x/"), new NullProgressMonitor)
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 0, 0)
   }
 
   /**
@@ -413,7 +411,7 @@ class ClasspathTests {
     JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/"+testShortScalaVersion+".x/"), new NullProgressMonitor)
 
     // set the classpath of the 'default' project
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 0, 0)
 
     // create a second project
     val secondProject = SDTTestUtils.createProjectInWorkspace("classpathMultipleProject")
@@ -423,7 +421,7 @@ class ClasspathTests {
     ) yield classpathEntry
 
     // set the classpath of the second project
-    setRawClasspathAndCheckMarkers(secondProjectCleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 1, 0, secondProject)
+    setRawClasspathAndCheckMarkers(secondProjectCleanRawClasspath :+ JavaCore.newVariableEntry(new Path("CLASSPATH_TEST_LIB/scala-library.jar"), null, null), 0, 0, secondProject)
 
     // change the classpath variable value to a bad scala library
     JavaCore.setClasspathVariable("CLASSPATH_TEST_LIB", new Path(project.underlying.getLocation().toOSString()).append("/lib/noproperties/"), new NullProgressMonitor)
@@ -434,12 +432,9 @@ class ClasspathTests {
 
   }
 
-  /**
-   * The scala-library.jar from the lib folder is marked as being a different version, but compatible
-   */
   @Test
   def differentButCompatibleVersion(): Unit = {
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("scala-library.jar"), 1, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("scala-library.jar"), 0, 0)
   }
 
   /**
@@ -473,7 +468,7 @@ class ClasspathTests {
    */
   @Test
   def differentNameWithCompatibleVersion(): Unit = {
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("my-scala-library.jar"), 1, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("my-scala-library.jar"), 0, 0)
   }
 
   /**
@@ -491,7 +486,7 @@ class ClasspathTests {
    */
   @Test
   def binaryClassFolderLibrary(): Unit = {
-    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("binary-scala-library"), 1, 0)
+    setRawClasspathAndCheckMarkers(cleanRawClasspath :+ newLibraryEntry("binary-scala-library"), 0, 0)
   }
 
   @Test
