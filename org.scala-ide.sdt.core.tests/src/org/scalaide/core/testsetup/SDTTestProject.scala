@@ -6,7 +6,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IProject
@@ -27,6 +26,7 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.launching.JavaRuntime
 import org.osgi.framework.Bundle
+import org.scalaide.core.SdtConstants
 
 /** A test project, created from scratch.
  *
@@ -56,7 +56,7 @@ class SDTTestProject(project : IProject) {
     })
   }
 
-  def addJar(plugin : String, jar : String) {
+  def addJar(plugin : String, jar : String): Unit = {
     val result = findFileInPlugin(plugin, jar)
     addToClasspath(JavaCore.newLibraryEntry(result, null, null))
   }
@@ -88,7 +88,7 @@ class SDTTestProject(project : IProject) {
     folder
   }
 
-  def dispose() {
+  def dispose(): Unit = {
     if (project.exists)
       project.delete(true, true, null)
     else
@@ -101,25 +101,25 @@ class SDTTestProject(project : IProject) {
     binFolder
   }
 
-  def addJavaNature() {
+  def addJavaNature(): Unit = {
     addNature(JavaCore.NATURE_ID)
   }
 
-  def addScalaNature() {
-    addNature(ScalaPlugin.plugin.natureId)
+  def addScalaNature(): Unit = {
+    addNature(SdtConstants.NatureId)
   }
 
-  def addNature(natureId : String) {
+  def addNature(natureId : String): Unit = {
     val description = project.getDescription
     description.setNatureIds(natureId +: description.getNatureIds)
     project.setDescription(description, null)
   }
 
-  def addToClasspath(entry : IClasspathEntry) {
+  def addToClasspath(entry : IClasspathEntry): Unit = {
     javaProject.setRawClasspath(entry +: javaProject.getRawClasspath, null)
   }
 
-  def createOutputFolder(binFolder : IFolder) {
+  def createOutputFolder(binFolder : IFolder): Unit = {
     val outputLocation = binFolder.getFullPath
     javaProject.setOutputLocation(outputLocation, null)
   }
@@ -132,12 +132,12 @@ class SDTTestProject(project : IProject) {
     root
   }
 
-  def addJavaSystemLibraries() {
+  def addJavaSystemLibraries(): Unit = {
     addToClasspath(JavaRuntime.getDefaultJREContainerEntry)
   }
 
-  def addScalaSystemLibraries() {
-    addToClasspath(JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)))
+  def addScalaSystemLibraries(): Unit = {
+    addToClasspath(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
   }
 
   def findFileInPlugin(plugin : String, file : String) : Path = {

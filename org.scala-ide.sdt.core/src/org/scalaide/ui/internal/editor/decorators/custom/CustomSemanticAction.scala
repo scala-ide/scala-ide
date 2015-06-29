@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/node/146
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.ui.internal.editor.decorators.custom
 
@@ -10,7 +8,7 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.ISourceViewer
-import org.scalaide.core.compiler.{ ScalaPresentationCompiler => SPC }
+import org.scalaide.core.internal.compiler.{ ScalaPresentationCompiler => SPC }
 import org.scalaide.core.internal.jdt.model.{ ScalaCompilationUnit => SCU }
 import org.scalaide.ui.internal.editor.decorators.BaseSemanticAction
 

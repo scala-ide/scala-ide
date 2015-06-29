@@ -3,11 +3,11 @@ package org.scalaide.core.internal.decorators.semantichighlighting
 import java.util.Arrays.binarySearch
 import java.util.Arrays.copyOfRange
 import scala.collection.mutable
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.SdtConstants
 
 /** This class keeps track of semantic positions and it's used by the text's presentation to apply semantic highlighting
   * styles in the editor.
@@ -59,7 +59,7 @@ private[scalaide] class PositionsTracker extends HasLogger {
     } {
       // sanity check
       if (newPos.isDeleted()) {
-        logger.error("Encountered position deleted during semantic highlighting. Please report a bug at " + ScalaPlugin.IssueTracker)
+        logger.error("Encountered position deleted during semantic highlighting. Please report a bug at " + SdtConstants.IssueTracker)
       }
       else {
         existingPositionsByOffset.get(offset) match {
@@ -101,7 +101,7 @@ private[scalaide] class PositionsTracker extends HasLogger {
   def swapPositions(newPositions: Array[Position]): Unit = {
     if (isDirty)
       logger.error("Error while performing semantic highlighting. Attempting to swap posions on a " +
-        "not up-to-date state. Please report a bug at " + ScalaPlugin.IssueTracker)
+        "not up-to-date state. Please report a bug at " + SdtConstants.IssueTracker)
     else positions = newPositions
   }
 

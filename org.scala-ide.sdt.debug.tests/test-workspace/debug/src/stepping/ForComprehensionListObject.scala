@@ -2,7 +2,7 @@ package stepping
 
 object ForComprehensionListObject {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
     val l= List(new Object(), "deux", "quatre", "huit")
 
@@ -14,7 +14,7 @@ object ForComprehensionListObject {
     new ForComprehensionListObject(l).bar
   }
 
-  def foo(l: List[Object]) {
+  def foo(l: List[Object]): Unit = {
 
     for (n <- l) {
       n
@@ -30,7 +30,7 @@ class ForComprehensionListObject (l: List[Object]) {
     n
   }
 
-  def bar() {
+  def bar(): Unit = {
 
     for (n <- l) {
       n

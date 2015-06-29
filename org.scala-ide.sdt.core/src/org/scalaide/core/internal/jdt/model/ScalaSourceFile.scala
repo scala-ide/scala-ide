@@ -24,7 +24,6 @@ import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
 import org.scalaide.core.resources.EclipseFile
 import org.eclipse.jdt.core.compiler.CharOperation
 import scala.tools.nsc.interactive.Response
-import org.scalaide.core.extensions.ReconciliationParticipantsExtensionPoint
 import org.scalaide.core.extensions.SourceFileProvider
 import org.eclipse.jdt.core.JavaModelException
 import org.scalaide.core.compiler.InteractiveCompilationUnit
@@ -32,7 +31,7 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.util.control.Exception
 import org.eclipse.core.runtime.CoreException
-
+import org.scalaide.core.compiler.ScalaCompilationProblem
 
 class ScalaSourceFileProvider extends SourceFileProvider {
   override def createFrom(path: IPath): Option[InteractiveCompilationUnit] =
@@ -80,14 +79,8 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   /** Schedule this source file for reconciliation. Add the file to
    *  the loaded files managed by the presentation compiler.
    */
-  override def scheduleReconcile(): Response[Unit] = {
-    val reloaded = scalaProject.presentationCompiler { compiler =>
-      compiler.askReload(this, getContents)
-    } getOrElse {
-      val dummy = new Response[Unit]
-      dummy.set(())
-      dummy
-    }
+  override def initialReconcile(): Response[Unit] = {
+    val reloaded = super.initialReconcile()
 
     this.reconcile(
         ICompilationUnit.NO_AST,
@@ -99,13 +92,9 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /* getProblems should be reserved for a Java context, @see getProblems */
-  override def reconcile(newContents: String): List[IProblem] ={
-    ReconciliationParticipantsExtensionPoint.runBefore(this, new NullProgressMonitor, workingCopyOwner)
-    val probs = currentProblems
-    ReconciliationParticipantsExtensionPoint.runAfter(this, new NullProgressMonitor, workingCopyOwner)
-    probs
+  def reconcile(newContents: String): List[ScalaCompilationProblem] = {
+    super.forceReconcile()
   }
-
 
   override def reconcile(
       astLevel : Int,
@@ -123,8 +112,12 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     reconcileFlags : Int,
     problems : JHashMap[_,_],
     monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-    openWhenClosed(info, true, monitor)
+
+    // don't rerun this expensive operation unless necessary
+    if (!isConsistent()) {
+      val info = createElementInfo.asInstanceOf[OpenableElementInfo]
+      openWhenClosed(info, true, monitor)
+    }
     null
   }
 
@@ -145,10 +138,6 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     if (probs.isEmpty) null else probs.toArray
   }
 
-  override def currentProblems(): List[IProblem] = withSourceFile { (src, compiler) =>
-    compiler.problemsOf(this)
-  } getOrElse Nil
-
   override def getType(name : String) : IType = new LazyToplevelClass(this, name)
 
   override def getContents() : Array[Char] = {
@@ -166,7 +155,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
   }
 
   /** Ask the compiler to reload {{{this}}} source. */
-  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, getContents) }
+  final def reload(): Unit = scalaProject.presentationCompiler { _.askReload(this, lastSourceMap().sourceFile) }
 
   /** Ask the compiler to discard {{{this}}} source. */
   final def discard(): Unit = scalaProject.presentationCompiler { _.discardCompilationUnit(this) }

@@ -1,8 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences._
-import org.eclipse.core.runtime._
-import org.eclipse.jface.preference._
 import org.eclipse.core.resources._
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 
@@ -48,7 +46,7 @@ class PropertyStore(val context: IScopeContext, val pageId: String)
   override def setValue(name: String, value: Long): Unit =
     putToNode(getLong)(projectNode.putLong)(name, value)
 
-  override def setValue(name: String, value: String) {
+  override def setValue(name: String, value: String): Unit = {
     // Do not turn on silent running here as Strings are propagated
     projectNode.put(name, value)
   }

@@ -6,7 +6,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 /**
  * A refactoring that expands bindings to case-classes in pattern matches with
  * the corresponding extractor. The refactoring is only accessible through a
- * quickfix.
+ * quickassist.
  */
 class ExpandCaseClassBinding extends RefactoringExecutor with RefactoringExecutorWithoutWizard {
 

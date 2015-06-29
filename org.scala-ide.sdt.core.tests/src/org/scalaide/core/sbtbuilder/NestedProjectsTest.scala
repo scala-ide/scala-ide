@@ -3,12 +3,12 @@ package sbtbuilder
 
 import testsetup.TestProjectSetup
 import testsetup.SDTTestUtils
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.junit.Test
 import org.junit.Assert._
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.core.resources.ResourcesPlugin
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.core.resources.IncrementalProjectBuilder
@@ -30,7 +30,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
   /**
    * The nested scala project
    */
-  lazy val scalaProject: ScalaProject = {
+  lazy val scalaProject: IScalaProject = {
     val workspace = ResourcesPlugin.getWorkspace()
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       // create the project
@@ -41,7 +41,7 @@ object NestedProjectsTest extends TestProjectSetup("nested-parent") {
       newProject.open(null)
       JavaCore.create(newProject)
     }
-    ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(scalaProjectName))
+    IScalaPlugin().getScalaProject(workspace.getRoot.getProject(scalaProjectName))
   }
 
   lazy val scalaSrcPackageRoot: IPackageFragmentRoot = {
@@ -57,7 +57,7 @@ class NestedProjectsTest {
    * happening any more.
    */
   @Test
-  def checkJavaCompilesInNestedProject() {
+  def checkJavaCompilesInNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -77,7 +77,7 @@ class NestedProjectsTest {
   }
 
   @Test
-  def checkErrorsAreReported_onTheNestedProject() {
+  def checkErrorsAreReported_onTheNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -95,7 +95,8 @@ class NestedProjectsTest {
       assertEquals("No errors in top-level project", 0, topLevelErrors.length)
 
       val nestedErrors = scalaProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
-      assertEquals("One error in nested project", 1, nestedErrors.length)
+      val errors = SDTTestUtils.markersMessages(nestedErrors.toList)
+      assertEquals("Two errors in nested project " + errors, 2, errors.length)
     } finally
       SDTTestUtils.changeContentOfFile(unitIFile, saved)
   }

@@ -15,12 +15,19 @@ import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
-import org.scalaide.logging.LogManager
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
-
+import org.scalaide.core.internal.logging.LogManager
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.ScalaPlugin
 
 class ReportBugDialog(shell: Shell) extends Dialog(shell) {
+
+  /** Overwritten in order to set the title text. */
+  override def configureShell(sh: Shell): Unit = {
+    super.configureShell(sh)
+    sh.setText("Bug Reporter")
+  }
 
   protected override def isResizable = true
 
@@ -36,31 +43,48 @@ class ReportBugDialog(shell: Shell) extends Dialog(shell) {
 
     val messageField = new Text(group1, SWT.READ_ONLY | SWT.MULTI | SWT.BORDER)
     messageField.setLayoutData(new GridData(GridData.GRAB_HORIZONTAL | GridData.HORIZONTAL_ALIGN_FILL))
+
+    val cacheEntries = ScalaPlugin().classLoaderStore.entries
+    val entries = cacheEntries.map(e => s"Compiler v. ${e._1.version.unparse}(${e._1.compiler.classJar})")
+
     messageField.setText(
-        "Scala plugin version: " + ScalaPlugin.plugin.getBundle.getVersion + "\n\n" +
-        "Bundled Scala compiler version: " + ScalaPlugin.plugin.scalaVer.unparse + "\n\n" +
-        "Scala library version:\t" + ScalaInstallation.platformInstallation.version.unparse + "\n" +
-        "Eclipse version: " + Platform.getBundle("org.eclipse.platform").getVersion)
+        s"""|Scala IDE version:
+            |        ${IScalaPlugin().getBundle.getVersion}
+            |Scala compiler version:
+            |        ${IScalaPlugin().scalaVersion.unparse}
+            |Scala library version:
+            |        ${platformInstallation.version.unparse}
+            |Eclipse version:
+            |        ${Platform.getBundle("org.eclipse.platform").getVersion}
+            |Class loader store: ${cacheEntries.size} entries
+            |        ${entries.mkString("\n\t")}
+            |""".stripMargin)
 
     val group2 = new Group(control, SWT.SHADOW_NONE)
     group2.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false))
-    // lay out the widgets on the same row
-    val rowLayout = new RowLayout(SWT.HORIZONTAL)
-    rowLayout.spacing = -3 // remove space between widgets
-    group2.setLayout(rowLayout)
+    group2.setLayout(new GridLayout(2, false))
 
     val logFileLink = new Link(group2, SWT.NONE)
     logFileLink.setText("<a>Check</a> the log")
     logFileLink.addListener(SWT.Selection, OpenExternalFile(LogManager.logFile))
 
     val reportBugLink = new Link(group2, SWT.NONE)
-    reportBugLink.setText("and <a href=\"" + ScalaPlugin.IssueTracker + "\">report a bug</a>.")
+    reportBugLink.setText(s"""and <a href="${SdtConstants.IssueTracker}">report a bug</a>.""")
     reportBugLink.addListener(SWT.Selection, new LinkListener())
+
+    val sveltoLink = new Link(group2, SWT.NONE)
+    sveltoLink.setText(s"""Install <a href="${SdtConstants.SveltoHomepage}">svelto</a> to log thread dumps when the UI is unresponsive.""")
+    sveltoLink.addListener(SWT.Selection, new LinkListener)
+    sveltoLink.setLayoutData({
+      val g = new GridData
+      g.horizontalSpan = 2
+      g
+    })
 
     control
   }
 
-  protected override def createButtonsForButtonBar(parent: Composite) {
+  protected override def createButtonsForButtonBar(parent: Composite): Unit = {
     // create only OK button
     createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true)
   }

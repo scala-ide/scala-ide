@@ -12,6 +12,7 @@ import scala.reflect.internal.util.RangePosition
 import org.eclipse.ltk.core.refactoring.CompositeChange
 import scala.tools.refactoring.common.TextChange
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * This rename participant hooks into the JDT's Rename File refactoring and renames the
@@ -117,16 +118,16 @@ class RenameParticipant extends LtkRenameParticipant {
    * suitable class (top-level, same name as the file) can be found.
    */
   private def getPositionOfClassToRename(file: IFile): Position = {
+    import IScalaPresentationCompiler.Implicits._
+
     ScalaSourceFile.createFromPath(file.getFullPath.toOSString) flatMap {
       _.withSourceFile { (scalaSourceFile, compiler) =>
 
         import compiler._
 
         val trees = {
-          val typed = new Response[Tree]
           /* we don't need a fully type-checked tree, so this should be enough*/
-          askParsedEntered(scalaSourceFile, keepLoaded = false, typed)
-          typed.get.left.toOption.toList
+          askParsedEntered(scalaSourceFile, keepLoaded = false).getOption().toList
         }
 
         def findTopLevelObjectOrClassDefinition(t: Tree): List[ImplDef] = t match {

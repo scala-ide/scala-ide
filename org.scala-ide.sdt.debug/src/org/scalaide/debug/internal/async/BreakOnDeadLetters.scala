@@ -1,8 +1,6 @@
 package org.scalaide.debug.internal.async
 
 import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.util.internal.eclipse.SWTUtils._
 import org.eclipse.jface.util.PropertyChangeEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.event.BreakpointEvent
@@ -10,16 +8,18 @@ import org.eclipse.debug.core.DebugEvent
 import org.scalaide.logging.HasLogger
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.util.eclipse.SWTUtils._
 
 class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
   import BreakOnDeadLetters._
 
-  def start() {
+  def start(): Unit = {
     internalActor.start()
     internalActor ! Initialize
   }
 
-  def dispose() {
+  def dispose(): Unit = {
     internalActor ! Shutdown
   }
 
@@ -35,8 +35,8 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     override def behavior = {
 
       case Initialize =>
-        ScalaPlugin.prefStore.addPropertyChangeListener(propListener _)
-        val enabled = ScalaPlugin.prefStore.getBoolean(preferenceID)
+        ScalaPlugin().getPreferenceStore.addPropertyChangeListener(propListener _)
+        val enabled = ScalaPlugin().getPreferenceStore.getBoolean(preferenceID)
         if (enabled)
           createRequests()
 
@@ -51,9 +51,6 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
         poison()
 
       case breakpointEvent: BreakpointEvent if eventRequests(breakpointEvent.request()) =>
-        val targetThread = debugTarget.getScalaThread(breakpointEvent.thread)
-        //        disable()
-        //        poison()
         logger.debug(s"Suspending thread ${breakpointEvent.thread.name()}")
         // most likely the breakpoint was hit on a different thread than the one we started with, so we find it here
         debugTarget.getScalaThread(breakpointEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
@@ -66,8 +63,8 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
         logger.error("Could not install dead letter breakpoints")
     }
 
-    private def disable() {
-      ScalaPlugin.prefStore.removePropertyChangeListener(propListener _)
+    private def disable(): Unit = {
+      ScalaPlugin().getPreferenceStore.removePropertyChangeListener(propListener _)
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
@@ -88,4 +85,3 @@ object BreakOnDeadLetters {
 
   final val preferenceID = "debug.breakOnDeadLetters"
 }
-

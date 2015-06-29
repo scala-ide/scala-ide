@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/node/146
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.ui.internal.actions
 
@@ -10,11 +8,11 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
 import org.eclipse.ui.PlatformUI
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.ui.menus.UIElement
-import org.scalaide.ui.internal.editor.decorators.implicits.PropertyChangeListenerProxy
+import org.scalaide.ui.internal.editor.decorators.PropertyChangeListenerProxy
 import org.eclipse.core.commands.AbstractHandler
-import org.scalaide.util.internal.eclipse.SWTUtils
+import org.scalaide.util.eclipse.SWTUtils
 
 /** Base handler for a toggle command linked to a platform preference.
  *
@@ -28,7 +26,7 @@ import org.scalaide.util.internal.eclipse.SWTUtils
  */
 abstract class AbstractToggleHandler(commandId: String, preferenceId: String) extends AbstractHandler with IElementUpdater {
 
-  private def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  private def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
 
   /** Call when the button is push.
    */
@@ -39,7 +37,7 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
 
   /** Update the UI element state according to the preference.
    */
-  def updateElement(element: UIElement, parameters: java.util.Map[_, _]) {
+  def updateElement(element: UIElement, parameters: java.util.Map[_, _]): Unit = {
     element.setChecked(isChecked)
   }
 
@@ -63,7 +61,7 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
 
   PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
 
-  private def refresh() {
+  private def refresh(): Unit = {
     val service = PlatformUI.getWorkbench().getService(classOf[ICommandService]).asInstanceOf[ICommandService]
     service.refreshElements(commandId, null)
   }

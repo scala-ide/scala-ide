@@ -1,11 +1,12 @@
 package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.core.resources.IFile
-
 import scala.tools.nsc.symtab.Flags
 
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.logging.HasLogger
 
 /** Add entries to the JDT index. This class traverses an *unattributed* Scala AST. This
  *  means a tree without symbols or types. However, a tree that was typed may still get here
@@ -21,12 +22,12 @@ import org.scalaide.core.compiler.ScalaPresentationCompiler
  *  'Test' in 'org.junit', and then pass those documents to the structure builder for
  *  precise parsing, where names are actually resolved.
  */
-trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
+trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
 
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
 
-    def addPackageName(p: Tree) {
+    def addPackageName(p: Tree): Unit = {
       p match {
         case i: Ident =>
           packageName.append(i.name)
@@ -48,7 +49,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
         case Ident(id)                           => id.toChars
         case Select(_, name)                     => name.toChars
         case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
-        case tpt @ TypeTree()                    => mapType(tpt.symbol).toCharArray // maybe the tree was typed
+        case tpt @ TypeTree()                    => javaTypeName(tpt.symbol).toCharArray // maybe the tree was typed
         case parent =>
           logger.info(s"superclass not understood: $parent")
           "$$NoRef".toCharArray
@@ -61,7 +62,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
      *  If the modifiers are empty, it uses the Symbol for finding them (the type-checker
      *  moves the annotations from the tree to the symbol).
      */
-    def addAnnotations(tree: MemberDef) {
+    def addAnnotations(tree: MemberDef): Unit = {
       if (tree.mods.annotations.isEmpty && tree.symbol.isInitialized) // don't force any symbols
         addAnnotations(tree.symbol)
       else
@@ -71,18 +72,22 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     private def addAnnotations(sym: Symbol) =
       for {
         ann <- sym.annotations
-        annotationType <- self.askOption(() => ann.atp.toString.toCharArray)
-      } indexer.addAnnotationTypeReference(annotationType)
+        annotationType <- asyncExec(ann.atp.toString.toCharArray).getOption()
+      } {
+        logger.debug(s"Added annotation ref (from sym): ${annotationType.toString}")
+        indexer.addAnnotationTypeReference(annotationType)
+      }
 
-    private def addAnnotationRef(tree: Tree) {
+    private def addAnnotationRef(tree: Tree): Unit = {
       for (t <- tree) t match {
         case New(tpt) =>
+          logger.debug(s"Added annotation ref (from tree): ${tpt.toString}")
           indexer.addAnnotationTypeReference(tpt.toString.toCharArray)
         case _ => ()
       }
     }
 
-    def addClass(c : ClassDef) {
+    def addClass(c : ClassDef): Unit = {
       indexer.addClassDeclaration(
         mapModifiers(c.mods),
         packageName.toString.toCharArray,
@@ -97,7 +102,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       addAnnotations(c)
     }
 
-    def addModule(m: ModuleDef) {
+    def addModule(m: ModuleDef): Unit = {
       val moduleName = m.name
       List(moduleName, moduleName.append('$')) foreach { name =>
         indexer.addClassDeclaration(
@@ -112,40 +117,40 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
       }
     }
 
-    def addVal(v : ValDef) {
+    def addVal(v : ValDef): Unit = {
       indexer.addMethodDeclaration(
-        nme.getterName(v.name).toChars,
+        v.name.getterName.toChars,
         Array.empty,
-        mapType(v.tpt.symbol).toArray,
+        javaTypeName(v.tpt.symbol).toArray,
         Array.empty
       )
 
       if(v.mods.hasFlag(Flags.MUTABLE))
         indexer.addMethodDeclaration(
-          nme.getterToSetter(nme.getterName(v.name)).toChars,
+          v.name.setterName.toChars,
           Array.empty,
-          mapType(v.tpt.symbol).toArray,
+          javaTypeName(v.tpt.symbol).toArray,
           Array.empty
         )
       addAnnotations(v)
     }
 
-    def addDef(d : DefDef) {
+    def addDef(d : DefDef): Unit = {
       val name = if(nme.isConstructorName(d.name)) enclClassNames.head else d.name.toChars
 
       val fps = for(vps <- d.vparamss; vp <- vps) yield vp
 
-      val paramTypes = fps.map(v => mapType(v.tpt.symbol))
+      val paramTypes = fps.map(v => javaTypeName(v.tpt.symbol))
       indexer.addMethodDeclaration(
         name,
         paramTypes.map(_.toCharArray).toArray,
-        mapType(d.tpt.symbol).toArray,
+        javaTypeName(d.tpt.symbol).toArray,
         Array.empty
       )
       addAnnotations(d)
     }
 
-    def addType(td : TypeDef) {
+    def addType(td : TypeDef): Unit = {
       // We don't care what to add, java doesn't see types anyway.
       indexer.addClassDeclaration(
         mapModifiers(td.mods),
@@ -162,7 +167,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
     var enclClassNames = List[Array[Char]]()
 
     override def traverse(tree: Tree): Unit = {
-      def inClass(c : Array[Char])(block : => Unit) {
+      def inClass(c : Array[Char])(block : => Unit): Unit = {
         val old = enclClassNames
         enclClassNames = c::enclClassNames
         block
@@ -217,7 +222,7 @@ trait ScalaIndexBuilder { self : ScalaPresentationCompiler =>
           val name = rt.name.toChars
           indexer.addTypeReference(name)
           indexer.addMethodReference(name, 0)
-          if(nme.isSetterName(rt.name)) indexer.addFieldReference(nme.setterToGetter(rt.name.toTermName).toChars)
+          if(nme.isSetterName(rt.name)) indexer.addFieldReference(rt.getterName.toChars)
           else indexer.addFieldReference(name)
           super.traverse(tree)
 

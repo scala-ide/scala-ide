@@ -1,17 +1,20 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal
 
-import org.eclipse.ui.preferences.ScopedPreferenceStore
 import org.eclipse.core.runtime.preferences.InstanceScope
 import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.ui.preferences.ScopedPreferenceStore
 
 trait ScalaDebugRunningTest {
 
   // debug tests need this
   disableStatusHandlers()
 
-  def disableStatusHandlers() {
+  def disableStatusHandlers(): Unit = {
     // disable UI-dependent checks done during pre-launch. Gets rid of annoying exceptions during tests
-    val prefs = new ScopedPreferenceStore(new InstanceScope(), DebugPlugin.getUniqueIdentifier);
+    val prefs = new ScopedPreferenceStore(InstanceScope.INSTANCE, DebugPlugin.getUniqueIdentifier);
     prefs.setValue("org.eclipse.debug.core.PREF_ENABLE_STATUS_HANDLERS", false)
   }
 

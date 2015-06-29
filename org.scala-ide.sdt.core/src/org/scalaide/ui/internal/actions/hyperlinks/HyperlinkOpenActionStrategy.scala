@@ -1,8 +1,8 @@
 package org.scalaide.ui.internal.actions.hyperlinks
 
-import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.BaseHyperlinkDetector
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jface.text.ITextSelection
@@ -10,7 +10,7 @@ import org.eclipse.jface.text.ITextSelection
 trait HyperlinkOpenActionStrategy {
   protected def detectionStrategy: BaseHyperlinkDetector
 
-  protected def openHyperlink(editor: JavaEditor) {
+  protected def openHyperlink(editor: JavaEditor): Unit = {
     getTextSelection(editor) map { selection =>
       withScalaCompilatioUnit(editor) { scu =>
         scu.followReference(detectionStrategy, editor, selection)
@@ -20,7 +20,7 @@ trait HyperlinkOpenActionStrategy {
 
   private def withScalaCompilatioUnit[T](editor: JavaEditor)(f: ScalaCompilationUnit => T): Option[T] = {
     val inputJavaElement = EditorUtility.getEditorInputJavaElement(editor, false)
-    Option(inputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) map (f)
+    Option(inputJavaElement) map (ScalaCompilationUnit.castFrom) map (f)
   }
 
   protected def isEnabled(editor: JavaEditor): Boolean = getTextSelection(editor) map { textSelection =>

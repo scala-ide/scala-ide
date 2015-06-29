@@ -13,7 +13,7 @@
 
   <groupId>org.scala-ide</groupId>
   <artifactId>org.scala-ide.build</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>4.2.0-SNAPSHOT</version>
   <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
   <packaging>pom</packaging>
 
@@ -24,11 +24,14 @@
     <repo.eclipse.indigo>http://download.eclipse.org/releases/indigo/</repo.eclipse.indigo>
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
+    <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
-    <repo.equinox.launcher>http://www.chuusai.com/eclipse/equinox-weaving-launcher/</repo.equinox.launcher>
+    <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
+    <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
+    <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
 
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
@@ -37,17 +40,17 @@
     <diffutils.version>1.2.1</diffutils.version>
 
     <!-- plugin versions -->
-    <tycho.plugin.version>0.20.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.6</scala.plugin.version>
-    <aspectj.plugin.version>1.6</aspectj.plugin.version>
-    <aspectj.version>1.7.4</aspectj.version>
+    <tycho.plugin.version>0.21.0</tycho.plugin.version>
+    <scala.plugin.version>3.2.0</scala.plugin.version>
+    <aspectj.plugin.version>1.7</aspectj.plugin.version>
+    <aspectj.version>1.8.2</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
 
     <!-- Weaving plugin version -->
-    <weaving.hook.plugin.version>Select a profile</weaving.hook.plugin.version>
+    <weaving.hook.plugin.version>Select an Eclipse profile</weaving.hook.plugin.version>
 
     <!-- tycho test related -->
     <tycho.test.OSspecific></tycho.test.OSspecific>
@@ -57,31 +60,38 @@
 
     <!-- base versions -->
     <!-- Scala 2.10.x -->
-    <scala210.version>2.10.5-SNAPSHOT</scala210.version>
+    <scala210.version>2.10.5</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.2-SNAPSHOT</scala211.version>
+    <scala211.version>2.11.7-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
-    <scala211.scala-xml.version>1.0.1</scala211.scala-xml.version>
-    <scala211.scala-parser-combinators.version>1.0.1</scala211.scala-parser-combinators.version>
+    <scala211.scala-xml.version>1.0.3</scala211.scala-xml.version>
+    <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
+    <!-- Scala 2.12.x -->
+    <scala212.version>2.12.0-SNAPSHOT</scala212.version>
+    <scala212.binary.version>2.11</scala212.binary.version>
+    <scala212.scala-xml.version>1.0.3</scala212.scala-xml.version>
+    <scala212.scala-parser-combinators.version>1.0.3</scala212.scala-parser-combinators.version>
+    <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
-    <eclipse.codename>Select a profile</eclipse.codename>
-    <repo.eclipse>Select a profile</repo.eclipse>
-    <repo.ajdt>Select a profile</repo.ajdt>
+    <eclipse.codename>Select an Eclipse profile</eclipse.codename>
+    <repo.eclipse>Select an Eclipse profile</repo.eclipse>
+    <repo.ajdt>Select an Eclipse profile</repo.ajdt>
 
     <!-- default values, can be overwritten by profiles -->
-    <scala.version>select a profile</scala.version>
-    <scala.short.version>select a profile</scala.short.version>
-    <scala.minor.version>select a profile</scala.minor.version>
-    <version.suffix>select a profile</version.suffix>
+    <scala.version>Select a Scala profile</scala.version>
+    <scala.short.version>Select a Scala profile</scala.short.version>
+    <scala.minor.version>Select a Scala profile</scala.minor.version>
+    <version.suffix>Select a Scala profile</version.suffix>
+    <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <sbt.version>0.13.2</sbt.version>
+    <sbt.version>0.13.6</sbt.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
     <repo.scalariform>${repo.scala-ide.root}/scalariform-${scala.short.version}x</repo.scalariform>
-    <repo.typesafe>http://private-repo.typesafe.com/typesafe/ide-${scala.minor.version}</repo.typesafe>
+    <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>
 
@@ -116,12 +126,26 @@
     </profile>
 
     <profile>
+      <id>scala-2.12.x</id>
+      <properties>
+        <scala.version>${scala212.version}</scala.version>
+        <scala.short.version>212</scala.short.version>
+        <scala.minor.version>2.12</scala.minor.version>
+        <version.suffix>2_12</version.suffix>
+        <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
+        <sbt.version>0.13.7-SNAPSHOT</sbt.version>
+
+      </properties>
+    </profile>
+
+    <profile>
       <!-- Eclipse Juno -->
       <id>eclipse-juno</id>
       <properties>
         <eclipse.codename>juno</eclipse.codename>
         <repo.eclipse>${repo.eclipse.juno}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.juno}</repo.ajdt>
+        <jdt.core.version.range>[3.8.0,3.10.0)</jdt.core.version.range>
         <weaving.hook.plugin.version>1.0.200.v20120524-1707</weaving.hook.plugin.version>
       </properties>
     </profile>
@@ -136,7 +160,20 @@
         <eclipse.codename>kepler</eclipse.codename>
         <repo.eclipse>${repo.eclipse.kepler}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.kepler}</repo.ajdt>
+        <jdt.core.version.range>[3.9.0,3.10.0)</jdt.core.version.range>
         <weaving.hook.plugin.version>1.0.200.v20130327-1442</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Eclipse Luna -->
+      <id>eclipse-luna</id>
+      <properties>
+        <eclipse.codename>luna</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
+        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
+        <weaving.hook.plugin.version>1.1.100.weaving-hook-20140821</weaving.hook.plugin.version>
       </properties>
     </profile>
 
@@ -178,14 +215,8 @@
       <dependencies>
         <dependency>
           <groupId>org.scala-ide</groupId>
-          <artifactId>build-tools_2.10</artifactId>
-          <version>0.4.0</version>
-        </dependency>
-        <!-- We need the 2.10 Scala library, instead of whatever cross-version we happen to build -->
-        <dependency>
-          <groupId>org.scala-lang</groupId>
-          <artifactId>scala-library</artifactId>
-          <version>2.10.0</version>
+          <artifactId>build-tools_2.11</artifactId>
+          <version>0.5.1</version>
         </dependency>
       </dependencies>
       <build>
@@ -218,7 +249,7 @@
           <!-- extra repository containing the build package -->
           <id>typesafe-ide</id>
           <name>Typesafe IDE repository</name>
-          <url>http://private-repo.typesafe.com/typesafe/ide-2.10</url>
+          <url>https://proxy-ch.typesafe.com:8082/artifactory/ide-2.11</url>
           <snapshots><enabled>true</enabled></snapshots>
         </repository>
       </repositories>
@@ -233,8 +264,11 @@
         <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
         <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>
         <scala211.source.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.source.feature</scala211.source.feature.dir>
+        <scala212.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.feature</scala212.feature.dir>
+        <scala212.source.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.source.feature</scala212.source.feature.dir>
         <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
+        <sdt.debug.expression.dir>org.scala-ide.sdt.debug.expression</sdt.debug.expression.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
       </properties>
       <build>
@@ -321,7 +355,7 @@
                   <outputDirectory>${scala211.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${scala211.feature.dir}/resources</directory>
+                      <directory>${scala211.feature.dir}/resources/${scala.short.version}</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -345,6 +379,40 @@
                   <overwrite>true</overwrite>
                 </configuration>
               </execution>
+              <execution>
+                <id>copy-resources-scala212-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala212.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala212.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
+              <execution>
+                <id>copy-resources-scala212-source-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${scala212.source.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${scala212.source.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
             </executions>
           </plugin>
           <plugin>
@@ -358,10 +426,25 @@
                   <target>
                     <copy file="${sdt.core.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
-                        overwrite="true" />
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                        </filterset>
+                    </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.debug.dir}/META-INF/MANIFEST.MF"
-                        overwrite="true" />
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                        </filterset>
+                    </copy>
+                    <copy file="${sdt.debug.expression.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
+                        tofile="${sdt.debug.expression.dir}/META-INF/MANIFEST.MF"
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                        </filterset>
+                    </copy>
                     <copy file="${sdt.update-site.dir}/resources/site-${version.suffix}.xml"
                         tofile="${sdt.update-site.dir}/site.xml"
                         overwrite="true" />
@@ -527,6 +610,21 @@
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
           <version>${scala.plugin.version}</version>
+          <configuration>
+            <args>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-deprecation</arg>
+              <arg>-language:_</arg>
+              <arg>-Xlint</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Xfatal-warnings</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
         </plugin>
         <!-- git hash extractor -->
         <plugin>
@@ -563,6 +661,9 @@
               <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
               <dir>org.scala-ide.sdt.debug.tests/src</dir>
               <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
+              <dir>org.scala-ide.sdt.debug.expression/src</dir>
+              <dir>org.scala-ide.sdt.debug.expression.tests/src</dir>
+              <dir>org.scala-ide.sdt.debug.expression.tests/test-workspace</dir>
             </sourceDirectories>
             <configLocation>org.scala-ide.sdt.core/scala-ide-style-config.xml</configLocation>
           </configuration>

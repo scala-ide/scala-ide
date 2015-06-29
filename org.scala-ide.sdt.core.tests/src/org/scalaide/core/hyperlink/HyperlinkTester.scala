@@ -2,20 +2,18 @@ package org.scalaide.core
 package hyperlink
 
 import testsetup.TestProjectSetup
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.scalaide.core.hyperlink.detector.ScalaDeclarationHyperlinkComputer
+import org.scalaide.core.internal.hyperlink.ScalaDeclarationHyperlinkComputer
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.jface.text.IRegion
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
-import org.scalaide.core.hyperlink.detector.JavaSelectionEngine
+import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.JavaSelectionEngine
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType
-
-import scala.language.reflectiveCalls
 
 trait HyperlinkTester extends TestProjectSetup {
   trait VerifyHyperlink {
@@ -55,7 +53,7 @@ trait HyperlinkTester extends TestProjectSetup {
     }
   }
 
-  def checkScalaLinks(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+  def checkScalaLinks(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link): Unit = {
     val resolver = new ScalaDeclarationHyperlinkComputer
     val maybeLinks = resolver.findHyperlinks(unit, wordRegion)
 
@@ -64,10 +62,10 @@ trait HyperlinkTester extends TestProjectSetup {
     val links = maybeLinks.get
     assertEquals("expected %d link, found %d".format(oracle.text.size, links.size), oracle.text.size, links.size)
     val linkResults = links map (_.getTypeLabel)
-    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+    assertEquals("text", oracle.text.toList.toString, linkResults.toString)
   }
 
-  def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link) {
+  def checkJavaElements(unit: InteractiveCompilationUnit, wordRegion: IRegion, word: String, oracle: Link): Unit = {
     val elements = JavaSelectionEngine.getJavaElements(unit, unit.asInstanceOf[Openable], wordRegion)
 
     // Verify Expectations
@@ -77,6 +75,6 @@ trait HyperlinkTester extends TestProjectSetup {
       e <- elements
       tpe = e.getAncestor(IJavaElement.TYPE).asInstanceOf[IType]
     } yield tpe.getFullyQualifiedName() + "." + e.getElementName()
-    assertEquals("text", oracle.text.toList.toString, linkResults.toList.toString)
+    assertEquals("text", oracle.text.toString, linkResults.toString)
   }
 }

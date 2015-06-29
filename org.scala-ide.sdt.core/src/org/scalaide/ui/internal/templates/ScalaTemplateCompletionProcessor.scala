@@ -11,8 +11,9 @@ import org.eclipse.jface.text.templates.TemplateContextType
 import org.eclipse.swt.graphics.Image
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.TemplateContextType
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.text.templates.DocumentTemplateContext
+import org.scalaide.core.SdtConstants
 
 /**
  * Group template related information instead of being merged/flatten into ScalaPlugin.
@@ -20,11 +21,11 @@ import org.eclipse.jface.text.templates.DocumentTemplateContext
  */
 class ScalaTemplateManager {
 
-  val CONTEXT_TYPE = ScalaPlugin.plugin.pluginId + ".templates"
-  val TEMPLATE_STORE_ID = ScalaPlugin.plugin.pluginId + ".preferences.Templates"
+  val CONTEXT_TYPE = SdtConstants.PluginId + ".templates"
+  val TEMPLATE_STORE_ID = SdtConstants.PluginId + ".preferences.Templates"
 
   lazy val templateStore = {
-    val b = new ContributionTemplateStore(contextTypeRegistry, ScalaPlugin.prefStore, TEMPLATE_STORE_ID)
+    val b = new ContributionTemplateStore(contextTypeRegistry, IScalaPlugin().getPreferenceStore(), TEMPLATE_STORE_ID)
     b.load()
     b
   }
@@ -81,7 +82,7 @@ class ScalaTemplateCompletionProcessor(val tm : ScalaTemplateManager) extends Te
  */
 class ScalaTemplateContextType extends TemplateContextType {
 
-  private def addGlobalResolvers() {
+  private def addGlobalResolvers(): Unit = {
     addResolver(new GlobalTemplateVariables.Cursor())
     addResolver(new GlobalTemplateVariables.WordSelection())
     addResolver(new GlobalTemplateVariables.LineSelection())

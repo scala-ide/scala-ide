@@ -1,0 +1,32 @@
+/* It is also possible to change the font configuration here.
+ * If one is configured, it will be preferred instead of the one
+ * in the "Colors and Fonts" preference page.
+ */
+html {}
+
+body {
+  overflow: auto;
+  margin: 0.3em;
+}
+
+ul {
+  list-style: square;
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: 1em;
+}
+
+li {
+  margin-top: 0.3em;
+  margin-bottom: 0;
+}
+
+code {
+  font-family: monospace;
+  background-color: #eee;
+}
+
+pre {
+  overflow: auto;
+  background-color: #eee;
+}

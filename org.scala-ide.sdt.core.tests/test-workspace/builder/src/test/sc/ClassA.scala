@@ -1,7 +1,7 @@
 package test.sc
 
 class ClassA {
-  def callMe() {
+  def callMe(): Unit = {
     println("Hello, world from Scala")
   }
 }

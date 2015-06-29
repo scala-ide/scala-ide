@@ -5,6 +5,6 @@ import org.junit.Test
 class TestB {
 
   @Test
-  def testMethod1() {}
+  def testMethod1(): Unit = {}
 
 }

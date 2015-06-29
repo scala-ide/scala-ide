@@ -1,28 +1,36 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.HashMap
+
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.jdt.core.IClassFile
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IType
+import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.internal.debug.ui.BreakpointUtils
+import org.eclipse.jdt.internal.debug.ui.DebugWorkingCopyManager
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin
 import org.eclipse.jdt.internal.debug.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.debug.ui.actions.ToggleBreakpointAdapter
-import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.util.internal.ReflectionUtils
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaSourceTypeElement
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.ReflectionUtils
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogger { self =>
   import ScalaToggleBreakpointAdapterUtils._
@@ -34,7 +42,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
    *  (unknown to the JDT, such as inner objects inside objects). Breakpoints could be set
    *  by giving only the line number.
    */
-  private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection) {
+  private def toggleLineBreakpointsImpl(part : IWorkbenchPart, selection : ISelection): Unit = {
     val job = new Job("Toggle Line Breakpoint") {
       override def run(monitor : IProgressMonitor) : IStatus = {
         val editor = getTextEditor(part)
@@ -105,7 +113,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
    *
    *  TODO: Rewrite to use the presentation compiler for finding the position.
    */
-  override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection) {
+  override def toggleBreakpoints(part : IWorkbenchPart, selection : ISelection): Unit = {
     val sel = translateToMembers(part, selection)
 
     sel match {
@@ -127,8 +135,59 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
     }
   }
 
-  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection) {
+  override def toggleLineBreakpoints(part : IWorkbenchPart, selection : ISelection): Unit = {
     toggleLineBreakpointsImpl(part, selection)
+  }
+
+  /**
+   * The implementation of this method is copied from the super class, which had
+   * to be overwritten because it doesn't know how to get a ScalaCompilationUnit.
+   */
+  override def translateToMembers(part: IWorkbenchPart, selection: ISelection): ISelection = {
+    def typeRoot(input: IEditorInput): Option[ITypeRoot] =
+      Option(input.getAdapter(classOf[IClassFile]).asInstanceOf[IClassFile])
+        .orElse(IScalaPlugin().scalaCompilationUnit(input).asInstanceOf[Option[ICompilationUnit]])
+        .orElse(Option(DebugWorkingCopyManager.getWorkingCopy(input, false)))
+
+    val editor = getTextEditor(part)
+    selection match {
+      case ts: ITextSelection if editor != null =>
+        val input = editor.getEditorInput()
+        val provider = editor.getDocumentProvider()
+        if (provider == null)
+          throw new CoreException(Status.CANCEL_STATUS)
+
+        val offset = {
+          val document = provider.getDocument(input)
+          if (document == null)
+            ts.getOffset()
+          else {
+            var o = ts.getOffset()
+            val r = document.getLineInformationOfOffset(o)
+            val end = r.getOffset()+r.getLength()
+            while (o < end && Character.isWhitespace(document.getChar(o)))
+              o += 1
+            o
+          }
+        }
+
+        val root = typeRoot(input)
+        root match {
+          case Some(cu: ICompilationUnit) =>
+            cu.synchronized {
+              cu.reconcile(ICompilationUnit.NO_AST, false, null, null)
+            }
+          case _ =>
+        }
+
+        root.map(_.getElementAt(offset)) match {
+          case Some(m: IMember) => new StructuredSelection(m)
+          case _ => selection
+        }
+
+      case _ =>
+        selection
+    }
   }
 }
 

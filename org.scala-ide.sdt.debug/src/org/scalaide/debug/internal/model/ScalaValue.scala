@@ -1,30 +1,37 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Status
+import org.eclipse.debug.core.DebugException
 import org.eclipse.debug.core.model.IIndexedValue
 import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.VoidValue
-import com.sun.jdi.Value
-import com.sun.jdi.StringReference
-import com.sun.jdi.ShortValue
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.LongValue
-import com.sun.jdi.IntegerValue
-import com.sun.jdi.FloatValue
-import com.sun.jdi.DoubleValue
-import com.sun.jdi.CharValue
-import com.sun.jdi.ByteValue
-import com.sun.jdi.BooleanValue
-import com.sun.jdi.ArrayReference
-import com.sun.jdi.ClassType
-import com.sun.jdi.PrimitiveValue
-import com.sun.jdi.Field
-import com.sun.jdi.Method
-import org.scalaide.debug.internal.JDIUtil
-import com.sun.jdi.ReferenceType
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin
 import org.eclipse.jdt.internal.debug.ui.IJDIPreferencesConstants
+import org.scalaide.debug.internal.ScalaDebugPlugin
+
+import com.sun.jdi.ArrayReference
+import com.sun.jdi.BooleanValue
+import com.sun.jdi.ByteValue
+import com.sun.jdi.CharValue
+import com.sun.jdi.ClassType
+import com.sun.jdi.DoubleValue
+import com.sun.jdi.Field
+import com.sun.jdi.FloatValue
+import com.sun.jdi.IntegerValue
+import com.sun.jdi.LongValue
+import com.sun.jdi.Method
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.ShortValue
+import com.sun.jdi.StringReference
+import com.sun.jdi.Value
+import com.sun.jdi.VoidValue
 
 object ScalaValue {
 
@@ -72,6 +79,9 @@ object ScalaValue {
     value match {
       case s: String =>
         new ScalaStringReference(target.virtualMachine.mirrorOf(s), target)
+      case int: Int =>
+        val mirror = target.virtualMachine.mirrorOf(int)
+        new ScalaPrimitiveValue("scala.Int", int.toString(), mirror, target)
       case _ =>
         ???
     }
@@ -160,7 +170,7 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
     val refTypeSignature = getReferenceType.signature
     if (BOXED_PRIMITIVE_TYPES.contains(refTypeSignature)) {
       "%s %s (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), getBoxedPrimitiveValue(), underlying.uniqueID)
-    } else if (BOXED_CHAR_TYPE == refTypeSignature) {
+    } else if (refTypeSignature == BOXED_CHAR_TYPE) {
       "%s '%s' (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), getBoxedPrimitiveValue(), underlying.uniqueID)
     } else {
       "%s (id=%d)".format(ScalaStackFrame.getSimpleName(refTypeSignature), underlying.uniqueID)
@@ -186,7 +196,13 @@ class ScalaObjectReference(override val underlying: ObjectReference, target: Sca
 
   protected[model] override def classType: ClassType = referenceType.asInstanceOf[ClassType]
 
-  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value = thread.invokeMethod(underlying, method, args:_*)
+  protected[model] def jdiInvokeMethod(method: Method, thread: ScalaThread, args: Value*): Value = Option(thread) match {
+    case None =>
+      logger.debug(s"Cannot invoke method $method on $this because no thread is selected or debugged thread is no longer available")
+      val status = new Status(IStatus.ERROR, ScalaDebugPlugin.id, "No thread is selected or debugged thread is no longer available")
+      throw new DebugException(status)
+    case Some(t) => t.invokeMethod(underlying, method, args: _*)
+  }
 
   // -----
 

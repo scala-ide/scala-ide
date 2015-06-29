@@ -299,4 +299,84 @@ class MultiLineStringAutoIndentStrategyTest extends AutoEditStrategyTests {
     |  def f = 0
     |}
     |""".mls after newline
+
+  @Test
+  def add_strip_margin_in_string_interpolation() = """
+    |class X {
+    |  val x = 0
+    |  val str = s```|^test $x test```
+    |}
+    |""".mls becomes """
+    |class X {
+    |  val x = 0
+    |  val str = s```|
+    |                |^test $x test```.stripMargin
+    |}
+    |""".mls after (newline, marker = '#')
+
+  @Test
+  def add_strip_margin_in_string_interpolation_with_braces() = """
+    |class X {
+    |  val x = 0
+    |  val str = s```|^test ?{x*2} test```
+    |}
+    |""".replace('?', '$').mls becomes """
+    |class X {
+    |  val x = 0
+    |  val str = s```|
+    |                |^test ?{x*2} test```.stripMargin
+    |}
+    |""".replace('?', '$').mls after (newline, marker = '#')
+
+  @Test
+  def add_strip_margin_in_string_interpolation_with_multiple_lines() = """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test
+    |                |^test $x test```.stripMargin
+    |}
+    |""".mls becomes """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test
+    |                |
+    |                |^test $x test```.stripMargin
+    |}
+    |""".mls after (newline, marker = '#')
+
+  @Test
+  def add_strip_margin_in_string_interpolation_with_multiple_insertions_and_cursor_on_first_line() = """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test $x ^test
+    |                |test $x test
+    |                |$x```.stripMargin
+    |}
+    |""".mls becomes """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test $x #
+    |                |^test
+    |                |test $x test
+    |                |$x```.stripMargin
+    |}
+    |""".mls after (newline, marker = '#')
+
+  @Test
+  def add_strip_margin_in_string_interpolation_with_multiple_insertions() = """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test $x
+    |                |test $x ^test
+    |                |$x```.stripMargin
+    |}
+    |""".mls becomes """
+    |class X {
+    |  val x = 0
+    |  val str = s```|test $x
+    |                |test $x #
+    |                |^test
+    |                |$x```.stripMargin
+    |}
+    |""".mls after (newline, marker = '#')
 }

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin (Test)
 Bundle-SymbolicName: org.scala-ide.sdt.core.tests
-Bundle-Version: 4.0.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
@@ -12,5 +12,4 @@ Require-Bundle: org.scala-lang.scala-library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,
  org.junit
-Export-Package: 
- org.scalaide.core.testsetup
+Export-Package: org.scalaide.core.testsetup

@@ -4,40 +4,36 @@ package semantichighlighting.classifier
 import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
 import testsetup.TestProjectSetup
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaProject
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
+import org.scalaide.util.eclipse.RegionUtils
+import org.scalaide.core.testsetup.SDTTestUtils
 
 class AbstractSymbolClassifierTest {
-  import AbstractSymbolClassifierTest._
+  import RegionUtils._
 
-  protected val simulator = new EclipseUserSimulator
-
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   @Before
-  def createProject() {
-    project = simulator.createProjectInWorkspace("symbols-classification", true)
+  def createProject(): Unit = {
+    project = SDTTestUtils.createProjectInWorkspace("symbols-classification", true)
   }
 
   @After
-  def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+  def deleteProject(): Unit = {
+    SDTTestUtils.deleteProjects(project)
   }
 
-  protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]) {
+  protected def checkSymbolClassification(source: String, locationTemplate: String, regionTagToSymbolType: Map[String, SymbolType]): Unit = {
     checkSymbolInfoClassification(source, locationTemplate, regionTagToSymbolType.mapValues(symbolType => SymbolInfo(symbolType, Nil, deprecated = false, inInterpolatedString = false)))
   }
 
-  protected def checkSymbolInfoClassification(source: String, locationTemplate: String, regionTagToSymbolInfo: Map[String, SymbolInfo], delimiter: Char = '$') {
-    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.getRegions(locationTemplate, delimiter)
+  protected def checkSymbolInfoClassification(source: String, locationTemplate: String, regionTagToSymbolInfo: Map[String, SymbolInfo], delimiter: Char = '$'): Unit = {
+    val expectedRegionToSymbolNameMap: Map[IRegion, String] = RegionParser.delimitedRegions(locationTemplate, delimiter)
     val expectedRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
       expectedRegionToSymbolNameMap.mapValues(regionTagToSymbolInfo).toList sortBy regionOffset
     val actualRegionsAndSymbols: List[(IRegion, SymbolInfo)] =
@@ -45,7 +41,7 @@ class AbstractSymbolClassifierTest {
     if (expectedRegionsAndSymbols != actualRegionsAndSymbols) {
       val sb = new StringBuffer
       def displayRegions(regionToSymbolInfoMap: List[(IRegion, SymbolInfo)]) = {
-        regionToSymbolInfoMap.toList.sortBy(regionOffset) map {
+        regionToSymbolInfoMap.sortBy(regionOffset) map {
           case (region, symbolInfo) =>
             "  " + region + " '" + region.of(source) + "' " + symbolInfo
         } mkString "\n"
@@ -79,13 +75,4 @@ class AbstractSymbolClassifierTest {
 
   private def regionOffset(regionAndSymbolInfo: (IRegion, _)) = regionAndSymbolInfo._1.getOffset
 
-}
-
-object AbstractSymbolClassifierTest {
-  private implicit class RegionOps(region: IRegion) {
-    def intersects(other: IRegion): Boolean =
-      !(other.getOffset >= region.getOffset + region.getLength || other.getOffset + other.getLength - 1 < region.getOffset)
-
-    def of(s: String): String = s.slice(region.getOffset, region.getOffset + region.getLength)
-  }
 }

@@ -1,8 +1,8 @@
 package org.scalaide.refactoring.internal.source
 package ui
 
-import org.scalaide.util.internal.eclipse.SWTUtils.noArgFnToSelectionAdapter
-import org.scalaide.util.internal.eclipse.SWTUtils.noArgFnToMouseUpListener
+import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
+import org.scalaide.util.eclipse.SWTUtils.noArgFnToMouseUpListener
 
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.swt.SWT
@@ -38,7 +38,7 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
 
     val headerLabelText: String = "Select the class parameters to include in the hashCode() and equals() methods"
 
-    def createControl(parent: Composite) {
+    def createControl(parent: Composite): Unit = {
       initializeDialogUnits(parent)
 
       val composite = new Composite(parent, SWT.NONE)
@@ -109,7 +109,7 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
         tableItem
       }
 
-      def updateSelectedParams() {
+      def updateSelectedParams(): Unit = {
         val checkedParams = tableItems.filter(_.getChecked).map(_.getText)
         selectedParamsObs(checkedParams)
       }

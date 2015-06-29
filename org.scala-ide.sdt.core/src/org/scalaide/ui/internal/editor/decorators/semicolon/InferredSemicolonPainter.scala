@@ -1,7 +1,7 @@
 package org.scalaide.ui.internal.editor.decorators.semicolon
 
 import scala.math.min
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.eclipse.EclipseUtils.RichDocument
 import scalariform.lexer._
 import scalariform.parser._
 import org.eclipse.swt.widgets.Display
@@ -31,9 +31,12 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
 
   private val typingDelayHelper: TypingDelayHelper = new TypingDelayHelper
 
-  private var inferredSemis: List[Token] = findInferredSemis
+  private var inferredSemis: List[Token] = if (isPainterEnabled) findInferredSemis else Nil
+
+  textViewer.getDocument().addDocumentListener(this)
 
   override def dispose(): Unit = {
+    Option(textViewer.getDocument()) foreach (_.removeDocumentListener(this))
     typingDelayHelper.stop()
   }
 
@@ -48,17 +51,19 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
       val charCount = widget.getCharCount
       val redrawLength = min(lineRegion.getLength, charCount - widgetOffset)
       if (widgetOffset >= 0 && redrawLength > 0)
-        widget.redrawRange(widgetOffset, redrawLength, true);
+        widget.redrawRange(widgetOffset, redrawLength, true)
     }
   }
 
-  def documentAboutToBeChanged(event: DocumentEvent) {}
+  def documentAboutToBeChanged(event: DocumentEvent): Unit = {}
 
-  def documentChanged(event: DocumentEvent) {
-    inferredSemis = updateInferredSemis(event)
-    typingDelayHelper.scheduleCallback {
-      inferredSemis = findInferredSemis
-      widget.redraw()
+  def documentChanged(event: DocumentEvent): Unit = {
+    if (isPainterEnabled) {
+      inferredSemis = updateInferredSemis(event)
+      typingDelayHelper.scheduleCallback {
+        inferredSemis = findInferredSemis
+        widget.redraw()
+      }
     }
   }
 
@@ -120,7 +125,7 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
         drawSemicolon(gc, documentOffset)
     }
 
-  private def drawSemicolon(gc: GC, modelOffset: Int) {
+  private def drawSemicolon(gc: GC, modelOffset: Int): Unit = {
     val widgetOffset = textViewer.modelOffset2WidgetOffset(modelOffset)
     if (widgetOffset >= 0) {
       val baseline = widget.getBaseline(widgetOffset)

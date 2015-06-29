@@ -2,7 +2,7 @@
 <feature
   id="org.scala-ide.sdt.source.feature"
   label="Scala IDE for Eclipse Source"
-  version="4.0.0.qualifier"
+  version="4.2.0.qualifier"
   provider-name="scala-ide.org">
 
   <description url="http://scala-ide.org/">
@@ -72,6 +72,13 @@ SUCH DAMAGE.
 
   <plugin
     id="org.scala-ide.sdt.aspects.source"
+    download-size="0"
+    install-size="0"
+    version="0.0.0"
+    unpack="false"/>
+
+  <plugin
+    id="org.scala-ide.sdt.debug.expression.source"
     download-size="0"
     install-size="0"
     version="0.0.0"

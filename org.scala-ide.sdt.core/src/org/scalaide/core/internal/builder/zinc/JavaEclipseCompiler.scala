@@ -4,7 +4,7 @@ import java.io.File
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
@@ -16,6 +16,7 @@ import xsbti.compile.JavaCompiler
 import xsbti.compile.Output
 import xsbti.Logger
 import org.scalaide.core.internal.builder.JDTBuilderFacade
+import org.scalaide.core.IScalaPlugin
 
 /** Eclipse Java compiler interface, used by the SBT builder.
  *  This class forwards to the internal Eclipse Java compiler, using
@@ -25,8 +26,8 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def project = p
 
-  def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
-    val scalaProject = plugin.getScalaProject(project)
+  def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger): Unit = {
+    val scalaProject = IScalaPlugin().getScalaProject(project)
 
     val allSourceFiles = scalaProject.allSourceFiles()
     val depends = scalaProject.directDependencies

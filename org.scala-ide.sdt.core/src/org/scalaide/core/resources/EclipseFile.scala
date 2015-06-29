@@ -17,6 +17,7 @@ import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.logging.HasLogger
 import scala.util.Try
+import org.scalaide.util.eclipse.FileUtils
 
 object EclipseResource extends HasLogger {
   def apply(r: IResource): EclipseResource[_ <: IResource] = r match {
@@ -47,24 +48,15 @@ object EclipseResource extends HasLogger {
    *                 under that project.
    */
   def fromString(path: String, prefix: IPath = Path.EMPTY): Option[EclipseResource[IResource]] = {
-    def resourceForPath(p: IPath) = {
-      val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(p))).getOrElse(Array())
-
-      resources match {
-        case Array(_, _*) => resources.find(prefix isPrefixOf _.getFullPath)
-        case _            => None
-      }
-    }
-
     val path0 = new Path(path)
-    resourceForPath(path0) match {
+    FileUtils.resourceForPath(path0, prefix) match {
       case Some(res) => Some(EclipseResource(res))
       case None =>
         // Attempt to refresh the parent folder and try again
-        resourceForPath(path0.removeLastSegments(1)) match {
+        FileUtils.resourceForPath(path0.removeLastSegments(1)) match {
           case Some(res) =>
             res.refreshLocal(IResource.DEPTH_ONE, null)
-            resourceForPath(path0).map(EclipseResource(_))
+            FileUtils.resourceForPath(path0).map(EclipseResource(_))
           case None => None
         }
     }
@@ -97,7 +89,7 @@ abstract class EclipseResource[+R <: IResource] extends AbstractFile {
 
   def delete: Unit = underlying.delete(true, null)
 
-  def create {}
+  def create: Unit = {}
 
   def absolute = this
 
@@ -119,7 +111,7 @@ class EclipseFile(override val underlying: IFile) extends EclipseResource[IFile]
       override def close = {
         val contents = new ByteArrayInputStream(buf, 0, count)
         if (!underlying.exists) {
-          def createParentFolder(parent: IContainer) {
+          def createParentFolder(parent: IContainer): Unit = {
             if (!parent.exists()) {
               createParentFolder(parent.getParent)
               parent.asInstanceOf[IFolder].create(true, true, null)

@@ -1,14 +1,30 @@
 package org.scalaide.ui.internal.project
 
 import org.eclipse.jface.viewers.IStructuredContentProvider
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.jface.viewers.Viewer
+import org.scalaide.core.internal.project.LabeledScalaInstallation
 
 trait ScalaInstallationUIProviders {
 
-  def title() : String
+  val labels = Array("built-in", "built-in", "unknown")
+
+  def getDecoration(si: IScalaInstallation): String = {
+    si match {
+        case s: BundledScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(0)})"
+        case s: MultiBundleScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(1)})"
+        case s: LabeledScalaInstallation =>
+          s"${s.getName().getOrElse("")}: ${s.version.unparse}"
+        case s: IScalaInstallation =>
+          s"$itemTitle: ${s.version.unparse} (${labels(2)})"
+      }
+  }
+
+  def itemTitle(): String
 
   class ContentProvider extends IStructuredContentProvider {
     override def dispose(): Unit = {}
@@ -17,24 +33,15 @@ trait ScalaInstallationUIProviders {
 
     override def getElements(input: Any): Array[Object] = {
       input match {
-        case l: List[ScalaInstallation] =>
-          l.toArray
+        case l: List[_] =>
+          l.asInstanceOf[List[Object]].toArray
       }
     }
   }
 
    class LabelProvider extends org.eclipse.jface.viewers.LabelProvider {
 
-    override def getText(element: Any): String = {
-      element match {
-        case s: BundledScalaInstallation =>
-          s"$title: bundled ${s.version.unparse}"
-        case s: MultiBundleScalaInstallation =>
-          s"$title: multi bundles ${s.version.unparse}"
-        case s: ScalaInstallation =>
-          s"unknown ${s.version.unparse}"
-      }
-    }
+   override def getText(element: Any): String = PartialFunction.condOpt(element){case si: IScalaInstallation => getDecoration(si)}.getOrElse("")
   }
 
 }

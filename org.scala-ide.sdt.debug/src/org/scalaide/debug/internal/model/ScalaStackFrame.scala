@@ -1,21 +1,22 @@
 package org.scalaide.debug.internal.model
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.reflect.NameTransformer
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.InvalidStackFrameException
+import com.sun.jdi.Method
+import com.sun.jdi.NativeMethodException
+import com.sun.jdi.StackFrame
+import org.eclipse.debug.core.model.IDropToFrame
 import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.AbsentInformationException
-import com.sun.jdi.Method
-import com.sun.jdi.StackFrame
-import com.sun.jdi.InvalidStackFrameException
-import com.sun.jdi.NativeMethodException
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.reflect.NameTransformer
 
 object ScalaStackFrame {
 
-  def apply(thread: ScalaThread, stackFrame: StackFrame): ScalaStackFrame = {
-    new ScalaStackFrame(thread, stackFrame)
+  def apply(thread: ScalaThread, stackFrame: StackFrame, index: Int = /*top frame*/ 0 ): ScalaStackFrame = {
+    new ScalaStackFrame(thread, stackFrame, index)
   }
 
   // regexp for JNI signature
@@ -78,7 +79,8 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame) extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame {
+class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame, val index: Int)
+  extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
 
   // Members declared in org.eclipse.debug.core.model.IStackFrame
@@ -103,9 +105,9 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   // Members declared in org.eclipse.debug.core.model.IStep
 
-  override def canStepInto(): Boolean = true // TODO: need real logic
-  override def canStepOver(): Boolean = true // TODO: need real logic
-  override def canStepReturn(): Boolean = true // TODO: need real logic
+  override def canStepInto(): Boolean = thread.canStepInto()
+  override def canStepOver(): Boolean = thread.canStepOver()
+  override def canStepReturn(): Boolean = thread.canStepReturn()
   override def isStepping(): Boolean = ???
   override def stepInto(): Unit = thread.stepInto
   override def stepOver(): Unit = thread.stepOver
@@ -113,13 +115,21 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume(): Boolean = true
+  override def canResume(): Boolean = thread.canResume()
   override def canSuspend(): Boolean = false
   override def isSuspended(): Boolean = true
   override def resume(): Unit = thread.resume()
   override def suspend(): Unit = ???
 
+  // Members declared in org.eclipse.debug.core.model.IDropToFrame
+
+  override def canDropToFrame(): Boolean = thread.canDropToFrame(this)
+  override def dropToFrame(): Unit = thread.dropToFrame(this)
+
   // ---
+
+  def isNative = stackFrame.location().method().isNative()
+  def isObsolete = stackFrame.location().method().isObsolete()
 
   import org.scalaide.debug.internal.JDIUtil._
   import scala.util.control.Exception
@@ -167,10 +177,14 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   def getMethodFullName(): String = {
     def getFullName(method: Method): String = {
-      "%s.%s(%s)".format(
-        getSimpleName(method.declaringType.signature),
-        NameTransformer.decode(method.name),
-        getArgumentSimpleNames(method.signature).mkString(", "))
+      // method.signature of obsolete methods is not available. Hence, they have to be processed in a special way.
+      if (method.isObsolete())
+        s"${getSimpleName(method.declaringType.signature)} <${NameTransformer.decode(method.name)}>"
+      else
+        "%s.%s(%s)".format(
+          getSimpleName(method.declaringType.signature),
+          NameTransformer.decode(method.name),
+          getArgumentSimpleNames(method.signature).mkString(", "))
     }
     safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
   }
@@ -180,7 +194,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     *  stack frame to compute its value, as it can be checked by looking at the implementation of
     *  `ScalaLocalVariable.getValue`
     */
-  def rebind(newStackFrame: StackFrame) {
+  def rebind(newStackFrame: StackFrame): Unit = {
     stackFrame = newStackFrame
   }
 

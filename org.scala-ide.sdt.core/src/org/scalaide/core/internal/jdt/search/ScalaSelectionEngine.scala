@@ -18,8 +18,9 @@ import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
@@ -32,12 +33,13 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
   val acceptedEnums = new ArrayBuffer[(Array[Char], Array[Char], Int)]
   val acceptedAnnotations = new ArrayBuffer[(Array[Char], Array[Char], Int)]
 
-  def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int) {
-    icu.doWithSourceFile { (src, compiler) =>
+  def select(icu: InteractiveCompilationUnit, selectionStart0: Int, selectionEnd0: Int): Unit = {
+    val src = icu.lastSourceMap().sourceFile
+    icu.scalaProject.presentationCompiler { compiler =>
 
       import compiler.{ log => _, _ }
 
-      val source = icu.getContents
+      val source = icu.lastSourceMap().scalaSource
       val region = ScalaWordFinder.findWord(source, selectionStart0)
 
       val (selectionStart, selectionEnd) =
@@ -73,8 +75,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptTypeWithFlags(t: compiler.Symbol, jdtFlags: Int) = {
-        val packageName = enclosingPackage(t).toArray
-        val typeName = mapTypeName(t).toArray
+        val packageName = javaEnclosingPackage(t).toArray
+        val typeName = enclosingTypeName(t).toArray
         Cont(requestor.acceptType(
           packageName,
           typeName,
@@ -86,9 +88,9 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptField(f: compiler.Symbol) = {
-        val packageName = enclosingPackage(f).toArray
-        val typeName = mapTypeName(f.owner).toArray
-        val name = (if (f.isSetter) compiler.nme.setterToGetter(f.name.toTermName) else f.name).toString.toArray
+        val packageName = javaEnclosingPackage(f).toArray
+        val typeName = enclosingTypeName(f.owner).toArray
+        val name = (if (f.isSetter) f.name.getterName else f.name).toString.toArray
         Cont(requestor.acceptField(
           packageName,
           typeName,
@@ -106,10 +108,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
         val name = if (isConstructor) owner.name else m0.name
         val paramTypes = m0.tpe.paramss.flatMap(_.map(_.tpe))
 
-        val packageName = enclosingPackage(m0).toArray
-        val typeName = mapTypeName(owner).toArray
+        val packageName = javaEnclosingPackage(m0).toArray
+        val typeName = enclosingTypeName(owner).toArray
         val parameterPackageNames = paramTypes.map(mapParamTypePackageName(_).toArray).toArray
-        val parameterTypeNames = paramTypes.map(mapType(_).toArray).toArray
+        val parameterTypeNames = paramTypes.map(javaTypeNameMono(_).toArray).toArray
         val parameterSignatures = paramTypes.map(mapParamTypeSignature(_)).toArray
         Cont(requestor.acceptMethod(
           packageName,
@@ -129,7 +131,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
       }
 
       def acceptLocalDefinition(defn: compiler.Symbol): Cont = {
-        val parent = ssr.findLocalElement(defn.pos.startOrPoint)
+        val parent = ssr.findLocalElement(defn.pos.start)
         if (parent != null) {
           val name = if (defn.hasFlag(Flags.PARAM) && defn.hasFlag(Flags.SYNTHETIC)) "_" else defn.name.toString.trim
           val jtype = compiler.javaDescriptor(defn.tpe)
@@ -139,8 +141,8 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
           val localVar = new ScalaLocalVariableElement(
             parent.asInstanceOf[JavaElement],
             name,
-            defn.pos.startOrPoint,
-            defn.pos.endOrPoint - 1,
+            defn.pos.start,
+            defn.pos.end - 1,
             defn.pos.point,
             defn.pos.point + name.length - 1,
             jtype,
@@ -151,11 +153,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
 
       val pos = compiler.rangePos(src, actualSelectionStart, actualSelectionStart, actualSelectionEnd + 1)
 
-      val typed = new compiler.Response[compiler.Tree]
-      compiler.askTypeAt(pos, typed)
-      val typedRes = typed.get
-      val cont: Cont = compiler.askOption { () =>
-        typedRes.left.toOption match {
+
+      val typedRes = compiler.askTypeAt(pos).getOption()
+      val cont: Cont = compiler.asyncExec {
+        typedRes match {
           case Some(tree) => {
             tree match {
               case i: compiler.Ident =>
@@ -163,7 +164,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                   case c: compiler.ClassSymbol  => acceptType(c)
                   case m: compiler.ModuleSymbol => acceptType(m)
                   case t: compiler.TermSymbol if t.pos.isDefined =>
-                    if (t.isMethod) acceptMethod(t) else if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                    if (t.isMethod) acceptMethod(t) else if (t.isLocalToBlock) acceptLocalDefinition(t) else acceptField(t)
                   case sym =>
                     logger.info("Unhandled: " + sym.getClass.getName)
                     Cont.Noop
@@ -173,7 +174,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                 r.symbol match {
                   case m: compiler.ModuleSymbol => acceptType(m)
                   case t: compiler.TermSymbol if !t.isMethod && t.pos.isDefined =>
-                    if (t.isLocal) acceptLocalDefinition(t) else acceptField(t)
+                    if (t.isLocalToBlock) acceptLocalDefinition(t) else acceptField(t)
                   case _ => Cont.Noop
                 }
 
@@ -187,7 +188,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                   else
                     acceptField(sym)
                 } else if (sym.owner.isAnonymousClass && sym.pos.isDefined) {
-                  ssr.addElement(ssr.findLocalElement(sym.pos.startOrPoint))
+                  ssr.addElement(ssr.findLocalElement(sym.pos.start))
                   Cont.Noop
                 } else if (sym.hasFlag(Flags.ACCESSOR | Flags.PARAMACCESSOR)) {
                   acceptField(sym)
@@ -228,10 +229,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                 if (sym ne NoSymbol) acceptSymbol(sym) else Cont.Noop
               case l@(_: ValDef | _: Bind | _: ClassDef | _: ModuleDef | _: TypeDef | _: DefDef) =>
                 val sym = l.symbol
-                if (sym.isLocal)
+                if (sym.isLocalToBlock)
                   acceptLocalDefinition(l.symbol)
                 else
-                  ssr.addElement(ssr.findLocalElement(pos.startOrPoint))
+                  ssr.addElement(ssr.findLocalElement(pos.start))
                   Cont.Noop
 
               case _ =>
@@ -243,7 +244,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
             logger.info("No tree")
             Cont.Noop
         }
-      } getOrElse Cont.Noop
+      }.getOrElse(Cont.Noop)()
 
       cont()
 
@@ -255,7 +256,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
 
         // accept qualified types only if no unqualified type was accepted
         if (!ssr.hasSelection) {
-          def acceptTypes(accepted: ArrayBuffer[(Array[Char], Array[Char], Int)]) {
+          def acceptTypes(accepted: ArrayBuffer[(Array[Char], Array[Char], Int)]): Unit = {
             if (!accepted.isEmpty) {
               for (t <- accepted)
                 requestor.acceptType(t._1, t._2, t._3, false, null, actualSelectionStart, actualSelectionEnd)
@@ -272,7 +273,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     }
   }
 
-  override def acceptType(packageName: Array[Char], simpleTypeName: Array[Char], enclosingTypeNames: Array[Array[Char]], modifiers: Int, accessRestriction: AccessRestriction) {
+  override def acceptType(packageName: Array[Char], simpleTypeName: Array[Char], enclosingTypeNames: Array[Array[Char]], modifiers: Int, accessRestriction: AccessRestriction): Unit = {
     val typeName =
       if (enclosingTypeNames == null)
         simpleTypeName
@@ -318,7 +319,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     throw new UnsupportedOperationException();
   }
 
-  override def acceptPackage(packageName: Array[Char]) {
+  override def acceptPackage(packageName: Array[Char]): Unit = {
     // NOP
   }
 
@@ -333,7 +334,7 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     packageName: Array[Char],
     extraFlags: Int,
     path: String,
-    accessRestriction: AccessRestriction) {
+    accessRestriction: AccessRestriction): Unit = {
     // NOP
   }
 }

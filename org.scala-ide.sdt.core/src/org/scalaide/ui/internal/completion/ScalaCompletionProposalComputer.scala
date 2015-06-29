@@ -20,45 +20,44 @@ import org.eclipse.jface.text.IDocument
 import scala.tools.nsc.symtab.Flags
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.ui.completion.ScalaCompletionProposal
 
 class ScalaCompletionProposalComputer extends ScalaCompletions with IJavaCompletionProposalComputer {
-  def sessionStarted() {}
-  def sessionEnded() {}
-  def getErrorMessage() = null
+  override def sessionStarted(): Unit = {}
+  override def sessionEnded(): Unit = {}
+  override def getErrorMessage() = null
 
-
-  def computeContextInformation(context : ContentAssistInvocationContext,
-      monitor : IProgressMonitor) : java.util.List[IContextInformation] = {
+  override def computeContextInformation(context : ContentAssistInvocationContext,
+      monitor : IProgressMonitor): java.util.List[IContextInformation] = {
     // Currently not supported
     java.util.Collections.emptyList()
   }
 
-  def computeCompletionProposals(context : ContentAssistInvocationContext,
-         monitor : IProgressMonitor) : java.util.List[ICompletionProposal] = {
+  override def computeCompletionProposals(context : ContentAssistInvocationContext,
+         monitor : IProgressMonitor): java.util.List[ICompletionProposal] = {
     import java.util.Collections.{ emptyList => javaEmptyList }
 
     val position = context.getInvocationOffset()
     context match {
       case jc : JavaContentAssistInvocationContext => jc.getCompilationUnit match {
         case scu : ScalaCompilationUnit =>
-          scu.withSourceFile { findCompletions(position, context, scu) } getOrElse (javaEmptyList())
+          findCompletions(position, context, scu)
         case _ => javaEmptyList()
       }
       case _ => javaEmptyList()
     }
   }
 
-  private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit)
-                             (sourceFile: SourceFile, compiler: ScalaPresentationCompiler): java.util.List[ICompletionProposal] = {
-    val chars = context.getDocument.get.toCharArray
+  private def findCompletions(position: Int, context: ContentAssistInvocationContext, scu: ScalaCompilationUnit): java.util.List[ICompletionProposal] = {
+    val chars = context.getDocument
     val region = ScalaWordFinder.findCompletionPoint(chars, position)
 
-    val res = findCompletions(region)(position, scu)(sourceFile, compiler)
+    val res = findCompletions(region, position, scu)
 
-    import collection.JavaConversions._
+    import collection.JavaConverters._
 
-    res.map(new ScalaCompletionProposal(_)): java.util.List[ICompletionProposal]
+    res.map(ScalaCompletionProposal(_): ICompletionProposal).asJava
   }
 }

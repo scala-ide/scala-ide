@@ -39,7 +39,7 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
         param: ValDef,
         paramsWithSeparators: List[ParamOrSeparator],
         upBtn: Button,
-        downBtn: Button) {
+        downBtn: Button): Unit = {
       val isLast = isLastInParamList(param, paramsWithSeparators)
       val isFirst = isFirstInParamList(param, paramsWithSeparators)
 
@@ -52,7 +52,7 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
         separator: ParamListSeparator,
         paramsWithSeparators: List[ParamOrSeparator],
         upBtn: Button,
-        downBtn: Button) {
+        downBtn: Button): Unit = {
       downBtn.setEnabled(false)
       upBtn.setEnabled(false)
     }

@@ -25,7 +25,7 @@ import org.eclipse.core.runtime.Platform
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.browser.IWorkbenchBrowserSupport
-import org.scalaide.logging.LogManager
+import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import java.io.File
 import java.net.URI
@@ -36,7 +36,6 @@ object Diagnostics {
   def insufficientHeap: Boolean = heapSize < recommendedHeap
 
   def eclipseIni(): Option[URI] = {
-    def appendIfNonExistant(what: String)(str: String) = if (str.endsWith(what)) str else str + what
     val eclipseHome = Option(System.getenv("ECLIPSE_HOME")) map (new File(_))
     val platformInstallLocation = for {
       location <- Option(Platform.getInstallLocation)
@@ -95,7 +94,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
       !(currentExcluded.contains(scalaCompletion) || currentExcluded.contains(scalaJavaCompletion))
     }
 
-    override def saveToStore() {
+    override def saveToStore(): Unit = {
       updateValue
       if (value && !getStoredValue) {
         val currentExcluded: Array[String] = PreferenceConstants.getExcludedCompletionProposalCategories
@@ -128,18 +127,18 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     type T = Int
     var value: Int = prefStore.getInt(keyName)
     var textWidget: Text = null // can't be initialized in the constructor because widget won't have been created yet
-    def saveToStore() {
+    def saveToStore(): Unit = {
       updateValue
       prefStore.setValue(keyName, value)
     }
-    def updateWidget() { textWidget.setText(value.toString) }
-    def updateValue() {
+    def updateWidget(): Unit = { textWidget.setText(value.toString) }
+    def updateValue(): Unit = {
       value = DiagnosticDialog.getIntOrError(textWidget.getText) match {
         case Left(error) => recommendedVal
         case Right(num) => num
       }
     }
-    def setToRecommended() { textWidget.setText(recommendedVal.toString) }
+    def setToRecommended(): Unit = { textWidget.setText(recommendedVal.toString) }
   }
 
   class BoolWidgetData(keyName: String, val recommendedVal: Boolean) extends WidgetData {
@@ -147,13 +146,13 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     var value: Boolean = prefStore.getBoolean(keyName)
     var checkbox: Button = null // can't be initialized in the constructor because widget won't have been created yet
 
-    def saveToStore() {
+    def saveToStore(): Unit = {
       updateValue
       prefStore.setValue(keyName, value) // code duplication is due to overloading in IPreferenceStore.setValue
     }
-    def updateWidget() { checkbox.setSelection(value) }
-    def updateValue() { value = checkbox.getSelection }
-    def setToRecommended() { checkbox.setSelection(recommendedVal) }
+    def updateWidget(): Unit = { checkbox.setSelection(value) }
+    def updateValue(): Unit = { value = checkbox.getSelection }
+    def setToRecommended(): Unit = { checkbox.setSelection(recommendedVal) }
   }
   // end helper classes
 
@@ -193,7 +192,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     val radioGroup = newGroup("Scala JDT Settings", control)
 
     val radioButtonListener = new SelectionAdapter {
-      override def widgetSelected(e: SelectionEvent) {
+      override def widgetSelected(e: SelectionEvent): Unit = {
         if (scalaSettingsButton.getSelection) {
           updating = true
           widgetDataList foreach { _.setToRecommended }
@@ -212,10 +211,6 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     // the inner controls
     val innerGroup = newGroup("", radioGroup)
     innerGroup.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true, 2, 1))
-
-    // Note: Mark Occurences is now working properly, so it doesn't need to be recommended to be turned off...
-    //    val markOccurrencesButton =
-    //      newCheckboxButton(innerGroup, "Enable JDT \"Mark Occurrences\" (not recommended)", markOccurrencesData)
 
     val completionButton =
       newCheckboxButton(innerGroup, "Use Scala-compatible JDT content assist proposals (recommended)", completionData)
@@ -282,19 +277,18 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     // IMPORTANT: add the listeners AFTER updating the widgets. Otherwise, the listeners will be triggered when setting the
     // widget's initial values
     val selectionListener = new SelectionAdapter {
-      override def widgetSelected(e: SelectionEvent) {
+      override def widgetSelected(e: SelectionEvent): Unit = {
         e.getSource.asInstanceOf[Control].getData.asInstanceOf[WidgetData].updateValue
         refreshRadioButtons()
         doEnableDisable()
       }
     }
 
-    //    markOccurrencesButton.addSelectionListener(selectionListener)
     autoActivationButton.addSelectionListener(selectionListener)
     completionButton.addSelectionListener(selectionListener)
 
     delayText.addModifyListener(new ModifyListener {
-      def modifyText(e: ModifyEvent) {
+      def modifyText(e: ModifyEvent): Unit = {
         verifyNumber(delayText.getText)
         activationDelayData.updateValue
         refreshRadioButtons
@@ -326,7 +320,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     button
   }
 
-  def doEnableDisable() {
+  def doEnableDisable(): Unit = {
     val selected = autoActivationButton.getSelection
     if (!selected && errorMessageField.getData.asInstanceOf[Boolean]) {
       delayText.setText("")
@@ -338,7 +332,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     delayText.setEnabled(autoActivationButton.getSelection)
   }
 
-  def refreshRadioButtons() {
+  def refreshRadioButtons(): Unit = {
     if (!updating) {
       val isDefault = widgetDataList forall { _.isRecommendedVal }
       scalaSettingsButton.setSelection(isDefault)
@@ -353,7 +347,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     }
   }
 
-  def setErrorMessage(msg: Option[String]) {
+  def setErrorMessage(msg: Option[String]): Unit = {
     if (errorMessageField != null && !errorMessageField.isDisposed) {
       errorMessageField.setText(msg.getOrElse(" \n "))
       errorMessageField.setData(msg.isDefined)
@@ -369,7 +363,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     }
   }
 
-  override def okPressed {
+  override def okPressed: Unit = {
     widgetDataList foreach { _.saveToStore }
     val doEnableWeaving = weavingButton.getSelection && !configurer.isWeaving
     super.okPressed
@@ -383,9 +377,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     super.close
   }
 
-  def turnWeavingOn() {
-    //    JDTWeavingPreferences.setAskToEnableWeaving(false)
-
+  def turnWeavingOn(): Unit = {
     val changeResult: IStatus = configurer.changeWeavingState(true)
 
     if (changeResult.getSeverity <= IStatus.WARNING) {
@@ -404,7 +396,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     }
   }
 
-  def showFailureDialog(result: IStatus) {
+  def showFailureDialog(result: IStatus): Unit = {
     val changeInstructions =
       """|Error: could not enable JDT weaving (see detail below).
          |
@@ -439,7 +431,7 @@ object DiagnosticDialog {
 }
 
 class LinkListener(dialog: Option[Dialog] = None) extends Listener {
-  def handleEvent(e: Event) {
+  def handleEvent(e: Event): Unit = {
     try {
       if (e.text.startsWith("file:/")) {
         OpenExternalFile(new File(new URI(e.text))).open()

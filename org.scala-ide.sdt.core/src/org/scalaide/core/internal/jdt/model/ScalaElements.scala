@@ -31,7 +31,7 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.swt.graphics.Image
 
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.ui.ScalaImages
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
 import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
 import org.scalaide.util.internal.ReflectionUtils
@@ -253,7 +253,7 @@ trait AuxChildrenElementInfo extends JavaElementInfo {
 }
 
 trait HasTypeParameters {
-  def setTypeParameters(typeParams: Array[ITypeParameter])
+  def setTypeParameters(typeParams: Array[ITypeParameter]): Unit
 }
 
 class TypeParameterScalaElementInfo extends TypeParameterElementInfo with SourceRefScalaElementInfo
@@ -273,27 +273,27 @@ class ScalaElementInfo extends SourceTypeElementInfo with ScalaMemberElementInfo
   override def setHandle(handle : IType) = super.setHandle(handle)
   override def setSuperclassName(superclassName : Array[Char]) = super.setSuperclassName(superclassName)
   override def setSuperInterfaceNames(superInterfaceNames : Array[Array[Char]]) = super.setSuperInterfaceNames(superInterfaceNames)
-  override def setTypeParameters(tps : Array[ITypeParameter]) {
+  override def setTypeParameters(tps : Array[ITypeParameter]): Unit = {
     typeParameters = tps
   }
 }
 
 trait FnInfo extends SourceMethodElementInfo with ScalaMemberElementInfo with HasTypeParameters {
   override def setArgumentNames(argumentNames : Array[Array[Char]]) = super.setArgumentNames(argumentNames)
-  def setReturnType(returnType : Array[Char])
+  def setReturnType(returnType : Array[Char]): Unit
   override def setExceptionTypeNames(exceptionTypeNames : Array[Array[Char]]) = super.setExceptionTypeNames(exceptionTypeNames)
 }
 
 class ScalaSourceConstructorInfo extends SourceConstructorInfo with FnInfo with AuxChildrenElementInfo with HasTypeParameters {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
-  override def setTypeParameters(tps : Array[ITypeParameter]) {
+  override def setTypeParameters(tps : Array[ITypeParameter]): Unit = {
     typeParameters = tps
   }
 }
 
 class ScalaSourceMethodInfo extends SourceMethodInfo with FnInfo with AuxChildrenElementInfo with HasTypeParameters {
   override def setReturnType(returnType : Array[Char]) = super.setReturnType(returnType)
-  override def setTypeParameters(tps : Array[ITypeParameter]) {
+  override def setTypeParameters(tps : Array[ITypeParameter]): Unit = {
     typeParameters = tps
   }
 }

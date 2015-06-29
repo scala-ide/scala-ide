@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
-   <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
    <extension-point id="sourcefileprovider" name="Source file Providers" schema="schema/sourceFileProviders.exsd"/>
    <extension-point id="scalaHoverDebugOverride" name="Scala Hover Debug Override" schema="schema/scalaHoverDebugOverride.exsd"/>
+   <extension-point id="fileCreator" name="File Creator" schema="schema/fileCreator.exsd"/>
+   <extension-point id="semanticHighlightingParticipants" name="Semantic Highlighting Participants" schema="schema/semanticHighlightingParticipants.exsd"/>
+   <extension-point id="quickAssists" name="Quick Assists" schema="schema/quickAssists.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -104,10 +106,22 @@
             name="Implicits">
       </page>
       <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferencePage"
+            id="org.scalaide.ui.preferences.editor.callByNameParamCreation"
+            name="Call-By-Name Parameter Creation">
+      </page>
+      <page
             category="org.scalaide.ui.preferences"
-            class="org.scalaide.logging.ui.preferences.LoggingPreferencePage"
+            class="org.scalaide.ui.internal.logging.LoggingPreferencePage"
             id="org.scalaide.ui.preferences.logging"
             name="Logging">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences"
+            class="org.scalaide.ui.internal.preferences.ResourcesPreferencePage"
+            id="org.scalaide.ui.preferences.resources"
+            name="Resources">
       </page>
       <page
             category="org.scalaide.ui.preferences"
@@ -119,7 +133,25 @@
             category="org.scalaide.ui.preferences"
             class="org.scalaide.ui.internal.preferences.InstalledScalasPreferencePage"
             id="org.scalaide.ui.preferences.scalas"
-            name="Installed Scalas">
+            name="Installations">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.HoverPreferencePage"
+            id="org.scalaide.ui.preferences.editor.hover"
+            name="Hover">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.SaveActionsPreferencePage"
+            id="org.scalaide.ui.preferences.editor.saveactions"
+            name="Save Actions">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.AutoEditsPreferencePage"
+            id="org.scalaide.ui.preferences.editor.autoedits"
+            name="Auto Edits">
       </page>
    </extension>
 
@@ -301,61 +333,6 @@
             id="org.scala-ide.sdt.core.wizards.newProject">
             <description>Create a Scala project</description>
       </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewClassWizard"
-            icon="icons/full/etool16/newclass_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Class"
-            id="org.scala-ide.sdt.core.wizards.newClass">
-            <description>Create a Scala class</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewObjectWizard"
-            icon="icons/full/etool16/newobject_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Object"
-            id="org.scala-ide.sdt.core.wizards.newObject">
-            <description>Create a Scala object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewPackageObjectWizard"
-            icon="icons/full/etool16/newpackage_object_wiz.png"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Package Object"
-            id="org.scala-ide.sdt.core.wizards.newPackageObject">
-            <description>Create a Scala Package Object</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewTraitWizard"
-            icon="icons/full/etool16/newtrait_wiz.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Trait"
-            id="org.scala-ide.sdt.core.wizards.newTrait">
-            <description>Create a Scala trait</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
-      <wizard
-            class="org.scalaide.ui.internal.wizards.NewApplicationWizard"
-            icon="icons/full/etool16/scala_app.gif"
-            finalPerspective="org.scala-ide.sdt.core.perspective"
-            category="org.scala-ide.sdt.core.wizards"
-            project="false"
-            name="Scala Application"
-            id="org.scala-ide.sdt.core.wizards.newApplication">
-            <description>Create a Scala application</description>
-            <selection class="java.lang.Object"/>
-      </wizard>
    </extension>
    <extension
          point="org.eclipse.ui.ide.projectNatureImages">
@@ -381,6 +358,16 @@
          point="org.eclipse.core.resources.markers">
       <super type="org.eclipse.core.resources.problemmarker"/>
       <super type="org.eclipse.jdt.core.problem"/>
+      <persistent value="true"/>
+   </extension>
+
+   <extension
+         id="scalaVersionProblem"
+         name="Scala Version Problem"
+         point="org.eclipse.core.resources.markers">
+      <super type="org.eclipse.core.resources.problemmarker"/>
+      <super type="org.eclipse.jdt.core.problem"/>
+      <super type="org.scala-ide.sdt.core.classpathProblem"/>
       <persistent value="true"/>
    </extension>
 
@@ -427,8 +414,12 @@
       <type
             name="scala.tools.eclipse.semantichighlighting.implicits.implicitConversionsOrArgsAnnotation"/>
       <type
+            name="scala.tools.eclipse.semantichighlighting.custom.mutableCollectionsCallAnnotation"/>
+      <type
             markerType="org.scalaide.refactoring.extractionScope"
             name="org.scalaide.refactoring.extractionScope"/>
+
+      <type name="scala.tools.eclipse.semantichighlighting.callByNameParam.creationAnnotation"/>
    </extension>
 
    <extension
@@ -452,7 +443,45 @@
           verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.implicit.rulers.vertical"
           verticalRulerPreferenceValue="true">
      </specification>
-     <specification 
+     <specification
+         annotationType="scala.tools.eclipse.semantichighlighting.custom.mutableCollectionsCallAnnotation"
+         colorPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.color"
+         colorPreferenceValue="94,105,255"
+         contributesToHeader="false"
+         includeOnPreferencePage="true"
+         icon="icons/full/elcl16/mutable.gif"
+         label="Mutable collection calls"
+         overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.rulers.overview"
+         overviewRulerPreferenceValue="false"
+         presentationLayer="5"
+         symbolicIcon="info"
+         textPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.text"
+         textPreferenceValue="false"
+         textStylePreferenceKey="scala.tools.eclipse.ui.preferences.mutable.textStylePreference"
+         textStylePreferenceValue="SQUIGGLES"
+         verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.mutable.rulers.vertical"
+         verticalRulerPreferenceValue="false">
+	 </specification>
+     <specification
+          annotationType="scala.tools.eclipse.semantichighlighting.callByNameParam.creationAnnotation"
+          colorPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.color"
+          colorPreferenceValue="112,177,198"
+          contributesToHeader="false"
+          includeOnPreferencePage="true"
+          icon="icons/full/elcl16/create_call_by_name_param.png"
+          label="Create Scala By Name Param"
+          overviewRulerPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.overview"
+          overviewRulerPreferenceValue="false"
+          presentationLayer="5"
+          symbolicIcon="info"
+          textPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.text"
+          textPreferenceValue="true"
+          textStylePreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.textStylePreference"
+          textStylePreferenceValue="UNDERLINE"
+          verticalRulerPreferenceKey="scala.tools.eclipse.ui.preferences.callByNameParam.creation.rulers.vertical"
+          verticalRulerPreferenceValue="true">
+     </specification>
+     <specification
           annotationType="org.scalaide.refactoring.extractionScope"
           colorPreferenceKey="extractionScope.color"
           colorPreferenceValue="192,255,192"
@@ -503,18 +532,20 @@
          class="org.scalaide.core.internal.containers.ScalaLibraryClasspathContainerPage">
       </classpathContainerPage>
    </extension>
+   <extension point="org.eclipse.ui.ide.markerResolution">
+   <markerResolutionGenerator markerType="org.scala-ide.sdt.core.scalaVersionProblem" class="org.scalaide.core.internal.quickassist.BadScalaVersionMarkerResolver">
+   </markerResolutionGenerator>
+   <markerResolutionGenerator
+         class="org.scalaide.core.internal.quickassist.NoScalaLibraryMarkerResolver"
+         markerType="org.scala-ide.sdt.core.classpathProblem">
+   </markerResolutionGenerator>
+   </extension>
    <extension point="org.eclipse.debug.core.statusHandlers">
-        <statusHandler
-       id="Xsource"
-       class="org.scalaide.ui.internal.handlers.ClasspathErrorPromptStatusHandler"
+      <statusHandler
+       id="GenericHandler"
+       class="org.scalaide.ui.internal.handlers.GenericExceptionStatusHandler"
        plugin="org.scala-ide.sdt.core"
-       code="1001">
-     </statusHandler>
-     <statusHandler
-       id="MissingScalaRequirement"
-       class="org.scalaide.ui.internal.handlers.MissingScalaRequirementHandler"
-       plugin="org.scala-ide.sdt.core"
-       code="1002">
+       code="1010">
      </statusHandler>
      <statusHandler
        id="CompilerLaunchError"
@@ -708,6 +739,27 @@
 
 
     </objectContribution>
+	<objectContribution
+      id="org.scala-ide.sdt.ui.interperter.start"
+      objectClass="org.eclipse.jdt.core.IJavaElement">
+      <action
+        class="org.scalaide.ui.internal.actions.ScalaInstallationAction"
+        enablesFor="1"
+        menubarPath="org.scala-ide.sdt.core.popupMenu/content"
+        icon="icons/full/etool16/scala_app.gif"
+        id="org.scala-ide.sdt.ui.createInt"
+        label="Set the Scala Installation"
+        tooltip="Set the ScalaInstallation for the selected Project"/>
+
+      <visibility>
+        <and>
+          <objectState name="projectNature" value="org.scala-ide.sdt.core.scalanature"/>
+          <objectClass name="org.eclipse.jdt.core.IJavaProject"/>
+        </and>
+      </visibility>
+
+
+    </objectContribution>
     <objectContribution
           adaptable="true"
           id="org.scala-ide.sdt.core.addScalaLibrary"
@@ -795,7 +847,10 @@
   <extension
         point="org.eclipse.core.runtime.preferences">
      <initializer
-           class="org.scalaide.ui.internal.preferences.ColourPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.ResourcesPreferencePageInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ColorPreferenceInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.ScalaCompilerPreferenceInitializer">
@@ -810,7 +865,10 @@
            class="org.scalaide.ui.internal.preferences.ImplicitsPagePreferenceInitializer">
      </initializer>
      <initializer
-           class="org.scalaide.logging.ui.preferences.LoggingPreferencePageInitializer">
+           class="org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.logging.LoggingPreferencePageInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.PreferenceInitializer">
@@ -820,6 +878,15 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.migration.MigrationPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.HoverPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.AutoEditsPreferenceInitializer">
      </initializer>
   </extension>
 
@@ -921,6 +988,13 @@
       description="Debug Scala JUnit Test"
       id="org.eclipse.shortcut.scala.junit.debug"
       name="Debug Scala JUnit Test" />
+    <command
+          categoryId="scala.tools.eclipse.category"
+          defaultHandler="org.scalaide.ui.internal.actions.RestartPresentationCompilerAction"
+          description="Restarts the Presentation Compiler of the Scala project that belongs to the active selection"
+          id="org.scala-ide.sdt.core.restartScalaPresentationCompiler"
+          name="Restart Scala Presentation Compiler">
+    </command>
   </extension>
 
   <extension point="org.eclipse.ui.bindings">
@@ -964,9 +1038,6 @@
     <provider class="org.scalaide.core.internal.jdt.search.ScalaSourceIndexerFactory" />
   </extension>
 
-  <extension point="org.scala-ide.sdt.aspects.spellingengineprovider">
-    <provider class="org.scalaide.ui.internal.editor.ScalaSpellingEngineProvider" />
-  </extension>
 
   <extension point="org.scala-ide.sdt.aspects.openactionprovider">
     <provider class="org.scalaide.ui.internal.actions.hyperlinks.OpenActionProvider" />
@@ -985,39 +1056,6 @@
       class="org.scalaide.ui.internal.jdt.model.ScalaImageDescriptorSelector">
     </selector>
   </extension>
-  <extension
-        point="org.eclipse.jdt.ui.quickFixProcessors">
-     <quickFixProcessor
-           class="org.scalaide.core.internal.quickfix.ScalaQuickFixProcessor"
-           id="scala-plugin.quickFixProcessor1">
-        <enablement>
-          <with variable="projectNatures">
-             <iterate operator="or">
-                <or>
-                  <equals value="org.scala-ide.sdt.core.scalanature"/>
-                </or>
-             </iterate>
-          </with>
-        </enablement>
-     </quickFixProcessor>
-  </extension>
- <extension
-       point="org.eclipse.jdt.ui.quickAssistProcessors">
-    <quickAssistProcessor
-          class="org.scalaide.core.internal.quickfix.ScalaQuickAssistProcessor"
-          id="org.scala-ide.sdt.core.quickAssistProcessor"
-          name="Scala Quick Assist Processor">
-        <enablement>
-          <with variable="projectNatures">
-             <iterate operator="or">
-                <or>
-                  <equals value="org.scala-ide.sdt.core.scalanature"/>
-                </or>
-             </iterate>
-          </with>
-        </enablement>
-    </quickAssistProcessor>
- </extension>
 
   <!-- refactoring -->
 
@@ -1095,7 +1133,7 @@
          name="Toggle Implicits Display"/>
       <command
          categoryId="org.eclipse.debug.ui.category.run"
-         id="org.scalaide.core.handler.RunSelection"
+         id="org.scalaide.core.handler.RunSelectionInInterpreter"
          name="Send Selection to Scala Interpreter"/>
       <command
          categoryId="scala.tools.eclipse.category"
@@ -1128,6 +1166,145 @@
             name="Show Indent Guide">
       </command>
 </extension>
+  <extension
+        name="Quick Assists"
+        point="org.eclipse.ui.commands">
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Opens the Scala Quick Assist dialog"
+           id="org.scalaide.core.quickassist"
+           name="Scala Quick Assist">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to add abstract members"
+           id="org.scalaide.core.quickassist.ImplAbstractMembers"
+           name="Scala Quick Assist - Implement Abstract Members">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to add the return type"
+           id="org.scalaide.core.quickassist.ExplicitReturnType"
+           name="Scala Quick Assist - Explicit Return Type">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to extract expressions"
+           id="org.scalaide.core.quickassist.ExtractExpressions"
+           name="Scala Quick Assist - Extract Expressions">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to inline local expressions"
+           id="org.scalaide.core.quickassist.InlineLocal"
+           name="Scala Quick Assist - Inline Local">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to expand case class bindings in pattern matches"
+           id="org.scalaide.core.quickassist.ExpandCaseClassBinding"
+           name="Scala Quick Assist - Expand Case Class Binding">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to expand implicit conversion and arguments"
+           id="org.scalaide.core.quickassist.ExpandImplicits"
+           name="Scala Quick Assist - Expand Implicits">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to import a missing member"
+           id="org.scalaide.core.quickassist.ImportMissingMember"
+           name="Scala Quick Assist - Import Missing Member">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to create a class from a missing type error"
+           id="org.scalaide.core.quickassist.CreateClass"
+           name="Scala Quick Assist - Create Class">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to fix a type mismatch error"
+           id="org.scalaide.core.quickassist.FixTypeMismatch"
+           name="Scala Quick Assist - Fix Type Mismatch">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to create a method from a value not found error"
+           id="org.scalaide.core.quickassist.CreateMethod"
+           name="Scala Quick Assist - Create Method">
+     </command>
+     <command
+           categoryId="scala.tools.eclipse.category"
+           defaultHandler="org.scalaide.core.internal.quickassist.QuickAssistHandler"
+           description="Shows a proposal to change the case of an identifier"
+           id="org.scalaide.core.quickassist.ChangeCase"
+           name="Scala Quick Assist - Change Case">
+     </command>
+  </extension>
+ <extension
+       point="org.scala-ide.sdt.core.quickAssists">
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType"
+          id="org.scalaide.core.quickassist.ExplicitReturnType">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.abstractimpl.ImplAbstractMembers"
+          id="org.scalaide.core.quickassist.ImplAbstractMembers">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.extract.ExtractExpressions"
+          id="org.scalaide.core.quickassist.ExtractExpressions">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.inline.InlineLocal"
+          id="org.scalaide.core.quickassist.InlineLocal">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.expand.ExpandCaseClassBinding"
+          id="org.scalaide.core.quickassist.ExpandCaseClassBinding">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.expand.ExpandImplicits"
+          id="org.scalaide.core.quickassist.ExpandImplicits">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.ImportMissingMember"
+          id="org.scalaide.core.quickassist.ImportMissingMember">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.CreateClass"
+          id="org.scalaide.core.quickassist.CreateClass">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.FixTypeMismatch"
+          id="org.scalaide.core.quickassist.FixTypeMismatch">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.createmethod.CreateMethod"
+          id="org.scalaide.core.quickassist.CreateMethod">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.changecase.ChangeCase"
+          id="org.scalaide.core.quickassist.ChangeCase">
+    </quickAssist>
+    <quickAssist
+          class="org.scalaide.core.internal.quickassist.FixSpellingMistake"
+          id="org.scalaide.core.quickassist.FixSpellingMistake">
+    </quickAssist>
+ </extension>
 
    <extension point="org.eclipse.ui.contexts">
      <context name="Editing Scala Source"
@@ -1165,16 +1342,6 @@
    		 schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
    		 contextId="scala.tools.eclipse.scalaEditorScope"
    		 sequence="M2+M3+R"/>
-   <key
-         commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
-         contextId="scala.tools.eclipse.scalaEditorScope"
-         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M2+M1+W T"/>
-   <key
-         commandId="scala.tools.eclipse.editor.OpenImplicit"
-         contextId="scala.tools.eclipse.scalaEditorScope"
-         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-         sequence="M3+F3"/>
    </extension>
    <extension point="org.eclipse.ui.bindings"> <!-- Cross-platform bindings -->
    <key
@@ -1188,10 +1355,28 @@
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+I"/>
    <key
-       commandId="org.scalaide.core.handler.RunSelection"
+       commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
        schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
        contextId="scala.tools.eclipse.scalaEditorScope"
        sequence="M1+M2+X"/>
+   <key
+         commandId="scala.tools.eclipse.editor.ShowTypeOfSelection"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M1+M2+Q">
+   </key>
+   <key
+         commandId="scala.tools.eclipse.editor.OpenImplicit"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M3+F3">
+   </key>
+   <key
+         commandId="org.scalaide.core.quickassist"
+         contextId="scala.tools.eclipse.scalaEditorScope"
+         schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+         sequence="M1+1">
+   </key>
    </extension>
 
   <!-- templates -->
@@ -1204,6 +1389,9 @@
     </contextType>
     <include
         file="templates/default-templates.xml">
+    </include>
+    <include
+          file="templates/wizard-templates.xml">
     </include>
   </extension>
 
@@ -1277,10 +1465,10 @@
           class="org.scalaide.refactoring.internal.MoveConstructorToCompanionObject"
           commandId="org.scalaide.refactoring.MoveConstructorToCompanionObject">
     </handler>
-    <handler
-          class="org.scalaide.ui.internal.actions.RunSelection"
-          commandId="org.scalaide.core.handler.RunSelection">
-    </handler>
+	<handler
+		class="org.scalaide.ui.internal.actions.RunSelectionInInterpreter"
+		commandId="org.scalaide.core.handler.RunSelectionInInterpreter">
+	</handler>
  </extension>
  <extension
        point="org.eclipse.ui.menus">
@@ -1316,7 +1504,7 @@
                 style="toggle">
           </command>
           <command
-                commandId="org.scalaide.core.handler.RunSelection"
+                commandId="org.scalaide.core.handler.RunSelectionInInterpreter"
                 disabledIcon="icons/full/dtool16/run_interpreter.gif"
                 icon="icons/full/etool16/run_interpreter.gif"
                 label="Run Selection in Scala Interpreter"
@@ -1547,14 +1735,6 @@
     </javaCompletionProposalComputer>
  </extension>
  <extension
-       point="org.scala-ide.sdt.core.reconciliationParticipants">
-    <participant
-          class="org.scalaide.ui.internal.editor.decorators.semantichighlighting.ImplicitHighlighter"
-          id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
-          name="Semantic Highlighting">
-    </participant>
- </extension>
- <extension
        point="org.eclipse.ltk.core.refactoring.moveParticipants">
     <moveParticipant
           class="org.scalaide.refactoring.internal.move.ScalaMoveParticipant"
@@ -1597,5 +1777,122 @@
           Shows Scala specific icons
        </description>
     </decorator>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.fileCreator">
+    <fileCreator
+          class="org.scalaide.ui.wizards.ClassCreator"
+          description="Create a Scala Class"
+          icon="icons/full/etool16/newclass_wiz.gif"
+          id="org.scalaide.ui.wizards.classCreator"
+          name="Scala Class"
+          templateId="org.scalaide.core.templates.wizards.class">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.TraitCreator"
+          description="Create a Scala Trait"
+          icon="icons/full/etool16/newtrait_wiz.gif"
+          id="org.scalaide.ui.wizards.traitCreator"
+          name="Scala Trait"
+          templateId="org.scalaide.core.templates.wizards.trait">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.ObjectCreator"
+          description="Create a Scala Object"
+          icon="icons/full/etool16/newobject_wiz.gif"
+          id="org.scalaide.ui.wizards.objectCreator"
+          name="Scala Object"
+          templateId="org.scalaide.core.templates.wizards.object">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.PackageObjectCreator"
+          description="Create a Scala Package Object"
+          icon="icons/full/etool16/newpackage_object_wiz.png"
+          id="org.scalaide.ui.wizards.packageObjectCreator"
+          name="Scala Package Object"
+          templateId="org.scalaide.core.templates.wizards.packageObject">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.AppCreator"
+          description="Create a Scala App"
+          icon="icons/full/etool16/scala_app.gif"
+          id="org.scalaide.ui.wizards.appCreator"
+          name="Scala App"
+          templateId="org.scalaide.core.templates.wizards.app">
+    </fileCreator>
+    <fileCreator
+          class="org.scalaide.ui.wizards.EmptyFileCreator"
+          description="Creates an empty file"
+          icon="icons/full/etool16/newfile_wiz.gif"
+          id="org.scalaide.ui.wizards.empty"
+          name="Empty File"
+          templateId="org.scalaide.core.templates.wizards.empty">
+    </fileCreator>
+ </extension>
+ <extension
+       point="org.eclipse.ui.themes">
+    <themeElementCategory
+          id="org.scalaide.ui.theme"
+          label="Scala">
+       <description>
+          Scala IDE related fonts and colors.
+       </description>
+    </themeElementCategory>
+    <fontDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.font.hover"
+          label="Hover Font">
+       <description>
+          The font used for all Scala hovers.
+       </description>
+    </fontDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterForeground"
+          label="Interpreter foreground color"
+          value="60,0,128">
+       <description>
+          The color used for the Scala Interpreter foreground.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterBackground"
+          label="Interpreter background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter background.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.interpreterErrorForeground"
+          label="Interpreter error foreground color"
+          value="128,0,64">
+       <description>
+          The color used for the Scala Interpreter foreground to display errors.
+       </description>
+    </colorDefinition>
+    <colorDefinition
+          categoryId="org.scalaide.ui.theme"
+          id="org.scalaide.ui.color.lineNumberBackground"
+          label="Interpreter line number background color"
+          value="230,230,230">
+       <description>
+          The color used for the Scala Interpreter line number background.
+       </description>
+    </colorDefinition>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.semanticHighlightingParticipants">
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingParticipant">
+    </participant>
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.custom.MutableCollectionCallHighlightingParticipant">
+    </participant>
+    <participant
+          class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
+    </participant>
  </extension>
 </plugin>

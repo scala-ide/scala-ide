@@ -28,7 +28,7 @@ public class TestJavaExtends extends ClassA {
         x=ge/*!*/
     }
 
-    privite void bar5() {
+    private void bar5() {
         ge/*!*/;
     }
 

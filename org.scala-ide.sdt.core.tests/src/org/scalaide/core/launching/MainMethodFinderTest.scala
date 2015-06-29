@@ -1,7 +1,7 @@
 package org.scalaide.core
 package launching
 
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
 import org.junit.After
@@ -14,40 +14,39 @@ class MainMethodFinderTest {
 
   private final val TestProjectName = "launchable"
 
-  private val simulator = new EclipseUserSimulator
   private var projectSetup: TestProjectSetup = _
 
   @Before
-  def createProject() {
-    val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
+  def createProject(): Unit = {
+    val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
     }
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
-  def project: ScalaProject = projectSetup.project
+  def project: IScalaProject = projectSetup.project
 
   @Test
-  def findMainMethods() {
+  def findMainMethods(): Unit = {
     val cu = projectSetup.createSourceFile("test", "MyMain.scala") {
       """
         |package test
         |
         |object OuterWithWronMain {
-        |  def main(args: Seq[String]) {} // not Array[String]
+        |  def main(args: Seq[String]): Unit = {} // not Array[String]
         |}
         |
         |object OuterWithGoodMain {
-        |  def main(args: Array[String]) {}
+        |  def main(args: Array[String]): Unit = {}
         |}
         |
         |class ClassWithGoodMain {
-        |  def main(args: Array[String]) {}  // it's a class, should not be reported
+        |  def main(args: Array[String]): Unit = {}  // it's a class, should not be reported
         |}
         |
         |object ObjectExtendsApp extends App {} // should be reported
@@ -58,7 +57,7 @@ class MainMethodFinderTest {
       """.stripMargin
     }
 
-    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).toList.map(_.getElementName)
+    val mainClasses = ScalaLaunchShortcut.getMainMethods(cu).map(_.getElementName)
     Assert.assertEquals("main classes found.", Set("OuterWithGoodMain$", "ObjectExtendsApp$"), mainClasses.toSet)
   }
 }

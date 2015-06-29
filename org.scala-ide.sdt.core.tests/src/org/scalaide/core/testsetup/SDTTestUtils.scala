@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.TimeoutException
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -17,8 +18,9 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.scalaide.util.internal.eclipse.OSGiUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.scalaide.util.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -29,40 +31,61 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IClasspathEntry
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.IScalaProject
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.core.runtime.NullProgressMonitor
+import scala.collection.mutable.ArrayBuffer
+import org.eclipse.jdt.launching.JavaRuntime
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.project.ScalaProject
 
-/** Utility functions for setting up test projects.
+/**
+ * Utility functions for setting up test projects.
  *
  */
 object SDTTestUtils extends HasLogger {
 
+  enableAutoBuild(false)
+  // Be nice to Mac users and use a default encoding other than MacRoman
+  InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).put(ResourcesPlugin.PREF_ENCODING, "UTF-8")
+
+  lazy val workspace = ResourcesPlugin.getWorkspace
+
   def sourceWorkspaceLoc(bundleName: String): IPath = {
-    val bundle = Platform.getBundle(bundleName) //"org.scala-ide.sdt.core.tests"
+    val bundle = Platform.getBundle(bundleName)
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
   }
 
   /** Enable workspace auto-building */
-  def enableAutoBuild(enable: Boolean) {
+  def enableAutoBuild(enable: Boolean): Unit = {
     // auto-building is on
-    val desc = SDTTestUtils.workspace.getDescription
+    val desc = workspace.getDescription
     desc.setAutoBuilding(enable)
-    SDTTestUtils.workspace.setDescription(desc)
+    workspace.setDescription(desc)
   }
 
-  enableAutoBuild(false)
-
   /** Return the Java problem markers corresponding to the given compilation unit. */
-  def findProblemMarkers(unit: ICompilationUnit) =
+  def findProblemMarkers(unit: ICompilationUnit): Array[IMarker] =
     unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
 
-  lazy val workspace = ResourcesPlugin.getWorkspace
+  def findProjectProblemMarkers(project: IProject, types: String*): Seq[IMarker] =
+    for {
+      typ <- types
+      markers <- project.findMarkers(typ, false, IResource.DEPTH_INFINITE)
+    } yield markers
 
-  /** Setup the project in the target workspace. The 'name' project should
+  def markersMessages(markers: List[IMarker]): List[String] =
+    markers.map(_.getAttribute(IMarker.MESSAGE).asInstanceOf[String])
+
+  /**
+   * Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
-  def setupProject(name: String, bundleName: String): ScalaProject = {
+  def setupProject(name: String, bundleName: String): IScalaProject =
+    internalSetupProject(name, bundleName)
+
+  private[core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
@@ -72,12 +95,14 @@ object SDTTestUtils extends HasLogger {
       val project = workspace.getRoot.getProject(name)
       project.create(null)
       project.open(null)
+      project.setDefaultCharset("UTF-8", /*progressMonitor =*/ null)
       JavaCore.create(project)
     }
-    ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(name))
+    ScalaPlugin().getScalaProject(workspace.getRoot.getProject(name))
   }
 
-  /** Return all positions (offsets) of the given str in the given source file.
+  /**
+   * Return all positions (offsets) of the given str in the given source file.
    */
   def positionsOf(source: Array[Char], str: String): Seq[Int] = {
     val buf = new mutable.ListBuffer[Int]
@@ -89,7 +114,8 @@ object SDTTestUtils extends HasLogger {
     buf.toList
   }
 
-  /** Return all positions and the number in the given marker. The marker is
+  /**
+   * Return all positions and the number in the given marker. The marker is
    *  wrapped by /**/, and the method returns matches for /*[0-9]+*/, as a sequence
    *  of pairs (offset, parsedNumber)
    */
@@ -104,7 +130,7 @@ object SDTTestUtils extends HasLogger {
     buf.toSeq
   }
 
-  def deleteRecursive(d: File) {
+  def deleteRecursive(d: File): Unit = {
     if (d.exists) {
       val filesOpt = Option(d.listFiles)
       for (files <- filesOpt; file <- files)
@@ -125,14 +151,15 @@ object SDTTestUtils extends HasLogger {
     result
   }
 
-  def deleteTempDirs() {
+  def deleteTempDirs(): Unit = {
     val userHome = new File(System.getProperty("user.home")).getAbsolutePath
     val rootDir = new File(userHome, "SDTCoreTestTempDir")
     if (rootDir.exists)
       deleteRecursive(rootDir)
   }
 
-  /** Add a new file to the given project. The given path is relative to the
+  /**
+   * Add a new file to the given project. The given path is relative to the
    *  project.
    *
    *  The file must not exist.
@@ -183,14 +210,14 @@ object SDTTestUtils extends HasLogger {
   }
 
   def createProjectInLocalFileSystem(parentFile: File, projectName: String): IProject = {
-    val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)
+    val project = workspace.getRoot.getProject(projectName)
     if (project.exists)
       project.delete(true, null)
     val testFile = new File(parentFile, projectName)
     if (testFile.exists)
       deleteRecursive(testFile)
 
-    val desc = ResourcesPlugin.getWorkspace.newProjectDescription(projectName)
+    val desc = workspace.newProjectDescription(projectName)
     desc.setLocation(new Path(new File(parentFile, projectName).getPath))
     project.create(desc, null)
     project.open(null)
@@ -218,35 +245,41 @@ object SDTTestUtils extends HasLogger {
     }
   }
 
-  val simulator = new EclipseUserSimulator
-
-
-  def createSourcePackage(name: String)(project: ScalaProject): IPackageFragment =
+  def createSourcePackage(name: String)(project: IScalaProject): IPackageFragment =
     project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
 
-  def addToClasspath(prj: ScalaProject, entries: IClasspathEntry*) {
+  def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String, force: Boolean = false): ICompilationUnit = {
+    BlockingProgressMonitor.waitUntilDone(pack.createCompilationUnit(name, sourceCode, force, _))
+  }
+
+  def addToClasspath(prj: IScalaProject, entries: IClasspathEntry*): Unit = {
     val existing = prj.javaProject.getRawClasspath
     prj.javaProject.setRawClasspath(existing ++ entries, null)
   }
 
   /** Create Scala projects, equiped with the Scala nature, Scala library container and a '/src' folder. */
-  def createProjects(names: String*): Seq[ScalaProject] =
-    names map (n => simulator.createProjectInWorkspace(n, true))
+  def createProjects(names: String*): Seq[IScalaProject] =
+    names map (n => createProjectInWorkspace(n, true))
 
-  def deleteProjects(projects: ScalaProject*) {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
+  private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
+    names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
+
+  def deleteProjects(projects: IScalaProject*): Unit = {
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
       projects foreach (_.underlying.delete(true, null))
     }
   }
 
   /** Wait until `pred` is true, or timeout (in ms). */
-  def waitUntil(timeout: Int)(pred: => Boolean) {
+  def waitUntil(timeout: Int, withTimeoutException: Boolean = false)(pred: => Boolean): Unit = {
     val start = System.currentTimeMillis()
     var cond = pred
     while ((System.currentTimeMillis() < start + timeout) && !cond) {
       Thread.sleep(100)
       cond = pred
     }
+    if (!cond && withTimeoutException)
+      throw new TimeoutException(s"Predicate is not fulfiled after declared time limit ($timeout millis).")
   }
 
   /**
@@ -266,20 +299,88 @@ object SDTTestUtils extends HasLogger {
    * }
    * }}}
    */
-  def testWithCompiler[A](testProjectName: String)(f: ScalaPresentationCompiler => A) = {
+  def testWithCompiler[A](testProjectName: String)(f: IScalaPresentationCompiler => A): Unit = {
     var projectSetup: TestProjectSetup = null
 
     try {
-      val simulator = new EclipseUserSimulator
-      val scalaProject = simulator.createProjectInWorkspace(testProjectName, withSourceRoot = true)
+      val scalaProject = createProjectInWorkspace(testProjectName, withSourceRoot = true)
 
       projectSetup = new TestProjectSetup(testProjectName) {
         override lazy val project = scalaProject
       }
       projectSetup.project.presentationCompiler { c => f(c) }
-    }
-    finally EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
-      projectSetup.project.underlying.delete(true, null)
-    }
+    } finally deleteProjects(projectSetup.project)
   }
+
+  /**
+   * Create a project in the current workspace. If `withSourceRoot` is true,
+   *  it creates a source folder called `src`.
+   */
+  def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): IScalaProject =
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
+
+  def createProjectInWorkspace(projectName: String, withSrcOutputStructure: SrcPathOutputEntry): IScalaProject =
+    internalCreateProjectInWorkspace(projectName, withSrcOutputStructure)
+
+  type SrcPathOutputEntry = (IProject, IJavaProject) => Seq[IClasspathEntry]
+
+  private def withNoSourceRoot: SrcPathOutputEntry = (_, _) => Seq.empty[IClasspathEntry]
+
+  private def withSourceRootOnly: SrcPathOutputEntry = (thisProject, correspondingJavaProject) => {
+    val sourceFolder = thisProject.getFolder("/src")
+    sourceFolder.create( /* force = */ false, /* local = */ true, /* monitor = */ null)
+    val root = correspondingJavaProject.getPackageFragmentRoot(sourceFolder)
+    Seq(JavaCore.newSourceEntry(root.getPath()))
+  }
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean): ScalaProject =
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
+
+  final def createJavaProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): IJavaProject = {
+    val workspaceRoot = workspace.getRoot()
+    val project = workspaceRoot.getProject(projectName)
+    project.create(null)
+    project.open(null)
+
+    val description = project.getDescription()
+    description.setNatureIds(Array(JavaCore.NATURE_ID))
+    project.setDescription(description, null)
+
+    val javaProject = JavaCore.create(project)
+    javaProject.setOutputLocation(new Path("/" + projectName + "/bin"), null)
+
+    val entries = new ArrayBuffer[IClasspathEntry]()
+    entries += JavaRuntime.getDefaultJREContainerEntry()
+
+    entries ++= withSourceFolders(project, javaProject)
+
+    javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
+    javaProject
+  }
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): ScalaProject = {
+    def withScalaFolders(project: IProject, jProject: IJavaProject) =
+      withSourceFolders(project, jProject) ++ Seq(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
+    def addScalaNature(project: IProject) = {
+      val description = project.getDescription
+      description.setNatureIds(SdtConstants.NatureId +: description.getNatureIds)
+      project.setDescription(description, null)
+      project
+    }
+
+    ScalaPlugin().getScalaProject(addScalaNature(createJavaProjectInWorkspace(projectName, withScalaFolders).getProject))
+  }
+
+  def withWorkspacePreference[A](name: String, value: Boolean)(thunk: => A): A = {
+    val store = ScalaPlugin().getPreferenceStore
+    val old = store.getBoolean(name)
+    try {
+      store.setValue(name, value)
+      thunk
+    } finally
+      store.setValue(name, old)
+  }
+
+  def buildWorkspace(): Unit =
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
 }

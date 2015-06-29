@@ -20,8 +20,7 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings.BooleanSettingWithDefault
+import org.scalaide.util.eclipse.EclipseUtils
 
 trait EclipseSettings {
   self: ScalaPluginPreferencePage =>
@@ -29,7 +28,7 @@ trait EclipseSettings {
   object EclipseSetting {
     /** Function to map a Scala compiler setting to an Eclipse plugin setting */
     private def apply(setting: Settings#Setting): EclipseSetting = setting match {
-      case setting: ScalaPluginSettings.BooleanSettingWithDefault => new CheckBoxSetting(setting)
+      case setting: ScalaPluginSettings.BooleanSettingWithDefault => new CheckBoxSettingWithDefault(setting)
       case setting: Settings#BooleanSetting => new CheckBoxSetting(setting)
       case setting: Settings#IntSetting     => new IntegerSetting(setting)
       case setting: Settings#StringSetting =>
@@ -37,7 +36,6 @@ trait EclipseSettings {
           case "-Ypresentation-log" | "-Ypresentation-replay" => new FileSetting(setting)
           case _ => new StringSetting(setting)
         }
-      //    case setting : Settings#PhasesSetting  => new StringSetting(setting) // !!!
       case setting: Settings#MultiStringSetting =>
         setting.name match {
           case "-Xplugin" => new MultiFileSetting(setting)
@@ -76,7 +74,7 @@ trait EclipseSettings {
       control.setEnabled(value)
     }
 
-    def addTo(page: Composite) {
+    def addTo(page: Composite): Unit = {
       val label = new Label(page, SWT.NONE)
       label.setText(SettingConverterUtil.convertNameToProperty(setting.name))
       createControl(page)
@@ -85,29 +83,25 @@ trait EclipseSettings {
     }
 
     /** Create the control on the page */
-    def createControl(page: Composite)
+    def createControl(page: Composite): Unit
     def isChanged: Boolean
 
     /** Reset the control to a default value */
-    def reset()
+    def reset(): Unit
 
     /** Apply the value of the control */
-    def apply()
+    def apply(): Unit
 
     override def toString() = s"${setting.name}($isChanged) = ${setting.value}"
   }
 
   /** Boolean setting controlled by a checkbox.
    */
-  private class CheckBoxSetting(setting: Settings#BooleanSetting, default: => Boolean = false)
+  private class CheckBoxSetting(setting: Settings#BooleanSetting)
     extends EclipseSetting(setting) {
     var control: Button = _
 
-    def this(setting: BooleanSettingWithDefault) = {
-      this(setting, setting.default)
-    }
-
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Button(page, SWT.CHECK)
       control.setSelection(setting.value)
       control.addSelectionListener(
@@ -116,9 +110,29 @@ trait EclipseSettings {
 
     def isChanged = !setting.value.equals(control.getSelection)
 
-    def reset() { control.setSelection(default) }
+    def reset(): Unit = { control.setSelection(false) }
 
-    def apply() { setting.value = control.getSelection }
+    def apply(): Unit = { setting.value = control.getSelection }
+  }
+
+  /** Boolean setting controlled by a checkbox, with a custom default value.
+   *  (copy of CheckBoxSetting, with a different reset)
+   */
+  private class CheckBoxSettingWithDefault(setting: ScalaPluginSettings.BooleanSettingWithDefault) extends EclipseSetting(setting) {
+    var control: Button = _
+
+    def createControl(page: Composite): Unit = {
+      control = new Button(page, SWT.CHECK)
+      control.setSelection(setting.value)
+      control.addSelectionListener(
+        SelectionListenerSing)
+    }
+
+    def isChanged = !setting.value.equals(control.getSelection)
+
+    def reset(): Unit = { control.setSelection(setting.default) }
+
+    def apply(): Unit = { setting.value = control.getSelection }
   }
 
   /** Integer setting editable using a text field.
@@ -127,20 +141,20 @@ trait EclipseSettings {
     extends EclipseSetting(setting) {
     var control: Text = _
 
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setLayoutData(data)
       control.setText(setting.value.toString)
       control.addListener(SWT.Verify, new Listener {
-        def handleEvent(e: Event) { if (e.text.exists(c => c < '0' || c > '9')) e.doit = false }
+        def handleEvent(e: Event): Unit = { if (e.text.exists(c => c < '0' || c > '9')) e.doit = false }
       })
       control.addModifyListener(ModifyListenerSing)
     }
 
     def isChanged = setting.value.toString != control.getText
 
-    def reset() { control.setText(setting.default.toString) }
-    def apply() {
+    def reset(): Unit = { control.setText(setting.default.toString) }
+    def apply(): Unit = {
       setting.value = try {
         control.getText.toInt
       } catch {
@@ -154,7 +168,7 @@ trait EclipseSettings {
   private class StringSetting(setting: Settings#StringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value)
       val layout = new GridData()
@@ -168,8 +182,8 @@ trait EclipseSettings {
      */
 
     def isChanged = setting.value != control.getText
-    def reset() { control.setText(setting.default) }
-    def apply() { setting.value = control.getText }
+    def reset(): Unit = { control.setText(setting.default) }
+    def apply(): Unit = { setting.value = control.getText }
   }
 
   /** Multi string setting editable using a text field.
@@ -177,7 +191,7 @@ trait EclipseSettings {
   private class MultiStringSetting(setting: Settings#MultiStringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       val layout = new GridData()
       layout.widthHint = 200
@@ -190,8 +204,8 @@ trait EclipseSettings {
       control.getText().split(',').map(_.trim).toList
 
     def isChanged = setting.value != values
-    def reset() { control.setText("") }
-    def apply() { setting.value = values }
+    def reset(): Unit = { control.setText("") }
+    def apply(): Unit = { setting.value = values }
   }
 
   /** Text setting selectable using a drop down combo box.
@@ -199,7 +213,7 @@ trait EclipseSettings {
   private class ComboSetting(setting: Settings#ChoiceSetting)
     extends EclipseSetting(setting) {
     var control: Combo = _
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Combo(page, SWT.DROP_DOWN | SWT.READ_ONLY)
       control.setLayoutData(data)
       setting.choices.foreach(control.add)
@@ -208,8 +222,8 @@ trait EclipseSettings {
     }
 
     def isChanged = setting.value != control.getText
-    def reset() { control.setText(setting.default) }
-    def apply() { setting.value = control.getText }
+    def reset(): Unit = { control.setText(setting.default) }
+    def apply(): Unit = { setting.value = control.getText }
   }
 
   /** String setting editable using a File dialog.
@@ -220,7 +234,7 @@ trait EclipseSettings {
   private class FileSetting(setting: Settings#StringSetting)
     extends EclipseSetting(setting) {
     var control: Text = _
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value)
       val layout = new GridData()
@@ -231,13 +245,13 @@ trait EclipseSettings {
     }
 
     def isChanged = setting.value != fileName(control.getText)
-    def reset() { control.setText(setting.default) }
-    def apply() { setting.value = fileName(control.getText) }
+    def reset(): Unit = { control.setText(setting.default) }
+    def apply(): Unit = { setting.value = fileName(control.getText) }
   }
 
   private class MultiFileSetting(setting: Settings#MultiStringSetting) extends EclipseSetting(setting) {
     var control: Text = _
-    def createControl(page: Composite) {
+    def createControl(page: Composite): Unit = {
       control = new Text(page, SWT.SINGLE | SWT.BORDER)
       control.setText(setting.value.mkString(", "))
       val layout = data
@@ -252,20 +266,20 @@ trait EclipseSettings {
     }
 
     override def isChanged = setting.value != fileNames()
-    override def reset() { control.setText("") }
-    override def apply() { setting.value = fileNames() }
+    override def reset(): Unit = { control.setText("") }
+    override def apply(): Unit = { setting.value = fileNames() }
   }
 
   /** Return an absolute path denoted by 'name'. If 'name' is already absolute,
    *  it returns 'name', otherwise it prepends the absolute path to the workspace.
    */
   private def fileName(name: String) = {
-    import org.scalaide.core.ScalaPlugin
+    import org.scalaide.core.IScalaPlugin
     import java.io.File
 
     val f = new File(name)
     if (name.nonEmpty && !f.isAbsolute) {
-      val workspacePath = ScalaPlugin.plugin.workspaceRoot.getLocation
+      val workspacePath = EclipseUtils.workspaceRoot.getLocation
       new File(workspacePath.toFile, name).getAbsolutePath
     } else name
   }

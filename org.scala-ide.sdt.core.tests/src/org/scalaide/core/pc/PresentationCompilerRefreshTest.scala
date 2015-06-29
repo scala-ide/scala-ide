@@ -3,7 +3,7 @@ package pc
 
 import org.junit.Test
 import org.eclipse.core.resources.IFile
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
 import testsetup._
 
 object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") with CustomAssertion
@@ -11,11 +11,11 @@ object PresentationCompilerRefreshTest extends TestProjectSetup("pc_refresh") wi
 class PresentationCompilerRefreshTest {
   import PresentationCompilerRefreshTest._
 
-  @Test def removeExistingFileAndChangeReferenceToNewFile() {
+  @Test def removeExistingFileAndChangeReferenceToNewFile(): Unit = {
     val unitA = scalaCompilationUnit("a/A.scala")
 
-    unitA.doWithSourceFile { (sf, comp) =>
-      comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
+    unitA.scalaProject.presentationCompiler { comp =>
+      comp.askReload(unitA, unitA.lastSourceMap().sourceFile).get // synchronize with the presentation compiler
     }
 
     assertNoErrors(unitA)
@@ -25,8 +25,8 @@ class PresentationCompilerRefreshTest {
       SDTTestUtils.changeContentOfFile(unitA.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], new_A_scala)
     }
 
-    unitA.doWithSourceFile { (sf, comp) =>
-      comp.askReload(unitA, unitA.getContents()).get // synchronize with the presentation compiler
+    unitA.scalaProject.presentationCompiler { comp =>
+      comp.askReload(unitA, unitA.lastSourceMap().sourceFile).get // synchronize with the presentation compiler
     }
 
     assertNoErrors(unitA)

@@ -15,7 +15,6 @@ import com.sun.jdi.request.StepRequest
 case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) extends HasLogger {
 
   private var watchedMessage: Option[ObjectReference] = None
-  private val senderFrameLocation = thread.threadRef.frame(0).location
 
   val programSends = List(
     AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
@@ -30,7 +29,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   private var stepRequests = Set[EventRequest]()
   private var steps = 0
 
-  def step() {
+  def step(): Unit = {
     sendRequests = programSends.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor, thread.threadRef)).toSet
     receiveRequests = programReceives.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
     internalActor.start()
@@ -39,8 +38,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   }
 
   object internalActor extends BaseDebuggerActor {
-    import scala.collection.JavaConverters._
-
     private def interceptMessage(ev: BreakpointEvent): Boolean = {
       // only intercept messages going out from the current thread and frame (no messages sent by methods below us)
       println(s"GENERAL SEND: ${ev.thread.frame(0).getArgumentValues()} THREAD: ${ev.thread.name()} looking for thread: ${thread.threadRef.name}: ${ev.thread == thread.threadRef}")
@@ -114,7 +111,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       case _ => reply(false)
     }
 
-    private def deleteSendRequests() {
+    private def deleteSendRequests(): Unit = {
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
@@ -126,7 +123,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       sendRequests = Set()
     }
 
-    private def disable() {
+    private def disable(): Unit = {
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 

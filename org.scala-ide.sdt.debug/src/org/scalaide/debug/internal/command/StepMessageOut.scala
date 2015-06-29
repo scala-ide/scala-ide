@@ -10,7 +10,7 @@ import org.eclipse.jface.viewers.IStructuredSelection
 import org.scalaide.debug.internal.model.ScalaStackFrame
 
 class StepMessageOut extends AbstractHandler {
-  def execute(event: ExecutionEvent): Object = {
+  override def execute(event: ExecutionEvent): Object = {
     val window = HandlerUtil.getActiveWorkbenchWindow(event)
     val service = DebugUITools.getDebugContextManager().getContextService(window)
     val selection = service.getActiveContext()
@@ -26,12 +26,7 @@ class StepMessageOut extends AbstractHandler {
     null
   }
 
-  override def setEnabled(context: Object) {
-  }
+  override def setEnabled(context: Object): Unit = ()
 
-  @volatile
-  private var enabled = true
-  override def isEnabled() = {
-    enabled
-  }
+  override def isEnabled() = true
 }

@@ -9,9 +9,9 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import testsetup.SDTTestUtils
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.junit.Before
 
 /** Test simple operations involving the source and output
@@ -20,28 +20,24 @@ import org.junit.Before
 class OutputFoldersTest {
   val NoContent: String = ""
 
-  val simulator = new EclipseUserSimulator
-
-  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
-  @Before def setupBuild() {
+  @Before def setupBuild(): Unit = {
     SDTTestUtils.enableAutoBuild(false)
   }
 
-
-  @Test def defaultOutputDirectory() {
+  @Test def defaultOutputDirectory(): Unit = {
     val projectName = "test-simple-output-projects"
-    val project = simulator.createProjectInWorkspace(projectName)
+    val project = SDTTestUtils.createProjectInWorkspace(projectName)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/bin".format(projectName))), project.outputFolders)
     project.javaProject.setOutputLocation(new Path("/%s/other-bin".format(projectName)), null)
     Assert.assertEquals("Default output directory", Seq(new Path("/%s/other-bin".format(projectName))), project.outputFolders)
 
-    val Seq((srcPath, _)) = project.sourceOutputFolders
+    val Seq((srcPath, _)) = project.sourceOutputFolders.toSeq
     Assert.assertEquals("Source path", new Path("/%s/src".format(projectName)), srcPath.getFullPath())
   }
 
-  @Test def multipleOutputDirs() {
+  @Test def multipleOutputDirs(): Unit = {
     val projectName = "test-simple-output-projects-2"
     val srcMain = new Path("/" +projectName + "/src/main/scala")
     val targetMain = new Path("/" +projectName + "/target/classes")
@@ -59,8 +55,7 @@ class OutputFoldersTest {
     Assert.assertEquals("Sources", Seq(targetMain, targetTest), outputs)
   }
 
-
-  @Test def missingSourceDirectory() {
+  @Test def missingSourceDirectory(): Unit = {
     val projectName = "missingSources"
     val srcMain = new Path("/" +projectName + "/src/main/scala")
     val targetMain = new Path("/" +projectName + "/target/classes")
@@ -86,11 +81,10 @@ class OutputFoldersTest {
     Assert.assertEquals("Outputs", Seq(targetMain), outputs)
   }
 
-
   /** Create a project with the specified source folders, inclusion and exclusion patterns */
-  private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): ScalaProject = {
+  private def makeProject(name: String, sourceFolders: (IPath, Array[IPath], Array[IPath], IPath)*): IScalaProject = {
 
-    val project = simulator.createProjectInWorkspace(name, sourceFolders.isEmpty)
+    val project = SDTTestUtils.createProjectInWorkspace(name, sourceFolders.isEmpty)
 
     val srcEntries =
       for ((dirPath, inclPats, exclPats, binPath) <- sourceFolders) yield {
@@ -104,10 +98,9 @@ class OutputFoldersTest {
     project
   }
 
-
   /** Ensure that given folder exists in Eclipse workspace */
-  private def ensureFolderExists(top: IContainer, path: IPath) {
-    def ensureFolderExists(container: IContainer, segments: List[String]) {
+  private def ensureFolderExists(top: IContainer, path: IPath): Unit = {
+    def ensureFolderExists(container: IContainer, segments: List[String]): Unit = {
       if (!container.exists())
         container.getParent().getFolder(container.getName()).create(false, true, null)
       segments match {
@@ -119,7 +112,6 @@ class OutputFoldersTest {
     ensureFolderExists(top, path.segments.toList.drop(1))
   }
 
-
   /** Create a project with src/main/scala and src/test/scala, without any source filters. */
   private def makeDefaultLayoutProject(projectName: String) = {
     val srcMain = new Path("/" +projectName + "/src/main/scala")
@@ -130,8 +122,7 @@ class OutputFoldersTest {
     makeProject(projectName, (srcMain, Array(), Array(), targetMain), (srcTest, Array(), Array(), targetTest))
   }
 
-
-  @Test def multipleSourceDirsWithoutFilters() {
+  @Test def multipleSourceDirsWithoutFilters(): Unit = {
 
     val project = makeDefaultLayoutProject("allSources1")
 
@@ -142,7 +133,7 @@ class OutputFoldersTest {
     Assert.assertEquals("All sources without filters", srcPaths, allSources)
   }
 
-  @Test def multipleSourceDirsWithInclusionFilters() {
+  @Test def multipleSourceDirsWithInclusionFilters(): Unit = {
     val project = makeProject("allSources2",
         ("/allSources2/src/main/scala", Array[IPath]("included/*"), Array[IPath](), null),
         ("/allSources2/src/test/scala", Array[IPath]("included2/*"), Array[IPath](), null)
@@ -158,7 +149,7 @@ class OutputFoldersTest {
     Assert.assertEquals("All sources with inclusion filters", srcPathsIn, allSources)
   }
 
-  @Test def multipleSourceDirsWithExclusionFilters() {
+  @Test def multipleSourceDirsWithExclusionFilters(): Unit = {
     val project = makeProject("allSources3",
         ("/allSources3/src/main/scala", Array[IPath](), Array[IPath]("excluded/*.scala", "excluded2/*"), null),
         ("/allSources3/src/test/scala", Array[IPath](), Array[IPath]("excluded/*"), null)
@@ -174,7 +165,7 @@ class OutputFoldersTest {
     Assert.assertEquals("All sources with exclusion filters", srcPathsIn, allSources)
   }
 
-  @Test def multipleSourceDirsWithInclusionAndExclusionFilters() {
+  @Test def multipleSourceDirsWithInclusionAndExclusionFilters(): Unit = {
     val project = makeProject("allSources4",
         ("/allSources4/src/main/scala", Array[IPath]("included/*"), Array[IPath]("included/excluded-again/*.scala", "excluded2/*"), null),
         ("/allSources4/src/test/scala", Array[IPath](), Array[IPath]("excluded/*"), null)
@@ -190,7 +181,7 @@ class OutputFoldersTest {
     Assert.assertEquals("All sources with exclusion filters", srcPathsIn, allSources)
   }
 
-  @Test def overlappingRootAndSourceFolder() {
+  @Test def overlappingRootAndSourceFolder(): Unit = {
     val project = makeProject("allSources5",
       ("/allSources5", Array[IPath](), Array[IPath]("src/", "included/excluded/*.scala", "excluded2/*"), "/allSources5/bin"),
       ("/allSources5/src/test/scala", Array[IPath](), Array[IPath](), null))

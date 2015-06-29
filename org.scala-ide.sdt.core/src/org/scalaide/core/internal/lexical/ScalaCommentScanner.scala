@@ -10,6 +10,7 @@ import org.eclipse.jface.text.rules.IWordDetector
 import org.eclipse.jface.text.rules.RuleBasedScanner
 import org.eclipse.jface.text.rules.Token
 import org.eclipse.jface.util.PropertyChangeEvent
+import org.scalaide.core.lexical.AbstractScalaScanner
 
 /**
  * This class works nearly the same way as [[org.eclipse.jdt.internal.ui.text.JavaCommentScanner]],
@@ -32,23 +33,14 @@ import org.eclipse.jface.util.PropertyChangeEvent
  *        the preference store from JDT
  */
 class ScalaCommentScanner(
-    val preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore,
+    override val preferenceStore: IPreferenceStore,
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
       extends RuleBasedScanner with AbstractScalaScanner {
 
-  @deprecated("use primary constructor instead", "4.0")
-  def this(
-      syntaxClass: ScalaSyntaxClass,
-      taskTagClass: ScalaSyntaxClass,
-      preferenceStore: IPreferenceStore,
-      javaPreferenceStore: IPreferenceStore) =
-    this(preferenceStore, javaPreferenceStore, syntaxClass, taskTagClass)
-
   private val wordMatcher = {
-    val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
-    val isCaseSensitive = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
+    val taskTags = preferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
+    val isCaseSensitive = preferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
     val wm = new WordMatcher
     val cwr = new CombinedWordRule(new IdentifierDetector, wm)
 
@@ -66,7 +58,7 @@ class ScalaCommentScanner(
    * This method differ from `setRules`, which overwrites all existing rules with
    * the passed ones.
    */
-  protected def appendRules(rules: Array[IRule]) {
+  protected def appendRules(rules: Array[IRule]): Unit = {
     if (fRules == null)
       fRules = rules.clone()
     else
@@ -76,7 +68,7 @@ class ScalaCommentScanner(
   /**
    * Overwritten because it needs to listen to task tag changes stored in JDT.
    */
-  override def adaptToPreferenceChange(event: PropertyChangeEvent) {
+  override def adaptToPreferenceChange(event: PropertyChangeEvent): Unit = {
     super.adaptToPreferenceChange(event)
 
     event.getProperty() match {
@@ -93,7 +85,7 @@ class ScalaCommentScanner(
    * Task tags are stored by JDT as a comma separated string. This function decodes
    * and stores them correctly.
    */
-  private def addTaskTags(wordMatcher: WordMatcher, tags: String, token: IToken) {
+  private def addTaskTags(wordMatcher: WordMatcher, tags: String, token: IToken): Unit = {
     tags.split(",") foreach { w =>
       wordMatcher.addWord(w, token)
     }
@@ -121,18 +113,24 @@ private class CombinedWordRule(
     matcher: WordMatcher
 ) extends IRule {
 
-  def evaluate(scanner: ICharacterScanner): IToken = {
+  override def evaluate(scanner: ICharacterScanner): IToken = {
     val wordStart = scanner.read().toChar
     if (detector.isWordStart(wordStart)) {
-      val word = wordStart +: Iterator
-          .continually(scanner.read().toChar)
-          .takeWhile(c => c != ICharacterScanner.EOF && detector.isWordPart(c))
-          .mkString
+
+      val word = new StringBuilder() append wordStart
+      var c = scanner.read().toChar
+
+      while (c != ICharacterScanner.EOF && detector.isWordPart(c)) {
+        word append c
+        c = scanner.read().toChar
+      }
+
       scanner.unread()
-      val tok = matcher.evaluate(word)
+      val tok = matcher.evaluate(word.toString())
       if (!tok.isUndefined()) tok
       else {
-        for (_ <- word) scanner.unread()
+        var i = word.length
+        while ({i -= 1; i >= 0}) scanner.unread()
         Token.UNDEFINED
       }
     } else {
@@ -168,14 +166,14 @@ private class WordMatcher {
    * If [[isCaseSensitve]] is not set the word is stored in a way that case
    * sensitivity doesn't matter.
    */
-  def addWord(word: String, token: IToken) {
+  def addWord(word: String, token: IToken): Unit = {
     words += (if (isCaseSensitive) word else word.toUpperCase()) -> token
   }
 
   /**
    * Clears all the containing words.
    */
-  def clearWords() {
+  def clearWords(): Unit = {
     words = Map()
   }
 
@@ -197,9 +195,9 @@ private class IdentifierDetector extends IWordDetector {
 
   private val specialSigns = """$@!%&*+-<=>?\^|~/""".toSet
 
-  def isWordStart(c: Char) =
+  override def isWordStart(c: Char) =
     Character.isJavaIdentifierStart(c) || specialSigns(c)
 
-  def isWordPart(c: Char) =
+  override def isWordPart(c: Char) =
     c != '$' && Character.isJavaIdentifierPart(c)
 }

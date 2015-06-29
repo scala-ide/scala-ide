@@ -8,15 +8,16 @@ class AccessibilityTests {
   import AccessibilityTests._
 
   def mkTestObj(
+      packageName: String,
       additionInClass: String = "",
       additionInPackage: String = "",
       additionOutsideOfPackage: String = "") = s"""
-    package accessibility {
+    package $packageName {
       class Foo {
         private def secretPrivate(): Unit = ()
         private[this] def secretPrivateThis(): Unit = ()
         protected def secretProtected(): Unit = ()
-        protected[accessibility] def secretProtectedInPackage(): Unit = ()
+        protected[$packageName] def secretProtectedInPackage(): Unit = ()
         def secretPublic(): Unit = ()
 
         $additionInClass
@@ -27,13 +28,14 @@ class AccessibilityTests {
   """
 
   @Test
-  def noAccessToPrivateThisOutsideOfInstance() =
-    mkTestObj(additionInClass = """
+  def noAccessToPrivateThisOutsideOfInstance() = {
+    val pkgName = s"noAccessToPrivateThisOutsideOfInstance"
+    mkTestObj(pkgName, additionInClass = """
       def someTests(other: Foo): Unit = {
         other.secr^
       }
     """) becomes
-    mkTestObj(additionInClass = """
+    mkTestObj(pkgName, additionInClass = """
       def someTests(other: Foo): Unit = {
         other.secretPrivate()^
       }
@@ -44,15 +46,17 @@ class AccessibilityTests {
         "secretProtected(): Unit",
         "secretProtectedInPackage(): Unit",
         "secretPublic(): Unit"))
+  }
 
   @Test
-  def accessToPrivateThisInsideOfInstance() =
-    mkTestObj(additionInClass = """
+  def accessToPrivateThisInsideOfInstance() = {
+    val pkgName = "accessToPrivateThisInsideOfInstance"
+    mkTestObj(pkgName, additionInClass = """
       def someTests(other: Foo): Unit = {
         this.secr^
       }
     """) becomes
-    mkTestObj(additionInClass = """
+    mkTestObj(pkgName, additionInClass = """
       def someTests(other: Foo): Unit = {
         this.secretPrivateThis()^
       }
@@ -64,19 +68,21 @@ class AccessibilityTests {
         "secretProtected(): Unit",
         "secretProtectedInPackage(): Unit",
         "secretPublic(): Unit"))
+  }
 
   @Test
-  def noAccessToPrivateInSubclass() =
-    mkTestObj(additionInPackage = """
+  def noAccessToPrivateInSubclass() = {
+    val pkgName = "noAccessToPrivateInSubclass"
+    mkTestObj(pkgName, additionInPackage = """
       class AccessibilityChecks extends Foo {
-        def someTests {
+        def someTests: Unit = {
           this.secr^
         }
       }
     """) becomes
-    mkTestObj(additionInPackage = """
+    mkTestObj(pkgName, additionInPackage = """
       class AccessibilityChecks extends Foo {
-        def someTests {
+        def someTests: Unit = {
           this.secretProtected()^
         }
       }
@@ -86,19 +92,21 @@ class AccessibilityTests {
         "secretProtected(): Unit",
         "secretProtectedInPackage(): Unit",
         "secretPublic(): Unit"))
+  }
 
   @Test
-  def noAccessToPrivateInUnrelatedClass() =
-    mkTestObj(additionInPackage = """
+  def noAccessToPrivateInUnrelatedClass() = {
+    val pkgName = "noAccessToPrivateInUnrelatedClass"
+    mkTestObj(pkgName, additionInPackage = """
       class UnrelatedClass {
-        def someTests(foo: Foo) {
+        def someTests(foo: Foo): Unit = {
           foo.secr^
         }
       }
     """) becomes
-    mkTestObj(additionInPackage = """
+    mkTestObj(pkgName, additionInPackage = """
       class UnrelatedClass {
-        def someTests(foo: Foo) {
+        def someTests(foo: Foo): Unit = {
           foo.secretPublic()^
         }
       }
@@ -107,22 +115,24 @@ class AccessibilityTests {
       expectedCompletions = Seq(
         "secretProtectedInPackage(): Unit",
         "secretPublic(): Unit"))
+  }
 
   @Test
-  def noAccessToPackageVisibilityInDifferentPackage() =
-    mkTestObj(additionOutsideOfPackage = """
+  def noAccessToPackageVisibilityInDifferentPackage() = {
+    val pkgName = "noAccessToPackageVisibilityInDifferentPackage"
+    mkTestObj(pkgName, additionOutsideOfPackage = s"""
       package other {
         class SomeChecsk {
-          def foo(o: accessibility.Foo) {
+          def foo(o: $pkgName.Foo): Unit = {
             o.secr^
           }
         }
       }
     """) becomes
-    mkTestObj(additionOutsideOfPackage = """
+    mkTestObj(pkgName, additionOutsideOfPackage = s"""
       package other {
         class SomeChecsk {
-          def foo(o: accessibility.Foo) {
+          def foo(o: $pkgName.Foo): Unit = {
             o.secretPublic()^
           }
         }
@@ -131,4 +141,5 @@ class AccessibilityTests {
       completionToApply = "secretPublic(): Unit",
       expectedCompletions = Seq(
         "secretPublic(): Unit"))
+  }
 }

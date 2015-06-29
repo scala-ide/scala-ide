@@ -6,6 +6,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.rules.IToken
 import org.eclipse.jface.text.rules.Token
+import org.scalaide.core.lexical.AbstractScalaScanner
 
 /**
  * Scans single line strings and divides them into normal string and escape
@@ -17,19 +18,12 @@ class StringTokenScanner(
   stringClass: ScalaSyntaxClass)
     extends AbstractScalaScanner with StringTokenizer {
 
-  @deprecated("use primary constructor instead", "4.0")
-  def this(
-      escapeSequenceClass: ScalaSyntaxClass,
-      stringClass: ScalaSyntaxClass,
-      preferenceStore: IPreferenceStore) =
-    this(preferenceStore, escapeSequenceClass, stringClass)
-
   private var offset: Int = _
   private var length: Int = _
   private var ranges: IndexedSeq[StyleRange] = _
   private var index: Int = _
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     ranges = tokenize(document, offset, length)
     index = 0
 

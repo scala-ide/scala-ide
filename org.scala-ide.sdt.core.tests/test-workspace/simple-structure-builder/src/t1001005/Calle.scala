@@ -12,7 +12,7 @@ class Callee @throws(classOf[InstantiationException]) () {
 
   @throws(classOf[IOException])
   @throws(classOf[SocketException])
-  def doStuff(i: Int) {
+  def doStuff(i: Int): Unit = {
     if (i > 0) throw new IOException
     else throw new SocketException
   }

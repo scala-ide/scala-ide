@@ -6,7 +6,7 @@ import org.junit._
 class LazyTemplateValTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def lazy_template_val() {
+  def lazy_template_val(): Unit = {
     checkSymbolClassification("""
         class A {
           lazy val immutableVal = 42
@@ -20,7 +20,7 @@ class LazyTemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def lazy_template_val_in_pattern_val_def() {
+  def lazy_template_val_in_pattern_val_def(): Unit = {
     checkSymbolClassification("""
         class A {
           lazy val Some(immutableVal) = Some(42)
@@ -34,7 +34,7 @@ class LazyTemplateValTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_lazy_template_val() {
+  def import_lazy_template_val(): Unit = {
     checkSymbolClassification("""
       object A { lazy val xxxxxx: Int = 42 }
       object B { import A.xxxxxx }

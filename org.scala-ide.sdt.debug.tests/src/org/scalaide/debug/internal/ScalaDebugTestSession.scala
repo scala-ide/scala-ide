@@ -1,32 +1,31 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.debug.internal
 
-import org.scalaide.debug.internal.model.ScalaThread
-import org.scalaide.debug.internal.model.ScalaStackFrame
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.model.ScalaDebugElement
-import org.scalaide.debug.internal.model.ScalaValue
-import org.eclipse.core.resources.ResourcesPlugin
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import org.eclipse.core.resources.IFile
-import org.eclipse.debug.core.ILaunchManager
-import org.eclipse.debug.core.IDebugEventSetListener
-import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IBreakpoint
-import org.eclipse.jdt.debug.core.JDIDebugModel
-import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugTarget
-import org.hamcrest.CoreMatchers._
-import org.hamcrest.Matcher
-import org.junit.Assert._
-import org.eclipse.debug.core.model.DebugElement
-import org.eclipse.jdt.internal.debug.core.model.JDIDebugElement
-import org.scalaide.logging.HasLogger
+import org.eclipse.debug.core.DebugPlugin
+import org.eclipse.debug.core.IDebugEventSetListener
 import org.eclipse.debug.core.ILaunchConfiguration
-import org.scalaide.debug.internal.breakpoints.BreakpointSupport
-import org.eclipse.jface.viewers.StructuredSelection
+import org.eclipse.debug.core.ILaunchManager
+import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
+import org.eclipse.jdt.debug.core.IJavaLineBreakpoint
+import org.eclipse.jdt.debug.core.JDIDebugModel
+import org.eclipse.jface.viewers.StructuredSelection
+import org.hamcrest.CoreMatchers._
 import org.junit.Assert
-import org.eclipse.debug.ui.contexts.DebugContextEvent
+import org.junit.Assert._
+import org.scalaide.core.testsetup.SDTTestUtils.waitUntil
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.model.ScalaValue
+import org.scalaide.logging.HasLogger
 
 object EclipseDebugEvent {
   def unapply(event: DebugEvent): Option[(Int, AnyRef)] = Some((event.getKind, event.getSource()))
@@ -37,14 +36,17 @@ object ScalaDebugTestSession {
   val Noop = () => ()
 
   def addDebugEventListener(f: PartialFunction[DebugEvent, Unit]): IDebugEventSetListener = {
-    val debugEventListener= new IDebugEventSetListener {
-      def handleDebugEvents(events: Array[DebugEvent]) {
-        events.foreach(f orElse {case _ =>})
+    val debugEventListener = new IDebugEventSetListener {
+      def handleDebugEvents(events: Array[DebugEvent]): Unit = {
+        events.foreach(f orElse { case _ => })
       }
     }
     DebugPlugin.getDefault.addDebugEventListener(debugEventListener)
     debugEventListener
   }
+
+  def removeDebugEventListener(debugEventListener: IDebugEventSetListener): Unit =
+    DebugPlugin.getDefault.removeDebugEventListener(debugEventListener)
 
   def apply(launchConfiguration: ILaunchConfiguration): ScalaDebugTestSession = {
     val session = new ScalaDebugTestSession(launchConfiguration)
@@ -56,7 +58,7 @@ object ScalaDebugTestSession {
     apply(DebugPlugin.getDefault.getLaunchManager.getLaunchConfiguration(launchConfigurationFile))
 }
 
-class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) extends HasLogger {
+class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) extends HasLogger {
   // 60s should be enough even for Jenkins builds running under high-load
   // (increased from 10s)
   val TIMEOUT = 60000
@@ -65,6 +67,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     type State = Value
     val ACTION_REQUESTED, NOT_LAUNCHED, RUNNING, SUSPENDED, TERMINATED = Value
   }
+
   import State._
 
   val debugEventListener = ScalaDebugTestSession.addDebugEventListener {
@@ -80,50 +83,50 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
       setTerminated()
   }
 
-  def setLaunched(target: ScalaDebugTarget) {
+  def setLaunched(target: ScalaDebugTarget): Unit = {
     this.synchronized {
       debugTarget = target
       setRunning()
     }
   }
 
-  def setActionRequested() {
+  def setActionRequested(): Unit = {
     state = ACTION_REQUESTED
   }
 
-  def setRunning() {
+  def setRunning(): Unit = {
     this.synchronized {
       state = RUNNING
       currentStackFrame = null
     }
   }
 
-  def setSuspended(stackFrame: ScalaStackFrame) {
+  def setSuspended(stackFrame: ScalaStackFrame): Unit = {
     this.synchronized {
       currentStackFrame = stackFrame
       val selection = new StructuredSelection(stackFrame)
-      ScalaDebugger.updateCurrentThreadAndStackFrame(selection)
+      ScalaDebugger.updateCurrentThread(selection)
       state = SUSPENDED
       logger.info("SUSPENDED at: %s:%d".format(stackFrame.getMethodFullName, stackFrame.getLineNumber))
       this.notify
     }
   }
 
-  def setTerminated() {
+  def setTerminated(): Unit = {
     this.synchronized {
       state = TERMINATED
       this.notify()
     }
   }
 
-  def waitUntilSuspended() {
+  def waitUntilSuspended(): Unit = {
     this.synchronized {
       while (state != SUSPENDED && state != TERMINATED)
         this.wait()
     }
   }
 
-  def waitUntilTerminated() {
+  def waitUntilTerminated(): Unit = {
     this.synchronized {
       if (state != TERMINATED)
         this.wait()
@@ -132,29 +135,32 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
 
   // ----
 
+  @volatile
   var state = NOT_LAUNCHED
   var debugTarget: ScalaDebugTarget = null
   var currentStackFrame: ScalaStackFrame = null
-
-  /**
-   * Add a breakpoint at the specified location,
-   * start or launch the session,
-   * and wait until the application is suspended
-   */
-  def runToLine(typeName: String, breakpointLine: Int) {
-    runToLine(typeName, breakpointLine, ScalaDebugTestSession.Noop)
-  }
+  def currentStackFrames: Seq[ScalaStackFrame] = Option(currentStackFrame).map(_.thread.getScalaStackFrames).getOrElse(Nil)
 
   /**
    * Add a breakpoint at the specified location,
    * start or launch the session,
    * perform the additional action,
    * and wait until the application is suspended
+   *
+   * @param conditionContext condition context represents condition and expected condition evaluation result (works with single visit breakpoints as there's only one flag for expected result)
    */
-  def runToLine[T](typeName: String, breakpointLine: Int, additionalAction: () => T): T = {
+  def runToLine[T](typeName: String,
+    breakpointLine: Int,
+    additionalAction: () => T = ScalaDebugTestSession.Noop,
+    conditionContext: Option[ConditionContext] = None,
+    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
-    val breakpoint = addLineBreakpoint(typeName, breakpointLine)
+    val breakpoint = addLineBreakpoint(typeName, breakpointLine, suspendPolicy)
+    conditionContext.foreach { c =>
+      breakpoint.setConditionEnabled(true)
+      breakpoint.setCondition(c.condition)
+    }
 
     if (state eq NOT_LAUNCHED) {
       launch()
@@ -168,16 +174,33 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     waitUntilSuspended
     removeBreakpoint(breakpoint)
 
-    assertEquals("Bad state after runToBreakpoint", SUSPENDED, state)
+    val expectedState = getExpectedState(conditionContext)
+    assertEquals(s"Bad state after runToBreakpoint(typeName = $typeName, line = $breakpointLine)", expectedState, state)
 
     actionResult
   }
 
   /**
+   * When breakpoint condition is set, but should evaluate to false `TERMINATED` state is expected, `SUSPENDED` otherwise
+   * @return expected state
+   */
+  private def getExpectedState(conditionContext: Option[ConditionContext]): State.Value = {
+    val shouldBeSuspended = conditionContext.forall(_.shouldSuspend)
+    if (shouldBeSuspended) {
+      SUSPENDED
+    } else {
+      TERMINATED
+    }
+  }
+
+  /**
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
-  def addLineBreakpoint(typeName: String, breakpointLine: Int): IJavaLineBreakpoint = {
+  def addLineBreakpoint(typeName: String,
+    breakpointLine: Int,
+    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): IJavaLineBreakpoint = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
+    breakpoint.setSuspendPolicy(suspendPolicy)
     waitForBreakpointsToBeEnabled(breakpoint)
     breakpoint
   }
@@ -185,11 +208,11 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
   /**
    * Remove the given breakpoint
    */
-  def removeBreakpoint(breakpoint: IBreakpoint) {
+  def removeBreakpoint(breakpoint: IBreakpoint): Unit = {
     breakpoint.delete()
   }
 
-  def stepOver() {
+  def stepOver(): Unit = {
     assertEquals("Bad state before stepOver", SUSPENDED, state)
 
     setActionRequested
@@ -200,7 +223,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     assertEquals("Bad state after stepOver", SUSPENDED, state)
   }
 
-  def stepInto() {
+  def stepInto(): Unit = {
     assertEquals("Bad state before stepIn", SUSPENDED, state)
 
     setActionRequested
@@ -211,7 +234,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     assertEquals("Bad state after stepIn", SUSPENDED, state)
   }
 
-  def stepReturn() {
+  def stepReturn(): Unit = {
     assertEquals("Bad state before stepReturn", SUSPENDED, state)
 
     setActionRequested
@@ -222,7 +245,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     assertEquals("Bad state after stepReturn", SUSPENDED, state)
   }
 
-  def resumeToCompletion() {
+  def resumeToCompletion(): Unit = {
     assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
 
     setActionRequested
@@ -233,7 +256,18 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     assertEquals("Bad state after resumeToCompletion", TERMINATED, state)
   }
 
-  def terminate() {
+  def dropToFrame(stackFrame: ScalaStackFrame): Unit = {
+    assertEquals("Bad state before dropToFrame", SUSPENDED, state)
+
+    setActionRequested
+    stackFrame.dropToFrame()
+
+    waitUntilSuspended
+
+    assertEquals("Bad state after dropToFrame", SUSPENDED, state)
+  }
+
+  def terminate(): Unit = {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.terminate()
       waitUntilTerminated
@@ -242,18 +276,18 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
   }
 
-  def resumetoSuspension() {
-    assertEquals("Bad state before resumeToCompletion", SUSPENDED, state)
+  def resumeToSuspension(): Unit = {
+    assertEquals("Bad state before resumeToSuspension", SUSPENDED, state)
 
     setActionRequested
     currentStackFrame.resume
 
     waitUntilSuspended
 
-    assertEquals("Bad state after resumeToCompletion", SUSPENDED, state)
+    assertEquals("Bad state after resumeToSuspension", SUSPENDED, state)
   }
 
-  def disconnect() {
+  def disconnect(): Unit = {
     if ((state ne NOT_LAUNCHED) && (state ne TERMINATED)) {
       debugTarget.disconnect()
       waitUntilTerminated
@@ -261,7 +295,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
     }
   }
 
-  def launch() {
+  def launch(): Unit = {
     launchConfiguration.launch(ILaunchManager.DEBUG_MODE, null)
   }
 
@@ -270,7 +304,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
    * while running test.
    * This method make sure there are no outstanding requests
    */
-  def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean) {
+  def waitForBreakpointToBe(breakpoint: IBreakpoint, enabled: Boolean): Unit = {
     import org.scalaide.core.testsetup.SDTTestUtils._
 
     if (state ne NOT_LAUNCHED) {
@@ -286,10 +320,12 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
       }
     }
   }
-  def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*) {
+
+  def waitForBreakpointsToBeEnabled(breakpoint: IBreakpoint*): Unit = {
     breakpoint.foreach(waitForBreakpointToBe(_, true))
   }
-  def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*) {
+
+  def waitForBreakpointsToBeDisabled(breakpoint: IBreakpoint*): Unit = {
     breakpoint.foreach(waitForBreakpointToBe(_, false))
   }
 
@@ -298,7 +334,7 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
   /**
    * Check that all threads have a suspended count of 0, except the one of the current thread, which should be 1
    */
-  def checkThreadsState() {
+  def checkThreadsState(): Unit = {
     assertEquals("Bad state before checkThreadsState", SUSPENDED, state)
 
     val currentThread = currentStackFrame.stackFrame.thread
@@ -307,22 +343,37 @@ class ScalaDebugTestSession private(launchConfiguration: ILaunchConfiguration) e
       assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount))
   }
 
-  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int) {
+  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int): Unit = {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)
 
-    assertEquals("Wrong typeName", typeName, currentStackFrame.stackFrame.location.declaringType.name)
-    assertEquals("Wrong method/line" + currentStackFrame.getLineNumber, methodFullSignature, currentStackFrame.stackFrame.location.method.name + currentStackFrame.stackFrame.location.method.signature)
-    assertEquals("Wrong line", line, currentStackFrame.getLineNumber)
+    val currentLocation = currentStackFrame.stackFrame.location
+    val currentTypeName = currentLocation.declaringType.name
+    val currentMethodFullSignature = currentLocation.method.name + currentLocation.method.signature
+    val currentLineNumber = currentStackFrame.getLineNumber
+
+    def frameInfo(typeName: String, methodSignature: String, lineNumber: Int) =
+      s"type: $typeName, method: $methodSignature, line: $lineNumber"
+
+    val currentFrameInfo = frameInfo(currentTypeName, currentMethodFullSignature, currentLineNumber)
+    val expectedFrameInfo = frameInfo(typeName, methodFullSignature, line)
+    assertEquals("Wrong frame", expectedFrameInfo, currentFrameInfo)
   }
 
   // access data in the current stackframe
 
-  /** Return the current value of a local variable.
+  /**
+   * Return the current value of a local variable.
    */
   def getLocalVariable(name: String): ScalaValue = {
     assertEquals("Bad state before getLocalVariable", SUSPENDED, state)
 
-    currentStackFrame.getVariables.find(_.getName == name).get.getValue.asInstanceOf[ScalaValue]
+    val variables = currentStackFrame.getVariables
+    val variable = variables.find(_.getName == name).getOrElse {
+      val availableVariables = variables.map(_.getName).mkString(", ")
+      throw new AssertionError(s"Variable with name $name not found. Available variables: $availableVariables")
+    }
+
+    variable.getValue.asInstanceOf[ScalaValue]
   }
 
   def skipAllBreakpoints(enabled: Boolean): Unit =

@@ -8,11 +8,12 @@ import org.eclipse.jface.text.source
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaOverrideIndicator
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.util.JDTUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 
 object ScalaOverrideIndicatorBuilder {
   val OVERRIDE_ANNOTATION_TYPE = "org.eclipse.jdt.ui.overrideIndicator"
@@ -26,8 +27,8 @@ case class JavaIndicator(scu: ScalaCompilationUnit,
   text: String,
   val isOverwrite: Boolean) extends source.Annotation(ScalaOverrideIndicatorBuilder.OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
 
-  def open() {
-    val tpe0 = JDTUtils.resolveType(scu.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
+  def open(): Unit = {
+    val tpe0 = JDTUtils.resolveType(scu.scalaProject.newSearchableEnvironment().nameLookup, packageName, typeNames, 0)
     tpe0 foreach { (tpe) =>
         val method = tpe.getMethod(methodName, methodTypeSignatures.toArray)
         if (method.exists)
@@ -42,7 +43,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
   case class ScalaIndicator(scu: ScalaCompilationUnit, text: String, base: Symbol, val isOverwrite: Boolean)
     extends source.Annotation(OVERRIDE_ANNOTATION_TYPE, false, text) with IScalaOverrideIndicator {
     def open = {
-      ask { () => locate(base, scu) } map {
+      asyncExec{ findDeclaration(base, scu.scalaProject.javaProject) }.getOption().flatten map {
         case (file, pos) =>
           EditorUtility.openInEditor(file, true) match {
             case editor: ITextEditor => editor.selectAndReveal(pos, 0)
@@ -60,7 +61,7 @@ trait ScalaOverrideIndicatorBuilder { self : ScalaPresentationCompiler =>
             for(base <- defn.symbol.allOverriddenSymbols) {
               val isOverwrite = base.isDeferred && !defn.symbol.isDeferred
               val text = (if (isOverwrite) "implements " else "overrides ") + base.fullName
-              val position = new JFacePosition(defn.pos.startOrPoint, 0)
+              val position = new JFacePosition(defn.pos.start, 0)
 
               if (base.isJavaDefined) {
                 val packageName = base.enclosingPackage.fullName

@@ -1,9 +1,10 @@
 package org.scalaide.core.internal.launching
 
 import scala.collection.mutable.ListBuffer
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.MissingRequirementError
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /** Given the Scala AST of any compilation unit, traverse the AST and collect all top level class
   * definitions that can be executed by the JUnit4 runtime.
@@ -14,7 +15,7 @@ import scala.tools.nsc.MissingRequirementError
   * have a look at the companion object.
   */
 private[launching] abstract class JUnit4TestClassesCollector extends HasLogger {
-  protected val global: ScalaPresentationCompiler
+  protected val global: IScalaPresentationCompiler
 
   import global._
 
@@ -34,12 +35,13 @@ private[launching] abstract class JUnit4TestClassesCollector extends HasLogger {
 
     override def traverse(tree: Tree): Unit = tree match {
       case _: PackageDef => super.traverse(tree)
+      case _: DocDef => super.traverse(tree)
       case cdef: ClassDef if isRunnableTestClass(cdef) => hits += cdef
       case _ => ()
     }
 
     private def isRunnableTestClass(cdef: ClassDef): Boolean = {
-      global.askOption { () => isTopLevelClass(cdef) && isTestClass(cdef) } getOrElse false
+      global.asyncExec { isTopLevelClass(cdef) && isTestClass(cdef) }.getOrElse(false)()
     }
 
     private def isTopLevelClass(cdef: ClassDef): Boolean = {

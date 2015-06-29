@@ -35,7 +35,7 @@ trait MergeParameterListsConfigurationPageGenerator extends MethodSignatureRefac
         param: ValDef,
         paramsWithSeparators: List[ParamOrSeparator],
         splitBtn: Button,
-        mergeBtn: Button) {
+        mergeBtn: Button): Unit = {
       mergeBtn.setEnabled(false)
       val isBeforeSeparatorCurrently = isBeforeSeparator(param, paramsWithSeparators)
       val isBeforeSeparatorOriginally = isBeforeSeparator(param, paramsWithOriginalSeparators)
@@ -47,7 +47,7 @@ trait MergeParameterListsConfigurationPageGenerator extends MethodSignatureRefac
         separator: ParamListSeparator,
         paramsWithSeparators: List[ParamOrSeparator],
         splitBtn: Button,
-        mergeBtn: Button) {
+        mergeBtn: Button): Unit = {
       mergeBtn.setEnabled(true)
       splitBtn.setEnabled(false)
     }

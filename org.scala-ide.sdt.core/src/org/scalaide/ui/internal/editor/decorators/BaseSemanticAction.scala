@@ -1,12 +1,9 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/node/146
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.ui.internal.editor.decorators
 
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.IPainter
@@ -20,12 +17,13 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.ui.editors.text.EditorsUI
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * Represents basic properties - enabled, bold an italic.
@@ -64,12 +62,12 @@ abstract class BaseSemanticAction(
   private val propertiesOpt = preferencePageId.map(id => new Properties(id))
 
   protected val annotationAccess = new IAnnotationAccess {
-    def getType(annotation: Annotation) = annotation.getType
-    def isMultiLine(annotation: Annotation) = true
-    def isTemporary(annotation: Annotation) = true
+    override def getType(annotation: Annotation) = annotation.getType
+    override def isMultiLine(annotation: Annotation) = true
+    override def isTemporary(annotation: Annotation) = true
   }
 
-  protected def pluginStore: IPreferenceStore = ScalaPlugin.plugin.getPreferenceStore
+  protected def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
 
   protected def isFontStyleBold = propertiesOpt match {
     case Some(properties) if pluginStore.getBoolean(properties.bold) => SWT.BOLD
@@ -111,11 +109,11 @@ abstract class BaseSemanticAction(
   //TODO monitor P_ACTIVATE to register/unregister update
   //TODO monitor P_ACTIVATE to remove existings annotation (true => false) or update openning file (false => true)
   override def apply(scu: ScalaCompilationUnit): Unit = {
-    scu.doWithSourceFile { (sourceFile, compiler) =>
+    scu.scalaProject.presentationCompiler.internal { compiler =>
 
       def findAnnotations(): Map[Annotation, JFacePosition] = {
-        val response = new compiler.Response[compiler.Tree]
-        compiler.askLoadedTyped(sourceFile, response)
+        val sourceFile = scu.lastSourceMap().sourceFile
+        val response = compiler.askLoadedTyped(sourceFile, false)
         response.get(200) match {
           case Some(Left(_)) => findAll(compiler, scu, sourceFile)
           case Some(Right(exc)) =>
@@ -135,7 +133,7 @@ abstract class BaseSemanticAction(
   }
 
   private val _listener = new IPropertyChangeListener {
-    def propertyChange(event: PropertyChangeEvent) {
+    override def propertyChange(event: PropertyChangeEvent): Unit = {
       propertiesOpt.foreach { properties =>
         val changed = event.getProperty() match {
           case properties.bold | properties.italic | P_COLOR => true
@@ -155,13 +153,11 @@ abstract class BaseSemanticAction(
   }
 
   private def refresh() = {
-    import org.scalaide.util.internal.Utils._
     for {
       page <- EclipseUtils.getWorkbenchPages
       editorReference <- page.getEditorReferences
       editorInput <- Option(editorReference.getEditorInput)
-      compilationUnit <- Option(JavaPlugin.getDefault.getWorkingCopyManager.getWorkingCopy(editorInput))
-      scu <- compilationUnit.asInstanceOfOpt[ScalaCompilationUnit]
+      scu <- IScalaPlugin().scalaCompilationUnit(editorInput)
     } apply(scu)
   }
 

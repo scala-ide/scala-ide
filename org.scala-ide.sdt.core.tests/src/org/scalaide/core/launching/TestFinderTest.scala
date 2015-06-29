@@ -19,12 +19,13 @@ class TestFinderTest {
   import TestFinderTest._
 
   @Test
-  def project_possibleMatches() {
+  def project_possibleMatches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val possibleMatches = finder.filteredTestResources(project, project.javaProject, new NullProgressMonitor)
     val expected = Set(getResource("/src/packa/TestA.scala"),
       getResource("/src/packa/FakeTest.scala"),
+      getResource("/src/packa/TestScalaDoc.scala"),
       getResource("/src/packc/TestC.scala"),
       getResource("/src/jpacka/JTestA.java"),
       getResource("/src/jpacka/RunWithTest.java"),
@@ -36,27 +37,27 @@ class TestFinderTest {
   }
 
   @Test
-  def scala_package_possibleMatches() {
+  def scala_package_possibleMatches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val possibleMatches = finder.filteredTestResources(project, project.javaProject.findPackageFragment("/test-finder/src/packa"), new NullProgressMonitor)
-    val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"))
+    val expected = Set(getResource("/src/packa/TestA.scala"), getResource("/src/packa/FakeTest.scala"), getResource("/src/packa/TestScalaDoc.scala"))
     assertEqualsSets("wrong filtered files", expected, possibleMatches.toSet)
   }
 
   @Test
-  def scala_package_matches() {
+  def scala_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new mutable.HashSet[IType]
     finder.findTestsInContainer(project.javaProject.findPackageFragment("/test-finder/src/packa"), result, new NullProgressMonitor)
 
-    val expected = Set(getType("packa.TestA"), getType("packa.TestA1"))
+    val expected = Set(getType("packa.TestA"), getType("packa.TestA1"), getType("packa.TestScalaDoc"))
     assertEqualsSets("wrong tests found", expected, result)
   }
 
   @Test
-  def java_package_matches() {
+  def java_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -67,7 +68,7 @@ class TestFinderTest {
   }
 
   @Test
-  def java_package_matches_inherited() {
+  def java_package_matches_inherited(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -78,7 +79,7 @@ class TestFinderTest {
   }
 
   @Test
-  def project_matches() {
+  def project_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -90,6 +91,7 @@ class TestFinderTest {
       getType("jpackb.JTestB"),
       getType("packa.TestA"),
       getType("packa.TestA1"),
+      getType("packa.TestScalaDoc"),
       getType("packb.TestB"),
       getType("packc.TestC"),
       getType("packc.TestCInherited1"),
@@ -99,7 +101,7 @@ class TestFinderTest {
   }
 
   @Test
-  def src_folder_matches() {
+  def src_folder_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -108,6 +110,7 @@ class TestFinderTest {
     val expected = Set(
       getType("jpacka.JTestA"),
       getType("jpacka.RunWithTest"),
+      getType("packa.TestScalaDoc"),
       getType("jpackb.JTestB"),
       getType("packa.TestA"),
       getType("packa.TestA1"),
@@ -120,7 +123,7 @@ class TestFinderTest {
   }
 
   @Test
-  def only_one_type_element_matches() {
+  def only_one_type_element_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -133,7 +136,7 @@ class TestFinderTest {
   }
 
   @Test
-  def empty_package_matches() {
+  def empty_package_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -145,7 +148,7 @@ class TestFinderTest {
   }
 
   @Test
-  def method_matches() {
+  def method_matches(): Unit = {
     val finder = new JUnit4TestFinder
 
     val result = new java.util.HashSet[IType]
@@ -158,7 +161,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_decls() {
+  def search_test_methods_decls(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packa.TestA1")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -167,7 +170,16 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_class() {
+  def search_test_methods_in_scaladoc_class(): Unit = {
+    val finder = new JUnit4TestFinder
+    val testClass = getType("packa.TestScalaDoc")
+    val result = finder.getTestMethods(project.javaProject, testClass)
+    val expected = Set("testMethod")
+    assertEqualsSets("wrong test methods", expected, result.asScala)
+  }
+
+  @Test
+  def search_test_methods_inherited_from_class(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestC")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -176,7 +188,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_trait() {
+  def search_test_methods_inherited_from_trait(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestCInherited1")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -185,7 +197,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_inherited_from_abstract_class() {
+  def search_test_methods_inherited_from_abstract_class(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("packc.TestCInherited2")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -194,7 +206,7 @@ class TestFinderTest {
   }
 
   @Test
-  def search_test_methods_in_empty_package() {
+  def search_test_methods_in_empty_package(): Unit = {
     val finder = new JUnit4TestFinder
     val testClass = getType("TestInEmptyPackage")
     val result = finder.getTestMethods(project.javaProject, testClass)
@@ -207,7 +219,6 @@ class TestFinderTest {
   private def getResource(absolutePath: String): IResource =
     project.underlying.findMember(absolutePath)
 
-  import scala.language.implicitConversions
   implicit def stringsArePaths(str: String): Path = new Path(str)
 
   def assertEqualsSets[T](msg: String, set1: collection.Set[T], set2: collection.Set[T]) = {

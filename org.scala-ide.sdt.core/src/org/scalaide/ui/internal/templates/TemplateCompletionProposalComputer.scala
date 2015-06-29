@@ -7,14 +7,14 @@ import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import java.util.Arrays
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 
 // Default ctor to make it instantiable via the extension mechanism.
 class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer {
 
     /** The wrapped processor. */
     private
-    val _processor = new ScalaTemplateCompletionProcessor(ScalaPlugin.plugin.templateManager)
+    val _processor = new ScalaTemplateCompletionProcessor(ScalaPlugin().templateManager)
 
     /*
      * @see org.eclipse.jface.text.contentassist.ICompletionProposalComputer#computeCompletionProposals(org.eclipse.jface.text.contentassist.TextContentAssistInvocationContext, org.eclipse.core.runtime.IProgressMonitor)
@@ -44,10 +44,10 @@ class TemplateCompletionProposalComputer extends IJavaCompletionProposalComputer
     /*
      * @see org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer#sessionStarted()
      */
-    def sessionStarted() {}
+    def sessionStarted(): Unit = {}
 
     /*
      * @see org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer#sessionEnded()
      */
-    def sessionEnded() {}
+    def sessionEnded(): Unit = {}
 }

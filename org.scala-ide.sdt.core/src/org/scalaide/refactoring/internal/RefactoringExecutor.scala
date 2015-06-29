@@ -4,7 +4,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizard
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 /**
  * This is the abstract driver of a refactoring execution: it is the
@@ -51,7 +51,7 @@ trait RefactoringExecutor extends RefactoringHandler {
    * Some of the refactoring implementations don't run in a wizard but make use of the
    * linked mode ui. These refactorings call `enterLinkedModeUi` directly.
    */
-  def runRefactoring(wizard: RefactoringWizard, shell: Shell) {
+  def runRefactoring(wizard: RefactoringWizard, shell: Shell): Unit = {
     new RefactoringWizardOpenOperation(wizard).run(shell, "Scala Refactoring")
   }
 }

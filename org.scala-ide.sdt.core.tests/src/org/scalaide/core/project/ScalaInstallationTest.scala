@@ -2,12 +2,12 @@ package org.scalaide.core.project
 
 import org.junit.Test
 import org.junit.Assert._
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.internal.project.BundledScalaInstallation
 import org.eclipse.core.runtime.Platform
@@ -22,10 +22,10 @@ class ScalaInstallationTest {
    * check the installations of Scala based on a bundle of jars
    */
   @Test
-  def bundledInstallationsTest {
+  def bundledInstallationsTest(): Unit = {
     val bundledInstallations = ScalaInstallation.bundledInstallations
 
-    ScalaPlugin.plugin.scalaVer match {
+    IScalaPlugin().scalaVersion match {
       case SpecificScalaVersion(2, 10, _, _) =>
         assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case SpecificScalaVersion(2, 11, _, _) =>
@@ -61,22 +61,27 @@ class ScalaInstallationTest {
 
         assertEquals("Wrong all source jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
 
+      case SpecificScalaVersion(2, 12, _, _) =>
+        assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case v =>
         fail(s"Unsupported Scala version: $v")
     }
   }
 
   @Test
-  def multiBundleInstallationsTest {
+  def multiBundleInstallationsTest(): Unit = {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
 
-    ScalaPlugin.plugin.scalaVer match {
+    IScalaPlugin().scalaVersion match {
       case SpecificScalaVersion(2, 10, _, _) =>
         assertEquals("Unexpected Scala bundle", 1, multiBundleInstallations.length)
         checkMultiBundleInstallation(2, 10, multiBundleInstallations.head)
       case SpecificScalaVersion(2, 11, _, _) =>
         assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
         checkMultiBundleInstallation(2, 11, multiBundleInstallations.head)
+      case SpecificScalaVersion(2, 12, _, _) =>
+        assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
+        checkMultiBundleInstallation(2, 12, multiBundleInstallations.head)
       case v =>
         fail(s"Unsupported Scala version: $v")
     }
@@ -85,7 +90,7 @@ class ScalaInstallationTest {
   val m2RepoLocationPattern = "(.*/)([^/]+)/([^/]+)/[^/]+\\.jar".r
   val pluginsLocationPattern = "(.*/)([^/]+)_([^/]+)\\.jar".r
 
-  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: ScalaInstallation) = {
+  def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: IScalaInstallation) = {
 
     def isLibraryBundle(bundle: Bundle) = {
       val version = bundle.getVersion()
@@ -94,7 +99,7 @@ class ScalaInstallationTest {
         version.getMinor() == minor
     }
 
-    val libraryBundle = ScalaPlugin.plugin.getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
+    val libraryBundle = IScalaPlugin().getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
 
     val libraryPath = OSGiUtils.getBundlePath(libraryBundle).get
 

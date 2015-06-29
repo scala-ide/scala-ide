@@ -3,9 +3,8 @@ package org.scalaide.core.completion
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.tools.nsc.interactive.Response
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.reflect.internal.util.SourceFile
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
 import org.junit.Test
@@ -29,32 +28,31 @@ class CompletionTests {
   import org.eclipse.jface.text.IDocument
   import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 
-  private def withCompletions(path2source: String)(body: (Int, OffsetPosition, List[CompletionProposal]) => Unit) {
+  private def withCompletions(path2source: String)(body: (Int, OffsetPosition, List[CompletionProposal]) => Unit): Unit = {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]
 
+    val src = unit.lastSourceMap().sourceFile
+
     // first, 'open' the file by telling the compiler to load it
-    unit.withSourceFile { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+    unit.scalaProject.presentationCompiler.internal { compiler =>
+      compiler.askReload(List(unit)).get
 
-      val tree = new Response[compiler.Tree]
-      compiler.askLoadedTyped(src, false, tree)
-      tree.get
+      compiler.askLoadedTyped(src, false).get
+    }
 
-      val contents = unit.getContents
-      // mind that the space in the marker is very important (the presentation compiler
-      // seems to get lost when the position where completion is asked
-      val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
-      assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
-      val content = unit.getContents.mkString
+    val contents = unit.getContents
+    // mind that the space in the marker is very important (the presentation compiler
+    // seems to get lost when the position where completion is asked
+    val positions = SDTTestUtils.positionsOf(contents, " /*!*/")
+    assertTrue("Couldn't find a position for the completion marker. Hint: Did you add a space between the element to complete and the marker?", positions.nonEmpty)
+    val content = unit.getContents.mkString
 
-      val completion = new ScalaCompletions
-      for (i <- 0 until positions.size) {
-        val pos = positions(i)
+    val completion = new ScalaCompletions
+    for (i <- 0 until positions.size) {
+      val pos = positions(i)
 
-        val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
-        val wordRegion = ScalaWordFinder.findWord(content, position.point)
+      val position = new scala.reflect.internal.util.OffsetPosition(src, pos)
+      val wordRegion = ScalaWordFinder.findWord(content, position.point)
 
         //        val selection = mock(classOf[ISelectionProvider])
 
@@ -74,17 +72,16 @@ class CompletionTests {
         val completions: List[ICompletionProposal] = completion.computeCompletionProposals(context, monitor).map(_.asInstanceOf[ICompletionProposal]).toList
         */
 
-        val completions = completion.findCompletions(wordRegion)(pos + 1, unit)(src, compiler)
-        val sortedCompletions = completions.sortWith((x,y) => x.relevance >= y.relevance)
-        body(i, position, sortedCompletions)
-      }
+      val completions = completion.findCompletions(wordRegion, pos + 1, unit)
+      val sortedCompletions = completions.sortBy(completion => -(completion.relevance))
+      body(i, position, sortedCompletions)
     }
   }
 
   /**
    * @param withImportProposal take in account proposal for types not imported yet
    */
-  private def runTest(path2source: String, withImportProposal: Boolean)(expectedCompletions: List[String]*) {
+  private def runTest(path2source: String, withImportProposal: Boolean)(expectedCompletions: List[String]*): Unit = {
 
     withCompletions(path2source) { (i, position, compl) =>
 
@@ -130,7 +127,7 @@ class CompletionTests {
    * This is more a structure builder problem, but it is visible through completion
    */
 
-  def checkPackageNameOnSingleCompletion(sourcePath: String, expected: Seq[(String, String)]) {
+  def checkPackageNameOnSingleCompletion(sourcePath: String, expected: Seq[(String, String)]): Unit = {
     withCompletions(sourcePath) { (idx, position, completions) =>
       assertEquals("Only one completion expected at (%d, %d)".format(position.line, position.column), 1, completions.size)
       assertEquals("Unexpected package name", expected(idx)._1, completions(0).displayDetail)
@@ -139,17 +136,17 @@ class CompletionTests {
   }
 
   @Test
-  def ticket1000855_1() {
+  def ticket1000855_1(): Unit = {
     checkPackageNameOnSingleCompletion("ticket_1000855/a/A.scala", Seq(("a.b", "T855B")))
   }
 
   @Test
-  def ticket1000855_2() {
+  def ticket1000855_2(): Unit = {
     checkPackageNameOnSingleCompletion("ticket_1000855/d/D.scala", Seq(("a.b.c", "T855C"), ("a.b.e", "T855E")))
   }
 
   @Test
-  def relevanceSortingTests() {
+  def relevanceSortingTests(): Unit = {
     val unit = scalaCompilationUnit("relevance/RelevanceCompletions.scala")
     reload(unit)
 
@@ -166,8 +163,8 @@ class CompletionTests {
   }
 
   @Test
-  def t1001218() {
-    val oraclePos8_14 = List("println(): Unit", "println(Any): Unit")
+  def t1001218(): Unit = {
+    val oraclePos8_14 = List("println(): Unit", "println(x: Any): Unit")
     val oraclePos10_12 = List("foo(): Int")
     val oraclePos12_12 = List("foo(): Int")
     val oraclePos18_10 = List("foo(): Int")
@@ -179,11 +176,11 @@ class CompletionTests {
   }
 
   @Test
-  def t1001272() {
-    val oraclePos16_18 = List("A(): t1001272.A", "A(Int): t1001272.A")
-    val oraclePos17_18 = List("B(): t1001272.B")
-    val oraclePos18_20 = List("E(Int): t1001272.D.E")
-    val oraclePos19_26 = List("InnerA(Int): t1001272.Test.a.InnerA")
+  def t1001272(): Unit = {
+    val oraclePos16_18 = List("A(): A", "A(a: Int): A")
+    val oraclePos17_18 = List("B(): B")
+    val oraclePos18_20 = List("E(i: Int): D.E")
+    val oraclePos19_26 = List("InnerA(i: Int): a.InnerA")
 
     val unit = scalaCompilationUnit("t1001272/A.scala")
     reload(unit)
@@ -193,14 +190,14 @@ class CompletionTests {
 
   @Ignore("Enable this when ticket #1001919 is fixed.")
   @Test
-  def t1001919() {
+  def t1001919(): Unit = {
     withCompletions("t1001919/Ticket1001919.scala") {
       (index, position, completions) =>
         assertEquals("There is only one completion location", 1, completions.size)
         assertTrue("The completion should return doNothingWith", completions.exists(
           _ match {
             case c:CompletionProposal =>
-              c.kind == MemberKind.Def && c.context == CompletionContext(CompletionContext.ImportContext) && c.completion == "doNothingWith"
+              c.kind == MemberKind.Def && c.context == CompletionContext.ImportContext && c.completion == "doNothingWith"
             case _ =>
               false
           }))
@@ -208,7 +205,7 @@ class CompletionTests {
   }
 
   @Test
-  def t1002002() {
+  def t1002002(): Unit = {
     withCompletions("t1002002/A.scala") {
       (index, position, completions) =>
         assertEquals("There is only one completion location", 1, completions.size)
@@ -224,7 +221,7 @@ class CompletionTests {
   }
 
   @Test
-  def t1002002_2() {
+  def t1002002_2(): Unit = {
     withCompletions("t1002002/D.scala") {
       (index, position, completions) =>
         assertEquals("There is only one completion location", 1, completions.size)
@@ -240,14 +237,14 @@ class CompletionTests {
   }
 
   @Test
-  def backticks_completion_t1001371() {
+  def backticks_completion_t1001371(): Unit = {
     withCompletions("backticks_completion/BackticksCompletionDemo.scala") {
       (testNumber, _, proposals) => {
-        def `assert completes with    backticks`(what: String, completion: String) {
+        def `assert completes with    backticks`(what: String, completion: String): Unit = {
           assertTrue(s"$what should auto-complete WITH backticks.", proposals.exists(_.completion == s"`$completion`"))
         }
 
-        def `assert completes without backticks`(what: String, completion: String) {
+        def `assert completes without backticks`(what: String, completion: String): Unit = {
           assertTrue(s"$what should auto-complete WITHOUT backticks.", proposals.exists(_.completion == completion))
         }
 

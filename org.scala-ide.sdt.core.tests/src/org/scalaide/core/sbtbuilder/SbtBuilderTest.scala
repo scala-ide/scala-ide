@@ -20,16 +20,16 @@ import scala.util.matching.Regex
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import scala.tools.nsc.Settings
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.project.ScalaClasspath
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-
+import org.scalaide.util.eclipse.EclipseUtils
 
 object SbtBuilderTest extends TestProjectSetup("builder") with CustomAssertion
 object depProject extends TestProjectSetup("builder-sub")
 object closedProject extends TestProjectSetup("closed-project-test") {
 
-  def closeProject() {
+  def closeProject(): Unit = {
     project.underlying.close(null)
   }
 }
@@ -39,11 +39,11 @@ class SbtBuilderTest {
   import SbtBuilderTest._
 
   @Before
-  def setupWorkspace() {
+  def setupWorkspace(): Unit = {
     SDTTestUtils.enableAutoBuild(true)
   }
 
-  @Test def testSimpleBuild() {
+  @Test def testSimpleBuild(): Unit = {
     println("building " + project)
     project.clean(new NullProgressMonitor())
     depProject // initialize
@@ -62,7 +62,7 @@ class SbtBuilderTest {
   /**
    * See #1002070
    */
-  @Test def testBuildErrorRemove() {
+  @Test def testBuildErrorRemove(): Unit = {
      import SDTTestUtils._
      SDTTestUtils.enableAutoBuild(false)
 
@@ -97,20 +97,20 @@ class SbtBuilderTest {
        deleteProjects(prj)
    }
 
-  @Test def testSimpleBuildWithResources() {
+  @Test def testSimpleBuildWithResources(): Unit = {
     println("building " + depProject)
     depProject.project.clean(new NullProgressMonitor())
     depProject.project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
     val targetResource = depProject.project.javaProject.getOutputLocation().append(new Path("resource.txt"))
-    val file = ScalaPlugin.plugin.workspaceRoot.findMember(targetResource)
+    val file = EclipseUtils.workspaceRoot.findMember(targetResource)
     Assert.assertNotNull("Resource has been copied to the output directory", file ne null)
     Assert.assertTrue("Resource has been copied to the output directory and exists", file.exists())
   }
 
-  @Test def dependent_projects_are_rebuilt_and_PC_notified() {
+  @Test def dependent_projects_are_rebuilt_and_PC_notified(): Unit = {
 
-    def rebuild(prj: ScalaProject): List[IMarker] = {
+    def rebuild(prj: IScalaProject): List[IMarker] = {
       println("building " + prj)
       prj.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 
@@ -147,8 +147,13 @@ class SbtBuilderTest {
       Assert.assertTrue("Build error messages differ. Expected: %s, Actual: %s".format(expectedMessages, errorMessages), expectedMessages.exists(similarErrorMessage(error)))
     }
 
-    fooClientCU.doWithSourceFile { (sf, comp) =>
-      comp.askReload(fooClientCU, fooClientCU.getContents()).get // synchronize with the good compiler
+    // error markers have non-zero length
+    for (p <- problems)
+      Assert.assertTrue("Error marker length is zero", (p.getAttribute(IMarker.CHAR_END, 0) - p.getAttribute(IMarker.CHAR_START, 0) > 0))
+
+    val sf = fooClientCU.lastSourceMap().sourceFile
+    fooClientCU.scalaProject.presentationCompiler { comp =>
+      comp.askReload(fooClientCU, sf).get // synchronize with the good compiler
     }
 
     val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
@@ -162,7 +167,7 @@ class SbtBuilderTest {
     unitsToWatch.flatMap(SDTTestUtils.findProblemMarkers)
   }
 
-  @Test def dependentProject_should_restart_PC_after_build() {
+  @Test def dependentProject_should_restart_PC_after_build(): Unit = {
     val fooCU = depProject.compilationUnit("subpack/Foo.scala")
     val changedErrors = SDTTestUtils.buildWith(fooCU.getResource, changedFooScala, unitsToWatch)
 
@@ -178,9 +183,8 @@ class SbtBuilderTest {
     assertNoErrors(fooClientCU)
   }
 
-  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath() {
+  @Test def scalaLibrary_in_dependent_project_shouldBe_on_BootClasspath(): Unit = {
     import SDTTestUtils._
-    import ScalaPlugin.plugin
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
     try {
@@ -196,10 +200,10 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
-      val expectedLib = plugin.workspaceRoot.findMember("/library/bin").getLocation
-      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLib.get)
+      val expectedLib = EclipseUtils.workspaceRoot.findMember("/library/bin").getLocation
+      Assert.assertEquals("Unexpected Scala lib", expectedLib, prjClient.scalaClasspath.scalaLibrary.get)
     } finally {
       deleteProjects(prjClient, prjLib)
     }
@@ -216,9 +220,8 @@ class SbtBuilderTest {
    *  - we do *not* test that a different JDK is honored by Sbt (couldn't find a way to
    *  fake a JDK install), but we do test that the JDK is put in `-javabootclasspath`.
    */
-  @Test def bootLibrariesAreOnClasspath() {
+  @Test def bootLibrariesAreOnClasspath(): Unit = {
     import SDTTestUtils._
-    import ScalaPlugin.plugin
 
     val Seq(prjClient, prjLib) = createProjects("client", "library")
     try {
@@ -240,7 +243,7 @@ class SbtBuilderTest {
       packLib.createCompilationUnit("Predef.scala", "package scala; class Predef", true, null)
       prjLib.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
 
-      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLib.isDefined)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
 
       val ScalaClasspath(jdkPaths, scalaLib, _, _) = prjClient.scalaClasspath
       val args = prjClient.scalacArguments
@@ -268,11 +271,39 @@ class SbtBuilderTest {
     }
   }
 
-  @Test def checkClosedProject() {
+   @Test def bootLibrariesCanBeUnorderedOnClasspath(): Unit = {
+    import SDTTestUtils._
+
+    val Seq(prjClient) = createProjects("client")
+    try {
+      val baseRawClasspath = prjClient.javaProject.getRawClasspath()
+
+      // The classpath, with the eclipse scala container removed
+      val (scalaContainerPath, cleanRawClasspath) = baseRawClasspath.partition(_.getPath().toPortableString() == "org.scala-ide.sdt.launching.SCALA_CONTAINER")
+
+      // add the scala classpath at the end
+      prjClient.javaProject.setRawClasspath(cleanRawClasspath ++ scalaContainerPath, null)
+
+      // add a source file
+      val packA = createSourcePackage("test")(prjClient)
+      packA.createCompilationUnit("A.scala", """class A { println("hello") }""", true, null)
+      Assert.assertTrue("Found Scala library", prjClient.scalaClasspath.scalaLibrary.isDefined)
+
+      // now test that the build succeeds with the out-of-order Scala library
+      prjClient.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+      prjClient.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+      val markers = prjClient.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+      Assert.assertTrue("No errors expected", markers.isEmpty)
+    } finally {
+      deleteProjects(prjClient)
+    }
+  }
+
+  @Test def checkClosedProject(): Unit = {
     closedProject.closeProject()
     Assert.assertEquals("exportedDependencies", Nil, closedProject.project.exportedDependencies)
     Assert.assertEquals("sourceFolders", Nil, closedProject.project.sourceFolders)
-    Assert.assertEquals("sourceOutputFolders", Nil, closedProject.project.sourceOutputFolders)
+    Assert.assertTrue("sourceOutputFolders", closedProject.project.sourceFolders.isEmpty)
   }
 
   /** Returns true if the expected regular expression matches the given error message. */
@@ -297,4 +328,3 @@ class Foo
     "(object )?Foo is not a member of (package )?subpack",
     "not found: type Foo")
 }
-

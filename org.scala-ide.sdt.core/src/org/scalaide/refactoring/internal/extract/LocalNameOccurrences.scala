@@ -4,7 +4,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.common.Occurrences
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
 
 case class LocalNameOccurrences(name: String) {
   private val os =

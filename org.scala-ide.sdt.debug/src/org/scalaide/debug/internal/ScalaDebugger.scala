@@ -1,6 +1,6 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.debug.internal.ui.contexts.DebugContextManager
@@ -8,7 +8,9 @@ import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-import scala.util.Try
+import org.scalaide.core.IScalaPlugin
+
+import com.sun.jdi.StackFrame
 
 import model.ScalaStackFrame
 import model.ScalaThread
@@ -25,6 +27,7 @@ object ScalaDebugger {
 
   @volatile private var _currentThread: ScalaThread = null
   @volatile private var _currentStackFrame: ScalaStackFrame = null
+  @volatile private var _currentFrameIndex: Int = 0
 
   /**
    * Currently selected thread & stack frame in the debugger UI view.
@@ -34,48 +37,54 @@ object ScalaDebugger {
    * values of `currentThread` & `currentStackFrame` are not the expected ones. Practically, this means that accesses to these members
    * should always happen within a try..catch block. Failing to do so can cause the whole debug session to shutdown for no good reasons.
    */
-  def currentThread = _currentThread
-  def currentStackFrame = _currentStackFrame
+  def currentThread: ScalaThread = _currentThread
+  def currentStackFrame: ScalaStackFrame = _currentStackFrame
+  def currentFrame(): Option[StackFrame] = Option(currentThread).map(_.threadRef.frame(_currentFrameIndex))
 
-  def updateCurrentThreadAndStackFrame(selection: ISelection) {
-    val (newThread, newStackFrame) = selection match {
+  private[debug] def updateCurrentThread(selection: ISelection): Unit = {
+    def setValues(thread: ScalaThread, frame: ScalaStackFrame, frameIndex: Int = 0): Unit = {
+      _currentThread = thread
+      _currentStackFrame = frame
+      _currentFrameIndex = frameIndex
+    }
+
+    selection match {
       case structuredSelection: IStructuredSelection =>
         structuredSelection.getFirstElement match {
           case scalaThread: ScalaThread =>
-            (scalaThread, Try(scalaThread.getTopStackFrame.asInstanceOf[ScalaStackFrame]) getOrElse null)
+            setValues(thread = scalaThread, frame = scalaThread.getTopStackFrame, frameIndex = 0)
           case scalaStackFrame: ScalaStackFrame =>
-            (scalaStackFrame.thread, scalaStackFrame)
+            setValues(thread = scalaStackFrame.thread, frame = scalaStackFrame, frameIndex = scalaStackFrame.index)
           case _ =>
             println(s"Don't know the current selection $selection")
-            (null, null)
+            setValues(thread = null, frame = null)
         }
       case _ =>
         println(s"Don't know the current selection $selection")
-        (null, null)
+        setValues(thread = null, frame = null)
     }
-
-    _currentThread = newThread
-    _currentStackFrame = newStackFrame
   }
 
-  def init() {
-    if (!ScalaPlugin.plugin.headlessMode) {
+  def init(): Unit = {
+    if (!IScalaPlugin().headlessMode) {
       ScalaDebuggerContextListener.register()
     }
   }
 
-  /** `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
+  /**
+   * `IDebugContextListener` is part of the Eclipse UI code, by extending it in a different
    *  object, it will not be loaded as soon as `ScalaDebugger` is used.
    *  This allow to use `ScalaDebugger` even if the application is launched in `headless` mode, like while running tests.
    */
   private object ScalaDebuggerContextListener extends IDebugContextListener {
 
-    def register() {
+    def register(): Unit = {
       DebugContextManager.getDefault().addDebugContextListener(this)
     }
 
-    override def debugContextChanged(event: DebugContextEvent) {
-      ScalaDebugger.updateCurrentThreadAndStackFrame(event.getContext())
+    override def debugContextChanged(event: DebugContextEvent): Unit = {
+      ScalaDebugger.updateCurrentThread(event.getContext())
     }
   }
+
 }

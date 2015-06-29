@@ -1,8 +1,8 @@
 package org.scalaide.core
 package findreferences
 
-import internal.project.ScalaProject
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.core.IScalaProject
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model._
 import org.scalaide.logging.HasLogger
 import testsetup.FileUtils
@@ -28,35 +28,31 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
 
-import scala.language.reflectiveCalls
-
 @RunWith(classOf[JUnit4])
 class FindReferencesTests extends FindReferencesTester with HasLogger {
   private final val TestProjectName = "find-references"
 
-  private val simulator = new EclipseUserSimulator
-
   private var projectSetup: TestProjectSetup = _
 
-  def project: ScalaProject = projectSetup.project
+  def project: IScalaProject = projectSetup.project
 
   private var typeCheckUnitBeforeRunningTest: Boolean = _
 
   @Before
-  def setUp() {
+  def setUp(): Unit = {
     typeCheckUnitBeforeRunningTest = false
   }
 
   @Before
-  def createProject() {
-    val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
+  def createProject(): Unit = {
+    val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
     }
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
@@ -152,116 +148,116 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
   }
 
   @Test
-  def findReferencesOfClassFieldVar_bug1000067_1() {
+  def findReferencesOfClassFieldVar_bug1000067_1(): Unit = {
     val expected = fieldVar("Referred.aVar") isReferencedBy method("Referring.anotherMethod") and method("Referring.yetAnotherMethod")
     runTest("bug1000067_1", "FindReferencesOfClassFieldVar.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassMethod_bug1000067_2() {
+  def findReferencesOfClassMethod_bug1000067_2(): Unit = {
     val expected = method("Referred.aMethod") isReferencedBy method("Referring.anotherMethod") and method("Referring.yetAnotherMethod")
     runTest("bug1000067_2", "FindReferencesOfClassMethod.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassFieldVal_bug1000067_3() {
+  def findReferencesOfClassFieldVal_bug1000067_3(): Unit = {
     val expected = fieldVal("Referred.aVal") isReferencedBy method("Referring.anotherMethod") and method("Referring.yetAnotherMethod")
     runTest("bug1000067_3", "FindReferencesOfClassFieldVal.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassFieldLazyVal() {
+  def findReferencesOfClassFieldLazyVal(): Unit = {
     val expected = fieldVal("Foo.lazyX") isReferencedBy method("Bar.meth")
     runTest("lazy-val", "FindReferencesOfClassFieldLazyVal.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassConstructor_bug1000063_1() {
+  def findReferencesOfClassConstructor_bug1000063_1(): Unit = {
     val expected = clazz("ReferredClass") isReferencedBy method("ReferringClass.foo") and method("ReferringClass.bar")
     runTest("bug1000063_1", "FindReferencesOfClassConstructor.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassTypeInMethodTypeBound_bug1000063_2() {
+  def findReferencesOfClassTypeInMethodTypeBound_bug1000063_2(): Unit = {
     val expected = clazz("ReferredClass") isReferencedBy clazz("ReferringClass") and typeAlias("ReferringClass.typedSet") and method("ReferringClass.foo")
     runTest("bug1000063_2", "FindReferencesOfClassType.scala", expected)
   }
 
   @Test
-  def findReferencesOfClassType_bug1001084() {
+  def findReferencesOfClassType_bug1001084(): Unit = {
     val expected = clazz("Foo") isReferencedBy clazz("Bar")
     runTest("bug1001084", "FindReferencesOfClassType.scala", expected)
   }
 
   @Test
-  def findReferencesInsideCompanionObject_ex1() {
+  def findReferencesInsideCompanionObject_ex1(): Unit = {
     val expected = fieldVal("Foo$.ss") isReferencedBy moduleConstructor("Foo")
     runTest("ex1", "Ex1.scala", expected)
   }
 
   @Test
-  def findReferencesInConstructorSuperCall() {
+  def findReferencesInConstructorSuperCall(): Unit = {
     val expected = fieldVal("foo.Bar$.vvvv") isReferencedBy clazzConstructor("foo.Foo")
     runTest("super", "foo/Bar.scala", expected)
   }
 
   @Test
-  def bug1001135() {
+  def bug1001135(): Unit = {
     val expected = method("foo.Bar$.configure", List("java.lang.String")) isReferencedBy method("foo.Foo.configure")
     runTest("bug1001135", "foo/Bar.scala", expected)
   }
 
   @Test
-  def findReferencesInClassFields() {
+  def findReferencesInClassFields(): Unit = {
     val expected = fieldVal("Bar$.vvvv") isReferencedBy fieldVal("Foo.vvvv")
     runTest("field-ref", "Bar.scala", expected)
   }
 
   @Test
-  def findReferencesOfCurriedMethod_bug1001146() {
+  def findReferencesOfCurriedMethod_bug1001146(): Unit = {
     val expected = method("util.EclipseUtils$.workspaceRunnableIn", List("java.lang.String", "java.lang.Object", "scala.Function1<java.lang.Object,scala.runtime.BoxedUnit>")) isReferencedBy method("util.FileUtils$.foo")
     runTest("bug1001146", "util/EclipseUtils.scala", expected)
   }
 
   @Test
-  def findReferencesOfMethodDeclaredWithDefaultArgs_bug1001146_1() {
+  def findReferencesOfMethodDeclaredWithDefaultArgs_bug1001146_1(): Unit = {
     val expected = method("util.EclipseUtils$.workspaceRunnableIn", List("java.lang.String", "java.lang.Object", "scala.Function1<java.lang.Object,scala.runtime.BoxedUnit>")) isReferencedBy method("util.FileUtils$.foo")
     runTest("bug1001146_1", "util/EclipseUtils.scala", expected)
   }
 
   @Test
-  def findReferencesOfMethodInsideAnonymousFunction() {
+  def findReferencesOfMethodInsideAnonymousFunction(): Unit = {
     val expected = method("Foo.foo") isReferencedBy moduleConstructor("Bar")
     runTest("anon-fun", "Foo.scala", expected)
   }
 
   @Test
-  def findReferencesOfAnonymousClass() {
+  def findReferencesOfAnonymousClass(): Unit = {
     val expected = clazz("Foo") isReferencedBy fieldVal("Bar$.f")
     runTest("anon-class", "Foo.scala", expected)
   }
 
   @Test
-  def findReferencesOfAbstractMember() {
+  def findReferencesOfAbstractMember(): Unit = {
     val expected = method("Foo.obj") isReferencedBy method("Foo.foo")
     runTest("abstract-member", "Foo.scala", expected)
   }
 
   @Test
-  def findReferencesOfVarSetter() {
+  def findReferencesOfVarSetter(): Unit = {
     val expected = fieldVar("Foo.obj1") isReferencedBy clazzConstructor("Bar") and fieldVal("Bar.bar") and method("Bar.bar2")
     runTest("var_ref", "Bar.scala", expected)
   }
 
   @Test
-  def findReferencesOfVarSetterAfterUnitIsTypehecked() {
+  def findReferencesOfVarSetterAfterUnitIsTypehecked(): Unit = {
     typeCheckUnitBeforeRunningTest = true
     val expected = fieldVar("Foo.obj1") isReferencedBy clazzConstructor("Bar") and fieldVal("Bar.bar") and method("Bar.bar2")
     runTest("var_ref", "Bar.scala", expected)
   }
 
   @Test
-  def findReferencesOfMethodWithPrimitiveArgument_bug1001167_1() {
+  def findReferencesOfMethodWithPrimitiveArgument_bug1001167_1(): Unit = {
     val expected = method("A.testA1", List("int")) isReferencedBy method("A.testA2")
     runTest("bug1001167_1", "A.scala", expected)
   }

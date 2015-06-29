@@ -1,3 +1,3 @@
 trait Foo/*ref*/ {
-  def foo() {}
+  def foo(): Unit = {}
 }

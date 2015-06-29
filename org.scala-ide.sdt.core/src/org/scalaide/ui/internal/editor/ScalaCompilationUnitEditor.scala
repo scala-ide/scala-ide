@@ -1,19 +1,21 @@
 package org.scalaide.ui.internal.editor
 
-import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.util.internal.ui.DisplayThread
-import org.scalaide.util.internal.eclipse.SWTUtils.fnToPropertyChangeListener
-import org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuidePainter
+import org.eclipse.jdt.internal.ui.javaeditor.IJavaEditorActionConstants
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.widgets.Composite
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.ui.internal.actions.ScalaCopyQualifiedNameAction
+import org.scalaide.ui.internal.editor.decorators.indentguide.IndentGuidePainter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting
 import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPainter
+import org.scalaide.ui.syntax.ScalaSyntaxClasses
+import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+import org.scalaide.util.ui.DisplayThread
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/
 trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
@@ -25,10 +27,10 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   scalaPrefStore.addPropertyChangeListener(preferenceListener)
 
-  protected def scalaPrefStore = ScalaPlugin.prefStore
+  protected def scalaPrefStore = IScalaPlugin().getPreferenceStore()
   def javaPrefStore = super.getPreferenceStore
 
-  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration) {
+  override def setSourceViewerConfiguration(configuration: SourceViewerConfiguration): Unit = {
     super.setSourceViewerConfiguration(
       configuration match {
         case svc: ScalaSourceViewerConfiguration => svc
@@ -36,13 +38,21 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
       })
   }
 
-  override def createPartControl(parent: Composite) {
+  protected override def createActions(): Unit = {
+    super.createActions()
+    installScalaAwareCopyQualifiedNameAction()
+  }
+
+  private def installScalaAwareCopyQualifiedNameAction(): Unit = {
+    setAction(IJavaEditorActionConstants.COPY_QUALIFIED_NAME, new ScalaCopyQualifiedNameAction(this))
+  }
+
+  override def createPartControl(parent: Composite): Unit = {
     super.createPartControl(parent)
 
     val sv = sourceViewer
     val painter = Seq(new IndentGuidePainter(sv), new InferredSemicolonPainter(sv))
     painter foreach sv.addPainter
-
 
     if (isScalaSemanticHighlightingEnabled)
       installScalaSemanticHighlighting(forceSemanticHighlightingOnInstallment)
@@ -74,7 +84,7 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
 
   private def isScalaSemanticHighlightingEnabled: Boolean = semanticHighlightingPreferences.isEnabled
 
-  override def dispose() {
+  override def dispose(): Unit = {
     super.dispose()
     scalaPrefStore.removePropertyChangeListener(preferenceListener)
     uninstallScalaSemanticHighlighting(removesHighlights = false)
@@ -97,7 +107,6 @@ trait ScalaCompilationUnitEditor extends JavaEditor with ScalaEditor {
     new ScalaSourceViewerConfiguration(javaPrefStore, scalaPrefStore, this)
 
   override final def getInteractiveCompilationUnit(): InteractiveCompilationUnit = {
-    // getInputJavaElement always returns the right value
-    super.getInputJavaElement().asInstanceOf[InteractiveCompilationUnit]
+    IScalaPlugin().scalaCompilationUnit(getEditorInput()).orNull
   }
 }

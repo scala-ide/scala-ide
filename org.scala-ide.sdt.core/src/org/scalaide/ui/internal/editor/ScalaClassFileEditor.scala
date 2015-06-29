@@ -1,17 +1,31 @@
 package org.scalaide.ui.internal.editor
 
-import org.scalaide.core.internal.jdt.model.ScalaClassFile
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
-import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.internal.ui.javaeditor.ClassFileEditor
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.text.ITextSelection
-import org.eclipse.jface.text.source.SourceViewerConfiguration
+import org.scalaide.core.internal.jdt.model.ScalaClassFile
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
+import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 
-class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor {
+class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor with MarkOccurrencesEditorExtension {
+
+  private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
+
+  override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
+    super.createPartControl(parent)
+
+    if (isMarkingOccurrences())
+      installOccurrencesFinder(/*forceUpdate*/false)
+
+    getInteractiveCompilationUnit() match {
+      case scu: ScalaCompilationUnit => implicitHighlighter(scu)
+      case _ =>
+    }
+  }
 
   override def getElementAt(offset : Int) : IJavaElement = {
     getInputJavaElement match {
@@ -27,12 +41,12 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
     }
   }
 
-  override protected def createActions() {
+  override protected def createActions(): Unit = {
     super.createActions()
     val openAction = new Action {
-      override def run {
-        Option(getInputJavaElement) map (_.asInstanceOf[ScalaCompilationUnit]) foreach { scu =>
-         scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
+      override def run: Unit = {
+        Option(getInputJavaElement) map (ScalaCompilationUnit.castFrom) foreach { scu =>
+          scu.followDeclaration(ScalaClassFileEditor.this, getSelectionProvider.getSelection.asInstanceOf[ITextSelection])
         }
       }
     }

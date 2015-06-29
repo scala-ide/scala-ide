@@ -13,7 +13,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   val newline = Add("\n")
 
   @Before
-  def startUp() {
+  def startUp(): Unit = {
     import org.eclipse.ui.texteditor.AbstractDecoratedTextEditorPreferenceConstants._
 
     enable(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
@@ -22,7 +22,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def no_close_on_deactiveted_feature() {
+  def no_close_on_deactiveted_feature(): Unit = {
     enable(P_ENABLE_AUTO_CLOSING_COMMENTS, false)
     """
     /**^
@@ -34,7 +34,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def openDocComment_topLevel() {
+  def openDocComment_topLevel(): Unit = {
     """
     /**^
     class Foo
@@ -48,7 +48,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def openMultilineComment_topLevel() {
+  def openMultilineComment_topLevel(): Unit = {
     """
     /*^
     class Foo
@@ -62,12 +62,12 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def openDocComment_topLevel_with_nested() {
+  def openDocComment_topLevel_with_nested(): Unit = {
     """
     /**^
     class Foo {
       /** blah */
-      def foo() {}
+      def foo(): Unit = {}
     }
     """ becomes
     """
@@ -76,17 +76,17 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
      */
     class Foo {
       /** blah */
-      def foo() {}
+      def foo(): Unit = {}
     }
     """ after newline
   }
 
   @Test
-  def openDocComment_topLevel_with_stringLit() {
+  def openDocComment_topLevel_with_stringLit(): Unit = {
     """
     /**^
     class Foo {
-       def foo() {
+       def foo(): Unit = {
             "/* */" // tricky, this trips the Java auto-edit :-D
       }
     }
@@ -96,20 +96,38 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
      * ^
      */
     class Foo {
-       def foo() {
+       def foo(): Unit = {
             "/* */" // tricky, this trips the Java auto-edit :-D
       }
     }
     """ after newline
   }
 
+  def openDocComment_topLevel_with_stringLitCommon(): Unit = {
+    """
+    /**
+     * ""^
+     */
+    class Foo {
+    }
+    """ becomes
+    """
+    /**
+     * ""
+     * ^
+     */
+    class Foo {
+    }
+    """ after newline
+  }
+
   @Test
-  def openDocComment_nested() {
+  def openDocComment_nested(): Unit = {
     """
     /** blah */
     class Foo {
       /**^
-      def foo() {
+      def foo(): Unit = {
       }
     }
     """ becomes
@@ -119,22 +137,22 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
       /**
        * ^
        */
-      def foo() {
+      def foo(): Unit = {
       }
     }
     """ after newline
   }
 
   @Test
-  def openDocComment_nested_with_other_docs() {
+  def openDocComment_nested_with_other_docs(): Unit = {
     """
     /** blah */
     class Foo {
       /**^
-      def foo() {
+      def foo(): Unit = {
       }
       /** */
-      def bar
+      def bar: Unit
     }
     """ becomes
     """
@@ -143,16 +161,16 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
       /**
        * ^
        */
-      def foo() {
+      def foo(): Unit = {
       }
       /** */
-      def bar
+      def bar: Unit
     }
     """ after newline
   }
 
   @Test
-  def closedDocComment_topLevel() {
+  def closedDocComment_topLevel(): Unit = {
     """
     /** ^blah */
     class Foo {
@@ -167,7 +185,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedMultilineComment_topLevel() {
+  def closedMultilineComment_topLevel(): Unit = {
     """
     /*  ^blah */
     class Foo {
@@ -182,15 +200,15 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedDocComment_topLevel_nested() {
+  def closedDocComment_topLevel_nested(): Unit = {
     """
     /** blah */
     class Foo {
       /**^*/
-      def foo() {
+      def foo(): Unit = {
       }
       /** */
-      def bar
+      def bar: Unit
     }
     """ becomes
     """
@@ -198,16 +216,16 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
     class Foo {
       /**
        * ^*/
-      def foo() {
+      def foo(): Unit = {
       }
       /** */
-      def bar
+      def bar: Unit
     }
     """ after newline
   }
 
   @Test
-  def openDocComment_at_end() {
+  def openDocComment_at_end(): Unit = {
     """
     class Foo {
     }/**^
@@ -221,7 +239,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedDocComment_no_asterisk_on_empty_line() {
+  def closedDocComment_no_asterisk_on_empty_line(): Unit = {
     """
     /**
     ^
@@ -240,7 +258,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedMultilineComment_no_asterisk_on_empty_line() {
+  def closedMultilineComment_no_asterisk_on_empty_line(): Unit = {
     """
     /*
     ^
@@ -259,7 +277,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedDocComment_no_asterisk_on_line_not_starting_with_asterisk() {
+  def closedDocComment_no_asterisk_on_line_not_starting_with_asterisk(): Unit = {
     """
     /**
     hello^
@@ -278,7 +296,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedDocComment_line_break() {
+  def closedDocComment_line_break(): Unit = {
     """
     /** one^two
      */
@@ -295,7 +313,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedMultilineComment_line_break() {
+  def closedMultilineComment_line_break(): Unit = {
     """
     /*  one^two
      */
@@ -312,12 +330,12 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def closedDocComment_line_break_nested() {
+  def closedDocComment_line_break_nested(): Unit = {
     """
     class Foo {
       /** one^two
        */
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ becomes
     """
@@ -325,47 +343,47 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
       /** one
        *  ^two
        */
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ after newline
   }
 
   @Test
-  def closedDocComment_nop_end() {
+  def closedDocComment_nop_end(): Unit = {
     """
     class Foo {
       /** one two *^/
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ becomes
     """
     class Foo {
       /** one two *
        *  ^/
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ after newline
   }
 
   @Test
-  def closedDocComment_nop_beginning() {
+  def closedDocComment_nop_beginning(): Unit = {
     """
     class Foo {
       /^** one two */
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ becomes
     """
     class Foo {
       /
        * ^** one two */
-      def meth() {}
+      def meth(): Unit = {}
     }
     """ after newline
   }
 
   @Test
-  def openDocComment_keep_indentation() {
+  def openDocComment_keep_indentation(): Unit = {
     """
     /**   hello^
     """ becomes
@@ -377,7 +395,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def openMultilineComment_keep_indentation() {
+  def openMultilineComment_keep_indentation(): Unit = {
     """
     /*   hello^
     """ becomes
@@ -389,7 +407,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_keep_indentation() {
+  def docComment_keep_indentation(): Unit = {
     """
     /**
      *    hello^
@@ -404,7 +422,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def multilineComment_keep_indentation() {
+  def multilineComment_keep_indentation(): Unit = {
     """
     /*
      *    hello^
@@ -419,7 +437,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_no_additional_indent_on_break_line_before_spaces() {
+  def docComment_no_additional_indent_on_break_line_before_spaces(): Unit = {
     """
     /**^ abc */
     """ becomes
@@ -430,7 +448,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_wrap_text_after_cursor_on_automatically_closed_comment() {
+  def docComment_wrap_text_after_cursor_on_automatically_closed_comment(): Unit = {
     """
     /** a^ b
     """ becomes
@@ -442,7 +460,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_close_before_comment_with_code_blocks() {
+  def docComment_close_before_comment_with_code_blocks(): Unit = {
     """
     /**^
     /** {{{ }}} */
@@ -456,7 +474,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_no_close_before_code_blocks() {
+  def docComment_no_close_before_code_blocks(): Unit = {
     """
     /**^ {{{ }}} */
     """ becomes
@@ -467,7 +485,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_no_close_between_code_blocks() {
+  def docComment_no_close_between_code_blocks(): Unit = {
     """
     /**
      * {{{ }}}
@@ -486,7 +504,7 @@ class CommentAutoEditStrategyTest extends AutoEditStrategyTests {
   }
 
   @Test
-  def docComment_close_before_string_containing_closing_comment() {
+  def docComment_close_before_string_containing_closing_comment(): Unit = {
     """
     /**^
     val str = " */"

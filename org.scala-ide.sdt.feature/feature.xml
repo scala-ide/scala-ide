@@ -2,12 +2,12 @@
 <feature
       id="org.scala-ide.sdt.feature"
       label="Scala IDE for Eclipse"
-      version="4.0.0.qualifier"
+      version="4.2.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.sdt.core">
 
    <description url="http://scala-ide.org/">
-     The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
+      The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -65,6 +65,10 @@ SUCH DAMAGE.
          id="org.scala-ide.sbt.feature"
          version="0.0.0"/>
 
+   <includes
+         id="org.scala-ide.scala211.feature"
+         version="0.0.0"/>
+
    <requires>
       <import plugin="org.eclipse.equinox.weaving.aspectj"/>
       <import plugin="org.eclipse.core.runtime"/>
@@ -116,6 +120,20 @@ SUCH DAMAGE.
 
    <plugin
          id="scalariform"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.eclipse.nebula.widgets.tablecombo"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.scala-ide.sdt.debug.expression"
          download-size="0"
          install-size="0"
          version="0.0.0"

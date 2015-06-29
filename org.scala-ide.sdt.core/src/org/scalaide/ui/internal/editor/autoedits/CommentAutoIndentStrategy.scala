@@ -8,7 +8,6 @@ import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
-import org.scalaide.util.internal.ScalaWordFinder
 import org.eclipse.jface.text.IRegion
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
@@ -21,7 +20,7 @@ import org.eclipse.jface.text.IRegion
  */
 class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: String) extends AutoIndentStrategy(prefStore) with HasLogger {
 
-  override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand) {
+  override def customizeDocumentCommand(doc: IDocument, cmd: DocumentCommand): Unit = {
     try {
       if (TextUtilities.endsWith(doc.getLegalLineDelimiters(), cmd.text) != -1) {
         val shouldClose = {
@@ -157,7 +156,6 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
     }
   }
 
-
   /** Heuristics for when to close a Scaladoc. Returns `true` when the offset is
    *  inside a Scaladoc that runs to the end of the document or if the line
    *  containing the end of the Scaladoc section contains a quotation mark. This
@@ -167,10 +165,10 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
   private def shouldCloseDocComment(doc: IDocument, offset: Int): Boolean = {
     def isProbablyString = {
       val p = TextUtilities.getPartition(doc, partitioning, offset, true)
-      val start = doc.getLineInformationOfOffset(p.getOffset()).getOffset()
-      val end = p.getOffset() + p.getLength() - start
+      val start = doc.getLineInformationOfOffset(p.getOffset + p.getLength).getOffset()
+      val len = p.getOffset() + p.getLength() - start
 
-      val containsSingleQuote = doc.get(start, end).reverse.exists(_ == '"')
+      val containsSingleQuote = doc.get(start, len).indexOf('"') >= 0
       scaladocPartitions(p.getType()) && containsSingleQuote
     }
 

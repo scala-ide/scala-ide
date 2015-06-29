@@ -12,31 +12,32 @@ object IDESettings {
 
     List(
       Box("Standard",
-        List(lint, deprecation, feature, g, optimise, target, unchecked,
+        // TODO: re-enable -Xlint when the changes to Mutable#settings has been stabilised
+        // in Scala master and some of the PRs with the old code have been through. See #1002253
+        List(/*lint, */deprecation, feature, g, optimise, target, unchecked,
              pluginOptions, nospecialization, verbose, explaintypes, nowarn)),
       Box("Advanced",
-      List(checkInit, Xchecknull, elidebelow,
+      List(checkInit, elidebelow,
              Xexperimental, future, XlogImplicits,
              noassertions, nouescape, plugin, disable,
-             require, pluginsDir, Xwarnfatal)),
+             require, pluginsDir, fatalWarnings)),
       Box("Presentation Compiler",
         List(YpresentationDebug, YpresentationVerbose, YpresentationLog, YpresentationReplay, YpresentationDelay)))
   }
 
   def buildManagerSettings: List[Box] =
     List(Box("Build manager",
-      List(buildManager,
-        compileOrder,
+      List(compileOrder,
         stopBuildOnErrors,
         relationsDebug,
         apiDiff,
         withVersionClasspathValidator,
         recompileOnMacroDef,
-        nameHashing)))
+        nameHashing,
+        useScopesCompiler)))
 }
 
 object ScalaPluginSettings extends Settings {
-  val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "sbt")
   val compileOrder = ChoiceSetting("-compileorder", "which", "Compilation order",
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")
   val stopBuildOnErrors = new BooleanSettingWithDefault("-stopBuildOnError", "Stop build if dependent projects have errors.", true)
@@ -45,6 +46,7 @@ object ScalaPluginSettings extends Settings {
   val apiDiff = BooleanSetting("-apiDiff", "Log type diffs that trigger additional compilation (slows down builder)")
   val recompileOnMacroDef = BooleanSetting("-recompileOnMacroDef", "Always recompile all dependencies of a macro def")
   val nameHashing = BooleanSetting("-nameHashing", "Enable improved (experimental) incremental compilation algorithm")
+  val useScopesCompiler = new BooleanSettingWithDefault("-useScopesCompiler", "Compiles every scope separately.", true)
 
   /** A setting represented by a boolean flag, with a custom default */
   // original code from MutableSettings#BooleanSetting
@@ -54,12 +56,12 @@ object ScalaPluginSettings extends Settings {
     val default: Boolean)
     extends Setting(name, descr) {
     type T = Boolean
-    protected var v: Boolean = default
+    protected var v: Boolean = false
     override def value: Boolean = v
 
     def tryToSet(args: List[String]) = { value = true; Some(args) }
     def unparse: List[String] = if (value) List(name) else Nil
-    override def tryToSetFromPropertyValue(s: String) { // used from ide
+    override def tryToSetFromPropertyValue(s: String): Unit = { // used from ide
       value = s.equalsIgnoreCase("true")
     }
     override def tryToSetColon(args: List[String]) = args match {

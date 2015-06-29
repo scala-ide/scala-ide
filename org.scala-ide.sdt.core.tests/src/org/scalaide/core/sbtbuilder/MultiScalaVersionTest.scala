@@ -4,10 +4,11 @@ import org.junit.Test
 import org.junit.Assert
 import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.JavaCore
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.availableInstallations
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.eclipse.core.runtime.Path
@@ -17,7 +18,10 @@ import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 import sbt.ScalaInstance
-import org.scalaide.core.internal.project.ScalaModule
+import org.scalaide.core.IScalaModule
+import org.scalaide.core.internal.project.ScalaInstallationChoice
+import org.scalaide.core.internal.project.LabeledScalaInstallation
+import org.scalaide.core.SdtConstants
 
 class MultiScalaVersionTest {
   // this was deprecated in 2.10, and invalid in 2.11
@@ -26,15 +30,20 @@ class MultiScalaVersionTest {
   val sourceCode = "case class InvalidCaseClass" // parameter-less case classes forbidden in 2.11
 
   @Test // Build using the previous version of the Scala library
-  def previousVersionBuildSucceeds() {
-    val Seq(p) = createProjects("prev-version-build")
-    p.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
-    val sourceFile = addFileToProject(p.underlying, "/src/InvalidCaseClass.scala", sourceCode)
+  def previousVersionBuildSucceeds(): Unit = {
+    val Seq(proj) = internalCreateProjects("prev-version-build")
+    val p = proj
+    val projectSpecificStorage = p.projectSpecificStorage
+
+    projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
 
     for (installation <- findPreviousScalaInstallation()) {
+      val choice = ScalaInstallationChoice(installation)
+      projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, choice.toString())
+      Assert.assertEquals(s"Expected to see the desired choice, found ${p.desiredinstallationChoice()}", choice, p.desiredinstallationChoice())
       setScalaLibrary(p, installation.library.classJar)
       val ShortScalaVersion(major, minor) = installation.version
-      p.projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
+      projectSpecificStorage.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-Xsource:$major.$minor")
 
       p.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
       val (_, errors) = getErrorMessages(p.underlying).filter(_._1 == IMarker.SEVERITY_ERROR).unzip
@@ -42,50 +51,17 @@ class MultiScalaVersionTest {
     }
   }
 
-  case class DummyInstallation(override val version: ScalaVersion) extends ScalaInstallation {
-
-    override def library: ScalaModule = ???
-    override def compiler: ScalaModule = ???
-    override def extraJars: Seq[ScalaModule] = ???
-    override def allJars: Seq[ScalaModule] = ???
-    override def scalaInstance: ScalaInstance = ???
-  }
-
-  /** shorcut for creating dummy installations. */
-  def di(v: String) = DummyInstallation(ScalaVersion("2.10.0"))
-
-  @Test
-  def bestMatchSimple() {
-    val installations = Seq(di("2.10.0"), di("2.11.0"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.10.10").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.10.0").version)
-  }
-
-  @Test
-  def bestMatchOffByOne() {
-    val installations = Seq(di("2.10.0"), di("2.11.0"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.11.1").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.11.1").version)
-  }
-
-  @Test
-  def bestMatchLargeMicros() {
-    val installations = Seq(di("2.9.0"), di("2.10.11"))
-    val best = ScalaInstallation.findBestMatch(ScalaVersion("2.10.0").asInstanceOf[SpecificScalaVersion], installations)
-    Assert.assertEquals("Find best version", best.version, di("2.10.0").version)
-  }
-
-  private def findPreviousScalaInstallation(): Option[ScalaInstallation] = {
-    ScalaInstallation.availableInstallations find { installation =>
-      (installation.version, ScalaPlugin.plugin.scalaVer) match {
+  private def findPreviousScalaInstallation(): Option[LabeledScalaInstallation] = {
+    availableInstallations find { installation =>
+      (installation.version, IScalaPlugin().scalaVersion) match {
         case (ShortScalaVersion(_, minor), ShortScalaVersion(_, pluginMinor)) => minor < pluginMinor
         case _ => false
       }
     }
   }
 
-  private def setScalaLibrary(p: ScalaProject, lib: IPath): Unit = {
-    val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != ScalaPlugin.plugin.scalaLibId)
+  private def setScalaLibrary(p: IScalaProject, lib: IPath): Unit = {
+    val baseClasspath = p.javaProject.getRawClasspath().filter(_.getPath().toPortableString() != SdtConstants.ScalaLibContId)
     p.javaProject.setRawClasspath(baseClasspath :+ JavaCore.newLibraryEntry(lib, null, null), null)
   }
 }

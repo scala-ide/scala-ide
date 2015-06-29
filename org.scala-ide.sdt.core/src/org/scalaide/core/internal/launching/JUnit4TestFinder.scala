@@ -6,7 +6,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.core.runtime.IProgressMonitor
 import java.util.{ Set => JSet }
 import org.eclipse.jdt.core.IType
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaProject
@@ -24,13 +24,14 @@ import org.eclipse.jdt.internal.junit.JUnitMessages
 import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IParent
 import scala.tools.eclipse.contribution.weaving.jdt.launching.ISearchMethods
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /** A JUnit4 test finder that works for Java and Scala.
  *
@@ -84,7 +85,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
 
     val emptySet = immutable.Set[String]()
 
-    val res = ScalaPlugin.plugin.asScalaProject(javaProject.getProject()) map { scalaProject =>
+    val res = IScalaPlugin().asScalaProject(javaProject.getProject()) map { scalaProject =>
       scalaProject.presentationCompiler { comp =>
         import comp._
         object helper extends JUnit4TestClassesCollector { val global: comp.type = comp }
@@ -95,12 +96,12 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
         }
         val fqn = newTypeName(tpe.getFullyQualifiedName())
 
-        askOption { () =>
+        asyncExec {
           // classes in the empty package are not found in the root mirror
           val sym = if (fqn.lastPos('.') > -1) rootMirror.getClassByName(fqn) else rootMirror.EmptyPackageClass.info.member(fqn)
           sym.annotations
-          sym.info.members.filter(hasTestAnnotation).map(_.originalName.toString).toSet
-        } getOrElse (emptySet)
+          sym.info.members.filter(hasTestAnnotation).map(_.unexpandedName.toString).toSet[String]
+        }.getOrElse(emptySet)()
       } getOrElse (emptySet)
     } getOrElse (emptySet)
 
@@ -115,19 +116,20 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
    */
   private def findTestsInContainer1(element: IJavaElement, result: mutable.Set[IType], _pm: IProgressMonitor): Unit = {
     val pm = if (_pm == null) new NullProgressMonitor else _pm
-    val scalaProject = ScalaPlugin.plugin.asScalaProject(element.getJavaProject().getProject()).get // we know it's a Scala project or we wouldn't be here
+    val scalaProject = IScalaPlugin().asScalaProject(element.getJavaProject().getProject()).get // we know it's a Scala project or we wouldn't be here
 
     val progress = SubMonitor.convert(pm, JUnitMessages.JUnit4TestFinder_searching_description, 4)
     try {
       val (scalaCandidates, javaCandidates) = filteredTestResources(scalaProject, element, progress.newChild(2)).partition(_.getFileExtension == "scala")
 
+      logger.debug(s"Scala test candidates:\n${scalaCandidates.mkString("\n")}")
       result ++= scalaMatches(scalaCandidates, progress.newChild(1))
       result ++= ((new JavaJUnit4TestFinder).javaMatches(scalaProject.javaProject, javaCandidates, progress.newChild(1)))
     } finally
       pm.done()
   }
 
-  private[core] def filteredTestResources(prj: ScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
+  private[core] def filteredTestResources(prj: IScalaProject, element: IJavaElement, progress: IProgressMonitor): Seq[IResource] = {
     val candidates = element match {
       case project: IJavaProject => prj.allSourceFiles.toSeq
       case _                     => Seq(element.getResource)
@@ -141,6 +143,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
     val pm = SubMonitor.convert(_pm, "Textual search for likely sources that contain tests", roots.size)
     val scope = TextSearchScope.newSearchScope(roots.toArray, FILE_NAME_PATTERN.pattern, /* visitDerivedResoures = */ false)
 
+    logger.info(s"Searching test resources in ${roots.map(_.getName)}")
     if (pm.isCanceled()) Seq()
     else {
       val engine = TextSearchEngine.createDefault()
@@ -198,7 +201,7 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
  *  the test class is because he has to fix all compilation errors. Therefore, it is better to always return the
  *  set of executable JUnit4 test classes and let the user figure out the cause why the test class cannot be run.
  */
-object JUnit4TestFinder {
+object JUnit4TestFinder extends HasLogger {
   private val MARKER_STRINGS = Set("@Test", "@RunWith")
 
   /** Textual filter, used to find candidate resources for JUnit tests. */
@@ -207,19 +210,17 @@ object JUnit4TestFinder {
 
   def findTestClasses(scu: ScalaSourceFile): List[IType] = scu.withSourceFile { (source, comp) =>
     import comp.ClassDef
-    import comp.Response
-    import comp.Tree
-    import org.scalaide.util.internal.Utils._
-    val response = new Response[Tree]
-    comp.askParsedEntered(source, keepLoaded = false, response)
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
+
+    val trees = comp.askParsedEntered(source, keepLoaded = false).getOrElse(comp.EmptyTree)()
 
     object JUnit4TestClasses extends JUnit4TestClassesCollector {
       val global: comp.type = comp
     }
 
-    val trees = response.get.left.getOrElse(comp.EmptyTree)
     for {
       cdef <- JUnit4TestClasses.collect(trees)
+      _ = logger.debug(s"Found test class ${cdef.name}")
       jdtElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
       jdtType <- jdtElement.asInstanceOfOpt[IType]
     } yield jdtType

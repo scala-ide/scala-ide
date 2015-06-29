@@ -1,21 +1,14 @@
 package org.scalaide.core.ui
 
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension3
-import org.junit.AfterClass
 import org.junit.ComparisonFailure
-import org.scalaide.core.EclipseUserSimulator
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.CompilerSupportTests
+import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.util.internal.eclipse.EclipseUtils
-import org.junit.AfterClass
+import org.scalaide.util.eclipse.EclipseUtils
 
 /**
  * This class provides basic test behavior for all text changing operations that
@@ -57,6 +50,31 @@ abstract class TextEditTests {
      * by the test suite.
      */
     def execute(): Unit
+
+    /**
+     * This function can handle Eclipse' linked mode model. To depict such a
+     * model in the test simply surround the identifiers that should be
+     * considered by the linked model with [[ and ]]. The cursor is always
+     * represented by a ^.
+     *
+     * This function needs to be called by a concrete operation to add the [[
+     * and ]] markers to `doc`. `cursorPos` is the position of the cursor where
+     * the ^ marker should be added to `doc`. This function updates the cursor
+     * position if necessary and returns its updated value. `groups` are pairs
+     * of `(offset, length)` which span the area that should be surrounded
+     * by the [[ and ]] markers.
+     */
+    def applyLinkedModel(doc: IDocument, cursorPos: Int, positionGroups: Seq[(Int, Int)]): Int = {
+      val groups = positionGroups.sortBy(-_._1)
+      val cursorOffset = groups.takeWhile(_._1 < cursorPos).size*4
+
+      groups foreach {
+        case (offset, length) =>
+          doc.replace(offset+length, 0, "]]")
+          doc.replace(offset, 0, "[[")
+      }
+      cursorPos+cursorOffset
+    }
   }
 
   /** This method allows subclasses to provide their own test setup. */
@@ -69,7 +87,7 @@ abstract class TextEditTests {
     def becomes(expectedOutput: String) = input -> expectedOutput
   }
   final implicit class TestExecutor(testData: (String, String)) {
-    def after(operation: Operation) = test(testData._1, testData._2, operation)
+    def after(operation: Operation, marker: Char = '$') = test(testData._1, testData._2, operation, marker)
   }
 
   /**
@@ -83,21 +101,21 @@ abstract class TextEditTests {
    * before the caret in the input string.
    *
    * Sometimes it can happen that the input or output must contain trailing
-   * white spaces. If this is the case then a $ sign must be set to the position
-   * after the expected number of white spaces.
+   * white spaces. If this is the case then the sign passed to `marker` must be
+   * set to the position after the expected number of white spaces.
    */
-  final def test(input: String, expectedOutput: String, operation: Operation): Unit = {
+  final def test(input: String, expectedOutput: String, operation: Operation, marker: Char = '$'): Unit = {
     require(input.count(_ == '^') == 1, "the cursor in the input isn't set correctly")
     require(expectedOutput.count(_ == '^') == 1, "the cursor in the expected output isn't set correctly")
 
-    val inputWithoutDollarSigns = input.filterNot(_ == '$')
+    val inputWithoutDollarSigns = input.filterNot(_ == marker)
     val caretOffset = inputWithoutDollarSigns.indexOf('^')
     val inputWithoutCursor = inputWithoutDollarSigns.filterNot(_ == '^')
 
     operation.caretOffset = caretOffset
     runTest(inputWithoutCursor, operation)
 
-    val expected = expectedOutput.replaceAll("\\$", "")
+    val expected = expectedOutput.filterNot(_ == marker)
     val actual = new StringBuilder(source).insert(operation.caretOffset, "^").toString()
 
     if (expected != actual) {
@@ -113,7 +131,7 @@ trait EclipseDocumentSupport {
 
   override def runTest(source: String, operation: Operation): Unit = {
     doc = new Document(source)
-    val partitioner = new ScalaDocumentPartitioner
+    val partitioner = ScalaCodePartitioner.documentPartitioner()
 
     doc.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
     doc.setDocumentPartitioner(IDocumentExtension3.DEFAULT_PARTITIONING, partitioner)
@@ -125,48 +143,12 @@ trait EclipseDocumentSupport {
     doc.get()
 }
 
-trait CompilerSupport extends EclipseDocumentSupport {
+trait CompilerSupport extends EclipseDocumentSupport with CompilerSupportTests {
   this: TextEditTests =>
-
-  /** Can be overwritten in a subclass if desired. */
-  val projectName: String = getClass().getSimpleName()
-
-  private val project: ScalaProject = {
-    val simulator = new EclipseUserSimulator
-    simulator.createProjectInWorkspace(projectName)
-  }
 
   override def runTest(source: String, operation: Operation): Unit = {
     EclipseUtils.workspaceRunnableIn(SDTTestUtils.workspace) { _ =>
       super.runTest(source, operation)
-    }
-  }
-
-  def withCompiler(f: ScalaPresentationCompiler => Unit): Unit =
-    project.presentationCompiler { compiler =>
-      f(compiler)
-    }
-
-  /**
-   * Creates a compilation unit whose underlying source file physically exists
-   * in the test project of the test workspace. The file is placed in a unique
-   * package name to prevent name clashes between generated files.
-   *
-   * The newly generated file is made available to the Eclipse platform and the
-   * Scala compiler to allow the usage of the full non GUI feature set of the IDE.
-   */
-  final def mkCompilationUnit(source: String): ICompilationUnit = {
-    val p = SDTTestUtils.createSourcePackage("testpackage" + System.nanoTime())(project)
-    new EclipseUserSimulator().createCompilationUnit(p, "testfile.scala", source)
-  }
-
-  final def mkScalaCompilationUnit(source: String): ScalaCompilationUnit =
-    mkCompilationUnit(source).asInstanceOf[ScalaCompilationUnit]
-
-  @AfterClass
-  final def deleteProject(): Unit = {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace()) { _ =>
-      project.underlying.delete(/* force */ true, new NullProgressMonitor)
     }
   }
 }

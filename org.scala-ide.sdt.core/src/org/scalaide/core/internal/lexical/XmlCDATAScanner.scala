@@ -6,6 +6,7 @@ import scala.collection.mutable.ListBuffer
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.eclipse.jface.preference.IPreferenceStore
+import org.scalaide.core.lexical.AbstractScalaScanner
 
 class XmlCDATAScanner(val preferenceStore: IPreferenceStore) extends AbstractScalaScanner {
 
@@ -15,7 +16,7 @@ class XmlCDATAScanner(val preferenceStore: IPreferenceStore) extends AbstractSca
 
   private var regionTokens: List[RegionToken] = Nil
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     val buffer = new ListBuffer[RegionToken]
     /**
      * Dummy token to sit on top of the stack until the first call to nextToken() removes it

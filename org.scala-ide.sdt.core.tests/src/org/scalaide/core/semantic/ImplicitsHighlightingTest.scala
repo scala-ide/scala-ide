@@ -1,36 +1,34 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/node/146
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.core
 package semantic
 
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Before
 import org.junit.Test
 import org.scalaide.ui.internal.preferences.ImplicitsPreferencePage
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 object ImplicitsHighlightingTest extends TestProjectSetup("implicits-highlighting")
 
 class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlightingTest) {
 
   @Before
-  def setPreferences() {
-    ScalaPlugin.plugin.getPreferenceStore.setValue(ImplicitsPreferencePage.P_CONVERSIONS_ONLY, false)
+  def setPreferences(): Unit = {
+    IScalaPlugin().getPreferenceStore.setValue(ImplicitsPreferencePage.PConversionsOnly, false)
   }
 
   @Test
-  def implicitConversion() {
+  def implicitConversion(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/Implicits.scala") { (src, compiler) =>
 
       val expected = List(
-        "Implicit conversions found: List(1,2) => listToString(List(1,2)) [180, 9]",
-        "Implicit conversions found: List(1,2,3) => listToString(List(1,2,3)) [151, 11]"
+        "Implicit conversion found: `List(1,2)` => `listToString(List(1,2)): String` [180, 9]",
+        "Implicit conversion found: `List(1,2,3)` => `listToString(List(1,2,3)): String` [151, 11]"
       )
       val actual = implicits(src, compiler)
 
@@ -39,11 +37,11 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
   }
 
   @Test
-  def implicitConversionsFromPredef() {
+  def implicitConversionsFromPredef(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/DefaultImplicits.scala") { (src, compiler) =>
 
       val expected = List(
-        "Implicit conversions found: 4 => int2Integer(4) [74, 1]"
+        "Implicit conversion found: `4` => `int2Integer(4): Integer` [74, 1]"
       )
       val actual = implicits(src, compiler)
 
@@ -52,11 +50,11 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
   }
 
   @Test
-  def implicitArguments() {
+  def implicitArguments(): Unit = {
     withCompilationUnitAndCompiler("implicit-highlighting/ImplicitArguments.scala") {(src, compiler) =>
 
       val expected = List (
-        "Implicit arguments found: takesImplArg => takesImplArg( implicits.ImplicitArguments.s ) [118, 12]"
+        "Implicit arguments found: `takesImplArg` => `takesImplArg( implicits.ImplicitArguments.s )` [124, 12]"
       )
       val actual = implicits(src, compiler)
 
@@ -64,8 +62,8 @@ class ImplicitsHighlightingTest extends HighlightingTestHelpers(ImplicitsHighlig
     }
   }
 
-  def implicits(compiler: ScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
-    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.sourceFile())
+  def implicits(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit) = {
+    val implicits = ImplicitHighlightingPresenter.findAllImplicitConversions(compiler, scu, scu.lastSourceMap().sourceFile)
     implicits.toList map {
       case (ann, p) =>
         ann.getText() +" ["+ p.getOffset() + ", "+ p.getLength() +"]"

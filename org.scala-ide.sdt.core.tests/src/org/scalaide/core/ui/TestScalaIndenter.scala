@@ -1,35 +1,31 @@
 package org.scalaide.core.ui
 
-import org.junit.Assert._
-import org.junit.runner.RunWith
-import org.junit.internal.runners.JUnit4ClassRunner
-import org.junit.Test
-import org.junit.Before
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.DocumentCommand
-import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.preference.PreferenceStore
-import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.formatter.{ DefaultCodeFormatterConstants => Dcfc }
 import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
-import org.eclipse.jdt.internal.core.JavaCorePreferenceInitializer
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.ui.internal.editors.text.EditorsPlugin
-import java.util.Hashtable
+import org.eclipse.jdt.ui.text.IJavaPartitions
+import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.TextUtilities
+import org.eclipse.jface.text.source.ISourceViewer
+import org.eclipse.ui.internal.editors.text.EditorsPlugin
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Ignore
+import org.junit.Test
+import org.junit.internal.runners.JUnit4ClassRunner
+import org.junit.runner.RunWith
+import org.scalaide.core.lexical.ScalaCodePartitioner
+import org.scalaide.core.testsetup.SdtTestConstants
 import org.scalaide.ui.internal.editor.PreferenceProvider
 import org.scalaide.ui.internal.editor.ScalaAutoIndentStrategy
 import org.scalaide.ui.internal.editor.ScalaIndenter
-import org.eclipse.jdt.ui.text.IJavaPartitions
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
 
 @RunWith(classOf[JUnit4ClassRunner])
+@Ignore(SdtTestConstants.TestRequiresGuiSupport)
 class TestScalaIndenter {
 
   /**
@@ -63,7 +59,7 @@ class TestScalaIndenter {
   val CARET = "_|_"
 
   @Before
-  def initialiseClass() {
+  def initialiseClass(): Unit = {
     // Initialisation fluff
     if (JavaPlugin.getDefault() == null) {
       new JavaPlugin()
@@ -76,14 +72,13 @@ class TestScalaIndenter {
     }
   }
 
-  def runTest(textSoFar : String, insert : String, expectedResultWithCaret : String) {
+  def runTest(textSoFar : String, insert : String, expectedResultWithCaret : String): Unit = {
     def nrOfCarets(str: String): Int = s"\\Q$CARET\\E".r.findAllIn(str).size
 
     val document = new Document(textSoFar.replace(CARET, ""))
-    val partitioner = new ScalaDocumentPartitioner
+    val partitioner = ScalaCodePartitioner.documentPartitioner()
     partitioner.connect(document)
     document.setDocumentPartitioner(IJavaPartitions.JAVA_PARTITIONING, partitioner)
-
 
     // Create the command with all needed information
     val command = new InstantiableDocumentCommands()
@@ -138,7 +133,6 @@ class TestScalaIndenter {
     assertEquals(expectedOffset, newOffset)
   }
 
-
   /**
    * Test:
    *   class x {<->
@@ -149,7 +143,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testClassIndent() {
+  def testClassIndent(): Unit = {
 
     val textSoFar =
       "class x {" + CARET
@@ -162,7 +156,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   trait x {<->
@@ -173,7 +166,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testTraitIndent() {
+  def testTraitIndent(): Unit = {
 
     val textSoFar =
       "trait x {" + CARET
@@ -185,7 +178,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
@@ -201,7 +193,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testDefIndent() {
+  def testDefIndent(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  def y = {" + CARET + "\n" +
@@ -216,7 +208,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
@@ -232,7 +223,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def defWithType() {
+  def defWithType(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  def y : Int = {" + CARET + "\n" +
@@ -248,7 +239,6 @@ class TestScalaIndenter {
     runTest(textSoFar, "\n", expectedResult)
   }
 
-
   /**
    * Test:
    *   class x {
@@ -262,7 +252,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def testGenericsIndent() {
+  def testGenericsIndent(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  val xs = List[x]" + CARET + "\n" +
@@ -276,7 +266,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
@@ -291,7 +280,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def genericsIndentOverMultipleLines() {
+  def genericsIndentOverMultipleLines(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  val xs = List[" + CARET + "\n" +
@@ -304,7 +293,6 @@ class TestScalaIndenter {
 
     runTest(textSoFar, "\n", expectedResult)
   }
-
 
   /**
    * Test:
@@ -319,7 +307,7 @@ class TestScalaIndenter {
    *   }
    */
   @Test
-  def afterFunctionCall() {
+  def afterFunctionCall(): Unit = {
     val textSoFar =
       "class x {\n" +
       "  y()" + CARET + "\n" +
@@ -335,7 +323,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefNoRhs() {
+  def afterValDefNoRhs(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = $CARET
@@ -351,7 +339,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDef() {
+  def afterValDef(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = "abc"$CARET
@@ -367,7 +355,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefEmptySpace() {
+  def afterValDefEmptySpace(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = "abc"
@@ -385,7 +373,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLit() {
+  def afterValDefCharLit(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = 'a'$CARET
@@ -401,7 +389,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLitEscaped() {
+  def afterValDefCharLitEscaped(): Unit = {
     val textSoFar = raw"""|
                         |class x {
                         |  val x = '\n'$CARET
@@ -417,7 +405,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefCharLitEscapedBackSlash() {
+  def afterValDefCharLitEscapedBackSlash(): Unit = {
     val textSoFar = raw"""|
                         |class x {
                         |  val x = '\\'$CARET
@@ -433,7 +421,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefRawString() {
+  def afterValDefRawString(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = \"\"\"abcdef\"\"\"$CARET
@@ -449,7 +437,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefMiddleCaret() {
+  def afterValDefMiddleCaret(): Unit = {
     val textSoFar = s"""|
                         |class x {
                         |  val x = $CARET"abc"
@@ -465,7 +453,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterValDefWithEscape() {
+  def afterValDefWithEscape(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  val x = "a\"bc"$CARET
@@ -481,7 +469,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterIfElse() {
+  def afterIfElse(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  if (true)
@@ -499,7 +487,7 @@ class TestScalaIndenter {
   }
 
   @Test
-  def afterIfElseNoChange() {
+  def afterIfElseNoChange(): Unit = {
     val textSoFar = s"""|
                         |class x {"
                         |  if (true)

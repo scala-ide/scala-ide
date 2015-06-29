@@ -11,6 +11,7 @@ import java.io.PrintWriter
 import java.io.FileOutputStream
 import java.util.Calendar
 import org.junit.Assert
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 object compilerProject extends TestProjectSetup("scala-compiler")
 
@@ -36,7 +37,7 @@ object compilerProject extends TestProjectSetup("scala-compiler")
 class MemoryLeaksTest extends HasLogger {
   final val mega = 1024 * 1024
 
-  @Test def memoryConsumptionTest() {
+  @Test def memoryConsumptionTest(): Unit = {
     import compilerProject._
     import logger._
 
@@ -65,6 +66,8 @@ class MemoryLeaksTest extends HasLogger {
     val usedMem = for (i <- 1 to N) yield {
       val src = if (i % 2 == 0) originalTyper else changedTyper
 
+      // reconcile once in a while
+      if (i % 3 == 0) typerUnit.withSourceFile((_, comp) => comp.askReloadManagedUnits())
       val usedMem = withGC {
         typeCheckWith(typerUnit, src)
         typeCheckWith(implicitsUnit, new String(implicitsUnit.getContents))
@@ -98,13 +101,12 @@ class MemoryLeaksTest extends HasLogger {
     logger.debug("Problems: " + unit.asInstanceOf[ScalaSourceFile].getProblems)
 
     // then
-    unit.withSourceFile { (sourceFile, compiler) =>
-      compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-        compiler.askOption { () =>
-          val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
+    unit.scalaProject.presentationCompiler.internal { compiler =>
+      val tree = compiler.askStructure(unit.lastSourceMap().sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+      compiler.asyncExec {
+        val overrideIndicatorBuilder = new compiler.OverrideIndicatorBuilderTraverser(unit, new java.util.HashMap)
 
-          overrideIndicatorBuilder.traverse(tree)
-        }
+        overrideIndicatorBuilder.traverse(tree)
       }
     }
   }

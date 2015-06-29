@@ -6,14 +6,14 @@ import scala.collection.JavaConverters._
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.logging.HasLogger
-import scala.actors.Actor
+import org.scalaide.util.internal.Suppress
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.ThreadReference
 
 object Utility extends HasLogger {
 
-  def installMethodBreakpoint(debugTarget: ScalaDebugTarget, app: AsyncProgramPoint, actor: Actor, threadRef: ThreadReference = null): Seq[BreakpointRequest] = {
+  def installMethodBreakpoint(debugTarget: ScalaDebugTarget, app: AsyncProgramPoint, actor: Suppress.DeprecatedWarning.Actor, threadRef: ThreadReference = null): Seq[BreakpointRequest] = {
     def isAPP(m: Method): Boolean =
       (!m.isAbstract()
         && m.name().startsWith(app.methodName)

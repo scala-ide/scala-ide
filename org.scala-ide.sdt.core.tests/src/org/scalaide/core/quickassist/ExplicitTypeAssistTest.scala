@@ -6,7 +6,7 @@ import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
-import org.scalaide.core.internal.quickfix.explicit.ExplicitReturnType
+import org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType
 import scala.util.control.Exception
 
 object ExplicitTypeAssistTest extends QuickAssistTest {
@@ -21,7 +21,7 @@ object ExplicitTypeAssistTest extends QuickAssistTest {
 class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   import ExplicitTypeAssistTest._
 
-  val quickAssist = ExplicitReturnType
+  val quickAssist = new ExplicitReturnType
 
   def createSource(packageName: String, unitName: String)(contents: String) = createSourceFile(packageName, unitName)(contents)
 
@@ -35,7 +35,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
     }
 
   @Test
-  def assistVal() {
+  def assistVal(): Unit = {
     assistsFor("""
         class Test {
           val foo = ^42
@@ -48,7 +48,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistDef() {
+  def assistDef(): Unit = {
     assistsFor("""
         class Test {
           def foo(x: Int) = ^x + 1
@@ -61,7 +61,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistList() {
+  def assistList(): Unit = {
     assistsFor("""
         class Test {
           def foo(x: Int) = ^List.fill(x)(0)
@@ -74,7 +74,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistMultiLine() {
+  def assistMultiLine(): Unit = {
     assistsFor("""
         class Test {
           def foo(x: Int) = ^{
@@ -91,7 +91,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistComplexSignature() {
+  def assistComplexSignature(): Unit = {
     assistsFor("""
         class Test {
           def foo[T](size: Int = 42, init: T)(implicit ord: Ordered[T]) = {
@@ -108,7 +108,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistInnerScopeVal() {
+  def assistInnerScopeVal(): Unit = {
     assistsFor("""
         class Test {
           def foo(x: Int) = {
@@ -127,7 +127,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistInnerScopeDef() {
+  def assistInnerScopeDef(): Unit = {
     assistsFor("""
         class Test {
           def foo(x: Int) = {
@@ -146,7 +146,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistTransitive() {
+  def assistTransitive(): Unit = {
     assistsFor("""
         class Test {
           val x = ^initialize()
@@ -171,7 +171,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistMultiAssign() {
+  def assistMultiAssign(): Unit = {
     assistsFor("""
         class Test {
           val x, y, z = ^initialize()
@@ -188,7 +188,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def noAssistPatMat() {
+  def noAssistPatMat(): Unit = {
     noAssistsFor("""
         class Test {
           val Some(x) = ^Option(new Object)
@@ -197,7 +197,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def noAssistTuple() {
+  def noAssistTuple(): Unit = {
     noAssistsFor("""
         class Test {
           val (x, y) = ^(1, 2)
@@ -206,7 +206,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistOperatorVal() {
+  def assistOperatorVal(): Unit = {
     assistsFor("""
         class Test {
           val ~ = ^42
@@ -219,7 +219,7 @@ class ExplicitTypeAssistTest extends QuickAssistTestHelper {
   }
 
   @Test
-  def assistOperatorDef() {
+  def assistOperatorDef(): Unit = {
     assistsFor("""
         class Test {
           def ++ = ^42

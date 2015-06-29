@@ -15,9 +15,10 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.ui.internal.ScalaImages
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.ui.ScalaImages
 import org.scalaide.util.internal.ReflectionUtils
+import org.scalaide.core.SdtConstants
 
 class ScalaProjectWizard extends {
     val pageOne = new NewScalaProjectWizardPageOne
@@ -28,18 +29,19 @@ class ScalaProjectWizard extends {
   setDefaultPageImageDescriptor(ScalaImages.SCALA_PROJECT_WIZARD);
 
   pageOne.setTitle("Create a Scala project")
+  pageOne.setDescription("Create a Scala project in the workspace or in an external location.")
   pageTwo.setTitle("Scala Settings")
   pageTwo.setDescription("Define the Scala build settings.")
 }
 
 class NewScalaProjectWizardPageOne extends NewJavaProjectWizardPageOne {
   override def getDefaultClasspathEntries() : Array[IClasspathEntry] =
-    (JavaCore.newContainerEntry(Path.fromPortableString(ScalaPlugin.plugin.scalaLibId)) +=: ArrayBuffer(super.getDefaultClasspathEntries : _*)).toArray
+    (JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)) +=: ArrayBuffer(super.getDefaultClasspathEntries : _*)).toArray
 }
 
 class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extends NewJavaProjectWizardPageTwo(pageOne) {
   import NewScalaProjectWizardPageTwoUtils._
-  override def configureJavaProject(newProjectCompliance : String, monitor0 : IProgressMonitor) {
+  override def configureJavaProject(newProjectCompliance : String, monitor0 : IProgressMonitor): Unit = {
     val monitor = if (monitor0 != null) monitor0 else new NullProgressMonitor
     val nSteps = 6
     monitor.beginTask(NewWizardMessages.JavaCapabilityConfigurationPage_op_desc_java, nSteps)
@@ -54,14 +56,14 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
     }
   }
 
-  def addScalaNatures(monitor : IProgressMonitor) {
+  def addScalaNatures(monitor : IProgressMonitor): Unit = {
     if (monitor != null && monitor.isCanceled)
       throw new OperationCanceledException
     val project = getJavaProject.getProject
     if (!project.hasNature(JavaCore.NATURE_ID)) {
       val desc = project.getDescription
       val natures = ArrayBuffer(desc.getNatureIds : _*)
-      natures += ScalaPlugin.plugin.natureId
+      natures += SdtConstants.NatureId
       natures += JavaCore.NATURE_ID
       desc.setNatureIds(natures.toArray)
       project.setDescription(desc, monitor)

@@ -31,9 +31,8 @@ import scala.collection.Map
 import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
 import scala.tools.nsc.util.NoPosition
-import scala.tools.nsc.util.Position
 import org.scalaide.util.internal.ReflectionUtils
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils
 import org.scalaide.core.internal.jdt.util.ImportContainerInfoUtils
 
@@ -44,7 +43,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
 
       val typeNames = for(AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) <- throwsAnnotations)
-        yield mapType(typeName).toCharArray
+        yield javaTypeNameMono(typeName).toCharArray
 
       if(typeNames.isEmpty) None
       else Some(typeNames.toArray)
@@ -52,7 +51,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
   }
 
   // We cache these names since they are used for each ValDef during structure building
-  private lazy val GET = nme.get //newTermName("get")
+  private lazy val GET = nme.get
   private lazy val IS  = newTermName("is")
   private lazy val SET = newTermName("set")
 
@@ -63,7 +62,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     type OverrideInfo = Int
     val overrideInfos = (new collection.mutable.HashMap[Symbol, OverrideInfo]).withDefaultValue(0)
 
-    def fillOverrideInfos(c : Symbol) {
+    def fillOverrideInfos(c : Symbol): Unit = {
       if (c ne NoSymbol) {
         val base = c.allOverriddenSymbols
         if (!base.isEmpty) {
@@ -111,7 +110,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
       def addFunction(f : Function) : Owner = this
 
-      def resetImportContainer() {}
+      def resetImportContainer(): Unit = {}
 
       def addChild(child : JavaElement) =
         elementInfo match {
@@ -122,8 +121,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def modules : Map[Symbol, ScalaElementInfo] = Map.empty
       def classes : Map[Symbol, (ScalaElement, ScalaElementInfo)] = Map.empty
 
-      private[ScalaStructureBuilder] def complete(treeTraverser: TreeTraverser) {
-        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo) {
+      private[ScalaStructureBuilder] def complete(treeTraverser: TreeTraverser): Unit = {
+        def addModuleInnerClasses(classElem : ScalaElement, classElemInfo : ScalaElementInfo, mInfo: ScalaElementInfo): Unit = {
           for(innerClasses <- treeTraverser.moduleInfo2innerClassDefs.get(mInfo); innerClass <- innerClasses) {
             /* The nested classes are exposed as children of the module's companion class. */
             val classBuilder: Builder = new Builder {
@@ -138,7 +137,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           }
         }
 
-        def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol) {
+        def addForwarders(classElem : ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol): Unit = {
           def conflictsIn(cls: Symbol, name: Name) =
             if (cls != NoSymbol)
               cls.info.nonPrivateMembers.exists(_.name == name)
@@ -178,11 +177,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             addForwarder(classElem, classElemInfo, module, m)
         }
 
-        def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol) {
+        def addForwarder(classElem: ScalaElement, classElemInfo : ScalaElementInfo, module: Symbol, d: Symbol): Unit = {
           val nm = d.name
 
           val fps = d.paramss.flatten
-          val paramNames = Array(fps.map(n => nme.getterName(n.name.toTermName).toChars) : _*)
+          val paramNames = Array(fps.map(n => n.getterName.toChars) : _*)
 
           val javaSig = javaSigOf(d)
 
@@ -203,7 +202,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           defElemInfo.setArgumentNames(paramNames)
           setExceptionTypeNames(d, defElemInfo)
 
-          val tn = javaSig.returnType.getOrElse(mapType(d.info.finalResultType)).toArray
+          val tn = javaSig.returnType.getOrElse(javaTypeNameMono(d.info.finalResultType)).toArray
           defElemInfo.setReturnType(tn)
 
           defElemInfo.setFlags0(ClassFileConstants.AccPublic|ClassFileConstants.AccFinal|ClassFileConstants.AccStatic)
@@ -213,7 +212,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               case NoPosition =>
                 (module.pos.point, module.pos.point, module.pos.point)
               case pos =>
-                (d.pos.startOrPoint, d.pos.point, d.pos.endOrPoint)
+                (d.pos.start, d.pos.point, d.pos.end)
             }
 
           val nameEnd = point+defElem.labelName.length-1
@@ -275,8 +274,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
           val tpPos = tpSymbol.pos
           if(tpPos.isDefined) {
-            val start = tpPos.startOrPoint
-            val end = tpPos.endOrPoint
+            val start = tpPos.start
+            val end = tpPos.end
           tpElementInfo.setSourceRangeStart0(start)
           tpElementInfo.nameStart = start
           tpElementInfo.nameEnd = end
@@ -327,7 +326,13 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
               resolveDuplicates(pkgElem)
               compilationUnitBuilder.addChild(pkgElem)
 
-              val pkgElemInfo = JavaElementFactory.createSourceRefElementInfo
+              val pkgElemInfo = new AnnotatableInfo() {
+                setNameSourceStart(p.pid.pos.start)
+                setNameSourceEnd(p.pid.pos.end - 1)
+                setSourceRangeStart(p.pos.start)
+                setSourceRangeEnd(p.pid.pos.end - 1)
+              }
+
               newElements0.put(pkgElem, pkgElemInfo)
             }
 
@@ -352,7 +357,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
         def isWildcard(s: ImportSelector) : Boolean = s.name == nme.WILDCARD
 
-        def addImport(name : String, isWildcard : Boolean) {
+        def addImport(name : String, isWildcard : Boolean): Unit = {
           val path = prefix + (if(isWildcard) "" else "." + name)
 
           val (importContainer, importContainerInfo) = currentImportContainer getOrElse {
@@ -372,8 +377,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           resolveDuplicates(importElem)
 
           val importElemInfo = new ImportDeclarationElementInfo
-          setSourceRangeStart(importElemInfo, pos.startOrPoint)
-          setSourceRangeEnd(importElemInfo, pos.endOrPoint-1)
+          setSourceRangeStart(importElemInfo, pos.start)
+          setSourceRangeEnd(importElemInfo, pos.end-1)
 
           val children = getChildren(importContainerInfo)
           if (children.isEmpty)
@@ -402,7 +407,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val name = c.name.toString
         val isAnon = sym.isAnonymousClass
         val superClass = sym.superClass
-        val superName = mapType(superClass)
+        val superName = javaTypeName(superClass)
 
         val classElem =
           if(sym hasFlag Flags.TRAIT)
@@ -449,7 +454,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         val annotsPos = addAnnotations(sym, classElemInfo, classElem)
 
         classElemInfo.setSuperclassName(superName.toCharArray)
-        val interfaceNames = sym.mixinClasses.map(mapType(_).toCharArray)
+        val interfaceNames = sym.mixinClasses.map(javaTypeName(_).toCharArray)
         classElemInfo.setSuperInterfaceNames(interfaceNames.toArray)
 
         val (start, end) = if (!isAnon) {
@@ -557,7 +562,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     trait ValOwner extends Owner { self =>
       override def addVal(v : ValDef) : Owner = {
-        val elemName = nme.getterName(v.name)
+        val elemName = v.getterName
         val sym = v.symbol
         val display = elemName.toString+" : "+sym.info.resultType.toString
 
@@ -583,16 +588,16 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         setSourceRange(valElemInfo, sym, annotsPos)
         newElements0.put(valElem, valElemInfo)
 
-        val tn = mapType(sym.info).toArray
+        val tn = javaTypeNameMono(sym.info).toArray
         valElemInfo.setTypeName(tn)
 
         // TODO: this is a hack needed until building is rewritten to traverse scopes rather than trees.
         // When done, remove.
         if (sym ne NoSymbol) {
           sym.initialize
-          val getter = sym.getter(sym.owner)
+          val getter = sym.getterIn(sym.owner)
           if (getter hasFlag Flags.ACCESSOR) addDef(getter)
-          val setter = sym.setter(sym.owner)
+          val setter = sym.setterIn(sym.owner)
           if (setter hasFlag Flags.ACCESSOR) addDef(setter)
           addBeanAccessors(sym)
         }
@@ -600,8 +605,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         self
       }
 
-      def addBeanAccessors(sym: Symbol) {
-        val beanName = nme.localToGetter(sym.name.toTermName).toString.capitalize
+      def addBeanAccessors(sym: Symbol): Unit = {
+        val beanName = sym.name.dropLocal.toString.capitalize
         val ownerInfo = sym.owner.info
         val accessors = List(ownerInfo.decl(GET append beanName), ownerInfo.decl(IS append beanName), ownerInfo.decl(SET append beanName)).filter(_ ne NoSymbol)
         accessors.foreach(addDef)
@@ -610,7 +615,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     trait TypeOwner extends Owner { self =>
       override def addType(t : TypeDef) : Owner = {
-        //logger.info("Type defn: >"+t.name.toString+"< ["+this+"]")
 
         val sym = t.symbol
         val name = t.name.toString
@@ -633,12 +637,10 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         newElements0.put(typeElem, typeElemInfo)
 
         if(t.rhs.symbol == NoSymbol) {
-          //logger.info("Type is abstract")
           val tn = "java.lang.Object".toArray
           typeElemInfo.setTypeName(tn)
         } else {
-          //logger.info("Type has type: "+t.rhs.symbol.fullName)
-          val tn = mapType(t.rhs.symbol).toArray
+          val tn = javaTypeName(t.rhs.symbol).toArray
           typeElemInfo.setTypeName(tn)
         }
 
@@ -672,7 +674,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
          *  parameter types have the same length. A mismatch here will crash the JDT later.
          */
         def paramNames: (Array[Array[Char]]) = {
-          val originalParamNames = fps.map(n => nme.getterName(n.name.toTermName).toChars)
+          val originalParamNames = fps.map(n => n.getterName.toChars)
           val res = ((paramsTypeSigs.length - originalParamNames.length ) match {
             case 0 =>
               originalParamNames
@@ -685,7 +687,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
           res.toArray
         }
-
 
         val display = if (sym ne NoSymbol) sym.nameString + sym.infoString(sym.info) else sym.name.toString + " (no info)"
 
@@ -708,7 +709,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         defElemInfo.setArgumentNames(paramNames)
         setExceptionTypeNames(sym, defElemInfo)
 
-        val tn = javaSig.returnType.getOrElse(mapType(sym.info.finalResultType)).toArray
+        val tn = javaSig.returnType.getOrElse(javaTypeNameMono(sym.info.finalResultType)).toArray
         defElemInfo.setReturnType(tn)
 
         val annotsPos = addAnnotations(sym, defElemInfo, defElem)
@@ -763,7 +764,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       }
     }
 
-    def resolveDuplicates(handle : SourceRefElement) {
+    def resolveDuplicates(handle : SourceRefElement): Unit = {
       while (newElements0.containsKey(handle)) {
         handle.occurrenceCount += 1
       }
@@ -841,6 +842,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
                 (tag, values)
               case NestedAnnotArg(annInfo) =>
                 (IMemberValuePair.K_ANNOTATION, addAnnotations(List(annInfo), null, owner))
+              case value =>
+                throw new IllegalArgumentException(s"can't retrieve member value from $value")
             }
           }
 
@@ -851,8 +854,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         }
 
         val info = new JDTAnnotationInfo
-        info.nameStart = ann.pos.startOrPoint
-        info.nameEnd = ann.pos.endOrPoint-1
+        info.nameStart = ann.pos.start
+        info.nameEnd = ann.pos.end-1
         info.members = if(ann.assocs.isEmpty) JDTAnnotation.NO_MEMBER_VALUE_PAIRS else getMemberValuePairs(handle, ann.assocs)
         info
      }
@@ -866,23 +869,23 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
     abstract class Builder extends PackageOwner with ImportContainerOwner with ClassOwner with ModuleOwner with ValOwner with TypeOwner with DefOwner
 
-    def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position) {
+    def setSourceRange(info: ScalaMemberElementInfo, sym: Symbol, annotsPos: Position): Unit = {
       val pos = sym.pos
       val (start, end) =
         if (pos.isDefined) {
           val pos0 = if (annotsPos.isOpaqueRange) pos union annotsPos else pos
           val start0 = if (sym == NoSymbol)
-            pos0.startOrPoint
+            pos0.start
           else
             try {
               docCommentPos(sym) match {
-                case NoPosition => pos0.startOrPoint
-                case cpos => cpos.startOrPoint
+                case NoPosition => pos0.start
+                case cpos => cpos.start
               }
             } catch {
-              case _: Exception => pos0.startOrPoint
+              case _: Exception => pos0.start
             }
-          (start0, pos0.endOrPoint-1)
+          (start0, pos0.end-1)
         }
         else
           (-1, -1)
@@ -891,8 +894,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       info.setSourceRangeEnd0(end)
     }
 
-
-    def traverse(tree: Tree) {
+    def traverse(tree: Tree): Unit = {
       val traverser = new TreeTraverser
       traverser.traverse(tree, new CompilationUnitBuilder)
     }
@@ -902,7 +904,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
        * The map's key refer to the module's symbol (it should really be of type {{{ModuleClassSymbol}}}). */
       val moduleInfo2innerClassDefs = collection.mutable.Map.empty[ScalaElementInfo, List[ClassDef]]
 
-      def traverse(tree: Tree, builder : Owner) {
+      def traverse(tree: Tree, builder : Owner): Unit = {
         val (newBuilder, children) = {
           tree match {
             case _ : Import =>

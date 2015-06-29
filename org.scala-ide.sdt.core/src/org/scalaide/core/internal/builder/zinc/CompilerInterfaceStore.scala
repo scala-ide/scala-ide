@@ -3,18 +3,21 @@ package org.scalaide.core.internal.builder.zinc
 import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.IScalaInstallation
 import sbt.compiler.IC
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.runtime.Platform
-import org.scalaide.util.internal.eclipse.OSGiUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import java.io.File
 import xsbti.Logger
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.ListBuffer
 import org.eclipse.core.runtime.SubMonitor
-import org.scalaide.util.internal.eclipse.EclipseUtils._
-import org.scalaide.util.internal.eclipse.FileUtils
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.EclipseUtils.RichPath
+import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
+import org.scalaide.core.SdtConstants
 
 /** This class manages a store of compiler-interface jars (as consumed by Sbt). Each specific
  *  version of Scala needs a compiler-interface jar compiled against that version.
@@ -36,7 +39,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   private var hits, misses = 0
 
   private lazy val compilerInterfaceSrc =
-    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(computeSourcePath(plugin.sbtCompilerInterfaceId, _))
+    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.SbtCompilerInterfacePluginId, _))
 
   private lazy val sbtFullJar = OSGiUtils.getBundlePath(plugin.sbtCompilerBundle)
 
@@ -47,7 +50,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
    *
    *  @retur An instance of Right(path) if successful, an error message inside `Left` otherwise.
    */
-  def compilerInterfaceFor(installation: ScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
+  def compilerInterfaceFor(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
     val targetJar = interfaceJar(installation)
 
     lockObject synchronized {
@@ -74,10 +77,10 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   /** Return the number of hits and misses in the store. */
   def getStats: (Int, Int) = (hits, misses)
 
-  private def cacheDir(installation: ScalaInstallation): IPath =
+  private def cacheDir(installation: IScalaInstallation): IPath =
     compilerInterfacesDir / installation.version.unparse
 
-  private def interfaceJar(installation: ScalaInstallation): IPath = {
+  private def interfaceJar(installation: IScalaInstallation): IPath = {
     cacheDir(installation) / compilerInterfaceName
   }
 
@@ -86,8 +89,10 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
    *  @return a right-biased `Either`, carrying either the path to the resulting compiler-interface jar, or
    *          a String with the error message.
    */
-  private def buildInterface(installation: ScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
-    val monitor = SubMonitor.convert(pm, s"Compiling compiler-interface for ${installation.version.unparse}", 2)
+  private def buildInterface(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
+    val name = s"Compiling compiler-interface for ${installation.version.unparse}"
+    val monitor = SubMonitor.convert(pm, name, 2)
+    monitor.subTask(name)
 
     (compilerInterfaceSrc, sbtFullJar) match {
       case (Some(compilerInterface), Some(sbtInterface)) =>
@@ -100,7 +105,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
           compilerInterface.toFile,
           targetJar.toFile,
           sbtInterface.toFile,
-          installation.scalaInstance,
+          scalaInstanceForInstallation(installation),
           log)
 
         monitor.worked(1)
@@ -112,7 +117,7 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
 
       case _ =>
         monitor.worked(2)
-        Left(s"Could not find compiler-interface/sbt bundle")
+        Left("Could not find compiler-interface/sbt bundle")
     }
   }
 

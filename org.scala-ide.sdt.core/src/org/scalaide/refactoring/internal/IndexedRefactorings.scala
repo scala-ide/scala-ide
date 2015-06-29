@@ -1,6 +1,6 @@
 package org.scalaide.refactoring.internal
 
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.MultiStageRefactoring
 import scala.tools.refactoring.analysis.GlobalIndexes
@@ -24,7 +24,7 @@ trait Indexed {
 abstract class IndexedIdeRefactoring(refactoringName: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
   extends ScalaIdeRefactoring(refactoringName, sourcefile, start, end) with FullProjectIndex {
 
-  val project: ScalaProject = sourcefile.scalaProject
+  val project: IScalaProject = sourcefile.scalaProject
 
   val refactoring: MultiStageRefactoring with GlobalIndexes with Indexed
 

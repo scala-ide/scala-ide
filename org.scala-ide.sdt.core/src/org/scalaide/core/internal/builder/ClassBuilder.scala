@@ -2,7 +2,6 @@ package org.scalaide.core.internal.builder
 
 import org.scalaide.core.internal.jdt.builder.GeneralScalaJavaBuilder
 import org.scalaide.core.internal.jdt.builder.ScalaJavaBuilderUtils
-import org.scalaide.core.ScalaPlugin
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.internal.core.JavaModelManager
@@ -13,12 +12,10 @@ trait JDTBuilderFacade {
 
   protected val scalaJavaBuilder = new GeneralScalaJavaBuilder
 
-  protected def plugin = ScalaPlugin.plugin
-
   /** The underlying project. */
   protected def project: IProject
 
-  protected def refresh() {
+  protected def refresh(): Unit = {
     val modelManager = JavaModelManager.getJavaModelManager
     val state = modelManager.getLastBuiltState(project, null).asInstanceOf[State]
     val newState =
@@ -34,7 +31,7 @@ trait JDTBuilderFacade {
     JDTUtils.refreshPackageExplorer
   }
 
-  protected def ensureProject() {
+  protected def ensureProject(): Unit = {
     if (scalaJavaBuilder.getProject == null)
       scalaJavaBuilder.setProject0(project)
   }

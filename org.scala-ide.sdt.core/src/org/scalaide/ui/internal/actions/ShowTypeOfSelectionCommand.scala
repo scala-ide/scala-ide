@@ -11,7 +11,9 @@ import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.eclipse.jface.internal.text.html.HTMLPrinter
+import org.scalaide.ui.internal.editor.hover.HtmlHover
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 class ShowTypeOfSelectionCommand extends AbstractHandler {
 
@@ -30,13 +32,15 @@ class ShowTypeOfSelectionCommand extends AbstractHandler {
 
 }
 
-object TypeOfExpressionProvider extends IInformationProvider {
+object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
   def getSubject(textViewer: ITextViewer, offset: Int): IRegion = {
     val r = textViewer.getSelectedRange
     new Region(r.x, r.y)
   }
 
   def getInformation(textViewer: ITextViewer, region: IRegion): String = {
+    import IScalaPresentationCompiler.Implicits._
+    import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
     EditorUtility.getActiveEditorJavaInput match {
       case scu: ScalaCompilationUnit =>
@@ -44,12 +48,10 @@ object TypeOfExpressionProvider extends IInformationProvider {
           import compiler._
 
           def typeInfo(tpe: Type): String =
-            Option(tpe).map(_.toString).getOrElse(null)
+            Option(tpe).map(tpe => createHtmlOutput { _ append convertContentToHtml(tpe.toString) }).orNull
 
-          val response = new Response[Tree]
-          askTypeAt(region.toRangePos(src), response)
           (for {
-            t <- response.get.left.toOption
+            t <- askTypeAt(region.toRangePos(src)).getOption()
           } yield t match {
             case ValDef(_, _, _, rhs) =>
               typeInfo(rhs.tpe)
@@ -58,7 +60,7 @@ object TypeOfExpressionProvider extends IInformationProvider {
             case _ =>
               typeInfo(t.tpe)
           }).getOrElse(null)
-        } orNull
+        }.orNull
 
       case _ => null
     }

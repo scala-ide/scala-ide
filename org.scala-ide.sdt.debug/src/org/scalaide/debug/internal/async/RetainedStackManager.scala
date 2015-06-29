@@ -14,7 +14,6 @@ import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
 import org.scalaide.logging.HasLogger
 import org.scalaide.debug.internal.model.ScalaValue
-import org.scalaide.util.internal.Utils
 import com.sun.jdi.Method
 
 /** Install breakpoints in key places and collect stack frames.
@@ -23,8 +22,6 @@ import com.sun.jdi.Method
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   final val MAX_ENTRIES = 20000
   private val stackFrames: mutable.Map[ObjectReference, AsyncStackTrace] = new LRUMap(MAX_ENTRIES)
-
-  private var futureApplyRequest: BreakpointRequest = null
 
   object actor extends BaseDebuggerActor {
     override protected def behavior = {
@@ -42,7 +39,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
   }
 
-  private def appHit(thread: ThreadReference, app: AsyncProgramPoint) {
+  private def appHit(thread: ThreadReference, app: AsyncProgramPoint): Unit = {
     val topFrame = thread.frame(0)
     val args = topFrame.getArgumentValues()
     //    logger.debug(s"$app hit: topFrame arguments: $args")
@@ -53,7 +50,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     stackFrames += (body.asInstanceOf[ObjectReference]) -> mkStackTrace(frames)
   }
 
-  private def mkStackTrace(frames: Seq[StackFrame]): AsyncStackTrace = fineDebugTimed("mkStackTrace") {
+  private def mkStackTrace(frames: Seq[StackFrame]): AsyncStackTrace = {
     import collection.JavaConverters._
 
     val asyncFrames = for (frame <- frames) yield {
@@ -69,7 +66,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     AsyncStackTrace(asyncFrames)
   }
 
-  private def installMethodBreakpoint(tpe: ReferenceType, app: AsyncProgramPoint) {
+  private def installMethodBreakpoint(tpe: ReferenceType, app: AsyncProgramPoint): Unit = {
     def isAPP(m: Method): Boolean =
       (!m.isAbstract()
         && m.name().startsWith(app.methodName)
@@ -100,7 +97,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     stackFrames.get(future)
   }
 
-  def start() {
+  def start(): Unit = {
     actor.start()
     for {
       app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
@@ -110,17 +107,6 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     else
       // in case it's not been loaded yet
       debugTarget.cache.addClassPrepareEventListener(actor, clazz)
-  }
-
-  /** Evaluated `op' and log the time in ms it took to execute it.
-   */
-  def fineDebugTimed[A](name: String)(op: => A): A = {
-    val start = System.nanoTime()
-    val res = op
-    val end = System.nanoTime()
-
-    //    logger.debug("%s: \t %,3d ns".format(name, end - start))
-    res
   }
 
 }

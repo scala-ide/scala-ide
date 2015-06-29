@@ -17,7 +17,6 @@ import org.eclipse.jface.viewers.TreeViewer
 import org.eclipse.jface.viewers.ITreeContentProvider
 import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.model.ScalaStackFrame
-import org.scalaide.debug.internal.model.ScalaVariable
 import org.eclipse.debug.core.model.IVariable
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.debug.internal.ui.model.elements.DebugElementLabelProvider
@@ -51,8 +50,8 @@ import org.eclipse.swt.widgets.Display
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
 
   /** As seen from class AsyncDebugView, the missing signatures are as follows.  *  For convenience, these are usable as stub implementations.  */
-  protected def configureToolBar(x$1: org.eclipse.jface.action.IToolBarManager): Unit = {}
-  protected def createActions(): Unit = {}
+  override protected def configureToolBar(x$1: org.eclipse.jface.action.IToolBarManager): Unit = {}
+  override protected def createActions(): Unit = {}
 
   private var viewer: TableViewer = _
 
@@ -67,7 +66,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
    *
    *  @param parent the parent control
    */
-  protected def createViewer(parent: Composite): Viewer = {
+  override protected def createViewer(parent: Composite): Viewer = {
     import Utils._
     //    val fPresentation = new DelegatingModelPresentation()
     //    val fPresentationContext = new DebugModelPresentationContext(IDebugUIConstants.ID_DEBUG_VIEW, this, fPresentation)
@@ -88,20 +87,20 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
       override def getImage(elem: Object): Image =
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
-      def getForeground(element: AnyRef): Color = element match {
+      override def getForeground(element: AnyRef): Color = element match {
         case AsyncStackFrame(_, location) if greyableContext(location.declaringTypeName) =>
           Display.getCurrent().getSystemColor(SWT.COLOR_GRAY)
         case _ =>
           null
       }
-      def getBackground(element: AnyRef): Color = null
+      override def getBackground(element: AnyRef): Color = null
     })
 
     viewer.addSelectionChangedListener(stackFrameSelectionChanged _)
     viewer
   }
 
-  override def init(site: IViewSite) {
+  override def init(site: IViewSite): Unit = {
     import Utils._
     super.init(site)
     val service = DebugUITools.getDebugContextManager().getContextService(site.getWorkbenchWindow())
@@ -112,12 +111,12 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     selectionService.addSelectionListener(IDebugUIConstants.ID_VARIABLE_VIEW, variableViewSelectionChanged _)
   }
 
-  override def dispose() {
+  override def dispose(): Unit = {
     val service = DebugUITools.getDebugContextManager().getContextService(getSite().getWorkbenchWindow())
     service.removeDebugContextProvider(asyncDebugContextProvider)
   }
 
-  def stackFrameSelectionChanged(sce: SelectionChangedEvent) {
+  def stackFrameSelectionChanged(sce: SelectionChangedEvent): Unit = {
     currentFrame = Option(sce.getSelection())
     sce.getSelection() match {
       case se: IStructuredSelection =>
@@ -158,14 +157,14 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     }
   }
 
-  protected def fillContextMenu(x$1: org.eclipse.jface.action.IMenuManager): Unit = {}
-  protected def getHelpContextId(): String = ""
+  override protected def fillContextMenu(x$1: org.eclipse.jface.action.IMenuManager): Unit = {}
+  override protected def getHelpContextId(): String = ""
 
   /** Notification the debug context has changed as specified by the given event.
    *
    *  @param event debug context event
    */
-  def debugContextChanged(event: DebugContextEvent): Unit = {
+  override def debugContextChanged(event: DebugContextEvent): Unit = {
     logger.info(s"Debug Event context change ${event.getContext()}")
     event.getContext match {
       case ssel: IStructuredSelection =>
@@ -184,7 +183,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  <a href="https://bugs.eclipse.org/9262">bug 9262</a>).
      *  </p>
      */
-    def getElements(inputElement: AnyRef): Array[Object] = inputElement match {
+    override def getElements(inputElement: AnyRef): Array[Object] = inputElement match {
       case thread: ScalaThread =>
         thread.getStackFrames.asInstanceOf[Array[Object]]
       //      case Seq(elems @ _*) => elems.toArray.asInstanceOf[Array[Object]]
@@ -204,7 +203,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  @param parentElement the parent element
      *  @return an array of child elements
      */
-    def getChildren(parentElement: AnyRef): Array[Object] = parentElement match {
+    override def getChildren(parentElement: AnyRef): Array[Object] = parentElement match {
       case frame: ScalaStackFrame =>
         frame.getVariables.asInstanceOf[Array[Object]]
       case AsyncStackTrace(frames)    => frames.toArray
@@ -221,7 +220,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  @return the parent element, or <code>null</code> if it
      *   has none or if the parent cannot be computed
      */
-    def getParent(element: AnyRef): AnyRef = element match {
+    override def getParent(element: AnyRef): AnyRef = element match {
       case frame: ScalaStackFrame =>
         frame.getThread
       case variable: IVariable =>
@@ -241,7 +240,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  @return <code>true</code> if the given element has children,
      *  and <code>false</code> if it has no children
      */
-    def hasChildren(element: AnyRef): Boolean = element match {
+    override def hasChildren(element: AnyRef): Boolean = element match {
       case _: AsyncStackFrame | _: AsyncStackTrace => true
       case _                                       => false
     }
@@ -253,7 +252,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  of being disposed.
      *  </p>
      */
-    def dispose(): Unit = {}
+    override def dispose(): Unit = {}
 
     /** Notifies this content provider that the given viewer's input
      *  has been switched to a different element.
@@ -274,13 +273,13 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
      *  @param newInput the new input element, or <code>null</code> if the viewer
      *   does not have an input
      */
-    def inputChanged(viewer: Viewer, oldInput: AnyRef, newInput: AnyRef): Unit = {
+    override def inputChanged(viewer: Viewer, oldInput: AnyRef, newInput: AnyRef): Unit = {
       //      logger.debug(s"old: $oldInput / new: $newInput")
     }
   }
 
   private object asyncDebugContextProvider extends AbstractDebugContextProvider(this) {
-    def fireSelection(se: ISelection) {
+    def fireSelection(se: ISelection): Unit = {
       fire(new DebugContextEvent(this, se, DebugContextEvent.ACTIVATED))
     }
 

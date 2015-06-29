@@ -2,6 +2,7 @@ package org.scalaide.util.internal
 
 import java.util.LinkedHashMap
 import java.lang.ref.WeakReference
+import scala.collection.JavaConverters._
 
 /** A LRU fixed sized-cache using WeakReferences.
  *
@@ -24,6 +25,8 @@ class FixedSizeCache[K, V](initSize: Int, maxSize: Int) {
   private val jmap = new LinkedHashMap[K, WeakReference[V]](initSize min maxSize, 0.75f, /* accessOrder = */ true) {
     override def removeEldestEntry(entry: JEntry): Boolean = size() > maxSize
   }
+
+  def entries: Seq[(K, WeakReference[V])] = jmap.asScala.toSeq
 
   /** Return the value associated with K if found in cache, otherwise insert the value
    *  provided in `orElse`.

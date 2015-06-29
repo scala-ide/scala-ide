@@ -1,0 +1,9 @@
+package org.scalaide.debug.internal.launching
+
+import org.eclipse.jdt.junit.launcher.JUnitLaunchConfigurationDelegate
+import org.scalaide.core.internal.launching.ClasspathGetterForLaunchDelegate
+import org.scalaide.core.internal.launching.ProblemHandlersForLaunchDelegate
+
+class ScalaJUnitLaunchConfigurationDelegate extends JUnitLaunchConfigurationDelegate
+    with ClasspathGetterForLaunchDelegate with ProblemHandlersForLaunchDelegate
+    with ScalaDebuggerForLaunchDelegate

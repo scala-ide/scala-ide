@@ -12,7 +12,7 @@ import org.junit.Test
 import org.junit.Ignore
 import org.eclipse.jface.text.Region
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import scala.tools.nsc.interactive.Response
 
 object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking")
@@ -20,18 +20,14 @@ object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking"
 class OccurrencesFinderTest {
   import OccurrencesFinderTest._
 
-  @Test def typeOccurrences() {
+  @Test def typeOccurrences(): Unit = {
     val unit = compilationUnit("occ/DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
 
     // first, 'open' the file by telling the compiler to load it
     unit.withSourceFile { (src, compiler) =>
-      val dummy = new Response[Unit]
-      compiler.askReload(List(src), dummy)
-      dummy.get
+      compiler.askReload(List(unit)).get
 
-      val tree =  new Response[compiler.Tree]
-      compiler.askLoadedTyped(src, false,tree)
-      tree.get
+      compiler.askLoadedTyped(src, false).get
     }
 
     val contents = unit.getContents

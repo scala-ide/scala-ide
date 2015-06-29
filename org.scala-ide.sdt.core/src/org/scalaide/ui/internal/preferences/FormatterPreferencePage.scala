@@ -28,15 +28,14 @@ import org.eclipse.ui._
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.editors.text.TextEditor
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
-import org.scalaide.core.internal.lexical.ScalaDocumentPartitioner
-import org.scalaide.util.internal.eclipse.SWTUtils._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.ProjectScope
+import org.scalaide.core.SdtConstants
 
 class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
   import FormatterPreferencePage._
@@ -45,7 +44,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   private var allEnableDisableControls: Set[Control] = Set()
 
-  override def init(workbench: IWorkbench) {
+  override def init(workbench: IWorkbench): Unit = {
     isWorkbenchPage = true
   }
 
@@ -67,7 +66,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
     protected var previewDocument: IDocument = _
 
-    def build(tabFolder: TabFolder) {
+    def build(tabFolder: TabFolder): Unit = {
       val tabItem = new TabItem(tabFolder, SWT.NONE)
       tabItem.setText(tabName)
       val tabComposite = new Composite(tabFolder, SWT.NONE)
@@ -75,11 +74,14 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       buildContents(tabComposite)
     }
 
-    protected def buildContents(composite: Composite)
+    protected def buildContents(composite: Composite): Unit
 
     private def formatPreviewText: String = ScalaFormatter.format(previewText, getPreferences(overlayStore))
 
-    protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor) {
+    protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor): Unit = {
+      import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+
       val checkBox = new Button(parent, SWT.CHECK | SWT.WRAP)
       checkBox.setText(text)
       checkBox.setToolTipText(preference.description + " (" + preference.key + ")")
@@ -98,7 +100,10 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       allEnableDisableControls += checkBox
     }
 
-    protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]) {
+    protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]): Unit = {
+      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
+      import org.scalaide.util.eclipse.SWTUtils.RichControl
+
       val IntegerPreference(min, max) = preference.preferenceType
       val label = new Label(parent, SWT.LEFT)
       label.setText(text)
@@ -116,7 +121,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
           case _: NumberFormatException => None
         }
 
-      def valueChanged() {
+      def valueChanged(): Unit = {
         validateNumber(field.getText) match {
           case Some(n) =>
             overlayStore(preference) = n
@@ -136,7 +141,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       allEnableDisableControls ++= Set(label, field)
     }
 
-    protected def addPreview(parent: Composite) {
+    protected def addPreview(parent: Composite): Unit = {
       val previewLabel = new Label(parent, SWT.LEFT)
       allEnableDisableControls += previewLabel
       previewLabel.setText("Preview:")
@@ -146,7 +151,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
     protected def createPreviewer(parent: Composite): Control = {
-      val previewer = ScalaPreviewerFactory.createPreviewer(parent, getPreferenceStore, formatPreviewText)
+      val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, getPreferenceStore, formatPreviewText)
       previewDocument = previewer.getDocument
       val control = previewer.getControl
       allEnableDisableControls += control
@@ -156,7 +161,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   object IndentPrefTab extends PrefTab("Indentation && Alignment", INDENT_PREVIEW_TEXT) {
 
-    def buildContents(composite: Composite) {
+    def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(9).grow(1)))
 
       addNumericField(composite, "Spaces to indent:", IndentSpaces)
@@ -174,7 +179,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   object SpacesPrefTab extends PrefTab("Spaces", SPACES_PREVIEW_TEXT) {
 
-    def buildContents(composite: Composite) {
+    def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(7).grow(1)))
 
       addCheckBox(composite, "Space before colons", SpaceBeforeColon)
@@ -190,7 +195,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   object MiscPrefTab extends PrefTab("Miscellaneous", MISC_PREVIEW_TEXT) {
 
-    def buildContents(composite: Composite) {
+    def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
 
       addCheckBox(composite, "Format XML", FormatXml)
@@ -205,7 +210,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   object ScaladocPrefTab extends PrefTab("Scaladoc", SCALADOC_PREVIEW_TEXT) {
 
-    def buildContents(composite: Composite) {
+    def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(3).grow(1)))
 
       addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
@@ -216,9 +221,9 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   }
 
-  private def initUnderlyingPreferenceStore() {
-    val pluginId = ScalaPlugin.plugin.pluginId
-    val scalaPrefStore = ScalaPlugin.prefStore
+  private def initUnderlyingPreferenceStore(): Unit = {
+    val pluginId = SdtConstants.PluginId
+    val scalaPrefStore = IScalaPlugin().getPreferenceStore()
     setPreferenceStore(getElement match {
       case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
       case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
@@ -227,6 +232,8 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   }
 
   def createContents(parent: Composite): Control = {
+    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
+    import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
 
     initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
 
@@ -313,16 +320,16 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
   override def performOk() = {
     super.performOk()
     overlayStore.propagate()
-    InstanceScope.INSTANCE.getNode(ScalaPlugin.plugin.pluginId).flush()
+    InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).flush()
     true
   }
 
-  override def dispose() {
+  override def dispose(): Unit = {
     overlayStore.stop()
     super.dispose()
   }
 
-  override def performDefaults() {
+  override def performDefaults(): Unit = {
     overlayStore.loadDefaults()
     super.performDefaults()
   }
@@ -331,7 +338,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     val dialog = new FileDialog(getShell, SWT.SAVE)
     dialog.setText(title)
     dialog.setFileName(initialFileName)
-    val dialogSettings = ScalaPlugin.plugin.getDialogSettings
+    val dialogSettings = IScalaPlugin().getDialogSettings
     Option(dialogSettings get IMPORT_EXPORT_DIALOG_PATH) foreach dialog.setFilterPath
     val fileName = dialog.open()
     if (fileName == null)
@@ -342,7 +349,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
   }
 
-  private def exportPreferences() {
+  private def exportPreferences(): Unit = {
     for (fileName <- getPreferenceFileNameViaDialog("Export formatter preferences", DEFAULT_PREFERENCE_FILE_NAME)) {
       val preferences = FormatterPreferences.getPreferences(overlayStore)
       try
@@ -355,7 +362,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
   }
 
-  private def importPreferences() {
+  private def importPreferences(): Unit = {
     for (fileName <- getPreferenceFileNameViaDialog("Import formatter preferences")) {
       val preferences = try
         PreferencesImporterExporter.loadPreferences(fileName)
@@ -399,7 +406,7 @@ class Bar(param: Int)
 extends Foo with Baz {
   def method(s: String,
 n: Int) = {
-    def localDef {
+    def localDef: Unit = {
       // ..
     }
     s match {

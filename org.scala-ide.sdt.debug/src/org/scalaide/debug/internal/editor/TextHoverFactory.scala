@@ -1,72 +1,72 @@
 package org.scalaide.debug.internal.editor
 
+import scala.reflect.internal.util.OffsetPosition
+import scala.reflect.internal.util.SourceFile
 import scala.util.Try
-import scala.reflect.internal.util.{Position, RangePosition, OffsetPosition, SourceFile}
-import org.scalaide.util.internal.eclipse.EclipseUtils.PimpedRegion
-import org.scalaide.ui.internal.editor.ScalaHover
-import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.compiler.ScalaPresentationCompiler
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.ITextHoverExtension2
-import org.eclipse.jface.text.ITextHoverExtension
-import org.eclipse.jface.text.ITextHover
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.IInformationControlExtension2
-import org.eclipse.jface.text.IInformationControlCreator
-import org.eclipse.jface.text.DefaultInformationControl
-import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
+
 import org.eclipse.debug.core.model.IVariable
+import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextHover
+import org.eclipse.jface.text.ITextHoverExtension
+import org.eclipse.jface.text.ITextHoverExtension2
+import org.eclipse.jface.text.ITextViewer
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.debug.internal.ScalaDebugger
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaThisVariable
+import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
+import org.scalaide.ui.internal.editor.hover.ScalaHoverImpl
+import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 class TextHoverFactory extends TextHoverFactoryInterface {
-  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHover(scu) with ITextHoverExtension with ITextHoverExtension2 {
+  import IScalaPresentationCompiler.Implicits._
+
+  def createFor(scu: ScalaCompilationUnit): ITextHover = new ScalaHoverImpl with ITextHoverExtension with ITextHoverExtension2 {
     var stringWasReturnedAtGetHoverInfo2 = false
 
-    override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
-      icu.withSourceFile{(src, compiler) =>
-        import compiler._
+    // fix the compilation unit
+    override def getCompilationUnit(viewer: ITextViewer): Option[InteractiveCompilationUnit] =
+      Option(scu)
 
-        val resp = new Response[Tree]
-        askTypeAt(region.toRangePos(src), resp)
+    override def getHoverInfo2(viewer: ITextViewer, region: IRegion): AnyRef = {
+      val hoverInfo = for {
+        icu <- getCompilationUnit(viewer)
+      } yield icu.withSourceFile { (src, compiler) =>
+        import compiler._
+        import org.scalaide.util.eclipse.RegionUtils.RichRegion
+
+        val resp = askTypeAt(region.toRangePos(src))
 
         stringWasReturnedAtGetHoverInfo2 = false
 
         for {
-          t <- resp.get.left.toOption
+          t <- resp.getOption()
           stackFrame <- Option(ScalaDebugger.currentStackFrame)
           variable <- StackFrameVariableOfTreeFinder.find(src, compiler, stackFrame)(t)
         } yield variable
       }.flatten getOrElse {
         stringWasReturnedAtGetHoverInfo2 = true
-        super.getHoverInfo(viewer, region)
+        super.getHoverInfo2(viewer, region)
       }
+      hoverInfo.getOrElse(null)
     }
 
     override def getHoverControlCreator: IInformationControlCreator =
       if(stringWasReturnedAtGetHoverInfo2)
-        new IInformationControlCreator {
-          def createInformationControl(parent: Shell) =
-            new StringHandlingInformationControlExtension2(parent)
-        }
+        super.getHoverControlCreator()
       else  /* An IVariable was returned. */
         new ExpressionInformationControlCreator
   }
 
-  class StringHandlingInformationControlExtension2(parent: Shell)
-  extends DefaultInformationControl(parent)
-  with IInformationControlExtension2 {
-    override def setInput(input: AnyRef) {
-      setInformation(input.asInstanceOf[String])
-    }
-  }
 }
 
-
 object StackFrameVariableOfTreeFinder {
-  def find(src: SourceFile, compiler: ScalaPresentationCompiler, stackFrame: ScalaStackFrame)(t: compiler.Tree): Option[IVariable] = {
+  def find(src: SourceFile, compiler: IScalaPresentationCompiler, stackFrame: ScalaStackFrame)(t: compiler.Tree): Option[IVariable] = {
     import compiler.{Try => _, _}
 
     // ---------------- HELPERS ---------------------------------
@@ -76,9 +76,7 @@ object StackFrameVariableOfTreeFinder {
       Option(symbolProducer) filterNot(_ == NoSymbol)
 
     def treeAt(pos: Position) = {
-      val resp = new Response[Tree]
-      askTypeAt(pos, resp)
-      resp.get.left.toOption
+      askTypeAt(pos).getOption()
     }
 
     // StackFrame line numbering is 1-based, while SourceFile line numbering is 0-based. Hence the "- 1".
@@ -89,7 +87,6 @@ object StackFrameVariableOfTreeFinder {
     }
 
     def isStackFrameWithin(range: Position) = stackFramePos map {range includes _} getOrElse false
-
 
     /** Here we use 'template' as an umbrella term to refer to any entity that exposes a 'this'
      *  variable in the stack frame. This 'this' variable will contain the fields of this template.
@@ -147,15 +144,13 @@ object StackFrameVariableOfTreeFinder {
     def findVariableFromFieldsOf(variable: IVariable, sym: Symbol, varMatcher: IVariable => Boolean = null) = {
       def stackFrameCompatibleNameOf(sym: Symbol): Name = {  // Based on trial & error. May need more work.
         var name = sym.name.toTermName
-        if(sym.hasLocalFlag) {
-          // name = name.dropLocal
-          // TODO: The commented line above can be used instead of the one below, when scala 2.10 support is dropped.
-          name = nme dropLocalSuffix name
+        if(sym.isLocalToThis) {
+          name = name.dropLocal
         }
         name.decodedName
       }
 
-      def cleanBinaryName(name: String) = nme originalName newTermName(name)
+      def cleanBinaryName(name: String) = nme unexpandedName newTermName(name)
 
       val variableMatcher = if(varMatcher != null)
         varMatcher
@@ -223,7 +218,7 @@ object StackFrameVariableOfTreeFinder {
           }).flatten
         case Select(_, _) => None
         case _ =>
-          if(sym.isLocal) {
+          if(sym.isLocalToBlock) {
             findVariableFromLocalVars(sym) orElse
             //
             // In closures, local vars of enclosing methods are stored as fields with mangled names.

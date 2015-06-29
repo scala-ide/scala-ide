@@ -4,13 +4,13 @@ import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
 import org.eclipse.jface.text.Document
-import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.ui.internal.completion.ScalaCompletionProposal
+import org.scalaide.ui.ScalaImages
+import org.scalaide.ui.completion.ScalaCompletionProposal
 import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.ASTVisitor
@@ -38,6 +38,8 @@ import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.ClassInstanceCreation
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.scalaide.core.completion.CompletionContext
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /** A completion proposal for Java sources. This adds mixed-in concrete members to scope
  *  completions in Java.
@@ -56,8 +58,8 @@ import org.scalaide.core.completion.CompletionContext
  * The //test comments reference the test cases from <code>ScalaJavaCompletionTests</code>
  */
 class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalComputer {
-  def sessionStarted() {}
-  def sessionEnded() {}
+  def sessionStarted(): Unit = {}
+  def sessionEnded(): Unit = {}
   def getErrorMessage() = null
 
   def computeContextInformation(context: ContentAssistInvocationContext, monitor: IProgressMonitor) =
@@ -66,7 +68,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   def computeCompletionProposals(context: ContentAssistInvocationContext, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     context match {
       case jc: JavaContentAssistInvocationContext =>
-        if (ScalaPlugin.plugin.isScalaProject(jc.getProject()))
+        if (ScalaProject.isScalaProject(jc.getProject()))
           jc.getCompilationUnit match {
           case scu: ScalaCompilationUnit => javaEmptyList()
           case _ => mixedInCompletions(jc.getCompilationUnit(), jc.getInvocationOffset(), monitor)
@@ -83,7 +85,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
-    val ast = unit.reconcile(AST.JLS3,
+    val ast = unit.reconcile(AST.JLS8,
       ICompilationUnit.FORCE_PROBLEM_DETECTION | // force the resolution of the type bindings
         ICompilationUnit.ENABLE_STATEMENTS_RECOVERY | // try to make sense of malformed statements
         ICompilationUnit.ENABLE_BINDINGS_RECOVERY, // try to guess binding even if the code is not fully valid
@@ -107,7 +109,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     // offset of the start of the element to complete
     val start = invocationOffset - prefix.length
 
-    val prj = ScalaPlugin.plugin.getScalaProject(unit.getJavaProject.getProject)
+    val prj = IScalaPlugin().getScalaProject(unit.getJavaProject.getProject)
     val completionProposals = prj.presentationCompiler { compiler =>
       import compiler._
 
@@ -118,17 +120,16 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
           !sym.isConstructor &&
           !sym.isPrivate)
 
-      compiler.askOption { () =>
+      compiler.asyncExec {
         val currentClass = rootMirror.getClassByName(newTypeName(referencedTypeName))
         val proposals = currentClass.info.members.filter(mixedInMethod).toList
-        val defaultContext = CompletionContext(CompletionContext.DefaultContext)
 
         for (sym <- proposals if sym.name.startsWith(prefix)) yield {
-          val prop = compiler.mkCompletionProposal(prefix.toCharArray, start, sym = sym,
-            tpe = sym.info, inherited = true, viaView = NoSymbol, defaultContext)
-          new ScalaCompletionProposal(prop)
+          val prop = compiler.mkCompletionProposal(prefix, start, sym = sym,
+            tpe = sym.info, inherited = true, viaView = NoSymbol, CompletionContext.DefaultContext, prj)
+          ScalaCompletionProposal(prop)
         }
-      }.getOrElse(Nil)
+      }.getOrElse(Nil)()
     } getOrElse (Nil)
 
     import scala.collection.JavaConversions._
@@ -188,7 +189,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Get the string to complete, and the referenced type form the
    * found enclosing node
    */
-  override def endVisit(compilationUnit: CompilationUnit) {
+  override def endVisit(compilationUnit: CompilationUnit): Unit = {
     enclosingNode match {
       case block: Block =>
         contextString = ""
@@ -375,7 +376,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Set the value of contextString from a SimpleName node containing
    * the offset.
    */
-  private def setContextStringFrom(simpleName: SimpleName) {
+  private def setContextStringFrom(simpleName: SimpleName): Unit = {
     contextString = simpleName.getIdentifier().substring(0, offset - simpleName.getStartPosition())
   }
 

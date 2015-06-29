@@ -1,21 +1,18 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/node/146
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.core.semantic
 
 import org.junit.Test
 import org.scalaide.ui.internal.editor.decorators.custom.AllMethodsTraverserDef
 import org.scalaide.ui.internal.editor.decorators.custom.TraverserDef.TypeDefinition
-import org.scalaide.ui.internal.editor.decorators.custom.TraverserId
 
 class CustomClassHighlightingTest
   extends HighlightingTestHelpers(CustomHighlightingTest)
   with CustomHighlightingTest {
 
   @Test
-  def scalaCollectionMutableHighlighting() {
+  def scalaCollectionMutableHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/ScalaCollectionMutable.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(
@@ -25,16 +22,15 @@ class CustomClassHighlightingTest
       val expected = List(
         "'scala.collection.mutable' call type found [181, 5]",
         "'scala.collection.mutable' call type found [195, 5]",
-        "'scala.collection.mutable' call type found [266, 3]")
+        "'scala.collection.mutable' call type found [274, 3]")
       val actual = annotations("scalaCollectionMutable")(traversers)(spc, scu)
 
       assertSameLists(expected, actual)
     }
   }
 
-  // TODO - flaky test :(
   @Test
-  def customTypeHighlighting() {
+  def customTypeHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Types.scala") { (spc, scu) =>
       val traversers = Seq(
         AllMethodsTraverserDef(

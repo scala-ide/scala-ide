@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.preferences
 
 import scala.collection.mutable.ListBuffer
-import org.scalaide.util.internal.eclipse.SWTUtils.CheckBox
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.ColorFieldEditor
@@ -14,13 +13,13 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Group
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 
 import EditorPreferencePage._
 
 class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val store = ScalaPlugin.prefStore
+  private val store = IScalaPlugin().getPreferenceStore()
 
   private val preferencesToSave = ListBuffer[() => Unit]()
 
@@ -45,14 +44,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
   }
 
   private def createSettingsGroup(base: Composite): Unit = {
-    val surround = group("Automatically surround selection", base)
-    checkBox(P_ENABLE_SMART_BRACKETS, "With [brackets]", surround)
-    checkBox(P_ENABLE_SMART_BRACES, "With {braces}", surround)
-    checkBox(P_ENABLE_SMART_PARENS, "With (parenthesis)", surround)
-    checkBox(P_ENABLE_SMART_QUOTES, "With \"quotes\"", surround)
-
     val typing = group("Typing", base)
-    checkBox(P_ENABLE_AUTO_CLOSING_BRACES, "Enable auto closing braces when editing an existing line", typing)
     checkBox(P_ENABLE_AUTO_CLOSING_COMMENTS, "Automatically close multi line comments and Scaladoc", typing)
     checkBox(P_ENABLE_AUTO_ESCAPE_LITERALS, "Automatically escape \" signs in string literals", typing)
     checkBox(P_ENABLE_AUTO_ESCAPE_SIGN, "Automatically escape \\ signs in string and character literals", typing)
@@ -67,7 +59,10 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     val highlighting = group("Highlighting", base)
     checkBox(P_ENABLE_MARK_OCCURRENCES, "Mark Occurences of the selected element in the current file", highlighting)
     checkBox(P_SHOW_INFERRED_SEMICOLONS, "Show inferred semicolons", highlighting)
-  }
+
+    val completion = group("Completion", base)
+    checkBox(P_ENABLE_HOF_COMPLETION, "Always insert lambdas when completing higher-order functions", completion)
+}
 
   private def group(text: String, parent: Composite): Group = {
     val g = new Group(parent, SWT.NONE)
@@ -77,6 +72,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     g
   }
 
+  import org.scalaide.util.eclipse.SWTUtils.CheckBox
   private def checkBox(preference: String, labelText: String, parent: Composite): CheckBox = {
     val b = new CheckBox(store, preference, labelText, parent)
     preferencesToSave += { () => b.store() }
@@ -104,12 +100,6 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 object EditorPreferencePage {
   private final val BASE = "scala.tools.eclipse.editor."
 
-  final val P_ENABLE_SMART_BRACKETS = BASE + "smartBrackets"
-  final val P_ENABLE_SMART_BRACES = BASE + "smartBraces"
-  final val P_ENABLE_SMART_PARENS = BASE + "smartParens"
-  final val P_ENABLE_SMART_QUOTES = BASE + "smartQuotes"
-
-  final val P_ENABLE_AUTO_CLOSING_BRACES = BASE + "autoClosingBrace"
   final val P_ENABLE_AUTO_CLOSING_COMMENTS = BASE + "autoClosingComments"
   final val P_ENABLE_AUTO_ESCAPE_LITERALS = BASE + "autoEscapeLiterals"
   final val P_ENABLE_AUTO_ESCAPE_SIGN = BASE + "autoEscapeSign"
@@ -124,18 +114,14 @@ object EditorPreferencePage {
 
   final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
   final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
+  final val P_ENABLE_HOF_COMPLETION = BASE + "completionAlwaysLambdas"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
-  override def initializeDefaultPreferences() {
-    val store = ScalaPlugin.plugin.getPreferenceStore
-    store.setDefault(P_ENABLE_SMART_BRACKETS, false)
-    store.setDefault(P_ENABLE_SMART_BRACES, false)
-    store.setDefault(P_ENABLE_SMART_PARENS, false)
-    store.setDefault(P_ENABLE_SMART_QUOTES, false)
+  override def initializeDefaultPreferences(): Unit = {
+    val store = IScalaPlugin().getPreferenceStore
 
-    store.setDefault(P_ENABLE_AUTO_CLOSING_BRACES, true)
     store.setDefault(P_ENABLE_AUTO_CLOSING_COMMENTS, true)
     store.setDefault(P_ENABLE_AUTO_ESCAPE_LITERALS, false)
     store.setDefault(P_ENABLE_AUTO_ESCAPE_SIGN, false)
@@ -146,6 +132,8 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_BREAKING_COMMENTS, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
+    store.setDefault(P_ENABLE_HOF_COMPLETION, true)
+
     // TODO This preference is added in 4.0. Delete the former preference once support for the former release is dropped.
     store.setDefault(P_SHOW_INFERRED_SEMICOLONS, store.getBoolean("actions.showInferredSemicolons"))
 

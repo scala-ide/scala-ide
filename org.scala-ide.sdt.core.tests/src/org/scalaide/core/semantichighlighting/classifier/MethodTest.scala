@@ -6,7 +6,7 @@ import org.junit._
 class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def method() {
+  def method(): Unit = {
     checkSymbolClassification("""
       object A {
         def method(): Int = method
@@ -18,7 +18,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def method_with_backticks() {
+  def method_with_backticks(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -36,7 +36,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def bug_with_backticks() {
+  def bug_with_backticks(): Unit = {
     checkSymbolClassification("""
       object A {
         List.`apply`(42)
@@ -48,7 +48,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_method() {
+  def import_method(): Unit = {
     checkSymbolClassification("""
       import System.currentTimeMillis
       """, """
@@ -58,7 +58,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def classOf() {
+  def classOf(): Unit = {
     checkSymbolClassification("""
       class A { classOf[A] }
       """, """
@@ -69,7 +69,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("The renamed method doesn't have a symbol and the current classification strategy needs the symbol's name.")
-  def import_renaming() {
+  def import_renaming(): Unit = {
     checkSymbolClassification("""
       import System.{ currentTimeMillis => bobble }
       class A {
@@ -83,7 +83,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def test_synthetic_function_param() {
+  def test_synthetic_function_param(): Unit = {
     checkSymbolClassification("""
       object A {
         {
@@ -102,7 +102,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001223)")
-  def param_of_classOf() {
+  def param_of_classOf(): Unit = {
     checkSymbolClassification("""
       object X {
         val x = classOf[Int]
@@ -117,7 +117,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001228)")
-  def combination_of_implicit_conversion_and_higher_order_method_call() {
+  def combination_of_implicit_conversion_and_higher_order_method_call(): Unit = {
     checkSymbolClassification("""
       object X {
         val s: String = Seq(1).map(param=>param)
@@ -134,7 +134,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001242)")
-  def internal_notation_of_operator_names() {
+  def internal_notation_of_operator_names(): Unit = {
     checkSymbolClassification("""
       object X {
         val xs = Nil $colon$colon 0
@@ -149,7 +149,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST (ticket #1001259)")
-  def param_of_super() {
+  def param_of_super(): Unit = {
     checkSymbolClassification("""
       object X {
         val bool = super[Object].equals(this)
@@ -163,7 +163,7 @@ class MethodTest extends AbstractSymbolClassifierTest {
   }
 
   @Test(expected = Predef.classOf[AssertionError])
-  def while_keyword_is_not_treated_as_method() {
+  def while_keyword_is_not_treated_as_method(): Unit = {
     checkSymbolClassification("""
       object X {
         while (false) {}

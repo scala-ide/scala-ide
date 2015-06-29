@@ -3,15 +3,19 @@ package org.scalaide.core.internal.builder.zinc
 import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.SubMonitor
-import org.scalaide.core.ScalaPlugin.plugin
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
 import sbt.ClasspathOptions
-import sbt.ScalaInstance
+import sbt.Logger.xlog2Log
 import sbt.classpath.ClasspathUtilities
 import sbt.compiler.AnalyzingCompiler
 import sbt.compiler.CompilerCache
@@ -23,37 +27,44 @@ import xsbti.Logger
 import xsbti.Maybe
 import xsbti.Reporter
 import xsbti.compile._
-import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.ScalaPlugin
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
+import java.net.URLClassLoader
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
  */
-class SbtInputs(installation: ScalaInstallation,
-  sourceFiles: Seq[File],
-  project: ScalaProject,
-  javaMonitor: SubMonitor,
-  scalaProgress: CompileProgress,
-  tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics
-  logger: Logger) {
+class SbtInputs(installation: IScalaInstallation,
+    sourceFiles: Seq[File],
+    project: IScalaProject,
+    javaMonitor: SubMonitor,
+    scalaProgress: CompileProgress,
+    tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics
+    logger: Logger,
+    addToClasspath: Seq[IPath] = Seq.empty,
+    srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty) {
 
   def cache = CompilerCache.fresh // May want to explore caching possibilities.
 
-  private val allProjects = project +: project.transitiveDependencies.flatMap(plugin.asScalaProject)
+  private val allProjects = project +: project.transitiveDependencies.flatMap(ScalaPlugin().asScalaProject)
 
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
       Maybe.just(Analysis.Empty)
-    else
-      allProjects.find(_.sourceOutputFolders.map(_._2.getLocation.toFile) contains f) map (_.buildManager) match {
-        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
-        case None                                     => Maybe.just(Analysis.Empty)
+    else {
+      val analysis = allProjects.collectFirst {
+        case project if project.buildManager.buildManagerOf(f).nonEmpty =>
+          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
       }
+      Maybe.just(analysis.getOrElse(Analysis.Empty))
+    }
 
   def progress = Maybe.just(scalaProgress)
 
@@ -61,19 +72,22 @@ class SbtInputs(installation: ScalaInstallation,
     sbt.inc.IncOptions.Default.
       withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withNewClassfileManager(ClassfileManager.transactional(tempDir)).
+      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
       withApiDumpDirectory(None).
       withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
       withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
   }
 
   def options = new Options {
-    def classpath = project.scalaClasspath.userCp.map(_.toFile.getAbsoluteFile).toArray
+    def classpath = (project.scalaClasspath.userCp ++ addToClasspath).map(_.toFile.getAbsoluteFile).toArray
 
     def sources = sourceFiles.toArray
 
     def output = new MultipleOutput {
-      def outputGroups = project.sourceOutputFolders.map {
+      private def sourceOutputFolders =
+        if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
+
+      def outputGroups = sourceOutputFolders.map {
         case (src, out) => new MultipleOutput.OutputGroup {
           def sourceDirectory = src.getLocation.toFile
           def outputDirectory = out.getLocation.toFile
@@ -101,15 +115,15 @@ class SbtInputs(installation: ScalaInstallation,
     def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
       case "JavaThenScala" => JavaThenScala
       case "ScalaThenJava" => ScalaThenJava
-      case _               => Mixed
+      case _ => Mixed
     }
   }
 
   /** @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
-    val scalaInstance = installation.scalaInstance
-    val store = ScalaPlugin.plugin.compilerInterfaceStore
+    val scalaInstance = scalaInstanceForInstallation(installation)
+    val store = ScalaPlugin().compilerInterfaceStore
 
     store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerInterface =>

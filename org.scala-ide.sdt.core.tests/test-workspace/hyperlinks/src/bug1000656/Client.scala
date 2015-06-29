@@ -5,7 +5,7 @@ import util.Full
 
 /** Test that hyperlinking works for definitions defined in a dependent project. */
 class Client {
-  def foo {
+  def foo: Unit = {
     val b: Box[Int] = null
 
     val t: b.myInt/*^*/ = 10

@@ -3,7 +3,6 @@ package org.scalaide.refactoring.internal.extract
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.extraction.ExtractionRefactoring
-
 import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
@@ -18,7 +17,8 @@ import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.internal.eclipse.TextEditUtils
 
 trait ExtractionExecutor extends RefactoringExecutor {
   abstract class ScalaIdeExtractionRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile)
@@ -40,7 +40,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
           EditorUtils.doWithCurrentEditor { editor =>
             val viewer = editor.getViewer()
             val pos = e.extractionSource.pos
-            viewer.setSelectedRange(pos.startOrPoint, pos.endOrPoint - pos.startOrPoint)
+            viewer.setSelectedRange(pos.start, pos.end - pos.start)
           }
         }
       }
@@ -88,7 +88,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
     refactoring.performRefactoring() match {
       case (change: TextChange) :: Nil if refactoring.getPages.isEmpty =>
         EditorUtils.doWithCurrentEditor { editor =>
-          EditorUtils.applyRefactoringChangeToEditor(change, editor)
+          TextEditUtils.applyRefactoringChangeToEditor(change, editor)
         }
         true
       case _ =>
@@ -115,7 +115,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
         { es =>
           val proposals = es.extractions.map { e =>
             val pos = e.extractionTarget.enclosing.pos
-            new ExtractionProposal(e.displayName, pos.startOrPoint, pos.endOrPoint) {
+            new ExtractionProposal(e.displayName, pos.start, pos.end) {
               def apply(doc: IDocument) = {
                 block(Some(e))
               }

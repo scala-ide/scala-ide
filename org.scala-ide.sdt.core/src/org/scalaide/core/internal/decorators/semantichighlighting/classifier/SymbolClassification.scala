@@ -2,7 +2,6 @@ package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 import scala.PartialFunction.condOpt
 import scala.collection.mutable
-import org.scalaide.core.compiler.ScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.nsc.io.AbstractFile
@@ -11,7 +10,8 @@ import scala.reflect.internal.util.SourceFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.Region
-import org.scalaide.util.internal.eclipse.RegionOps._
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 private object SymbolClassification {
 
@@ -32,8 +32,8 @@ private object SymbolClassification {
 
 }
 
-class SymbolClassification(protected val sourceFile: SourceFile, val global: ScalaPresentationCompiler, useSyntacticHints: Boolean)
-  extends SafeSymbol with TypeTreeTraverser with SymbolTests with HasLogger {
+class SymbolClassification(protected val sourceFile: SourceFile, val global: IScalaPresentationCompiler, useSyntacticHints: Boolean)
+  extends SafeSymbol with SymbolTests with HasLogger {
 
   import SymbolClassification._
   import global.Symbol
@@ -45,7 +45,8 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
   protected lazy val syntacticInfo =
     if (useSyntacticHints) SyntacticInfo.getSyntacticInfo(sourceFile.content.mkString) else SyntacticInfo.noSyntacticInfo
 
-  private lazy val unitTree: global.Tree = global.loadedType(sourceFile, true).fold(identity, _ => global.EmptyTree)
+  private lazy val unitTree: global.Tree =
+    global.askLoadedTyped(sourceFile, true).get.fold(identity, _ => global.EmptyTree)
 
   private def canSymbolBeReferencedInSource(sym: Symbol): Boolean = {
     def isSyntheticMethodParam(sym: Symbol): Boolean = sym.isSynthetic && sym.isValueParameter
@@ -62,7 +63,7 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
       def getSymbolInfo(symbolType: SymbolType, sym: Symbol, region: Option[IRegion]): SymbolInfo = {
         val inInterpolatedString = region.map(syntacticInfo.identifiersInStringInterpolations).getOrElse(false)
         // isDeprecated may trigger type completion for annotations
-        val deprecated = sym.annotations.nonEmpty && global.askOption(() => sym.isDeprecated).getOrElse(false)
+        val deprecated = sym.annotations.nonEmpty && global.asyncExec(sym.isDeprecated).getOrElse(false)()
         SymbolInfo(symbolType, region.toList, deprecated, inInterpolatedString)
       }
 
@@ -72,23 +73,35 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
 
         findDynamicMethodCall(t) map {
           case (symbolType, pos) =>
-            val sym = global.askOption(() => t.symbol).getOrElse(NoSymbol)
+            val sym = global.asyncExec(t.symbol).getOrElse(NoSymbol)()
             getSymbolInfo(symbolType, sym, Some(posToRegion(pos)))
         }
+      }
+
+      def handleCallByNameParamSpecialCase(symType: SymbolType, t: Tree): SymbolType =
+        // we only want call-by-name parameters to be treated special where they are called, not where they are defined
+        if (symType == CallByNameParameter && t.isDef)
+          Param
+        else
+          symType
+
+      def getRefinedSymbolType(sym: Symbol, t: Tree): SymbolType =  {
+        val symType = getSymbolType(sym)
+        handleCallByNameParamSpecialCase(symType, t)
       }
 
       def findSymbolInfo(t: Tree): List[SymbolInfo] =
         safeSymbol(t) collect {
           case (sym, pos) if canSymbolBeReferencedInSource(sym) =>
-            getSymbolInfo(getSymbolType(sym), sym, getOccurrenceRegion(sym)(pos))
+            getSymbolInfo(getRefinedSymbolType(sym, t), sym, getOccurrenceRegion(sym)(pos))
         }
 
       var symbolInfos = IndexedSeq.empty[SymbolInfo]
       new Traverser {
         override def traverse(t: Tree): Unit = {
-          def symExists = global.askOption(() => t.symbol != NoSymbol).getOrElse(false)
+          def symExists = global.asyncExec(t.symbol != NoSymbol).getOrElse(false)()
 
-          if (!progressMonitor.isCanceled() && isSourceTree(t) && (t.hasSymbol || t.isType || symExists)) {
+          if (!progressMonitor.isCanceled() && isSourceTree(t) && (t.hasSymbolField || t.isType || symExists)) {
             val ds = findDynamicInfo(t)
             val xs = if (ds.isEmpty) findSymbolInfo(t) else ds.toList
             symbolInfos ++= xs
@@ -115,13 +128,15 @@ class SymbolClassification(protected val sourceFile: SourceFile, val global: Sca
     (symbolInfosFromSyntax ++ prunedSymbolInfos).filter(_.regions.nonEmpty).distinct
   }
 
-  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] =
+  private def getOccurrenceRegion(sym: Symbol)(pos: Position): Option[IRegion] = {
+    import org.scalaide.util.eclipse.RegionUtils.RichRegion
     getNameRegion(pos) flatMap { region =>
       val text = region of sourceFile.content
       val symName = sym.nameString
       if (symName.startsWith(text) || text == "`" + symName + "`") Some(region)
       else None
     }
+  }
 
   private def getNameRegion(pos: Position): Option[IRegion] =
     try

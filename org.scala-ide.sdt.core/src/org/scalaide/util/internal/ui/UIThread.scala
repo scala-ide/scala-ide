@@ -5,8 +5,8 @@ trait UIThread {
   def asyncExec(f: => Unit): Unit
 
   /** Synchronously run `f` on the UI thread.  */
-  def syncExec(f: => Unit)
+  def syncExec(f: => Unit): Unit
 
   /** Retrieve the UI Thread instance */
-  def get: Thread
+  private [scalaide] def get: Thread
 }

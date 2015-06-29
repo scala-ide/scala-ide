@@ -22,17 +22,6 @@ object ScalaThreadTest {
   }
 
   final private val WaitingStep = 50
-
-  import scala.language.implicitConversions
-
-  private def waitUntil(condition: => Boolean, timeout: Int) {
-    val timeoutEnd = System.currentTimeMillis() + timeout
-    while (!condition) {
-      assertTrue("Timed out before condition was satisfied", System.currentTimeMillis() < timeoutEnd)
-      Thread.sleep(WaitingStep)
-    }
-  }
-
 }
 
 /**
@@ -47,14 +36,14 @@ class ScalaThreadTest {
   var actor: Option[BaseDebuggerActor] = None
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @After
-  def cleanupActor() {
+  def cleanupActor(): Unit = {
     actor.foreach(_ ! PoisonPill)
     actor = None
   }
@@ -73,7 +62,7 @@ class ScalaThreadTest {
   }
 
   @Test
-  def getName() {
+  def getName(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenReturn("some test string")
@@ -86,7 +75,7 @@ class ScalaThreadTest {
   }
 
   @Test
-  def vmDisconnectedExceptionOnGetName() {
+  def vmDisconnectedExceptionOnGetName(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenThrow(new VMDisconnectedException)
@@ -99,7 +88,7 @@ class ScalaThreadTest {
   }
 
   @Test
-  def objectCollectedExceptionOnGetName() {
+  def objectCollectedExceptionOnGetName(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
 
     when(jdiThread.name).thenThrow(new ObjectCollectedException)
@@ -119,7 +108,7 @@ class ScalaThreadTest {
    */
   @Ignore
   @Test
-  def threadResumedOnlyOnce_1001199() {
+  def threadResumedOnlyOnce_1001199(): Unit = {
     val jdiThread = mock(classOf[ThreadReference])
 
     val thread = createThread(jdiThread)
@@ -137,7 +126,7 @@ class ScalaThreadTest {
    * #1001308
    */
   @Test(timeout = 2000)
-  def getStackFramesFreeze() {
+  def getStackFramesFreeze(): Unit = {
 
     val jdiThread = mock(classOf[ThreadReference])
 

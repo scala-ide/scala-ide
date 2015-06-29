@@ -8,8 +8,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import scala.language.reflectiveCalls
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.launching.ScalaLaunchShortcut
 
 /** This class checks the functionality behind Run As > JUnit Test, triggered when a user right clicks on a source
@@ -23,12 +22,11 @@ class JUnit4TestFinderTest {
 
   private final val TestProjectName = "runAsJunit"
 
-  private val simulator = new EclipseUserSimulator
   private var projectSetup: TestProjectSetup = _
 
   @Before
-  def createProject() {
-    val scalaProject = simulator.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
+  def createProject(): Unit = {
+    val scalaProject = SDTTestUtils.createProjectInWorkspace(TestProjectName, withSourceRoot = true)
     projectSetup = new TestProjectSetup(TestProjectName) {
       override lazy val project = scalaProject
     }
@@ -68,11 +66,11 @@ class JUnit4TestFinderTest {
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
-  private def project: ScalaProject = projectSetup.project
+  private def project: IScalaProject = projectSetup.project
 
   private def delete(sources: ScalaSourceFile*): Unit = {
     import scala.util.control.Exception.ignoring
@@ -89,7 +87,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -108,7 +106,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -128,7 +126,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -149,7 +147,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           | // unclosed class
         """.stripMargin
       }
@@ -170,7 +168,7 @@ class JUnit4TestFinderTest {
           |class MyTest {
           |  s //unknown identifier
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -191,12 +189,12 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |class MyTest1 {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |
           |class MyTest2 {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -216,7 +214,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |object MyTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -236,7 +234,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |trait SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -256,7 +254,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class AbstractTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -276,7 +274,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |class MyTest extends SuperTest
         """.stripMargin
@@ -298,7 +296,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -324,7 +322,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |abstract class SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
         """.stripMargin
       }
@@ -350,7 +348,7 @@ class JUnit4TestFinderTest {
           |import org.junit.Test
           |trait SuperTest {
           |  @Test
-          |  def test1() {}
+          |  def test1(): Unit = {}
           |}
           |class MyTest extends SuperTest
         """.stripMargin
@@ -481,7 +479,7 @@ class JUnit4TestFinderTest {
 
   private def runnableJUnitTestClassesIn(source: ScalaSourceFile) = new {
     def matches(expectedClassNames: Set[String]): Unit = {
-      val jUnitClasses = ScalaLaunchShortcut.getJunitTestClasses(source).toList.map(_.getElementName)
+      val jUnitClasses = ScalaLaunchShortcut.getJunitTestClasses(source).map(_.getElementName)
       Assert.assertEquals("test classes found.", expectedClassNames, jUnitClasses.toSet)
     }
   }

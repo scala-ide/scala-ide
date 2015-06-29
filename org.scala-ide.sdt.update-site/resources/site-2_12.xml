@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.scala-ide.sdt.feature_0.0.0.jar" id="org.scala-ide.sdt.feature" version="0.0.0">
+      <category name="sdt"/>
+   </feature>
+   <feature url="features/org.scala-ide.sbt.feature_0.0.0.jar" id="org.scala-ide.sbt.feature" version="0.0.0">
+      <category name="sdt"/>
+   </feature>
+   <feature url="features/org.scala-ide.scala211.feature_0.0.0.jar" id="org.scala-ide.scala211.feature" version="0.0.0">
+      <category name="sdt"/>
+   </feature>
+   <feature url="features/org.scala-ide.scala212.feature_0.0.0.jar" id="org.scala-ide.scala212.feature" version="0.0.0">
+      <category name="sdt"/>
+   </feature>
+   <feature url="features/org.scala-ide.sdt.source.feature_0.0.0.jar" id="org.scala-ide.sdt.source.feature" version="0.0.0">
+      <category name="sdt-source"/>
+   </feature>
+   <feature url="features/org.scala-ide.sbt.source.feature_0.0.0.jar" id="org.scala-ide.sbt.source.feature" version="0.0.0">
+      <category name="sdt-source"/>
+   </feature>
+   <feature url="features/org.scala-ide.scala211.source.feature_0.0.0.jar" id="org.scala-ide.scala211.source.feature" version="0.0.0">
+      <category name="sdt-source"/>
+   </feature>
+   <feature url="features/org.scala-ide.scala212.source.feature_0.0.0.jar" id="org.scala-ide.scala212.source.feature" version="0.0.0">
+      <category name="sdt-source"/>
+   </feature>
+   <feature url="features/org.scala-ide.sdt.dev.feature_0.0.0.jar" id="org.scala-ide.sdt.dev.feature" version="0.0.0">
+      <category name="dev"/>
+   </feature>
+   <category-def name="sdt" label="Scala IDE for Eclipse">
+     <description>
+       The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform.
+     </description>
+   </category-def>
+   <category-def name="sdt-source" label="Scala IDE for Eclipse Source Feature">
+     <description>
+       The Scala IDE for Eclipse provides the tools needed to build Scala programs on the Eclipse Platform. This feature provides access (including, e.g. linking) to the IDE plugin's source.
+     </description>
+   </category-def>
+   <category-def name="dev" label="Scala IDE for Eclipse Development Support">
+     <description>
+       The Scala IDE for Eclipse Development support provides tools used to develop Scala-based Eclipse plugins.
+     </description>
+   </category-def>
+</site>

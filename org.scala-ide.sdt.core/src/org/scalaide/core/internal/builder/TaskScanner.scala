@@ -5,9 +5,9 @@ import scala.collection.mutable.ArrayBuffer
 import org.eclipse.jdt.core.JavaCore
 import scala.reflect.internal.util.Position
 import scala.reflect.internal.util.RangePosition
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 
-class TaskScanner(project : ScalaProject) {
+class TaskScanner(project : IScalaProject) {
   import TaskScanner._
 
   def getJavaOptions(key: String): Array[String] = {
@@ -76,7 +76,7 @@ class TaskScanner(project : ScalaProject) {
       i += 1
     }
 
-    lines.flatMap({ case (offset, line) => extractTasksFromLine(line, pos.startOrPoint+offset)}).toList
+    lines.flatMap({ case (offset, line) => extractTasksFromLine(line, pos.start+offset)}).toList
   }
 }
 

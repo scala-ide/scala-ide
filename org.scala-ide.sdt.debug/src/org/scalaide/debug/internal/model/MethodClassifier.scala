@@ -2,7 +2,7 @@ package org.scalaide.debug.internal.model
 
 import com.sun.jdi.Method
 import org.scalaide.debug.internal.classfile.ConstantPool
-import org.scalaide.util.internal.Utils._
+import org.scalaide.util.Utils._
 
 /** Classifies `scalac` synthetic methods according to their purpose.
  *

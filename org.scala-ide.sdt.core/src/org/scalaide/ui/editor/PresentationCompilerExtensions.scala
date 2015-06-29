@@ -1,6 +1,6 @@
 package org.scalaide.ui.editor
 
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import scala.reflect.internal.util.SourceFile
 
 /** A few convenience methods on top of the presentation compiler
@@ -8,7 +8,7 @@ import scala.reflect.internal.util.SourceFile
  *  This should migrate to sdt.core/interactive compiler as needed.
  */
 abstract class PresentationCompilerExtensions {
-  val compiler: ScalaPresentationCompiler
+  val compiler: IScalaPresentationCompiler
 
   import compiler._
 
@@ -23,7 +23,7 @@ abstract class PresentationCompilerExtensions {
     override def isEligible(t: Tree) = super.isEligible(t) && p(t)
   }
 
-  def getEnclosingMethd(src: SourceFile, offset: Int) = {
+  def getEnclosingMethod(src: SourceFile, offset: Int): Tree = {
     locateIn(parseTree(src), rangePos(src, offset, offset, offset), t => t.isInstanceOf[DefDef])
   }
 }

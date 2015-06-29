@@ -1,8 +1,10 @@
 package org.scalaide.core.ui.completion
 
 import org.junit.Test
-import org.scalaide.core.ui.CompilerSupport
 import org.junit.AfterClass
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.core.FlakyTest
 
 object StandardCompletionTests extends CompletionTests
 class StandardCompletionTests {
@@ -41,7 +43,7 @@ class StandardCompletionTests {
     object X {
       (new A).foo([[i]])^
     }
-  """ after Completion("foo(Int): Int")
+  """ after Completion("foo(i: Int): Int")
 
   @Test
   def completeMethodWithMultipleParameterLists() = """
@@ -58,7 +60,7 @@ class StandardCompletionTests {
     object X {
       (new A).foo([[i]])([[j]])^
     }
-  """ after Completion("foo(Int)(Int): Int")
+  """ after Completion("foo(i: Int)(j: Int): Int")
 
   @Test
   def doNotInsertImplicitParameterList() = """
@@ -75,7 +77,7 @@ class StandardCompletionTests {
     object X {
       (new A).foobar([[i]], [[j]])([[ident]])^
     }
-  """ after Completion("foobar(Int, Int)(Int)(Int): Int", expectedNumberOfCompletions = 1)
+  """ after Completion("foobar(i: Int, j: Int)(ident: Int)(l: Int): Int", expectedNumberOfCompletions = 1)
 
   @Test
   def completeImportedMembers() = """
@@ -96,7 +98,7 @@ class StandardCompletionTests {
       import a._
       foo([[i]])^
     }
-  """ after Completion("foo(Int): Int")
+  """ after Completion("foo(i: Int): Int")
 
   @Test
   def completeMethodWithEmptyParamList() = """
@@ -147,10 +149,10 @@ class StandardCompletionTests {
   """ becomes """
     class Ticket1000475 {
       val m = Map(1 -> "1")
-      m(1) forall([[p]])^
+      m(1) forall { [[x]] => [[???]] }^
       println()
     }
-  """ after Completion("forall(Char => Boolean): Boolean")
+  """ after Completion("forall(p: Char => Boolean): Boolean")
 
   @Test
   def completeJavaType() = """
@@ -214,10 +216,10 @@ class StandardCompletionTests {
     class Test1 {
       new C().t1000654_a([[s]])^
     }
-  """ after Completion("t1000654_a(String): Int",
+  """ after Completion("t1000654_a(s: String): Int",
       expectedCompletions = Seq(
-          "t1000654_a(Int): Int",
-          "t1000654_a(String): Int"))
+          "t1000654_a(i: Int): Int",
+          "t1000654_a(s: String): Int"))
 
   @Test
   def completeCaseClassMember() = """
@@ -259,6 +261,124 @@ class StandardCompletionTests {
       import Ticket1001125.doNothingWith^
     }
   """ after Completion(
-      "doNothingWith(Any): Unit",
+      "doNothingWith(that: Any): Unit",
       expectedNumberOfCompletions = 1)
+
+  @Test
+  def noEmptyParensForJavaGetter() = FlakyTest.retry("noEmptyParensForJavaGetter") { """
+    object Test {
+      val a = "test string"
+      a.getB^
+    }
+  """ becomes """
+    object Test {
+      val a = "test string"
+      a.getBytes^
+    }
+  """ after Completion(
+      "getBytes(): Array[Byte]",
+      expectedNumberOfCompletions = 4)
+  }
+
+  @Test
+  def emptyParensForJavaNonGetter() = """
+    object Test {
+      val a: java.io.File = new java.io.File("")
+      a.canR^
+    }
+  """ becomes """
+    object Test {
+      val a: java.io.File = new java.io.File("")
+      a.canRead()^
+    }
+  """ after Completion(
+      "canRead(): Boolean",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHigherOrderFunction() = """
+    object Test {
+      def withResource[T](f: T => Unit): Unit = ???
+      this.withR^
+    }
+  """ becomes """
+    object Test {
+      def withResource[T](f: T => Unit): Unit = ???
+      this.withResource { [[x]] => [[???]] }^
+    }
+  """ after Completion(
+      "withResource[T](f: T => Unit): Unit",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHOFWithEmptyParens() = """
+    object Test {
+      def lzyEval(f: () => Any): Unit = ???
+      this.lzy^
+    }
+  """ becomes """
+    object Test {
+      def lzyEval(f: () => Any): Unit = ???
+      this.lzyEval { () => [[???]] }^
+    }
+  """ after Completion(
+      "lzyEval(f: () => Any): Unit",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeCallByNameParam() = """
+    object Test {
+      def cbn(f: => Any): Unit = ???
+      this.cb^
+    }
+  """ becomes """
+    object Test {
+      def cbn(f: => Any): Unit = ???
+      this.cbn([[f]])^
+    }
+  """ after Completion(
+      "cbn(f: => Any): Unit",
+      expectedNumberOfCompletions = 1)
+
+  @Test
+  def completeParameterInHOFWithoutInfixNotation() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, false) {
+      """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withR^
+      }
+    """ becomes """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withResource([[f]])^
+      }
+    """ after Completion(
+          "withResource[T](f: T => Unit): Unit",
+          expectedNumberOfCompletions = 1)
+    }
+  }
+
+  @Test
+  def completeParameterInHOFWithInfixNotation() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, false) {
+      """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this withR^
+      }
+    """ becomes """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this withResource { [[x]] => [[???]] }^
+      }
+    """ after Completion(
+          "withResource[T](f: T => Unit): Unit",
+          expectedNumberOfCompletions = 1)
+    }
+  }
 }

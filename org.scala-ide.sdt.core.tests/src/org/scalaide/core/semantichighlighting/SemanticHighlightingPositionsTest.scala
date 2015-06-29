@@ -1,14 +1,12 @@
 package org.scalaide.core
 package semantichighlighting
 
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.util.internal.eclipse.EmptyRegion
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.core.util.CurrentThread
-import org.scalaide.util.internal.eclipse.EclipseUtils
 import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 import org.eclipse.core.internal.filebuffers.SynchronizableDocument
@@ -31,6 +29,7 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting.Presenter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.core.internal.decorators.semantichighlighting._
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes
+import org.scalaide.core.testsetup.SDTTestUtils
 
 class SemanticHighlightingPositionsTest {
   import SemanticHighlightingPositionsTest._
@@ -38,8 +37,7 @@ class SemanticHighlightingPositionsTest {
   private val MarkerRegex: Regex = """/\*\^\*/""".r
   private val Marker = "/*^*/"
 
-  protected val simulator = new EclipseUserSimulator
-  private var project: ScalaProject = _
+  private var project: IScalaProject = _
 
   private var sourceView: ISourceViewer = _
   private var document: IDocument = _
@@ -59,19 +57,17 @@ class SemanticHighlightingPositionsTest {
     mock(classOf[InteractiveCompilationUnitEditor])
 
   @Before
-  def createProject() {
-    project = simulator.createProjectInWorkspace("semantic-highlighting-positions-update", true)
+  def createProject(): Unit = {
+    project = SDTTestUtils.createProjectInWorkspace("semantic-highlighting-positions-update", true)
   }
 
   @After
-  def deleteProject() {
-    EclipseUtils.workspaceRunnableIn(ScalaPlugin.plugin.workspaceRoot.getWorkspace) { _ =>
-      project.underlying.delete(true, null)
-    }
+  def deleteProject(): Unit = {
+    SDTTestUtils.deleteProjects(project)
   }
 
   @Before
-  def setupMocks() {
+  def setupMocks(): Unit = {
     sourceView = mock(classOf[ISourceViewer])
     document = new SynchronizableDocument
     when(sourceView.getDocument()).thenReturn(document)
@@ -86,8 +82,8 @@ class SemanticHighlightingPositionsTest {
 
   private def setTestCode(code: String): Unit = {
     testCode = code.stripMargin
-    val emptyPkg = simulator.createPackage("")
-    unit = simulator.createCompilationUnit(emptyPkg, "A.scala", testCode).asInstanceOf[ScalaCompilationUnit]
+    val emptyPkg = SDTTestUtils.createSourcePackage("")(project)
+    unit = SDTTestUtils.createCompilationUnit(emptyPkg, "A.scala", testCode).asInstanceOf[ScalaCompilationUnit]
     when(compilationUnitEditor.getInteractiveCompilationUnit).thenReturn(unit)
     document.set(testCode)
   }
@@ -159,7 +155,7 @@ class SemanticHighlightingPositionsTest {
       document.replace(offset, length, newText) // triggers the IUpdatePosition listener
       unit.getBuffer().replace(offset, length, newText) // needed by the semantic highlighting reconciler
       // compiler needs to reload the content of the unit (this is usually done by the reconciler, but the test does not rely on it)
-      project.presentationCompiler { _.askReload(unit, unit.getContents) }
+      project.presentationCompiler { _.askReload(unit, unit.sourceMap(unit.getContents()).sourceFile) }
     }
 
     // perform edit
@@ -185,7 +181,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_not_affected_by_edition() {
+  def highlighted_positions_not_affected_by_edition(): Unit = {
     runTest(AddText("\n\n")) {
       """
         |class A {
@@ -197,7 +193,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def existing_highlighted_positions_are_shifted() {
+  def existing_highlighted_positions_are_shifted(): Unit = {
     runTest(AddText("\n\n")) {
       """
         |class A {
@@ -209,7 +205,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def new_highlighted_positions_are_reported() {
+  def new_highlighted_positions_are_reported(): Unit = {
     runTest(AddText("val bar = 2", List(new Position(17, 3, SymbolTypes.TemplateVal, deprecated = false, inInterpolatedString = false)))) {
       """
         |class A {
@@ -221,7 +217,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_in_the_document_are_removed_on_deletion() {
+  def highlighted_positions_in_the_document_are_removed_on_deletion(): Unit = {
     runTest(RemoveText) {
       """
         |class A {
@@ -234,7 +230,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def highlighted_positions_around_deletion_action_are_correct() {
+  def highlighted_positions_around_deletion_action_are_correct(): Unit = {
     runTest(RemoveText) {
       """
         |class A {
@@ -247,7 +243,7 @@ class SemanticHighlightingPositionsTest {
   }
 
   @Test
-  def correctly_compute_damagedRegion_whenDeletingText() {
+  def correctly_compute_damagedRegion_whenDeletingText(): Unit = {
     runTest(RemoveText) {
       """
         |object A {
@@ -261,7 +257,7 @@ class SemanticHighlightingPositionsTest {
 
 object SemanticHighlightingPositionsTest {
 
-  class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
+  final class TextPresentationStub(override val sourceViewer: ISourceViewer) extends TextPresentationHighlighter {
     @volatile private var reconciler: Job = _
     @volatile var positionsTracker: PositionsTracker = _
     @volatile var damagedRegion: IRegion = _

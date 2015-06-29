@@ -4,30 +4,12 @@ import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.AddImportStatement
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
-import org.scalaide.util.internal.ScalaWordFinder
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.internal.eclipse.TextEditUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-
-object HasArgs extends Enumeration {
-  val NoArgs, EmptyArgs, NonEmptyArgs = Value
-
-  /** Given a list of method's parameters it tells if the method
-   * arguments should be adorned with parenthesis. */
-  def from(params: List[List[_]]) = params match {
-    case Nil => NoArgs
-    case Nil :: Nil => EmptyArgs
-    case _ => NonEmptyArgs
-  }
-}
-
-/** Context related to the invocation of the Completion.
- *  Can be extended with more context as needed in future
- *
- *  @param contextType The type of completion - e.g. Import, method apply
- *  */
-case class CompletionContext(
-  contextType: CompletionContext.ContextType
-)
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.eclipse.jface.internal.text.html.BrowserInput
 
 object CompletionContext {
   trait ContextType
@@ -35,8 +17,8 @@ object CompletionContext {
   case object ApplyContext extends ContextType
   case object NewContext extends ContextType
   case object ImportContext extends ContextType
+  case object InfixMethodContext extends ContextType
 }
-
 
 /** A completion proposal coming from the Scala compiler. This
  *  class holds together data about completion proposals.
@@ -50,7 +32,7 @@ object CompletionContext {
  */
 case class CompletionProposal(
   kind: MemberKind.Value,
-  context: CompletionContext,
+  context: CompletionContext.ContextType,
   startPos: Int,             // position where the 'completion' string should be inserted
   completion: String,        // the string to be inserted in the document
   display: String,           // the display string in the completion list
@@ -60,14 +42,15 @@ case class CompletionProposal(
   getParamNames: () => List[List[String]], // parameter names (excluding any implicit parameter sections)
   paramTypes: List[List[String]],          // parameter types matching parameter names (excluding implicit parameter sections)
   fullyQualifiedName: String, // for Class, Trait, Type, Objects: the fully qualified name
-  needImport: Boolean        // for Class, Trait, Type, Objects: import statement has to be added
+  needImport: Boolean,        // for Class, Trait, Type, Objects: import statement has to be added
+  documentation: () => Option[BrowserInput]  // on-demand generated documentation HTML.
 ) {
 
   /** `getParamNames` is expensive, save this result once computed.
    *
    *  @note This field is lazy to avoid unnecessary computation.
    */
-  lazy val explicitParamNames = getParamNames()
+  private lazy val explicitParamNames = getParamNames()
 
   /** Return the tooltip displayed once a completion has been activated. */
   def tooltip: String = {
@@ -85,20 +68,80 @@ case class CompletionProposal(
    *
    *  @note It triggers the potentially expensive `getParameterNames` operation.
    */
-  def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
-    if (context.contextType == CompletionContext.ImportContext || ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist))
+  private def completionString(overwrite: Boolean, doParamsProbablyExist: => Boolean): String = {
+    if ((explicitParamNames.isEmpty || overwrite) && doParamsProbablyExist)
       completion
-    else {
-      val buffer = new StringBuffer(completion)
+    else
+      completionData.completionString
+  }
 
-      for (section <- explicitParamNames)
-        buffer.append(section.mkString("(", ", ", ")"))
-      buffer.toString
+  private case class CompletionData(completionString: String, linkedModeGroups: IndexedSeq[(Int, Int)])
+
+  /** Compute the full completion string and linked-mode groups.
+   *
+   *  The default completion string consists of the method name (`completion`) followed
+   *  by all explicit argument lists, pre-filled with the name of the corresponding
+   *  parameter at that position.
+   *
+   *  Special cases:
+   *    - Java getters. A Java method with no parameters will omit the empty param list
+   *    - one-argument higher-order functions. The parameter is surrounded by braces instead
+   *      of parenthesis, and a dummy function `x => ???` is placed instead of the parameter
+   *      name.
+   *    - non-argument higher order functions. The parameter is surrounded by braces and
+   *      a dummy function `() => ???` is placed instead of the parameter name
+   */
+  private lazy val completionData = {
+    if (context == CompletionContext.ImportContext
+        || (isJava && explicitParamNames == List(Nil) && completion.startsWith("get")))
+      CompletionData(completion, IndexedSeq.empty)
+    else {
+      val offset = startPos + completion.length
+      explicitParamNames.zip(paramTypes) match {
+        case List((List(_), List(SimpleFunctionType("()", _)))) if shouldInsertLambda =>
+          CompletionData(s"""$completion { () => ??? }""", IndexedSeq((offset + 9, 3)))
+
+        case List((List(_), List(SimpleFunctionType(x, _)))) if shouldInsertLambda && !x.contains(",") =>
+          CompletionData(s"""$completion { x => ??? }""", IndexedSeq((offset + 3, 1), (offset + 8, 3)))
+
+        case _ =>
+          val buffer = new StringBuffer(completion)
+
+          for (section <- explicitParamNames)
+            buffer.append(section.mkString("(", ", ", ")"))
+          CompletionData(buffer.toString, explicitParamsLinkedGroups)
+      }
     }
   }
 
+  private val shouldInsertLambda =
+    (context == CompletionContext.InfixMethodContext
+        || ScalaPlugin().getPreferenceStore.getBoolean(EditorPreferencePage.P_ENABLE_HOF_COMPLETION))
+
+  /** Match a simple function of form {{{A => B}}}
+   *  where neither A nor B are function types.
+   */
+  private case object SimpleFunctionType {
+    def unapply(fun: String): Option[(String, String)] = {
+      fun.split("=>") match {
+        case Array(a, b) if !a.isEmpty => Some((a.trim, b.trim))
+        case _                         => None
+      }
+    }
+  }
+
+  /** Return the pair of offset -> length for linked-mode groups corresponding to
+   *  the completion string. Offsets are relative to the document.
+   *
+   *  For example, for a completion string like {{{meth(a, bar)}}} this method would
+   *  return {{{IndexedSeq((offset + 1) -> 1, (offset + 4) -> 3}}}, where offset is
+   *  the index at the beginning of the parameter list.
+   */
+  def linkedModeGroups: IndexedSeq[(Int, Int)] =
+    completionData.linkedModeGroups
+
   /** Non GUI logic that calculates the `(offset, length)` groups for the `LinkedModeModel` */
-  def linkedModeGroups: IndexedSeq[(Int, Int)] = {
+  private def explicitParamsLinkedGroups: IndexedSeq[(Int, Int)] = {
     var groups = IndexedSeq[(Int, Int)]()
     var offset = startPos + completion.length
     for (section <- explicitParamNames) {
@@ -129,7 +172,7 @@ case class CompletionProposal(
    * Because this is a heuristic it will only work in some cases, but hopefully in
    * the most important ones.
    */
-  def doParamsProbablyExist(d: IDocument, offset: Int): Boolean = {
+  private def doParamsProbablyExist(d: IDocument, offset: Int): Boolean = {
     def terminatesExprProbably(c: Char) =
       c.toString matches "[a-zA-Z_;)},.\n]"
 
@@ -176,14 +219,14 @@ case class CompletionProposal(
         }
 
       val applyLinkedMode =
-        (context.contextType != CompletionContext.ImportContext
+        (context != CompletionContext.ImportContext
         && (!overwrite || !paramsProbablyExists)
         && explicitParamNames.flatten.nonEmpty)
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring
       // to work properly.
-      val selection = EditorUtils.applyChangesToFile(
+      val selection = TextEditUtils.applyChangesToFile(
         d, new TextSelection(d, endPos, 0), scalaSourceFile.file, completedIdent +: importStmt)
 
       if (applyLinkedMode)

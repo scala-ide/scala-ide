@@ -7,17 +7,12 @@ import org.eclipse.jface.text._
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.jface.text.reconciler.DirtyRegion
-import org.eclipse.jface.text.source._
 import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.ui.texteditor._
-import org.scalaide.ui.internal.editor.InteractiveCompilationUnitEditor
-import org.scalaide.util.internal.Utils._
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
+import org.scalaide.util.Utils._
 
 class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
-
-  private var progressMonitor : IProgressMonitor = _
-  private var document: IDocument = _
 
   /**
    * The underlying compilation unit, in general implemented by a ScalaSourceFile.
@@ -32,25 +27,20 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
   // for which reconciliation of the locally opened editor makes little sense
   // (it's more properly a ScalaClassFileViewer) but we still want to flush
   // scheduled reloads nonetheless
-  private val listeningEditor : Option[IJavaReconcilingListener] =
+  private val listeningEditor: Option[IJavaReconcilingListener] =
     icuEditor.asInstanceOfOpt[IJavaReconcilingListener]
 
-  override def setDocument(doc: IDocument) {
-    document = doc
-  }
+  override def setDocument(doc: IDocument): Unit = {}
 
-  override def setProgressMonitor(pMonitor : IProgressMonitor) {
-    progressMonitor = pMonitor
-  }
+  override def setProgressMonitor(pMonitor: IProgressMonitor): Unit = {}
 
-  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion) {
+  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
     logger.debug("Incremental reconciliation not implemented.")
   }
 
-  override def reconcile(partition: IRegion) {
+  override def reconcile(partition: IRegion): Unit = {
     listeningEditor.foreach(_.aboutToBeReconciled())
-    icUnit.scalaProject.presentationCompiler(_.flushScheduledReloads())
-    val errors = icUnit.reconcile(document.get)
+    val errors = icUnit.forceReconcile()
 
     // Some features, such as quick fixes, are dependent upon getting an ICompilationUnit there
     val cu: Option[ICompilationUnit] = icUnit.asInstanceOfOpt[ICompilationUnit]
@@ -63,9 +53,9 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
     listeningEditor.foreach(_.reconciled(null, false, new NullProgressMonitor()))
   }
 
-  override def initialReconcile() {
+  override def initialReconcile(): Unit = {
     // an askReload there adds the scUnit to the list of managed CUs
-    icUnit.scheduleReconcile()
+    icUnit.initialReconcile()
     reconcile(null)
   }
 

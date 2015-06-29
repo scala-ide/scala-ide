@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="eventHandler" name="Event Handler" schema="schema/eventHandler.exsd"/>
    <extension
          point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
@@ -53,12 +54,22 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
             type="org.scala-ide.ew.launcher.JunitLaunchConfig">
       </launchDelegate>
+      <launchDelegate
+            delegate="org.scalaide.debug.internal.launching.ScalaJUnitLaunchConfigurationDelegate"
+            delegateDescription="The Scala JVM Launcher supports debugging of JUnit Scala using the new Scala debugger"
+            id="scala.junit.new"
+            modes="debug"
+            name="Scala JUnit (new debugger)"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            type="org.eclipse.jdt.junit.launchconfig">
+      </launchDelegate>
     </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.scalaide.ui.preferences"
-            class="org.scalaide.debug.internal.preferences.DebuggerPreferences"
+            class="org.scalaide.debug.internal.preferences.DebuggerPreferencePage"
             id="org.scalaide.ui.preferences.debug"
             name="Debug">
       </page>
@@ -80,6 +91,7 @@
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>
+
    <extension
          point="org.eclipse.ui.views">
       <view

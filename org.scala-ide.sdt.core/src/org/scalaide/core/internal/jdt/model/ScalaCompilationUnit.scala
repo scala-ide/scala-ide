@@ -36,12 +36,10 @@ import scala.tools.nsc.io.AbstractFile
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaWordFinder
-import org.scalaide.ui.internal.ScalaImages
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.core.compiler.ScalaPresentationCompiler
+import org.scalaide.ui.ScalaImages
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
-import org.scalaide.util.internal.ScalaWordFinder
+import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.ReflectionUtils
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.core.JavaElement
@@ -49,11 +47,35 @@ import org.eclipse.jdt.internal.core.SourceRefElement
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.interactive.Response
 import org.eclipse.jface.text.source.ISourceViewer
-import org.scalaide.core.hyperlink.detector.DeclarationHyperlinkDetector
+import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
 import org.eclipse.ui.texteditor.ITextEditor
-import org.scalaide.core.hyperlink.detector.BaseHyperlinkDetector
-import org.scalaide.util.internal.eclipse.EditorUtils
+import org.scalaide.core.internal.hyperlink.BaseHyperlinkDetector
+import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.internal
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.compiler.ISourceMap
+import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
+import org.scalaide.core.compiler.IPositionInformation
+
+object ScalaCompilationUnit extends HasLogger {
+
+  // This method is overloaded cause we have casts from 2 unrelated types in our codebase.
+  def castFrom(icu: InteractiveCompilationUnit): ScalaCompilationUnit = cast(icu)
+  def castFrom(tr: ITypeRoot): ScalaCompilationUnit = cast(tr)
+
+  // This method provides better error message if cast fails
+  private def cast(a: AnyRef): ScalaCompilationUnit = a match {
+    case scu: ScalaCompilationUnit => scu
+    case other =>
+      val message = """Underlying compilation unit is not a Scala Compilation unit.
+                      |This is most probably caused by disabled JDT weaving.
+                      |Run `Scala -> Run Setup Diagnostics` to enable it.""".stripMargin
+      logger.error(message)
+      throw new RuntimeException(message)
+  }
+}
 
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit
@@ -63,33 +85,31 @@ trait ScalaCompilationUnit extends Openable
   with InteractiveCompilationUnit
   with HasLogger {
 
-  override def scalaProject = ScalaPlugin.plugin.getScalaProject(getJavaProject.getProject)
+  override def scalaProject: internal.project.ScalaProject =
+    ScalaPlugin().getScalaProject(getJavaProject.getProject)
 
-  val file : AbstractFile
+  override val file : AbstractFile
+
+  override def sourceMap(contents: Array[Char]): ISourceMap = sourceFileLock.synchronized {
+    cachedSourceInfo = ISourceMap.plainScala(file, contents)
+    cachedSourceInfo
+  }
+
+  override def lastSourceMap(): ISourceMap = sourceFileLock.synchronized {
+    if (cachedSourceInfo == null) sourceMap(getContents)
+    else cachedSourceInfo
+  }
 
   /** Lock object for operating on `cachedSourceFile` */
   private val sourceFileLock = new Object
 
-  // @GuardedBy("sourceFileLock")
-  private var cachedSourceFile: SourceFile = _
-
-  override def sourceFile(contents: Array[Char]): SourceFile = sourceFileLock.synchronized {
-    cachedSourceFile = new BatchSourceFile(file, contents)
-    cachedSourceFile
-  }
-
-  /** Return the most recent source file, or a fresh one based on the underlying file contents. */
-  override def sourceFile(): SourceFile = sourceFileLock.synchronized {
-    if (cachedSourceFile == null)
-      sourceFile(getContents)
-    else cachedSourceFile
-  }
+  private var cachedSourceInfo: ISourceMap = _
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
-  override def bufferChanged(e : BufferChangedEvent) {
+  override def bufferChanged(e : BufferChangedEvent): Unit = {
     if (!e.getBuffer.isClosed)
-      scalaProject.presentationCompiler(_.scheduleReload(this, getContents))
+      scalaProject.presentationCompiler(_.scheduleReload(this, sourceMap(getContents).sourceFile))
 
     super.bufferChanged(e)
   }
@@ -99,7 +119,7 @@ trait ScalaCompilationUnit extends Openable
    *
    *  This code is copied from org.eclipse.jdt.internal.core.CompilationUnit
    */
-  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor) {
+  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor): Unit = {
     // ensure buffer is opened
     val buffer = super.getBufferManager().getBuffer(this);
     if (buffer == null) {
@@ -110,19 +130,20 @@ trait ScalaCompilationUnit extends Openable
   override def buildStructure(info: OpenableElementInfo, pm: IProgressMonitor, newElements: JMap[_, _], underlyingResource: IResource): Boolean = {
     ensureBufferOpen(info, pm)
 
-    withSourceFile({ (sourceFile, compiler) =>
+    scalaProject.presentationCompiler.internal { compiler =>
       val unsafeElements = newElements.asInstanceOf[JMap[AnyRef, AnyRef]]
       val tmpMap = new java.util.HashMap[AnyRef, AnyRef]
+      val sourceFile = lastSourceMap().sourceFile
       val sourceLength = sourceFile.length
 
       try {
         logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
 
-        compiler.withStructure(sourceFile) { tree =>
-          compiler.askOption { () =>
-            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
-          }
-        }
+        val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
+        compiler.asyncExec {
+          new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+        }.getOption() // block until the traverser finished
+
         info match {
           case cuei: CompilationUnitElementInfo =>
             cuei.setSourceLength(sourceLength)
@@ -141,21 +162,7 @@ trait ScalaCompilationUnit extends Openable
           logger.error("Compiler crash while building structure for %s".format(file), ex)
           false
       }
-    }) getOrElse false
-  }
-
-
-  /** Schedule this unit for reconciliation. This implementation does nothing, subclasses
-   *  implement custom behavior. @see ScalaSourceFile
-   *
-   *  @return A response on which clients can synchronize. The response
-   *          only notifies when the unit was added to the managed sources list, *not*
-   *          that it was typechecked.
-   */
-  override def scheduleReconcile(): Response[Unit] = {
-    val r = (new Response[Unit])
-    r.set(())
-    r
+    } getOrElse false
   }
 
   /** Index this source file, but only if the project has the Scala nature.
@@ -163,12 +170,11 @@ trait ScalaCompilationUnit extends Openable
    *  This avoids crashes if the indexer kicks in on a project that has Scala sources
    *  but no Scala library on the classpath.
    */
-  def addToIndexer(indexer : ScalaSourceIndexer) {
+  def addToIndexer(indexer : ScalaSourceIndexer): Unit = {
     if (scalaProject.hasScalaNature) {
-      try doWithSourceFile { (source, compiler) =>
-        compiler.withParseTree(source) { tree =>
-          new compiler.IndexBuilderTraverser(indexer).traverse(tree)
-        }
+      try scalaProject.presentationCompiler.internal { compiler =>
+        val tree = compiler.parseTree(lastSourceMap().sourceFile)
+        new compiler.IndexBuilderTraverser(indexer).traverse(tree)
       } catch {
         case ex: Throwable => logger.error("Compiler crash during indexing of %s".format(getResource()), ex)
       }
@@ -222,14 +228,12 @@ trait ScalaCompilationUnit extends Openable
     withSourceFile { (srcFile, compiler) =>
       val pos = compiler.rangePos(srcFile, offset, offset, offset)
 
-      val typed = new compiler.Response[compiler.Tree]
-      compiler.askTypeAt(pos, typed)
-      val typedRes = typed.get
+      val typedRes = compiler.askTypeAt(pos).getOption()
       val element = for {
-       t <- typedRes.left.toOption
-       if t.hasSymbol
-       sym = if (t.symbol.isSetter) t.symbol.getter(t.symbol.owner) else t.symbol
-       element <- compiler.getJavaElement(sym)
+       t <- typedRes
+       if t.hasSymbolField
+       sym = if (t.symbol.isSetter) t.symbol.getterIn(t.symbol.owner) else t.symbol
+       element <- compiler.getJavaElement(sym, scalaProject.javaProject)
       } yield Array(element: IJavaElement)
 
       val res = element.getOrElse(Array.empty[IJavaElement])
@@ -238,35 +242,35 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,
-                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor): Unit = {
     // This is a no-op. The Scala IDE provides code completions via an extension point
   }
 
-  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
-    doWithSourceFile { (sourceFile, compiler) =>
-      compiler.loadedType(sourceFile, true) match {
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch): Unit = {
+    scalaProject.presentationCompiler.internal { compiler =>
+      compiler.askLoadedTyped(lastSourceMap().sourceFile, false).get match {
         case Left(tree) =>
-          compiler.askOption { () =>
+          compiler.asyncExec {
             compiler.MatchLocator(this, matchLocator, possibleMatch).traverse(tree)
-          }
+          }.getOption() // wait until the traverser finished
         case _ => () // no op
       }
 
     }
   }
 
-  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+  override def createOverrideIndicators(annotationMap : JMap[_, _]): Unit = {
     if (scalaProject.hasScalaNature)
-      doWithSourceFile { (sourceFile, compiler) =>
+      scalaProject.presentationCompiler.internal { compiler =>
         try {
-          compiler.withStructure(sourceFile, keepLoaded = true) { tree =>
-            compiler.askOption { () =>
-              new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
-            }
-          }
+          val tree = compiler.askStructure(lastSourceMap().sourceFile, keepLoaded = true).getOrElse(compiler.EmptyTree)()
+
+          compiler.asyncExec {
+            new compiler.OverrideIndicatorBuilderTraverser(this, annotationMap.asInstanceOf[JMap[AnyRef, AnyRef]]).traverse(tree)
+          }.getOption()  // block until traverser finished
         } catch {
           case ex: Exception =>
-           logger.error("Exception thrown while creating override indicators for %s".format(sourceFile), ex)
+           logger.error("Exception thrown while creating override indicators for %s".format(lastSourceMap().sourceFile), ex)
         }
       }
   }
@@ -275,15 +279,11 @@ trait ScalaCompilationUnit extends Openable
     import scala.util.control.Exception
 
     val descriptor = Exception.catching(classOf[JavaModelException]).opt(getCorrespondingResource) map { file =>
-      import ScalaImages.SCALA_FILE
-      import ScalaImages.EXCLUDED_SCALA_FILE
       val javaProject = JavaCore.create(scalaProject.underlying)
-      if (javaProject.isOnClasspath(file)) SCALA_FILE else EXCLUDED_SCALA_FILE
+      if (javaProject.isOnClasspath(file)) ScalaImages.SCALA_FILE else ScalaImages.EXCLUDED_SCALA_FILE
     }
     descriptor.orNull
   }
-
-  override def getScalaWordFinder() : IScalaWordFinder = ScalaWordFinder
 
   def followDeclaration(editor : ITextEditor, selection : ITextSelection): Unit =
     followReference(DeclarationHyperlinkDetector(), editor, selection)

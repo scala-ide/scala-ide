@@ -1,20 +1,25 @@
 package org.scalaide.core.testsetup
 
-import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.JavaCore
-import org.junit.Assert.assertNotNull
-import org.scalaide.core.internal.project.ScalaProject
-import org.eclipse.jdt.core.ICompilationUnit
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.eclipse.jdt.core.IProblemRequestor
-import org.eclipse.jdt.core.WorkingCopyOwner
+import scala.tools.nsc.interactive.Response
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IPackageFragmentRoot
+import org.eclipse.jdt.core.IProblemRequestor
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.text.edits.ReplaceEdit
+import org.junit.Assert.assertNotNull
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
-import org.eclipse.core.resources.IFile
-import org.scalaide.core.EclipseUserSimulator
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.project.ScalaProject
 
 /** Base class for setting up tests that depend on a project found in the test-workspace.
  *
@@ -29,8 +34,10 @@ import org.scalaide.core.EclipseUserSimulator
  *
  */
 class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
+  private[core] lazy val internalProject: ScalaProject = SDTTestUtils.internalSetupProject(projectName, bundleName)
+
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
-  lazy val project: ScalaProject = SDTTestUtils.setupProject(projectName, bundleName)
+  override lazy val project: IScalaProject = internalProject
 
   /** The package root corresponding to /src inside the project. */
   lazy val srcPackageRoot: IPackageFragmentRoot = {
@@ -72,14 +79,20 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
 
   def createSourceFile(packageName: String, unitName: String)(contents: String): ScalaSourceFile = {
     val pack = SDTTestUtils.createSourcePackage(packageName)(project)
-    new EclipseUserSimulator().createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
+    SDTTestUtils.createCompilationUnit(pack, unitName, contents).asInstanceOf[ScalaSourceFile]
   }
 
-  def reload(unit: ScalaCompilationUnit) {
+  def reload(unit: InteractiveCompilationUnit): Unit = {
     // first, 'open' the file by telling the compiler to load it
     unit.withSourceFile { (src, compiler) =>
-      val dummy = new compiler.Response[Unit]
-      compiler.askReload(List(src), dummy)
+      compiler.askReload(List(unit)).get
+    }
+  }
+
+  def parseAndEnter(unit: InteractiveCompilationUnit): Unit = {
+    unit.withSourceFile { (src, compiler) =>
+      val dummy = new compiler.Response[compiler.Tree]
+      compiler.askParsedEntered(src, false, dummy)
       dummy.get
     }
   }
@@ -99,7 +112,7 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /** Open a working copy of the passed `unit` */
-  private def openWorkingCopyFor(unit: ScalaSourceFile) {
+  private def openWorkingCopyFor(unit: ScalaSourceFile): Unit = {
     val requestor = mock(classOf[IProblemRequestor])
     // the requestor must be active, or unit.getWorkingCopy won't trigger the Scala
     // structure builder
@@ -114,22 +127,46 @@ class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bu
   }
 
   /** Wait until the passed `unit` is entirely typechecked. */
-  def waitUntilTypechecked(unit: ScalaCompilationUnit) {
+  def waitUntilTypechecked(unit: ScalaCompilationUnit): Unit = {
     // give a chance to the background compiler to report the error
     unit.withSourceFile { (source, compiler) =>
-      import scala.tools.nsc.interactive.Response
-      val res = new Response[compiler.Tree]
-      compiler.askLoadedTyped(source, true, res)
-      res.get // wait until unit is typechecked
+      compiler.askLoadedTyped(source, true).get // wait until unit is typechecked
     }
   }
 
   /** Open the passed `source` and wait until it has been fully typechecked.*/
-  def openAndWaitUntilTypechecked(source: ScalaSourceFile) {
+  def openAndWaitUntilTypechecked(source: ScalaSourceFile): Unit = {
     val sourcePath = source.getPath()
     val projectSrcPath = project.underlying.getFullPath() append "src"
     val path = sourcePath.makeRelativeTo(projectSrcPath)
     open(path.toOSString())
     waitUntilTypechecked(source)
   }
+
+  /**
+   * Allows to modify sources in test workspace.
+   *
+   * @param compilationUnitPath path to file which we'll change
+   * @param lineNumber line which will be removed (line numbers start from 1)
+   * @param newLine code inserted in place of line with lineNumber
+   */
+  def modifyLine(compilationUnitPath: String, lineNumber: Int, newLine: String): Unit = {
+    val lineIndex = lineNumber - 1
+    val cu = compilationUnit(compilationUnitPath)
+    val code = cu.getSource
+    val lines = code.split('\n').toList
+    val newLines = lines.updated(lineIndex, newLine)
+    val newCode = newLines.mkString("\n")
+
+    val textEdit = new ReplaceEdit(0, code.length(), newCode)
+    cu.applyTextEdit(textEdit, new NullProgressMonitor)
+    cu.save(new NullProgressMonitor, true)
+  }
+
+  /**
+   * Be aware that it can be heavy. Moreover, it's needed to ensure that
+   * events are already properly propagated after the build.
+   */
+  def buildIncrementally(): Unit =
+    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 }

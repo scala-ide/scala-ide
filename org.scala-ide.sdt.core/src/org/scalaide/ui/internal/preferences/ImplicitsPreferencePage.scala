@@ -1,11 +1,10 @@
 package org.scalaide.ui.internal.preferences
 
-import org.eclipse.jface.preference._
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.core.ScalaPlugin
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
@@ -13,58 +12,45 @@ import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.ui.dialogs.PreferencesUtil
+import org.scalaide.util.eclipse.SWTUtils
 
-class ImplicitsPreferencePage extends FieldEditorPreferencePage with IWorkbenchPreferencePage {
+class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the highlighting for implicit conversions and implicit parameters") {
   import ImplicitsPreferencePage._
-  import org.scalaide.util.internal.eclipse.SWTUtils._
-
-  setPreferenceStore(ScalaPlugin.plugin.getPreferenceStore)
-  setDescription("""
-Set the highlighting for implicit conversions and implicit parameters.
-  """)
 
   override def createContents(parent: Composite): Control = {
     val control = super.createContents(parent).asInstanceOf[Composite]
-    val link = new Link(control, SWT.NONE)
-    link.setText("""More options for highlighting for implicit conversions on the <a href="org.eclipse.ui.editors.preferencePages.Annotations">Text Editors/Annotations</a> preference page.""")
-    link.addSelectionListener { e: SelectionEvent =>
-      PreferencesUtil.createPreferenceDialogOn(parent.getShell, e.text, null, null)
-    }
-
+    SWTUtils.mkLinkToAnnotationsPref(parent)(a => s"More options for highlighting for implicit conversions on the $a preference page.")
     control
   }
 
-  override def createFieldEditors() {
-    addField(new BooleanFieldEditor(P_ACTIVE, "Enabled", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_BOLD, "Bold", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_ITALIC, "Italic", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_CONVERSIONS_ONLY, "Only highlight implicit conversions", getFieldEditorParent))
-    addField(new BooleanFieldEditor(P_FIRST_LINE_ONLY, "Only highlight the first line in an implicit conversion", getFieldEditorParent))
+  override def createFieldEditors(): Unit = {
+    addBooleanFieldEditors(
+      PActive -> "Enable implicit highlighting",
+      PBold -> "Highlight in bold",
+      PItalic -> "Highlight in italic",
+      PConversionsOnly -> "Only highlight implicit conversions",
+      PFirstLineOnly -> "Only highlight the first line in an implicit conversion")
   }
-
-  def init(workbench: IWorkbench) {}
-
 }
 
 object ImplicitsPreferencePage {
-  val BASE = "scala.tools.eclipse.ui.preferences.implicit."
-  val P_ACTIVE = BASE + "enabled"
-  val P_BOLD = BASE + "text.bold"
-  val P_ITALIC = BASE + "text.italic"
-  val P_CONVERSIONS_ONLY = BASE + "conversions.only"
-  val P_FIRST_LINE_ONLY  = BASE + "firstline.only"
+  val PActive = "scala.tools.eclipse.ui.preferences.implicit.enabled"
+  val PBold = "scala.tools.eclipse.ui.preferences.implicit.text.bold"
+  val PItalic = "scala.tools.eclipse.ui.preferences.implicit.text.italic"
+  val PConversionsOnly = "scala.tools.eclipse.ui.preferences.implicit.conversions.only"
+  val PFirstLineOnly = "scala.tools.eclipse.ui.preferences.implicit.firstline.only"
 }
 
 class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
 
   import ImplicitsPreferencePage._
 
-  override def initializeDefaultPreferences() {
-    val store = ScalaPlugin.plugin.getPreferenceStore
-    store.setDefault(P_ACTIVE, true)
-    store.setDefault(P_BOLD, false)
-    store.setDefault(P_ITALIC, false)
-    store.setDefault(P_CONVERSIONS_ONLY, true)
-    store.setDefault(P_FIRST_LINE_ONLY, true)
+  override def initializeDefaultPreferences(): Unit = {
+    val store = IScalaPlugin().getPreferenceStore
+    store.setDefault(PActive, true)
+    store.setDefault(PBold, false)
+    store.setDefault(PItalic, false)
+    store.setDefault(PConversionsOnly, true)
+    store.setDefault(PFirstLineOnly, true)
   }
 }

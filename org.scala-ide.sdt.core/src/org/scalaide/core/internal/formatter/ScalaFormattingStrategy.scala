@@ -13,8 +13,7 @@ import org.eclipse.ui.texteditor.ITextEditor
 import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
-import org.scalaide.core.ScalaPlugin
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.resources.IResource
 
 class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {
@@ -23,12 +22,12 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
 
   private var regionOpt: Option[IRegion] = None
 
-  def formatterStarts(context: IFormattingContext) {
+  def formatterStarts(context: IFormattingContext): Unit = {
     this.document = context.getProperty(FormattingContextProperties.CONTEXT_MEDIUM).asInstanceOf[IDocument]
     this.regionOpt = Option(context.getProperty(FormattingContextProperties.CONTEXT_REGION).asInstanceOf[IRegion])
   }
 
-  def format() {
+  def format(): Unit = {
     val preferences = FormatterPreferences.getPreferences(getProject)
     val edits =
       try ScalaFormatter.formatAsEdits(document.get, preferences, Some(getDefaultLineDelimiter(document)))
@@ -50,6 +49,8 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
   }
 
   private def expandToWholeLines(offsetAndLength: (Int, Int)): (Int, Int) = {
+    import org.scalaide.util.eclipse.EclipseUtils.RichDocument
+
     val (offset, length) = offsetAndLength
     var current = offset
     while (current >= 0 && document(current) != '\n')
@@ -66,7 +67,7 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     (newOffset, newLength)
   }
 
-  private def applyEdits(edits: List[EclipseTextEdit]) {
+  private def applyEdits(edits: List[EclipseTextEdit]): Unit = {
     val multiEdit = new MultiTextEdit
     multiEdit.addChildren(edits.toArray)
 
@@ -76,15 +77,16 @@ class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrate
     undoManager.endCompoundChange()
   }
 
-  def formatterStops() {
+  def formatterStops(): Unit = {
     this.document = null
     this.regionOpt = None
   }
 
+  import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
   private def getProject = editor.getEditorInput.asInstanceOf[IAdaptable].adaptTo[IResource].getProject
 
   def format(content: String, isLineStart: Boolean, indentation: String, positions: Array[Int]): String = null
 
-  def formatterStarts(initialIndentation: String) {}
+  def formatterStarts(initialIndentation: String): Unit = {}
 
 }

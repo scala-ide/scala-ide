@@ -1,22 +1,39 @@
 package org.scalaide.ui.internal.actions
 
+import org.eclipse.core.commands.AbstractHandler
+import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.core.runtime.Platform
 import org.eclipse.ui.IObjectActionDelegate
 import org.eclipse.ui.IWorkbenchPart
-import org.scalaide.core.ScalaPlugin.plugin
-import org.scalaide.util.internal.eclipse.EclipseUtils._
+import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
+import org.scalaide.util.eclipse.EditorUtils
 
-trait AbstractPopupAction extends IObjectActionDelegate {
+/**
+ * This traits contains definitions to handle the invocation of menu entries
+ * that are shown in the "Scala" context menu.
+ *
+ * Extends [[AbstractHandler]] to allow users to call this action by
+ * key bindings.
+ */
+trait AbstractPopupAction extends AbstractHandler with IObjectActionDelegate {
   private var selectionOption: Option[ISelection] = None
 
-  def performAction(project: IProject)
+  /**
+   * This method is called if either the menu entry is invoked or the handler
+   * (if it exists) is called when an [[IResource]] element is selected.
+   */
+  def performAction(project: IProject): Unit
 
-  override def selectionChanged(action: IAction, selection: ISelection) { this.selectionOption = Option(selection) }
+  override def execute(event: ExecutionEvent): AnyRef = {
+    EditorUtils.resourceOfActiveEditor flatMap (r ⇒ Option(r.getProject)) foreach performAction
+    null
+  }
+
+  override def selectionChanged(action: IAction, selection: ISelection): Unit = { this.selectionOption = Option(selection) }
 
   override def run(action: IAction) = {
     for {
@@ -28,9 +45,9 @@ trait AbstractPopupAction extends IObjectActionDelegate {
 
   private def selectionObjectToProject(selectionElement: Object): Option[IProject] = selectionElement match {
     case project: IProject => Some(project)
-    case adaptable: IAdaptable => adaptable.adaptToSafe[IProject]
+    case adaptable: IAdaptable => adaptable.adaptToOpt[IProject]
     case _ => None
   }
 
-  def setActivePart(action: IAction, targetPart: IWorkbenchPart) {  }
+  def setActivePart(action: IAction, targetPart: IWorkbenchPart): Unit = {  }
 }
