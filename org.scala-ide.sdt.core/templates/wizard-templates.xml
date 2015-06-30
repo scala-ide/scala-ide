@@ -9,9 +9,6 @@
   enabled="true"
 >${package_name}
 
-/**
- * @author ${user}
- */
 class ${type_name} {
   ${cursor}
 }</template>
@@ -24,9 +21,6 @@ class ${type_name} {
   enabled="true"
 >${package_name}
 
-/**
- * @author ${user}
- */
 trait ${type_name} {
   ${cursor}
 }</template>
@@ -39,9 +33,6 @@ trait ${type_name} {
   enabled="true"
 >${package_name}
 
-/**
- * @author ${user}
- */
 object ${type_name} {
   ${cursor}
 }</template>
@@ -54,9 +45,6 @@ object ${type_name} {
   enabled="true"
 >${package_name}
 
-/**
- * @author ${user}
- */
 package object ${type_name} {
   ${cursor}
 }</template>
@@ -69,9 +57,6 @@ package object ${type_name} {
   enabled="true"
 >${package_name}
 
-/**
- * @author ${user}
- */
 object ${type_name} extends App {
   ${cursor}
 }</template>
