@@ -17,14 +17,21 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
+import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
+import org.scalaide.core.internal.builder.CachedAnalysisBuildManager
+import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.builder.TaskManager
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
+import org.scalaide.util.internal.Suppress.DeprecatedWarning.AggressiveCompile
+import org.scalaide.util.internal.Suppress.DeprecatedWarning.aggressivelyCompile
 
-import sbt.compiler.AggressiveCompile
+import sbt.Logger.xlog2Log
 import sbt.compiler.CompileFailed
 import sbt.compiler.IC
 import sbt.inc.Analysis
@@ -33,6 +40,7 @@ import sbt.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
+import xsbti.compile.JavaCompiler
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -207,8 +215,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     compilers match {
       case Right(comps) =>
         import comps._
-        agg(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress), scalacOptions, javacOptions, aMap,
-          defClass, sbtReporter, order, skip = false, in.incOptions)(log)
+        aggressivelyCompile(agg)(log)(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress),
+          scalacOptions, javacOptions, aMap, defClass, sbtReporter, order, /* skip = */ false, in.incOptions)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
         throw CompilerInterfaceFailed
