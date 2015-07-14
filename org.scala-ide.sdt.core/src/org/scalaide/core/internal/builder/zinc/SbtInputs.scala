@@ -79,7 +79,13 @@ class SbtInputs(installation: IScalaInstallation,
   }
 
   def options = new Options {
-    def classpath = (project.scalaClasspath.userCp ++ addToClasspath).map(_.toFile.getAbsoluteFile).toArray
+    def outputFolders = srcOutputs.map {
+      case (_, out) => out.getRawLocation
+    }
+
+    def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+      .distinct
+      .map(_.toFile.getAbsoluteFile).toArray
 
     def sources = sourceFiles.toArray
 
@@ -119,7 +125,8 @@ class SbtInputs(installation: IScalaInstallation,
     }
   }
 
-  /** @return Right-biased instance of Either (error message in Left, value in Right)
+  /**
+   * @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
