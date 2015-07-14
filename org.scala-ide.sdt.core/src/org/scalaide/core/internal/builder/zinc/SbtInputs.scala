@@ -36,7 +36,8 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.IPath
 
-/** Inputs-like class, but not implementing xsbti.compile.Inputs.
+/**
+ * Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
@@ -79,7 +80,13 @@ class SbtInputs(installation: IScalaInstallation,
   }
 
   def options = new Options {
-    def classpath = (project.scalaClasspath.userCp ++ addToClasspath).map(_.toFile.getAbsoluteFile).toArray
+    def outputFolders = srcOutputs.map {
+      case (_, out) => out.getRawLocation
+    }
+
+    def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+      .distinct
+      .map(_.toFile.getAbsoluteFile).toArray
 
     def sources = sourceFiles.toArray
 
@@ -119,7 +126,8 @@ class SbtInputs(installation: IScalaInstallation,
     }
   }
 
-  /** @return Right-biased instance of Either (error message in Left, value in Right)
+  /**
+   * @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
@@ -131,7 +139,7 @@ class SbtInputs(installation: IScalaInstallation,
         val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
         new Compilers[AnalyzingCompiler] {
           def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions, logger)
+          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions)
         }
     }
   }
