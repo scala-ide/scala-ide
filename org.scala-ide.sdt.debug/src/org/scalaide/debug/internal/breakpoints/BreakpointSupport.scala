@@ -3,7 +3,11 @@
  */
 package org.scalaide.debug.internal.breakpoints
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
@@ -14,13 +18,13 @@ import org.scalaide.debug.BreakpointContext
 import org.scalaide.debug.DebugContext
 import org.scalaide.debug.JdiEventCommand
 import org.scalaide.debug.NoCommand
-import org.scalaide.debug.PrepareClass
 import org.scalaide.debug.SuspendExecution
-import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.JdiEventDispatcher
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
+import org.scalaide.debug.internal.model.ClassPrepareListener
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
@@ -31,30 +35,27 @@ import com.sun.jdi.event.Event
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
 
+import BreakpointSupportSubordinate.createBreakpointRequest
+import BreakpointSupportSubordinate.handleEvent
 import RichBreakpoint.richBreakpoint
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
   final val ATTR_TYPE_NAME = "org.eclipse.jdt.debug.core.typeName"
 
-  /** Create the breakpoint support actor.
+  /**
+   * Create the breakpoint support actor.
    *
    *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence
    *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
    *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
    */
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
-    BreakpointSupportActor(breakpoint, debugTarget)
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): BreakpointSupportSubordinate = {
+    BreakpointSupportSubordinate(breakpoint, debugTarget)
   }
 }
 
-private object BreakpointSupportActor {
-  // specific events
-  case class Changed(delta: IMarkerDelta)
-
-  /** The message used to reenable breakpoint requests managed by the given actor. */
-  case object ReenableBreakpointAfterHcr
-
+private object BreakpointSupportSubordinate {
   val eventHandlerMappings = EventHandlerMapping.mappings
 
   /**
@@ -66,17 +67,16 @@ private object BreakpointSupportActor {
     handlerResults.filter(_ != NoCommand).toSet
   }
 
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): BreakpointSupportSubordinate = {
     val typeName = breakpoint.typeName
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
-    val actor = new BreakpointSupportActor(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
+    val subordinate = new BreakpointSupportSubordinate(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
 
-    debugTarget.cache.addClassPrepareEventListener(actor, typeName)
+    debugTarget.cache.addClassPrepareEventListener(subordinate, typeName)
 
-    actor.start()
-    actor
+    subordinate
   }
 
   /** Create event requests to tell the VM to notify us when it reaches the line for the current `breakpoint` */
@@ -84,7 +84,7 @@ private object BreakpointSupportActor {
     val requests = new ListBuffer[EventRequest]
 
     debugTarget.cache.getLoadedNestedTypes(typeName).foreach {
-        createBreakpointRequest(breakpoint, debugTarget, _).foreach { requests append _ }
+      createBreakpointRequest(breakpoint, debugTarget, _).foreach { requests append _ }
     }
 
     requests.toSeq
@@ -110,111 +110,92 @@ private object BreakpointSupportActor {
  *  - the JDI event queue, when a breakpoint is hit
  *  - the platform, when a breakpoint is changed (for instance, disabled)
  */
-private class BreakpointSupportActor private (
+class BreakpointSupportSubordinate private (
     breakpoint: IBreakpoint,
     debugTarget: ScalaDebugTarget,
     typeName: String,
-    breakpointRequests: ListBuffer[EventRequest]) extends BaseDebuggerActor {
-  import BreakpointSupportActor._
+    breakpointRequests: ListBuffer[EventRequest]) extends ClassPrepareListener with JdiEventReceiver {
+  import BreakpointSupportSubordinate._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
-  private var requestsEnabled = false
+  private val requestsEnabled: AtomicBoolean = new AtomicBoolean
 
-  private val eventDispatcher = debugTarget.eventDispatcher
+  private val eventDispatcher: JdiEventDispatcher = debugTarget.eventDispatcher
 
-  override def postStart(): Unit =  {
-    breakpointRequests.foreach(listenForBreakpointRequest)
-    updateBreakpointRequestState(isEnabled)
-  }
+  breakpointRequests.foreach(listenForBreakpointRequest)
+  updateBreakpointRequestState(isEnabled)
 
   /** Returns true if the `breakpoint` is enabled and its state should indeed be considered. */
   private def isEnabled: Boolean = breakpoint.isEnabled() && DebugPlugin.getDefault().getBreakpointManager().isEnabled()
 
   /** Register `this` actor to receive all notifications from the `eventDispatcher` related to the passed `request`.*/
   private def listenForBreakpointRequest(request: EventRequest): Unit =
-    eventDispatcher.setActorFor(this, request)
+    eventDispatcher.register(this, request)
 
   private def updateBreakpointRequestState(enabled: Boolean): Unit = {
-    breakpointRequests.foreach (_.setEnabled(enabled))
-    requestsEnabled = enabled
+    breakpointRequests.foreach(_.setEnabled(enabled))
+    requestsEnabled.getAndSet(enabled)
   }
 
-  private def handleJdiEventCommands(event: Event, cmds: Set[JdiEventCommand]) = {
-    val shouldSuspend = event match {
-      case event: ClassPrepareEvent if cmds(PrepareClass) ⇒
-        // JDI event triggered when a class is loaded
-        classPrepared(event.referenceType)
-        false
-      case event: BreakpointEvent if cmds(SuspendExecution) ⇒
-        // JDI event triggered when a breakpoint is hit
-        breakpointHit(event.location, event.thread)
-        true
-      case _ ⇒
-        false
-    }
-    reply(shouldSuspend)
+  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]): PartialFunction[Event, StaySuspended] = {
+    case event: BreakpointEvent if cmds(SuspendExecution) ⇒
+      // JDI event triggered when a breakpoint is hit
+      breakpointHit(event.location, event.thread)
+      true
   }
 
   private def defaultCommands(event: Event): JdiEventCommand = event match {
-    case _: ClassPrepareEvent ⇒ PrepareClass
-    case _: BreakpointEvent   ⇒ SuspendExecution
+    case _: BreakpointEvent ⇒ SuspendExecution
   }
 
-  // Manage the events
-  override protected def behavior: PartialFunction[Any, Unit] = {
-    case event: Event =>
+  override protected def innerHandle = {
+    case event =>
       val context = BreakpointContext(breakpoint, debugTarget)
       val cmds = {
         val cmds = handleEvent(event, context)
         if (cmds.nonEmpty) cmds else Set(defaultCommands(event))
       }
-
-      handleJdiEventCommands(event, cmds)
-    case Changed(delta) =>
-      // triggered by the platform, when the breakpoint changed state
-      changed(delta)
-    case ScalaDebugBreakpointManager.ActorDebug =>
-      reply(None)
-    case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
-      reply(requestsEnabled)
-    case BreakpointSupportActor.ReenableBreakpointAfterHcr =>
-      reenableBreakpointRequestsAfterHcr()
+      handleJdiEventCommands(cmds)(event)
   }
+
+  def breakpointRequestState(): Boolean =
+    requestsEnabled.get
 
   /**
    * Remove all created requests for this breakpoint
    */
-  override protected def preExit(): Unit = {
+  def exit(): Unit = {
+    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
-    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
-
     breakpointRequests.foreach { request =>
       eventRequestManager.deleteEventRequest(request)
-      eventDispatcher.unsetActorFor(request)
+      eventDispatcher.unregister(request)
     }
   }
 
-  /** React to changes in the breakpoint marker and enable/disable VM breakpoint requests accordingly.
+  /**
+   * React to changes in the breakpoint marker and enable/disable VM breakpoint requests accordingly.
    *
    *  @note ClassPrepare events are always enabled, since the breakpoint at the specified line
    *        can be installed *only* after/when the class is loaded, and that might happen while this
    *        breakpoint is disabled.
    */
-  private def changed(delta: IMarkerDelta): Unit = {
-    if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
+  def changed(delta: IMarkerDelta): Future[Unit] = Future {
+    if (isEnabled ^ requestsEnabled.get) updateBreakpointRequestState(isEnabled)
   }
 
-  /** Create the line breakpoint for the newly loaded class.
+  /**
+   * Create the line breakpoint for the newly loaded class.
    */
-  private def classPrepared(referenceType: ReferenceType): Unit = {
+  override def notify(event: ClassPrepareEvent): Future[Unit] = Future {
+    val referenceType = event.referenceType
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)
-
     breakpointRequest.foreach { br =>
       breakpointRequests append br
       listenForBreakpointRequest(br)
-      br.setEnabled(requestsEnabled)
+      br.setEnabled(requestsEnabled.get)
     }
   }
 
@@ -229,7 +210,7 @@ private class BreakpointSupportActor private (
    * After hcr often we don't get events related to breakpoint requests.
    * Reenabling them seems to help in most of cases.
    */
-  private def reenableBreakpointRequestsAfterHcr(): Unit = {
+  def reenableBreakpointRequestsAfterHcr(): Unit = {
     breakpointRequests.foreach { breakpointRequest =>
       if (breakpointRequest.isEnabled()) {
         breakpointRequest.disable()

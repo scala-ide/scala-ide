@@ -6,9 +6,10 @@ package org.scalaide.debug.internal.hcr
 import scala.collection.mutable.Publisher
 import scala.collection.mutable.Subscriber
 import scala.util.Failure
-import scala.util.Try
 import scala.util.Success
+import scala.util.Try
 import scala.util.control.NoStackTrace
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.debug.core.DebugEvent
@@ -22,8 +23,26 @@ import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
+import org.scalaide.debug.internal.hcr.HotCodeReplaceTest.Matcher
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 
+import HotCodeReplaceTest.ClassMethodBeginning
+import HotCodeReplaceTest.ClassMethodEnd
+import HotCodeReplaceTest.DefaultRecursiveMethodLocalIntValue
+import HotCodeReplaceTest.IntFromCtorArgName
+import HotCodeReplaceTest.JavaClassFilePath
+import HotCodeReplaceTest.JavaClassMethodEndLine
+import HotCodeReplaceTest.Location
+import HotCodeReplaceTest.MainMethodBeginning
+import HotCodeReplaceTest.MainMethodEnd
+import HotCodeReplaceTest.Matcher
+import HotCodeReplaceTest.RecursiveMethodBeginning
+import HotCodeReplaceTest.RecursiveMethodEnd
+import HotCodeReplaceTest.RecursiveMethodSelfCall
+import HotCodeReplaceTest.RunMethodBeginning
+import HotCodeReplaceTest.RunMethodEnd
+import HotCodeReplaceTest.TestHcrSuccessListener
+import HotCodeReplaceTest.TestedFilePath
 import ScalaHotCodeReplaceManager.HCRResult
 import ScalaHotCodeReplaceManager.HCRSucceeded
 
@@ -116,7 +135,6 @@ private object HotCodeReplaceTest {
  * Tests whether HCR works (classes are correctly replaced in VM and we get new values)
  * and whether associated settings are correctly applied.
  */
-@Ignore("Flaky, often fails in Scala PR validation.")
 class HotCodeReplaceTest
     extends TestProjectSetup("hot-code-replace", bundleName = "org.scala-ide.sdt.debug.tests")
     with ScalaDebugRunningTest {
@@ -201,7 +219,7 @@ class HotCodeReplaceTest
     val hcrFinishedTimeoutMillis = 20000
 
     val hcrEventsSubscriber = new TestHcrSuccessListener
-    val hcrEventsPublisher = session.debugTarget.companionActor.asInstanceOf[Publisher[HCRResult]]
+    val hcrEventsPublisher = session.debugTarget.subordinate.asInstanceOf[Publisher[HCRResult]]
     hcrEventsPublisher.subscribe(hcrEventsSubscriber)
 
     val thread = session.currentStackFrame.thread

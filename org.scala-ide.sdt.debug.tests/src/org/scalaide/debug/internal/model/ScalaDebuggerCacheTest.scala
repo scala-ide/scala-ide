@@ -22,6 +22,9 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequestManager
 import org.scalaide.core.testsetup.SDTTestUtils
+import java.util.concurrent.atomic.AtomicReference
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 class ScalaDebugCacheTest {
 
@@ -40,9 +43,6 @@ class ScalaDebugCacheTest {
     val BaseName = "test01.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a$b", BaseName + "$" + "Test", BaseName + "$Test2", "test01.a.TestTest", "test01.b.Test", "a." + BaseName)
-
-    SDTTestUtils.waitUntil(1000)(debugCache.running)
-    assertTrue("The debugger cache is not running", debugCache.running)
 
     val actual = debugCache.getLoadedNestedTypes(BaseName)
 
@@ -65,7 +65,8 @@ class ScalaDebugCacheTest {
     assertEquals("Wrong set of loaded nested types", Seq(BaseName, BaseName + "$", BaseName + "$a"), toSortedListOfTypeName(actual))
 
     // 'receive' a ClassPrepareEvent from the VM
-    debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
+    val classPrepareEventFromVm = debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))(ExecutionContext.global)
+    while (!classPrepareEventFromVm.isCompleted) {}
 
     val actual2 = debugCache.getLoadedNestedTypes(BaseName)
 
@@ -78,50 +79,45 @@ class ScalaDebugCacheTest {
    */
   @Test
   def addAndRemoveListener(): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     val BaseName = "test03.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a")
 
     // a latch listener actor. It releases the latch when it receives a ClassPrepareEvent
-    val testActor = new BaseDebuggerActor {
-      @volatile var latch = new CountDownLatch(1)
+    val testing = new ClassPrepareListener {
+      val latch: AtomicReference[CountDownLatch] = new AtomicReference(new CountDownLatch(1))
 
-      override def behavior = {
-        case e: ClassPrepareEvent =>
-          latch.countDown()
-          reply(true)
+      override def notify(cpEvent: ClassPrepareEvent): Future[Unit] = Future {
+        latch.get.countDown()
       }
 
       def awaitLatch(time: Int): Boolean = {
-        latch.await(time, TimeUnit.MILLISECONDS)
+        latch.get.await(time, TimeUnit.MILLISECONDS)
       }
 
       def resetLatch(): Unit = {
-        latch = new CountDownLatch(1)
+        latch.getAndSet(new CountDownLatch(1))
       }
     }
 
-    toShutdown += (() => { testActor ! PoisonPill })
-    testActor.start
-
     // register listener, and check get data
 
-    debugCache.addClassPrepareEventListener(testActor, BaseName)
+    debugCache.addClassPrepareEventListener(testing, BaseName)
 
     // 'receive' a ClassPrepareEvent from the VM
-    debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
+    debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))
 
-    assertTrue("Message was not received by listening actor before timeout", testActor.awaitLatch(500))
+    assertTrue("Message was not received by listening actor before timeout", testing.awaitLatch(500))
 
     // unregister listener, and check get no data
+    debugCache.removeClassPrepareEventListener(testing, BaseName)
 
-    debugCache.removeClassPrepareEventListener(testActor, BaseName)
+    testing.resetLatch()
 
-    testActor.resetLatch
+    debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))
 
-    debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
-
-    assertFalse("Unexpected message was received by listening actor before timeout", testActor.awaitLatch(500))
+    assertFalse("Unexpected message was received by listening actor before timeout", testing.awaitLatch(500))
 
     verifyNestedTypesCalls(debugCache, classPrepareRequest1, classPrepareRequest2, BaseName)
   }
@@ -244,16 +240,8 @@ class ScalaDebugCacheTest {
     when(eventRequestManager.createClassPrepareRequest()).thenReturn(classPrepareRequest1, classPrepareRequest2)
     (classPrepareRequest1, classPrepareRequest2)
 
-    val debugTargetActor = new BaseDebuggerActor {
-      override def behavior = new PartialFunction[Any, Unit] {
-        def apply(v1: Any): Unit = {}
-        def isDefinedAt(x: Any): Boolean = false
-      }
-    }
-    debugTargetActor.start
-    val debugCache = ScalaDebugCache(debugTarget, debugTargetActor)
+    val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += (() => { debugTargetActor ! PoisonPill })
     toShutdown += debugCache.dispose
 
     (debugCache, classPrepareRequest1, classPrepareRequest2)
@@ -272,8 +260,8 @@ class ScalaDebugCacheTest {
     verify(classPrepareRequest1, times(1)).addClassFilter(baseName)
     verify(classPrepareRequest2, times(1)).enable()
     verify(classPrepareRequest2, times(1)).addClassFilter(baseName + "$*")
-    verify(debugCache.debugTarget.eventDispatcher, times(1)).setActorFor(debugCache.actor, classPrepareRequest1)
-    verify(debugCache.debugTarget.eventDispatcher, times(1)).setActorFor(debugCache.actor, classPrepareRequest2)
+    verify(debugCache.debugTarget.eventDispatcher, times(1)).register(debugCache.subordinate, classPrepareRequest1)
+    verify(debugCache.debugTarget.eventDispatcher, times(1)).register(debugCache.subordinate, classPrepareRequest2)
   }
 
   /** Create all the mocks required for anon function cache tests.
@@ -281,16 +269,8 @@ class ScalaDebugCacheTest {
   private def initAnonFunctionMocks(typeName: String, methodNames: String*): (ScalaDebugCache, ReferenceType) = {
     val debugTarget = mock(classOf[ScalaDebugTarget])
 
-    val debugTargetActor = new BaseDebuggerActor {
-      override def behavior = new PartialFunction[Any, Unit] {
-        def apply(v1: Any): Unit = {}
-        def isDefinedAt(x: Any): Boolean = false
-      }
-    }
-    debugTargetActor.start
-    val debugCache = ScalaDebugCache(debugTarget, debugTargetActor)
+    val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += (() => { debugTargetActor ! PoisonPill })
     toShutdown += debugCache.dispose
 
     val refType = createReferenceType(typeName)
@@ -313,16 +293,8 @@ class ScalaDebugCacheTest {
   private def initMethodFlagsMocks(typeName: String, methodName: String): (ScalaDebugCache, Method, Location) = {
     val debugTarget = mock(classOf[ScalaDebugTarget])
 
-    val debugTargetActor = new BaseDebuggerActor {
-      override def behavior = new PartialFunction[Any, Unit] {
-        def apply(v1: Any): Unit = {}
-        def isDefinedAt(x: Any): Boolean = false
-      }
-    }
-    debugTargetActor.start
-    val debugCache = ScalaDebugCache(debugTarget, debugTargetActor)
+    val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += (() => { debugTargetActor ! PoisonPill })
     toShutdown += debugCache.dispose
 
     val location = mock(classOf[Location])
