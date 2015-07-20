@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.breakpoints
 
 import scala.collection.mutable.ListBuffer
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -21,7 +20,6 @@ import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.util.internal.Suppress
-
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
@@ -30,8 +28,8 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.event.Event
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
-
 import RichBreakpoint.richBreakpoint
+import java.util.concurrent.atomic.AtomicBoolean
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -118,7 +116,7 @@ private class BreakpointSupportActor private (
   import BreakpointSupportActor._
 
   /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
-  private var requestsEnabled = false
+  private val requestsEnabled: AtomicBoolean = new AtomicBoolean
 
   private val eventDispatcher = debugTarget.eventDispatcher
 
@@ -136,7 +134,7 @@ private class BreakpointSupportActor private (
 
   private def updateBreakpointRequestState(enabled: Boolean): Unit = {
     breakpointRequests.foreach (_.setEnabled(enabled))
-    requestsEnabled = enabled
+    requestsEnabled.getAndSet(enabled)
   }
 
   private def handleJdiEventCommands(event: Event, cmds: Set[JdiEventCommand]) = {
@@ -173,10 +171,8 @@ private class BreakpointSupportActor private (
     case Changed(delta) =>
       // triggered by the platform, when the breakpoint changed state
       changed(delta)
-    case ScalaDebugBreakpointManager.ActorDebug =>
-      reply(None)
     case ScalaDebugBreakpointManager.GetBreakpointRequestState(_) =>
-      reply(requestsEnabled)
+      reply(requestsEnabled.get)
     case BreakpointSupportActor.ReenableBreakpointAfterHcr =>
       reenableBreakpointRequestsAfterHcr()
   }
@@ -203,7 +199,7 @@ private class BreakpointSupportActor private (
    *        breakpoint is disabled.
    */
   private def changed(delta: IMarkerDelta): Unit = {
-    if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
+    if(isEnabled ^ requestsEnabled.get) updateBreakpointRequestState(isEnabled)
   }
 
   /** Create the line breakpoint for the newly loaded class.
@@ -214,7 +210,7 @@ private class BreakpointSupportActor private (
     breakpointRequest.foreach { br =>
       breakpointRequests append br
       listenForBreakpointRequest(br)
-      br.setEnabled(requestsEnabled)
+      br.setEnabled(requestsEnabled.get)
     }
   }
 
