@@ -190,14 +190,7 @@ abstract class ScalaDebugTarget private(
   /** Initialize the dependent components
    */
   private def startJdiEventDispatcher() = {
-    // start the event dispatcher thread
-    DebugPlugin.getDefault.asyncExec(new Runnable() {
-      override def run(): Unit = {
-        val thread = new Thread(eventDispatcher, "Scala debugger JDI event dispatcher")
-        thread.setDaemon(true)
-        thread.start()
-      }
-    })
+    eventDispatcher.loop()
   }
 
   /** Callback from the breakpoint manager when a platform breakpoint is hit

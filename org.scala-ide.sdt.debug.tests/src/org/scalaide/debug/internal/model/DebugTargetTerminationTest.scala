@@ -177,26 +177,6 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   @Test
-  def normalTerminationOf_DebugTargetActor_triggers_BreakpointManagerActor_termination(): Unit = {
-    val debugTargetActor = debugTarget.companionActor
-    val breapointManagerActor = debugTarget.breakpointManager.companionActor
-
-    checkGracefulTerminationOf(breapointManagerActor) when {
-      debugTargetActor ! PoisonPill
-    }
-  }
-
-  @Test
-  def normalTerminationOf_BreakpointManagerActor_triggers_DebugTargetActor_termination(): Unit = {
-    val debugTargetActor = debugTarget.companionActor
-    val breapointManagerActor = debugTarget.breakpointManager.companionActor
-
-    checkGracefulTerminationOf(debugTargetActor) when {
-      breapointManagerActor ! PoisonPill
-    }
-  }
-
-  @Test
   def normalTerminationOf_DebugTargetActor_triggers_JdiEventDispatcherActor_termination(): Unit = {
     val debugTargetActor = debugTarget.companionActor
     val jdiEventDispatcherActor = debugTarget.eventDispatcher.companionActor

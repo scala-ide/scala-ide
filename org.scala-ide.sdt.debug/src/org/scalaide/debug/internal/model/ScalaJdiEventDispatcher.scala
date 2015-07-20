@@ -18,11 +18,26 @@ import com.sun.jdi.request.EventRequest
 import ScalaJdiEventDispatcherActor.SetActorFor
 import ScalaJdiEventDispatcherActor.UnsetActorFor
 
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.util.internal.Suppress
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
+
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
     val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     new ScalaJdiEventDispatcher(virtualMachine, companionActor)
   }
+}
+
+case object Dispatch {
+  def done = Future.successful {}
+
+  def apply(runningCondition: => Boolean)(colaborator: () => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] =
+    if (runningCondition) {
+      colaborator() flatMap { _ => apply(runningCondition)(colaborator) }
+    } else done
 }
 
 /**
@@ -55,6 +70,28 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
           // it should not die from any exception. Just logging
           logger.error("Error in jdi event loop", e)
       }
+    }
+  }
+
+  def loop(): Unit = {
+    val eventQueue = virtualMachine.eventQueue
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val colaborator = () => Future {
+      val eventSet = eventQueue.remove(1000)
+      if (eventSet != null) {
+        companionActor ! eventSet
+      }
+    }
+    Dispatch(running)(colaborator) recoverWith {
+      case e: VMDisconnectedException =>
+        // it is likely that we will see this exception before being able to
+        // shutdown the loop after a VMDisconnectedEvent
+        dispose()
+        Dispatch.done
+      case e: Exception =>
+        // it should not die from any exception. Just logging
+        logger.error("Error in jdi event loop", e)
+        Dispatch(running)(colaborator)
     }
   }
 
