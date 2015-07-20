@@ -12,10 +12,7 @@ object CloseCharSetting extends AutoEditSetting(
   description = "Closes a typed opening char literal if necessary.",
   partitions = Set(
     IDocument.DEFAULT_CONTENT_TYPE,
-    ScalaPartitions.SCALA_MULTI_LINE_STRING,
-    ScalaPartitions.SCALADOC_CODE_BLOCK,
-    IJavaPartitions.JAVA_DOC,
-    IJavaPartitions.JAVA_MULTI_LINE_COMMENT
+    ScalaPartitions.SCALADOC_CODE_BLOCK
   )
 )
 
