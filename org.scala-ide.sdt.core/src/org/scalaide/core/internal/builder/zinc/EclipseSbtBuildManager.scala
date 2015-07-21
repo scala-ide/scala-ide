@@ -4,10 +4,9 @@ package zinc
 import java.io.File
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
-
+import scala.annotation.migration
 import scala.collection.mutable
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
@@ -19,11 +18,15 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
+import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
+import org.scalaide.core.internal.builder.CachedAnalysisBuildManager
+import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.builder.TaskManager
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
-
+import sbt.Logger.xlog2Log
 import sbt.compiler.AggressiveCompile
 import sbt.compiler.CompileFailed
 import sbt.compiler.IC
@@ -33,8 +36,12 @@ import sbt.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
+import xsbti.compile.JavaCompiler
+import org.eclipse.core.resources.IMarker
+import org.eclipse.jdt.core.IJavaModelMarker
 
-/** An Eclipse builder using the Sbt engine.
+/**
+ * An Eclipse builder using the Sbt engine.
  *
  *  The classpath is handled by delegating to the underlying project. That means
  *  a valid Scala library has to exist on the classpath, but it's not limited to
@@ -110,7 +117,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       sources --= files
   }
 
-  /** The given files have been modified by the user. Recompile
+  /**
+   * The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
   private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]): Unit = {
@@ -188,7 +196,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    */
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] = None
 
-  /** Inspired by IC.compile
+  /**
+   * Inspired by IC.compile
    *
    *  We need to duplicate IC.compile (by inlining insde this
    *  private method) because the Java interface it has as a
@@ -207,13 +216,32 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     compilers match {
       case Right(comps) =>
         import comps._
-        agg(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress), scalacOptions, javacOptions, aMap,
-          defClass, sbtReporter, order, skip = false, in.incOptions)(log)
+        recompileJavaAfterSbtCompiling(agg(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress),
+          scalacOptions, javacOptions, aMap, defClass, sbtReporter, order, skip = false, in.incOptions)(log))(javac, options.sources.toSet)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
         throw CompilerInterfaceFailed
     }
   }
+
+  protected val emptyRecompileJavaAfterSbtCompiling: (Analysis) => (JavaCompiler, Set[File]) => Analysis = a => (_, _) => a
+  protected val workingRecompileJavaAfterSbtCompiling: (Analysis) => (JavaCompiler, Set[File]) => Analysis = compilationAnalysis => (javac, sources) => {
+    Option((project.allSourceFiles() filter {
+      val Dot = 1
+      src =>
+        src.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) &&
+          src.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_ZERO).nonEmpty
+    } map {
+      _.getRawLocation.toFile()
+    } toSet) & sources) foreach { javaFiles =>
+      val unused = null
+      javac.compile(javaFiles.toArray, /* classpath = */ Array.empty[File], /* output = */ unused,
+        /* options = */ Array.empty[String], /* logger = */ unused)
+    }
+    compilationAnalysis
+  }
+  private def recompileJavaAfterSbtCompiling(compilationAnalysis: Analysis)(javac: JavaCompiler, sources: Set[File]): Analysis =
+    workingRecompileJavaAfterSbtCompiling(compilationAnalysis)(javac, sources)
 
   private object CompilerInterfaceFailed extends RuntimeException
 

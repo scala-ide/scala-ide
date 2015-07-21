@@ -93,7 +93,7 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
     run = forever
     toCompile(owningProject.allSourceFiles)
   }
-  private def forever(sources: Set[IFile]): Set[IFile] = toCompile(sources) ++ resetJavaMarkers(getValidJavaSourcesOfThisScope)
+  private def forever(sources: Set[IFile]): Set[IFile] = toCompile(sources) ++ getValidJavaSourcesOfThisScope
 
   def apply(sources: Set[IFile]): Set[IFile] = run(sources)
 
@@ -101,10 +101,5 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
     val Dot = 1
     toCompile(owningProject.allSourceFiles
       .filter { _.getLocation.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) })
-  }
-
-  private def resetJavaMarkers(javaFiles: Set[IFile]): Set[IFile] = {
-    javaFiles.foreach { _.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE) }
-    javaFiles
   }
 }

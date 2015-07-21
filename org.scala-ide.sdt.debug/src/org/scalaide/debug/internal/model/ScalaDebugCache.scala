@@ -1,18 +1,26 @@
 package org.scalaide.debug.internal.model
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.BaseDebuggerActor._
+import org.scalaide.debug.internal.BaseDebuggerActor.syncSend
 import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.preferences.DebuggerPreferencePage
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.Utils.jdiSynchronized
 import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.Location
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.event.ClassPrepareEvent
+
+import ScalaDebugCache.HiddenTypes
+import ScalaDebugCache.extractOuterTypeName
+import ScalaDebugCache.prefStore
 
 object ScalaDebugCache {
   private final val OuterTypeNameRegex = """([^\$]*)(\$.*)?""".r
@@ -22,7 +30,8 @@ object ScalaDebugCache {
     "java.lang.ClassLoader",
     "scala.runtime.BoxesRunTime")
 
-  /** Return the the name of the lowest (outer) type containing the type with the given name (everything before the first '$').
+  /**
+   * Return the the name of the lowest (outer) type containing the type with the given name (everything before the first '$').
    */
   private[model] def extractOuterTypeName(typeName: String) = typeName match {
     case OuterTypeNameRegex(outerTypeName, nestedTypeName) =>
@@ -41,7 +50,8 @@ object ScalaDebugCache {
 
 }
 
-/** A cache used to keep the list of nested classes of a outer class.
+/**
+ * A cache used to keep the list of nested classes of a outer class.
  *  It is used by for the line breakpoints and step-over.
  *
  *  Most of the methods are synchronous calls made to the underlying actor.
@@ -54,7 +64,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   private[debug] val actor: ScalaDebugCacheActor
 
-  /** Return the list of type which are nested under the same outer type as the type with the given name,
+  /**
+   * Return the list of type which are nested under the same outer type as the type with the given name,
    *  and which are currently loaded in the debugged VM.
    */
   def getLoadedNestedTypes(typeName: String): Set[ReferenceType] = {
@@ -71,7 +82,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     }
   }
 
-  /** Adds the given actor as a listener for class prepare events in the debugged VM,
+  /**
+   * Adds the given actor as a listener for class prepare events in the debugged VM,
    *  for types which are nested under the same outer type as the type withe the given name.
    *  The event is sent as a ClassPrepareEvent to the actor.
    *
@@ -84,7 +96,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     syncSend(actor, AddClassPrepareEventListener(listener, extractOuterTypeName(typeName)))
   }
 
-  /** Removes the given actor as being a listener for class prepare events in the debugged VM,
+  /**
+   * Removes the given actor as being a listener for class prepare events in the debugged VM,
    *  for types which are nested under the same outer type as the type with the given name.
    *
    *  Does nothing if the actor was not registered as a listener for the outer type of the type with the given name.
@@ -99,14 +112,16 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   private var typeCache = Map[ReferenceType, TypeCache]()
   private val typeCacheLock = new Object()
 
-  /** Return the method containing the actual code of the anon function, if it is contained
+  /**
+   * Return the method containing the actual code of the anon function, if it is contained
    *  in the given range, <code>None</code> otherwise.
    */
   def getAnonFunctionsInRange(refType: ReferenceType, range: Range): Option[Method] = {
     getCachedAnonFunction(refType).filter(method => range.contains(method.location.lineNumber))
   }
 
-  /** Return the method containing the actual code of the anon function.
+  /**
+   * Return the method containing the actual code of the anon function.
    */
   def getAnonFunction(refType: ReferenceType): Option[Method] = {
     getCachedAnonFunction(refType)
@@ -117,7 +132,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     getCachedMethodFlags(location.method()).isTransparent
   }
 
-  /** Is this location opaque? Returns `true` for all locations in which the
+  /**
+   * Is this location opaque? Returns `true` for all locations in which the
    *  debugger should not stop. It won't stop in anything below this call either (any
    *  methods called by methods at this location).
    */
@@ -125,7 +141,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     getCachedMethodFlags(location.method()).isOpaque
   }
 
-  /** Returns the anon function for the given type, if it exists. The cache is checked
+  /**
+   * Returns the anon function for the given type, if it exists. The cache is checked
    *  before doing the actual search.
    */
   private def getCachedAnonFunction(refType: ReferenceType): Option[Method] = {
@@ -145,7 +162,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     }
   }
 
-  /** Returns the anon function for the given type, if it exists.
+  /**
+   * Returns the anon function for the given type, if it exists.
    */
   private def findAnonFunction(refType: ReferenceType): Option[Method] = {
     val allMethods = refType.methods
@@ -179,7 +197,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     }
   }
 
-  /** Returns the flags for the given method. The cache is checked
+  /**
+   * Returns the flags for the given method. The cache is checked
    *  before doing the actual computation.
    */
   private def getCachedMethodFlags(method: Method): MethodFlags = {
@@ -203,7 +222,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
     }
   }
 
-  /** Create the flags for the given method.
+  /**
+   * Create the flags for the given method.
    */
   private def createMethodFlags(method: Method): MethodFlags = {
     val typeName = method.declaringType.name
@@ -234,9 +254,10 @@ private[model] case class LoadedNestedTypes(outerTypeName: String)
 private[model] case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
 private[model] case class AddClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
 private[model] case class RemoveClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
+private case class AddClassPrepareEventListenerUpdate(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String, cache: NestedTypesCache)
+private case class LoadedNestedTypesUpdate(outerTypeName: String, cache: NestedTypesCache)
 
 protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor) extends BaseDebuggerActor with HasLogger {
-
   private var nestedTypesCache = Map[String, NestedTypesCache]()
 
   override protected def behavior: Behavior = {
@@ -244,14 +265,36 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
       classLoaded(e)
       reply(false)
     case LoadedNestedTypes(outerTypeName) =>
-      reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(outerTypeName)))
+      val replyTo = sender
+      become {
+        case LoadedNestedTypesUpdate(outerTypeName, cache) =>
+          updateCacheWith((outerTypeName, cache))
+          replyTo ! LoadedNestedTypesAnswer(cache.types)
+          unbecome()
+      }
+      findCache(outerTypeName).onSuccess {
+        case (typeName, cache) =>
+          ScalaDebugCacheActor.this ! LoadedNestedTypesUpdate(typeName, cache)
+      }
     case AddClassPrepareEventListener(actor, outerTypeName) =>
-      addClassPreparedEventListener(actor, outerTypeName)
-      reply(true)
+      val replyTo = sender
+      become {
+        case AddClassPrepareEventListenerUpdate(actor, outerTypeName, cache) =>
+          updateCacheWith((outerTypeName, cache.copy(listeners = cache.listeners + actor)))
+          replyTo ! true
+          unbecome()
+      }
+      findCache(outerTypeName).onSuccess {
+        case (typeName, cache) =>
+          ScalaDebugCacheActor.this ! AddClassPrepareEventListenerUpdate(actor, typeName, cache)
+      }
     case RemoveClassPrepareEventListener(actor, outerTypeName) =>
       removeClassPreparedEventListener(actor, outerTypeName)
       reply(true)
   }
+
+  private def updateCacheWith(entry: (String, NestedTypesCache)) =
+    nestedTypesCache = nestedTypesCache + entry
 
   override protected def postStart(): Unit = {
     link(scalaDebugTargetActor)
@@ -275,16 +318,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
   }
 
-  private def getLoadedNestedTypes(outerTypeName: String): Set[ReferenceType] = {
-    nestedTypesCache.get(outerTypeName) match {
-      case Some(cache) =>
-        cache.types
-      case None =>
-        initializedRequestsAndCache(outerTypeName).types
-    }
-  }
-
-  private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = {
+  private def findNestedTypesWithJdi(outerTypeName: String) = {
     val simpleRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName, debugTarget)
     val patternRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName + "$*", debugTarget)
     debugTarget.eventDispatcher.setActorFor(ScalaDebugCacheActor.this, simpleRequest)
@@ -301,22 +335,20 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     }
 
     import scala.collection.JavaConverters._
-    val types = debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
-
-    val cache = new NestedTypesCache(types, Set())
-    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache))
-    cache
+    debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
   }
 
-  private def addClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
-    val cache = nestedTypesCache.get(outerTypeName) match {
+  private def findCache(outerTypeName: String): scala.concurrent.Future[(String, NestedTypesCache)] =
+    nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
-        cache
+        Future.successful((outerTypeName, cache))
       case None =>
-        initializedRequestsAndCache(outerTypeName)
+        Future {
+          jdiSynchronized {
+            (outerTypeName, NestedTypesCache(findNestedTypesWithJdi(outerTypeName)))
+          }
+        }
     }
-    nestedTypesCache = nestedTypesCache + ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
-  }
 
   private def removeClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
     nestedTypesCache.get(outerTypeName) foreach { cache =>
@@ -332,7 +364,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
 }
 
-case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor])
+case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor] = Set.empty)
 
 case class TypeCache(anonMethod: Option[Option[Method]] = None, methods: Map[Method, MethodFlags])
 case class MethodFlags(isTransparent: Boolean, isOpaque: Boolean)
