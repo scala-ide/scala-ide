@@ -138,7 +138,7 @@ class SbtInputs(installation: IScalaInstallation,
         val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
         new Compilers[AnalyzingCompiler] {
           def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions, logger)
+          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions)
         }
     }
   }
