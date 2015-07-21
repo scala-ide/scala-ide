@@ -82,8 +82,9 @@ trait CloseMatchingPair extends AutoEdit {
 
     val lineInfo = document.lineInformationOfOffset(offset)
     val lineAfterCaret = document.textRange(offset, lineInfo.end)
+    val forwardToSurroundSelectionAutoEdit = IScalaPlugin().getPreferenceStore.getBoolean(surroundSelectionSetting.id) && textSelection.length > 0
 
-    if (IScalaPlugin().getPreferenceStore.getBoolean(surroundSelectionSetting.id))
+    if (forwardToSurroundSelectionAutoEdit)
       false
     else if (lineAfterCaret.isEmpty)
       true
