@@ -103,7 +103,7 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
     /* This explicit call to super matters, presumably exercised
       through AspectJ. See #1002016. */
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+    null
   }
 
   override def makeConsistent(
