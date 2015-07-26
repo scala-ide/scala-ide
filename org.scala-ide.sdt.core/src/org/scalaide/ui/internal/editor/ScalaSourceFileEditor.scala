@@ -54,6 +54,9 @@ import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.ui.DisplayThread
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.eclipse.jdt.core.dom.AST
+import org.scalaide.util.Utils
 
 class ScalaSourceFileEditor
     extends CompilationUnitEditor
@@ -349,6 +352,20 @@ class ScalaSourceFileEditor
 
   override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor): Unit = {
     super.reconciled(ast, forced, progressMonitor)
+    getInteractiveCompilationUnit() match {
+      case unit: ScalaSourceFile => // only do this for source files, not class files
+        // trigger Java structure building
+        // this should be fast, the whole unit was fully type-checked
+        Utils.debugTimed("makeConsistent after reconcile") {
+          unit.makeConsistent(
+            AST.JLS8, // anything other than NO_AST would work
+            true, // resolve bindings
+            0, // don't perform statements recovery
+            null, // don't collect problems but report them
+            progressMonitor)
+        }
+      case _ =>
+    }
     reconcilingListeners.reconciled(ast, forced, progressMonitor)
   }
 

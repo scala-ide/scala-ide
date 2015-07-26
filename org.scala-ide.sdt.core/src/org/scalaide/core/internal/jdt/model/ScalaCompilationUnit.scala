@@ -58,6 +58,7 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.compiler.ISourceMap
 import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
 import org.scalaide.core.compiler.IPositionInformation
+import org.scalaide.util.Utils
 
 object ScalaCompilationUnit extends HasLogger {
 
@@ -136,31 +137,33 @@ trait ScalaCompilationUnit extends Openable
       val sourceFile = lastSourceMap().sourceFile
       val sourceLength = sourceFile.length
 
-      try {
-        logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
+      Utils.debugTimed("buildStructure") {
+        try {
+          logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
 
-        val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
-        compiler.asyncExec {
-          new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
-        }.getOption() // block until the traverser finished
+          val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
+          compiler.asyncExec {
+            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+          }.getOption() // block until the traverser finished
 
-        info match {
-          case cuei: CompilationUnitElementInfo =>
-            cuei.setSourceLength(sourceLength)
-          case _ =>
+          info match {
+            case cuei: CompilationUnitElementInfo =>
+              cuei.setSourceLength(sourceLength)
+            case _ =>
+          }
+
+          unsafeElements.putAll(tmpMap)
+          true
+        } catch {
+          case e: InterruptedException =>
+            Thread.currentThread().interrupt()
+            logger.info("ignored InterruptedException in build structure")
+            false
+
+          case ex: Exception =>
+            logger.error("Compiler crash while building structure for %s".format(file), ex)
+            false
         }
-
-        unsafeElements.putAll(tmpMap)
-        true
-      } catch {
-        case e: InterruptedException =>
-          Thread.currentThread().interrupt()
-          logger.info("ignored InterruptedException in build structure")
-          false
-
-        case ex: Exception =>
-          logger.error("Compiler crash while building structure for %s".format(file), ex)
-          false
       }
     } getOrElse false
   }

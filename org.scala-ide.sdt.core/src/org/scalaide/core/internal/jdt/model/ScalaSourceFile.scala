@@ -115,8 +115,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
     // don't rerun this expensive operation unless necessary
     if (!isConsistent()) {
-      val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-      openWhenClosed(info, true, monitor)
+      if (astLevel != ICompilationUnit.NO_AST && resolveBindings) {
+        val info = createElementInfo.asInstanceOf[OpenableElementInfo]
+        openWhenClosed(info, true, monitor)
+      } else
+        logger.info(s"Skipped `makeConsistent` with resolveBindings: $resolveBindings and astLevel: $astLevel")
     }
     null
   }
