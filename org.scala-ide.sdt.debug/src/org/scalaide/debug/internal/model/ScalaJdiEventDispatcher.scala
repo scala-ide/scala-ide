@@ -23,6 +23,11 @@ import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.util.internal.Suppress
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import org.scalaide.debug.internal.JdiEventDispatcher
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.JdiEventReceiver
+import java.util.concurrent.ConcurrentHashMap
+import scala.concurrent.Await
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
@@ -46,10 +51,13 @@ case object Dispatch {
  * This class is thread safe. Instances have be created through its companion object.
  */
 
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Suppress.DeprecatedWarning.Actor) extends Runnable with HasLogger {
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Suppress.DeprecatedWarning.Actor)
+    extends Runnable with HasLogger with JdiEventDispatcher {
+
   @volatile
   private var running = true
 
+  /** @deprecated use `loop()` */
   override def run(): Unit = {
     // the polling loop runs until the VM is disconnected, or it is told to stop.
     // The events which have been already read will still be processed by the actor.
@@ -112,11 +120,19 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
     companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
   }
 
+  override def register(eventReceiver: JdiEventReceiver, request: EventRequest): Unit = {
+    companionActor.asInstanceOf[ScalaJdiEventDispatcherActor].register(eventReceiver, request)
+  }
+
   /**
    * Remove the call back target for the given request
    */
   def unsetActorFor(request: EventRequest): Unit = {
     companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
+  }
+
+  override def unregister(request: EventRequest): Unit = {
+    companionActor.asInstanceOf[ScalaJdiEventDispatcherActor].unregister(request)
   }
 }
 
@@ -141,6 +157,16 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
 
   /** event request to actor map */
   private var eventActorMap = Map[EventRequest, Suppress.DeprecatedWarning.Actor]()
+  private val eventReceiversMap: scala.collection.mutable.Map[EventRequest, JdiEventReceiver] = {
+    import scala.collection.JavaConverters._
+    new ConcurrentHashMap[EventRequest, JdiEventReceiver].asScala
+  }
+
+  private[model] def register(receiver: JdiEventReceiver, request: EventRequest): Unit =
+    eventReceiversMap += (request -> receiver)
+
+  private[model] def unregister(request: EventRequest): Unit =
+    eventReceiversMap -= request
 
   override protected def postStart(): Unit = link(scalaDebugTargetActor)
 
@@ -159,6 +185,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
     import scala.collection.JavaConverters._
 
     var futures = List[Future[Any]]()
+    var newFutures = List[scala.concurrent.Future[Boolean]]()
 
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
@@ -178,6 +205,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
         eventActorMap.get(event.request).foreach { interestedActor =>
           futures ::= (interestedActor !! event)
         }
+        eventReceiversMap.get(event.request).foreach { receiver =>
+          newFutures ::= receiver.handle(event)
+        }
     }
 
     // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.
@@ -189,6 +219,12 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
     }
 
     var staySuspended = false
+    staySuspended |= {
+      import scala.concurrent.ExecutionContext.Implicits._
+      import scala.concurrent.duration._
+      Await.result(scala.concurrent.Future.fold(newFutures)(staySuspended)(_ | _), 1 minute)
+    }
+
     val it = futures.iterator
     loopWhile(it.hasNext) {
       val future = it.next
