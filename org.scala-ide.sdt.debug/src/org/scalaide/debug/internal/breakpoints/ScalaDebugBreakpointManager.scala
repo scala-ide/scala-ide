@@ -25,8 +25,8 @@ object ScalaDebugBreakpointManager {
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugBreakpointManager = {
     import scala.concurrent.ExecutionContext.Implicits.global
-    val companionActor = new ScalaDebugBreakpointSubordinate(debugTarget)
-    new ScalaDebugBreakpointManager(companionActor)
+    val subordinate = new ScalaDebugBreakpointSubordinate(debugTarget)
+    new ScalaDebugBreakpointManager(subordinate)
   }
 }
 
@@ -107,23 +107,23 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
 private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext) {
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
-  import BreakpointSupportActor.Changed
-  import BreakpointSupportActor.ReenableBreakpointAfterHcr
+  import BreakpointSupportSubordinate.Changed
+  import BreakpointSupportSubordinate.ReenableBreakpointAfterHcr
 
   import scala.collection._
   import scala.collection.JavaConverters._
-  private val breakpoints: concurrent.Map[IBreakpoint, Suppress.DeprecatedWarning.Actor] =
-    new ConcurrentHashMap[IBreakpoint, Suppress.DeprecatedWarning.Actor].asScala
+  private val breakpoints: concurrent.Map[IBreakpoint, BreakpointSupportSubordinate] =
+    new ConcurrentHashMap[IBreakpoint, BreakpointSupportSubordinate].asScala
 
   def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Future[Unit] = Future {
     breakpoints.get(breakpoint).map { breakpointSupport =>
-      breakpointSupport ! Changed(delta)
+      breakpointSupport.changed(delta)
     }
   }
 
   def breakpointRemoved(breakpoint: IBreakpoint): Future[Unit] = Future {
     breakpoints.get(breakpoint).map { breakpointSupport =>
-      breakpointSupport ! PoisonPill
+      breakpointSupport.exit()
       breakpoints -= breakpoint
     }
   }
@@ -147,7 +147,7 @@ private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarg
 
   private[debug] def breakpointRequestState(breakpoint: IBreakpoint): Option[Boolean] = {
     breakpoints.get(breakpoint).flatMap { breakpointSupport =>
-      Some((breakpointSupport !? ScalaDebugBreakpointManager.GetBreakpointRequestState(breakpoint)).asInstanceOf[Boolean])
+      Some(breakpointSupport.breakpointRequestState())
     }
   }
 
@@ -174,9 +174,9 @@ private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarg
       case bp: JavaLineBreakpoint if isChanged(bp.getTypeName) => bp
     }
     affectedBreakpoints.foreach { breakpoint =>
-      breakpoints(breakpoint) ! ReenableBreakpointAfterHcr
+      breakpoints(breakpoint).reenableBreakpointRequestsAfterHcr()
     }
   }
 
-  def exit(): Unit = breakpoints.values.foreach(_ ! PoisonPill)
+  def exit(): Unit = breakpoints.values.foreach(_.exit())
 }
