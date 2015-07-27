@@ -15,7 +15,6 @@ import org.scalaide.debug.JdiEventCommand
 import org.scalaide.debug.NoCommand
 import org.scalaide.debug.PrepareClass
 import org.scalaide.debug.SuspendExecution
-import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
@@ -73,11 +72,11 @@ private object BreakpointSupportSubordinate {
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
 
-    val actor = new BreakpointSupportSubordinate(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
+    val subordinate = new BreakpointSupportSubordinate(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
 
-    debugTarget.cache.addClassPrepareEventFutureListener(actor, typeName)
+    debugTarget.cache.addClassPrepareEventFutureListener(subordinate, typeName)
 
-    actor
+    subordinate
   }
 
   /** Create event requests to tell the VM to notify us when it reaches the line for the current `breakpoint` */
