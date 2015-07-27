@@ -6,8 +6,6 @@ import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.util.internal.Suppress
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap

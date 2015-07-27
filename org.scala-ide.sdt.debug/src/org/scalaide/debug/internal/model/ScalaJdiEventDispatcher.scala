@@ -28,6 +28,7 @@ import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.JdiEventReceiver
 import java.util.concurrent.ConcurrentHashMap
 import scala.concurrent.Await
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
@@ -54,15 +55,14 @@ case object Dispatch {
 class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Suppress.DeprecatedWarning.Actor)
     extends Runnable with HasLogger with JdiEventDispatcher {
 
-  @volatile
-  private var running = true
+  private val running = new AtomicBoolean(true)
 
   /** @deprecated use `loop()` */
   override def run(): Unit = {
     // the polling loop runs until the VM is disconnected, or it is told to stop.
     // The events which have been already read will still be processed by the actor.
     val eventQueue = virtualMachine.eventQueue
-    while (running) {
+    while (running.get) {
       try {
         // use a timeout of 1s, so it cleanly terminates on shut down
         val eventSet = eventQueue.remove(1000)
@@ -89,8 +89,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
       if (eventSet != null) {
         companionActor ! eventSet
       }
-    }
-    Dispatch(running)(colaborator) recoverWith {
+    } recoverWith {
       case e: VMDisconnectedException =>
         // it is likely that we will see this exception before being able to
         // shutdown the loop after a VMDisconnectedEvent
@@ -99,15 +98,16 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
       case e: Exception =>
         // it should not die from any exception. Just logging
         logger.error("Error in jdi event loop", e)
-        Dispatch(running)(colaborator)
+        Dispatch.done
     }
+    Dispatch(running.get)(colaborator)
   }
 
   /**
    * release all resources
    */
   private[model] def dispose(): Unit = {
-    running = false
+    running.getAndSet(false)
     companionActor ! PoisonPill
   }
 
