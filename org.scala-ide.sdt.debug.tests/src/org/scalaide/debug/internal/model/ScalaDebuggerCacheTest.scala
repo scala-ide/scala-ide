@@ -22,6 +22,8 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequestManager
 import org.scalaide.core.testsetup.SDTTestUtils
+import java.util.concurrent.atomic.AtomicReference
+import scala.concurrent.Future
 
 class ScalaDebugCacheTest {
 
@@ -78,50 +80,45 @@ class ScalaDebugCacheTest {
    */
   @Test
   def addAndRemoveListener(): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     val BaseName = "test03.a.Test"
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a")
 
     // a latch listener actor. It releases the latch when it receives a ClassPrepareEvent
-    val testActor = new BaseDebuggerActor {
-      @volatile var latch = new CountDownLatch(1)
+    val testing = new ClassPrepareListener {
+      val latch: AtomicReference[CountDownLatch] = new AtomicReference(new CountDownLatch(1))
 
-      override def behavior = {
-        case e: ClassPrepareEvent =>
-          latch.countDown()
-          reply(true)
+      override def notify(cpEvent: ClassPrepareEvent): Future[Unit] = Future {
+        latch.get.countDown()
       }
 
       def awaitLatch(time: Int): Boolean = {
-        latch.await(time, TimeUnit.MILLISECONDS)
+        latch.get.await(time, TimeUnit.MILLISECONDS)
       }
 
       def resetLatch(): Unit = {
-        latch = new CountDownLatch(1)
+        latch.getAndSet(new CountDownLatch(1))
       }
     }
 
-    toShutdown += (() => { testActor ! PoisonPill })
-    testActor.start
-
     // register listener, and check get data
 
-    debugCache.addClassPrepareEventListener(testActor, BaseName)
+    debugCache.addClassPrepareEventListener(testing, BaseName)
 
     // 'receive' a ClassPrepareEvent from the VM
     debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
 
-    assertTrue("Message was not received by listening actor before timeout", testActor.awaitLatch(500))
+    assertTrue("Message was not received by listening actor before timeout", testing.awaitLatch(500))
 
     // unregister listener, and check get no data
+    debugCache.removeClassPrepareEventListener(testing, BaseName)
 
-    debugCache.removeClassPrepareEventListener(testActor, BaseName)
-
-    testActor.resetLatch
+    testing.resetLatch()
 
     debugCache.actor !? createClassPrepareEvent(BaseName + "$b")
 
-    assertFalse("Unexpected message was received by listening actor before timeout", testActor.awaitLatch(500))
+    assertFalse("Unexpected message was received by listening actor before timeout", testing.awaitLatch(500))
 
     verifyNestedTypesCalls(debugCache, classPrepareRequest1, classPrepareRequest2, BaseName)
   }

@@ -50,12 +50,6 @@ private[debug] object BreakpointSupport {
 }
 
 private object BreakpointSupportSubordinate {
-  // specific events
-  case class Changed(delta: IMarkerDelta)
-
-  /** The message used to reenable breakpoint requests managed by the given actor. */
-  case object ReenableBreakpointAfterHcr
-
   val eventHandlerMappings = EventHandlerMapping.mappings
 
   /**
@@ -74,7 +68,7 @@ private object BreakpointSupportSubordinate {
 
     val subordinate = new BreakpointSupportSubordinate(breakpoint, debugTarget, typeName, ListBuffer(breakpointRequests: _*))
 
-    debugTarget.cache.addClassPrepareEventFutureListener(subordinate, typeName)
+    debugTarget.cache.addClassPrepareEventListener(subordinate, typeName)
 
     subordinate
   }
@@ -140,10 +134,6 @@ class BreakpointSupportSubordinate private (
 
   private def handleJdiEventCommands(event: Event, cmds: Set[JdiEventCommand]) = {
     event match {
-      case event: ClassPrepareEvent if cmds(PrepareClass) ⇒
-        // JDI event triggered when a class is loaded
-        consume(event)
-        false
       case event: BreakpointEvent if cmds(SuspendExecution) ⇒
         // JDI event triggered when a breakpoint is hit
         breakpointHit(event.location, event.thread)
@@ -154,7 +144,6 @@ class BreakpointSupportSubordinate private (
   }
 
   private def defaultCommands(event: Event): JdiEventCommand = event match {
-    case _: ClassPrepareEvent ⇒ PrepareClass
     case _: BreakpointEvent ⇒ SuspendExecution
   }
 
@@ -177,7 +166,7 @@ class BreakpointSupportSubordinate private (
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-    debugTarget.cache.removeClassPrepareEventFutureListener(this, typeName)
+    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
 
     breakpointRequests.foreach { request =>
       eventRequestManager.deleteEventRequest(request)
@@ -192,7 +181,6 @@ class BreakpointSupportSubordinate private (
    *        can be installed *only* after/when the class is loaded, and that might happen while this
    *        breakpoint is disabled.
    */
-  import scala.concurrent.ExecutionContext.Implicits.global
   def changed(delta: IMarkerDelta): Future[Unit] = Future {
     if (isEnabled ^ requestsEnabled.get) updateBreakpointRequestState(isEnabled)
   }
@@ -200,7 +188,7 @@ class BreakpointSupportSubordinate private (
   /**
    * Create the line breakpoint for the newly loaded class.
    */
-  override protected def consume(event: ClassPrepareEvent): Unit = {
+  override def notify(event: ClassPrepareEvent): Future[Unit] = Future {
     val referenceType = event.referenceType
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)
 

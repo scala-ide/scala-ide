@@ -71,7 +71,7 @@ private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, t
 
   private val enabled = new AtomicBoolean
 
-  override protected def consume(classPrepareEvent: ClassPrepareEvent): Unit = {
+  override def notify(classPrepareEvent: ClassPrepareEvent): Future[Unit] = Future {
     // JDI event triggered when a class has been loaded
     for {
       range <- rangeOpt
@@ -115,7 +115,7 @@ private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, t
   private def enable(): Unit = {
     if (!enabled.getAndSet(true)) {
       val eventDispatcher = debugTarget.eventDispatcher
-      debugTarget.cache.addClassPrepareEventFutureListener(this, typeName)
+      debugTarget.cache.addClassPrepareEventListener(this, typeName)
       requests.foreach {
         request =>
           eventDispatcher.register(this, request)
@@ -133,7 +133,7 @@ private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, t
         eventDispatcher.unregister(request)
         eventRequestManager.deleteEventRequest(request)
       }
-      debugTarget.cache.removeClassPrepareEventFutureListener(this, typeName)
+      debugTarget.cache.removeClassPrepareEventListener(this, typeName)
     }
   }
 }
