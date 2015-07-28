@@ -35,6 +35,7 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -79,7 +80,6 @@ object ScalaDebugTarget extends HasLogger {
   /** A message sent to the companion actor to indicate we're attached to the VM. */
   private[model] object AttachedToVM
   private[internal] case class UpdateStackFramesAfterHcr(dropAffectedFrames: Boolean)
-  private[internal] case class ReplaceClasses(changedClasses: Seq[ClassFileResource])
 }
 
 /** A debug target in the Scala debug model.
@@ -176,8 +176,7 @@ abstract class ScalaDebugTarget private(
   @volatile
   private var threads = List[ScalaThread]()
 
-  @volatile
-  private[internal] var isPerformingHotCodeReplace: Boolean = false
+  private[internal] val isPerformingHotCodeReplace: AtomicBoolean = new AtomicBoolean
 
   private[debug] val eventDispatcher: ScalaJdiEventDispatcher
   private[debug] val breakpointManager: ScalaDebugBreakpointManager
@@ -495,8 +494,6 @@ private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartReque
     case msg: ScalaDebugTarget.UpdateStackFramesAfterHcr =>
       val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
       nonSystemThreads.foreach(_.updateStackFramesAfterHcr(msg))
-    case ScalaDebugTarget.ReplaceClasses(changedClasses) =>
-      replaceClassesIfVMAllows(changedClasses)
   }
 
   /** Initialize this debug target actor:

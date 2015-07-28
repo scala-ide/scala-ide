@@ -6,25 +6,21 @@ package org.scalaide.debug.internal.hcr
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.mutable.Publisher
-
 import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
-import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.model.ScalaDebugTarget.ReplaceClasses
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
-
 import com.sun.jdi.ReferenceType
-
 import ScalaHotCodeReplaceManager.HCRFailed
 import ScalaHotCodeReplaceManager.HCRNotSupported
 import ScalaHotCodeReplaceManager.HCRResult
 import ScalaHotCodeReplaceManager.HCRSucceeded
+import scala.concurrent.Future
 
 private[internal] object ScalaHotCodeReplaceManager {
 
@@ -33,9 +29,9 @@ private[internal] object ScalaHotCodeReplaceManager {
   private[hcr] case class HCRNotSupported(launchName: String) extends HCRResult
   private[hcr] case class HCRFailed(launchName: String) extends HCRResult
 
-  def create(debugTargetCompanionActor: BaseDebuggerActor): Option[ScalaHotCodeReplaceManager] = {
+  def create(hcrExecutor: HotCodeReplaceExecutor): Option[ScalaHotCodeReplaceManager] = {
     if (HotCodeReplacePreferences.hcrEnabled)
-      Some(new ScalaHotCodeReplaceManager(debugTargetCompanionActor))
+      Some(new ScalaHotCodeReplaceManager(hcrExecutor))
     else
       None
   }
@@ -88,7 +84,7 @@ private[internal] object ScalaHotCodeReplaceManager {
  * After correcting an error in JA1.java and another build, this class (with aforementioned its possible nested
  * classes) is also redefined.
  */
-class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebuggerActor) extends IResourceChangeListener {
+class ScalaHotCodeReplaceManager private (hcrExecutor: HotCodeReplaceExecutor) extends IResourceChangeListener {
 
   private[internal] def init(): Unit = {
     ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_BUILD)
@@ -101,7 +97,7 @@ class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebugge
   override def resourceChanged(event: IResourceChangeEvent): Unit = {
     val changedClasses = getChangedClasses(event)
     if (changedClasses.nonEmpty)
-      debugTargetCompanionActor ! ReplaceClasses(changedClasses)
+      hcrExecutor.replaceClassesIfVMAllows(changedClasses)
   }
 
   private def getChangedClasses(event: IResourceChangeEvent): List[ClassFileResource] = {
@@ -122,13 +118,14 @@ class ScalaHotCodeReplaceManager private (debugTargetCompanionActor: BaseDebugge
 
 private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with HasLogger {
   import scala.collection.JavaConverters._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   protected val debugTarget: ScalaDebugTarget
 
   /**
    * If VM supports HCR, it replaces classes already loaded to VM using new class file versions.
    */
-  def replaceClassesIfVMAllows(changedClasses: Seq[ClassFileResource]): Unit = {
+  def replaceClassesIfVMAllows(changedClasses: Seq[ClassFileResource]): Future[Unit] = Future {
     val typesToReplace = changedClasses filter isLoadedToVM
     if (typesToReplace.nonEmpty) {
       val launchName = currentLaunchName
@@ -144,7 +141,7 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
   private def doHotCodeReplace(launchName: String, typesToReplace: Seq[ClassFileResource]): Unit = {
     try {
       logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName'")
-      debugTarget.isPerformingHotCodeReplace = true
+      debugTarget.isPerformingHotCodeReplace.getAndSet(true)
       // FIXME We need the automatic semantic dropping frames BEFORE HCR to prevent VM crashes.
       // We should drop possibly affected frames in this place (remember to wait for the end of such
       // an operation) and run Step Into after HCR. If no frames will be dropped, we'll just refresh
@@ -162,7 +159,7 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
           () => publish(HCRFailed(launchName))
         }
     } finally {
-      debugTarget.isPerformingHotCodeReplace = false
+      debugTarget.isPerformingHotCodeReplace.getAndSet(false)
       debugTarget.fireChangeEvent(DebugEvent.CONTENT)
     }
   }
