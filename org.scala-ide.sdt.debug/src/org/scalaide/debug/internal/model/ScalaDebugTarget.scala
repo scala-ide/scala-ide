@@ -11,7 +11,6 @@ import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
 import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
-
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -21,7 +20,6 @@ import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
 import org.osgi.framework.Version
-
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
@@ -32,6 +30,7 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
+import java.util.concurrent.atomic.AtomicBoolean
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -75,7 +74,6 @@ object ScalaDebugTarget extends HasLogger {
   /** A message sent to the companion actor to indicate we're attached to the VM. */
   private[model] object AttachedToVM
   private[internal] case class UpdateStackFramesAfterHcr(dropAffectedFrames: Boolean)
-  private[internal] case class ReplaceClasses(changedClasses: Seq[ClassFileResource])
 }
 
 /**
@@ -166,8 +164,7 @@ abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
   @volatile
   private var threads = List[ScalaThread]()
 
-  @volatile
-  private[internal] var isPerformingHotCodeReplace: Boolean = false
+  private[internal] val isPerformingHotCodeReplace: AtomicBoolean = new AtomicBoolean
 
   private[debug] val eventDispatcher: ScalaJdiEventDispatcher
   private[debug] val breakpointManager: ScalaDebugBreakpointManager
@@ -467,8 +464,6 @@ private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartReque
     case msg: ScalaDebugTarget.UpdateStackFramesAfterHcr =>
       val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
       nonSystemThreads.foreach(_.updateStackFramesAfterHcr(msg))
-    case ScalaDebugTarget.ReplaceClasses(changedClasses) =>
-      replaceClassesIfVMAllows(changedClasses)
   }
 
   /** Initialize this debug target actor:

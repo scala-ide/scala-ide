@@ -53,7 +53,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
   override def canStepOver: Boolean = canStep
   override def canStepReturn: Boolean = canStep
   override def isStepping: Boolean = ???
-  private def canStep = suspended && !target.isPerformingHotCodeReplace
+  private def canStep = suspended && !target.isPerformingHotCodeReplace.get
 
   override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
   override def stepOver(): Unit = {
@@ -65,7 +65,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
 
-  override def canResume: Boolean = suspended && !target.isPerformingHotCodeReplace
+  override def canResume: Boolean = suspended && !target.isPerformingHotCodeReplace.get
   override def canSuspend: Boolean = !suspended // TODO: need real logic
   override def isSuspended: Boolean = util.Try(threadRef.isSuspended).getOrElse(false)
 
@@ -168,7 +168,7 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
     def isNativeAndIsNotObsoleteWhenObsoleteAllowed(f: ScalaStackFrame) = f.isNative && !(canDropObsoleteFrames && f.isObsolete)
 
     def notNative = !frames.take(indexOfFrame + 2).exists(isNativeAndIsNotObsoleteWhenObsoleteAllowed)
-    canPopFrames && atLeastLastButOne && (relatedToHcr || (!target.isPerformingHotCodeReplace && notNative))
+    canPopFrames && atLeastLastButOne && (relatedToHcr || (!target.isPerformingHotCodeReplace.get && notNative))
   }
 
   private[model] def canPopFrames: Boolean = isSuspended && target.canPopFrames
