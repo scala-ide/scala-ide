@@ -9,11 +9,9 @@ object SyncCall extends HasLogger {
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
   val Timeout = 500 millis
-  type TimeoutOccurred = Boolean
 
   def result[T](f: => T): Option[T] = {
     import scala.concurrent.TimeoutException
-
     Try {
       Await.result(Future { f }, Timeout)
     }.map {
@@ -25,11 +23,10 @@ object SyncCall extends HasLogger {
     }.get
   }
 
-  def ready(f: => Unit): TimeoutOccurred = {
+  def timeout[T](f: => Future[T]): Boolean = {
     import scala.concurrent.TimeoutException
-
     Try {
-      Await.ready(Future { f }, Timeout)
+      Await.ready(f, Timeout)
     }.map { _ =>
       false
     }.recover {

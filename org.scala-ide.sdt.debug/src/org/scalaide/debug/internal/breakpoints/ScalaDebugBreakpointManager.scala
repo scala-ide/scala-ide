@@ -105,13 +105,11 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
 private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext) {
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
-  import BreakpointSupportSubordinate.Changed
-  import BreakpointSupportSubordinate.ReenableBreakpointAfterHcr
-
   import scala.collection._
-  import scala.collection.JavaConverters._
-  private val breakpoints: concurrent.Map[IBreakpoint, BreakpointSupportSubordinate] =
+  private val breakpoints: concurrent.Map[IBreakpoint, BreakpointSupportSubordinate] = {
+    import scala.collection.JavaConverters._
     new ConcurrentHashMap[IBreakpoint, BreakpointSupportSubordinate].asScala
+  }
 
   def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Future[Unit] = Future {
     breakpoints.get(breakpoint).map { breakpointSupport =>

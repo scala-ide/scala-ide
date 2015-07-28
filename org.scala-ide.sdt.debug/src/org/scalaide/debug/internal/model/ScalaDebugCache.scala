@@ -14,6 +14,8 @@ import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.event.ClassPrepareEvent
 import java.util.concurrent.ConcurrentHashMap
+import scala.concurrent.Future
+import scala.concurrent.Await
 
 import ScalaDebugCache.HiddenTypes
 import ScalaDebugCache.extractOuterTypeName
@@ -55,6 +57,7 @@ object ScalaDebugCache {
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
   import ScalaDebugCache._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   @volatile
   private[debug] var running = false
@@ -81,7 +84,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Adds the given actor as a listener for class prepare events in the debugged VM,
-   *  for types which are nested under the same outer type as the type withe the given name.
+   *  for types which are nested under the same outer type as the type with the given name.
    *  The event is sent as a ClassPrepareEvent to the actor.
    *
    *  This method is synchronous. Once this method returns, all subsequent ClassPrepareEvents
@@ -89,12 +92,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *
    *  Does nothing if the actor has already been added for the same outer type.
    */
-  def addClassPrepareEventListener(listener: Suppress.DeprecatedWarning.Actor, typeName: String): Unit = {
-    syncSend(actor, AddClassPrepareEventListener(listener, extractOuterTypeName(typeName)))
-  }
-
-  def addClassPrepareEventFutureListener(listener: ClassPrepareListener, typeName: String): Unit = {
-    syncSend(actor, AddClassPrepareEventFutureListener(listener, extractOuterTypeName(typeName)))
+  def addClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Unit = {
+    actor.addClassPreparedEventFutureListener(listener, extractOuterTypeName(typeName))
   }
 
   /**
@@ -106,12 +105,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *  This method is asynchronous. There might be residual ClassPrepareEvents being
    *  sent to this listener.
    */
-  def removeClassPrepareEventListener(listener: Suppress.DeprecatedWarning.Actor, typeName: String): Unit = {
-    actor ! RemoveClassPrepareEventListener(listener, extractOuterTypeName(typeName))
-  }
-
-  def removeClassPrepareEventFutureListener(listener: ClassPrepareListener, typeName: String): Unit = {
-    actor ! RemoveClassPrepareEventFutureListener(listener, extractOuterTypeName(typeName))
+  def removeClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Future[Unit] = Future {
+    actor.removeClassPreparedEventFutureListener(listener, extractOuterTypeName(typeName))
   }
 
   private var typeCache = Map[ReferenceType, TypeCache]()
@@ -257,12 +252,11 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
 private[model] case class LoadedNestedTypes(outerTypeName: String)
 private[model] case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
-private[model] case class AddClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
-private[model] case class RemoveClassPrepareEventListener(actor: Suppress.DeprecatedWarning.Actor, outerTypeName: String)
-private[model] case class AddClassPrepareEventFutureListener(listener: ClassPrepareListener, outerTypeName: String)
-private[model] case class RemoveClassPrepareEventFutureListener(listener: ClassPrepareListener, outerTypeName: String)
 
 protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget, scalaDebugTargetActor: BaseDebuggerActor) extends BaseDebuggerActor with HasLogger {
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import scala.concurrent.duration._
+  val DefaultTimeout = 500 millis
 
   private val nestedTypesCache: scala.collection.mutable.Map[String, NestedTypesCache] = {
     import scala.collection.JavaConverters._
@@ -275,18 +269,6 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
       reply(false)
     case LoadedNestedTypes(outerTypeName) =>
       reply(LoadedNestedTypesAnswer(getLoadedNestedTypes(outerTypeName)))
-    case AddClassPrepareEventListener(actor, outerTypeName) =>
-      addClassPreparedEventListener(actor, outerTypeName)
-      reply(true)
-    case RemoveClassPrepareEventListener(actor, outerTypeName) =>
-      removeClassPreparedEventListener(actor, outerTypeName)
-      reply(true)
-    case AddClassPrepareEventFutureListener(listener, outerTypeName) =>
-      addClassPreparedEventFutureListener(listener, outerTypeName)
-      reply(true)
-    case RemoveClassPrepareEventFutureListener(listener, outerTypeName) =>
-      removeClassPreparedEventFutureListener(listener, outerTypeName)
-      reply(true)
   }
 
   override protected def postStart(): Unit = {
@@ -302,14 +284,13 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
         // store the new type
         nestedTypesCache += ((topLevelTypeName, cache.copy(types = cache.types + refType)))
         // dispatch to listeners
-        cache.listeners.foreach { a =>
-          if (syncSend(a, event).isEmpty)
-            logger.info("TIMOUT waiting for the listener actor in `classLoaded`")
-        }
-        cache.futureListeners.foreach { listener =>
-          if (listener.notify(event))
-            logger.info("TIMOUT waiting for the future listener in `classLoaded`")
-        }
+        if (SyncCall.timeout {
+          Future.sequence {
+            cache.listeners.map {
+              _.notify(event)
+            }
+          }
+        }) logger.info("TIMOUT waiting for the listener actor in `classLoaded`")
       case None =>
         logger.warn("Received ClassPrepareEvent for not expected type: %s".format(refType.name()))
     }
@@ -343,12 +324,12 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     import scala.collection.JavaConverters._
     val types = debugTarget.virtualMachine.allClasses().asScala.filter(nestedTypeFilter).toSet
 
-    val cache = new NestedTypesCache(types, Set(), Set())
+    val cache = new NestedTypesCache(types, Set())
     nestedTypesCache += ((outerTypeName, cache))
     cache
   }
 
-  private def addClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
+  private[model] def addClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
     val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache
@@ -358,25 +339,9 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     nestedTypesCache += ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
   }
 
-  private def removeClassPreparedEventListener(listener: Suppress.DeprecatedWarning.Actor, outerTypeName: String): Unit = {
+  private[model] def removeClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
     nestedTypesCache.get(outerTypeName) foreach { cache =>
       nestedTypesCache += ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
-    }
-  }
-
-  private def addClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
-    val cache = nestedTypesCache.get(outerTypeName) match {
-      case Some(cache) =>
-        cache
-      case None =>
-        initializedRequestsAndCache(outerTypeName)
-    }
-    nestedTypesCache += ((outerTypeName, cache.copy(futureListeners = cache.futureListeners + listener)))
-  }
-
-  private def removeClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
-    nestedTypesCache.get(outerTypeName) foreach { cache =>
-      nestedTypesCache += ((outerTypeName, cache.copy(futureListeners = cache.futureListeners - listener)))
     }
   }
 
@@ -388,7 +353,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
 
 }
 
-case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[Suppress.DeprecatedWarning.Actor], futureListeners: Set[ClassPrepareListener])
+case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[ClassPrepareListener])
 
 case class TypeCache(anonMethod: Option[Option[Method]] = None, methods: Map[Method, MethodFlags])
 case class MethodFlags(isTransparent: Boolean, isOpaque: Boolean)
