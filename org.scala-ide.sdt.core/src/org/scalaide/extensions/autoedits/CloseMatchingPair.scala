@@ -2,6 +2,7 @@ package org.scalaide.extensions
 package autoedits
 
 import org.eclipse.jface.text.IRegion
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.eclipse.RegionUtils._
 
 /** Functionality for all auto edits that should handle matching pairs. */
@@ -12,6 +13,7 @@ trait CloseMatchingPair extends AutoEdit {
 
   def opening: Char
   def closing: Char
+  def surroundSelectionSetting: AutoEditSetting
 
   def singleLinkedPos(pos: Int): Seq[Seq[(Int, Int)]] =
     Seq(Seq((pos, 0)))
@@ -25,7 +27,7 @@ trait CloseMatchingPair extends AutoEdit {
    */
   def autoClosingRequired(offset: Int): Boolean = {
 
-    /**
+    /*
      * Searches for all pairing elements leftwards, starting at `startPosition`
      * (inclusive) and ending at `endPosition` (inclusive). If a matching pair
      * is found, the elements of this pair are not returned. The only elements
@@ -51,7 +53,7 @@ trait CloseMatchingPair extends AutoEdit {
       loop(startPosition, Nil).reverse
     }
 
-    /**
+    /*
      * In contrast to [[searchPairElemsLeftwards]] this searches for elements
      * rightwards, starting at `startPosition` (inclusive) and ending at
      * `endPosition` (exclusive). If a matching pair is found, the elements of
@@ -80,8 +82,12 @@ trait CloseMatchingPair extends AutoEdit {
 
     val lineInfo = document.lineInformationOfOffset(offset)
     val lineAfterCaret = document.textRange(offset, lineInfo.end)
+    val forwardToSurroundSelectionAutoEdit = IScalaPlugin().getPreferenceStore.getBoolean(surroundSelectionSetting.id) && textSelection.length > 0
 
-    if (lineAfterCaret.isEmpty) true
+    if (forwardToSurroundSelectionAutoEdit)
+      false
+    else if (lineAfterCaret.isEmpty)
+      true
     else {
       val elemsLeft = searchPairElemsLeftwards(offset-1, lineInfo.start)
       val elemsRight = searchPairElemsRightwards(offset, lineInfo.end)

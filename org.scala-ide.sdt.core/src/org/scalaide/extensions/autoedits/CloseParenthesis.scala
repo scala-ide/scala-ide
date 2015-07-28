@@ -16,6 +16,7 @@ trait CloseParenthesis extends CloseMatchingPair {
 
   override def opening = '('
   override def closing = ')'
+  override def surroundSelectionSetting = SurroundSelectionWithParenthesesSetting
 
   override def setting = CloseParenthesisSetting
 

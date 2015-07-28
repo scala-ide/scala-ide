@@ -19,6 +19,7 @@ trait CloseCurlyBrace extends CloseMatchingPair {
 
   override def opening = '{'
   override def closing = '}'
+  override def surroundSelectionSetting = SurroundSelectionWithBracesSetting
 
   override def setting = CloseCurlyBraceSetting
 

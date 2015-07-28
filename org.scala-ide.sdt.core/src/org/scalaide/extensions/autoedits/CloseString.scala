@@ -3,8 +3,10 @@ package autoedits
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.IDocument
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.core.text.TextChange
+import org.scalaide.util.eclipse.RegionUtils._
 
 object CloseStringSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[CloseString],
@@ -44,9 +46,14 @@ trait CloseString extends AutoEdit {
   def isNested(offset: Int) =
     document.textRangeOpt(offset-1, offset+1) exists (Set("{}", "[]", "()", "<>", "\"\"")(_))
 
-  def autoClosingRequired(offset: Int): Boolean =
-    if (offset < document.length)
+  def autoClosingRequired(offset: Int): Boolean = {
+    val forwardToSurroundSelectionAutoEdit = IScalaPlugin().getPreferenceStore.getBoolean(SurroundSelectionWithStringSetting.id) && textSelection.length > 0
+
+    if (forwardToSurroundSelectionAutoEdit)
+      false
+    else if (offset < document.length)
       !ch(-1, '"') && (Character.isWhitespace(document(offset)) || isNested(offset))
     else
       !ch(-1, '"')
+  }
 }

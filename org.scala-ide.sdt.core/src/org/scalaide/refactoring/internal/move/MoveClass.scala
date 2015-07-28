@@ -2,7 +2,6 @@ package org.scalaide.refactoring.internal
 package move
 
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.ConsoleTracing
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations
@@ -53,7 +52,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
     }
 
     val refactoring = withCompiler { compiler =>
-      new implementations.MoveClass with GlobalIndexes with ConsoleTracing {
+      new implementations.MoveClass with GlobalIndexes {
         val global = compiler
 
         /* The initial index is empty, it will be filled during the initialization

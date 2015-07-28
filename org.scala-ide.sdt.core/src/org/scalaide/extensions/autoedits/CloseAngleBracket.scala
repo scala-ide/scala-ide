@@ -16,6 +16,7 @@ trait CloseAngleBracket extends CloseMatchingPair {
 
   override def opening = '<'
   override def closing = '>'
+  override def surroundSelectionSetting = SurroundSelectionWithAngleBracketsSetting
 
   override def setting = CloseBracketSetting
 

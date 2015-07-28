@@ -114,4 +114,12 @@ case class AutoEditSetting(
   name: String,
   description: String,
   partitions: Set[String] = Set()
-) extends ExtensionSetting
+) extends ExtensionSetting {
+
+  /**
+   * An unique ID that identifies the configuration value of this auto edit. The
+   * configuration is a set of key-value pairs that can be specified by users to
+   * configure further behavior of the auto edit.
+   */
+  def configId: String = s"$id.config"
+}
