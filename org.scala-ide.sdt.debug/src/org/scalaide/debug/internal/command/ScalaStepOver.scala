@@ -84,23 +84,21 @@ private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, t
     }
   }
 
-  override def handle(event: Event): Future[Boolean] = Future {
-    event match {
-      // JDI event triggered when a step has been performed
-      case stepEvent: StepEvent =>
-        if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
-          disable()
-          thread.suspendedFromScala(DebugEvent.STEP_OVER)
-          true
-        } else {
-          false
-        }
-      // JDI event triggered when a breakpoint is hit
-      case breakpointEvent: BreakpointEvent =>
+  override protected def innerHandle = {
+    // JDI event triggered when a step has been performed
+    case stepEvent: StepEvent =>
+      if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
         disable()
         thread.suspendedFromScala(DebugEvent.STEP_OVER)
         true
-    }
+      } else {
+        false
+      }
+    // JDI event triggered when a breakpoint is hit
+    case breakpointEvent: BreakpointEvent =>
+      disable()
+      thread.suspendedFromScala(DebugEvent.STEP_OVER)
+      true
   }
 
   override def step(): Unit = Future {

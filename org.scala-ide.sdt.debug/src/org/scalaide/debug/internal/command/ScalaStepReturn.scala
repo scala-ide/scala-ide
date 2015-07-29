@@ -31,17 +31,14 @@ private[command] class ScalaStepReturnSubordinate(debugTarget: ScalaDebugTarget,
 
   protected[command] def scalaStep: ScalaStep = this
 
-  override def handle(event: Event): Future[Boolean] = Future {
-    event match {
-      // JDI event triggered when a step has been performed
-      case stepEvent: StepEvent =>
-        if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
-          disable()
-          thread.suspendedFromScala(DebugEvent.STEP_RETURN)
-          true
-        } else false
-      case _ => false
-    }
+  override protected def innerHandle = {
+    // JDI event triggered when a step has been performed
+    case stepEvent: StepEvent =>
+      if (!debugTarget.cache.isTransparentLocation(stepEvent.location)) {
+        disable()
+        thread.suspendedFromScala(DebugEvent.STEP_RETURN)
+        true
+      } else false
   }
 
   override def step(): Unit = Future {

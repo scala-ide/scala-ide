@@ -54,44 +54,41 @@ private[command] class ScalaStepIntoSubordinate(debugTarget: ScalaDebugTarget, t
 
   protected[command] def scalaStep: ScalaStep = this
 
-  override def handle(event: Event): Future[Boolean] = Future {
-    event match {
-      // JDI event triggered when a step has been performed
-      case stepEvent: StepEvent =>
-        stepEvent.request.asInstanceOf[StepRequest].depth match {
-          case StepRequest.STEP_INTO =>
-            if (debugTarget.cache.isOpaqueLocation(stepEvent.location)) {
-              // don't step deeper into constructor from 'hidden' entities
-              stepOutStackDepth.getAndSet(stepEvent.thread.frameCount)
-              stepIntoRequest.disable()
-              stepOutRequest.enable()
-              false
-            } else {
-              if (!debugTarget.cache.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
-                disable()
-                thread.suspendedFromScala(DebugEvent.STEP_INTO)
-                true
-              } else false
-            }
-
-          case StepRequest.STEP_OUT =>
-            if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
-              // we are back on the method, but on a different line, stopping the stepping
+  override protected def innerHandle = {
+    // JDI event triggered when a step has been performed
+    case stepEvent: StepEvent =>
+      stepEvent.request.asInstanceOf[StepRequest].depth match {
+        case StepRequest.STEP_INTO =>
+          if (debugTarget.cache.isOpaqueLocation(stepEvent.location)) {
+            // don't step deeper into constructor from 'hidden' entities
+            stepOutStackDepth.getAndSet(stepEvent.thread.frameCount)
+            stepIntoRequest.disable()
+            stepOutRequest.enable()
+            false
+          } else {
+            if (!debugTarget.cache.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
               disable()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true
-            } else {
-              // switch back to step into only if the step return has been effectively done.
-              if (stepEvent.thread.frameCount < stepOutStackDepth.get) {
-                // launch a new step into
-                stepOutRequest.disable()
-                stepIntoRequest.enable()
-              }
-              false
+            } else false
+          }
+
+        case StepRequest.STEP_OUT =>
+          if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
+            // we are back on the method, but on a different line, stopping the stepping
+            disable()
+            thread.suspendedFromScala(DebugEvent.STEP_INTO)
+            true
+          } else {
+            // switch back to step into only if the step return has been effectively done.
+            if (stepEvent.thread.frameCount < stepOutStackDepth.get) {
+              // launch a new step into
+              stepOutRequest.disable()
+              stepIntoRequest.enable()
             }
-        }
-      case _ => false
-    }
+            false
+          }
+      }
   }
 
   override def step(): Unit = Future {

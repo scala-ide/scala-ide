@@ -182,6 +182,7 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
    * Resume or not the stopped threads depending on actor's answers
    */
   private def processEventSet(eventSet: EventSet): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     import scala.collection.JavaConverters._
 
     var futures = List[Future[Any]]()
