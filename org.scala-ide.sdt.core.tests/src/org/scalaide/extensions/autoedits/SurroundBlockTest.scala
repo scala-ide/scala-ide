@@ -226,4 +226,32 @@ class SurroundBlockTest extends AutoEditTests {
       }
     }
     """ after curlyBrace
+
+  @Test
+  def add_no_brace_before_empty_line_with_comments() = """
+    test("") ^
+
+    // This tests whether file input stream remembers what files were seen before
+    // the master failure and uses them again to process a large window operation.
+    test("recovery with file input stream") {
+    """ becomes """
+    test("") {^
+
+    // This tests whether file input stream remembers what files were seen before
+    // the master failure and uses them again to process a large window operation.
+    test("recovery with file input stream") {
+    """ after curlyBrace
+
+  @Test
+  def add_brace_inline_else() = """
+    if (x > 0) ^
+      true
+    else
+      false
+    """ becomes """
+    if (x > 0) {^
+      true
+    } else
+      false
+    """ after curlyBrace
 }

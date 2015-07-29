@@ -48,10 +48,15 @@ trait SurroundBlock extends AutoEdit {
     check(textChange) {
       case Add(start, "{") =>
         surroundLocation(start) map {
-          case (pos, indentLen) =>
+          case (pos, indentLen, token) =>
             val sep = System.getProperty("line.separator")
-            Replace(start, pos, "{" + document.textRange(start, pos) + " "*indentLen + "}" + sep)
-              .withCursorPos(start+1)
+            val indent = " " * indentLen
+
+            val change = if (token.tokenType == Tokens.ELSE)
+              Replace(start, pos + indentLen, s"{${document.textRange(start, pos)}$indent} ")
+            else
+              Replace(start, pos, s"{${document.textRange(start, pos)}$indent}$sep")
+            change.withCursorPos(start+1)
         }
     }
   }
@@ -63,7 +68,7 @@ trait SurroundBlock extends AutoEdit {
    *
    * In case no insertion position could be found, `None` is returned.
    */
-  private def surroundLocation(offset: Int): Option[(Int, Int)] = {
+  private def surroundLocation(offset: Int): Option[(Int, Int, Token)] = {
     def indentLenOfLine(line: IRegion) = {
       val text = document.textRange(line.start, line.end)
       text.takeWhile(Character.isWhitespace).length()
@@ -72,13 +77,18 @@ trait SurroundBlock extends AutoEdit {
     val firstIndent = indentLenOfLine(firstLine)
     val lexer = ScalaLexer.createRawLexer(document.textRange(offset, document.length-1), forgiveErrors = true)
 
-    def loop(): Option[Int] =
+    def loop(): Option[(Int, Token)] =
       if (!lexer.hasNext)
         None
       else {
+        import Tokens._
         val t = lexer.next()
 
-        if (t.tokenType == Tokens.RBRACE || (Tokens.KEYWORDS contains t.tokenType) || t.tokenType == Tokens.VARID) {
+        if (t.tokenType == RBRACE
+             || t.tokenType == VARID
+             || t.tokenType == LINE_COMMENT
+             || t.tokenType == COMMENTS
+             || (Tokens.KEYWORDS contains t.tokenType)) {
           val line = document.lineInformationOfOffset(t.offset+offset)
           val indent = indentLenOfLine(line)
 
@@ -92,10 +102,8 @@ trait SurroundBlock extends AutoEdit {
 
             if (prevLine.start == firstLine.start)
               None
-            else if (t.tokenType == Tokens.VARID)
-              Some(prevLine.end+1)
             else
-              Some(line.start)
+              Some((prevLine.end+1, t))
           }
           else
             loop()
@@ -105,7 +113,7 @@ trait SurroundBlock extends AutoEdit {
       }
 
     if (offset == firstLine.trimRight(document).end+1)
-      loop() map (_ → firstIndent)
+      loop() map { case (line, token) => (line, firstIndent, token) }
     else
       None
   }
