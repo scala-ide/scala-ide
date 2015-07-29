@@ -50,7 +50,7 @@ object ScalaDebugTarget extends HasLogger {
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
       override val hcrManager: Option[ScalaHotCodeReplaceManager] = ScalaHotCodeReplaceManager.create(companionActor)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, companionActor)
-      override val cache: ScalaDebugCache = ScalaDebugCache(this, companionActor)
+      override val cache: ScalaDebugCache = ScalaDebugCache(this)
     }
 
     launch.addDebugTarget(debugTarget)
