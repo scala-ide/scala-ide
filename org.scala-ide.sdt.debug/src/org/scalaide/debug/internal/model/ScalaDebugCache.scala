@@ -264,12 +264,10 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     new ConcurrentHashMap[String, NestedTypesCache].asScala
   }
 
-  override def handle(event: Event): Future[Boolean] = Future {
-    event match {
-      case e: ClassPrepareEvent =>
-        classLoaded(e)
-        false
-    }
+  override protected def innerHandle = {
+    case e: ClassPrepareEvent =>
+      classLoaded(e)
+      false
   }
 
   private def classLoaded(event: ClassPrepareEvent): Unit = {

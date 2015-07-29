@@ -132,28 +132,25 @@ class BreakpointSupportSubordinate private (
     requestsEnabled.getAndSet(enabled)
   }
 
-  private def handleJdiEventCommands(event: Event, cmds: Set[JdiEventCommand]) = {
-    event match {
-      case event: BreakpointEvent if cmds(SuspendExecution) ⇒
-        // JDI event triggered when a breakpoint is hit
-        breakpointHit(event.location, event.thread)
-        true
-      case _ ⇒
-        false
-    }
+  private def handleJdiEventCommands(cmds: Set[JdiEventCommand]): PartialFunction[Event, StaySuspended] = {
+    case event: BreakpointEvent if cmds(SuspendExecution) ⇒
+      // JDI event triggered when a breakpoint is hit
+      breakpointHit(event.location, event.thread)
+      true
   }
 
   private def defaultCommands(event: Event): JdiEventCommand = event match {
     case _: BreakpointEvent ⇒ SuspendExecution
   }
 
-  override def handle(event: Event): Future[Boolean] = Future {
-    val context = BreakpointContext(breakpoint, debugTarget)
-    val cmds = {
-      val cmds = handleEvent(event, context)
-      if (cmds.nonEmpty) cmds else Set(defaultCommands(event))
-    }
-    handleJdiEventCommands(event, cmds)
+  override protected def innerHandle = {
+    case event =>
+      val context = BreakpointContext(breakpoint, debugTarget)
+      val cmds = {
+        val cmds = handleEvent(event, context)
+        if (cmds.nonEmpty) cmds else Set(defaultCommands(event))
+      }
+      handleJdiEventCommands(cmds)(event)
   }
 
   def breakpointRequestState(): Boolean =

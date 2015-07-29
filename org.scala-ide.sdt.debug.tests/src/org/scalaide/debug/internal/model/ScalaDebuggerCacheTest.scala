@@ -24,6 +24,7 @@ import com.sun.jdi.request.EventRequestManager
 import org.scalaide.core.testsetup.SDTTestUtils
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 class ScalaDebugCacheTest {
 
@@ -64,7 +65,7 @@ class ScalaDebugCacheTest {
     assertEquals("Wrong set of loaded nested types", Seq(BaseName, BaseName + "$", BaseName + "$a"), toSortedListOfTypeName(actual))
 
     // 'receive' a ClassPrepareEvent from the VM
-    val classPrepareEventFromVm = debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))
+    val classPrepareEventFromVm = debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))(ExecutionContext.global)
     while (!classPrepareEventFromVm.isCompleted) {}
 
     val actual2 = debugCache.getLoadedNestedTypes(BaseName)
