@@ -252,9 +252,6 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
 }
 
-private[model] case class LoadedNestedTypes(outerTypeName: String)
-private[model] case class LoadedNestedTypesAnswer(types: Set[ReferenceType])
-
 protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget)
     extends JdiEventReceiver with HasLogger {
   import scala.concurrent.ExecutionContext.Implicits.global
