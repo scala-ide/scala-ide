@@ -96,14 +96,19 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     super.forceReconcile()
   }
 
+  /**
+   * We cut short this call since reconciliation is performed through the usual mechanism in the
+   * editor. Calls arriving here come from the JDT, for instance from the breadcrumb view, and end
+   * up doing expensive computation on the UI thread.
+   *
+   * @see #1002412
+   */
   override def reconcile(
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    /* This explicit call to super matters, presumably exercised
-      through AspectJ. See #1002016. */
-    super.reconcile(ICompilationUnit.NO_AST, reconcileFlags, workingCopyOwner, monitor)
+    null
   }
 
   override def makeConsistent(
@@ -115,8 +120,11 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
 
     // don't rerun this expensive operation unless necessary
     if (!isConsistent()) {
-      val info = createElementInfo.asInstanceOf[OpenableElementInfo]
-      openWhenClosed(info, true, monitor)
+      if (astLevel != ICompilationUnit.NO_AST && resolveBindings) {
+        val info = createElementInfo.asInstanceOf[OpenableElementInfo]
+        openWhenClosed(info, true, monitor)
+      } else
+        logger.info(s"Skipped `makeConsistent` with resolveBindings: $resolveBindings and astLevel: $astLevel")
     }
     null
   }
