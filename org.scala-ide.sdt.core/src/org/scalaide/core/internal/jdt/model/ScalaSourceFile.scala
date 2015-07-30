@@ -96,13 +96,18 @@ class ScalaSourceFile(fragment : PackageFragment, elementName: String, workingCo
     super.forceReconcile()
   }
 
+  /**
+   * We cut short this call since reconciliation is performed through the usual mechanism in the
+   * editor. Calls arriving here come from the JDT, for instance from the breadcrumb view, and end
+   * up doing expensive computation on the UI thread.
+   *
+   * @see #1002412
+   */
   override def reconcile(
       astLevel : Int,
       reconcileFlags : Int,
       workingCopyOwner : WorkingCopyOwner,
       monitor : IProgressMonitor) : org.eclipse.jdt.core.dom.CompilationUnit = {
-    /* This explicit call to super matters, presumably exercised
-      through AspectJ. See #1002016. */
     null
   }
 
