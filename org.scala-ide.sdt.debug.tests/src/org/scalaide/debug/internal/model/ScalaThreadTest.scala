@@ -50,8 +50,8 @@ class ScalaThreadTest {
 
   private def anonDebugTarget: ScalaDebugTarget = {
     val debugTarget = mock(classOf[ScalaDebugTarget])
-    val debugTargetActor = mock(classOf[BaseDebuggerActor])
-    when(debugTarget.companionActor).thenReturn(debugTargetActor)
+    val debugTargetSubordinate = mock(classOf[ScalaDebugTargetSubordinate])
+    when(debugTarget.subordinate).thenReturn(debugTargetSubordinate)
     debugTarget
   }
 

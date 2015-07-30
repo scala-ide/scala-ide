@@ -29,10 +29,15 @@ import org.scalaide.debug.internal.JdiEventReceiver
 import java.util.concurrent.ConcurrentHashMap
 import scala.concurrent.Await
 import java.util.concurrent.atomic.AtomicBoolean
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
+import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
 
 object ScalaJdiEventDispatcher {
-  def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
-    val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+  def apply(virtualMachine: VirtualMachine, scalaDebugTarget: JdiDebugTargetEventReceiver): ScalaJdiEventDispatcher = {
+    val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTarget)
     new ScalaJdiEventDispatcher(virtualMachine, companionActor)
   }
 }
@@ -120,9 +125,8 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
     companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
   }
 
-  override def register(eventReceiver: JdiEventReceiver, request: EventRequest): Unit = {
+  override def register(eventReceiver: JdiEventReceiver, request: EventRequest): Unit =
     companionActor.asInstanceOf[ScalaJdiEventDispatcherActor].register(eventReceiver, request)
-  }
 
   /**
    * Remove the call back target for the given request
@@ -131,17 +135,16 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
     companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
   }
 
-  override def unregister(request: EventRequest): Unit = {
+  override def unregister(request: EventRequest): Unit =
     companionActor.asInstanceOf[ScalaJdiEventDispatcherActor].unregister(request)
-  }
 }
 
 private[model] object ScalaJdiEventDispatcherActor {
   case class SetActorFor(actor: Suppress.DeprecatedWarning.Actor, request: EventRequest)
   case class UnsetActorFor(request: EventRequest)
 
-  def apply(scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor): ScalaJdiEventDispatcherActor = {
-    val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
+  def apply(scalaDebugTarget: JdiDebugTargetEventReceiver): ScalaJdiEventDispatcherActor = {
+    val actor = new ScalaJdiEventDispatcherActor(scalaDebugTarget)
     actor.start()
     actor
   }
@@ -152,7 +155,8 @@ private[model] object ScalaJdiEventDispatcherActor {
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor) extends BaseDebuggerActor {
+private class ScalaJdiEventDispatcherActor private (scalaDebugTarget: JdiDebugTargetEventReceiver) extends BaseDebuggerActor {
+  import scala.concurrent.ExecutionContext.Implicits.global
   import ScalaJdiEventDispatcherActor._
 
   /** event request to actor map */
@@ -163,12 +167,10 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
   }
 
   private[model] def register(receiver: JdiEventReceiver, request: EventRequest): Unit =
-    eventReceiversMap += (request -> receiver)
+    Future(eventReceiversMap += (request -> receiver))
 
   private[model] def unregister(request: EventRequest): Unit =
-    eventReceiversMap -= request
-
-  override protected def postStart(): Unit = link(scalaDebugTargetActor)
+    Future(eventReceiversMap -= request)
 
   override protected def behavior = {
     case SetActorFor(actor, request) => eventActorMap += (request -> actor)
@@ -182,7 +184,6 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
    * Resume or not the stopped threads depending on actor's answers
    */
   private def processEventSet(eventSet: EventSet): Unit = {
-    import scala.concurrent.ExecutionContext.Implicits.global
     import scala.collection.JavaConverters._
 
     var futures = List[Future[Any]]()
@@ -194,12 +195,8 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
      * see eclipse bug #383625 */
     // forward each event to the interested actor
     eventSet.eventIterator.asScala.foreach {
-      case event: VMStartEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
-      case event: VMDisconnectEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
-      case event: VMDeathEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
+      case event @ (_: VMStartEvent | _: VMDisconnectEvent | _: VMDeathEvent) =>
+        newFutures ::= scalaDebugTarget.handle(event)
       case event =>
         /* TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
          *  @see EventRequest.setProperty(k, v) and EventRequest.getProperty */
@@ -242,5 +239,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppr
     }
     // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above
     //          `loopWhile` never returns normally (i.e., it always throws an exception!).
+  }
+
+  override protected def preExit(): Unit = {
+    scalaDebugTarget.dispose()
   }
 }

@@ -25,6 +25,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.Utils.jdiSynchronized
 import scala.actors.Future
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.concurrent.ExecutionContext
 
 class ThreadNotSuspendedException extends Exception
 
@@ -327,8 +328,6 @@ private[model] class ScalaThreadActor private (thread: ScalaThread) extends Base
   // step management
   private var currentStep: Option[ScalaStep] = None
 
-  override protected def postStart(): Unit = link(thread.getDebugTarget.companionActor)
-
   override protected def behavior = {
     case SuspendedFromScala(eventDetail) =>
       currentStep.foreach(_.stop())
@@ -390,9 +389,16 @@ private[model] class ScalaThreadActor private (thread: ScalaThread) extends Base
       poison()
   }
 
+  override protected def postStart(): Unit = {
+    // before shutting down the actor we need to unlink it from the `debugTarget` actor to prevent that normal termination of
+    // a `ScalaThread` leads to shutting down the whole debug session.
+    link(thread.getDebugTarget().eventDispatcher.companionActor)
+  }
+
   override protected def preExit(): Unit = {
     // before shutting down the actor we need to unlink it from the `debugTarget` actor to prevent that normal termination of
     // a `ScalaThread` leads to shutting down the whole debug session.
-    unlink(thread.getDebugTarget.companionActor)
+    unlink(thread.getDebugTarget().eventDispatcher.companionActor)
+    thread.getDebugTarget().subordinate.dispose()(ExecutionContext.global)
   }
 }

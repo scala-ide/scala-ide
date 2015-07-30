@@ -200,7 +200,7 @@ class HotCodeReplaceTest
     val hcrFinishedTimeoutMillis = 20000
 
     val hcrEventsSubscriber = new TestHcrSuccessListener
-    val hcrEventsPublisher = session.debugTarget.companionActor.asInstanceOf[Publisher[HCRResult]]
+    val hcrEventsPublisher = session.debugTarget.subordinate.asInstanceOf[Publisher[HCRResult]]
     hcrEventsPublisher.subscribe(hcrEventsSubscriber)
 
     val thread = session.currentStackFrame.thread

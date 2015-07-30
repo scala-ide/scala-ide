@@ -21,3 +21,7 @@ trait JdiEventReceiver {
 
   protected def innerHandle: PartialFunction[Event, StaySuspended]
 }
+
+trait JdiDebugTargetEventReceiver extends JdiEventReceiver {
+  def dispose()(implicit ec: ExecutionContext): Future[Unit]
+}

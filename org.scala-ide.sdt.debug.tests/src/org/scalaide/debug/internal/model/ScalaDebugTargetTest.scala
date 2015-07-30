@@ -19,24 +19,17 @@ import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
 import com.sun.jdi.event.VMDeathEvent
 import org.junit.After
+import org.junit.Assert
 
 class ScalaDebugTargetTest {
-
-  /**
-   * The actor associated to the debug target currently being tested.
-   */
-  var actor: Option[BaseDebuggerActor] = None
+  import org.scalaide.debug.internal.TestFutureUtil._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   @Before
   def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
-  }
-
-  @After
-  def actorCleanup(): Unit = {
-    actor.foreach(_ ! PoisonPill)
   }
 
   @Test
@@ -49,18 +42,18 @@ class ScalaDebugTargetTest {
     when(event.thread).thenReturn(thread)
     when(thread.name).thenReturn(ThreadName)
 
-    debugTarget.companionActor !? event
-
-    val threads1 = debugTarget.getThreads
-    assertEquals("Wrong number of threads", 1, threads1.length)
-    assertEquals("Wrong thread name", ThreadName, threads1(0).getName)
+    whenReady(debugTarget.subordinate.handle(event)) { _ =>
+      val threads1 = debugTarget.getThreads
+      assertEquals("Wrong number of threads", 1, threads1.length)
+      assertEquals("Wrong thread name", ThreadName, threads1(0).getName)
+    }
 
     // a second start event should not result in a duplicate entry
-    debugTarget.companionActor !? event
-
-    val threads2 = debugTarget.getThreads
-    assertEquals("Wrong number of threads", 1, threads2.length)
-    assertEquals("Wrong thread name", ThreadName, threads2(0).getName)
+    whenReady(debugTarget.subordinate.handle(event)) { _ =>
+      val threads2 = debugTarget.getThreads
+      assertEquals("Wrong number of threads", 1, threads2.length)
+      assertEquals("Wrong thread name", ThreadName, threads2(0).getName)
+    }
   }
 
   /**
@@ -70,11 +63,11 @@ class ScalaDebugTargetTest {
   @Test(timeout = 2000)
   def getThreadsFreeze(): Unit = {
 
-    val debugTarget= createDebugTarget
+    val debugTarget = createDebugTarget
 
-    debugTarget.companionActor ! mock(classOf[VMDeathEvent])
-    debugTarget.getThreads
-
+    whenReady(debugTarget.subordinate.handle(mock(classOf[VMDeathEvent]))) { _ =>
+      debugTarget.getThreads
+    }
   }
 
   /**
@@ -90,8 +83,7 @@ class ScalaDebugTargetTest {
     when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
-    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, allowDisconnect= false, allowTerminate= true)
-    actor = Some(debugTarget.companionActor)
+    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, allowDisconnect = false, allowTerminate = true)
     debugTarget
   }
 
