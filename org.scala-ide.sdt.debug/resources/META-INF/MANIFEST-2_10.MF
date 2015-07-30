@@ -76,6 +76,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false
 Export-Package: 
+ org.apache.commons.collections4.map,
  org.scalaide.debug,
  org.scalaide.debug.internal,
  org.scalaide.debug.internal.breakpoints,
