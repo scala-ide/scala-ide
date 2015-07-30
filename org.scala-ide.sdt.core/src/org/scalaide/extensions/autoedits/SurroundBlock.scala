@@ -87,8 +87,7 @@ trait SurroundBlock extends AutoEdit {
 
         if (t.tokenType == RBRACE
              || t.tokenType == VARID
-             || t.tokenType == LINE_COMMENT
-             || t.tokenType == COMMENTS
+             || COMMENTS.contains(t.tokenType)
              || (Tokens.KEYWORDS contains t.tokenType)) {
           val line = document.lineInformationOfOffset(t.offset+offset)
           val indent = indentLenOfLine(line)
