@@ -254,4 +254,34 @@ class SurroundBlockTest extends AutoEditTests {
     } else
       false
     """ after curlyBrace
+
+  @Test
+  def add_brace_inline_catch() = """
+    try ^
+      throw null
+    catch {
+      case _ => ()
+    }
+    """ becomes """
+    try {^
+      throw null
+    } catch {
+      case _ => ()
+    }
+    """ after curlyBrace
+
+  @Test
+  def add_brace_inline_finally() = """
+    try ^
+      throw null
+    finally {
+      ()
+    }
+    """ becomes """
+    try {^
+      throw null
+    } finally {
+      ()
+    }
+    """ after curlyBrace
 }

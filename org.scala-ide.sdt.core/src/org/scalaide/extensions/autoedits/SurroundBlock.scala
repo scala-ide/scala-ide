@@ -45,6 +45,7 @@ trait SurroundBlock extends AutoEdit {
   override def setting = SurroundBlockSetting
 
   override def perform() = {
+    val elseLikeTokens = Set(Tokens.ELSE, Tokens.CATCH, Tokens.FINALLY)
     check(textChange) {
       case Add(start, "{") =>
         surroundLocation(start) map {
@@ -52,7 +53,7 @@ trait SurroundBlock extends AutoEdit {
             val sep = System.getProperty("line.separator")
             val indent = " " * indentLen
 
-            val change = if (token.tokenType == Tokens.ELSE)
+            val change = if (elseLikeTokens(token.tokenType))
               Replace(start, pos + indentLen, s"{${document.textRange(start, pos)}$indent} ")
             else
               Replace(start, pos, s"{${document.textRange(start, pos)}$indent}$sep")
@@ -62,9 +63,9 @@ trait SurroundBlock extends AutoEdit {
   }
 
   /**
-   * Returns the position where the closing curly brace should be inserted and
-   * the indentation of the line where the opening curly brace is inserted into
-   * the document.
+   * Returns a triple with the position where the closing curly brace should be inserted,
+   * the indentation of the line where the opening curly brace is inserted into the document
+   * and the first token after the insertion point.
    *
    * In case no insertion position could be found, `None` is returned.
    */
