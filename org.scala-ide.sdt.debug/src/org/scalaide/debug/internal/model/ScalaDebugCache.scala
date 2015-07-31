@@ -48,7 +48,7 @@ object ScalaDebugCache {
 
   def apply(debugTarget: ScalaDebugTarget): ScalaDebugCache = {
     val debugCache = new ScalaDebugCache(debugTarget) {
-      val subordinate = new ScalaDebugCacheActor(this, debugTarget)
+      val subordinate = new ScalaDebugCacheSubordinate(this, debugTarget)
     }
     debugCache
   }
@@ -63,9 +63,8 @@ object ScalaDebugCache {
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
   import ScalaDebugCache._
-  import scala.concurrent.ExecutionContext.Implicits.global
 
-  private[debug] val subordinate: ScalaDebugCacheActor
+  private[debug] val subordinate: ScalaDebugCacheSubordinate
 
   /**
    * Return the list of type which are nested under the same outer type as the type with the given name,
@@ -96,7 +95,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *  Does nothing if the actor has already been added for the same outer type.
    */
   def addClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Unit = {
-    subordinate.addClassPreparedEventFutureListener(listener, extractOuterTypeName(typeName))
+    subordinate.addClassPreparedEventListener(listener, extractOuterTypeName(typeName))
   }
 
   /**
@@ -108,9 +107,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
    *  This method is asynchronous. There might be residual ClassPrepareEvents being
    *  sent to this listener.
    */
-  def removeClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Future[Unit] = Future {
-    subordinate.removeClassPreparedEventFutureListener(listener, extractOuterTypeName(typeName))
-  }
+  def removeClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Unit =
+    subordinate.removeClassPreparedEventListener(listener, extractOuterTypeName(typeName))
 
   private var typeCache = Map[ReferenceType, TypeCache]()
   private val typeCacheLock = new Object()
@@ -248,11 +246,14 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   private def sameBytecode(m1: Method, m2: Method): Boolean = m1.bytecodes.sameElements(m2.bytecodes)
 
   def dispose(): Unit = {
+    subordinate.flushCache()
+    typeCacheLock synchronized {
+      typeCache = Map.empty
+    }
   }
-
 }
 
-protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget)
+protected[debug] class ScalaDebugCacheSubordinate(debugCache: ScalaDebugCache, debugTarget: ScalaDebugTarget)
     extends JdiEventReceiver with HasLogger {
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -299,8 +300,8 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
   private def initializedRequestsAndCache(outerTypeName: String): NestedTypesCache = {
     val simpleRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName, debugTarget)
     val patternRequest = JdiRequestFactory.createClassPrepareRequest(outerTypeName + "$*", debugTarget)
-    debugTarget.eventDispatcher.register(ScalaDebugCacheActor.this, simpleRequest)
-    debugTarget.eventDispatcher.register(ScalaDebugCacheActor.this, patternRequest)
+    debugTarget.eventDispatcher.register(ScalaDebugCacheSubordinate.this, simpleRequest)
+    debugTarget.eventDispatcher.register(ScalaDebugCacheSubordinate.this, patternRequest)
     simpleRequest.enable()
     patternRequest.enable()
 
@@ -320,7 +321,7 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     cache
   }
 
-  private[model] def addClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
+  private[model] def addClassPreparedEventListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
     val cache = nestedTypesCache.get(outerTypeName) match {
       case Some(cache) =>
         cache
@@ -330,11 +331,13 @@ protected[debug] class ScalaDebugCacheActor(debugCache: ScalaDebugCache, debugTa
     nestedTypesCache += ((outerTypeName, cache.copy(listeners = cache.listeners + listener)))
   }
 
-  private[model] def removeClassPreparedEventFutureListener(listener: ClassPrepareListener, outerTypeName: String): Unit = {
+  private[model] def removeClassPreparedEventListener(listener: ClassPrepareListener, outerTypeName: String): Future[Unit] = Future {
     nestedTypesCache.get(outerTypeName) foreach { cache =>
       nestedTypesCache += ((outerTypeName, cache.copy(listeners = cache.listeners - listener)))
     }
   }
+
+  private[model] def flushCache(): Future[Unit] = Future(nestedTypesCache.clear())
 }
 
 case class NestedTypesCache(types: Set[ReferenceType], listeners: Set[ClassPrepareListener])

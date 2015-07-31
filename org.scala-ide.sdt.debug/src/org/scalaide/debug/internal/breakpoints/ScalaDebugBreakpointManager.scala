@@ -46,7 +46,7 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
 
   private def ravelFutures[T](b: => Future[T])(implicit ec: ExecutionContext): Unit = {
     val p = Promise[Unit]
-    b.onComplete { t => p.success {}; t.get }
+    b.onComplete { t => p.success {}; }
     waitForAllCurrentFutures.getAndSet(waitForAllCurrentFutures.get.flatMap { _ => p.future })
   }
 
@@ -80,6 +80,7 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
 
   def dispose(): Unit = {
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
+    waitForAllCurrentFutures.getAndSet(Future.successful {})
     subordinate.exit()
   }
 
@@ -111,11 +112,10 @@ private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarg
     new ConcurrentHashMap[IBreakpoint, BreakpointSupportSubordinate].asScala
   }
 
-  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Future[Unit] = Future {
+  def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Future[Unit] =
     breakpoints.get(breakpoint).map { breakpointSupport =>
       breakpointSupport.changed(delta)
-    }
-  }
+    }.getOrElse(Future.successful {})
 
   def breakpointRemoved(breakpoint: IBreakpoint): Future[Unit] = Future {
     breakpoints.get(breakpoint).map { breakpointSupport =>
@@ -174,5 +174,8 @@ private[debug] class ScalaDebugBreakpointSubordinate(debugTarget: ScalaDebugTarg
     }
   }
 
-  def exit(): Unit = breakpoints.values.foreach(_.exit())
+  def exit(): Future[Unit] = Future {
+    breakpoints.values.foreach(_.exit())
+    breakpoints.clear()
+  }
 }
