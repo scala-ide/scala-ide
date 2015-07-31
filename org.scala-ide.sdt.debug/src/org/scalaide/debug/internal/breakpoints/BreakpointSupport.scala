@@ -159,12 +159,10 @@ class BreakpointSupportSubordinate private (
   /**
    * Remove all created requests for this breakpoint
    */
-  def exit(): Unit = Future {
+  def exit(): Unit = {
+    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
-    debugTarget.cache.removeClassPrepareEventListener(this, typeName)
-
     breakpointRequests.foreach { request =>
       eventRequestManager.deleteEventRequest(request)
       eventDispatcher.unregister(request)

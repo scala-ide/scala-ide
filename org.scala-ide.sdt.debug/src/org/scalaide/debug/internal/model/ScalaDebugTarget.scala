@@ -33,6 +33,9 @@ import com.sun.jdi.event.Event
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
+import java.util.concurrent.atomic.AtomicReference
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -51,7 +54,7 @@ object ScalaDebugTarget extends HasLogger {
       override val subordinate = ScalaDebugTargetSubordinate(threadStartRequest, threadDeathRequest, this)
       override val breakpointManager: ScalaDebugBreakpointManager = ScalaDebugBreakpointManager(this)
       override val hcrManager: Option[ScalaHotCodeReplaceManager] = ScalaHotCodeReplaceManager.create(subordinate)
-      override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, subordinate)
+      override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, this)
       override val cache: ScalaDebugCache = ScalaDebugCache(this)
     }
 
@@ -72,9 +75,6 @@ object ScalaDebugTarget extends HasLogger {
   }
 
   val versionStringPattern = "version ([^-]*).*".r
-
-  /** A message sent to the companion actor to indicate we're attached to the VM. */
-  private[internal] case class UpdateStackFramesAfterHcr(dropAffectedFrames: Boolean)
 }
 
 /**
@@ -84,7 +84,7 @@ object ScalaDebugTarget extends HasLogger {
 abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
   allowTerminate: Boolean, val classPath: Option[Seq[String]])
-    extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
+    extends ScalaDebugElement(null) with JdiDebugTargetEventReceiver with IDebugTarget with HasLogger {
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -105,9 +105,9 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
 
   override def getProcess: org.eclipse.debug.core.model.IProcess = process
 
-  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = threads.toArray
+  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = threads.get.toArray
 
-  override def hasThreads: Boolean = !threads.isEmpty
+  override def hasThreads: Boolean = !threads.get.isEmpty
 
   override def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
@@ -117,7 +117,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
 
   override def disconnect(): Unit = {
     virtualMachine.dispose()
-    subordinate.dispose()(ExecutionContext.global)
+    vmDisconnected()
   }
 
   override def isDisconnected(): Boolean = !running.get
@@ -154,16 +154,17 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     // manually clean up, as VMDeathEvent and VMDisconnectedEvent are not fired
     // when abruptly terminating the vM
     vmDisconnected()
-    subordinate.dispose()(ExecutionContext.global)
   }
 
   override def getDebugTarget: ScalaDebugTarget = this
 
+  override protected def innerHandle = subordinate.innerHandle
+
+  override def dispose()(implicit ec: ExecutionContext): Future[Unit] = Future(terminate())
   // ---
 
   private val running: AtomicBoolean = new AtomicBoolean(true)
-  @volatile
-  private var threads = List[ScalaThread]()
+  private val threads: AtomicReference[List[ScalaThread]] = new AtomicReference(Nil)
 
   private[internal] val isPerformingHotCodeReplace: AtomicBoolean = new AtomicBoolean
 
@@ -177,7 +178,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * Initialize the dependent components
    */
   private def startJdiEventDispatcher() = {
-    eventDispatcher.loop()
+    eventDispatcher.run()
   }
 
   /**
@@ -365,20 +366,22 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * Callback from the actor when the connection with the vm as been lost
    */
   private[model] def vmDisconnected(): Unit = {
-    running.getAndSet(false)
-    eventDispatcher.dispose()
-    breakpointManager.dispose()
-    hcrManager.foreach(_.dispose())
-    cache.dispose()
-    disposeThreads()
-    fireTerminateEvent()
+    if (running.getAndSet(false)) {
+      eventDispatcher.dispose()
+      breakpointManager.dispose()
+      subordinate.removeSubscriptions()
+      hcrManager.foreach(_.dispose())
+      cache.dispose()
+      disposeThreads()
+      fireTerminateEvent()
+    }
   }
 
   private def disposeThreads(): Unit = {
-    threads.foreach {
+    val previousThreads = threads.getAndSet(Nil)
+    previousThreads.foreach {
       _.dispose()
     }
-    threads = Nil
   }
 
   /**
@@ -386,8 +389,12 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def addThread(thread: ThreadReference): Unit = {
-    if (!threads.exists(_.threadRef eq thread))
-      threads = threads :+ ScalaThread(this, thread)
+    // TODO: replace with getAndUpdate when java 1.8
+    var prev, next: List[ScalaThread] = Nil
+    do {
+      prev = threads.get
+      next = if (prev.exists(_.threadRef eq thread)) prev else prev :+ ScalaThread(this, thread)
+    } while (!threads.compareAndSet(prev, next))
   }
 
   /**
@@ -395,9 +402,14 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def removeThread(thread: ThreadReference): Unit = {
-    val (removed, remainder) = threads.partition(_.threadRef eq thread)
-    threads = remainder
-    removed.foreach(_.terminatedFromScala())
+    // TODO: replace with getAndUpdate when java 1.8
+    var prev: List[ScalaThread] = Nil
+    var next: (List[ScalaThread], List[ScalaThread]) = (Nil, Nil)
+    do {
+      prev = threads.get
+      next = prev.partition(_.threadRef eq thread)
+    } while (!threads.compareAndSet(prev, next._2))
+    next._1.foreach(_.terminatedFromScala())
   }
 
   /**
@@ -405,7 +417,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def initializeThreads(t: List[ThreadReference]): Unit = {
-    threads = t.map(ScalaThread(this, _))
+    threads.getAndSet(t.map(ScalaThread(this, _)))
   }
 
   /**
@@ -417,7 +429,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   /**
    * Return the current list of threads
    */
-  private[model] def getScalaThreads: List[ScalaThread] = threads
+  private[model] def getScalaThreads: List[ScalaThread] = threads.get
 
   private[model] def canPopFrames: Boolean = running.get && virtualMachine.canPopFrames()
 
@@ -442,11 +454,11 @@ private[model] object ScalaDebugTargetSubordinate {
  * linked actors).
  */
 private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
-    extends JdiDebugTargetEventReceiver with HotCodeReplaceExecutor {
+    extends JdiEventReceiver with HotCodeReplaceExecutor {
   /** Is this actor initialized and listening to thread events? */
   private val initialized = new AtomicBoolean
 
-  override protected def innerHandle = vmEventsHandle orElse threadEventsHandle
+  override protected[model] def innerHandle = vmEventsHandle orElse threadEventsHandle
 
   private[model] def attachedToVm(): Future[Unit] = Future {
     initialize()
@@ -459,7 +471,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
 
   private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
     val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
-    nonSystemThreads.foreach(_.updateStackFramesAfterHcr(ScalaDebugTarget.UpdateStackFramesAfterHcr(dropAffectedFrames)))
+    nonSystemThreads.foreach(_.updateStackFramesAfterHcr(dropAffectedFrames))
   }
 
   private def threadEventsHandle: PartialFunction[Event, StaySuspended] = {
@@ -496,10 +508,6 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
       threadDeathRequest.enable()
       debugTarget.vmStarted()
     }
-  }
-
-  override def dispose()(implicit ec: ExecutionContext): Future[Unit] = Future {
-    exit()
   }
 
   private def exit(): Unit = {
