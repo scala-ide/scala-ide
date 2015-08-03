@@ -20,7 +20,6 @@ import org.junit.Test
 import org.mockito.Matchers.anyLong
 import org.mockito.Mockito._
 import org.scalaide.debug.internal.EclipseDebugEvent
-import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Suppress
@@ -40,6 +39,7 @@ import com.sun.jdi.event.VMStartEvent
 import scala.concurrent.Future
 import scala.concurrent.Await
 import org.junit.Ignore
+import org.junit.BeforeClass
 
 object DebugTargetTerminationTest {
   final val LatchTimeout = 5000L
@@ -49,24 +49,18 @@ object DebugTargetTerminationTest {
    * to gracefully recover from generic exceptions.
    */
   object ExceptionForTestingPurposes_ThisIsOk extends RuntimeException with scala.util.control.NoStackTrace
-}
-
-class DebugTargetTerminationTest extends HasLogger {
-  import DebugTargetTerminationTest.ExceptionForTestingPurposes_ThisIsOk
-  import DebugTargetTerminationTest.LatchTimeout
 
   var virtualMachine: VirtualMachine = _
   var eventQueue: EventQueue = _
   var debugTarget: ScalaDebugTarget = _
 
-  @Before
-  def initializeDebugPlugin(): Unit = {
-    if (DebugPlugin.getDefault == null) {
-      new DebugPlugin
-    }
+  def withCountDownLatch(counter: Int, timeout: Long = LatchTimeout)(body: CountDownLatch => Unit): Boolean = {
+    val latch = new CountDownLatch(counter)
+    body(latch)
+    latch.await(timeout, TimeUnit.SECONDS)
   }
 
-  @Before
+  @BeforeClass
   def initializeDebugTarget(): Unit = {
     virtualMachine = mock(classOf[VirtualMachineImpl])
     when(virtualMachine.allThreads).thenReturn(new ArrayList[ThreadReference]())
@@ -94,15 +88,21 @@ class DebugTargetTerminationTest extends HasLogger {
       debugEventListener.foreach(DebugPlugin.getDefault.removeDebugEventListener(_))
     }
   }
+}
+
+class DebugTargetTerminationTest extends HasLogger {
+  import DebugTargetTerminationTest._
+
+
+  @Before
+  def initializeDebugPlugin(): Unit = {
+    if (DebugPlugin.getDefault == null) {
+      new DebugPlugin
+    }
+  }
 
   implicit def handleDebugEvents(f: Array[DebugEvent] => Unit): IDebugEventSetListener = new IDebugEventSetListener {
     override def handleDebugEvents(events: Array[DebugEvent]): Unit = f(events)
-  }
-
-  private def withCountDownLatch(counter: Int, timeout: Long = LatchTimeout)(body: CountDownLatch => Unit): Boolean = {
-    val latch = new CountDownLatch(counter)
-    body(latch)
-    latch.await(timeout, TimeUnit.SECONDS)
   }
 
   private def assertDebugTargetTerminated(precondition: => Unit): Unit = {

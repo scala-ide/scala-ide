@@ -283,6 +283,7 @@ class HotCodeReplaceTest
     classLocalInt mustEqual 10
   }
 
+  @Ignore("needs to be fixed")
   @Test
   def hcrWithDisabledAutomaticDroppingFrames(): Unit = {
     HotCodeReplacePreferences.dropObsoleteFramesAutomatically = false
@@ -437,6 +438,7 @@ class HotCodeReplaceTest
     classLocalInt mustEqual 10
   }
 
+  @Ignore("needs to be fixed")
   @Test
   def doNotDropLastFrame(): Unit = {
     // GIVEN the thread is suspended at the correct breakpoint in the separate thread and initial values are correct

@@ -320,6 +320,7 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
     val previousStep = currentStep.getAndSet(None)
     previousStep.foreach { _.stop() }
     thread.suspend(eventDetail)
+    println("suspended from scala")
   }
 
   private[model] def resumeFromScala(step: Option[ScalaStep], eventDetail: Int): Future[Unit] = Future {
@@ -384,8 +385,10 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
   }
 
   private[model] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
-    if (thread.isSuspended)
+    if (thread.isSuspended) {
       thread.updateScalaStackFramesAfterHcr(dropAffectedFrames)
+      println("thread updating scala stack frame")
+    }
   }
 
   private def exit(): Unit = {

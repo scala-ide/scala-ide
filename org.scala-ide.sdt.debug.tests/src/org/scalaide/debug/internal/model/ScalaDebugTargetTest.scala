@@ -20,8 +20,31 @@ import org.scalaide.debug.internal.PoisonPill
 import com.sun.jdi.event.VMDeathEvent
 import org.junit.After
 import org.junit.Assert
+import org.junit.BeforeClass
+
+object ScalaDebugTargetTest {
+  var debugTarget: ScalaDebugTarget = _
+
+  /**
+   * Create a debug target with most of the JDI implementation mocked
+   */
+  @BeforeClass
+  def createDebugTarget(): Unit = {
+    val virtualMachine = mock(classOf[VirtualMachine])
+    when(virtualMachine.allThreads).thenReturn(new ArrayList[ThreadReference]())
+    val eventRequestManager = mock(classOf[EventRequestManager])
+    when(virtualMachine.eventRequestManager).thenReturn(eventRequestManager)
+    when(virtualMachine.eventQueue).thenReturn(mock(classOf[EventQueue]))
+    val threadStartRequest = mock(classOf[ThreadStartRequest])
+    when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
+    val threadDeathRequest = mock(classOf[ThreadDeathRequest])
+    when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
+    debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, allowDisconnect = false, allowTerminate = true)
+  }
+}
 
 class ScalaDebugTargetTest {
+  import ScalaDebugTargetTest._
   import org.scalaide.debug.internal.TestFutureUtil._
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,7 +58,6 @@ class ScalaDebugTargetTest {
   @Test
   def threadNotTwiceInList(): Unit = {
     val ThreadName = "thread name"
-    val debugTarget = createDebugTarget()
 
     val event = mock(classOf[ThreadStartEvent])
     val thread = mock(classOf[ThreadReference])
@@ -62,29 +84,8 @@ class ScalaDebugTargetTest {
    */
   @Test(timeout = 2000)
   def getThreadsFreeze(): Unit = {
-
-    val debugTarget = createDebugTarget
-
     whenReady(debugTarget.subordinate.handle(mock(classOf[VMDeathEvent]))) { _ =>
       debugTarget.getThreads
     }
   }
-
-  /**
-   * Create a debug target with most of the JDI implementation mocked
-   */
-  def createDebugTarget(): ScalaDebugTarget = {
-    val virtualMachine = mock(classOf[VirtualMachine])
-    when(virtualMachine.allThreads).thenReturn(new ArrayList[ThreadReference]())
-    val eventRequestManager = mock(classOf[EventRequestManager])
-    when(virtualMachine.eventRequestManager).thenReturn(eventRequestManager)
-    when(virtualMachine.eventQueue).thenReturn(mock(classOf[EventQueue]))
-    val threadStartRequest = mock(classOf[ThreadStartRequest])
-    when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
-    val threadDeathRequest = mock(classOf[ThreadDeathRequest])
-    when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
-    val debugTarget = ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, allowDisconnect = false, allowTerminate = true)
-    debugTarget
-  }
-
 }
