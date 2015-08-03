@@ -489,6 +489,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
   }
 
   private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
+    println("scala debug target update stack frame")
     val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
     nonSystemThreads.foreach(_.updateStackFramesAfterHcr(dropAffectedFrames))
   }

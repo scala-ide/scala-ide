@@ -20,7 +20,6 @@ import ScalaHotCodeReplaceManager.HCRFailed
 import ScalaHotCodeReplaceManager.HCRNotSupported
 import ScalaHotCodeReplaceManager.HCRResult
 import ScalaHotCodeReplaceManager.HCRSucceeded
-import scala.concurrent.Future
 
 private[internal] object ScalaHotCodeReplaceManager {
 
@@ -118,14 +117,13 @@ class ScalaHotCodeReplaceManager private (hcrExecutor: HotCodeReplaceExecutor) e
 
 private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with HasLogger {
   import scala.collection.JavaConverters._
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   protected val debugTarget: ScalaDebugTarget
 
   /**
    * If VM supports HCR, it replaces classes already loaded to VM using new class file versions.
    */
-  def replaceClassesIfVMAllows(changedClasses: Seq[ClassFileResource]): Future[Unit] = Future {
+  def replaceClassesIfVMAllows(changedClasses: Seq[ClassFileResource]): Unit = {
     val typesToReplace = changedClasses filter isLoadedToVM
     if (typesToReplace.nonEmpty) {
       val launchName = currentLaunchName
