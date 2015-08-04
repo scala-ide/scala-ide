@@ -1,16 +1,18 @@
 package org.scalaide.debug.internal.model
 
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+
 import scala.Left
 import scala.Right
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Either
 import scala.util.control.Exception
 import scala.util.control.Exception.Catch
+
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IStackFrame
@@ -22,6 +24,7 @@ import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
+
 import com.sun.jdi.ClassType
 import com.sun.jdi.IncompatibleThreadStateException
 import com.sun.jdi.Method
@@ -29,7 +32,6 @@ import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMCannotBeModifiedException
 import com.sun.jdi.Value
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 class ThreadNotSuspendedException extends Exception
@@ -332,7 +334,6 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
     val previousStep = currentStep.getAndSet(None)
     previousStep.foreach { _.stop() }
     thread.suspend(eventDetail)
-    println("suspended from scala")
   }
 
   private[model] def resumeFromScala(step: Option[ScalaStep], eventDetail: Int): Future[Unit] = Future {
@@ -386,7 +387,6 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
     val previousStep = currentStep.getAndSet(None)
     previousStep.foreach(_.stop())
     thread.fireTerminateEvent()
-    exit()
   }
 
   private[model] def rebindStackFrames(shouldFireChangeEvent: Boolean): Future[Unit] = Future {
@@ -399,11 +399,6 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
   private[model] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
     if (thread.isSuspended) {
       thread.updateScalaStackFramesAfterHcr(dropAffectedFrames)
-      println("thread updating scala stack frame")
     }
-  }
-
-  private def exit(): Unit = {
-    thread.getDebugTarget().dispose()
   }
 }

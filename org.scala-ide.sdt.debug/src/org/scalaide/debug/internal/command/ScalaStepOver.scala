@@ -1,26 +1,28 @@
 package org.scalaide.debug.internal.command
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.Option.option2Iterable
+import scala.Range
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
-import org.scalaide.debug.internal.JDIUtil.methodToLines
-import org.scalaide.debug.internal.model.ScalaThread
-import org.scalaide.debug.internal.model.ScalaStackFrame
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.model.JdiRequestFactory
-import org.scalaide.debug.internal.model.ScalaDebugCache
-import org.eclipse.debug.core.DebugEvent
-import com.sun.jdi.event.StepEvent
-import com.sun.jdi.event.ClassPrepareEvent
-import com.sun.jdi.event.BreakpointEvent
-import com.sun.jdi.request.StepRequest
-import com.sun.jdi.request.EventRequest
-import com.sun.jdi.ReferenceType
-import org.scalaide.debug.internal.JdiEventReceiver
-import java.util.concurrent.atomic.AtomicBoolean
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+
+import org.eclipse.debug.core.DebugEvent
+import org.scalaide.debug.internal.JDIUtil.methodToLines
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.model.ClassPrepareListener
-import com.sun.jdi.event.Event
+import org.scalaide.debug.internal.model.JdiRequestFactory
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaThread
+
+import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.event.ClassPrepareEvent
+import com.sun.jdi.event.StepEvent
+import com.sun.jdi.request.EventRequest
+import com.sun.jdi.request.StepRequest
 
 object ScalaStepOver {
 

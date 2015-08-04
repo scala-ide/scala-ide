@@ -165,7 +165,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
 
   override protected def innerHandle = subordinate.innerHandle
 
-  override def dispose()(implicit ec: ExecutionContext): Future[Unit] = Future(terminate())
+  override def dispose()(implicit ec: ExecutionContext): Future[Unit] = Future.successful(terminate())
   // ---
 
   private val running: AtomicBoolean = new AtomicBoolean(true)
