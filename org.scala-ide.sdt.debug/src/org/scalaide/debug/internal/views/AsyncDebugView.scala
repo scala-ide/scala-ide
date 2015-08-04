@@ -114,6 +114,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
   override def dispose(): Unit = {
     val service = DebugUITools.getDebugContextManager().getContextService(getSite().getWorkbenchWindow())
     service.removeDebugContextProvider(asyncDebugContextProvider)
+    super.dispose()
   }
 
   def stackFrameSelectionChanged(sce: SelectionChangedEvent): Unit = {
@@ -147,12 +148,12 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
         viewer.setSelection(null, true)
         val newInput = dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying).getOrElse(AsyncStackTrace(Nil))
         logger.debug(s"Setting viewer.input to $newInput")
-        viewer.setInput(newInput)
       //        val varView = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().findView(IDebugUIConstants.ID_VARIABLE_VIEW)
       //        varView.asInstanceOf[AbstractDebugView].getViewer().setInput(null)
+        setInputSafely(newInput)
 
       case _ =>
-        viewer.setInput(null)
+        setInputSafely(null)
         logger.debug("Unknown value")
     }
   }
@@ -168,9 +169,19 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     logger.info(s"Debug Event context change ${event.getContext()}")
     event.getContext match {
       case ssel: IStructuredSelection =>
-        viewer.setInput(ssel.getFirstElement())
+        setInputSafely(ssel.getFirstElement)
       case _ =>
     }
+  }
+
+  /**
+   * In can happen that this method is called when the UI widget is already disposed
+   * or not yet fully initialized. In such cases we are not allowed to set an input.
+   */
+  private def setInputSafely(input: Any): Unit = {
+    val c = viewer.getControl
+    if (c != null && !c.isDisposed())
+      viewer.setInput(input)
   }
 
   private class StackFrameProvider extends ITreeContentProvider {
