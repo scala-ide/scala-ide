@@ -20,8 +20,9 @@ class StepMessageOut extends AbstractHandler {
         se.getFirstElement() match {
           case ssf: ScalaStackFrame =>
             ssf.thread.stepMessageOut()
-          case _ => // do nothing but don't crash
+          case _ =>
         }
+      case _ =>
     }
     null
   }
