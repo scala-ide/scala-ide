@@ -82,10 +82,17 @@ object ScalaDebugTarget extends HasLogger {
 /** A debug target in the Scala debug model.
  *  This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private(val virtualMachine: VirtualMachine,
-                                        launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
-                                        allowTerminate: Boolean, val classPath: Option[Seq[String]])
+abstract class ScalaDebugTarget private(
+    val virtualMachine: VirtualMachine,
+    launch: ILaunch,
+    process: IProcess,
+    allowDisconnect: Boolean,
+    allowTerminate: Boolean,
+    val classPath: Option[Seq[String]])
   extends ScalaDebugElement(null) with IDebugTarget with HasLogger {
+
+  override def toString =
+    s"ScalaDebugTarget(vm = $virtualMachine, launch = $launch, process = $process, allowDisconnect = $allowDisconnect, allowTerminate = $allowTerminate, classpath = ${classPath.map(_.mkString(":")).mkString})"
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -446,7 +453,7 @@ private[model] object ScalaDebugTargetActor {
  *  of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
  *  linked actors).
  */
-private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, protected val debugTarget: ScalaDebugTarget)
+private class ScalaDebugTargetActor private(threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, override protected val debugTarget: ScalaDebugTarget)
     extends BaseDebuggerActor
     with HotCodeReplaceExecutor {
 
