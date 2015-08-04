@@ -3,7 +3,12 @@
  */
 package org.scalaide.debug.internal.breakpoints
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -13,12 +18,14 @@ import org.scalaide.debug.BreakpointContext
 import org.scalaide.debug.DebugContext
 import org.scalaide.debug.JdiEventCommand
 import org.scalaide.debug.NoCommand
-import org.scalaide.debug.PrepareClass
 import org.scalaide.debug.SuspendExecution
+import org.scalaide.debug.internal.JdiEventDispatcher
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
+import org.scalaide.debug.internal.model.ClassPrepareListener
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.util.internal.Suppress
+
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
@@ -27,11 +34,10 @@ import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.event.Event
 import com.sun.jdi.request.BreakpointRequest
 import com.sun.jdi.request.EventRequest
+
+import BreakpointSupportSubordinate.createBreakpointRequest
+import BreakpointSupportSubordinate.handleEvent
 import RichBreakpoint.richBreakpoint
-import java.util.concurrent.atomic.AtomicBoolean
-import org.scalaide.debug.internal.model.ClassPrepareListener
-import org.scalaide.debug.internal.JdiEventReceiver
-import scala.concurrent.Future
 
 private[debug] object BreakpointSupport {
   /** Attribute Type Name */
@@ -115,7 +121,7 @@ class BreakpointSupportSubordinate private (
   /** Return true if the state of the `breakpointRequests` associated to this breakpoint is (or, if not yet loaded, will be) enabled in the VM. */
   private val requestsEnabled: AtomicBoolean = new AtomicBoolean
 
-  private val eventDispatcher = debugTarget.eventDispatcher
+  private val eventDispatcher: JdiEventDispatcher = debugTarget.eventDispatcher
 
   breakpointRequests.foreach(listenForBreakpointRequest)
   updateBreakpointRequestState(isEnabled)
@@ -186,7 +192,6 @@ class BreakpointSupportSubordinate private (
   override def notify(event: ClassPrepareEvent): Future[Unit] = Future {
     val referenceType = event.referenceType
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)
-
     breakpointRequest.foreach { br =>
       breakpointRequests append br
       listenForBreakpointRequest(br)

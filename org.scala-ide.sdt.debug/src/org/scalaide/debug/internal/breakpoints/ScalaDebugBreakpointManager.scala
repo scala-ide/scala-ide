@@ -1,18 +1,22 @@
 package org.scalaide.debug.internal.breakpoints
 
-import org.scalaide.debug.internal.model.ScalaDebugTarget
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicReference
+
+import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
+import scala.collection.Seq
+import scala.collection.concurrent
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.Promise
+
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
-import org.scalaide.util.internal.Suppress
-import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.ConcurrentHashMap
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Promise
-import java.util.concurrent.atomic.AtomicReference
+import org.scalaide.debug.internal.model.ScalaDebugTarget
 
 object ScalaDebugBreakpointManager {
   /**
@@ -42,7 +46,6 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
    * @note Use this for test purposes only!
    */
   private val waitForAllCurrentFutures: AtomicReference[Future[Unit]] = new AtomicReference(Future.successful {})
-  implicit val ec = ExecutionContext.global
 
   private def ravelFutures[T](b: => Future[T])(implicit ec: ExecutionContext): Unit = {
     val p = Promise[Unit]

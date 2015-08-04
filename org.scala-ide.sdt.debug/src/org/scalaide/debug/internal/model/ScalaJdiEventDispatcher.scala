@@ -162,6 +162,7 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
     }
   }
 
-  private[model] def dispose(): Future[Unit] =
-    scalaDebugTarget.dispose()
+  private[model] def dispose(): Future[Unit] = Future {
+    eventReceiversMap.clear()
+  }
 }

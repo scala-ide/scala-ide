@@ -1,18 +1,21 @@
 package org.scalaide.debug.internal.command
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+import org.eclipse.debug.core.DebugEvent
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThread
-import org.eclipse.debug.core.DebugEvent
+
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
-import com.sun.jdi.event.Event
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicBoolean
-import scala.concurrent.Future
-import org.scalaide.debug.internal.JdiEventReceiver
 
 object ScalaStepInto {
 
