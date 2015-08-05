@@ -1,15 +1,16 @@
 package org.scalaide.debug.internal.async
 
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.eclipse.jface.util.PropertyChangeEvent
-import com.sun.jdi.request.EventRequest
-import com.sun.jdi.event.BreakpointEvent
 import org.eclipse.debug.core.DebugEvent
-import org.scalaide.logging.HasLogger
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.PoisonPill
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.internal.ScalaPlugin
+
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.SWTUtils._
+
+import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.request.EventRequest
 
 /**
  * Responsible for installing and removing the break on dead letters
@@ -51,6 +52,7 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
           disable()
 
       case Shutdown =>
+        ScalaPlugin().getPreferenceStore.removePropertyChangeListener(propListener)
         disable()
         poison()
 
@@ -68,7 +70,6 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
 
     private def disable(): Unit = {
-      ScalaPlugin().getPreferenceStore.removePropertyChangeListener(propListener)
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
