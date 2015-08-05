@@ -34,6 +34,7 @@ import org.scalaide.debug.internal.model.ScalaJdiEventDispatcherTest
     classOf[ScalaDebugModelPresentationTest],
     classOf[ScalaStackFrameTest],
     classOf[ScalaValueTest],
+    classOf[HotCodeReplaceTest],
     classOf[LibraryJarInBootstrapTest],
     classOf[ScalaDebugTargetTest],
     classOf[ScalaDebuggerDisconnectTests],
@@ -43,7 +44,6 @@ import org.scalaide.debug.internal.model.ScalaJdiEventDispatcherTest
     classOf[ScalaDebugBreakpointTest],
     classOf[ScalaDebugCacheTest],
     classOf[StackFrameVariableOfTreeFinderTest],
-    classOf[HotCodeReplaceTest],
     classOf[ScalaApplicationLaunchConfigurationDelegateTest],
     classOf[ScalaJUnitLaunchConfigurationDelegateTest],
     classOf[ScalaJdiEventDispatcherTest]
