@@ -30,8 +30,8 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   private var steps = 0
 
   def step(): Unit = {
-    sendRequests = programSends.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor, thread.threadRef)).toSet
-    receiveRequests = programReceives.flatMap(Utility.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
+    sendRequests = programSends.flatMap(AsyncUtils.installMethodBreakpoint(debugTarget, _, internalActor, thread.threadRef)).toSet
+    receiveRequests = programReceives.flatMap(AsyncUtils.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
     internalActor.start()
     // CLIENT_REQUEST seems to be the only event that correctly updates the UI
     thread.resumeFromScala(DebugEvent.CLIENT_REQUEST)

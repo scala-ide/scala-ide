@@ -67,12 +67,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   }
 
   private def installMethodBreakpoint(tpe: ReferenceType, app: AsyncProgramPoint): Unit = {
-    def isAPP(m: Method): Boolean =
-      (!m.isAbstract()
-        && m.name().startsWith(app.methodName)
-        && !m.name().contains("$default"))
-
-    val method = tpe.allMethods().asScala.find(isAPP)
+    val method = AsyncUtils.findAsyncProgramPoint(app, tpe)
     method.foreach { meth =>
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method.get, debugTarget)
       debugTarget.eventDispatcher.setActorFor(actor, req)

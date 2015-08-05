@@ -58,7 +58,7 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
 
     def createRequests() = {
-      eventRequests = Utility.installMethodBreakpoint(debugTarget, asyncPoint, internalActor).toSet
+      eventRequests = AsyncUtils.installMethodBreakpoint(debugTarget, asyncPoint, internalActor).toSet
       if (eventRequests.isEmpty)
         logger.error("Could not install dead letter breakpoints")
     }
