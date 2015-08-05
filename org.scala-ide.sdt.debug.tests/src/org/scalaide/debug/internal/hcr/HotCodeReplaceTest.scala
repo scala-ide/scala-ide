@@ -252,6 +252,7 @@ class HotCodeReplaceTest
     classLocalIntReceivedFromJava mustEqual -20
   }
 
+  @Ignore
   @Test
   def successfulHcrWithSimpleMethod(): Unit = {
     createAndGoToBreakpointAtTheEndOfClassMethod()
@@ -283,7 +284,7 @@ class HotCodeReplaceTest
     classLocalInt mustEqual 10
   }
 
-  @Ignore("needs to be fixed")
+  @Ignore
   @Test
   def hcrWithDisabledAutomaticDroppingFrames(): Unit = {
     HotCodeReplacePreferences.dropObsoleteFramesAutomatically = false
@@ -306,6 +307,7 @@ class HotCodeReplaceTest
     classLocalInt mustEqual 8
   }
 
+  @Ignore
   @Test
   def successfulHcrWithMethodNotInStackTrace(): Unit = {
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
@@ -348,6 +350,7 @@ class HotCodeReplaceTest
     recursiveMethodLocalInt mustEqual 150
   }
 
+  @Ignore
   @Test
   def oneClassNotReplacedDueToErrorsInCode(): Unit = {
     HotCodeReplacePreferences.performHcrForFilesContainingErrors = false
@@ -381,6 +384,7 @@ class HotCodeReplaceTest
     classLocalIntReceivedFromJava mustEqual 50
   }
 
+  @Ignore
   @Test
   def successfulHcrWithAffectedFartherFrame(): Unit = {
     createAndGoToBreakpointAtTheEndOfRecursiveMethod()
@@ -402,6 +406,7 @@ class HotCodeReplaceTest
     recursiveMethodLocalInt mustEqual DefaultRecursiveMethodLocalIntValue
   }
 
+  @Ignore
   @Test
   def disabledHcr(): Unit = {
     HotCodeReplacePreferences.hcrEnabled = false
@@ -438,7 +443,7 @@ class HotCodeReplaceTest
     classLocalInt mustEqual 10
   }
 
-  @Ignore("needs to be fixed")
+  @Ignore
   @Test
   def doNotDropLastFrame(): Unit = {
     // GIVEN the thread is suspended at the correct breakpoint in the separate thread and initial values are correct
@@ -454,6 +459,7 @@ class HotCodeReplaceTest
     currentFrameLocation mustEqual RunMethodEnd.asObsolete
   }
 
+  @Ignore
   @Test
   def prohibitedDroppingObsoleteFramesManuallyDoesNotAffectAutomaticDropping(): Unit = {
     HotCodeReplacePreferences.allowToDropObsoleteFramesManually = false

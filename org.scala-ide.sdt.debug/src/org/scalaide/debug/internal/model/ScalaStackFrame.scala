@@ -81,22 +81,22 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame, val index: Int)
+class ScalaStackFrame private (val thread: ScalaThread, @volatile private var stackFrame0: StackFrame, val index: Int)
   extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
-  private val stackFrameRef: AtomicReference[StackFrame] = new AtomicReference(stackFrame)
+  private val stackFrameRef: AtomicReference[StackFrame] = new AtomicReference(stackFrame0)
   // Members declared in org.eclipse.debug.core.model.IStackFrame
 
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
   override def getLineNumber(): Int = jdiSynchronized {
     (safeStackFrameCalls(-1) or wrapJDIException("Exception while retrieving stack frame's line number")) {
-      stackFrameRef.get.location.lineNumber // TODO: cache data ?
+      stackFrame.location.lineNumber // TODO: cache data ?
     }
   }
   override def getName(): String = jdiSynchronized {
     (safeStackFrameCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")) {
-      stackFrameRef.get.location.declaringType.name // TODO: cache data ?
+      stackFrame.location.declaringType.name // TODO: cache data ?
     }
   }
   override def getRegisterGroups(): Array[IRegisterGroup] = ???
@@ -130,8 +130,9 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   // ---
 
-  def isNative = stackFrameRef.get.location().method().isNative()
-  def isObsolete = stackFrameRef.get.location().method().isObsolete()
+  def isNative = stackFrame.location().method().isNative()
+  def isObsolete = stackFrame.location().method().isObsolete()
+  def stackFrame = stackFrameRef.get
 
   import org.scalaide.debug.internal.JDIUtil._
   import scala.util.control.Exception
@@ -142,22 +143,22 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
       import scala.collection.JavaConverters._
       val visibleVariables = {
         (Exception.handling(classOf[AbsentInformationException]) by (_ => Seq.empty)) {
-          stackFrameRef.get.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
+          stackFrame.visibleVariables.asScala.map(new ScalaLocalVariable(_, this))
         }
       }
 
-      val currentMethod = stackFrameRef.get.location.method
+      val currentMethod = stackFrame.location.method
       if (currentMethod.isNative || currentMethod.isStatic) {
         // 'this' is not available for native and static methods
         visibleVariables
       } else {
-        new ScalaThisVariable(stackFrameRef.get.thisObject, this) +: visibleVariables
+        new ScalaThisVariable(stackFrame.thisObject, this) +: visibleVariables
       }
     }
   }
 
   private def getSourceName(): String =
-    safeStackFrameCalls("Source name not available")(stackFrameRef.get.location.sourceName)
+    safeStackFrameCalls("Source name not available")(stackFrame.location.sourceName)
 
   /**
    * Return the source path based on source name and the package.
@@ -168,7 +169,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   def getSourcePath(): String = {
     wrapJDIException("Exception while retrieving source path") {
       // we shoudn't use location#sourcePath, as it is platform dependent
-      stackFrameRef.get.location.declaringType.name.split('.').init match {
+      stackFrame.location.declaringType.name.split('.').init match {
         case Array() =>
           getSourceName
         case packageSegments =>
@@ -188,7 +189,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
           NameTransformer.decode(method.name),
           getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame0.location.method) }
   }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need

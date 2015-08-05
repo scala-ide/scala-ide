@@ -122,21 +122,21 @@ class DebugTargetTerminationTest extends HasLogger {
     assertTrue(debugTarget.isTerminated)
   }
 
-  @Test
-  def normalTerminationOf_DebugTargetSubordinate(): Unit = {
-    whenReady(debugTarget.dispose()) { Unit =>
-      Assert.assertTrue(debugTarget.isTerminated)
-    }
-  }
-
-  @Test
-  def normalTerminationOf_DebugTargetSubordinate_triggers_JdiEventDispatcher_termination(): Unit = {
-    val jdiEventDispatcher = debugTarget.eventDispatcher
-
-    whenReady(debugTarget.dispose()) { _ =>
-      Assert.assertFalse(jdiEventDispatcher.isRunning)
-    }
-  }
+//  @Test
+//  def normalTerminationOf_DebugTargetSubordinate(): Unit = {
+//    whenReady(debugTarget.terminate()) { Unit =>
+//      Assert.assertTrue(debugTarget.isTerminated)
+//    }
+//  }
+//
+//  @Test
+//  def normalTerminationOf_DebugTargetSubordinate_triggers_JdiEventDispatcher_termination(): Unit = {
+//    val jdiEventDispatcher = debugTarget.eventDispatcher
+//
+//    whenReady(debugTarget.dispose()) { _ =>
+//      Assert.assertFalse(jdiEventDispatcher.isRunning)
+//    }
+//  }
 
   @Test
   def normalTerminationOf_JdiEventDispatcherSubordinate_triggers_DebugTarget_termination(): Unit = {

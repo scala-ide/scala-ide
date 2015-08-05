@@ -1,8 +1,15 @@
 package org.scalaide.debug.internal.model
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
+
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IDebugTarget
@@ -26,6 +33,7 @@ import org.scalaide.util.ui.DisplayThread
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
+import com.sun.jdi.event.Event
 import com.sun.jdi.event.ThreadDeathEvent
 import com.sun.jdi.event.ThreadStartEvent
 import com.sun.jdi.event.VMDeathEvent
@@ -33,14 +41,6 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import java.util.concurrent.atomic.AtomicBoolean
-import com.sun.jdi.event.Event
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext
-import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
-import java.util.concurrent.atomic.AtomicReference
-import org.scalaide.debug.internal.JdiEventReceiver
-import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -89,7 +89,7 @@ object ScalaDebugTarget extends HasLogger {
 abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
   allowTerminate: Boolean, val classPath: Option[Seq[String]])
-    extends ScalaDebugElement(null) with JdiDebugTargetEventReceiver with IDebugTarget with HasLogger {
+    extends ScalaDebugElement(null) with JdiEventReceiver with IDebugTarget with HasLogger {
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -165,7 +165,6 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
 
   override protected def innerHandle = subordinate.innerHandle
 
-  override def dispose()(implicit ec: ExecutionContext): Future[Unit] = Future.successful(terminate())
   // ---
 
   private val running: AtomicBoolean = new AtomicBoolean(true)
@@ -530,8 +529,8 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
     }
   }
 
-  private def exit(): Unit = {
-    debugTarget.vmDisconnected()
+  private def exit(): Future[Unit] = Future {
+    debugTarget.terminate()
     // don't have to unregister from event dispatcher. debugTarget makes total cleanse.
   }
 }

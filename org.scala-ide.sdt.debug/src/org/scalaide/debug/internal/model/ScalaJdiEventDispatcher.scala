@@ -11,7 +11,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 
-import org.scalaide.debug.internal.JdiDebugTargetEventReceiver
 import org.scalaide.debug.internal.JdiEventDispatcher
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.logging.HasLogger
@@ -26,7 +25,7 @@ import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
 
 object ScalaJdiEventDispatcher {
-  def apply(virtualMachine: VirtualMachine, scalaDebugTarget: JdiDebugTargetEventReceiver): ScalaJdiEventDispatcher = {
+  def apply(virtualMachine: VirtualMachine, scalaDebugTarget: JdiEventReceiver): ScalaJdiEventDispatcher = {
     val subordinate = ScalaJdiEventDispatcherSubordinate(scalaDebugTarget)
     new ScalaJdiEventDispatcher(virtualMachine, subordinate)
   }
@@ -102,7 +101,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
 }
 
 private[model] object ScalaJdiEventDispatcherSubordinate {
-  def apply(scalaDebugTarget: JdiDebugTargetEventReceiver): ScalaJdiEventDispatcherSubordinate =
+  def apply(scalaDebugTarget: JdiEventReceiver): ScalaJdiEventDispatcherSubordinate =
     new ScalaJdiEventDispatcherSubordinate(scalaDebugTarget)
 }
 
@@ -111,7 +110,7 @@ private[model] object ScalaJdiEventDispatcherSubordinate {
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarget: JdiDebugTargetEventReceiver) {
+private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarget: JdiEventReceiver) {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   /** event request to receiver map */
