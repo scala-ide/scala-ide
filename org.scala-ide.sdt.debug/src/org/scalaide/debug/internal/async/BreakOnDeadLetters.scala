@@ -11,6 +11,10 @@ import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.eclipse.SWTUtils._
 
+/**
+ * Responsible for installing and removing the break on dead letters
+ * functionality of the async debugger on top of `debugTarget`.
+ */
 class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
   import BreakOnDeadLetters._
 
@@ -23,8 +27,8 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     internalActor ! Shutdown
   }
 
-  def propListener(event: PropertyChangeEvent): Any = {
-    if (event.getProperty() == preferenceID)
+  val propListener: PropertyChangeEvent ⇒ Unit = event ⇒ {
+    if (event.getProperty() == PreferenceId)
       internalActor ! PrefChange(event)
   }
 
@@ -35,8 +39,8 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     override def behavior = {
 
       case Initialize =>
-        ScalaPlugin().getPreferenceStore.addPropertyChangeListener(propListener _)
-        val enabled = ScalaPlugin().getPreferenceStore.getBoolean(preferenceID)
+        ScalaPlugin().getPreferenceStore.addPropertyChangeListener(propListener)
+        val enabled = ScalaPlugin().getPreferenceStore.getBoolean(PreferenceId)
         if (enabled)
           createRequests()
 
@@ -64,7 +68,7 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
 
     private def disable(): Unit = {
-      ScalaPlugin().getPreferenceStore.removePropertyChangeListener(propListener _)
+      ScalaPlugin().getPreferenceStore.removePropertyChangeListener(propListener)
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
@@ -83,5 +87,5 @@ object BreakOnDeadLetters {
   case object Shutdown
   case class PrefChange(event: PropertyChangeEvent)
 
-  final val preferenceID = "debug.breakOnDeadLetters"
+  final val PreferenceId = "org.scalaide.debug.breakOnDeadLetters"
 }
