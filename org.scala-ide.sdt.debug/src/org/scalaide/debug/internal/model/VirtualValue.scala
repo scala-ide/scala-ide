@@ -5,36 +5,43 @@ import org.scalaide.debug.internal.ScalaDebugger
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.eclipse.debug.core.model.IVariable
 
-case class VirtualValue(refTypeName: String, valueString: String, fields: Seq[IVariable] = Seq.empty)(implicit debugTarget: ScalaDebugTarget)
-  extends ScalaDebugElement(debugTarget) with IValue {
+case class VirtualValue
+    (refTypeName: String, valueString: String, fields: Seq[IVariable] = Seq.empty)
+    (implicit debugTarget: ScalaDebugTarget)
+      extends ScalaDebugElement(debugTarget)
+      with IValue {
 
-  def isAllocated(): Boolean = false
+  override def isAllocated(): Boolean = false
 
-  def getReferenceTypeName(): String = refTypeName
+  override def getReferenceTypeName(): String = refTypeName
 
-  def getValueString(): String = valueString
+  override def getValueString(): String = valueString
 
-  def withFields(vars: IVariable*) = {
+  def withFields(vars: IVariable*) =
     VirtualValue(refTypeName, valueString, fields ++ vars.toSeq)
-  }
 
-  def getVariables(): Array[IVariable] = fields.toArray
+  override def getVariables(): Array[IVariable] = fields.toArray
 
-  def hasVariables(): Boolean = fields.isEmpty
+  override def hasVariables(): Boolean = fields.isEmpty
 }
 
-case class VirtualVariable(name: String, refTypeName: String, value: IValue)(implicit debugTarget: ScalaDebugTarget) extends ScalaDebugElement(debugTarget) with IVariable {
-  def getName(): String = name
+case class VirtualVariable
+    (name: String, refTypeName: String, value: IValue)
+    (implicit debugTarget: ScalaDebugTarget)
+      extends ScalaDebugElement(debugTarget)
+      with IVariable {
 
-  def getReferenceTypeName(): String = refTypeName
+  override def getName(): String = name
 
-  def getValue(): IValue = value
+  override def getReferenceTypeName(): String = refTypeName
 
-  def hasValueChanged(): Boolean = false
+  override def getValue(): IValue = value
 
-  def supportsValueModification(): Boolean = false
-  def setValue(x$1: IValue): Unit = ???
-  def setValue(x$1: String): Unit = ???
-  def verifyValue(x$1: IValue): Boolean = false
-  def verifyValue(x$1: String): Boolean = false
+  override def hasValueChanged(): Boolean = false
+
+  override def supportsValueModification(): Boolean = false
+  override def setValue(value: IValue): Unit = ???
+  override def setValue(expr: String): Unit = ???
+  override def verifyValue(value: IValue): Boolean = false
+  override def verifyValue(expr: String): Boolean = false
 }

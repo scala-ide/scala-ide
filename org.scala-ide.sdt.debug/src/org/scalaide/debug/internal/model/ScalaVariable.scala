@@ -1,15 +1,15 @@
 package org.scalaide.debug.internal.model
 
-import org.eclipse.debug.core.model.IVariable
-import com.sun.jdi.LocalVariable
-import com.sun.jdi.Field
-import com.sun.jdi.ArrayType
-import com.sun.jdi.ObjectReference
 import org.eclipse.debug.core.model.IValue
 
-abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IVariable {
+import org.eclipse.debug.core.model.IVariable
 
-  // Members declared in org.eclipse.debug.core.model.IValueModification
+import com.sun.jdi.ArrayType
+import com.sun.jdi.Field
+import com.sun.jdi.LocalVariable
+import com.sun.jdi.ObjectReference
+
+abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement(target) with IVariable {
 
   override def setValue(value: IValue): Unit = ???
   override def setValue(value: String): Unit = ???
@@ -30,7 +30,6 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
       name drop idx + 2
   }
 
-  // Members declared in org.eclipse.debug.core.model.IVariable
   final override def getValue(): IValue =
     wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
 
@@ -44,14 +43,16 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
 
   def isStatic: Boolean = false
   def isFinal: Boolean = false
+
+  /** Gets called by [[getValue]] to ensure that JDI exceptions are handled correctly. */
   protected def doGetValue(): IValue
+  /** Gets called by [[getName]] to ensure that JDI exceptions are handled correctly. */
   protected def doGetName(): String
+  /** Gets called by [[getGetReferenceTypeName]] to ensure that JDI exceptions are handled correctly. */
   protected def doGetReferenceTypeName(): String
 }
 
 class ScalaThisVariable(underlying: ObjectReference, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
-
-  // Members declared in org.eclipse.debug.core.model.IVariable
 
   override protected def doGetName: String = "this"
   override protected def doGetReferenceTypeName: String = underlying.referenceType.name
@@ -60,28 +61,21 @@ class ScalaThisVariable(underlying: ObjectReference, stackFrame: ScalaStackFrame
 
 class ScalaLocalVariable(underlying: LocalVariable, stackFrame: ScalaStackFrame) extends ScalaVariable(stackFrame.getDebugTarget) {
 
-  // Members declared in org.eclipse.debug.core.model.IVariable
-
   override protected def doGetName(): String = underlying.name
   override protected def doGetReferenceTypeName(): String = underlying.typeName
 
-  // fetching the value for local variables cannot be delayed because the underlying stackframe element may become invalid at any time
+  // fetching the value for local variables cannot be delayed because the underlying stack frame element may become invalid at any time
   override protected def doGetValue: IValue = ScalaValue(stackFrame.stackFrame.getValue(underlying), getDebugTarget)
 }
 
 class ScalaArrayElementVariable(index: Int, arrayReference: ScalaArrayReference) extends ScalaVariable(arrayReference.getDebugTarget) {
 
-  // Members declared in org.eclipse.debug.core.model.IVariable
-
   override protected def doGetName(): String = "(%s)".format(index)
   override protected def doGetReferenceTypeName(): String = arrayReference.underlying.referenceType.asInstanceOf[ArrayType].componentTypeName
   override protected def doGetValue(): IValue = ScalaValue(arrayReference.underlying.getValue(index), getDebugTarget)
-
 }
 
 class ScalaFieldVariable(field: Field, objectReference: ScalaObjectReference) extends ScalaVariable(objectReference.getDebugTarget) {
-
-  // Members declared in org.eclipse.debug.core.model.IVariable
 
   override def isStatic: Boolean = field.isStatic()
   override def isFinal: Boolean = field.isFinal

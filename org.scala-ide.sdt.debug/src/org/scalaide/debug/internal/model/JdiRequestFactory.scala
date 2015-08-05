@@ -4,6 +4,8 @@
 package org.scalaide.debug.internal.model
 
 import org.scalaide.debug.internal.JDIUtil
+import org.scalaide.logging.HasLogger
+
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.VirtualMachine
@@ -13,7 +15,6 @@ import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import org.scalaide.logging.HasLogger
 
 /** Utility methods used to create JDI request.
  *  This object doesn't use any internal field, and is thread safe.

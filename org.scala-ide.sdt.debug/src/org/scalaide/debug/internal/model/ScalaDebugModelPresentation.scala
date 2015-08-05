@@ -1,30 +1,31 @@
 package org.scalaide.debug.internal.model
 
-import org.scalaide.debug.internal.ScalaDebugger
+import scala.util.Try
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.debug.core.model.IValue
-import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
-import org.eclipse.debug.ui.IValueDetailListener
-import org.eclipse.debug.ui.IDebugUIConstants
-import org.eclipse.debug.ui.IDebugModelPresentation
-import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.eclipse.ui.IEditorInput
-import org.eclipse.jface.viewers.ILabelProviderListener
-import org.scalaide.debug.internal.async.AsyncStackFrame
 import org.eclipse.debug.core.model.IStackFrame
+import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.core.model.IVariable
-import org.eclipse.debug.ui.IInstructionPointerPresentation
-import scala.util.Try
-import org.eclipse.ui.IEditorPart
-import org.eclipse.jface.text.source.Annotation
-import org.eclipse.swt.graphics.Image
 import org.eclipse.debug.internal.ui.DebugUIMessages
 import org.eclipse.debug.internal.ui.InstructionPointerAnnotation
+import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
+import org.eclipse.debug.ui.DebugUITools
+import org.eclipse.debug.ui.IDebugModelPresentation
+import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.debug.ui.IInstructionPointerPresentation
+import org.eclipse.debug.ui.IValueDetailListener
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.jface.text.source.Annotation
+import org.eclipse.jface.viewers.ILabelProviderListener
+import org.eclipse.swt.graphics.Image
+import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.IEditorPart
 import org.scalaide.debug.internal.ScalaDebugPlugin
+
+import org.scalaide.debug.internal.ScalaDebugger
 
 /** Utility methods for the ScalaDebugModelPresentation class
  *  This object doesn't use any internal field, and is thread safe.
@@ -91,14 +92,10 @@ object ScalaDebugModelPresentation {
  */
 class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstructionPointerPresentation {
 
-  // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
-
   override def addListener(listener: ILabelProviderListener): Unit = ???
   override def dispose(): Unit = {} // TODO: need real logic
   override def isLabelProperty(element: Any, property: String): Boolean = ???
   override def removeListener(listener: ILabelProviderListener): Unit = ???
-
-  // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
   override def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
     new Job("Computing Scala debug details") {
@@ -159,8 +156,6 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
    */
   override def setAttribute(key: String, value: Any): Unit = {}
 
-  // Members declared in org.eclipse.debug.ui.ISourcePresentation
-
   override def getEditorId(input: IEditorInput, element: Any): String = {
     EditorUtility.getEditorID(input)
   }
@@ -168,8 +163,6 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
   override def getEditorInput(input: Any): IEditorInput = {
     EditorUtility.getEditorInput(input)
   }
-
-  // ----
 
   /*
    * TODO: add support for thread state (running, suspended at ...)
@@ -195,52 +188,19 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
     })
   }
 
-  // from InstructionPointer
-  def getInstructionPointerAnnotation(editorPart: IEditorPart, frame: IStackFrame): Annotation = {
+  override def getInstructionPointerAnnotation(editorPart: IEditorPart, frame: IStackFrame): Annotation = {
     new InstructionPointerAnnotation(frame,
       IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY,
       DebugUIMessages.InstructionPointerAnnotation_1,
       DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER))
   }
 
-  /** Returns an identifier of a <code>org.eclipse.ui.editors.annotationTypes</code> extension used for
-   *  the specified stack frame in the specified editor, or <code>null</code> if a default annotation
-   *  should be used.
-   *
-   *  @param editorPart the editor the debugger has opened
-   *  @param frame the stack frame for which the debugger is displaying
-   *  source
-   *  @return annotation type identifier or <code>null</code>
-   */
-  def getInstructionPointerAnnotationType(editorPart: IEditorPart, frame: IStackFrame): String =
+  override def getInstructionPointerAnnotationType(editorPart: IEditorPart, frame: IStackFrame): String =
     IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY
 
-  /** Returns the instruction pointer image used for the specified stack frame in the specified
-   *  editor, or <code>null</code> if a default image should be used.
-   *  <p>
-   *  By default, the debug platform uses different images for top stack
-   *  frames and non-top stack frames in a thread.
-   *  </p>
-   *  @param editorPart the editor the debugger has opened
-   *  @param frame the stack frame for which the debugger is displaying
-   *  source
-   *  @return image or <code>null</code>
-   */
-  def getInstructionPointerImage(editorPart: IEditorPart, frame: IStackFrame): Image =
+  override def getInstructionPointerImage(editorPart: IEditorPart, frame: IStackFrame): Image =
     DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER)
 
-  /** Returns the text to associate with the instruction pointer annotation used for the
-   *  specified stack frame in the specified editor, or <code>null</code> if a default
-   *  message should be used.
-   *  <p>
-   *  By default, the debug platform uses different images for top stack
-   *  frames and non-top stack frames in a thread.
-   *  </p>
-   *  @param editorPart the editor the debugger has opened
-   *  @param frame the stack frame for which the debugger is displaying
-   *  source
-   *  @return message or <code>null</code>
-   */
-  def getInstructionPointerText(editorPart: IEditorPart, frame: IStackFrame): String =
+  override def getInstructionPointerText(editorPart: IEditorPart, frame: IStackFrame): String =
     DebugUIMessages.InstructionPointerAnnotation_1
 }

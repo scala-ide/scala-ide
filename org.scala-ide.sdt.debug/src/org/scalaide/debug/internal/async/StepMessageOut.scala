@@ -45,7 +45,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         println("? intercept send: " + ev.thread.frame(0).getArgumentValues())
         true
       } else false
-      //        && (ev.thread.frame(1).location == senderFrameLocation))
     }
 
     private def isReceiveHandler(loc: com.sun.jdi.Location): Boolean = {
@@ -63,10 +62,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         watchedMessage = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
 
         reply(false) // don't suspend this thread
-      //        logger.debug(s"Suspending thread ${breakpointEvent.thread.name()}")
-      //        // most likely the breakpoint was hit on a different thread than the one we started with, so we find it here
-      //        debugTarget.getScalaThread(breakpointEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
-      //        reply(true) // suspend here!
 
       case breakpointEvent: BreakpointEvent if receiveRequests(breakpointEvent.request()) =>
         val app = breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint]
@@ -104,7 +99,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         reply(false)
 
       case stepEvent: StepEvent =>
-        //        logger.debug(s"Step $steps in ${stepEvent.location().method().name()}")
         steps += 1
         logger.debug(s"Step $steps: ${stepEvent.location.declaringType}.${stepEvent.location.method}")
         reply(false) // resume VM

@@ -1,27 +1,26 @@
 package org.scalaide.debug.internal.async
 
-import com.sun.jdi.ObjectReference
-
-import com.sun.jdi.StackFrame
-import scala.collection.mutable
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-import org.scalaide.debug.internal.BaseDebuggerActor
-import com.sun.jdi.event._
 import scala.collection.JavaConverters._
-import org.scalaide.debug.internal.model.JdiRequestFactory
-import com.sun.jdi.request.BreakpointRequest
-import com.sun.jdi.ReferenceType
-import com.sun.jdi.ThreadReference
-import org.scalaide.logging.HasLogger
-import org.scalaide.debug.internal.model.ScalaValue
-import com.sun.jdi.Method
+import scala.collection.mutable
 
-/** Install breakpoints in key places and collect stack frames.
- *
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.model.JdiRequestFactory
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.debug.internal.model.ScalaValue
+import org.scalaide.logging.HasLogger
+
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ReferenceType
+import com.sun.jdi.StackFrame
+import com.sun.jdi.ThreadReference
+import com.sun.jdi.event._
+
+/**
+ * Installs breakpoints in key places and collect stack frames.
  */
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
-  final val MAX_ENTRIES = 20000
-  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTrace] = new LRUMap(MAX_ENTRIES)
+  final val MaxEntries = 20000
+  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTrace] = new LRUMap(MaxEntries)
 
   object actor extends BaseDebuggerActor {
     override protected def behavior = {
@@ -42,11 +41,9 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   private def appHit(thread: ThreadReference, app: AsyncProgramPoint): Unit = {
     val topFrame = thread.frame(0)
     val args = topFrame.getArgumentValues()
-    //    logger.debug(s"$app hit: topFrame arguments: $args")
 
     val body = args.get(app.paramIdx)
     val frames = thread.frames().asScala.toList
-    //    logger.debug(s"Added ${frames.size} stack frames in cache.")
     stackFrames += (body.asInstanceOf[ObjectReference]) -> mkStackTrace(frames)
   }
 
@@ -77,8 +74,6 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
       logger.debug(s"Installed method breakpoint for ${method.get.declaringType()}.${method.get.name}")
     }
   }
-
-  //  private val FutureImpl = "scala.concurrent.package$"
 
   private val programPoints = List(
     AsyncProgramPoint("scala.concurrent.package$", "future", 0),

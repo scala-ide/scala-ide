@@ -7,5 +7,4 @@ package org.scalaide.debug.internal.async
  *  @param methodName the method name
  *  @param paramIdx  the index of the method parameter to be associated with a stackframe
  */
-case class AsyncProgramPoint(className: String, methodName: String, paramIdx: Int) {
-}
+case class AsyncProgramPoint(className: String, methodName: String, paramIdx: Int)
