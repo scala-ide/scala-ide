@@ -1,21 +1,23 @@
 package org.scalaide.debug.internal.model
 
-import org.scalaide.debug.internal.ScalaDebugger
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.util.Try
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.debug.core.model.IValue
-import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
-import org.eclipse.debug.ui.IValueDetailListener
-import org.eclipse.debug.ui.IDebugUIConstants
-import org.eclipse.debug.ui.IDebugModelPresentation
-import org.eclipse.debug.ui.DebugUITools
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.eclipse.ui.IEditorInput
-import org.eclipse.jface.viewers.ILabelProviderListener
 import org.eclipse.debug.core.model.IVariable
-import scala.util.Try
+import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
+import org.eclipse.debug.ui.DebugUITools
+import org.eclipse.debug.ui.IDebugModelPresentation
+import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.debug.ui.IValueDetailListener
+import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.jface.viewers.ILabelProviderListener
+import org.eclipse.ui.IEditorInput
+import org.scalaide.debug.internal.ScalaDebugger
 
 /**
  * Utility methods for the ScalaDebugModelPresentation class
@@ -40,18 +42,19 @@ object ScalaDebugModelPresentation {
   }
 
   def textFor(variable: IVariable): String = {
-    val name = Try{variable.getName} getOrElse "Unavailable Name"
-    val value = Try{variable.getValue} map {computeDetail(_)} getOrElse "Unavailable Value"
+    val name = Try { variable.getName } getOrElse "Unavailable Name"
+    val value = Try { variable.getValue } map { computeDetail(_) } getOrElse "Unavailable Value"
     s"$name = $value"
   }
 
-  /** Return the a toString() equivalent for an Array
+  /**
+   * Return the a toString() equivalent for an Array
    */
   private def computeDetail(arrayReference: ScalaArrayReference): String = {
     import scala.collection.JavaConverters._
     // There's a bug in the JDI implementation provided by the JDT, calling getValues()
     // on an array of size zero generates a java.lang.IndexOutOfBoundsException
-    val array= arrayReference.underlying
+    val array = arrayReference.underlying
     if (array.length == 0) {
       "Array()"
     } else {
@@ -59,7 +62,8 @@ object ScalaDebugModelPresentation {
     }
   }
 
-  /** Return the value produced by calling toString() on the object.
+  /**
+   * Return the value produced by calling toString() on the object.
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
     try {
@@ -138,7 +142,8 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     }
   }
 
-  /** Currently we don't support any attributes. The standard one,
+  /**
+   * Currently we don't support any attributes. The standard one,
    *  `show type names`, might get here but we ignore it.
    */
   override def setAttribute(key: String, value: Any): Unit = {}
