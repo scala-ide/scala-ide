@@ -31,8 +31,8 @@ import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.project._
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.logging.PluginLogConfigurator
 import org.scalaide.ui.internal.diagnostic
@@ -41,7 +41,7 @@ import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
 import org.scalaide.util.eclipse.OSGiUtils
-import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.CompilerUtils._
 import org.scalaide.util.internal.FixedSizeCache
 
 object ScalaPlugin {
@@ -53,29 +53,27 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  import CompilerUtils.ShortScalaVersion
-  import CompilerUtils.isBinaryPrevious
-  import CompilerUtils.isBinarySame
 
-  import org.scalaide.core.SdtConstants._
-
- /** Check if the given version is compatible with the current plug-in version.
-   *  Check on the major/minor number, discard the maintenance number.
-   *
-   *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
-   *  2.8.1 and 2.9.0 aren't.
-   */
-  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
-    if (project.isUsingCompatibilityMode())
+ /**
+  * Check if the given version is compatible with the current plug-in version.
+  * Check on the major/minor number, discard the maintenance number.
+  *
+  * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+  * 2.8.1 and 2.9.0 aren't.
+  */
+  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = project.getCompatibilityMode match {
+    case Same ⇒
+      isBinarySame(ScalaVersion.current, version) // don't treat 2 unknown versions as equal
+    case Previous ⇒
       isBinaryPrevious(ScalaVersion.current, version)
-    else
-      isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
+    case Subsequent ⇒
+      isBinarySubsequent(ScalaVersion.current, version)
   }
 
   private lazy val sdtCoreBundle = getBundle()
 
-  lazy val sbtCompilerBundle = Platform.getBundle(SbtPluginId)
-  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SbtCompilerInterfacePluginId)
+  lazy val sbtCompilerBundle = Platform.getBundle(SdtConstants.SbtPluginId)
+  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SdtConstants.SbtCompilerInterfacePluginId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
 
   lazy val templateManager = new ScalaTemplateManager()
@@ -183,15 +181,15 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         disposeProject(project)
       case _ =>
     }
-    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
+    Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
         // This is obtained at project opening or closing, meaning the 'openness' state changed
-        if (delta.getFlags == IResourceDelta.OPEN){
+        if (delta.getFlags == IResourceDelta.OPEN) {
           val resource = delta.getResource().asInstanceOfOpt[IProject]
-          resource foreach {(r) =>
+          resource foreach { r =>
             // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
             // setting the Installation triggers a recursive check
-            asScalaProject(r) foreach { (p) =>
+            asScalaProject(r) foreach { p =>
               try {
                 // It's important to save this /before/ checking classpath : classpath
                 // checks create their own preference modifications under some conditions.
@@ -203,10 +201,11 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
             }
           }
           false
-        } else
-        true
+        }
+        else
+          true
       }
-    })))
+    }))
   }
 
   override def elementChanged(event: ElementChangedEvent): Unit = {
@@ -224,9 +223,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         if (innerDelta.getKind() == CHANGED && (innerDelta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0) {
           innerDelta.getElement() match {
             // classpath change should only impact projects
-            case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
-            }
+            case javaProject: IJavaProject =>
+              asScalaProject(javaProject.getProject()) foreach (_.classpathHasChanged(queue = false))
             case _ =>
           }
         }
@@ -277,7 +275,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
-        case COMPILATION_UNIT if isChanged && elem.getResource != null && elem.getResource.getName.endsWith(ScalaFileExtn) =>
+        case COMPILATION_UNIT if isChanged && elem.getResource != null && elem.getResource.getName.endsWith(SdtConstants.ScalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
           if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed

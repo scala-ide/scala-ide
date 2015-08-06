@@ -35,7 +35,7 @@ import org.scalaide.core.testsetup.SDTTestUtils
 object DesiredScalaInstallationTests {
   private var projects: List[IScalaProject] = List()
 
-    @AfterClass
+  @AfterClass
   final def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(projects: _*)
   }
