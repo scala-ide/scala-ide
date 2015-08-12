@@ -1,13 +1,12 @@
 package org.scalaide.debug.internal
 
-import org.scalaide.core.IScalaPlugin
-
 import org.eclipse.debug.core.model.IDebugModelProvider
 import org.eclipse.debug.internal.ui.contexts.DebugContextManager
 import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
+
 import org.scalaide.core.IScalaPlugin
 
 import com.sun.jdi.StackFrame
@@ -20,7 +19,7 @@ object ScalaDebugger {
   val classIDebugModelProvider = classOf[IDebugModelProvider]
 
   val modelProvider = new IDebugModelProvider {
-    def getModelIdentifiers() = {
+    override def getModelIdentifiers() = {
       Array(ScalaDebugPlugin.id)
     }
   }

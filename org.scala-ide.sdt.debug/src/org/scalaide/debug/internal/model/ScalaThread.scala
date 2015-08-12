@@ -23,6 +23,7 @@ import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.Utils.jdiSynchronized
+import org.scalaide.debug.internal.async.StepMessageOut
 import scala.actors.Future
 import scala.collection.JavaConverters.asScalaBufferConverter
 
@@ -42,7 +43,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: ThreadReference)
+abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
     extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
@@ -55,12 +56,24 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
   override def isStepping: Boolean = ???
   private def canStep = suspended && !target.isPerformingHotCodeReplace
 
-  override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
+  override def stepInto(): Unit = {
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
+    }
+  }
   override def stepOver(): Unit = {
-    wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
+    }
   }
   override def stepReturn(): Unit = {
-    wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
+    }
+  }
+
+  def stepMessageOut(): Unit = {
+    (new StepMessageOut(getDebugTarget, this)).step
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
