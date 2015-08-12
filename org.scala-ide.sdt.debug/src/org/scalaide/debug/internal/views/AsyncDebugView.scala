@@ -31,7 +31,10 @@ import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IViewSite
 import org.eclipse.ui.IWorkbenchPart
 import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.scalaide.debug.internal.async._
+import org.scalaide.debug.internal.async.AsyncLocalVariable
+import org.scalaide.debug.internal.async.AsyncStackFrame
+import org.scalaide.debug.internal.async.AsyncStackTrace
+import org.scalaide.debug.internal.async.RetainedStackManager
 import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaObjectReference
@@ -39,6 +42,9 @@ import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
+
+import Utils.fnToSelectionChangedListener
+import Utils.fnToSelectionListener
 
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
 

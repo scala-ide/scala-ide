@@ -135,4 +135,61 @@
             hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
       </overrider>
    </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabs">
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.scala-ide.ew.launcher.WorkbenchLauncherTabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.pde.ui.launch.tab.main">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.jdt.junit.launchConfigurationTabGroup.junit"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.junit.JUnitLaunchConfigurationTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="scala.scalatest.tabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="scala.tools.eclipse.launching.scalaTestMainTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="scala.application.tabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.debug.ui.javaMainTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.pde.ui.launcher.JUnitTabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.pde.ui.launch.tab.test">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.jdt.debug.ui.launchConfigurationTabGroup.remoteJavaApplication"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.debug.ui.javaConnectTab">
+         </placement>
+      </tab>
+   </extension>
 </plugin>

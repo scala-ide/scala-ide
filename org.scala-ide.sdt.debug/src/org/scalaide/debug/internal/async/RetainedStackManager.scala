@@ -27,6 +27,8 @@ import RetainedStackManager.OrdinalNotSet
  * Installs breakpoints in key places and collect stack frames.
  */
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
+  import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
+
   final val MaxEntries = 20000
   private val stackFrames: mutable.Map[ObjectReference, AsyncStackTraces] = new LRUMap(MaxEntries)
   private val messageOrdinal = new AtomicInteger
@@ -109,7 +111,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
     stackFrames.get(future).flatMap(_(messageOrdinal))
 
-  def start(): Unit = {
+  def start(): Unit = if (debugTarget.getLaunch.getLaunchConfiguration.getAttribute(LaunchWithAsyncDebugger, false)) {
     actor.start()
     for {
       app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
@@ -120,7 +122,6 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
       // in case it's not been loaded yet
       debugTarget.cache.addClassPrepareEventListener(actor, clazz)
   }
-
 }
 
 object RetainedStackManager {

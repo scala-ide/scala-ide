@@ -24,6 +24,9 @@ import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMCannotBeModifiedException
 import com.sun.jdi.Value
 
+import scala.actors.Future
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 class ThreadNotSuspendedException extends Exception
 
 object ScalaThread {
