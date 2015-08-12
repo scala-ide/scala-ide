@@ -2,18 +2,18 @@ package org.scalaide.debug.internal.async
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaValue
 import org.scalaide.logging.HasLogger
-
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.event._
+import scala.util.Try
+import scala.util.Success
 
 /**
  * Installs breakpoints in key places and collect stack frames.
@@ -50,14 +50,18 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   private def mkStackTrace(frames: Seq[StackFrame]): AsyncStackTrace = {
     import collection.JavaConverters._
 
-    val asyncFrames = for (frame <- frames) yield {
-      val names = frame.visibleVariables()
-      val values = frame.getValues(names)
-      val locals = values.asScala.map {
-        case (lvar, lval) => AsyncLocalVariable(lvar.name(), ScalaValue(lval, debugTarget))(debugTarget)
+    val asyncFrames = frames.map { frame =>
+      Try {
+        val names = frame.visibleVariables()
+        val values = frame.getValues(names)
+        val locals = values.asScala.map {
+          case (lvar, lval) => AsyncLocalVariable(lvar.name(), ScalaValue(lval, debugTarget))(debugTarget)
+        }
+        val location = frame.location()
+        AsyncStackFrame(locals.toSeq, Location(location.sourceName, location.declaringType.name, location.lineNumber))(debugTarget)
       }
-      val location = frame.location()
-      AsyncStackFrame(locals.toSeq, Location(location.sourceName, location.declaringType.name, location.lineNumber))(debugTarget)
+    } collect {
+      case Success(asyncStackTrace) => asyncStackTrace
     }
 
     AsyncStackTrace(asyncFrames)
@@ -76,6 +80,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   }
 
   private val programPoints = List(
+    AsyncProgramPoint("scala.concurrent.Future$", "apply", 0),
     AsyncProgramPoint("scala.concurrent.package$", "future", 0),
     AsyncProgramPoint("play.api.libs.iteratee.Cont$", "apply", 0),
     AsyncProgramPoint("akka.actor.LocalActorRef", "$bang", 0),

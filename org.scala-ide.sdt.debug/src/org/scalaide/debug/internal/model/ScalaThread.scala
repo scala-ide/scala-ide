@@ -23,7 +23,6 @@ import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.Utils.jdiSynchronized
-import org.scalaide.debug.internal.async.StepMessageOut
 import scala.actors.Future
 import scala.collection.JavaConverters.asScalaBufferConverter
 
@@ -70,10 +69,6 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
     for (head <- stackFrames.headOption) {
       wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
     }
-  }
-
-  def stepMessageOut(): Unit = {
-    (new StepMessageOut(getDebugTarget, this)).step
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
