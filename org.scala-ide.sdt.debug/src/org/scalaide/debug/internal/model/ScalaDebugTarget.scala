@@ -182,7 +182,6 @@ abstract class ScalaDebugTarget private(
   private[debug] val companionActor: BaseDebuggerActor
   private[debug] val cache: ScalaDebugCache
   val retainedStack: RetainedStackManager
-  val breakOnDeadLetters: BreakOnDeadLetters = new BreakOnDeadLetters(this)
 
   /** Initialize the dependent components
    */
@@ -365,7 +364,6 @@ abstract class ScalaDebugTarget private(
     initializeThreads(virtualMachine.allThreads.asScala.toList)
     retainedStack.start()
     breakpointManager.init()
-    breakOnDeadLetters.start()
     hcrManager.foreach(_.init())
 
     fireChangeEvent(DebugEvent.CONTENT)
@@ -379,7 +377,6 @@ abstract class ScalaDebugTarget private(
     breakpointManager.dispose()
     hcrManager.foreach(_.dispose())
     cache.dispose()
-    breakOnDeadLetters.dispose()
     disposeThreads()
     fireTerminateEvent()
   }
