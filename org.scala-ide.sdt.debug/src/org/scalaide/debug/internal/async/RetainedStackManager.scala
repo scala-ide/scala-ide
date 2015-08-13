@@ -1,26 +1,35 @@
 package org.scalaide.debug.internal.async
 
-import scala.collection.JavaConverters._
+import java.util.concurrent.atomic.AtomicInteger
+
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable
+import scala.util.Success
+import scala.util.Try
+
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaValue
 import org.scalaide.logging.HasLogger
+
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
-import com.sun.jdi.event._
-import scala.util.Try
-import scala.util.Success
+import com.sun.jdi.event.BreakpointEvent
+import com.sun.jdi.event.ClassPrepareEvent
+
+import RetainedStackManager.OrdinalNotSet
 
 /**
  * Installs breakpoints in key places and collect stack frames.
  */
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   final val MaxEntries = 20000
-  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTrace] = new LRUMap(MaxEntries)
+  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTraces] = new LRUMap(MaxEntries)
+  private val messageOrdinal = new AtomicInteger
 
   object actor extends BaseDebuggerActor {
     override protected def behavior = {
@@ -33,21 +42,30 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
 
       // JDI event triggered when a breakpoint is hit
       case breakpointEvent: BreakpointEvent =>
-        appHit(breakpointEvent.thread, breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint])
+        appHit(breakpointEvent.thread, breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint], messageOrdinal.getAndIncrement)
         reply(false) // don't suspend this thread
     }
   }
 
-  private def appHit(thread: ThreadReference, app: AsyncProgramPoint): Unit = {
+  private def appHit(thread: ThreadReference, app: AsyncProgramPoint, messageOrdinal: Int): Unit = {
     val topFrame = thread.frame(0)
     val args = topFrame.getArgumentValues()
 
     val body = args.get(app.paramIdx)
     val frames = thread.frames().asScala.toList
-    stackFrames += (body.asInstanceOf[ObjectReference]) -> mkStackTrace(frames)
+    addAsyncStackFrame(body.asInstanceOf[ObjectReference], mkStackTrace(frames, messageOrdinal), messageOrdinal)
   }
 
-  private def mkStackTrace(frames: Seq[StackFrame]): AsyncStackTrace = {
+  private def addAsyncStackFrame(key: ObjectReference, asyncStackTrace: AsyncStackTrace, ordinal: Int): Unit = {
+    stackFrames.get(key) match {
+      case Some(asyncStackTraces) =>
+        stackFrames.put(key, asyncStackTraces.add(ordinal, asyncStackTrace))
+      case None =>
+        stackFrames.put(key, AsyncStackTraces(List(AsyncStackTraceItem(asyncStackTrace, ordinal))))
+    }
+  }
+
+  private def mkStackTrace(frames: Seq[StackFrame], ordinal: Int): AsyncStackTrace = {
     import collection.JavaConverters._
 
     val asyncFrames = frames.map { frame =>
@@ -55,7 +73,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
         val names = frame.visibleVariables()
         val values = frame.getValues(names)
         val locals = values.asScala.map {
-          case (lvar, lval) => AsyncLocalVariable(lvar.name(), ScalaValue(lval, debugTarget))(debugTarget)
+          case (lvar, lval) => AsyncLocalVariable(lvar.name(), ScalaValue(lval, debugTarget), ordinal)(debugTarget)
         }
         val location = frame.location()
         AsyncStackFrame(locals.toSeq, Location(location.sourceName, location.declaringType.name, location.lineNumber))(debugTarget)
@@ -88,9 +106,8 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
 
   /** Return the saved stackframes for the given future body (if any). */
-  def getStackFrameForFuture(future: ObjectReference): Option[AsyncStackTrace] = {
-    stackFrames.get(future)
-  }
+  def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
+    stackFrames.get(future).flatMap(_(messageOrdinal))
 
   def start(): Unit = {
     actor.start()
@@ -104,4 +121,35 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
       debugTarget.cache.addClassPrepareEventListener(actor, clazz)
   }
 
+}
+
+object RetainedStackManager {
+  val OrdinalNotSet = -1
+}
+
+private case class AsyncStackTraceItem(asyncStackTrace: AsyncStackTrace, ordinal: Int)
+
+private case class AsyncStackTraces(indexedAsyncStackTraces: List[AsyncStackTraceItem]) {
+  import RetainedStackManager._
+  type IndexedAsyncStackTrace = (AsyncStackTrace, Int)
+
+  def add(uniqueOrdinal: Int, asyncStackTrace: AsyncStackTrace): AsyncStackTraces =
+    AsyncStackTraces(indexedAsyncStackTraces :+ AsyncStackTraceItem(asyncStackTrace, uniqueOrdinal))
+
+  def apply(index: Int): Option[AsyncStackTrace] =
+    if (indexedAsyncStackTraces.tail.isEmpty)
+      indexedAsyncStackTraces.headOption.map(_.asyncStackTrace)
+    else {
+      if (OrdinalNotSet == index)
+        indexedAsyncStackTraces.lastOption.map(_.asyncStackTrace)
+      else {
+        val previousTraces = indexedAsyncStackTraces.collect {
+          case item @ AsyncStackTraceItem(_, ordinal) if ordinal < index => item
+        }
+        if (previousTraces.nonEmpty)
+          Option(previousTraces.maxBy(_.ordinal).asyncStackTrace)
+        else
+          None
+      }
+    }
 }

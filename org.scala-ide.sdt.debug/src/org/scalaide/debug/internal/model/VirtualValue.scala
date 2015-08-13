@@ -22,7 +22,7 @@ case class VirtualValue
 
   override def getVariables(): Array[IVariable] = fields.toArray
 
-  override def hasVariables(): Boolean = fields.isEmpty
+  override def hasVariables(): Boolean = fields.nonEmpty
 }
 
 case class VirtualVariable

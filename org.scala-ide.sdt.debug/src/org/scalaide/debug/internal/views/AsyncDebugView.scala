@@ -61,7 +61,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     val service = debugService
     service.addDebugContextProvider(asyncDebugContextProvider)
     // TODO remove this?
-//    service.addDebugContextListener(this)
+    //    service.addDebugContextListener(this)
 
     val selectionService = site.getWorkbenchWindow().getSelectionService()
     selectionService.addSelectionListener(IDebugUIConstants.ID_VARIABLE_VIEW, variableViewSelectionChanged _)
@@ -92,17 +92,25 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     case _ =>
   }
 
-  def updateAsyncFrame(elem: IVariable): Unit = {
-    val dbgTarget = elem.getDebugTarget().asInstanceOf[ScalaDebugTarget]
-    elem.getValue() match {
-      case ref: ScalaObjectReference =>
-        viewer.setSelection(null, true)
-        val newInput = dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying).getOrElse(AsyncStackTrace(Nil))
-        setInputSafely(newInput)
+  def updateAsyncFrame(elem: IVariable): Unit =
+    setInputSafely(computeNewInput(elem))
 
-      case _ =>
-        setInputSafely(null)
-    }
+  private def computeNewInput(elem: IVariable) = elem.getValue() match {
+    case ref: ScalaObjectReference =>
+      computeNewInputForScalaObjectReference(ref, elem)
+    case _ =>
+      null
+  }
+
+  private def findMessageOrdinal(elem: IVariable) = elem match {
+    case AsyncLocalVariable(_, _, messageOrdinal) => messageOrdinal
+    case _ => RetainedStackManager.OrdinalNotSet
+  }
+
+  private def computeNewInputForScalaObjectReference(ref: ScalaObjectReference, elem: IVariable): AsyncStackTrace = {
+    viewer.setSelection(null, true)
+    val dbgTarget = elem.getDebugTarget().asInstanceOf[ScalaDebugTarget]
+    dbgTarget.retainedStack.getStackFrameForFuture(ref.underlying, findMessageOrdinal(elem)).getOrElse(AsyncStackTrace(Nil))
   }
 
   override protected def fillContextMenu(x$1: org.eclipse.jface.action.IMenuManager): Unit = {}
@@ -134,27 +142,27 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     private val emptyArray = Array[Object]()
 
     override def getElements(inputElement: AnyRef): Array[Object] = inputElement match {
-      case thread: ScalaThread     => thread.getStackFrames.asInstanceOf[Array[Object]]
+      case thread: ScalaThread => thread.getStackFrames.asInstanceOf[Array[Object]]
       case AsyncStackTrace(frames) => frames.toArray
-      case _                       => Array(inputElement) // TODO: They say big NO NO
+      case _ => Array(inputElement) // TODO: They say big NO NO
     }
 
     override def getChildren(parentElement: AnyRef): Array[Object] = parentElement match {
-      case frame: ScalaStackFrame     => frame.getVariables.asInstanceOf[Array[Object]]
-      case AsyncStackTrace(frames)    => frames.toArray
+      case frame: ScalaStackFrame => frame.getVariables.asInstanceOf[Array[Object]]
+      case AsyncStackTrace(frames) => frames.toArray
       case AsyncStackFrame(locals, _) => locals.toArray
-      case _                          => emptyArray
+      case _ => emptyArray
     }
 
     override def getParent(element: AnyRef): AnyRef = element match {
       case frame: ScalaStackFrame => frame.getThread
-      case variable: IVariable    => null // TODO proper parent?
-      case _                      => null
+      case variable: IVariable => null // TODO proper parent?
+      case _ => null
     }
 
     override def hasChildren(element: AnyRef): Boolean = element match {
       case _: AsyncStackFrame | _: AsyncStackTrace => true
-      case _                                       => false
+      case _ => false
     }
 
     override def dispose(): Unit = {}
@@ -170,10 +178,10 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
       greyablePackages.exists(typeName.startsWith)
 
     override def getText(elem: Object): String = elem match {
-      case AsyncLocalVariable(name, value) => s"$name: ${ScalaDebugModelPresentation.computeDetail(value)}"
-      case AsyncStackFrame(_, location)    => s"$location"
-      case s: IStackFrame                  => s"${s.getName()}:${s.getLineNumber()}"
-      case _                               => elem.toString
+      case AsyncLocalVariable(name, value, _) => s"$name: ${ScalaDebugModelPresentation.computeDetail(value)}"
+      case AsyncStackFrame(_, location) => s"$location"
+      case s: IStackFrame => s"${s.getName()}:${s.getLineNumber()}"
+      case _ => elem.toString
     }
 
     override def getImage(elem: Object): Image =

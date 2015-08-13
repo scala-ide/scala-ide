@@ -96,7 +96,7 @@ case class AsyncStackFrame
     override def hasStackFrames(): Boolean = true
   }
 }
-case class AsyncLocalVariable(name: String, value: IValue)(val dbgTarget: IDebugTarget) extends DebugElement(dbgTarget) with IVariable {
+case class AsyncLocalVariable(name: String, value: IValue, ordinal: Int)(val dbgTarget: IDebugTarget) extends DebugElement(dbgTarget) with IVariable {
   // Members declared in org.eclipse.debug.core.model.IDebugElement
   override def getModelIdentifier(): String = ScalaDebugPlugin.id
   // Members declared in org.eclipse.debug.core.model.IValueModification
