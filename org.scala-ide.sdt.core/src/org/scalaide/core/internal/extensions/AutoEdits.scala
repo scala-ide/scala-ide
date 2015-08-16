@@ -10,12 +10,8 @@ object AutoEdits {
   val autoEditData: Seq[(String, AutoEditSetting)] = Seq(
     fullyQualifiedName[ConvertToUnicode] → ConvertToUnicodeSetting,
     fullyQualifiedName[SmartSemicolonInsertion] → SmartSemicolonInsertionSetting,
-    fullyQualifiedName[CloseCurlyBrace] → CloseCurlyBraceSetting,
     fullyQualifiedName[JumpOverClosingCurlyBrace] → JumpOverClosingCurlyBraceSetting,
     fullyQualifiedName[RemoveCurlyBracePair] → RemoveCurlyBracePairSetting,
-    fullyQualifiedName[CloseParenthesis] → CloseParenthesisSetting,
-    fullyQualifiedName[CloseBracket] → CloseBracketSetting,
-    fullyQualifiedName[CloseAngleBracket] → CloseAngleBracketSetting,
     fullyQualifiedName[RemoveParenthesisPair] → RemoveParenthesisPairSetting,
     fullyQualifiedName[CreateMultiplePackageDeclarations] → CreateMultiplePackageDeclarationsSetting,
     fullyQualifiedName[ApplyTemplate] → ApplyTemplateSetting,
@@ -31,7 +27,11 @@ object AutoEdits {
     fullyQualifiedName[SurroundSelectionWithParentheses] → SurroundSelectionWithParenthesesSetting,
     fullyQualifiedName[SurroundSelectionWithBraces] → SurroundSelectionWithBracesSetting,
     fullyQualifiedName[SurroundSelectionWithBrackets] → SurroundSelectionWithBracketsSetting,
-    fullyQualifiedName[SurroundSelectionWithAngleBrackets] → SurroundSelectionWithAngleBracketsSetting
+    fullyQualifiedName[SurroundSelectionWithAngleBrackets] → SurroundSelectionWithAngleBracketsSetting,
+    fullyQualifiedName[CloseCurlyBrace] → CloseCurlyBraceSetting,
+    fullyQualifiedName[CloseParenthesis] → CloseParenthesisSetting,
+    fullyQualifiedName[CloseBracket] → CloseBracketSetting,
+    fullyQualifiedName[CloseAngleBracket] → CloseAngleBracketSetting
   )
 
   /**

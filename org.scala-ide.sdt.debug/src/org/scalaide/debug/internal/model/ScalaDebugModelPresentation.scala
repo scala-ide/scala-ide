@@ -24,7 +24,6 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.IEditorPart
 import org.scalaide.debug.internal.ScalaDebugPlugin
-
 import org.scalaide.debug.internal.ScalaDebugger
 
 /** Utility methods for the ScalaDebugModelPresentation class
@@ -49,12 +48,13 @@ object ScalaDebugModelPresentation {
   }
 
   def textFor(variable: IVariable): String = {
-    val name = Try{variable.getName} getOrElse "Unavailable Name"
-    val value = Try{variable.getValue} map {computeDetail(_)} getOrElse "Unavailable Value"
+    val name = Try { variable.getName } getOrElse "Unavailable Name"
+    val value = Try { variable.getValue } map { computeDetail(_) } getOrElse "Unavailable Value"
     s"$name = $value"
   }
 
-  /** Return the a toString() equivalent for an Array
+  /**
+   * Return the a toString() equivalent for an Array
    */
   private def computeDetail(arrayReference: ScalaArrayReference): String = {
     import scala.collection.JavaConverters._
@@ -68,7 +68,8 @@ object ScalaDebugModelPresentation {
     }
   }
 
-  /** Return the value produced by calling toString() on the object.
+  /**
+   * Return the value produced by calling toString() on the object.
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
     if (ScalaDebugger.currentThread == null) ""
@@ -151,7 +152,8 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
     }
   }
 
-  /** Currently we don't support any attributes. The standard one,
+  /**
+   * Currently we don't support any attributes. The standard one,
    *  `show type names`, might get here but we ignore it.
    */
   override def setAttribute(key: String, value: Any): Unit = {}

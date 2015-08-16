@@ -79,6 +79,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.jdi;apply-aspects:=false,
  scala.xml,
  scala.xml.parsing
 Export-Package: 

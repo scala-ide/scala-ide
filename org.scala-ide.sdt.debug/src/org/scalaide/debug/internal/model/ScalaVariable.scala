@@ -1,6 +1,7 @@
 package org.scalaide.debug.internal.model
 
 import org.eclipse.debug.core.model.IValue
+import org.scalaide.util.Utils.jdiSynchronized
 
 import org.eclipse.debug.core.model.IVariable
 
@@ -30,14 +31,17 @@ abstract class ScalaVariable(target: ScalaDebugTarget) extends ScalaDebugElement
       name drop idx + 2
   }
 
-  final override def getValue(): IValue =
+  final override def getValue(): IValue = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's value") { doGetValue() }
+  }
 
-  final override def getName(): String =
+  final override def getName(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's name") { unexpandedName(doGetName()) }
+  }
 
-  final override def getReferenceTypeName(): String =
+  final override def getReferenceTypeName(): String = jdiSynchronized {
     wrapJDIException("Exception while retrieving variable's reference type name") { doGetReferenceTypeName() }
+  }
 
   override def hasValueChanged: Boolean = false // TODO: need real logic
 
