@@ -42,7 +42,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: ThreadReference)
+abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
     extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
@@ -55,12 +55,20 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
   override def isStepping: Boolean = ???
   private def canStep = suspended && !target.isPerformingHotCodeReplace
 
-  override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
+  override def stepInto(): Unit = {
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
+    }
+  }
   override def stepOver(): Unit = {
-    wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
+    }
   }
   override def stepReturn(): Unit = {
-    wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
+    }
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume

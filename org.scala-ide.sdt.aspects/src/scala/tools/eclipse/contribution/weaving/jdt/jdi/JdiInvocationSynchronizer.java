@@ -22,7 +22,11 @@ public final class JdiInvocationSynchronizer {
       locked = true;
       return codeBlock.call();
     } catch (Exception e) {
-      throw new IllegalStateException("executed code block failed", e);
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
+      } else {
+        throw new IllegalStateException("executed code block failed", e);
+      }
     } finally {
       locked = false;
     }
