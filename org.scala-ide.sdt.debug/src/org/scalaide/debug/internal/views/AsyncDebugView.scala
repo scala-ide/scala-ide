@@ -175,12 +175,24 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
   private object StackFrameLabelProvider extends LabelProvider with IColorProvider {
 
     val fadingPackages = {
-      val pkgs = ScalaDebugPlugin.plugin.getPreferenceStore.getString(AsyncDebuggerPreferencePage.FadingPackages)
+      val pkgs = store.getString(AsyncDebuggerPreferencePage.FadingPackages)
       pkgs.split(',').toSet
     }
 
+    val fadingColor = {
+      val rgb = PreferenceConverter.getColor(store, AsyncDebuggerPreferencePage.FadingColor)
+      new Color(Display.getCurrent(), rgb)
+    }
+
+    def store = ScalaDebugPlugin.plugin.getPreferenceStore
+
     def fadingContext(typeName: String): Boolean =
       fadingPackages.exists(typeName.startsWith)
+
+    override def dispose() = {
+      fadingColor.dispose()
+      super.dispose()
+    }
 
     override def getText(elem: Object): String = elem match {
       case AsyncLocalVariable(name, value, _) => s"$name: ${ScalaDebugModelPresentation.computeDetail(value)}"
@@ -194,7 +206,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
     override def getForeground(element: AnyRef): Color = element match {
       case AsyncStackFrame(_, location) if fadingContext(location.declaringTypeName) =>
-        Display.getCurrent().getSystemColor(SWT.COLOR_GRAY)
+        fadingColor
       case _ =>
         null
     }

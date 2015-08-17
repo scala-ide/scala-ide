@@ -1,6 +1,7 @@
 package org.scalaide.debug.internal.preferences
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.eclipse.jface.preference.ColorFieldEditor
 import org.eclipse.jface.preference.FieldEditorPreferencePage
 import org.eclipse.jface.preference.StringFieldEditor
 import org.eclipse.swt.layout.GridLayout
@@ -19,6 +20,9 @@ class AsyncDebuggerPreferencePage extends FieldEditorPreferencePage(FieldEditorP
 
     val fp = new StringFieldEditor(FadingPackages, "Comma separated list of packages that should be faded: ", c)
     addField(fp)
+
+    val color = new ColorFieldEditor(FadingColor, "Color of faded packages:", c)
+    addField(color)
   }
 
   override def init(workbench: IWorkbench): Unit = {}
@@ -27,6 +31,7 @@ class AsyncDebuggerPreferencePage extends FieldEditorPreferencePage(FieldEditorP
 
 object AsyncDebuggerPreferencePage {
   val FadingPackages = "org.scalaide.debug.async.fadingPackages"
+  val FadingColor = "org.scalaide.debug.async.fadingColor"
 }
 
 class AsyncDebuggerPreferencesInitializer extends AbstractPreferenceInitializer {
@@ -36,6 +41,7 @@ class AsyncDebuggerPreferencesInitializer extends AbstractPreferenceInitializer 
     val store = ScalaDebugPlugin.plugin.getPreferenceStore
 
     store.setDefault(FadingPackages, "scala.,akka.,play.")
+    store.setDefault(FadingColor, "191,191,191")
   }
 
 }
