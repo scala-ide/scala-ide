@@ -27,12 +27,14 @@ import org.eclipse.swt.widgets.Display
 import org.eclipse.ui.ISelectionListener
 import org.eclipse.ui.IViewSite
 import org.eclipse.ui.IWorkbenchPart
+import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.async._
 import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaObjectReference
 import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
@@ -172,10 +174,13 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
   private object StackFrameLabelProvider extends LabelProvider with IColorProvider {
 
-    val greyablePackages = Set("akka.", "scala.", "play.")
+    val fadingPackages = {
+      val pkgs = ScalaDebugPlugin.plugin.getPreferenceStore.getString(AsyncDebuggerPreferencePage.FadingPackages)
+      pkgs.split(',').toSet
+    }
 
-    def greyableContext(typeName: String): Boolean =
-      greyablePackages.exists(typeName.startsWith)
+    def fadingContext(typeName: String): Boolean =
+      fadingPackages.exists(typeName.startsWith)
 
     override def getText(elem: Object): String = elem match {
       case AsyncLocalVariable(name, value, _) => s"$name: ${ScalaDebugModelPresentation.computeDetail(value)}"
@@ -188,7 +193,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
       DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
     override def getForeground(element: AnyRef): Color = element match {
-      case AsyncStackFrame(_, location) if greyableContext(location.declaringTypeName) =>
+      case AsyncStackFrame(_, location) if fadingContext(location.declaringTypeName) =>
         Display.getCurrent().getSystemColor(SWT.COLOR_GRAY)
       case _ =>
         null

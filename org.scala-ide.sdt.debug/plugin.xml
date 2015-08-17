@@ -73,11 +73,20 @@
             id="org.scalaide.ui.preferences.debug"
             name="Debug">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.debug"
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug"
+            name="Async Debugger">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.scalaide.debug.internal.preferences.DebugerPreferencesInitializer">
+      </initializer>
+      <initializer
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencesInitializer">
       </initializer>
    </extension>
    <extension
