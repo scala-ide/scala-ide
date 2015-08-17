@@ -72,7 +72,18 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
     selectionService.addSelectionListener(IDebugUIConstants.ID_VARIABLE_VIEW, variableViewSelectionChanged _)
   }
 
+  /**
+   * Removes all state that is saved in the debug view. Should be called when
+   * the view should be cleared, e.g. when the debugger is terminated.
+   */
+  def clearDebugView(): Unit = {
+    setInputSafely(null)
+    viewer.getTable.removeAll()
+    currentFrame = None
+  }
+
   override def dispose(): Unit = {
+    clearDebugView()
     debugService.removeDebugContextProvider(asyncDebugContextProvider)
     super.dispose()
   }

@@ -1,16 +1,5 @@
 package org.scalaide.debug.internal.model
 
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
-import org.scalaide.debug.internal.ScalaSourceLookupParticipant
-import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
-import org.scalaide.debug.internal.hcr.ClassFileResource
-import org.scalaide.debug.internal.hcr.HotCodeReplaceExecutor
-import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
-import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
-import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
-import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.DebugPlugin
@@ -19,7 +8,23 @@ import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
+import org.eclipse.ui.PlatformUI
 import org.osgi.framework.Version
+
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.debug.internal.ScalaSourceLookupParticipant
+import org.scalaide.debug.internal.async.RetainedStackManager
+import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
+import org.scalaide.debug.internal.hcr.ClassFileResource
+import org.scalaide.debug.internal.hcr.HotCodeReplaceExecutor
+import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
+import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
+import org.scalaide.debug.internal.views.AsyncDebugView
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.ui.DisplayThread
+
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
@@ -30,8 +35,6 @@ import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-import org.scalaide.debug.internal.async.RetainedStackManager
-import org.scalaide.debug.internal.async.BreakOnDeadLetters
 
 object ScalaDebugTarget extends HasLogger {
 
@@ -377,8 +380,24 @@ abstract class ScalaDebugTarget private(
     breakpointManager.dispose()
     hcrManager.foreach(_.dispose())
     cache.dispose()
+    clearAsyncDebugView()
     disposeThreads()
     fireTerminateEvent()
+  }
+
+  /** Normally, the async debug view is automatically opened when the debugger
+   *  is started and closed when the debugger is stopped. If the user opens the
+   *  async debug view manually, we explicitly have to ensure that its content
+   *  get removed once the debugger is stopped.
+   */
+  private def clearAsyncDebugView(): Unit = DisplayThread.asyncExec {
+    for {
+      w ← Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow)
+      p ← Option(w.getActivePage)
+      view ← Option(p.findView("org.scala-ide.sdt.debug.asyncView"))
+    } {
+      view.asInstanceOf[AsyncDebugView].clearDebugView()
+    }
   }
 
   private def disposeThreads(): Unit = {
