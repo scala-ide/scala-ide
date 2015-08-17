@@ -10,6 +10,9 @@ import org.eclipse.debug.ui.contexts.DebugContextEvent
 import org.eclipse.debug.ui.contexts.IDebugContextListener
 import org.eclipse.debug.ui.contexts.IDebugContextService
 import org.eclipse.jface.action.IToolBarManager
+import org.eclipse.jface.preference.PreferenceConverter
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.viewers.IColorProvider
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.ISelectionChangedListener
@@ -174,12 +177,31 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
   private object StackFrameLabelProvider extends LabelProvider with IColorProvider {
 
-    val fadingPackages = {
+    var fadingColor = loadFadingColor
+    var fadingPackages = loadFadingPackages
+
+    val pcl = new IPropertyChangeListener {
+      override def propertyChange(event: PropertyChangeEvent) = {
+        event.getProperty match {
+          case AsyncDebuggerPreferencePage.FadingColor ⇒
+            if (fadingColor != null)
+              fadingColor.dispose()
+            fadingColor = loadFadingColor
+
+          case AsyncDebuggerPreferencePage.FadingPackages ⇒
+            fadingPackages = loadFadingPackages
+        }
+      }
+    }
+
+    store.addPropertyChangeListener(pcl)
+
+    def loadFadingPackages = {
       val pkgs = store.getString(AsyncDebuggerPreferencePage.FadingPackages)
       pkgs.split(',').toSet
     }
 
-    val fadingColor = {
+    def loadFadingColor = {
       val rgb = PreferenceConverter.getColor(store, AsyncDebuggerPreferencePage.FadingColor)
       new Color(Display.getCurrent(), rgb)
     }
@@ -190,6 +212,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
       fadingPackages.exists(typeName.startsWith)
 
     override def dispose() = {
+      store.removePropertyChangeListener(pcl)
       fadingColor.dispose()
       super.dispose()
     }
