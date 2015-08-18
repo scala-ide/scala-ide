@@ -16,12 +16,19 @@ import com.sun.jdi.BooleanValue
 import com.sun.jdi.ClassType
 import com.sun.jdi.ReferenceType
 
+import org.scalaide.debug.internal.JDIUtil._
+
 class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
 
   override def getLogicalStructureTypes(value: IValue): Array[ILogicalStructureType] = {
     value match {
-      case objectReference: ScalaObjectReference if ScalaLogicalStructureProvider.isScalaCollection(objectReference) =>
-        Array(ScalaCollectionLogicalStructureType)
+      case objectReference: ScalaObjectReference =>
+        if (ScalaLogicalStructureProvider.isScalaCollection(objectReference)) {
+          Array(ScalaLogicalStructureProvider)
+        } else AkkaActorLogicalStructure.enclosingActor(objectReference) match {
+          case Some(actorReference) => Array(AkkaActorLogicalStructure)
+          case _                    => Array()
+        }
       case _ =>
         ScalaLogicalStructureProvider.emptyLogicalStructureTypes
     }
@@ -29,7 +36,7 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
 
 }
 
-object ScalaLogicalStructureProvider extends HasLogger {
+object ScalaLogicalStructureProvider extends ILogicalStructureType with HasLogger {
 
   private lazy val emptyLogicalStructureTypes: Array[ILogicalStructureType] = Array.empty
 
@@ -43,13 +50,22 @@ object ScalaLogicalStructureProvider extends HasLogger {
       checkIfImplements(objectReference.referenceType(), "scala.collection.TraversableLike")
     }
 
-  /**
-   * Checks 'implements' with Java meaning
-   */
-  def implements(classType: ClassType, interfaceName: String): Boolean = {
-    import scala.collection.JavaConverters._
-    classType.allInterfaces.asScala.exists(_.name == interfaceName)
-  }
+  // Members declared in org.eclipse.debug.core.ILogicalStructureType
+
+  override def getDescription(): String = "Flat the Scala collections"
+
+  override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
+
+  // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
+
+  override def getLogicalStructure(value: IValue): IValue =
+    callToArray(value).getOrElse(value)
+
+  override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
+
+  // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
+
+  override def getDescription(value: IValue): String = getDescription
 
   private def checkIfImplements(refType: ReferenceType, interfaceName: String) = refType match {
     case classType: ClassType =>
@@ -121,28 +137,6 @@ object ScalaLogicalStructureProvider extends HasLogger {
     tupleRef.invokeMethod(s"_$elementNumber", "()Ljava/lang/Object;", thread)
       .asInstanceOf[ScalaObjectReference]
   }
-}
-
-object ScalaCollectionLogicalStructureType extends ILogicalStructureType with HasLogger {
-
-  // Members declared in org.eclipse.debug.core.ILogicalStructureType
-
-  override def getDescription(): String = "Flat the Scala collections"
-
-  override val getId: String = ScalaDebugPlugin.id + ".logicalstructure.collection"
-
-  // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate
-
-  override def getLogicalStructure(value: IValue): IValue =
-    callToArray(value).getOrElse(value)
-
-  override def providesLogicalStructure(value: IValue): Boolean = true // TODO: check that as it is created by the provider, it is never used with other values
-
-  // Members declared in org.eclipse.debug.core.model.ILogicalStructureTypeDelegate2
-
-  override def getDescription(value: IValue): String = getDescription
-
-  // other methods
 
   /**
    * Tries to call toArray on given value.
@@ -151,7 +145,7 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
     val scalaValue = value.asInstanceOf[ScalaObjectReference]
 
     try {
-      Some(ScalaLogicalStructureProvider.callToArray(scalaValue))
+      Some(callToArray(scalaValue))
     } catch {
       case e: Exception =>
         // fail gracefully in case of problem
@@ -159,4 +153,51 @@ object ScalaCollectionLogicalStructureType extends ILogicalStructureType with Ha
         None
     }
   }
+}
+
+object AkkaActorLogicalStructure extends ILogicalStructureType with HasLogger {
+  override def getDescription(): String =
+    "Actor logical structure"
+
+  override def getDescription(v: IValue): String =
+    getDescription
+
+  override def getId(): String =
+    ScalaDebugPlugin.id + "logicalstructure.actor"
+
+  override def getLogicalStructure(obj: IValue): IValue = obj match {
+    case ref: ScalaObjectReference =>
+      val Some(actor) = enclosingActor(ref)
+      implicit val target = actor.getDebugTarget()
+      val actorContext = actor.invokeMethod("context", ScalaDebugger.currentThread).asInstanceOf[ScalaObjectReference]
+      val sender = actor.invokeMethod("sender", ScalaDebugger.currentThread)
+      val parent = actorContext.invokeMethod("parent", "()Lakka/actor/ActorRef;", ScalaDebugger.currentThread)
+      val supervisingStrategy = actor.invokeMethod("supervisorStrategy", "()Lakka/actor/SupervisorStrategy;", ScalaDebugger.currentThread)
+
+      VirtualValue("Actor", actor.invokeMethod("self", ScalaDebugger.currentThread).getValueString())
+        .withFields(
+          VirtualVariable("<parent>", parent.getReferenceTypeName(), parent),
+          VirtualVariable("<sender>", sender.getReferenceTypeName(), sender),
+          VirtualVariable("<supervisorStrategy>", supervisingStrategy.getReferenceTypeName(), supervisingStrategy))
+        .withFields(
+          ref.getVariables(): _*)
+    case _ =>
+      obj
+  }
+
+  def enclosingActor(obj: ScalaObjectReference): Option[ScalaObjectReference] = {
+    obj.wrapJDIException("Exception while computing logical structures for actor") {
+      def walkOuterPath(obj: ScalaObjectReference): Option[ScalaObjectReference] = {
+        if (implements(obj.classType, "akka.actor.Actor")) Some(obj)
+        else (for {
+          _ <- Option(obj.referenceType().fieldByName("$outer"))
+          outerField = obj.fieldValue("$outer").asInstanceOf[ScalaObjectReference]
+        } yield walkOuterPath(outerField)).flatten
+      }
+
+      walkOuterPath(obj)
+    }
+  }
+
+  override def providesLogicalStructure(v: IValue): Boolean = !v.isInstanceOf[VirtualValue]
 }

@@ -1,30 +1,28 @@
 package org.scalaide.debug.internal.model
 
-import com.sun.jdi.ClassType
-import com.sun.jdi.IncompatibleThreadStateException
-import com.sun.jdi.Method
-import com.sun.jdi.ObjectCollectedException
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ThreadReference
-import com.sun.jdi.Value
-import com.sun.jdi.VMCannotBeModifiedException
-import com.sun.jdi.VMDisconnectedException
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IStackFrame
-import org.eclipse.jdt.internal.debug.core.model.JDIStackFrame
+import org.eclipse.debug.core.model.IThread
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.JDIUtil._
-import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStep
 import org.scalaide.debug.internal.command.ScalaStepInto
+import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.Utils.jdiSynchronized
-import scala.actors.Future
-import scala.collection.JavaConverters.asScalaBufferConverter
+
+import com.sun.jdi.ClassType
+import com.sun.jdi.IncompatibleThreadStateException
+import com.sun.jdi.Method
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ThreadReference
+import com.sun.jdi.VMCannotBeModifiedException
+import com.sun.jdi.Value
 
 class ThreadNotSuspendedException extends Exception
 
@@ -42,7 +40,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: ThreadReference)
+abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
     extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
@@ -55,12 +53,20 @@ abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: Thr
   override def isStepping: Boolean = ???
   private def canStep = suspended && !target.isPerformingHotCodeReplace
 
-  override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
+  override def stepInto(): Unit = {
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
+    }
+  }
   override def stepOver(): Unit = {
-    wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
+    }
   }
   override def stepReturn(): Unit = {
-    wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
+    }
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
