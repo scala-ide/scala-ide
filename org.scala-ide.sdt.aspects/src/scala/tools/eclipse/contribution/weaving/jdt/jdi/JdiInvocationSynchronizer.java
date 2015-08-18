@@ -17,16 +17,10 @@ public final class JdiInvocationSynchronizer {
     return INSTANCE;
   }
 
-  public synchronized <R> R runSynchronized(Callable<R> codeBlock) {
+  public synchronized <R> R runSynchronized(Callable<R> codeBlock) throws Exception {
     try {
       locked = true;
       return codeBlock.call();
-    } catch (Exception e) {
-      if (e instanceof RuntimeException) {
-        throw (RuntimeException) e;
-      } else {
-        throw new IllegalStateException("executed code block failed", e);
-      }
     } finally {
       locked = false;
     }
