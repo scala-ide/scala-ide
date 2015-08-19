@@ -3,9 +3,7 @@ package org.scalaide.debug.internal.model
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.eclipse.core.resources.IMarkerDelta
@@ -15,15 +13,19 @@ import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
+import org.eclipse.ui.PlatformUI
 import org.osgi.framework.Version
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.ScalaSourceLookupParticipant
+import org.scalaide.debug.internal.async.RetainedStackManager
 import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
 import org.scalaide.debug.internal.hcr.HotCodeReplaceExecutor
 import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
 import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
+import org.scalaide.debug.internal.views.AsyncDebugView
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.ui.DisplayThread
 
 import com.sun.jdi.ClassNotLoadedException
 import com.sun.jdi.ThreadReference
@@ -56,6 +58,7 @@ object ScalaDebugTarget extends HasLogger {
       override val hcrManager: Option[ScalaHotCodeReplaceManager] = ScalaHotCodeReplaceManager.create(subordinate)
       override val eventDispatcher: ScalaJdiEventDispatcher = ScalaJdiEventDispatcher(virtualMachine, this)
       override val cache: ScalaDebugCache = ScalaDebugCache(this)
+      override val retainedStack = new RetainedStackManager(this)
     }
 
     launch.addDebugTarget(debugTarget)
@@ -77,14 +80,20 @@ object ScalaDebugTarget extends HasLogger {
   val versionStringPattern = "version ([^-]*).*".r
 }
 
-/**
- * A debug target in the Scala debug model.
- * This class is thread safe. Instances have be created through its companion object.
+/** A debug target in the Scala debug model.
+ *  This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
-  launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
-  allowTerminate: Boolean, val classPath: Option[Seq[String]])
-    extends ScalaDebugElement(null) with JdiEventReceiver with IDebugTarget with HasLogger {
+abstract class ScalaDebugTarget private(
+    val virtualMachine: VirtualMachine,
+    launch: ILaunch,
+    process: IProcess,
+    allowDisconnect: Boolean,
+    allowTerminate: Boolean,
+    val classPath: Option[Seq[String]])
+  extends ScalaDebugElement(null) with JdiEventReceiver with IDebugTarget with HasLogger {
+
+  override def toString =
+    s"ScalaDebugTarget(vm = $virtualMachine, launch = $launch, process = $process, allowDisconnect = $allowDisconnect, allowTerminate = $allowTerminate, classpath = ${classPath.map(_.mkString(":")).mkString})"
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -172,16 +181,15 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   private[debug] val hcrManager: Option[ScalaHotCodeReplaceManager]
   private[debug] val subordinate: ScalaDebugTargetSubordinate
   private[debug] val cache: ScalaDebugCache
+  val retainedStack: RetainedStackManager
 
-  /**
-   * Initialize the dependent components
+  /** Initialize the dependent components
    */
   private def startJdiEventDispatcher() = {
     eventDispatcher.run()
   }
 
-  /**
-   * Callback from the breakpoint manager when a platform breakpoint is hit
+  /** Callback from the breakpoint manager when a platform breakpoint is hit
    */
   private[debug] def threadSuspended(thread: ThreadReference, eventDetail: Int): Unit = {
     subordinate.threadSuspended(thread, eventDetail)
@@ -191,11 +199,10 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    * Information about the VM being debugged
    */
 
-  /**
-   * The version of Scala on the VM being debugged.
-   * The value is `None` if it has not been initialized yet, or if it is too early to know (scala.Predef is not loaded yet).
-   * The value is `Some(Version(0,0,0))` if there was a problem while try fetch the version.
-   * Otherwise it contains the value parsed from scala.util.Properties.versionString.
+  /** The version of Scala on the VM being debugged.
+   *  The value is `None` if it has not been initialized yet, or if it is too early to know (scala.Predef is not loaded yet).
+   *  The value is `Some(Version(0,0,0))` if there was a problem while try fetch the version.
+   *  Otherwise it contains the value parsed from scala.util.Properties.versionString.
    */
   @volatile
   private var scalaVersion: Option[Version] = None
@@ -207,9 +214,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     scalaVersion
   }
 
-  /**
-   * Attempt to get a value for the Scala version.
-   * The possible return values are defined in {{scalaVersion}}.
+  /** Attempt to get a value for the Scala version.
+   *  The possible return values are defined in {{scalaVersion}}.
    */
   private def fetchScalaVersion(thread: ScalaThread): Option[Version] = {
     try {
@@ -262,13 +268,13 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   /**
    * Return a reference to the object with the given name in the debugged VM.
    *
-   * @param objectName the name of the object, as defined in code (without '$').
-   * @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
-   * @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
+   *  @param objectName the name of the object, as defined in code (without '$').
+   *  @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
+   *  @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
    *
-   * @throws ClassNotLoadedException if the class was not loaded yet.
-   * @throws IllegalArgumentException if there is no object of the given name.
-   * @throws DebugException
+   *  @throws ClassNotLoadedException if the class was not loaded yet.
+   *  @throws IllegalArgumentException if there is no object of the given name.
+   *  @throws DebugException
    */
   def objectByName(objectName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaObjectReference = {
     val moduleClassName = objectName + '$'
@@ -280,11 +286,11 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   /**
    * Return a reference to the type with the given name in the debugged VM.
    *
-   * @param objectName the name of the object, as defined in code (without '$').
-   * @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
-   * @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
+   *  @param objectName the name of the object, as defined in code (without '$').
+   *  @param tryForceLoad indicate if it should try to forceLoad the type if it is not loaded yet.
+   *  @param thread the thread to use to if a force load is needed. Can be `null` if tryForceLoad is `false`.
    *
-   * @throws ClassNotLoadedException if the class was not loaded yet.
+   *  @throws ClassNotLoadedException if the class was not loaded yet.
    */
   private def classByName(typeName: String, tryForceLoad: Boolean, thread: ScalaThread): ScalaReferenceType = {
     import scala.collection.JavaConverters._
@@ -356,13 +362,14 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     // get the current requests
     import scala.collection.JavaConverters._
     initializeThreads(virtualMachine.allThreads.asScala.toList)
+    retainedStack.start()
     breakpointManager.init()
     hcrManager.foreach(_.init())
+
     fireChangeEvent(DebugEvent.CONTENT)
   }
 
-  /**
-   * Callback from the actor when the connection with the vm as been lost
+  /** Callback from the actor when the connection with the vm as been lost
    */
   private[model] def vmDisconnected(): Unit = {
     if (running.getAndSet(false)) {
@@ -371,8 +378,24 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
       subordinate.removeSubscriptions()
       hcrManager.foreach(_.dispose())
       cache.dispose()
+      clearAsyncDebugView()
       disposeThreads()
       fireTerminateEvent()
+    }
+  }
+
+  /** Normally, the async debug view is automatically opened when the debugger
+   *  is started and closed when the debugger is stopped. If the user opens the
+   *  async debug view manually, we explicitly have to ensure that its content
+   *  get removed once the debugger is stopped.
+   */
+  private def clearAsyncDebugView(): Unit = DisplayThread.asyncExec {
+    for {
+      w ← Option(PlatformUI.getWorkbench.getActiveWorkbenchWindow)
+      p ← Option(w.getActivePage)
+      view ← Option(p.findView("org.scala-ide.sdt.debug.asyncView"))
+    } {
+      view.asInstanceOf[AsyncDebugView].clearDebugView()
     }
   }
 
@@ -383,9 +406,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     }
   }
 
-  /**
-   * Add a thread to the list of threads.
-   * FOR THE COMPANION ACTOR ONLY.
+  /** Add a thread to the list of threads.
+   *  FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def addThread(thread: ThreadReference): Unit = {
     // TODO: replace with getAndUpdate when java 1.8
@@ -396,9 +418,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     } while (!threads.compareAndSet(prev, next))
   }
 
-  /**
-   * Remove a thread from the list of threads
-   * FOR THE COMPANION ACTOR ONLY.
+  /** Remove a thread from the list of threads
+   *  FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def removeThread(thread: ThreadReference): Unit = {
     // TODO: replace with getAndUpdate when java 1.8
@@ -411,9 +432,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
     next._1.foreach(_.terminatedFromScala())
   }
 
-  /**
-   * Set the initial list of threads.
-   * FOR THE COMPANION ACTOR ONLY.
+  /** Set the initial list of threads.
+   *  FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def initializeThreads(t: List[ThreadReference]): Unit = {
     threads.getAndSet(t.map(ScalaThread(this, _)))
@@ -430,6 +450,9 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
    */
   private[model] def getScalaThreads: List[ScalaThread] = threads.get
 
+  def getScalaThread(threadRef: ThreadReference) =
+    threads.get.find(_.threadRef == threadRef)
+
   private[model] def canPopFrames: Boolean = running.get && virtualMachine.canPopFrames()
 }
 
@@ -442,17 +465,17 @@ private[model] object ScalaDebugTargetSubordinate {
   }
 }
 
-/**
- * Actor used to manage a Scala debug target. It keeps track of the existing threads.
- * This class is thread safe. Instances are not to be created outside of the ScalaDebugTarget object.
+/** Actor used to manage a Scala debug target. It keeps track of the existing threads.
+ *  This class is thread safe. Instances are not to be created outside of the ScalaDebugTarget object.
  *
- * The `ScalaDebugTargetActor` is linked to both the `ScalaJdiEventDispatcherActor and the
- * `ScalaDebugBreakpointManagerActor`, this implies that if any of the three actors terminates (independently
- * of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
- * linked actors).
+ *  The `ScalaDebugTargetActor` is linked to both the `ScalaJdiEventDispatcherActor and the
+ *  `ScalaDebugBreakpointManagerActor`, this implies that if any of the three actors terminates (independently
+ *  of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
+ *  linked actors).
  */
-private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
-    extends JdiEventReceiver with HotCodeReplaceExecutor {
+private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, override protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
+    extends JdiEventReceiver
+    with HotCodeReplaceExecutor {
   /** Is this actor initialized and listening to thread events? */
   private val initialized = new AtomicBoolean
 

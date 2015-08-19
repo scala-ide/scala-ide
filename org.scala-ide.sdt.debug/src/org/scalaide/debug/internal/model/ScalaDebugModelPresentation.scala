@@ -1,27 +1,33 @@
 package org.scalaide.debug.internal.model
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.util.Try
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.jobs.Job
+import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IValue
 import org.eclipse.debug.core.model.IVariable
+import org.eclipse.debug.internal.ui.DebugUIMessages
+import org.eclipse.debug.internal.ui.InstructionPointerAnnotation
 import org.eclipse.debug.internal.ui.views.variables.IndexedVariablePartition
 import org.eclipse.debug.ui.DebugUITools
 import org.eclipse.debug.ui.IDebugModelPresentation
 import org.eclipse.debug.ui.IDebugUIConstants
+import org.eclipse.debug.ui.IInstructionPointerPresentation
 import org.eclipse.debug.ui.IValueDetailListener
 import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
+import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.viewers.ILabelProviderListener
+import org.eclipse.swt.graphics.Image
 import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.IEditorPart
+import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.ScalaDebugger
 
-/**
- * Utility methods for the ScalaDebugModelPresentation class
- * This object doesn't use any internal field, and is thread safe.
+/** Utility methods for the ScalaDebugModelPresentation class
+ *  This object doesn't use any internal field, and is thread safe.
  */
 object ScalaDebugModelPresentation {
   def computeDetail(value: IValue): String = {
@@ -66,7 +72,8 @@ object ScalaDebugModelPresentation {
    * Return the value produced by calling toString() on the object.
    */
   private def computeDetail(objectReference: ScalaObjectReference): String = {
-    try {
+    if (ScalaDebugger.currentThread == null) ""
+    else try {
       objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
         case s: ScalaStringReference =>
           s.underlying.value
@@ -81,20 +88,15 @@ object ScalaDebugModelPresentation {
 
 }
 
-/**
- * Generate the elements used by the UI.
- * This class doesn't use any internal field, and is thread safe.
+/** Generate the elements used by the UI.
+ *  This class doesn't use any internal field, and is thread safe.
  */
-class ScalaDebugModelPresentation extends IDebugModelPresentation {
-
-  // Members declared in org.eclipse.jface.viewers.IBaseLabelProvider
+class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstructionPointerPresentation {
 
   override def addListener(listener: ILabelProviderListener): Unit = ???
   override def dispose(): Unit = {} // TODO: need real logic
   override def isLabelProperty(element: Any, property: String): Boolean = ???
   override def removeListener(listener: ILabelProviderListener): Unit = ???
-
-  // Members declared in org.eclipse.debug.ui.IDebugModelPresentation
 
   override def computeDetail(value: IValue, listener: IValueDetailListener): Unit = {
     new Job("Computing Scala debug details") {
@@ -117,13 +119,20 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
       case stackFrame: ScalaStackFrame =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
-      case variable: ScalaVariable =>
-        // TODO: right image depending on ?
-        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
       case variable: IndexedVariablePartition =>
         // variable used to split large arrays
         // TODO: see ScalaVariable before
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+      case VirtualVariable("<sender>", _, _) =>
+        ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
+      case VirtualVariable("<parent>", _, _) =>
+        ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
+      case variable: IVariable =>
+        // TODO: right image depending on ?
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
+      case asyncSF: IStackFrame =>
+        // TODO: right image depending of state
+        DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
       case _ => DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
     }
@@ -139,6 +148,7 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
         getScalaStackFrameText(stackFrame)
       case variable: IVariable =>
         ScalaDebugModelPresentation.textFor(variable)
+      case _ => element.toString
     }
   }
 
@@ -148,8 +158,6 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
    */
   override def setAttribute(key: String, value: Any): Unit = {}
 
-  // Members declared in org.eclipse.debug.ui.ISourcePresentation
-
   override def getEditorId(input: IEditorInput, element: Any): String = {
     EditorUtility.getEditorID(input)
   }
@@ -157,8 +165,6 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
   override def getEditorInput(input: Any): IEditorInput = {
     EditorUtility.getEditorInput(input)
   }
-
-  // ----
 
   /*
    * TODO: add support for thread state (running, suspended at ...)
@@ -184,4 +190,19 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation {
     })
   }
 
+  override def getInstructionPointerAnnotation(editorPart: IEditorPart, frame: IStackFrame): Annotation = {
+    new InstructionPointerAnnotation(frame,
+      IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY,
+      DebugUIMessages.InstructionPointerAnnotation_1,
+      DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER))
+  }
+
+  override def getInstructionPointerAnnotationType(editorPart: IEditorPart, frame: IStackFrame): String =
+    IDebugUIConstants.ANNOTATION_TYPE_INSTRUCTION_POINTER_SECONDARY
+
+  override def getInstructionPointerImage(editorPart: IEditorPart, frame: IStackFrame): Image =
+    DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_INSTRUCTION_POINTER)
+
+  override def getInstructionPointerText(editorPart: IEditorPart, frame: IStackFrame): String =
+    DebugUIMessages.InstructionPointerAnnotation_1
 }

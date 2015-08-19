@@ -85,6 +85,10 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile private var st
   extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
   private val stackFrameRef: AtomicReference[StackFrame] = new AtomicReference(stackFrame0)
+
+  override def toString =
+    s"ScalaStackFrame(thread = $thread, stackFrame = $stackFrame, index = $index)"
+
   // Members declared in org.eclipse.debug.core.model.IStackFrame
 
   override def getCharEnd(): Int = -1

@@ -73,11 +73,20 @@
             id="org.scalaide.ui.preferences.debug"
             name="Debug">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.debug"
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug"
+            name="Async Debugger">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.scalaide.debug.internal.preferences.DebugerPreferencesInitializer">
+      </initializer>
+      <initializer
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencesInitializer">
       </initializer>
    </extension>
    <extension
@@ -93,10 +102,37 @@
    </extension>
 
    <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.scala-ide.sdt.core.viewCategory"
+            class="org.scalaide.debug.internal.views.AsyncDebugView"
+            id="org.scala-ide.sdt.debug.asyncView"
+            name="Async Stack"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.contextViewBindings">
+      <contextViewBinding
+            autoOpen="true"
+            contextId="org.eclipse.debug.ui.debugging"
+            viewId="org.scala-ide.sdt.debug.asyncView">
+      </contextViewBinding>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="org.eclipse.debug.ui.debugActionSet">
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
          point="org.scala-ide.sdt.core.scalaHoverDebugOverride">
       <overrider
             hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
       </overrider>
    </extension>
-           
 </plugin>

@@ -9,9 +9,9 @@ import org.junit.Test
 import org.junit.matchers.JUnitMatchers
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.model.ScalaArrayReference
-import org.scalaide.debug.internal.model.ScalaCollectionLogicalStructureType
 import org.scalaide.debug.internal.model.ScalaDebugModelPresentation
 import org.hamcrest.CoreMatchers
+import org.scalaide.debug.internal.model.ScalaLogicalStructureProvider
 
 object ScalaDebugComputeDetailTest extends TestProjectSetup("debug", bundleName= "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest
 
@@ -111,7 +111,7 @@ class ScalaDebugComputeDetailTest {
 
     session.checkStackFrame(TYPENAME_VARIABLES + "$", "main([Ljava/lang/String;)V", 30)
 
-    val logicalStructure= ScalaCollectionLogicalStructureType.getLogicalStructure(session.getLocalVariable("j"))
+    val logicalStructure= ScalaLogicalStructureProvider.getLogicalStructure(session.getLocalVariable("j"))
 
     assertThat("Wrong type for the logical structure", logicalStructure.getValueString(), CoreMatchers.containsString("Array[Object](3)"))
 
