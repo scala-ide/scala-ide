@@ -36,7 +36,7 @@ object AsyncUtils extends HasLogger {
       method <- findAsyncProgramPoint(app, tpe)
     } yield {
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method, debugTarget)
-      debugTarget.eventDispatcher.setActorFor(actor, req)
+      //debugTarget.eventDispatcher.setActorFor(actor, req)
       req.putProperty("app", app)
       if (threadRef ne null)
         req.addThreadFilter(threadRef)

@@ -70,12 +70,12 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
 
     private def disable(): Unit = {
-      val eventDispatcher = debugTarget.eventDispatcher
+      //val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
       for (request <- eventRequests) {
         request.disable()
-        eventDispatcher.unsetActorFor(request)
+        //eventDispatcher.unsetActorFor(request)
         eventRequestManager.deleteEventRequest(request)
       }
     }
