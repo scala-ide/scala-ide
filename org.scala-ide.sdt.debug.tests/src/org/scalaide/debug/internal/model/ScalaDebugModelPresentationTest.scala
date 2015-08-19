@@ -30,11 +30,6 @@ class ScalaDebugModelPresentationTest {
 
   val modelPres = new ScalaDebugModelPresentation
 
-  /**
-   * The actor associated to the element currently being tested.
-   */
-  var actor: Option[BaseDebuggerActor] = None
-
   @Before
   def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
@@ -42,17 +37,8 @@ class ScalaDebugModelPresentationTest {
     }
   }
 
-  @After
-  def actorCleanup(): Unit = {
-    actor.foreach(_ ! PoisonPill)
-    actor = None
-  }
-
-  private def createThread(jdiThread: ThreadReference): ScalaThread = {
-    val scalaThread = ScalaThread(null, jdiThread)
-    actor = Some(scalaThread.companionActor)
-    scalaThread
-  }
+  private def createThread(jdiThread: ThreadReference): ScalaThread =
+    ScalaThread(null, jdiThread)
 
   @Test
   def scalaThreadName(): Unit = {

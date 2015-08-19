@@ -36,7 +36,8 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.IPath
 
-/** Inputs-like class, but not implementing xsbti.compile.Inputs.
+/**
+ * Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
