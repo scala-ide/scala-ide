@@ -1,15 +1,21 @@
 package org.scalaide.debug.internal.command
 
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+import org.eclipse.debug.core.DebugEvent
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThread
-import org.eclipse.debug.core.DebugEvent
+
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
-import com.sun.jdi.event.Event
-import org.scalaide.debug.internal.BaseDebuggerActor
 
 object ScalaStepInto {
 
@@ -28,12 +34,8 @@ object ScalaStepInto {
 
     val stackFrames = scalaStackFrame.thread.getStackFrames
     val depth = stackFrames.length - stackFrames.indexOf(scalaStackFrame)
-    val companionActor = new ScalaStepIntoActor(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber) {
-      override val scalaStep: ScalaStep = new ScalaStepImpl(this)
-    }
-    companionActor.start()
-
-    companionActor.scalaStep
+    val subordinate = new ScalaStepIntoSubordinate(scalaStackFrame.getDebugTarget, scalaStackFrame.thread, stepIntoRequest, stepOutRequest, depth, scalaStackFrame.stackFrame.location.lineNumber)
+    subordinate.scalaStep
   }
 
 }
@@ -42,101 +44,86 @@ object ScalaStepInto {
  * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepInto object.
  */
-private[command] abstract class ScalaStepIntoActor(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int) extends BaseDebuggerActor {
+private[command] class ScalaStepIntoSubordinate(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int)
+    extends ScalaStep with JdiEventReceiver {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   /**
    * Needed to perform a correct step out (see Eclipse bug report #38744)
    */
-  private var stepOutStackDepth = 0
+  private val stepOutStackDepth = new AtomicInteger
 
-  private var enabled = false
+  private val enabled = new AtomicBoolean
 
-  protected[command] def scalaStep: ScalaStep
+  protected[command] def scalaStep: ScalaStep = this
 
-  override protected def postStart(): Unit = link(thread.companionActor)
-
-  override protected def behavior = {
+  override protected def innerHandle = {
     // JDI event triggered when a step has been performed
     case stepEvent: StepEvent =>
-      reply(stepEvent.request.asInstanceOf[StepRequest].depth match {
+      stepEvent.request.asInstanceOf[StepRequest].depth match {
         case StepRequest.STEP_INTO =>
           if (debugTarget.cache.isOpaqueLocation(stepEvent.location)) {
             // don't step deeper into constructor from 'hidden' entities
-            stepOutStackDepth = stepEvent.thread.frameCount
+            stepOutStackDepth.getAndSet(stepEvent.thread.frameCount)
             stepIntoRequest.disable()
             stepOutRequest.enable()
             false
           } else {
             if (!debugTarget.cache.isTransparentLocation(stepEvent.location) && stepEvent.location.lineNumber != stackLine) {
-              terminate()
+              disable()
               thread.suspendedFromScala(DebugEvent.STEP_INTO)
               true
-            }
-            else false
+            } else false
           }
 
         case StepRequest.STEP_OUT =>
           if (stepEvent.thread.frameCount == stackDepth && stepEvent.location.lineNumber != stackLine) {
             // we are back on the method, but on a different line, stopping the stepping
-            terminate()
+            disable()
             thread.suspendedFromScala(DebugEvent.STEP_INTO)
             true
           } else {
             // switch back to step into only if the step return has been effectively done.
-            if (stepEvent.thread.frameCount < stepOutStackDepth) {
+            if (stepEvent.thread.frameCount < stepOutStackDepth.get) {
               // launch a new step into
               stepOutRequest.disable()
               stepIntoRequest.enable()
             }
             false
           }
-      })
-    // user step request
-    case ScalaStep.Step =>
-      step()
-    case ScalaStep.Stop =>
-      terminate()
+      }
   }
 
-  private def step(): Unit = {
+  override def step(): Unit = Future {
     enable()
     thread.resumeFromScala(scalaStep, DebugEvent.STEP_INTO)
   }
 
-  private def terminate(): Unit = {
+  override def stop(): Unit = Future {
     disable()
-    poison()
   }
 
   private def enable(): Unit = {
-    if (!enabled) {
+    if (!enabled.getAndSet(true)) {
       val eventDispatcher = debugTarget.eventDispatcher
-
-      eventDispatcher.setActorFor(this, stepIntoRequest)
-      eventDispatcher.setActorFor(this, stepOutRequest)
+      eventDispatcher.register(this, stepIntoRequest)
+      eventDispatcher.register(this, stepOutRequest)
       stepIntoRequest.enable()
-      enabled = true
     }
   }
 
   private def disable(): Unit = {
-    if (enabled) {
+    if (enabled.getAndSet(false)) {
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
       // make sure that actors are gracefully shut down
-      eventDispatcher.unsetActorFor(stepIntoRequest)
-      eventDispatcher.unsetActorFor(stepOutRequest)
+      eventDispatcher.unregister(stepIntoRequest)
+      eventDispatcher.unregister(stepOutRequest)
 
       stepIntoRequest.disable()
       stepOutRequest.disable()
       eventRequestManager.deleteEventRequest(stepIntoRequest)
       eventRequestManager.deleteEventRequest(stepOutRequest)
-      enabled = false
     }
-  }
-
-  override protected def preExit(): Unit = {
-    unlink(thread.companionActor)
-    disable()
   }
 }

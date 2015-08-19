@@ -13,6 +13,7 @@ import org.eclipse.debug.core.model.IVariable
 import org.scalaide.util.Utils.jdiSynchronized
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.NameTransformer
+import java.util.concurrent.atomic.AtomicReference
 
 object ScalaStackFrame {
 
@@ -80,9 +81,10 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame: StackFrame, val index: Int)
+class ScalaStackFrame private (val thread: ScalaThread, @volatile private var stackFrame0: StackFrame, val index: Int)
   extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
+  private val stackFrameRef: AtomicReference[StackFrame] = new AtomicReference(stackFrame0)
 
   override def toString =
     s"ScalaStackFrame(thread = $thread, stackFrame = $stackFrame, index = $index)"
@@ -134,6 +136,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
 
   def isNative = stackFrame.location().method().isNative()
   def isObsolete = stackFrame.location().method().isObsolete()
+  def stackFrame = stackFrameRef.get
 
   import org.scalaide.debug.internal.JDIUtil._
   import scala.util.control.Exception
@@ -190,7 +193,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
           NameTransformer.decode(method.name),
           getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame0.location.method) }
   }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need
@@ -199,7 +202,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     *  `ScalaLocalVariable.getValue`
     */
   def rebind(newStackFrame: StackFrame): Unit = {
-    stackFrame = newStackFrame
+    stackFrameRef.getAndSet(newStackFrame)
   }
 
   /** Wrap calls to the underlying VM stack frame to handle exceptions gracefully. */
