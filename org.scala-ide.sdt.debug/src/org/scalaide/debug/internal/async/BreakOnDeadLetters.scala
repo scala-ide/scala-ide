@@ -88,6 +88,27 @@ class BreakOnDeadLetters(debugTarget: ScalaDebugTarget) extends HasLogger {
           createRequests()
         reply(false)
     }
+<<<<<<< HEAD
+=======
+
+    def createRequests() = {
+      eventRequests = AsyncUtils.installMethodBreakpoint(debugTarget, asyncPoint, internalActor).toSet
+      if (eventRequests.isEmpty)
+        logger.error("Could not install dead letter breakpoints")
+    }
+
+    private def disable(): Unit = {
+      val eventDispatcher = debugTarget.eventDispatcher
+      val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
+
+      for (request <- eventRequests) {
+        request.disable()
+        eventDispatcher.unregister(request)
+        eventRequestManager.deleteEventRequest(request)
+      }
+    }
+
+>>>>>>> Merge with async stack tracer
   }
 }
 

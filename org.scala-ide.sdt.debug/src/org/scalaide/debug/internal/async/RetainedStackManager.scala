@@ -1,14 +1,29 @@
 package org.scalaide.debug.internal.async
 
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+<<<<<<< HEAD
+=======
+import scala.collection.JavaConverters.asScalaSetConverter
+import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+>>>>>>> Merge with async stack tracer
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Try
 
+<<<<<<< HEAD
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.ScalaDebugPlugin
+=======
+import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.model.ClassPrepareListener
+>>>>>>> Merge with async stack tracer
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaValue
@@ -21,6 +36,8 @@ import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.ClassPrepareEvent
+import com.sun.jdi.event.Event
+import com.sun.jdi.request.BreakpointRequest
 
 /**
  * Installs breakpoints in key places and collect stack frames.
@@ -29,22 +46,30 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
 
   final val MaxEntries = 20000
-  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTraces] = new LRUMap(MaxEntries)
+  private val stackFrames: mutable.Map[ObjectReference, AsyncStackTraces] = {
+    import scala.collection.JavaConverters._
+    new ConcurrentHashMap[ObjectReference, AsyncStackTraces](MaxEntries).asScala
+  }
+  private val breakpointRequests: mutable.Set[BreakpointRequest] = {
+    import scala.collection.JavaConverters._
+    Collections.newSetFromMap(new ConcurrentHashMap[BreakpointRequest, java.lang.Boolean]).asScala
+  }
   private val messageOrdinal = new AtomicInteger
 
-  object actor extends BaseDebuggerActor {
-    override protected def behavior = {
-      // JDI event triggered when a class has been loaded
-      case classPrepareEvent: ClassPrepareEvent =>
-        val refType = classPrepareEvent.referenceType()
-        // find the right app to install
-        programPoints.find(_.className == refType.name()) foreach { installMethodBreakpoint(refType, _) }
-        reply(false)
-
+  object subordinate extends JdiEventReceiver with ClassPrepareListener {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    override protected def innerHandle: PartialFunction[Event, StaySuspended] = {
       // JDI event triggered when a breakpoint is hit
       case breakpointEvent: BreakpointEvent =>
         appHit(breakpointEvent.thread, breakpointEvent.request().getProperty("app").asInstanceOf[AsyncProgramPoint], messageOrdinal.getAndIncrement)
-        reply(false) // don't suspend this thread
+        false // don't suspend this thread
+    }
+
+    override def notify(event: ClassPrepareEvent): Future[Unit] = Future {
+      // JDI event triggered when a class has been loaded
+      val refType = event.referenceType()
+      // find the right app to install
+      programPoints.find(_.className == refType.name()) foreach { installMethodBreakpoint(refType, _) }
     }
   }
 
@@ -90,10 +115,10 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     val method = AsyncUtils.findAsyncProgramPoint(app, tpe)
     method.foreach { meth =>
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method.get, debugTarget)
-      debugTarget.eventDispatcher.setActorFor(actor, req)
+      debugTarget.eventDispatcher.register(subordinate, req)
       req.putProperty("app", app)
       req.enable()
-
+      breakpointRequests += req
       logger.debug(s"Installed method breakpoint for ${method.get.declaringType()}.${method.get.name}")
     }
   }
@@ -109,8 +134,12 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
     stackFrames.get(future).flatMap(_(messageOrdinal))
 
+<<<<<<< HEAD
   def start(): Unit = if (debugTarget.getLaunch.getLaunchConfiguration.getAttribute(LaunchWithAsyncDebugger, false)) {
     actor.start()
+=======
+  def start(): Unit = {
+>>>>>>> Merge with async stack tracer
     for {
       app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
       refType = debugTarget.virtualMachine.classesByName(clazz).asScala
@@ -118,8 +147,20 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
       installMethodBreakpoint(refType(0), app)
     else
       // in case it's not been loaded yet
-      debugTarget.cache.addClassPrepareEventListener(actor, clazz)
+      debugTarget.cache.addClassPrepareEventListener(subordinate, clazz)
   }
+<<<<<<< HEAD
+=======
+
+  def dispose(): Unit = Future {
+    breakpointRequests.foreach { br =>
+      debugTarget.eventDispatcher.unregister(br)
+      br.disable()
+    }
+    breakpointRequests.clear()
+    stackFrames.clear()
+  }
+>>>>>>> Merge with async stack tracer
 }
 
 object RetainedStackManager {

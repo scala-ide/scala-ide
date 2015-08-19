@@ -1,9 +1,7 @@
 package org.scalaide.debug.internal.model
 
 import java.util.ArrayList
-
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.Launch
 import org.junit.Assert.assertEquals
@@ -13,7 +11,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
 import org.scalaide.debug.internal.TestFutureUtil.waitForConditionOrTimeout
 import org.scalaide.debug.internal.TestFutureUtil.whenReady
-
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventQueue
@@ -23,8 +20,8 @@ import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequestManager
 import com.sun.jdi.request.ThreadDeathRequest
 import com.sun.jdi.request.ThreadStartRequest
-
 import ScalaDebugTargetTest.createDebugTarget
+import com.sun.jdi.request.ClassPrepareRequest
 
 object ScalaDebugTargetTest {
   /**
@@ -39,6 +36,8 @@ object ScalaDebugTargetTest {
     when(eventRequestManager.createThreadStartRequest).thenReturn(threadStartRequest)
     val threadDeathRequest = mock(classOf[ThreadDeathRequest])
     when(eventRequestManager.createThreadDeathRequest).thenReturn(threadDeathRequest)
+    val classPrepareRequest = mock(classOf[ClassPrepareRequest])
+    when(eventRequestManager.createClassPrepareRequest).thenReturn(classPrepareRequest)
     ScalaDebugTarget(virtualMachine, mock(classOf[Launch]), null, allowDisconnect = false, allowTerminate = true)
   }
 }

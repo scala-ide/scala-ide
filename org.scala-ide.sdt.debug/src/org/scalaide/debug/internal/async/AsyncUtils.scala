@@ -37,9 +37,14 @@ object AsyncUtils extends HasLogger {
       method <- findAsyncProgramPoint(app, tpe)
     } yield {
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method, debugTarget)
+<<<<<<< HEAD
       debugTarget.eventDispatcher.setActorFor(actor, req)
       req.putProperty(AsyncProgramPointKey, app)
       requestOwner.foreach { req.putProperty(RequestOwnerKey, _) }
+=======
+      //debugTarget.eventDispatcher.setActorFor(actor, req)
+      req.putProperty("app", app)
+>>>>>>> Merge with async stack tracer
       if (threadRef ne null)
         req.addThreadFilter(threadRef)
       req.enable()
