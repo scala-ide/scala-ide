@@ -378,6 +378,7 @@ abstract class ScalaDebugTarget private(
       subordinate.removeSubscriptions()
       hcrManager.foreach(_.dispose())
       cache.dispose()
+      retainedStack.dispose()
       clearAsyncDebugView()
       disposeThreads()
       fireTerminateEvent()
