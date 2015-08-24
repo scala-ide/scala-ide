@@ -3,7 +3,6 @@ package org.scalaide.debug.internal.async
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable
 import scala.util.Success
 import scala.util.Try
@@ -20,8 +19,6 @@ import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.ClassPrepareEvent
-
-import RetainedStackManager.OrdinalNotSet
 
 /**
  * Installs breakpoints in key places and collect stack frames.
