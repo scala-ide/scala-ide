@@ -76,7 +76,7 @@
       <page
             category="org.scalaide.ui.preferences.debug"
             class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
-            id="org.scalaide.ui.preferences.debug"
+            id="org.scalaide.ui.preferences.debug.async"
             name="Async Debugger">
       </page>
    </extension>
@@ -187,5 +187,13 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+F5">
       </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug.async"
+            name="Scala Async Debugger">
+      </page>
    </extension>
 </plugin>

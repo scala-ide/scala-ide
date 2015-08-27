@@ -27,7 +27,6 @@ import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.dialogs.PropertyPage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
-import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
 import org.eclipse.jface.preference.FieldEditor
@@ -35,85 +34,16 @@ import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.core.resources.ProjectScope
 import org.scalaide.core.SdtConstants
 
-class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPreferencePage {
+class OrganizeImportsPreferencesPage extends FieldEditors {
   import OrganizeImportsPreferences._
 
-  private var isWorkbenchPage = false
-
-  private var allEnableDisableControls: Set[Control] = Set()
-
-  case class AnalyzerSetting(enabled: Boolean, severity: Int)
-
-  private val fieldEditors = collection.mutable.ListBuffer[FieldEditor]()
-
-  override def init(workbench: IWorkbench): Unit = {
-    isWorkbenchPage = true
-  }
-
-  private def initUnderlyingPreferenceStore(): Unit = {
-    val pluginId = SdtConstants.PluginId
-    val scalaPrefStore = IScalaPlugin().getPreferenceStore()
-    setPreferenceStore(getElement match {
-      case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
-      case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
-      case _ => scalaPrefStore
-    })
-  }
-
-  def addNewFieldEditorWrappedInComposite[T <: FieldEditor](parent: Composite)(f: Composite => T): T = {
-
-    val composite = new Composite(parent, SWT.NONE)
-
-    val fieldEditor = f(composite)
-
-    fieldEditor.setPreferenceStore(getPreferenceStore)
-    fieldEditor.load
-
-    if(isWorkbenchPage) {
-      composite.setLayoutData(new CC().grow.wrap)
-    } else {
-      composite.setLayoutData(new CC().spanX(2).grow.wrap)
-    }
-
-    fieldEditor
-  }
-
   override def createContents(parent: Composite): Control = {
+    initUnderlyingPreferenceStore(SdtConstants.PluginId, IScalaPlugin().getPreferenceStore)
+    mkMainControl(parent)(createEditors)
+  }
 
-    initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
-
-    // copied from the formatter preferences, should be extracted to somewhere common..
-    val control = new Composite(parent, SWT.NONE)
-    val rowConstraints = if (isWorkbenchPage)
-      new AC().index(0).grow(0).index(1).grow
-    else
-      new AC().index(0).grow(0).index(1).grow(0).index(2).grow(0).index(3).grow
-    control.setLayout(new MigLayout(new LC().insetsAll("0").fill, new AC(), rowConstraints))
-
-    if (!isWorkbenchPage) {
-
-      val projectSpecificButton = new Button(control, SWT.CHECK | SWT.WRAP)
-      projectSpecificButton.setText("Enable project specific settings")
-      projectSpecificButton.setSelection(getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY))
-      projectSpecificButton.addSelectionListener { () =>
-        val enabled = projectSpecificButton.getSelection
-        getPreferenceStore.setValue(USE_PROJECT_SPECIFIC_SETTINGS_KEY, enabled)
-        allEnableDisableControls foreach { _.setEnabled(enabled) }
-      }
-      projectSpecificButton.setLayoutData(new CC)
-
-      val link = new Link(control, SWT.NONE)
-      link.setText("<a>" + PreferencesMessages.PropertyAndPreferencePage_useworkspacesettings_change + "</a>")
-      link.addSelectionListener { () =>
-        PreferencesUtil.createPreferenceDialogOn(getShell, PAGE_ID, Array(PAGE_ID), null).open()
-      }
-      link.setLayoutData(new CC().alignX("right").wrap)
-
-      val horizontalLine = new Label(control, SWT.SEPARATOR | SWT.HORIZONTAL)
-      horizontalLine.setLayoutData(new CC().spanX(2).grow.wrap)
-    }
-
-    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { (parent =>
+  def createEditors(control: Composite): Unit = {
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       new ListEditor(groupsKey, "Define the sorting order of import statements.", parent) {
 
         allEnableDisableControls += getListControl(parent)
@@ -125,14 +55,19 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
 
         override def getNewInputObject(): String = {
 
-          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a package name:", "", new IInputValidator { override def isValid(text: String) = null });
+          val dlg = new InputDialog(
+              Display.getCurrent().getActiveShell(),
+              "",
+              "Enter a package name:",
+              "",
+              new IInputValidator { override def isValid(text: String) = null })
           if (dlg.open() == Window.OK) {
             dlg.getValue()
           } else {
             null
           }
         }
-      })
+      }
     }
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
@@ -162,7 +97,12 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
 
         override def getNewInputObject(): String = {
 
-          val dlg = new InputDialog(Display.getCurrent().getActiveShell(), "", "Enter a fully qualified package or type name:", "", new IInputValidator { override def isValid(text: String) = null });
+          val dlg = new InputDialog(
+              Display.getCurrent().getActiveShell(),
+              "",
+              "Enter a fully qualified package or type name:",
+              "",
+              new IInputValidator { override def isValid(text: String) = null })
           if (dlg.open() == Window.OK) {
             dlg.getValue()
           } else {
@@ -177,46 +117,31 @@ class OrganizeImportsPreferencesPage extends PropertyPage with IWorkbenchPrefere
         allEnableDisableControls += getChangeControl(parent)
       }
     }
-
-    if (!isWorkbenchPage) {
-      val enabled = getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
-      allEnableDisableControls foreach { _.setEnabled(enabled) }
-    }
-    control
   }
 
-  override def performDefaults() = {
-    super.performDefaults()
-    fieldEditors.foreach(_.loadDefault)
-  }
+  override def useProjectSpecifcSettingsKey = UseProjectSpecificSettingsKey
 
-  override def performOk() = {
-    super.performOk()
-    fieldEditors.foreach(_.store)
-    InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).flush()
-    true
-  }
+  override def pageId = PageId
 }
 
 object OrganizeImportsPreferences extends Enumeration {
-  val PREFIX = "organizeimports"
-  val USE_PROJECT_SPECIFIC_SETTINGS_KEY = PREFIX + ".useProjectSpecificSettings"
-  val PAGE_ID = "scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
+  val UseProjectSpecificSettingsKey = "organizeimports.useProjectSpecificSettings"
+  val PageId = "org.scalaide.ui.preferences.editor.organizeImports"
 
   val ExpandImports = Value("expand")
   val CollapseImports = Value("collapse")
   val PreserveExistingGroups = Value("preserve")
 
-  val groupsKey         = PREFIX +".groups"
-  val wildcardsKey      = PREFIX +".wildcards"
-  val expandCollapseKey = PREFIX +".expandcollapse"
+  val groupsKey         = "organizeimports.groups"
+  val wildcardsKey      = "organizeimports.wildcards"
+  val expandCollapseKey = "organizeimports.expandcollapse"
 
-  val omitScalaPackage = PREFIX +".scalapackage"
+  val omitScalaPackage = "organizeimports.scalapackage"
 
   private def getPreferenceStore(project: IProject): IPreferenceStore = {
     val workspaceStore = IScalaPlugin().getPreferenceStore()
     val projectStore = new PropertyStore(new ProjectScope(project), SdtConstants.PluginId)
-    val useProjectSettings = projectStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
+    val useProjectSettings = projectStore.getBoolean(UseProjectSpecificSettingsKey)
     val prefStore = if (useProjectSettings) projectStore else workspaceStore
     prefStore
   }
