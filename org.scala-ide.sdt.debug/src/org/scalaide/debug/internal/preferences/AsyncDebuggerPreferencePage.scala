@@ -17,9 +17,12 @@ import org.scalaide.ui.internal.preferences.FieldEditors
 class AsyncDebuggerPreferencePage extends FieldEditors {
   import AsyncDebuggerPreferencePage._
 
-  setPreferenceStore(ScalaDebugPlugin.plugin.getPreferenceStore)
+  override def createContents(parent: Composite): Control = {
+    initUnderlyingPreferenceStore(ScalaDebugPlugin.id, ScalaDebugPlugin.plugin.getPreferenceStore)
+    mkMainControl(parent)(createEditors)
+  }
 
-  override def createContents(parent: Composite): Control = mkMainControl(parent) { control ⇒
+  def createEditors(control: Composite): Unit = {
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent ⇒
       new ListEditor(FadingPackages, "Define all package names that should be faded:", parent) {
 
@@ -56,7 +59,9 @@ class AsyncDebuggerPreferencePage extends FieldEditors {
     }
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent ⇒
-      new ColorFieldEditor(FadingColor, "Color of faded packages:", parent)
+      new ColorFieldEditor(FadingColor, "Color of faded packages:", parent) {
+        allEnableDisableControls += getColorSelector.getButton
+      }
     }
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent ⇒
@@ -98,6 +103,10 @@ class AsyncDebuggerPreferencePage extends FieldEditors {
       }
     }
   }
+
+  override def useProjectSpecifcSettingsKey = UseProjectSpecificSettingsKey
+
+  override def pageId = PageId
 }
 
 object AsyncDebuggerPreferencePage {
@@ -106,6 +115,8 @@ object AsyncDebuggerPreferencePage {
   val AsyncProgramPoints = "org.scalaide.debug.async.programPoints"
   /** The delimiter that separates the data that is entered in the UI. */
   val DataDelimiter = ";"
+  val UseProjectSpecificSettingsKey = "org.scalaide.debug.async.useProjectSpecificSettings"
+  val PageId = "org.scalaide.ui.preferences.debug.async"
 }
 
 class AsyncDebuggerPreferencesInitializer extends AbstractPreferenceInitializer {
