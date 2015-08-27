@@ -122,14 +122,21 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            id="org.scala-ide.sdt.debug.stepMessageOut"
+            categoryId="org.scalaide.debug"
+            id="org.scalaide.debug.async.stepMessageOut"
             name="Step Message Out">
       </command>
       <command
+            categoryId="org.scalaide.debug"
             description="Break execution when a message is sent to dead letters"
-            id="org.scala-ide.sdt.debug.stopOnDeadLetters"
+            id="org.scalaide.debug.async.stopOnDeadLetters"
             name="Break on DeadLetter">
       </command>
+      <category
+            description="Scala Debugger category"
+            id="org.scalaide.debug"
+            name="Scala Debugger">
+      </category>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
