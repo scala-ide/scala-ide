@@ -37,16 +37,8 @@ import org.scalaide.logging.HasLogger
 import org.eclipse.core.resources.ProjectScope
 import org.scalaide.core.SdtConstants
 
-class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage with HasLogger {
+class FormatterPreferencePage extends FieldEditors with HasLogger {
   import FormatterPreferencePage._
-
-  private var isWorkbenchPage = false
-
-  private var allEnableDisableControls: Set[Control] = Set()
-
-  override def init(workbench: IWorkbench): Unit = {
-    isWorkbenchPage = true
-  }
 
   lazy val overlayStore = {
     import OverlayPreferenceStore._
@@ -159,7 +151,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
   }
 
-  object IndentPrefTab extends PrefTab("Indentation && Alignment", INDENT_PREVIEW_TEXT) {
+  object IndentPrefTab extends PrefTab("Indentation && Alignment", IndentPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(9).grow(1)))
@@ -177,7 +169,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
   }
 
-  object SpacesPrefTab extends PrefTab("Spaces", SPACES_PREVIEW_TEXT) {
+  object SpacesPrefTab extends PrefTab("Spaces", SpacesPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(7).grow(1)))
@@ -193,7 +185,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
   }
 
-  object MiscPrefTab extends PrefTab("Miscellaneous", MISC_PREVIEW_TEXT) {
+  object MiscPrefTab extends PrefTab("Miscellaneous", MiscPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
@@ -208,7 +200,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
   }
 
-  object ScaladocPrefTab extends PrefTab("Scaladoc", SCALADOC_PREVIEW_TEXT) {
+  object ScaladocPrefTab extends PrefTab("Scaladoc", ScaladocPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(3).grow(1)))
@@ -220,52 +212,14 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     }
 
   }
-
-  private def initUnderlyingPreferenceStore(): Unit = {
-    val pluginId = SdtConstants.PluginId
-    val scalaPrefStore = IScalaPlugin().getPreferenceStore()
-    setPreferenceStore(getElement match {
-      case project: IProject => new PropertyStore(new ProjectScope(project), pluginId)
-      case project: IJavaProject => new PropertyStore(new ProjectScope(project.getProject), pluginId)
-      case _ => scalaPrefStore
-    })
+  override def createContents(parent: Composite): Control = {
+    initUnderlyingPreferenceStore(SdtConstants.PluginId, IScalaPlugin().getPreferenceStore)
+    mkMainControl(parent)(createEditors)
   }
 
-  def createContents(parent: Composite): Control = {
+  def createEditors(control: Composite): Unit = {
     import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
     import org.scalaide.util.eclipse.SWTUtils.noArgFnToSelectionAdapter
-
-    initUnderlyingPreferenceStore() // done here to ensure that getElement will have been set
-
-    val control = new Composite(parent, SWT.NONE)
-    val rowConstraints = if (isWorkbenchPage)
-      new AC().index(0).grow(0).index(1).grow
-    else
-      new AC().index(0).grow(0).index(1).grow(0).index(2).grow(0).index(3).grow
-    control.setLayout(new MigLayout(new LC().insetsAll("0").fill, new AC(), rowConstraints))
-
-    if (!isWorkbenchPage) {
-
-      val projectSpecificButton = new Button(control, SWT.CHECK | SWT.WRAP)
-      projectSpecificButton.setText("Enable project specific settings")
-      projectSpecificButton.setSelection(getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY))
-      projectSpecificButton.addSelectionListener { e: SelectionEvent =>
-        val enabled = projectSpecificButton.getSelection
-        getPreferenceStore.setValue(USE_PROJECT_SPECIFIC_SETTINGS_KEY, enabled)
-        allEnableDisableControls foreach { _.setEnabled(enabled) }
-      }
-      projectSpecificButton.setLayoutData(new CC)
-
-      val link = new Link(control, SWT.NONE)
-      link.setText("<a>" + PreferencesMessages.PropertyAndPreferencePage_useworkspacesettings_change + "</a>")
-      link.addSelectionListener { () =>
-        PreferencesUtil.createPreferenceDialogOn(getShell, PAGE_ID, Array(PAGE_ID), null).open()
-      }
-      link.setLayoutData(new CC().alignX("right").wrap)
-
-      val horizontalLine = new Label(control, SWT.SEPARATOR | SWT.HORIZONTAL)
-      horizontalLine.setLayoutData(new CC().spanX(2).grow.wrap)
-    }
 
     { // Manual link + import / export buttons
       val buttonPanel = new Composite(control, SWT.NONE)
@@ -281,7 +235,7 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
       val link = new Link(buttonPanel, SWT.NONE)
       link.setText("<a>Scalariform manual</a>")
       link.addSelectionListener { e: SelectionEvent =>
-        val url = new URL(SCALARIFORM_DOC_URL)
+        val url = new URL(ScalariformDocUrl)
         PlatformUI.getWorkbench.getBrowserSupport.createBrowser(null).openURL(url)
       }
       link.setLayoutData(new CC)
@@ -309,13 +263,11 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     MiscPrefTab.build(tabFolder)
 
     allEnableDisableControls += tabFolder
-
-    if (!isWorkbenchPage) {
-      val enabled = getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)
-      allEnableDisableControls foreach { _.setEnabled(enabled) }
-    }
-    control
   }
+
+  override def useProjectSpecifcSettingsKey = USE_PROJECT_SPECIFIC_SETTINGS_KEY
+
+  override def pageId = PageId
 
   override def performOk() = {
     super.performOk()
@@ -339,18 +291,18 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
     dialog.setText(title)
     dialog.setFileName(initialFileName)
     val dialogSettings = IScalaPlugin().getDialogSettings
-    Option(dialogSettings get IMPORT_EXPORT_DIALOG_PATH) foreach dialog.setFilterPath
+    Option(dialogSettings get ImportExportDialogPath) foreach dialog.setFilterPath
     val fileName = dialog.open()
     if (fileName == null)
       None
     else {
-      dialogSettings.put(IMPORT_EXPORT_DIALOG_PATH, dialog.getFilterPath)
+      dialogSettings.put(ImportExportDialogPath, dialog.getFilterPath)
       Some(fileName)
     }
   }
 
   private def exportPreferences(): Unit = {
-    for (fileName <- getPreferenceFileNameViaDialog("Export formatter preferences", DEFAULT_PREFERENCE_FILE_NAME)) {
+    for (fileName <- getPreferenceFileNameViaDialog("Export formatter preferences", DefaultPreferenceFileName)) {
       val preferences = FormatterPreferences.getPreferences(overlayStore)
       try
         PreferencesImporterExporter.savePreferences(fileName, preferences)
@@ -380,15 +332,15 @@ class FormatterPreferencePage extends PropertyPage with IWorkbenchPreferencePage
 
 object FormatterPreferencePage {
 
-  val DEFAULT_PREFERENCE_FILE_NAME = "formatterPreferences.properties"
+  val DefaultPreferenceFileName = "formatterPreferences.properties"
 
-  val PAGE_ID = "scala.tools.eclipse.formatter.FormatterPreferencePage"
+  val PageId = "scala.tools.eclipse.formatter.FormatterPreferencePage"
 
-  val IMPORT_EXPORT_DIALOG_PATH = "formatter.importExportDialogPath"
+  val ImportExportDialogPath = "formatter.importExportDialogPath"
 
-  val SCALARIFORM_DOC_URL = "http://mdr.github.com/scalariform/"
+  val ScalariformDocUrl = "http://mdr.github.com/scalariform/"
 
-  val SPACES_PREVIEW_TEXT = """class ClassName[T](name: String) {
+  val SpacesPreviewText = """class ClassName[T](name: String) {
 
   println("hello"+name+"world")
 
@@ -401,7 +353,7 @@ object FormatterPreferencePage {
 }
 """
 
-  val INDENT_PREVIEW_TEXT = """package foo {
+  val IndentPreviewText = """package foo {
 class Bar(param: Int)
 extends Foo with Baz {
   def method(s: String,
@@ -418,7 +370,7 @@ n: Int) = {
 }
 }"""
 
-  val MISC_PREVIEW_TEXT = """val xml = <foo>
+  val MiscPreviewText = """val xml = <foo>
 <bar/>
  <baz  attr= "value" />
 </foo>
@@ -442,7 +394,7 @@ else {
 }
 """
 
-  val SCALADOC_PREVIEW_TEXT = """/**
+  val ScaladocPreviewText = """/**
  * Multiline Scaladoc
  * comment
  */
