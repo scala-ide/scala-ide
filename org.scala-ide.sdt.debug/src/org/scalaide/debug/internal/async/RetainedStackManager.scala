@@ -8,9 +8,11 @@ import scala.util.Success
 import scala.util.Try
 
 import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaValue
+import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.ObjectReference
@@ -96,13 +98,12 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
   }
 
-  private val programPoints = List(
-    AsyncProgramPoint("scala.concurrent.Future$", "apply", 0),
-    AsyncProgramPoint("scala.concurrent.package$", "future", 0),
-    AsyncProgramPoint("play.api.libs.iteratee.Cont$", "apply", 0),
-    AsyncProgramPoint("akka.actor.LocalActorRef", "$bang", 0),
-    AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
-    AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
+  private val programPoints = {
+    val app = ScalaDebugPlugin.plugin.getPreferenceStore.getString(AsyncDebuggerPreferencePage.AsyncProgramPoints)
+    app.split(AsyncDebuggerPreferencePage.DataDelimiter).map(_.split(",")).map {
+      case Array(className, methodName, paramIdx) ⇒ AsyncProgramPoint(className, methodName, paramIdx.toInt)
+    }.toList
+  }
 
   /** Return the saved stackframes for the given future body (if any). */
   def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
