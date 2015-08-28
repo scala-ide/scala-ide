@@ -25,7 +25,7 @@ private class GeneralSettingsBlock(val tab: ScalaDebuggerTab) {
 
   private var globalAsyncDebuggerSwitchButton: Button = _
   val SettingsArea = "General Settings"
-  val AsyncDebuggerGlobalSwitch = "Enable Async Debugger functionality"
+  val AsyncDebuggerGlobalSwitch = "Enable Async Stack Trace functionality"
 
   def createControl(parent: Composite): Unit = {
     val group = SWTFactory.createGroup(parent, SettingsArea, 1, 1, GridData.FILL_HORIZONTAL)
