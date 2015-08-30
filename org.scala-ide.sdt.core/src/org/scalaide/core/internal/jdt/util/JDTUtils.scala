@@ -18,11 +18,10 @@ import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.ImportContainerInfo
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.NameLookup
-import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
-import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.util.internal.ReflectionUtils
 
 object JDTUtils {
   private var refreshPending = false
@@ -33,7 +32,7 @@ object JDTUtils {
       if (!refreshPending) {
         refreshPending = true
         new UIJob("Refresh package explorer") {
-          def runInUIThread(monitor : IProgressMonitor) : IStatus  = {
+          override def runInUIThread(monitor : IProgressMonitor): IStatus  = {
             lock.synchronized {
               refreshPending = false
             }
