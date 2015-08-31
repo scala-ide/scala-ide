@@ -17,19 +17,19 @@ object AsyncUtils extends HasLogger {
 
   def findAsyncProgramPoint(app: AsyncProgramPoint, tpe: ReferenceType): Option[Method] = {
     def isAsyncProgramPoint(m: Method): Boolean =
-      (!m.isAbstract()
-        && m.name().startsWith(app.methodName)
-        && !m.name().contains("$default"))
+      !m.isAbstract() &&
+        m.name().startsWith(app.methodName) &&
+        !m.name().contains("$default") &&
+        m.declaringType().name() == app.className
 
-     tpe.allMethods().asScala.find(isAsyncProgramPoint)
+    tpe.allMethods().asScala.find(isAsyncProgramPoint)
   }
 
   def installMethodBreakpoint(
-      debugTarget: ScalaDebugTarget,
-      app: AsyncProgramPoint,
-      actor: Suppress.DeprecatedWarning.Actor,
-      threadRef: ThreadReference = null
-      ): Seq[BreakpointRequest] = {
+    debugTarget: ScalaDebugTarget,
+    app: AsyncProgramPoint,
+    actor: Suppress.DeprecatedWarning.Actor,
+    threadRef: ThreadReference = null): Seq[BreakpointRequest] = {
 
     for {
       tpe <- debugTarget.virtualMachine.classesByName(app.className).asScala.toSeq
