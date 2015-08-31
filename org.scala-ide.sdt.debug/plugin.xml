@@ -76,7 +76,7 @@
       <page
             category="org.scalaide.ui.preferences.debug"
             class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
-            id="org.scalaide.ui.preferences.debug"
+            id="org.scalaide.ui.preferences.debug.async"
             name="Async Debugger">
       </page>
    </extension>
@@ -122,33 +122,37 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
-            id="org.scala-ide.sdt.debug.stepMessageOut"
+            categoryId="org.scalaide.debug"
+            id="org.scalaide.debug.async.stepMessageOut"
             name="Step Message Out">
       </command>
       <command
+            categoryId="org.scalaide.debug"
             description="Break execution when a message is sent to dead letters"
-            id="org.scala-ide.sdt.debug.stopOnDeadLetters"
+            id="org.scalaide.debug.async.stopOnDeadLetters"
             name="Break on DeadLetter">
       </command>
+      <category
+            description="Scala Debugger category"
+            id="org.scalaide.debug"
+            name="Scala Debugger">
+      </category>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="toolbar:org.eclipse.ui.main.toolbar">
-         <toolbar
-               id="org.eclipse.debug.ui.debugActionSet">
-            <command
-                  commandId="org.scala-ide.sdt.debug.stepMessageOut"
-                  icon="icons/bang.png"
-                  label="Step Message Out"
-                  style="push"
-                  tooltip="Step until a message is received">
-               <visibleWhen
-                     checkEnabled="true">
-               </visibleWhen>
-            </command>
-         </toolbar>
+            locationURI="toolbar:org.scala-ide.sdt.debug.asyncView">
+         <command
+               commandId="org.scala-ide.sdt.debug.stepMessageOut"
+               icon="icons/bang.png"
+               label="Step Message Out"
+               style="push"
+               tooltip="Step until a message is received">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -244,5 +248,13 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M2+F5">
       </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug.async"
+            name="Scala Async Debugger">
+      </page>
    </extension>
 </plugin>
