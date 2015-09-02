@@ -1,6 +1,7 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.separator
+
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 
@@ -40,7 +41,7 @@ import org.eclipse.core.runtime.Path
  * Scala->Compiler preferences menu. If this flag is not set then compilation process
  * falls to old approach implemented in [[ProjectsDependentSbtBuildManager]].
  */
-trait CompileScope {
+sealed trait CompileScope {
 
   /** Can be human readable name. */
   def name: String
@@ -77,4 +78,8 @@ case object CompileTestsScope extends CompileScope {
   override def isValidSourcePath(path: IPath): Boolean = isInPath(path, default, play)
   private val default = toIPath(s"src${separator}test")
   private val play = toIPath("test")
+}
+
+object CompileScope {
+  def scopesInCompileOrder: Seq[CompileScope] = Seq(CompileMacrosScope, CompileMainScope, CompileTestsScope)
 }

@@ -1,70 +1,62 @@
 package org.scalaide.ui.internal.preferences
 
-import org.eclipse.core.resources.IncrementalProjectBuilder
+import java.util.concurrent.atomic.AtomicBoolean
+
+import scala.collection.mutable.Publisher
+import scala.collection.mutable.Subscriber
+import scala.tools.nsc.Settings
+import scala.tools.nsc.settings.Final
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.runtime.preferences.IEclipsePreferences
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.PreferencePage
+import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
+import org.eclipse.jface.bindings.keys.KeyStroke
+import org.eclipse.jface.dialogs.MessageDialog
+import org.eclipse.jface.fieldassist.ContentProposal
+import org.eclipse.jface.fieldassist.ContentProposalAdapter
+import org.eclipse.jface.fieldassist.ControlDecoration
+import org.eclipse.jface.fieldassist.FieldDecorationRegistry
+import org.eclipse.jface.fieldassist.IContentProposal
+import org.eclipse.jface.fieldassist.IContentProposalProvider
+import org.eclipse.jface.fieldassist.TextContentAdapter
+import org.eclipse.jface.preference.ComboFieldEditor
+import org.eclipse.jface.preference.FieldEditor
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.ui.IWorkbench
-import org.eclipse.ui.IWorkbenchPreferencePage
-import org.eclipse.ui.dialogs.PropertyPage
+import org.eclipse.jface.preference.PreferencePage
+import org.eclipse.jface.preference.StringFieldEditor
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.ModifyEvent
-import org.eclipse.swt.events.ModifyListener
-import org.eclipse.swt.events.SelectionAdapter
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.layout.RowLayout
-import org.eclipse.swt.widgets.Button
-import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Group
-import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Control
+import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.widgets.TabFolder
 import org.eclipse.swt.widgets.TabItem
 import org.eclipse.swt.widgets.Text
-import scala.tools.nsc.Settings
-import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.eclipse.SWTUtils
-import org.eclipse.jface.fieldassist.FieldDecorationRegistry
-import org.eclipse.jface.fieldassist.ControlDecoration
-import org.eclipse.swt.events.VerifyEvent
-import scala.tools.nsc.CompilerCommand
-import org.eclipse.jface.fieldassist._
-import org.eclipse.jface.bindings.keys.KeyStroke
-import org.eclipse.jface.dialogs.MessageDialog
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.internal.builder.ProjectsCleanJob
-import org.eclipse.core.resources.ProjectScope
-import org.scalaide.core.ScalaInstallationChange
-import org.eclipse.jface.preference.ComboFieldEditor
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
-import java.util.concurrent.atomic.AtomicIntegerArray
-import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
-import scala.tools.nsc.settings.Final
-import org.eclipse.jface.preference.StringFieldEditor
-import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
-import org.scalaide.core.internal.project.ScalaInstallationChoice
-import scala.collection.mutable.Subscriber
-import scala.collection.mutable.Publisher
-import org.eclipse.jdt.core.IClasspathContainer
-import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
-import org.eclipse.jface.preference.FieldEditor
-import org.scalaide.util.ui.DisplayThread
-import java.util.concurrent.atomic.AtomicBoolean
+import org.eclipse.ui.IWorkbench
+import org.eclipse.ui.IWorkbenchPreferencePage
+import org.eclipse.ui.dialogs.PropertyPage
 import org.scalaide.core.IScalaProjectEvent
+import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.SdtConstants
-import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.builder.ProjectsCleanJob
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallationChoice
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
+import org.scalaide.util.Utils
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.util.ui.DisplayThread
 
 trait ScalaPluginPreferencePage extends HasLogger {
   self: PreferencePage with EclipseSettings =>
@@ -83,22 +75,22 @@ trait ScalaPluginPreferencePage extends HasLogger {
       for (setting <- b.userSettings) {
         val name = SettingConverterUtil.convertNameToProperty(setting.name)
         val isDefault = setting match {
-          case bswd : ScalaPluginSettings.BooleanSettingWithDefault =>
+          case bswd: ScalaPluginSettings.BooleanSettingWithDefault =>
             bswd.value == bswd.default
-          case bs: Settings#BooleanSetting     =>
+          case bs: Settings#BooleanSetting =>
             // use the store default if it is defined: e.i. it is not a sbt/scalac preference
             bs.value == store.getDefaultBoolean(name)
-          case is: Settings#IntSetting         => is.value == is.default
-          case ss: Settings#StringSetting      => ss.value == ss.default
+          case is: Settings#IntSetting => is.value == is.default
+          case ss: Settings#StringSetting => ss.value == ss.default
           case ms: Settings#MultiStringSetting => ms.value == Nil
-          case cs: Settings#ChoiceSetting      => cs.value == cs.default
+          case cs: Settings#ChoiceSetting => cs.value == cs.default
         }
         if (!store.getBoolean(USE_PROJECT_SETTINGS_PREFERENCE) && isDefault)
           store.setToDefault(name)
         else {
           val value = setting match {
             case ms: Settings#MultiStringSetting => ms.value.mkString(",")
-            case setting                         => setting.value.toString
+            case setting => setting.value.toString
           }
           store.setValue(name, value)
         }
@@ -115,11 +107,12 @@ trait ScalaPluginPreferencePage extends HasLogger {
   def updateApply(): Unit
 }
 
-/** Provides a property page to allow Scala compiler settings to be changed.
+/**
+ * Provides a property page to allow Scala compiler settings to be changed.
  */
 class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with EclipseSettings
-  with ScalaPluginPreferencePage
-  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
+    with ScalaPluginPreferencePage
+    with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
 
   //TODO - Use setValid to enable/disable apply button so we can only click the button when a property/preference
   // has changed from the saved value
@@ -132,18 +125,18 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
-    event match { case e:ScalaInstallationChange => save() }
+    event match { case e: ScalaInstallationChange => save() }
   }
   override def dispose() = {
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach (_.removeSubscriptions())
     super.dispose()
   }
 
-  def getConcernedProject(): Option[IProject] =  getElement() match {
-      case project: IProject         => Some(project)
-      case javaProject: IJavaProject => Some(javaProject.getProject())
-      case other                     => None // We're a Preference page!
-    }
+  def getConcernedProject(): Option[IProject] = getElement() match {
+    case project: IProject => Some(project)
+    case javaProject: IJavaProject => Some(javaProject.getProject())
+    case other => None // We're a Preference page!
+  }
 
   lazy val preferenceStore0: IPreferenceStore = {
     /** The project for which we are setting properties */
@@ -160,7 +153,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
   import EclipseSetting.toEclipseBox
   /** The settings we can change */
-  lazy val userBoxes = IDESettings.shownSettings(ScalaPresentationCompiler.defaultScalaSettings()) ++ IDESettings.buildManagerSettings
+  lazy val userBoxes = IDESettings.shownSettings(ScalaPresentationCompiler.defaultScalaSettings()) ++ IDESettings.buildManagerSettings :+
+    ScopesSettings.buildScopesSettings(this.getConcernedProject())
   lazy val eclipseBoxes = userBoxes.map { s => toEclipseBox(s, preferenceStore0) }
 
   /** Pulls the preference store associated with this plugin */
@@ -182,22 +176,22 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     val wasDesiredInstallationChanged = new AtomicBoolean(false)
     val wereAdditionalParamsChanged = new AtomicBoolean(false)
 
-    val classpathChangesListener: IPropertyChangeListener = {(event: PropertyChangeEvent) =>
-        event.getProperty() match {
-          case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasProjectSettingsChanged.set(true)
-          case CompilerSettings.ADDITIONAL_PARAMS => wereAdditionalParamsChanged.set(true)
-          case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasDesiredInstallationChanged.set(true)
-          case _ =>
-        }
+    val classpathChangesListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
+      event.getProperty() match {
+        case SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE => wasProjectSettingsChanged.set(true)
+        case CompilerSettings.ADDITIONAL_PARAMS => wereAdditionalParamsChanged.set(true)
+        case SettingConverterUtil.SCALA_DESIRED_INSTALLATION => wasDesiredInstallationChanged.set(true)
+        case _ =>
+      }
     }
     preferenceStore0.addPropertyChangeListener(classpathChangesListener)
 
-    val additionalSourceLevelParameter = ScalaPresentationCompiler.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) find {s => s.startsWith("-Xsource")}
-    val sourceLevelString = additionalSourceLevelParameter flatMap ("""-Xsource:(\d\.\d+(?:\.\d)*)""".r unapplySeq(_)) flatMap (_.headOption)
+    val additionalSourceLevelParameter = ScalaPresentationCompiler.defaultScalaSettings().splitParams(additionalParamsWidget.additionalParametersControl.getText()) find { s => s.startsWith("-Xsource") }
+    val sourceLevelString = additionalSourceLevelParameter flatMap ("""-Xsource:(\d\.\d+(?:\.\d)*)""".r unapplySeq (_)) flatMap (_.headOption)
 
     useProjectSettingsWidget.foreach(_.store())
     additionalParamsWidget.save()
-    dslWidget foreach ( _.store())
+    dslWidget foreach (_.store())
 
     //This has to come later, as we need to make sure the useProjectSettingsWidget's values make it into
     //the final save.
@@ -209,7 +203,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       // OR set a scala Installation
       // => we deduce the correct sourceLevel Value and execute it
       if (sourceLevelString.isDefined)
-      scalaProject foreach (_.setDesiredSourceLevel(ScalaVersion(sourceLevelString.get))) //this triggers a classpath check on its own
+        scalaProject foreach (_.setDesiredSourceLevel(ScalaVersion(sourceLevelString.get))) //this triggers a classpath check on its own
       else if (wasProjectSettingsChanged.getAndSet(false) || wereAdditionalParamsChanged.getAndSet(false)) scalaProject foreach (_.classpathHasChanged())
     }
 
@@ -308,8 +302,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       val message = "The Compiler Settings Property page contains unsaved modifications. Do you want to apply those modifications so that other compiler-dependent pages can take those settings into account ?"
       val buttonLabels: Array[String] = Array(
         PreferencesMessages.BuildPathsPropertyPage_unsavedchanges_button_save,
-        PreferencesMessages.BuildPathsPropertyPage_unsavedchanges_button_ignore
-      )
+        PreferencesMessages.BuildPathsPropertyPage_unsavedchanges_button_ignore)
       val dialog: MessageDialog = new MessageDialog(getShell(), title, null, message, MessageDialog.QUESTION, buttonLabels, 0);
       val res = dialog.open();
       if (res == 0) {
@@ -321,7 +314,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     } else super.okToLeave()
     res
   }
-
 
   /** We override this so we can update the status of the apply button after all components have been added */
   override def createControl(parent: Composite): Unit = {
@@ -350,7 +342,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     val result = MessageDialog.openConfirm(getShell(), "Compiler settings changed",
-        "The compiler settings have changed. A full rebuild is required for " +
+      "The compiler settings have changed. A full rebuild is required for " +
         "changes to take effect. Shall all projects be cleaned now?")
 
     if (result)
@@ -371,14 +363,14 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   //Make sure apply button isn't available until it should be
   override def isChanged: Boolean = {
     useProjectSettingsWidget foreach { (widget) =>
-        if (widget.isChanged) {
-          return true
-        } else {
-          // Make sure we don't check the settings of the GUI if they're all disabled
-          // and the "use Project settings" is disabled
-          if (!widget.isUseEnabled)
-            return false
-        }
+      if (widget.isChanged) {
+        return true
+      } else {
+        // Make sure we don't check the settings of the GUI if they're all disabled
+        // and the "use Project settings" is disabled
+        if (!widget.isUseEnabled)
+          return false
+      }
     }
 
     logger.info(eclipseBoxes.exists { box =>
@@ -387,7 +379,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }.toString)
 
     //check all our other settings
-    (dslWidget exists {w => w.isChanged()}) || additionalParamsWidget.isChanged || super.isChanged
+    (dslWidget exists { w => w.isChanged() }) || additionalParamsWidget.isChanged || super.isChanged
   }
 
   override def performDefaults(): Unit = {
@@ -396,8 +388,8 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   /** This widget should only be used on project property pages. */
-  class UseProjectSettingsWidget(parent:Composite) extends org.scalaide.util.eclipse.SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent)
-  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]]{
+  class UseProjectSettingsWidget(parent: Composite) extends org.scalaide.util.eclipse.SWTUtils.CheckBox(preferenceStore0, SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, "Use Project Settings", parent)
+      with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
     import SettingConverterUtil._
 
     // TODO - Does this belong here?  For now it's the only place we can really check...
@@ -405,7 +397,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       getPreferenceStore.setDefault(USE_PROJECT_SETTINGS_PREFERENCE, false)
     }
     this += ((e) => handleToggle())
-    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
+    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.subscribe(this) }
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match {
@@ -417,7 +409,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     override def dispose() = {
-      getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.removeSubscription(this)}
+      getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.removeSubscription(this) }
       super.dispose()
     }
 
@@ -445,19 +437,19 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     def itemTitle = "Fixed Scala Installation"
   }
 
-   def choicesOfScalaInstallations(): Array[Array[String]] = {
-      (Array("Latest 2.11 bundle (dynamic)", "2.11") ::
+  def choicesOfScalaInstallations(): Array[Array[String]] = {
+    (Array("Latest 2.11 bundle (dynamic)", "2.11") ::
       (Array("Latest 2.10 bundle (dynamic)", "2.10") ::
-      ScalaInstallation.availableInstallations.map{si => Array(labeler.getDecoration(si), ScalaInstallationChoice(si).toString())})).toArray
-    }
+        ScalaInstallation.availableInstallations.map { si => Array(labeler.getDecoration(si), ScalaInstallationChoice(si).toString()) })).toArray
+  }
 
-  class DesiredInstallationWidget(parent:Composite) extends ComboFieldEditor(
-        SettingConverterUtil.SCALA_DESIRED_INSTALLATION,
-        "Scala Installation",
-        choicesOfScalaInstallations(),
-        parent) with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]]{
+  class DesiredInstallationWidget(parent: Composite) extends ComboFieldEditor(
+    SettingConverterUtil.SCALA_DESIRED_INSTALLATION,
+    "Scala Installation",
+    choicesOfScalaInstallations(),
+    parent) with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
     setPreferenceStore(preferenceStore0)
-    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
+    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.subscribe(this) }
     load()
     // This is just here to implement a status/dirtiness check, not to get values
     // however, owing to the policy of the FieldEditor subclasses not to change values outside of the store,
@@ -493,7 +485,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       updateApplyButton()
     }
 
-
     override def dispose() = {
       getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.removeSubscription(this) }
       super.dispose()
@@ -503,12 +494,12 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
-  class AdditionalParametersWidget(parent:Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent)
-  with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
+  class AdditionalParametersWidget(parent: Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent)
+      with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
     import org.scalaide.util.eclipse.SWTUtils.fnToModifyListener
     setPreferenceStore(preferenceStore0)
     load()
-    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.subscribe(this)}
+    getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.subscribe(this) }
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match {
@@ -520,7 +511,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
     }
 
     override def dispose() = {
-      getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach {_.removeSubscription(this)}
+      getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.removeSubscription(this) }
       super.dispose()
     }
 

@@ -1,10 +1,14 @@
 package org.scalaide.core.internal.project.scopes
 
+import java.io.File
+
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IJavaModelMarker
@@ -14,9 +18,11 @@ import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.CompileScope
+import org.scalaide.ui.internal.preferences.ScopesSettings
+import org.scalaide.util.internal.SettingConverterUtil
+
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
-import java.io.File
 
 /**
  * Manages compilation of sources for given scope.
@@ -31,7 +37,17 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
       addThemToClasspath, srcOutputs)
   private val scopeFilesToCompile = ScopeFilesToCompile(toCompile, owningProject)
 
-  private def managesSrcFolder(src: IContainer) = scope.isValidSourcePath(src.getProjectRelativePath)
+  private def managesSrcFolder(src: IContainer): Boolean =
+    managesSrcFolder(src.getProjectRelativePath)
+
+  private def managesSrcFolder(srcProjectRelativePath: IPath): Boolean = {
+    val srcFolderKey = ScopesSettings.makeKey(srcProjectRelativePath)
+    val srcFolderProperty = SettingConverterUtil.convertNameToProperty(srcFolderKey)
+    val assignedScopeName = owningProject.storage.getString(srcFolderProperty)
+    def isAssignedScopeThisScope = scope.name == assignedScopeName
+    def isUnassignedToAnyScopeAndValidSourcePath = assignedScopeName.isEmpty && scope.isValidSourcePath(srcProjectRelativePath)
+    isAssignedScopeThisScope || isUnassignedToAnyScopeAndValidSourcePath
+  }
 
   private def addThemToClasspath = owningProject.sourceOutputFolders.collect {
     case (src, out) if !managesSrcFolder(src) => out.getLocation
@@ -51,7 +67,7 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
         val SeverityNotSet = -1
         owningProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE).exists { marker =>
           val severity = marker.getAttribute(IMarker.SEVERITY, SeverityNotSet)
-          severity == IMarker.SEVERITY_ERROR && scope.isValidSourcePath(marker.getResource.getLocation)
+          severity == IMarker.SEVERITY_ERROR && managesSrcFolder(marker.getResource.getLocation)
         }
       }
       delegate.build(scopeFilesToCompile(addedOrUpdated), toCompile(removed), monitor)
@@ -83,7 +99,7 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
     owningProject.sourceOutputFolders collectFirst {
       case (sourceFolder, outputFolder) if outputFolder.getLocation.toFile == outputFile &&
-        scope.isValidSourcePath(sourceFolder.getProjectRelativePath) => this
+        managesSrcFolder(sourceFolder) => this
     }
 }
 
