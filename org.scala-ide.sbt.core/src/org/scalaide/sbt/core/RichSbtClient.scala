@@ -9,7 +9,7 @@ import org.scalaide.sbt.util.SourceUtils
 
 import KeyProvider.KeyProvider
 import akka.actor.ActorSystem
-import akka.stream.ActorFlowMaterializer
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import sbt.client.Interaction
 import sbt.client.SbtClient
@@ -29,7 +29,7 @@ class RichSbtClient(private[core] val client: SbtClient) {
    * Retrieves elements that get send to [[sbt.client.SbtClient.watchBuild]] by
    * a Source.
    */
-  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure] = {
+  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure, Unit] = {
     SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
       val c = client.watchBuild { b ⇒
         subs.onNext(b)
@@ -61,7 +61,7 @@ class RichSbtClient(private[core] val client: SbtClient) {
   def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
     client.requestExecution(commandOrTask, interaction)
 
-  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A]] = {
+  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A], Unit] = {
     SourceUtils.fromEventStream[Out[A]] { subs ⇒
       val cancellation = implicitly[KeyProvider[KP]].watch(key) { (key, res) ⇒
         val elem = res map (key → _)
@@ -74,7 +74,7 @@ class RichSbtClient(private[core] val client: SbtClient) {
   private def valueOfKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit sys: ActorSystem): Future[A] = {
     import sys.dispatcher
     import SourceUtils._
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer()
     watchKey(key).firstFuture.flatMap(elem ⇒ Future.fromTry(elem.map(_._2)))
   }
 
