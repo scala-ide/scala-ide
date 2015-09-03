@@ -142,20 +142,17 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             allPopups="false"
-            locationURI="toolbar:org.eclipse.ui.main.toolbar">
-         <toolbar
-               id="org.eclipse.debug.ui.debugActionSet">
-            <command
-                  commandId="org.scalaide.debug.async.stepMessageOut"
-                  icon="icons/bang.png"
-                  label="Step Message Out"
-                  style="push"
-                  tooltip="Step until a message is received">
-               <visibleWhen
-                     checkEnabled="true">
-               </visibleWhen>
-            </command>
-         </toolbar>
+            locationURI="toolbar:org.eclipse.debug.ui.DebugView">
+         <command
+               commandId="org.scalaide.debug.async.stepMessageOut"
+               icon="icons/bang.png"
+               label="Step Message Out"
+               style="push"
+               tooltip="Step until a message is received">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
       </menuContribution>
       <menuContribution
             allPopups="false"
