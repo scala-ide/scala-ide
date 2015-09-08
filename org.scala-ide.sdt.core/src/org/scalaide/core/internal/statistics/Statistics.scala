@@ -10,9 +10,6 @@ import scala.pickling.Pickler
 import scala.pickling.Unpickler
 import scala.pickling.pickler.AllPicklers
 
-import org.scalaide.util.eclipse.EclipseUtils
-import org.scalaide.core.internal.statistics.Features.CopyQualifiedName
-import org.scalaide.core.internal.statistics.Features.ExplicitReturnType
 import org.scalaide.core.ScalaIdeDataStore
 import Features._
 

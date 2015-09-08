@@ -37,7 +37,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     d.partition(fd ⇒ !Set(CharactersSaved, NotSpecified)(fd.feature))
   }
 
-  def createContents(parent: Composite): Control = {
+  override def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
 
@@ -124,7 +124,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     }
   }
 
-  def init(workbench: IWorkbench): Unit = ()
+  override def init(workbench: IWorkbench): Unit = ()
 
   private object ColumnSorter extends ViewerSorter {
 
@@ -136,7 +136,8 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
       type Direction = Value
       val Ascending, Descending = Value
     }
-    import Column._, Direction._
+    import Column._
+    import Direction._
 
     var sortCol: Column = NrOfUses
     var sortDir: Direction = Descending
@@ -165,13 +166,13 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
   }
 
   private object ContentProvider extends IStructuredContentProvider {
-    def dispose(): Unit = ()
+    override def dispose(): Unit = ()
 
-    def getElements(input: Any): Array[AnyRef] = {
+    override def getElements(input: Any): Array[AnyRef] = {
       input.asInstanceOf[Array[AnyRef]]
     }
 
-    def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = ()
+    override def inputChanged(viewer: Viewer, oldInput: Any, newInput: Any): Unit = ()
   }
 
 }
