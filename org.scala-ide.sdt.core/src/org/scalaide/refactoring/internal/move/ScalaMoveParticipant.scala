@@ -51,7 +51,7 @@ class ScalaMoveParticipant extends MoveParticipant {
 
           var initialConditions: Option[RefactoringStatus] = None
 
-          def runRefactoring(pm: IProgressMonitor) {
+          def runRefactoring(pm: IProgressMonitor): Unit = {
             initialConditions = Some(moveRefactoring.checkInitialConditions(pm))
             moveRefactoring.setMoveSingleImpl(false /*move all classes in the file*/)
             moveRefactoring.target = targetPackage

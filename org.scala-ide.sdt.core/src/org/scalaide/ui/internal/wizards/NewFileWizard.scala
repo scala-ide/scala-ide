@@ -21,10 +21,12 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Label
+import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.swt.widgets.TableItem
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.dialogs.PreferencesUtil
 import org.eclipse.ui.ide.IDE
 import org.eclipse.ui.wizards.newresource.BasicNewResourceWizard
 import org.scalaide.core.internal.ScalaPlugin
@@ -105,10 +107,18 @@ trait NewFileWizard extends AnyRef with HasLogger {
     val lbName = new Label(c, SWT.NONE)
     tName = new Text(c, SWT.BORDER)
     completionOverlay = new AutoCompletionOverlay(tName)
+    val desc = new Link(c, SWT.NONE)
 
     lbName.setText("Name:")
 
     lbProject.setText("Source Folder:")
+
+    desc.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false, 2, 1))
+    desc.setText("""|The wizard uses a template in <a href="org.scalaide.ui.preferences.editor.templates">Scala → Editor → Templates</a> to create the content of a new file.
+                    |The corresponding templates start with "wizard_" and can be freely edited.""".stripMargin)
+    desc.addSelectionListener { e: SelectionEvent ⇒
+      PreferencesUtil.createPreferenceDialogOn(c.getShell, e.text, null, null).open()
+    }
 
     btProject.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false))
     btProject.addSelectionListener { e: SelectionEvent =>
@@ -214,7 +224,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   def dispose(): Unit = {
-    import scala.language.reflectiveCalls
     disposables foreach { _.dispose() }
   }
 
@@ -239,7 +248,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
       val tb = ctx.evaluate(template)
       val vars = tb.getVariables()
       val replacements = vars flatMap { v =>
-        val len = v.getName().length() + "${}".length()
+        val len = v.getName().length() + 3 // length of "${}"
         val value = v.getDefaultValue()
         v.getOffsets() map (off => (off, len, value))
       }

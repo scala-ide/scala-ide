@@ -14,21 +14,21 @@ import org.scalaide.debug.internal.model.ScalaThread
 
 class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesTest) {
 
-  private def changeThread(name: String) {
+  private def changeThread(name: String): Unit = {
     val newThread = ScalaDebugger.currentThread.getDebugTarget.getThreads
       .filter(_.getName == name).head.asInstanceOf[ScalaThread]
     ScalaDebugger.updateCurrentThread(new StructuredSelection(newThread))
     assertTrue(s"Thread $name is not suspended", ScalaDebugger.currentThread.isSuspended)
   }
 
-  private def changeFrame(index: Int) {
+  private def changeFrame(index: Int): Unit = {
     val currentThread = ScalaDebugger.currentThread
     val newFrame = ScalaStackFrame(currentThread, currentThread.threadRef.frame(index), index)
     ScalaDebugger.updateCurrentThread(new StructuredSelection(newFrame))
   }
 
   @Test
-  def testFrameAccess() {
+  def testFrameAccess(): Unit = {
     /* Frames:
     0: recFunction(0)
     1: recFunction(1)
@@ -50,7 +50,7 @@ class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesT
   }
 
   @Test
-  def testThreadAccess() {
+  def testThreadAccess(): Unit = {
     changeThread(DifferentStackFramesTestCase.demonThreadName)
 
     ExpressionManager.compute("input") match {

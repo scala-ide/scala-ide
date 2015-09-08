@@ -15,7 +15,7 @@ object PropertyChangeListenerProxy {
 class PropertyChangeListenerProxy(listenerRef: WeakReference[IPropertyChangeListener], stores: IPreferenceStore*)
   extends IPropertyChangeListener {
 
-  def propertyChange(event: PropertyChangeEvent) {
+  def propertyChange(event: PropertyChangeEvent): Unit = {
     Option(listenerRef.get) match {
       case None =>
         stores.foreach { _.removePropertyChangeListener(this) }

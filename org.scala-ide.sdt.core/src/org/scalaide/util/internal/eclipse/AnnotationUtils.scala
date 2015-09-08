@@ -25,17 +25,17 @@ object AnnotationUtils {
       annotations.toList
     }
 
-    def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]) {
+    def replaceAnnotations(annotations: Iterable[Annotation], replacements: Map[Annotation, Position]): Unit = {
       annotationModel.asInstanceOf[IAnnotationModelExtension].replaceAnnotations(annotations.toArray, replacements.asJava)
     }
 
-    def deleteAnnotations(annotations: Iterable[Annotation]) {
+    def deleteAnnotations(annotations: Iterable[Annotation]): Unit = {
       replaceAnnotations(annotations, Map())
     }
 
   }
 
-  def update(sourceViewer: ISourceViewer, annotationType: String, newAnnotations: Map[Annotation, Position]) {
+  def update(sourceViewer: ISourceViewer, annotationType: String, newAnnotations: Map[Annotation, Position]): Unit = {
     for (annotationModel <- Option(sourceViewer.getAnnotationModel))
       update(annotationModel, annotationType, newAnnotations)
   }
@@ -43,7 +43,7 @@ object AnnotationUtils {
   /**
    *  Replace annotations of the given annotationType with the given new annotations
    */
-  private def update(model: IAnnotationModel, annotationType: String, newAnnotations: Map[Annotation, Position]) {
+  private def update(model: IAnnotationModel, annotationType: String, newAnnotations: Map[Annotation, Position]): Unit = {
     model.withLock {
       val annotationsToRemove = model.getAnnotations.filter(_.getType == annotationType)
       model.replaceAnnotations(annotationsToRemove, newAnnotations)

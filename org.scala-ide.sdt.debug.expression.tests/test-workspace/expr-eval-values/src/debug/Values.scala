@@ -2,7 +2,7 @@ package debug
 
 object Values extends App {
 
-  def foo() {
+  def foo(): Unit = {
     val byte: Byte = 4
     val byte2: Byte = 3
     val short: Short = 6
@@ -36,7 +36,7 @@ object Values extends App {
     val listArray = multilist.toArray
     val intArray = list.toArray
 
-    def testFunction() {
+    def testFunction(): Unit = {
       val debug = "ala"
     }
 

@@ -15,7 +15,6 @@ import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.JUnit4
-import scala.language.reflectiveCalls
 import org.scalaide.core.internal.launching.ScalaLaunchDelegate
 import org.scalaide.core.internal.launching.MainClassVerifier
 
@@ -26,12 +25,12 @@ class MainClassVerifierTest {
   private var project: IScalaProject = _
 
   @Before
-  def createProject() {
+  def createProject(): Unit = {
     project = SDTTestUtils.createProjectInWorkspace("main-launcher", true)
   }
 
   @After
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 
@@ -45,7 +44,7 @@ class MainClassVerifierTest {
    *  dialog if the user installed the 'tests' plugin, and never seeing the warning for build errors.
    */
   @Test @Ignore("There is no way to test launching without using an extension point that intercepts all status requests")
-  def reportErrorWhenMainContainsCompilationErrors() {
+  def reportErrorWhenMainContainsCompilationErrors(): Unit = {
     val mainName = "MainWithCompilationErrors"
     val main = """
     object %s extends App {
@@ -84,7 +83,7 @@ class MainClassVerifierTest {
 
   /** Test that an error is reported if the `mainTypeName` is a class (it ought to be an `object`).*/
   @Test
-  def reportErrorWhenMainIsInScalaClass() {
+  def reportErrorWhenMainIsInScalaClass(): Unit = {
     val pkg = ""
     val mainName = "Main"
     val main = "class %s extends App".format(mainName) // note: need an object, not a class!
@@ -97,7 +96,7 @@ class MainClassVerifierTest {
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
   @Test
-  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inEmptyPackage() {
+  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inEmptyPackage(): Unit = {
     val pkg = "foo"
     val mainName = "Main"
     val main = "object %s extends App".format(mainName) // note: no package declaration here!
@@ -110,7 +109,7 @@ class MainClassVerifierTest {
 
   /** Test that an error is reported if the `mainTypeName` used to run the code does not match the binary location.*/
   @Test
-  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inNonEmptyPackage() {
+  def reportNoErrorWhenPackageDeclarationInMainTypeDoesntMatchBinaryLocation_inNonEmptyPackage(): Unit = {
     val sourceLocation = "foo"
     val pkg = "bar"
     val mainName = "Main"
@@ -127,7 +126,7 @@ class MainClassVerifierTest {
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
   @Test
-  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inEmptyPackage() {
+  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inEmptyPackage(): Unit = {
     val pkg = "foo"
     val mainName = "Main"
     val main = "object %s extends App".format(mainName) // note: no package declaration here!
@@ -140,7 +139,7 @@ class MainClassVerifierTest {
 
   /** Test that no error is reported if the `mainTypeName` used to run the code matches the binary location.*/
   @Test
-  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inNonEmptyPackage() {
+  def doNotReportErrorWhenPackageDeclarationInMainTypeMatchBinaryLocation_inNonEmptyPackage(): Unit = {
     val sourceLocation = "foo"
     val pkg = "bar"
     val mainName = "Main"
@@ -156,7 +155,7 @@ class MainClassVerifierTest {
   }
 
   @Test
-  def reportNoErrorWhenMainClassInLaunchConfigurationIsWrong() {
+  def reportNoErrorWhenMainClassInLaunchConfigurationIsWrong(): Unit = {
     val pkg = "foo"
     val mainName = "Main"
     val main = """
@@ -171,7 +170,7 @@ class MainClassVerifierTest {
   }
 
   @Test
-  def mainVerificationSucceed() {
+  def mainVerificationSucceed(): Unit = {
     val pkg = "foo"
     val mainName = "Main"
     val main = """
@@ -186,13 +185,13 @@ class MainClassVerifierTest {
   }
 
   @Test
-  def reportErrorIfProjectHasBuildErrors() {
+  def reportErrorIfProjectHasBuildErrors(): Unit = {
     // let's pretend the project has build errors
     runTest("", hasBuildErrors = true).expectErrors
   }
 
   @Test
-  def runScalaAppOnSourceWithSeveralPackageDeclaration_t1001096() {
+  def runScalaAppOnSourceWithSeveralPackageDeclaration_t1001096(): Unit = {
     val mainName = "Test1"
     val main = """
     package pp {

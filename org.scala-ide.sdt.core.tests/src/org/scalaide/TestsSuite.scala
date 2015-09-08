@@ -10,6 +10,7 @@ import org.scalaide.core.compiler.NamePrinterTest
 import org.scalaide.core.compiler.PresentationCompilerActivityListenerTest
 import org.scalaide.core.compiler.settings.CompilerSettingsTest
 import org.scalaide.core.completion.CompletionTests
+import org.scalaide.core.completion.ScalaJavaCompletionTests
 import org.scalaide.core.findreferences.FindReferencesTests
 import org.scalaide.core.hyperlink.HyperlinkDetectorTests
 import org.scalaide.core.hyperlink.ScalaWordFinderTest
@@ -26,8 +27,11 @@ import org.scalaide.core.pc.PresentationCompilerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.project.ScalaInstallationTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
+import org.scalaide.core.sbtbuilder.JavaDependsOnScalaBothAreOkTest
+import org.scalaide.core.sbtbuilder.JavaDependsOnScalaTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.sbtbuilder.MultipleErrorsTest
+import org.scalaide.core.sbtbuilder.NameHashingVulnerabilityTest
 import org.scalaide.core.sbtbuilder.NestedProjectsTest
 import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
@@ -36,6 +40,8 @@ import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
+import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
+import org.scalaide.core.sbtbuilder.ScopeCompileConfigurationTest
 import org.scalaide.core.sbtbuilder.ScopeCompileTest
 import org.scalaide.core.sbtbuilder.TodoBuilderTest
 import org.scalaide.core.semantic.HighlightingTestsSuite
@@ -47,6 +53,7 @@ import org.scalaide.core.text.TextTestSuite
 import org.scalaide.core.ui.ScalaTemplateContextTest
 import org.scalaide.core.ui.UITestSuite
 import org.scalaide.core.ui.completion.CompletionTestSuite
+import org.scalaide.extensions.autoedits.AutoEditTestSuite
 import org.scalaide.extensions.saveactions.SaveActionTestSuite
 import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationPresenterTest
 import org.scalaide.ui.wizards.WizardTests
@@ -63,7 +70,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[CompletionTests],
     classOf[DesiredScalaInstallationTests],
     classOf[RunAsTest],
-    // classOf[ScalaJavaCompletionTests], FIXME: Uncomment as soon as this regression is fixed.
+    classOf[ScalaJavaCompletionTests],
     classOf[FindReferencesTests],
     classOf[HyperlinkDetectorTests],
     // classOf[scala.tools.eclipse.interpreter.EclipseReplTest], // see comments there
@@ -99,6 +106,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[WizardTests],
     classOf[TextTestSuite],
     classOf[SaveActionTestSuite],
+    classOf[AutoEditTestSuite],
     classOf[TextSelectionTest],
     classOf[RegionUtilsTest],
     classOf[DeclarationPrinterTest],
@@ -107,6 +115,11 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[CallByNameParamAtCreationPresenterTest],
     classOf[ScalaJavaDepTicket_1000607Test],
     classOf[ScalaJavaDepWhenJavaIsWrongTest],
-    classOf[ScopeCompileTest]
+    classOf[ScopeCompileTest],
+    classOf[ScalaProjectDependedOnJavaProjectTest],
+    classOf[NameHashingVulnerabilityTest],
+    classOf[JavaDependsOnScalaTest],
+    classOf[JavaDependsOnScalaBothAreOkTest],
+    classOf[ScopeCompileConfigurationTest]
 ))
 class TestsSuite

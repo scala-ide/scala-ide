@@ -16,7 +16,7 @@ class ScalaStructureSelectEnclosingAction(editor: ScalaSourceFileEditor, selecti
 
   private var previousAstSelector: Option[(String, AstSelector)] = None
 
-  override def run() {
+  override def run(): Unit = {
     val source = editor.getDocumentProvider.getDocument(editor.getEditorInput).get
     val astSelector = previousAstSelector match {
       case Some((previousSource, astSelector)) if previousSource == source => astSelector

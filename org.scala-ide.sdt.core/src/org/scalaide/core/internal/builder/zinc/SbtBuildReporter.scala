@@ -1,22 +1,22 @@
 package org.scalaide.core.internal.builder.zinc
 
 import scala.collection.mutable
-import scala.tools.nsc.reporters.Reporter
-import org.scalaide.core.resources.EclipseResource
-import org.scalaide.util.internal.SbtUtils.m2o
+import scala.reflect.internal.Chars
+
 import org.eclipse.core.resources.IMarker
-import xsbti.{ Position, Severity }
-import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.eclipse.FileUtils
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
-import org.scalaide.logging.HasLogger
 import org.scalaide.core.resources.MarkerFactory
-import scala.reflect.internal.Chars
-import xsbti.Maybe
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.FileUtils
+import org.scalaide.util.internal.SbtUtils
 
-private case class SbtProblem(severity: Severity, message: String, position: Position, category: String) extends xsbti.Problem {
+private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
+  extends xsbti.Problem {
+
+  import SbtUtils.m2o
+
   override def equals(other: Any): Boolean = other match {
     case otherProblem: xsbti.Problem =>
       ((message == otherProblem.message)
@@ -32,9 +32,10 @@ private case class SbtProblem(severity: Severity, message: String, position: Pos
     message.hashCode + severity.hashCode
 }
 
-/** An Sbt Reporter that creates error markers as build errors are reported.
+/**
+ * An Sbt Reporter that creates error markers as build errors are reported.
  *
- *  @note It removes duplicate errors coming from scalac.
+ * @note It removes duplicate errors coming from scalac.
  */
 private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Reporter with HasLogger {
   private val probs = new mutable.ArrayBuffer[xsbti.Problem]
@@ -49,11 +50,11 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
 
   override def hasErrors(): Boolean = seenErrors
   override def hasWarnings(): Boolean = seenWarnings
-  override def printSummary(): Unit = {} //TODO
+  override def printSummary(): Unit = {} // TODO - implement this method
   override def problems: Array[xsbti.Problem] = probs.toArray
   override def comment(pos: xsbti.Position, msg: String): Unit = {}
 
-  override def log(pos: Position, msg: String, sev: Severity) {
+  override def log(pos: xsbti.Position, msg: String, sev: xsbti.Severity): Unit = {
     val problem = SbtProblem(sev, msg, pos, "compile")
     if (!probs.contains(problem)) {
       createMarker(pos, msg, sev)
@@ -74,7 +75,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
     case xsbti.Severity.Warn  => IMarker.SEVERITY_WARNING
   }
 
-  def createMarker(pos: Position, msg: String, sev: xsbti.Severity) = {
+  def createMarker(pos: xsbti.Position, msg: String, sev: xsbti.Severity) = {
     import SbtUtils._
     val severity = eclipseSeverity(sev)
 
@@ -96,7 +97,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   /** Return the identifier starting at `start` inside `content`. */
-  private def identifierLength(content: String, start: Maybe[Integer]): Int = {
+  private def identifierLength(content: String, start: xsbti.Maybe[Integer]): Int = {
     def isOK(c: Char) = Chars.isIdentifierPart(c) || Chars.isOperatorPart(c)
     if (start.isDefined)
       (content drop start.get takeWhile isOK).size

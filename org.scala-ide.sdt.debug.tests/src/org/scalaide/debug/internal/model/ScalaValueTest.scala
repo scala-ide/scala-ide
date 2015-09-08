@@ -47,14 +47,14 @@ class ScalaValueTest {
   import ScalaValueTest._
 
   @Before
-  def initializeDebugPlugin() {
+  def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
       new DebugPlugin
     }
   }
 
   @Test
-  def booleanValueTrue() {
+  def booleanValueTrue(): Unit = {
     val jdiValue = mock(classOf[BooleanValue])
     when(jdiValue.value).thenReturn(true)
 
@@ -67,7 +67,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def booleanValueFalse() {
+  def booleanValueFalse(): Unit = {
     val jdiValue = mock(classOf[BooleanValue])
     when(jdiValue.value).thenReturn(false)
 
@@ -80,7 +80,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def byteValue() {
+  def byteValue(): Unit = {
     val jdiValue = mock(classOf[ByteValue])
     when(jdiValue.value).thenReturn(64.toByte)
 
@@ -93,7 +93,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def charValue() {
+  def charValue(): Unit = {
     val jdiValue = mock(classOf[CharValue])
     when(jdiValue.value).thenReturn('z')
 
@@ -106,7 +106,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def doubleValue() {
+  def doubleValue(): Unit = {
     val jdiValue = mock(classOf[DoubleValue])
     when(jdiValue.value).thenReturn(4.55d)
 
@@ -119,7 +119,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def floatValue() {
+  def floatValue(): Unit = {
     val jdiValue = mock(classOf[FloatValue])
     when(jdiValue.value).thenReturn(82.9f)
 
@@ -132,7 +132,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def intValue() {
+  def intValue(): Unit = {
     val jdiValue = mock(classOf[IntegerValue])
     when(jdiValue.value).thenReturn(32)
 
@@ -145,7 +145,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def longValue() {
+  def longValue(): Unit = {
     val jdiValue = mock(classOf[LongValue])
     when(jdiValue.value).thenReturn(128L)
 
@@ -158,7 +158,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def shortValue() {
+  def shortValue(): Unit = {
     val jdiValue = mock(classOf[ShortValue])
     when(jdiValue.value).thenReturn(334.toShort)
 
@@ -171,7 +171,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def stringValue() {
+  def stringValue(): Unit = {
     val jdiValue = mock(classOf[StringReference])
     when(jdiValue.value).thenReturn("some string")
     when(jdiValue.uniqueID).thenReturn(15)
@@ -189,7 +189,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceValue() {
+  def objectReferenceValue(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(22)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -208,7 +208,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceValueNoFields() {
+  def objectReferenceValueNoFields(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(1223)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -227,7 +227,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceValueWithEncodedName() {
+  def objectReferenceValueWithEncodedName(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(666)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -242,7 +242,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedInteger() {
+  def objectReferenceBoxedInteger(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(2)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -260,7 +260,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedLong() {
+  def objectReferenceBoxedLong(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(4)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -278,7 +278,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedBoolean() {
+  def objectReferenceBoxedBoolean(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(8)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -296,7 +296,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedByte() {
+  def objectReferenceBoxedByte(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(16)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -314,7 +314,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedChar() {
+  def objectReferenceBoxedChar(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(256)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -332,7 +332,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedDouble() {
+  def objectReferenceBoxedDouble(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(32)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -350,7 +350,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedFloat() {
+  def objectReferenceBoxedFloat(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(64)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -368,7 +368,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def objectReferenceBoxedShort() {
+  def objectReferenceBoxedShort(): Unit = {
     val jdiValue = mock(classOf[ObjectReference])
     when(jdiValue.uniqueID).thenReturn(128)
     val jdiReferenceType = mock(classOf[ClassType])
@@ -386,7 +386,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def arrayReferenceValue() {
+  def arrayReferenceValue(): Unit = {
     val jdiValue = mock(classOf[ArrayReference])
     when(jdiValue.length).thenReturn(3)
     when(jdiValue.uniqueID).thenReturn(65)
@@ -413,7 +413,7 @@ class ScalaValueTest {
   }
 
   @Test
-  def arrayReferenceValueZeroLength() {
+  def arrayReferenceValueZeroLength(): Unit = {
     val jdiValue = mock(classOf[ArrayReference])
     when(jdiValue.length).thenReturn(0)
     when(jdiValue.uniqueID).thenReturn(92)

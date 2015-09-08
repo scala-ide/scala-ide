@@ -10,6 +10,7 @@ import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
+import org.scalaide.util.Utils.jdiSynchronized
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.reflect.NameTransformer
 
@@ -83,16 +84,19 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
 
+  override def toString =
+    s"ScalaStackFrame(thread = $thread, stackFrame = $stackFrame, index = $index)"
+
   // Members declared in org.eclipse.debug.core.model.IStackFrame
 
   override def getCharEnd(): Int = -1
   override def getCharStart(): Int = -1
-  override def getLineNumber(): Int = {
+  override def getLineNumber(): Int = jdiSynchronized {
     (safeStackFrameCalls(-1) or wrapJDIException("Exception while retrieving stack frame's line number")) {
       stackFrame.location.lineNumber // TODO: cache data ?
     }
   }
-  override def getName(): String = {
+  override def getName(): String = jdiSynchronized {
     (safeStackFrameCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")) {
       stackFrame.location.declaringType.name // TODO: cache data ?
     }
@@ -135,7 +139,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
   import scala.util.control.Exception
   import Exception.Catch
 
-  private lazy val variables: Seq[ScalaVariable] = {
+  private lazy val variables: Seq[ScalaVariable] = jdiSynchronized {
     (safeStackFrameCalls(Nil) or wrapJDIException("Exception while retrieving stack frame's visible variables")) {
       import scala.collection.JavaConverters._
       val visibleVariables = {
@@ -194,7 +198,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile var stackFrame
     *  stack frame to compute its value, as it can be checked by looking at the implementation of
     *  `ScalaLocalVariable.getValue`
     */
-  def rebind(newStackFrame: StackFrame) {
+  def rebind(newStackFrame: StackFrame): Unit = {
     stackFrame = newStackFrame
   }
 

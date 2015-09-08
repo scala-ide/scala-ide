@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package proxies.phases
 
-import scala.tools.reflect.ToolBox
 import scala.reflect.runtime._
 
 import org.scalaide.debug.internal.expression.Names.Debugger

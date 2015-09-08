@@ -54,7 +54,7 @@ trait JdiHelpers {
    * }}}
    */
   final def prettyPrint(method: Method): String = {
-    def err[A](f: => A) = util.Try(f).toOption.getOrElse("<no info>")
+    def err[A](f: => A): Any = util.Try(f).toOption.getOrElse("<no info>")
     def param(f: Method => Boolean, name: String): String = if (f(method)) name else ""
 
     val params = err(Seq(

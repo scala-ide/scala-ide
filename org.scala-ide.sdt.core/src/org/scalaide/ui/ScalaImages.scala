@@ -34,5 +34,7 @@ object ScalaImages {
   val NEW_CLASS: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/etool16/newclass_wiz.gif")
   val CORRECTION_RENAME: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/correction_rename.gif")
 
+  val DESC_SETTINGS_OBJ: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/settings.gif")
+
   val ADD_METHOD_PROPOSAL: Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
 }

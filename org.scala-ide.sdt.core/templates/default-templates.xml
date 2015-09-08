@@ -15,7 +15,7 @@
   description="application object"
   id="scala.templates.app"
   context="org.scala-ide.sdt.core.templates" enabled="true"
->object ${name} extends Application {
+>object ${name} extends App {
   ${line_selection}${cursor}
 }</template>
 <template name="arr"

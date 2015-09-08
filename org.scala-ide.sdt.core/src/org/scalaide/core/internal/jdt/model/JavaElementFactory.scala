@@ -44,7 +44,7 @@ object JavaElementFactory extends ReflectionUtils {
   def createImportDeclaration(parent : IImportContainer, name : String, isWildcard : Boolean) =
     idCtor.newInstance(parent, name, boolean2Boolean(isWildcard)).asInstanceOf[ImportDeclaration]
 
-  def setParent(child : JavaElement, parent : JavaElement) {
+  def setParent(child : JavaElement, parent : JavaElement): Unit = {
     parentField.set(child, parent)
   }
 }

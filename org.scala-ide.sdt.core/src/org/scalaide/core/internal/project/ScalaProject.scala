@@ -82,21 +82,21 @@ object ScalaProject {
 
   /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
   private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
-    override def partOpened(part: IWorkbenchPart) {
+    override def partOpened(part: IWorkbenchPart): Unit = {
       doWithCompilerAndFile(part) { (compiler, ssf) =>
         logger.debug("open " + part.getTitle)
         ssf.forceReload()
       }
     }
 
-    override def partClosed(part: IWorkbenchPart) {
+    override def partClosed(part: IWorkbenchPart): Unit = {
       doWithCompilerAndFile(part) { (compiler, ssf) =>
         logger.debug("close " + part.getTitle)
         ssf.discard()
       }
     }
 
-    private def doWithCompilerAndFile(part: IWorkbenchPart)(op: (IScalaPresentationCompiler, ScalaSourceFile) => Unit) {
+    private def doWithCompilerAndFile(part: IWorkbenchPart)(op: (IScalaPresentationCompiler, ScalaSourceFile) => Unit): Unit = {
       part match {
         case editor: IEditorPart =>
           editor.getEditorInput match {
@@ -380,7 +380,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
   // TODO Per-file encodings
   private def encoding: Option[String] =
     sourceFolders.headOption flatMap { path =>
-      EclipseUtils.workspaceRoot.findContainersForLocation(path) match {
+      EclipseUtils.workspaceRoot.findContainersForLocationURI(path.toFile.toURI) match {
         case Array(container) => Some(container.getDefaultCharset)
         case _ => None
       }
@@ -450,7 +450,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       generalSettings
   }
 
-  private def initializeSetting(setting: Settings#Setting, propValue: String) {
+  private def initializeSetting(setting: Settings#Setting, propValue: String): Unit = {
     try {
       setting.tryToSetFromPropertyValue(propValue)
       logger.debug("[%s] initializing %s to %s (%s)".format(underlying.getName(), setting.name, setting.value.toString, storage.getString(SettingConverterUtil.convertNameToProperty(setting.name))))
@@ -484,7 +484,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     settings.processArgumentString(additional)
   }
 
-  private def setupCompilerClasspath(settings: Settings) {
+  private def setupCompilerClasspath(settings: Settings): Unit = {
     val scalaCp = scalaClasspath // don't need to recompute it each time we use it
 
     settings.javabootclasspath.value = scalaCp.jdkPaths.map(_.toOSString).mkString(pathSeparator)
@@ -510,7 +510,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
    */
   lazy val projectSpecificStorage: IPersistentPreferenceStore = {
     val p = new PropertyStore(new ProjectScope(underlying), SdtConstants.PluginId) {
-      override def save() {
+      override def save(): Unit = {
         try {
           super.save()
         } catch {
@@ -584,7 +584,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     buildManager.invalidateAfterLoad
   else false
 
-  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor) {
+  def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit = {
     hasBeenBuilt = true
 
     clearBuildProblemMarker()
@@ -604,7 +604,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     }
   }
 
-  def resetDependentProjects() {
+  def resetDependentProjects(): Unit = {
     for {
       prj <- underlying.getReferencingProjects()
       if prj.isOpen() && ScalaProject.isScalaProject(prj)
@@ -626,7 +626,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     resetCompilers // reset them only after the output directory is emptied
   }
 
-  private def resetBuildCompiler() {
+  private def resetBuildCompiler(): Unit = {
     buildManager0 = null
     hasBeenBuilt = false
   }
@@ -639,7 +639,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
   /** Should only be called when `this` project is being deleted or closed from the workspace. */
   private[core] def dispose(): Unit = {
-    def shutDownCompilers() {
+    def shutDownCompilers(): Unit = {
       logger.info("shutting down compilers for " + this)
       resetBuildCompiler()
       presentationCompiler.shutdown()

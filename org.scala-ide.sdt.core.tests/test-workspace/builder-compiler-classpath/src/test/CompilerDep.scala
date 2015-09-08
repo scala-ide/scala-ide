@@ -1,7 +1,7 @@
 package test
 
 class CompilerDep {
-  def foo {
+  def foo: Unit = {
     println(scala.tools.nsc.Main.prompt)
   }
 }

@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package features
 
-import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NewInstancesTestCase
@@ -52,11 +51,9 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
     eval("new LibClassWithVararg(1, 2)", "LibClassWithVararg(List(1, 2))", "debug.LibClassWithVararg")
   }
 
-  // TODO - Toolbox cannot typecheck java vararg constructors https://issues.scala-lang.org/browse/SI-9212
-  // If this test fails it means Toolbox is fixed, yay! (or some other exception is thrown)
-  @Test(expected = classOf[ReflectiveCompilationFailure])
+  @Test
   def javaVarArgConstructor(): Unit = {
-    eval("new JavaVarArg()", "JavaVarArg()", "debug.JavaVarArg")
+    eval("new JavaVarArg()", "JavaVarArg([])", "debug.JavaVarArg")
     eval("new JavaVarArg(1)", "JavaVarArg([1])", "debug.JavaVarArg")
     eval("new JavaVarArg(1, 2)", "JavaVarArg([1, 2])", "debug.JavaVarArg")
   }

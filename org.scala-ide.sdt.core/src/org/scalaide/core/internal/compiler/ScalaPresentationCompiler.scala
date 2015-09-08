@@ -1,64 +1,55 @@
 package org.scalaide.core.internal.compiler
 
-import scala.tools.nsc.interactive.FreshRunReq
-import scala.collection.concurrent
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.SynchronizedMap
-import org.eclipse.jdt.core.compiler.IProblem
-import org.eclipse.jdt.internal.compiler.problem.DefaultProblem
-import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities
+import scala.concurrent.duration.DurationInt
+import scala.reflect.internal.util.BatchSourceFile
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.RangePosition
+import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.Settings
+import scala.tools.nsc.interactive.CommentPreservingTypers
 import scala.tools.nsc.interactive.Global
 import scala.tools.nsc.interactive.InteractiveReporter
 import scala.tools.nsc.interactive.Problem
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
-import scala.tools.nsc.reporters.Reporter
-import scala.reflect.internal.util.BatchSourceFile
-import scala.reflect.internal.util.Position
-import scala.reflect.internal.util.SourceFile
+import scala.tools.nsc.symtab.Flags
+import scala.util.Try
+
+import org.eclipse.core.resources.IFile
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IMethod
+import org.eclipse.jdt.internal.compiler.problem.ProblemSeverities
+import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.hyperlink.IHyperlink
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.compiler.CompilerApiExtensions
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.core.compiler.IScalaPresentationCompiler.withResponse
+import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.compiler.ScalaCompilationProblem
 import org.scalaide.core.completion.CompletionContext
-import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
+import org.scalaide.core.completion.CompletionProposal
+import org.scalaide.core.extensions.SourceFileProviderRegistry
+import org.scalaide.core.internal.hyperlink.ScalaHyperlink
 import org.scalaide.core.internal.jdt.model.ScalaJavaMapper
-import org.scalaide.core.internal.jdt.search.ScalaMatchLocator
 import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
-import org.scalaide.ui.internal.jdt.model.ScalaOverrideIndicatorBuilder
+import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
+import org.scalaide.core.internal.jdt.search.ScalaMatchLocator
 import org.scalaide.core.resources.EclipseFile
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.HasLogger
-import scala.tools.nsc.util.FailedInterrupt
-import scala.tools.nsc.symtab.Flags
-import org.scalaide.core.completion.CompletionProposal
-import org.eclipse.jdt.core.IMethod
-import scala.tools.nsc.interactive.MissingResponse
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.core.extensions.SourceFileProviderRegistry
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.resources.IFile
-import org.eclipse.jdt.internal.core.util.Util
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.util.ScalaWordFinder
-import scalariform.lexer.{ScalaLexer, ScalaLexerException}
-import scala.reflect.internal.util.RangePosition
-import org.scalaide.core.internal.jdt.model.ScalaStructureBuilder
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.compiler._
-import org.scalaide.core.compiler.IScalaPresentationCompiler._
-import scala.tools.nsc.interactive.InteractiveReporter
-import scala.tools.nsc.interactive.CommentPreservingTypers
 import org.scalaide.ui.internal.editor.hover.ScalaDocHtmlProducer
-import scala.util.Try
-import scala.reflect.internal.util.NoPosition
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.text.hyperlink.IHyperlink
-import org.scalaide.core.internal.hyperlink.ScalaHyperlink
-import org.eclipse.jface.text.Region
-import org.scalaide.util.eclipse.RegionUtils
+import org.scalaide.ui.internal.jdt.model.ScalaOverrideIndicatorBuilder
+import org.scalaide.util.ScalaWordFinder
+import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
-class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
+import scalariform.lexer.ScalaLexer
+import scalariform.lexer.ScalaLexerException
+
+class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
   /*
    * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
    * and concurrent access may lead to overwritten names.
@@ -122,7 +113,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   @deprecated("use askReloadManagedUnits instead", "4.0.0")
   def reconcileOpenUnits() = askReloadManagedUnits()
 
-  def askReloadManagedUnits() {
+  def askReloadManagedUnits(): Unit = {
     askReload(compilationUnits)
   }
 
@@ -274,7 +265,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
    *
    *  If the file has not been 'reloaded' first, it does nothing.
    */
-  def askToDoFirst(scu: InteractiveCompilationUnit) {
+  def askToDoFirst(scu: InteractiveCompilationUnit): Unit = {
     askToDoFirst(scu.lastSourceMap().sourceFile)
   }
 
@@ -297,7 +288,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
     super.askReload(sources, response)
   }
 
-  def filesDeleted(units: Seq[InteractiveCompilationUnit]) {
+  def filesDeleted(units: Seq[InteractiveCompilationUnit]): Unit = {
     logger.info("files deleted:\n" + (units map (_.file.path) mkString "\n"))
     if (!units.isEmpty)
       askFilesDeleted(units.map(_.lastSourceMap().sourceFile).toList)
@@ -311,7 +302,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   /** Tell the presentation compiler to refresh the given files,
    *  if they are not managed by the presentation compiler already.
    */
-  def refreshChangedFiles(files: List[IFile]) {
+  def refreshChangedFiles(files: List[IFile]): Unit = {
     // transform to batch source files
     val freshSources = files.collect {
       // When a compilation unit is moved (e.g. using the Move refactoring) between packages,
@@ -343,7 +334,7 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   override def logError(msg: String, t: Throwable) =
     eclipseLog.error(msg, t)
 
-  def destroy() {
+  def destroy(): Unit = {
     logger.info("shutting down presentation compiler on project: " + name)
     askShutdown()
   }
@@ -489,9 +480,6 @@ class ScalaPresentationCompiler(name: String, _settings: Settings) extends {
   }
 
   private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
-
-  override def inform(msg: String): Unit =
-    logger.debug("[%s]: %s".format(name, msg))
 }
 
 object ScalaPresentationCompiler {
@@ -499,7 +487,7 @@ object ScalaPresentationCompiler {
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
-  class PresentationReporter extends InteractiveReporter {
+  class PresentationReporter extends InteractiveReporter with HasLogger {
     var compiler: ScalaPresentationCompiler = null
 
     def nscSeverityToEclipse(severityLevel: Int) =
@@ -555,5 +543,9 @@ object ScalaPresentationCompiler {
       case '\n' | '\r' => ' '
       case c           => c
     }
+
+    override def echo(msg: String): Unit =
+      logger.debug(s"[${compiler.name}]: $msg")
+
   }
 }

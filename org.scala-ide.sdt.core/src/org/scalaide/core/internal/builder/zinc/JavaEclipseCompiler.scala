@@ -17,6 +17,7 @@ import xsbti.compile.Output
 import xsbti.Logger
 import org.scalaide.core.internal.builder.JDTBuilderFacade
 import org.scalaide.core.IScalaPlugin
+import xsbti.Reporter
 
 /** Eclipse Java compiler interface, used by the SBT builder.
  *  This class forwards to the internal Eclipse Java compiler, using
@@ -26,7 +27,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def project = p
 
-  def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger) {
+  override def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger): Unit = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
 
     val allSourceFiles = scalaProject.allSourceFiles()
@@ -52,4 +53,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
       refresh()
     }
   }
+
+  override def compileWithReporter(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], reporter: Reporter, log: Logger): Unit =
+    compile(sources, classpath, output, options, log)
 }

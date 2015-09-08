@@ -73,7 +73,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case t: TypeError => logError("Error while searching Scala tree", t)
     }
 
-    def report(tree: Tree)
+    def report(tree: Tree): Unit
 
     import MatchLocatorUtils._
     def report(sm: SearchMatch) = {
@@ -107,60 +107,13 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       }
       else currentOwner
     }
-
-    /* simplified from org.eclipse.jdt.internal.core.search.matching.PatternLocator */
-    /*def qualifiedPattern(simpleNamePattern: Array[Char], qualificationPattern: Array[Char]): Array[Char] =
-      // NOTE: if case insensitive search then simpleNamePattern & qualificationPattern are assumed to be lowercase
-      if (qualificationPattern == null)
-        simpleNamePattern
-      else if (simpleNamePattern eq null)
-        CharOp.concat(qualificationPattern, OneStar, '.')
-      else
-        CharOp.concat(qualificationPattern, simpleNamePattern, '.')
-
-    /**
-     * See whether the given type can occur in a pattern (e.g. type vars cannot)
-     */
-    def canMatchPattern(tpe: Type): Boolean = tpe match {
-      case _ : ErrorType | _ : WildcardType | _ : NoType => false
-      case _ => true
-    }
-
-    def resolveLevelForType(qualifiedPattern: Array[Char], tpe: Type): Int = {
-      if (qualifiedPattern eq null) AccurateMatch
-      else if (tpe eq null) InaccurateMatch
-      else if (!canMatchPattern(tpe)) ImpossibleMatch
-      else {
-        tpe match {
-          case ThisType(_) | SingleType(_,_) =>
-          case SingleType(pre, sym) =>
-          // pre.sym.type
-    // int(2)
-  case TypeRef(pre, sym, args) =>
-    // pre.sym[targs]
-  case RefinedType(parents, defs) =>
-    // parent1 with ... with parentn { defs }
-  case AnnotatedType(annots, tp) =>
-    // tp @annots
-          case _ => PatternLocator.INACCURATE_MATCH
-        }
-
-        val qualifiedPackageName = tpe.qualifiedPackageName()
-        val qualifiedSourceName = qualifiedSourceName(tpe)
-        val fullyQualifiedTypeName = if (qualifiedPackageName.length == 0) qualifiedSourceName
-          else CharOp.concat(qualifiedPackageName, qualifiedSourceName, '.')
-        if (CharOp.`match`(qualifiedPattern, fullyQualifiedTypeName, this.isCaseSensitive))
-          AccurateMatch
-        else ImpossibleMatch
-      }
-    }*/
   }
 
   object NoLocator extends MatchLocatorTraverser {
     def scu: ScalaCompilationUnit = null
     def matchLocator: MatchLocator = null
     def possibleMatch: PossibleMatch = null
-    def report(tree: Tree) {}
+    def report(tree: Tree): Unit = {}
   }
 
   class OrLocator(val scu: ScalaCompilationUnit, val matchLocator: MatchLocator,
@@ -210,7 +163,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
           true
       })
 
-    def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern) {
+    def reportMethodReference(tree: Tree, sym: Symbol, pat: MethodPattern): Unit = {
       if (!pat.matchesName(pat.selector, sym.name.toChars) || !sym.pos.isDefined) {
         logger.debug("Name didn't match: [%s] pos.isDefined: %b".format(sym.fullName, sym.pos.isDefined))
         return
@@ -258,7 +211,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case _ =>
     }
 
-    def reportVariableReference(s: Select, pat: FieldPattern) {
+    def reportVariableReference(s: Select, pat: FieldPattern): Unit = {
       val searchedVar = pat.getIndexKey
 
       lazy val noPosition = !s.pos.isDefined
@@ -328,14 +281,14 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
 
     }
 
-    def reportAnnotations(sym: Symbol) {
+    def reportAnnotations(sym: Symbol): Unit = {
       for (annot @ AnnotationInfo(atp, args, assocs) <- sym.annotations) if (annot.pos.isDefined) {
         reportTypeReference(atp, annot.pos)
         traverseTrees(args)
       }
     }
 
-    def reportObjectReference(pat: TypeReferencePattern, symbol: Symbol, pos: Position) {
+    def reportObjectReference(pat: TypeReferencePattern, symbol: Symbol, pos: Position): Unit = {
         val searchedName = simpleName(pat)
         val symName = javaSimpleTypeName(symbol).toCharArray
         // TODO: better char array handling
@@ -361,7 +314,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         }
     }
 
-    def reportTypeReference(tpe: Type, refPos: Position) {
+    def reportTypeReference(tpe: Type, refPos: Position): Unit = {
       if (tpe eq null) return
       val patternFullyQualifiedName = fullyQualifiedName(qualification(pattern), simpleName(pattern))
       if(pattern.matchesName(patternFullyQualifiedName, javaTypeName(tpe.typeSymbol).toCharArray)) {
@@ -386,7 +339,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
       case _ =>
     }
 
-    def reportTypeDefinition(tpe: Type, declPos: Position) {
+    def reportTypeDefinition(tpe: Type, declPos: Position): Unit = {
       val decl = new TypeDeclaration(null)
       decl.name = tpe.typeSymbol.nameString.toCharArray
       if (matchLocator.patternLocator.`match`(decl, possibleMatch.nodeSet) > 0) {
@@ -458,7 +411,6 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
         super.traverse(tree)
       }
     }
-
 
   }*/
 }

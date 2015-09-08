@@ -8,14 +8,14 @@ import org.eclipse.jface.text._
 class ScalaDocumentPartitionerTest {
 
   @Test
-  def no_partition_change() {
+  def no_partition_change(): Unit = {
     //       000000000011111111112222222222333333333344444444445
     //       012345678901234567890123456789012345678901234567890
     check("""/* comment */ "foo" /* comment */""", Replace(start = 5, finish = 7, text = "foo"), expectedNoRegion)
   }
 
   @Test
-  def modify_single_partition() {
+  def modify_single_partition(): Unit = {
     //       000000000011111111112222222222333333333344444444445
     //       012345678901234567890123456789012345678901234567890
     check("""/* comment */ "foo" /* comment */""", Insertion(point = 16, text = "XXX"), expectedNoRegion)
@@ -23,7 +23,7 @@ class ScalaDocumentPartitionerTest {
   }
 
   @Test
-  def delete_partition_at_start_and_end_of_file() {
+  def delete_partition_at_start_and_end_of_file(): Unit = {
     //       000000000011111111112222222222333333333344444444445
     //       012345678901234567890123456789012345678901234567890
     check("""/* comment */ 42""", Deletion(start = 0, finish = 12), expectedRegion(0, 0))
@@ -35,7 +35,7 @@ class ScalaDocumentPartitionerTest {
 
   private def expectedNoRegion: IRegion = null
 
-  private def check(source: String, replacement: Replacement, expectedRegion: IRegion) {
+  private def check(source: String, replacement: Replacement, expectedRegion: IRegion): Unit = {
     val partitioner = ScalaCodePartitioner.documentPartitioner()
     val actualRegion = changedPartitionsRegion(partitioner, source, replacement)
     assertEquals(expectedRegion, actualRegion)

@@ -1,27 +1,30 @@
 package org.scalaide.debug.internal.model
 
-import com.sun.jdi.ClassType
-import com.sun.jdi.IncompatibleThreadStateException
-import com.sun.jdi.Method
-import com.sun.jdi.ObjectCollectedException
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ThreadReference
-import com.sun.jdi.Value
-import com.sun.jdi.VMCannotBeModifiedException
-import com.sun.jdi.VMDisconnectedException
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import org.eclipse.debug.core.DebugEvent
-import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IStackFrame
-import org.eclipse.jdt.internal.debug.core.model.JDIStackFrame
+import org.eclipse.debug.core.model.IThread
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.JDIUtil._
-import org.scalaide.debug.internal.command.ScalaStepOver
+import org.scalaide.debug.internal.async.StepMessageOut
 import org.scalaide.debug.internal.command.ScalaStep
 import org.scalaide.debug.internal.command.ScalaStepInto
+import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.Utils.jdiSynchronized
+
+import com.sun.jdi.ClassType
+import com.sun.jdi.IncompatibleThreadStateException
+import com.sun.jdi.Method
+import com.sun.jdi.ObjectReference
+import com.sun.jdi.ThreadReference
+import com.sun.jdi.VMCannotBeModifiedException
+import com.sun.jdi.Value
+
 import scala.actors.Future
 import scala.collection.JavaConverters.asScalaBufferConverter
 
@@ -42,7 +45,7 @@ object ScalaThread {
  * This class is thread safe. Instances have be created through its companion object.
  */
 abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
-  extends ScalaDebugElement(target) with IThread with HasLogger {
+    extends ScalaDebugElement(target) with IThread with HasLogger {
   import ScalaThreadActor._
   import BaseDebuggerActor._
 
@@ -54,12 +57,24 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   override def isStepping: Boolean = ???
   private def canStep = suspended && !target.isPerformingHotCodeReplace
 
-  override def stepInto(): Unit = stepIntoFrame(stackFrames.head)
+  override def stepInto(): Unit = {
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
+    }
+  }
   override def stepOver(): Unit = {
-    wrapJDIException("Exception while performing `step over`") { ScalaStepOver(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
+    }
   }
   override def stepReturn(): Unit = {
-    wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(stackFrames.head).step() }
+    for (head <- stackFrames.headOption) {
+      wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
+    }
+  }
+
+  def stepMessageOut(): Unit = {
+    (new StepMessageOut(getDebugTarget, this)).step
   }
 
   // Members declared in org.eclipse.debug.core.model.ISuspendResume
@@ -81,7 +96,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   override def getBreakpoints: Array[IBreakpoint] = Array.empty // TODO: need real logic
 
   override def getName: String = {
-    (safeThreadCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")){
+    (safeThreadCalls("Error retrieving name") or wrapJDIException("Exception while retrieving stack frame's name")) {
       name = threadRef.name
       name
     }
@@ -124,7 +139,8 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   def terminatedFromScala(): Unit = dispose()
 
-  /** Invoke the given method on the given instance with the given arguments.
+  /**
+   * Invoke the given method on the given instance with the given arguments.
    *
    *  This method should not be called directly.
    *  Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
@@ -134,7 +150,8 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
     processMethodInvocationResult(syncSend(companionActor, InvokeMethod(objectReference, method, args.toList)))
   }
 
-  /** Invoke the given static method on the given type with the given arguments.
+  /**
+   * Invoke the given static method on the given type with the given arguments.
    *
    *  This method should not be called directly.
    *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
@@ -177,14 +194,14 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * FOR THE COMPANION ACTOR ONLY.
    */
   private[model] def dropToFrameInternal(frame: ScalaStackFrame, relatedToHcr: Boolean = false): Unit =
-    (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame")) {
+    (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame"))(jdiSynchronized {
       if (canDropToFrame(frame, relatedToHcr)) {
         val frames = stackFrames
         val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
         threadRef.popFrames(frame.stackFrame)
         stepIntoFrame(startFrameForStepInto)
       }
-    }
+    })
 
   /**
    * @param shouldFireChangeEvent fire an event after refreshing frames to refresh also UI elements
@@ -212,7 +229,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * release all resources
    */
-  def dispose() {
+  def dispose(): Unit = {
     stackFrames = Nil
     companionActor ! TerminatedFromScala
   }
@@ -229,8 +246,11 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   private[model] def suspend(eventDetail: Int) = {
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
-      stackFrames = threadRef.frames.asScala.zipWithIndex.map { case (frame, index) =>
-        ScalaStackFrame(this, frame, index)
+      stackFrames = jdiSynchronized {
+        threadRef.frames
+      }.asScala.zipWithIndex.map {
+        case (frame, index) =>
+          ScalaStackFrame(this, frame, index)
       }(collection.breakOut)
       suspended = true
       fireSuspendEvent(eventDetail)
@@ -241,7 +261,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * Set the this object internal states to resumed.
    * FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def resume(eventDetail: Int) {
+  private[model] def resume(eventDetail: Int): Unit = {
     suspended = false
     stackFrames = Nil
     fireResumeEvent(eventDetail)
@@ -256,7 +276,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
     rebindFrames()
   }
 
-  private def rebindFrames(): Unit = {
+  private def rebindFrames(): Unit = jdiSynchronized {
     // FIXME: Should check that `threadRef.frames == stackFrames` before zipping
     threadRef.frames.asScala.zip(stackFrames).foreach {
       case (jdiStackFrame, scalaStackFrame) => scalaStackFrame.rebind(jdiStackFrame)
@@ -315,7 +335,7 @@ private[model] object ScalaThreadActor {
  * Actor used to manage a Scala thread. It keeps track of the existing stack frames, and of the execution status.
  * This class is thread safe. Instances are not to be created outside of the ScalaThread object.
  */
-private[model] class ScalaThreadActor private(thread: ScalaThread) extends BaseDebuggerActor {
+private[model] class ScalaThreadActor private (thread: ScalaThread) extends BaseDebuggerActor {
   import ScalaThreadActor._
 
   // step management

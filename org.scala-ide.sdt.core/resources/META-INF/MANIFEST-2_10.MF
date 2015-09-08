@@ -3,7 +3,7 @@ Eclipse-ExtensibleAPI: true
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
-Bundle-Version: 4.1.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
@@ -50,7 +50,9 @@ Require-Bundle:
  org.eclipse.ui.browser,
  org.eclipse.nebula.widgets.tablecombo,
  org.eclipse.e4.ui.workbench,
- org.eclipse.e4.ui.model.workbench"
+ org.eclipse.e4.ui.model.workbench,
+ org.eclipse.e4.core.commands,
+ org.eclipse.e4.core.contexts
 Import-Package: 
  org.eclipse.osgi.service.datalocation,
  org.eclipse.core.runtime,
@@ -77,6 +79,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.actions;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
+ scala.tools.eclipse.contribution.weaving.jdt.jdi;apply-aspects:=false,
  scala.xml,
  scala.xml.parsing
 Export-Package: 
@@ -94,7 +97,6 @@ Export-Package:
  org.scalaide.core.internal.decorators.semantichighlighting,
  org.scalaide.core.internal.decorators.semantichighlighting.classifier,
  org.scalaide.core.internal.extensions,
- org.scalaide.core.internal.extensions.saveactions,
  org.scalaide.core.internal.formatter,
  org.scalaide.core.internal.hyperlink,
  org.scalaide.core.internal.jdt.builder,

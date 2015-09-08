@@ -12,7 +12,7 @@ class HighlightingTextStyleStrategy(var fontStyle: Int) extends AnnotationPainte
   // `applyTextStyle` is called by the AnnotatinPainter when the text is painted,
   // so we don't have to notify the `styleRange` of any changes to `fontStyle`.
 
-  def applyTextStyle(styleRange: StyleRange, annotationColor: Color) {
+  def applyTextStyle(styleRange: StyleRange, annotationColor: Color): Unit = {
     styleRange.fontStyle = fontStyle
     styleRange.underline = false
     styleRange.underlineColor = annotationColor

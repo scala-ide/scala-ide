@@ -57,7 +57,7 @@ class NestedProjectsTest {
    * happening any more.
    */
   @Test
-  def checkJavaCompilesInNestedProject() {
+  def checkJavaCompilesInNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -77,7 +77,7 @@ class NestedProjectsTest {
   }
 
   @Test
-  def checkErrorsAreReported_onTheNestedProject() {
+  def checkErrorsAreReported_onTheNestedProject(): Unit = {
     // clean the nested project
     scalaProject.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     scalaProject.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
@@ -96,7 +96,7 @@ class NestedProjectsTest {
 
       val nestedErrors = scalaProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
       val errors = SDTTestUtils.markersMessages(nestedErrors.toList)
-      assertEquals("One error in nested project " + errors, 1, errors.length)
+      assertEquals("Two errors in nested project " + errors, 2, errors.length)
     } finally
       SDTTestUtils.changeContentOfFile(unitIFile, saved)
   }

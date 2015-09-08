@@ -14,15 +14,15 @@ class ScalaDocumentPartitioner(conservative: Boolean = false) extends IDocumentP
 
   private var partitionRegions: List[ITypedRegion] = Nil
 
-  def connect(document: IDocument) {
+  def connect(document: IDocument): Unit = {
     partitionRegions = ScalaCodePartitioner.partition(document.get)
   }
 
-  def disconnect() {
+  def disconnect(): Unit = {
     partitionRegions = Nil
   }
 
-  def documentAboutToBeChanged(event: DocumentEvent) {}
+  def documentAboutToBeChanged(event: DocumentEvent): Unit = {}
 
   def documentChanged(event: DocumentEvent): Boolean = documentChanged2(event) != null
 

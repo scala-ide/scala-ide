@@ -1,26 +1,27 @@
 package org.scalaide.debug.internal.editor
 
+import scala.reflect.internal.util.OffsetPosition
+import scala.reflect.internal.util.SourceFile
 import scala.util.Try
-import scala.reflect.internal.util.{Position, RangePosition, OffsetPosition, SourceFile}
-import org.scalaide.ui.internal.editor.hover.ScalaHoverImpl
-import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.model.{ScalaThisVariable, ScalaStackFrame}
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.ITextHoverExtension2
-import org.eclipse.jface.text.ITextHoverExtension
-import org.eclipse.jface.text.ITextHover
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.IInformationControlExtension2
-import org.eclipse.jface.text.IInformationControlCreator
-import org.eclipse.jface.text.DefaultInformationControl
-import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
+
 import org.eclipse.debug.core.model.IVariable
+import org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.ITextHover
+import org.eclipse.jface.text.ITextHoverExtension
+import org.eclipse.jface.text.ITextHoverExtension2
+import org.eclipse.jface.text.ITextViewer
 import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.debug.internal.ScalaDebugger
+import org.scalaide.debug.internal.model.ScalaStackFrame
+import org.scalaide.debug.internal.model.ScalaThisVariable
+import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
+import org.scalaide.ui.internal.editor.hover.ScalaHoverImpl
+import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 class TextHoverFactory extends TextHoverFactoryInterface {
   import IScalaPresentationCompiler.Implicits._
@@ -64,7 +65,6 @@ class TextHoverFactory extends TextHoverFactoryInterface {
 
 }
 
-
 object StackFrameVariableOfTreeFinder {
   def find(src: SourceFile, compiler: IScalaPresentationCompiler, stackFrame: ScalaStackFrame)(t: compiler.Tree): Option[IVariable] = {
     import compiler.{Try => _, _}
@@ -87,7 +87,6 @@ object StackFrameVariableOfTreeFinder {
     }
 
     def isStackFrameWithin(range: Position) = stackFramePos map {range includes _} getOrElse false
-
 
     /** Here we use 'template' as an umbrella term to refer to any entity that exposes a 'this'
      *  variable in the stack frame. This 'this' variable will contain the fields of this template.

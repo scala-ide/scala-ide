@@ -18,8 +18,6 @@ class SearchForUnboundVariables(val toolbox: ToolBox[universe.type], localVariab
     extends TransformationPhase[BeforeTypecheck]
     with UnboundValuesSupport {
 
-  import toolbox.u._
-
   override def transform(data: TransformationPhaseData): TransformationPhaseData = {
     val unboundNames = new VariableProxyTraverser(data.tree, _ => None, localVariablesNames).findUnboundVariables()
     data.after(phaseName, data.tree).withUnboundVariables(unboundNames)

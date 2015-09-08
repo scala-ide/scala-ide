@@ -13,7 +13,7 @@
 
   <groupId>org.scala-ide</groupId>
   <artifactId>org.scala-ide.build</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>4.2.0-SNAPSHOT</version>
   <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
   <packaging>pom</packaging>
 
@@ -41,7 +41,7 @@
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
-    <scala.plugin.version>3.1.6</scala.plugin.version>
+    <scala.plugin.version>3.2.0</scala.plugin.version>
     <aspectj.plugin.version>1.7</aspectj.plugin.version>
     <aspectj.version>1.8.2</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
@@ -62,7 +62,7 @@
     <!-- Scala 2.10.x -->
     <scala210.version>2.10.5</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.7-SNAPSHOT</scala211.version>
+    <scala211.version>2.11.8-SNAPSHOT</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
     <scala211.scala-xml.version>1.0.3</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
@@ -86,7 +86,7 @@
     <version.suffix>Select a Scala profile</version.suffix>
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <sbt.version>0.13.6</sbt.version>
+    <sbt.version>0.13.8</sbt.version>
     <pickling.version>0.10.0</pickling.version>
     <parser.combinators.version>1.0.2</parser.combinators.version>
 
@@ -135,7 +135,7 @@
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
         <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
-        <sbt.version>0.13.7-SNAPSHOT</sbt.version>
+        <sbt.version>0.13.8-SNAPSHOT</sbt.version>
 
       </properties>
     </profile>
@@ -510,6 +510,11 @@
         <artifactId>log4j</artifactId>
         <version>${log4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-collections4</artifactId>
+        <version>4.0</version>
+      </dependency>
       <!-- test support -->
       <dependency>
         <groupId>org.mockito</groupId>
@@ -617,6 +622,21 @@
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
           <version>${scala.plugin.version}</version>
+          <configuration>
+            <args>
+              <arg>-feature</arg>
+              <arg>-unchecked</arg>
+              <arg>-deprecation</arg>
+              <arg>-language:_</arg>
+              <arg>-Xlint</arg>
+              <arg>-Xfuture</arg>
+              <arg>-Xfatal-warnings</arg>
+              <arg>-Yno-adapted-args</arg>
+              <arg>-Ywarn-dead-code</arg>
+              <arg>-Ywarn-unused-import</arg>
+              <arg>-Ywarn-unused</arg>
+            </args>
+          </configuration>
         </plugin>
         <!-- git hash extractor -->
         <plugin>

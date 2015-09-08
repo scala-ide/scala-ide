@@ -68,7 +68,7 @@ class BaseConditionalBreakpointTestCompanion(workspace: String = "conditional-br
     doCreateEvaluatorWithBreakpoint(conditionContext)
 
   @BeforeClass
-  def prepareTestDebugSession() {
+  def prepareTestDebugSession(): Unit = {
     refreshBinaryFiles()
   }
 

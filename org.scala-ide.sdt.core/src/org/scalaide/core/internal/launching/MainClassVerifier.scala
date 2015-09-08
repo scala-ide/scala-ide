@@ -1,12 +1,11 @@
 package org.scalaide.core.internal.launching
 
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.IScalaProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
-import org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
+import org.scalaide.ui.internal.handlers.CompilerLaunchErrorHandler
 import org.scalaide.util.eclipse.EclipseUtils
 
 object MainClassVerifier {
@@ -36,12 +35,12 @@ class MainClassVerifier {
     val mainClass = findClassFile(project, mainTypeName)
     def mainModuleClass = findClassFile(project, mainTypeName + MainClassVerifier.ModuleClassSuffix)
 
-    if (mainClass.nonEmpty && mainModuleClass.isEmpty) new Status(IStatus.ERROR, SdtConstants.PluginId, s"${mainTypeName} needs to be an `object` (it is currently a `class`).")
+    if (mainClass.nonEmpty && mainModuleClass.isEmpty)
+      new Status(IStatus.ERROR, SdtConstants.PluginId, CompilerLaunchErrorHandler.STATUS_CODE_LAUNCH_ERROR, s"${mainTypeName} needs to be an `object` (it is currently a `class`).", null)
     else if (hasBuildErrors) {
       val msg = s"Project ${project.underlying.getName} contains build errors."
       new Status(IStatus.ERROR, SdtConstants.PluginId, CompilerLaunchErrorHandler.STATUS_CODE_LAUNCH_ERROR, msg, null)
-    }
-    else new Status(IStatus.OK, SdtConstants.PluginId, "")
+    } else new Status(IStatus.OK, SdtConstants.PluginId, "")
   }
 
   private def findClassFile(project: IScalaProject, mainTypeName: String): Option[IResource] = {

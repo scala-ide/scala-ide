@@ -3,7 +3,6 @@ package move
 
 import scala.language.reflectiveCalls
 import scala.tools.refactoring.analysis.GlobalIndexes
-import scala.tools.refactoring.common.ConsoleTracing
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations
@@ -42,7 +41,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
 
     def refactoringParameters = refactoring.RefactoringParameters(target.getElementName, moveSingleImpl)
 
-    def setMoveSingleImpl(moveSingle: Boolean) {
+    def setMoveSingleImpl(moveSingle: Boolean): Unit = {
       if(moveSingle && preparationResult.isRight) {
         // the function is never called if we don't have a value:
         moveSingleImpl = preparationResult.right.get
@@ -52,7 +51,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
     }
 
     val refactoring = withCompiler { compiler =>
-      new implementations.MoveClass with GlobalIndexes with ConsoleTracing {
+      new implementations.MoveClass with GlobalIndexes {
         val global = compiler
 
         /* The initial index is empty, it will be filled during the initialization
@@ -114,8 +113,6 @@ class MoveClass extends RefactoringExecutorWithWizard {
         }
         buildFullProjectIndex(pm, toMove)
       }
-
-      import scala.language.reflectiveCalls
 
       refactoring.index = index
 

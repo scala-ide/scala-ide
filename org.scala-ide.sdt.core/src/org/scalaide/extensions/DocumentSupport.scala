@@ -1,7 +1,12 @@
 package org.scalaide.extensions
 
+import org.eclipse.jface.text.ITextSelection
+import org.eclipse.ui.PlatformUI
 import org.scalaide.core.text.Document
 
+/**
+ * Can be mixed into a [[ScalaIdeExtension]] that operates on a [[Document]].
+ */
 trait DocumentSupport extends ScalaIdeExtension {
 
   /**
@@ -14,4 +19,12 @@ trait DocumentSupport extends ScalaIdeExtension {
    * implemented by the IDE.
    */
   val document: Document
+
+  /**
+   * Returns the region that was selected at the time when the auto edit has
+   * been invoked.
+   */
+  def textSelection: ITextSelection =
+    PlatformUI.getWorkbench.getActiveWorkbenchWindow.getSelectionService
+      .getSelection.asInstanceOf[ITextSelection]
 }

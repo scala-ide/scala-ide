@@ -2,6 +2,7 @@ package org.scalaide.core.ui
 
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.Document
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IDocumentExtension3
 import org.junit.ComparisonFailure
 import org.scalaide.CompilerSupportTests
@@ -49,6 +50,31 @@ abstract class TextEditTests {
      * by the test suite.
      */
     def execute(): Unit
+
+    /**
+     * This function can handle Eclipse' linked mode model. To depict such a
+     * model in the test simply surround the identifiers that should be
+     * considered by the linked model with [[ and ]]. The cursor is always
+     * represented by a ^.
+     *
+     * This function needs to be called by a concrete operation to add the [[
+     * and ]] markers to `doc`. `cursorPos` is the position of the cursor where
+     * the ^ marker should be added to `doc`. This function updates the cursor
+     * position if necessary and returns its updated value. `groups` are pairs
+     * of `(offset, length)` which span the area that should be surrounded
+     * by the [[ and ]] markers.
+     */
+    def applyLinkedModel(doc: IDocument, cursorPos: Int, positionGroups: Seq[(Int, Int)]): Int = {
+      val groups = positionGroups.sortBy(-_._1)
+      val cursorOffset = groups.takeWhile(_._1 < cursorPos).size*4
+
+      groups foreach {
+        case (offset, length) =>
+          doc.replace(offset+length, 0, "]]")
+          doc.replace(offset, 0, "[[")
+      }
+      cursorPos+cursorOffset
+    }
   }
 
   /** This method allows subclasses to provide their own test setup. */

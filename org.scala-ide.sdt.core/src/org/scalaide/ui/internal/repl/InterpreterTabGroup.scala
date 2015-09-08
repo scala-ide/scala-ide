@@ -92,7 +92,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(org.eclipse.swt.widgets.Composite)
    */
-  override def createControl(parent: Composite) {
+  override def createControl(parent: Composite): Unit = {
     val comp = new Composite(parent, SWT.NONE)
     comp.setLayout(new GridLayout(1, false))
     comp.setFont(parent.getFont)
@@ -101,8 +101,6 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     comp.setLayoutData(gd)
     comp.getLayout().asInstanceOf[GridLayout].verticalSpacing = 0
     createProjectEditor(comp)
-    //createVerticalSpacer(comp, 1) // FIXME Why is this code commented out? Should it be removed?
-    //createMainTypeEditor(comp, LauncherMessages.JavaMainTab_Main_cla_ss__4)
     createSeedScriptEditor(comp)
     setControl(comp)
   }
@@ -117,7 +115,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
    *
    * @param parent the parent composite
    */
-  protected def createProjectEditor(parent: Composite) {
+  protected def createProjectEditor(parent: Composite): Unit = {
     val font = parent.getFont()
     val group = new Group(parent, SWT.NONE)
     group.setText("Project Setup")
@@ -136,7 +134,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     fProjButton.addSelectionListener(() => handleProjectButtonSelected())
   }
 
-  protected def createSeedScriptEditor(parent: Composite) {
+  protected def createSeedScriptEditor(parent: Composite): Unit = {
     val group = new Group(parent, SWT.NONE)
     group.setText("Interpreter Seed Script")
     group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL | GridData.FILL_VERTICAL))
@@ -144,7 +142,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     seedScriptText = new Text(group, SWT.MULTI | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL)
   }
 
-  private def handleProjectButtonSelected() {
+  private def handleProjectButtonSelected(): Unit = {
     val project = chooseScalaProject()
     if (project == null) {
       return
@@ -168,7 +166,6 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
       dialog.setElements(scalaProjects)
     } catch {
       case jme: JavaModelException =>
-        //TODO - Log
         eclipseLog.error("Java model exception", jme)
     }
     val scalaProject = getScalaProject()
@@ -206,7 +203,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(org.eclipse.debug.core.ILaunchConfiguration)
    */
-  override def initializeFrom(config: ILaunchConfiguration) {
+  override def initializeFrom(config: ILaunchConfiguration): Unit = {
     updateProjectFromConfig(config)
     updateSeedScriptFromConfig(config)
     super.initializeFrom(config)
@@ -216,7 +213,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
    * updates the project text field form the configuration
    * @param config the configuration we are editing
    */
-  private def updateProjectFromConfig(config: ILaunchConfiguration) {
+  private def updateProjectFromConfig(config: ILaunchConfiguration): Unit = {
     var projectName = ""
     try {
       projectName = config.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, "")
@@ -229,7 +226,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
     }
   }
 
-  private def updateSeedScriptFromConfig(config: ILaunchConfiguration) {
+  private def updateSeedScriptFromConfig(config: ILaunchConfiguration): Unit = {
     if (seedScriptText != null) {
       seedScriptText.setText(config.getAttribute(InterpreterLaunchConstants.SEED_SCRIPT, ""))
     }
@@ -239,7 +236,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
    * Maps the config to associated java resource
    *
    */
-  protected def mapResources() {
+  protected def mapResources(): Unit = {
     try {
       //CONTEXTLAUNCHING
       val javaProject = getScalaProject()
@@ -255,7 +252,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#performApply(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
    */
-  override def performApply(config: ILaunchConfigurationWorkingCopy) {
+  override def performApply(config: ILaunchConfigurationWorkingCopy): Unit = {
     config.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, fProjText.getText().trim())
     config.setAttribute(InterpreterLaunchConstants.SEED_SCRIPT, seedScriptText.getText.trim())
     mapResources()
@@ -264,7 +261,7 @@ class InterpreterMainTab extends JavaLaunchTab with HasLogger {
   /* (non-Javadoc)
    * @see org.eclipse.debug.ui.ILaunchConfigurationTab#setDefaults(org.eclipse.debug.core.ILaunchConfigurationWorkingCopy)
    */
-  override def setDefaults(config: ILaunchConfigurationWorkingCopy) {
+  override def setDefaults(config: ILaunchConfigurationWorkingCopy): Unit = {
     val javaElement = getContext()
     if (javaElement != null) {
       initializeJavaProject(javaElement, config)

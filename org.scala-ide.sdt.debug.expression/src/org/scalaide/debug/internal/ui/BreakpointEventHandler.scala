@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.ui
 
 import scala.util.Failure
 import scala.util.Success
-
 import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import org.eclipse.jface.dialogs.MessageDialog
 import org.scalaide.debug.BreakpointContext
@@ -15,8 +14,8 @@ import org.scalaide.debug.SuspendExecution
 import org.scalaide.debug.internal.expression.ExpressionManager
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.Utils.jdiSynchronized
 import org.scalaide.util.ui.DisplayThread
-
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.event.BreakpointEvent
 import com.sun.jdi.event.Event
@@ -30,29 +29,30 @@ class BreakpointEventHandler extends DebugEventHandler {
       NoCommand
   }
 
-  private def handleBreakpointEvent(event: BreakpointEvent, breakpoint: JavaLineBreakpoint, debugTarget: ScalaDebugTarget): JdiEventCommand = {
-    val condition = getCondition(breakpoint)
-    val location = event.location()
-    val thread = event.thread()
+  private def handleBreakpointEvent(event: BreakpointEvent, breakpoint: JavaLineBreakpoint, debugTarget: ScalaDebugTarget): JdiEventCommand =
+    jdiSynchronized {
+      val condition = getCondition(breakpoint)
+      val location = event.location()
+      val thread = event.thread()
 
-    ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
-      case Success(true) =>
-        SuspendExecution
-      case Success(false) =>
-        ContinueExecution
-      case Failure(e: VMDisconnectedException) =>
-        // Ok, end of debugging
-        ContinueExecution
-      case Failure(e) =>
-        DisplayThread.asyncExec {
-          MessageDialog.openError(
-            SWTUtils.getShell,
-            "Error",
-            s"Error in conditional breakpoint:\n${e.getMessage}")
-        }
-        SuspendExecution
+      ExpressionManager.shouldSuspendVM(condition, location, thread, debugTarget.classPath) match {
+        case Success(true) =>
+          SuspendExecution
+        case Success(false) =>
+          ContinueExecution
+        case Failure(e: VMDisconnectedException) =>
+          // Ok, end of debugging
+          ContinueExecution
+        case Failure(e) =>
+          DisplayThread.asyncExec {
+            MessageDialog.openError(
+              SWTUtils.getShell,
+              "Error",
+              s"Error in conditional breakpoint:\n${e.getMessage}")
+          }
+          SuspendExecution
+      }
     }
-  }
 
   /**
    * Extracts condition from breakpoint.

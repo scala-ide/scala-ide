@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.breakpoints
 
-import scala.actors.Actor
 import scala.collection.mutable.ListBuffer
 
 import org.eclipse.core.resources.IMarkerDelta
@@ -21,6 +20,7 @@ import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.extensions.EventHandlerMapping
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
+import org.scalaide.util.internal.Suppress
 
 import com.sun.jdi.Location
 import com.sun.jdi.ReferenceType
@@ -43,7 +43,7 @@ private[debug] object BreakpointSupport {
    *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
    *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
    */
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     BreakpointSupportActor(breakpoint, debugTarget)
   }
 }
@@ -66,7 +66,7 @@ private object BreakpointSupportActor {
     handlerResults.filter(_ != NoCommand).toSet
   }
 
-  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Actor = {
+  def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     val typeName = breakpoint.typeName
 
     val breakpointRequests = createBreakpointsRequests(breakpoint, typeName, debugTarget)
@@ -184,7 +184,7 @@ private class BreakpointSupportActor private (
   /**
    * Remove all created requests for this breakpoint
    */
-  override protected def preExit() {
+  override protected def preExit(): Unit = {
     val eventDispatcher = debugTarget.eventDispatcher
     val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
@@ -202,13 +202,13 @@ private class BreakpointSupportActor private (
    *        can be installed *only* after/when the class is loaded, and that might happen while this
    *        breakpoint is disabled.
    */
-  private def changed(delta: IMarkerDelta) {
+  private def changed(delta: IMarkerDelta): Unit = {
     if(isEnabled ^ requestsEnabled) updateBreakpointRequestState(isEnabled)
   }
 
   /** Create the line breakpoint for the newly loaded class.
    */
-  private def classPrepared(referenceType: ReferenceType) {
+  private def classPrepared(referenceType: ReferenceType): Unit = {
     val breakpointRequest = createBreakpointRequest(breakpoint, debugTarget, referenceType)
 
     breakpointRequest.foreach { br =>
@@ -221,7 +221,7 @@ private class BreakpointSupportActor private (
   /**
    * On line breakpoint hit, set the thread as suspended
    */
-  private def breakpointHit(location: Location, thread: ThreadReference) {
+  private def breakpointHit(location: Location, thread: ThreadReference): Unit = {
     debugTarget.threadSuspended(thread, DebugEvent.BREAKPOINT)
   }
 

@@ -37,7 +37,7 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
 
   /** Update the UI element state according to the preference.
    */
-  def updateElement(element: UIElement, parameters: java.util.Map[_, _]) {
+  def updateElement(element: UIElement, parameters: java.util.Map[_, _]): Unit = {
     element.setChecked(isChecked)
   }
 
@@ -61,7 +61,7 @@ abstract class AbstractToggleHandler(commandId: String, preferenceId: String) ex
 
   PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
 
-  private def refresh() {
+  private def refresh(): Unit = {
     val service = PlatformUI.getWorkbench().getService(classOf[ICommandService]).asInstanceOf[ICommandService]
     service.refreshElements(commandId, null)
   }

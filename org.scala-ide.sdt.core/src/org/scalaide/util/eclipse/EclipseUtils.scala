@@ -99,7 +99,7 @@ object EclipseUtils extends HasLogger {
    */
   def workspaceRunnableIn(wspace: IWorkspace, monitor: IProgressMonitor = null)(f: IProgressMonitor => Unit): Unit = {
     wspace.run(new IWorkspaceRunnable {
-      override def run(monitor: IProgressMonitor) {
+      override def run(monitor: IProgressMonitor): Unit = {
         f(monitor)
       }
     }, monitor)

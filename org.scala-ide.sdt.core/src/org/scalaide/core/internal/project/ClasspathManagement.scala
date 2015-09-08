@@ -55,10 +55,10 @@ import org.scalaide.util.internal.SettingConverterUtil
  *         The version of the Scala library
  */
 case class ScalaClasspath(
-    jdkPaths: Seq[IPath],
-    scalaLibrary: Option[IPath],
-    userCp: Seq[IPath],
-    scalaVersionString: Option[String]) extends IScalaClasspath {
+    override val jdkPaths: Seq[IPath],
+    override val scalaLibrary: Option[IPath],
+    override val userCp: Seq[IPath],
+    override val scalaVersionString: Option[String]) extends IScalaClasspath {
 
   override def toString = s"""|
     |jdkPaths: $jdkPaths
@@ -76,7 +76,7 @@ case class ScalaClasspath(
    *
    *  It puts the JDK and the Scala library in front of the user classpath.
    */
-  lazy val fullClasspath: Seq[File] =
+  override lazy val fullClasspath: Seq[File] =
     toPath(jdkPaths) ++ scalaLibraryFile.toSeq ++ toPath(userCp)
 }
 
@@ -371,57 +371,61 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
     }
 
     val scalaVersion = ScalaPlugin().scalaVersion.unparse
-    val expectedVersion =
-      if (this.isUsingCompatibilityMode())
-        previousShortString(ScalaPlugin().scalaVersion)
-      else
-        scalaVersion
+    val mode = getCompatibilityMode
+    val expectedVersion = mode match {
+      case Same ⇒ scalaVersion
+      case Previous ⇒ previousShortString(ScalaPlugin().scalaVersion)
+      case Subsequent ⇒ subsequentShortString(ScalaPlugin().scalaVersion)
+    }
 
-    fragmentRoots.length match {
-      case 0 => // unable to find any trace of scala library
-        ClasspathErrorMarker(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.", SdtConstants.ClasspathProblemMarkerId) :: Nil
-      case 1 => // one and only one, now check if the version number is contained in library.properties
-        if (fragmentRoots(0).isProject) {
-          // if the library is provided by a project in the workspace, disable the warning (the version file is missing anyway)
-          Nil
-        } else fragmentRoots(0).version match {
-          case Some(v) if (!this.isUsingCompatibilityMode() && v == ScalaPlugin().scalaVersion) =>
-            // exactly the same version, should be from the container. Perfect
-            Nil
-          case Some(v) if ScalaPlugin().isCompatibleVersion(v, this) =>
-            // compatible version (major, minor are the same). Still, add warning message
-            ClasspathErrorMarker(IMarker.SEVERITY_WARNING, s"The version of scala library found in the build path (${v.unparse}) is different from the one provided by scala IDE ($scalaVersion). Make sure you know what you are doing.", SdtConstants.ClasspathProblemMarkerId) :: Nil
-          case Some(v) if (isBinaryPrevious(ScalaPlugin().scalaVersion, v)) => {
-            val msg = s"The version of scala library found in the build path of ${underlying.getName()} (${v.unparse}) is prior to the one provided by scala IDE ($scalaVersion). Setting a Scala Installation Choice to match."
-            // It's important here to check we're not mistakenly "fixing" the scala installation of a project which already has a scala container on classpath
-            // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
-            if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
-              // see the comment to checkClasspath above
-              EclipseUtils.scheduleJob(s"Update Scala Installation from raw classpath for ${underlying.getName()}", underlying, Job.BUILD) { monitor =>
-                projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
-                setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
-                projectSpecificStorage.save()
-                publish(ScalaInstallationChange())
-                Status.OK_STATUS
-              }
-              ClasspathErrorMarker(IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
-            }
-            // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
-            else ClasspathErrorMarker(IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
+    def noLibFound =
+      ClasspathErrorMarker(IMarker.SEVERITY_ERROR, "Unable to find a scala library. Please add the scala container or a scala library jar to the build path.", SdtConstants.ClasspathProblemMarkerId) :: Nil
+
+    def singleLibFound(lib: ScalaLibrary) = lib.version match {
+      case Some(v) if mode == Same && v == ScalaPlugin().scalaVersion || ScalaPlugin().isCompatibleVersion(v, this) =>
+        Nil
+      case Some(v) if isBinaryPrevious(ScalaPlugin().scalaVersion, v) =>
+        val msg = s"The version of scala library found in the build path of ${underlying.getName()} (${v.unparse}) is prior to the one provided by scala IDE ($scalaVersion). Setting a Scala Installation Choice to match."
+        // It's important here to check we're not mistakenly "fixing" the scala installation of a project which already has a scala container on classpath
+        // Those should have their installation choice changed through other means, we only aim at changing installation for 'unmanaged' (non-container) libs, e.g. sbt imports
+        if (canFixInstallationFromScalaLib && !isBundledPath(fragmentRoots(0).location)) {
+          // see the comment to checkClasspath above
+          EclipseUtils.scheduleJob(s"Update Scala Installation from raw classpath for ${underlying.getName()}", underlying, Job.BUILD) { monitor =>
+            projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_INSTALLATION, ScalaInstallationChoice(v).toString())
+            setDesiredInstallation(ScalaInstallationChoice(v), "requested Scala Installation change from classpath analysis at project open")
+            projectSpecificStorage.save()
+            publish(ScalaInstallationChange())
+            Status.OK_STATUS
           }
-          case Some(v) => {
-            // incompatible version
-            ClasspathErrorMarker(IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path (${v.unparse}) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.", SdtConstants.ClasspathProblemMarkerId) :: Nil
-          }
-          case None =>
-            // no version found
-            ClasspathErrorMarker(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar", SdtConstants.ClasspathProblemMarkerId) :: Nil
+          ClasspathErrorMarker(IMarker.SEVERITY_WARNING, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
         }
-      case _ => // 2 or more of them, not great, but warn only if the library is not a project
-        if (fragmentRoots.exists(incompatibleScalaLibrary))
-          ClasspathErrorMarker(IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false), SdtConstants.ClasspathProblemMarkerId) :: Nil
+        // Previous version, and the XSource flag isn't there already : warn and suggest fix using Xsource
+        else ClasspathErrorMarker(IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: Nil
+      case Some(v) =>
+        // incompatible version
+        ClasspathErrorMarker(IMarker.SEVERITY_ERROR, s"The version of scala library found in the build path (${v.unparse}) is incompatible with the one expected by scala IDE ($expectedVersion). Please replace the scala library with the scala container or a compatible scala library jar.", SdtConstants.ClasspathProblemMarkerId) :: Nil
+      case None =>
+        // no version found
+        ClasspathErrorMarker(IMarker.SEVERITY_ERROR, "The scala library found in the build path doesn't expose its version. Please replace the scala library with the scala container or a valid scala library jar", SdtConstants.ClasspathProblemMarkerId) :: Nil
+    }
+
+    /* 2 or more of them, not great, but warn only if the library is not a project. */
+    def multipleLibsFound =
+      if (fragmentRoots.exists(incompatibleScalaLibrary))
+        ClasspathErrorMarker(IMarker.SEVERITY_ERROR, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = false), SdtConstants.ClasspathProblemMarkerId) :: Nil
+      else
+        ClasspathErrorMarker(IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true), SdtConstants.ClasspathProblemMarkerId) :: Nil
+
+    fragmentRoots match {
+      case Seq() ⇒
+        noLibFound
+      case Seq(library) ⇒
+        if (library.isProject)
+          Nil
         else
-          ClasspathErrorMarker(IMarker.SEVERITY_WARNING, moreThanOneLibraryError(fragmentRoots.map(_.location), compatible = true), SdtConstants.ClasspathProblemMarkerId) :: Nil
+          singleLibFound(library)
+      case _ ⇒
+        multipleLibsFound
     }
   }
 

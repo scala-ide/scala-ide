@@ -7,7 +7,7 @@ object A_1001367 {
     val a = 2 /* put breakpoint at this line */
   }
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     new B().a
     println("test")
   }

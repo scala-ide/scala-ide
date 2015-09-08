@@ -6,7 +6,7 @@ import org.junit._
 class PackageTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def package_decl() {
+  def package_decl(): Unit = {
     checkSymbolClassification("""
       package packageName1.packageName2
       """, """
@@ -16,7 +16,7 @@ class PackageTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("Packages' symbol seem to take a TransparentPosition, why?")
-  def package_in_visibility_classifier() {
+  def package_in_visibility_classifier(): Unit = {
     checkSymbolClassification("""
       package packageName1
       protected[packageName1] class A

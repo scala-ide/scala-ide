@@ -30,13 +30,6 @@
             name="Send Selection to Scala Expression Evaluator"/>
     </extension>
          
-    <extension point="org.eclipse.ui.bindings">
-        <key
-            commandId="org.scalaide.debug.handler.RunSelectionInExpressionEvaluator"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            contextId="scala.tools.eclipse.scalaEditorScope"
-            sequence="M1+M2+Z"/>
-    </extension>
 	
     <extension
         point="org.eclipse.ui.handlers">

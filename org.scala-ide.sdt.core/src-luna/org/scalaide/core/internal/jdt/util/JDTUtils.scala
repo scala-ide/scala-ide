@@ -110,6 +110,6 @@ object ImportContainerInfoUtils extends ReflectionUtils {
   private val iciClazz = classOf[ImportContainerInfo]
   private val childrenField = getDeclaredField(iciClazz, "children")
 
-  def setChildren(ic : ImportContainerInfo, children : Array[IJavaElement]) { childrenField.set(ic, children) }
+  def setChildren(ic : ImportContainerInfo, children : Array[IJavaElement]): Unit = { childrenField.set(ic, children) }
   def getChildren(ic : ImportContainerInfo) = childrenField.get(ic).asInstanceOf[Array[IJavaElement]]
 }

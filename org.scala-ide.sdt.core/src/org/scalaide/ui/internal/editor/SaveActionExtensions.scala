@@ -1,11 +1,12 @@
 package org.scalaide.ui.internal.editor
 
-import scala.concurrent._
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.reflect.internal.util.SourceFile
-import scala.tools.refactoring.common.{TextChange => RTextChange}
-import scala.util._
+import scala.tools.refactoring.common.{ TextChange => RTextChange }
+import scala.util.Failure
+import scala.util.Left
+import scala.util.Right
+import scala.util.Success
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
@@ -17,66 +18,52 @@ import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.internal.extensions.saveactions.AddMissingOverrideCreator
-import org.scalaide.core.internal.extensions.saveactions.AddNewLineAtEndOfFileCreator
-import org.scalaide.core.internal.extensions.saveactions.AddReturnTypeToPublicSymbolsCreator
-import org.scalaide.core.internal.extensions.saveactions.AutoFormattingCreator
-import org.scalaide.core.internal.extensions.saveactions.RemoveDuplicatedEmptyLinesCreator
-import org.scalaide.core.internal.extensions.saveactions.RemoveTrailingWhitespaceCreator
+import org.scalaide.core.internal.extensions.ExtensionCompiler
+import org.scalaide.core.internal.extensions.ExtensionCreators
+import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
+import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.extensions.saveactions.AddMissingOverrideSetting
-import org.scalaide.extensions.saveactions.AddNewLineAtEndOfFileSetting
-import org.scalaide.extensions.saveactions.AddReturnTypeToPublicSymbolsSetting
-import org.scalaide.extensions.saveactions.AutoFormattingSetting
-import org.scalaide.extensions.saveactions.RemoveDuplicatedEmptyLinesSetting
-import org.scalaide.extensions.saveactions.RemoveTrailingWhitespaceSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EditorUtils
-import org.scalaide.util.internal.FutureUtils.TimeoutFuture
+import org.scalaide.util.internal.FutureUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
-object SaveActionExtensions {
+object SaveActionExtensions extends AnyRef with HasLogger {
 
   /**
-   * The settings for all existing save actions.
+   * Contains all available document save actions. They are cached here
+   * because their creation is expensive.
    */
-  val saveActionSettings: Seq[SaveActionSetting] = Seq(
-    RemoveTrailingWhitespaceSetting,
-    AddNewLineAtEndOfFileSetting,
-    AutoFormattingSetting,
-    RemoveDuplicatedEmptyLinesSetting
-  )
+  private val documentSaveActions = {
+    SaveActions.documentSaveActionsData flatMap {
+      case (fqn, setting) ⇒
+        ExtensionCompiler.savelyLoadExtension[ExtensionCreators.DocumentSaveAction](fqn).map(setting → _)
+    }
+  }
 
   /**
-   * The ID which is used as key in the preference store to identify the actual
-   * timeout value for save actions.
+   * Contains all available compiler save actions. They are cached here
+   * because their creation is expensive.
    */
-  final val SaveActionTimeoutId: String = "org.scalaide.extensions.SaveAction.Timeout"
+  private val compilerSaveActions = {
+    SaveActions.compilerSaveActionsData flatMap {
+      case (fqn, setting) ⇒
+        ExtensionCompiler.savelyLoadExtension[ExtensionCreators.CompilerSaveAction](fqn).map(setting → _)
+    }
+  }
 
   /**
    * The time a save action gets until the IDE waits no longer on its result.
    */
   private def saveActionTimeout: FiniteDuration =
-    IScalaPlugin().getPreferenceStore().getInt(SaveActionTimeoutId).millis
-
-  private val documentSaveActions = Seq(
-    RemoveTrailingWhitespaceSetting -> RemoveTrailingWhitespaceCreator.create _,
-    AddNewLineAtEndOfFileSetting -> AddNewLineAtEndOfFileCreator.create _,
-    AutoFormattingSetting -> AutoFormattingCreator.create _,
-    RemoveDuplicatedEmptyLinesSetting -> RemoveDuplicatedEmptyLinesCreator.create _
-  )
-
-  private val compilerSaveActions = Seq(
-    AddMissingOverrideSetting -> AddMissingOverrideCreator.create _,
-    AddReturnTypeToPublicSymbolsSetting -> AddReturnTypeToPublicSymbolsCreator.create _
-  )
+    IScalaPlugin().getPreferenceStore().getInt(SaveActions.SaveActionTimeoutId).millis
 }
 
 trait SaveActionExtensions extends HasLogger {
@@ -133,7 +120,10 @@ trait SaveActionExtensions extends HasLogger {
       val undoManager = DocumentUndoManagerRegistry.getDocumentUndoManager(udoc)
       undoManager.beginCompoundChange()
 
-      try applyDocumentExtensions(udoc)
+      try {
+        applyDocumentExtensions(udoc)
+        applyCompilerExtensions(udoc)
+      }
       finally {
         updateEditor()
 
@@ -147,31 +137,63 @@ trait SaveActionExtensions extends HasLogger {
   }
 
   /**
-   * Applies all save actions that extends [[DocumentSupport]].
+   * Applies all save actions that extend [[DocumentSupport]].
    */
   private def applyDocumentExtensions(udoc: IDocument): Unit = {
     for ((setting, ext) <- documentSaveActions if isEnabled(setting.id)) {
       val doc = new TextDocument(udoc)
       val instance = ext(doc)
-      performExtension(instance, udoc) {
+      performDocumentExtension(instance, udoc) {
         instance.perform()
       }
     }
   }
 
   /**
-   * Applies all save actions that extends [[CompilerSupport]].
+   * Applies all save actions that extend [[CompilerSupport]].
    */
   private def applyCompilerExtensions(udoc: IDocument): Unit = {
-    for ((setting, ext) <- compilerSaveActions if isEnabled(setting.id)) {
-      createExtensionWithCompilerSupport(ext) foreach { instance =>
-        performExtension(instance, udoc) {
-          instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
-            instance.perform()
-          }.getOrElse(Seq())()
+    val timeout = saveActionTimeout
+
+    def loop(xs: Seq[(SaveActionSetting, ExtensionCreators.CompilerSaveAction)]): Unit = xs match {
+      case Seq() ⇒
+
+      case (setting, ext) +: xs if isEnabled(setting.id) ⇒
+        val res = FutureUtils.performWithTimeout(timeout) {
+          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'.") {
+            createExtensionWithCompilerSupport(ext) map { instance =>
+              instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
+                instance.perform()
+              }.getOrElse(Seq())()
+            }
+          }.flatten.getOrElse(Seq())
         }
-      }
+
+        res match {
+          case Success(changes) ⇒
+            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'.") {
+              applyChanges(setting.id, changes, udoc)
+            }
+            loop(xs)
+
+          case Failure(_) ⇒
+            eclipseLog.error(s"""|
+               |A save action that relies on compiler support didn't complete in a
+               | given time, it had $timeout time to complete. Because it is
+               | unlikely that further save actions that rely on compiler support will
+               | complete in time, no further save actions are executed. Please consider
+               | to disable save actions that rely on the compiler. The performed save
+               | action itself couldn't be aborted, therefore if you know that it may
+               | never complete in future, you may wish to restart your Eclipse to
+               | clean up your VM.
+               |
+               |""".stripMargin.replaceAll("\n", ""))
+        }
+
+      case _ +: xs ⇒
+        loop(xs)
     }
+    loop(compilerSaveActions)
   }
 
   /**
@@ -185,22 +207,17 @@ trait SaveActionExtensions extends HasLogger {
    * get a sequence of changes. It is executes in a safe environment that
    * catches errors.
    */
-  private def performExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]): Unit = {
+  private def performDocumentExtension(instance: SaveAction, udoc: IDocument)(ext: => Seq[Change]): Unit = {
     val id = instance.setting.id
     val timeout = saveActionTimeout
 
-    val futureToUse: Seq[Change] => Future[Seq[Change]] =
-      if (IScalaPlugin().noTimeoutMode)
-        Future(_)
-      else
-        TimeoutFuture(timeout)(_)
-
-    val f = futureToUse {
+    val res = FutureUtils.performWithTimeout(timeout) {
       EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
         ext
       }.getOrElse(Seq())
     }
-    Await.ready(f, Duration.Inf).value.get match {
+
+    res match {
       case Success(changes) =>
         EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
           applyChanges(id, changes, udoc)
@@ -237,12 +254,7 @@ trait SaveActionExtensions extends HasLogger {
     }
   }
 
-  private type CompilerSupportCreator = (
-      IScalaPresentationCompiler, IScalaPresentationCompiler#Tree,
-      SourceFile, Int, Int
-    ) => SaveAction with CompilerSupport
-
-  private def createExtensionWithCompilerSupport(creator: CompilerSupportCreator): Option[SaveAction with CompilerSupport] = {
+  private def createExtensionWithCompilerSupport(creator: ExtensionCreators.CompilerSaveAction): Option[SaveAction with CompilerSupport] = {
     lastSourceFile.withSourceFile { (sf, compiler) =>
       import compiler._
 

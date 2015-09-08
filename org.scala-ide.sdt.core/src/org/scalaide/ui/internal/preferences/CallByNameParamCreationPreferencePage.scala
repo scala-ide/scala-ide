@@ -15,7 +15,7 @@ class CallByNameParamCreationPreferencePage extends BasicFieldEditorPreferencePa
     control
   }
 
-  override def createFieldEditors() {
+  override def createFieldEditors(): Unit = {
     addBooleanFieldEditors(
       PActive -> "Enabled",
       PBold -> "Bold",
@@ -34,7 +34,7 @@ object CallByNameParamCreationPreferencePage {
 class CallByNameParamCreationPreferenceInitializer extends AbstractPreferenceInitializer {
   import CallByNameParamCreationPreferencePage._
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     store.setDefault(PActive, true)
     store.setDefault(PBold, false)

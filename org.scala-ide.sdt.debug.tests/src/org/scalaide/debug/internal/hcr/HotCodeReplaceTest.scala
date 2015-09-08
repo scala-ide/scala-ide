@@ -41,7 +41,7 @@ private object HotCodeReplaceTest {
    * Checks whether we got exactly one message and it's of type HCRSucceeded.
    * Otherwise, when checking whether HCR succeeded, the test fails with an appropriate message.
    */
-  class TestHcrSuccessListener extends Subscriber[HCRResult, Publisher[HCRResult]] {
+  final class TestHcrSuccessListener extends Subscriber[HCRResult, Publisher[HCRResult]] {
 
     private var onlyOneSuccessReceived: Try[Boolean] = Success(false)
 
@@ -49,7 +49,7 @@ private object HotCodeReplaceTest {
       case Success(value) => value
       case Failure(e) =>
         // New exception to have informative stack trace.
-        throw new AssertionError("Unexpected message(s). Check the chained exception(s) for more information.", e)
+        throw new IllegalStateException("Unexpected message(s). Check the chained exception(s) for more information.", e)
     }
 
     override def notify(publisher: Publisher[HCRResult], event: HCRResult): Unit = event match {

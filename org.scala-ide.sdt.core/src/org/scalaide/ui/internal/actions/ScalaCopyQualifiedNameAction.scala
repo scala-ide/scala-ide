@@ -24,7 +24,6 @@ class ScalaCopyQualifiedNameAction(editor: ScalaCompilationUnitEditor) extends S
 
   override def run(): Unit = {
     ScalaPlugin().statistics.incUses(Features.CopyQualifiedName)
-
     val qname = {
       for (cu <- compilationUnit) yield {
         val selection = editor.getViewer.getSelectedRange

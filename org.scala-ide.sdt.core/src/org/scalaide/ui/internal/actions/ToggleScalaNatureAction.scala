@@ -16,7 +16,7 @@ object ToggleScalaNatureAction {
 class ToggleScalaNatureAction extends AbstractPopupAction {
   import ToggleScalaNatureAction._
 
-  override def performAction(project: IProject) {
+  override def performAction(project: IProject): Unit = {
     toggleScalaNature(project)
   }
 
@@ -35,7 +35,7 @@ class ToggleScalaNatureAction extends AbstractPopupAction {
     if (project.hasNature(PDE_PLUGIN_NATURE) && Platform.getBundle(PDE_BUNDLE_NAME) != null)
       proc
 
-  private def updateNatureIds(project: IProject)(natureIdUpdater: Array[String] => Array[String]) {
+  private def updateNatureIds(project: IProject)(natureIdUpdater: Array[String] => Array[String]): Unit = {
     val projectDescription = project.getDescription
     val currentNatureIds = projectDescription.getNatureIds
     val updatedNatureIds = natureIdUpdater(currentNatureIds)

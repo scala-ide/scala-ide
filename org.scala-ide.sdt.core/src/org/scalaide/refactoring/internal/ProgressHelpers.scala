@@ -12,7 +12,7 @@ object ProgressHelpers {
 
   def shell = PlatformUI.getWorkbench.getActiveWorkbenchWindow.getShell
 
-  def runInUiJob(block: (IProgressMonitor, Shell) => IStatus) {
+  def runInUiJob(block: (IProgressMonitor, Shell) => IStatus): Unit = {
     new UIJob("Refactoring") {
       def runInUIThread(pm: IProgressMonitor): IStatus = {
         block(pm, getDisplay.getActiveShell)
@@ -20,15 +20,15 @@ object ProgressHelpers {
     }.schedule
   }
 
-  def runInProgressDialogBlockUi(block: IProgressMonitor => Unit) {
+  def runInProgressDialogBlockUi(block: IProgressMonitor => Unit): Unit = {
     runInProgressDialog(block, fork = false)
   }
 
-  def runInProgressDialogNonblocking(block: IProgressMonitor => Unit) {
+  def runInProgressDialogNonblocking(block: IProgressMonitor => Unit): Unit = {
     runInProgressDialog(block, fork = true)
   }
 
-  private def runInProgressDialog(block: IProgressMonitor => Unit, fork: Boolean) {
+  private def runInProgressDialog(block: IProgressMonitor => Unit, fork: Boolean): Unit = {
 
     val runnable = new IRunnableWithProgress {
       def run(pm: IProgressMonitor) = block(pm)

@@ -10,8 +10,7 @@ import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
 import org.scalaide.core.internal.statistics.Features.ExplicitReturnType
 
-/** A quick fix that adds an explicit return type to a given val or def
- */
+/** A quick fix that adds an explicit return type to a given val or def */
 class ExplicitReturnType extends QuickAssist {
   override def compute(ctx: InvocationContext): Seq[BasicCompletionProposal] =
     addReturnType(ctx.icu, ctx.selectionStart).toSeq
@@ -19,11 +18,13 @@ class ExplicitReturnType extends QuickAssist {
   private def addReturnType(icu: InteractiveCompilationUnit, offset: Int): Option[BasicCompletionProposal] = {
 
     icu.withSourceFile { (sourceFile, compiler) =>
-      import compiler.{ ValDef, EmptyTree, TypeTree, DefDef, ValOrDefDef }
+      import compiler.ValDef
+      import compiler.EmptyTree
+      import compiler.TypeTree
+      import compiler.DefDef
+      import compiler.ValOrDefDef
 
-      /** Find the tokens leading to tree `rhs` and return the position before `=`,
-       *  or -1 if not found.
-       */
+      /* Find the tokens leading to tree `rhs` and return the position before `=`, or -1 if not found. */
       def findInsertionPoint(vdef: ValOrDefDef): Int = {
         val lexical = new compiler.LexicalStructure(sourceFile)
         val tokens = lexical.tokensBetween(vdef.pos.start, vdef.rhs.pos.start)

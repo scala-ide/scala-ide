@@ -4,23 +4,23 @@ import debug.Helper._
 
 class SimpleStepping {
 
-  def foo() {
+  def foo(): Unit = {
     bar()  // line 8
   }
 
-  def bar() {
+  def bar(): Unit = {
     noop(None) // line 12
     noop(None) // line 13
   }
 
-  def mainTest() {
+  def mainTest(): Unit = {
     foo()
   }
 }
 
 object SimpleStepping {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     new SimpleStepping().mainTest
   }
 

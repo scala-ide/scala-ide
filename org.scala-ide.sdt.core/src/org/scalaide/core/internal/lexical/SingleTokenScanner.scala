@@ -14,7 +14,7 @@ class SingleTokenScanner(
   private var length: Int = _
   private var consumed = false
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     this.offset = offset
     this.length = length
     this.consumed = false

@@ -4,15 +4,12 @@
 package org.scalaide.debug.internal.expression.features
 
 import org.junit.Test
-import org.junit.Ignore
 import org.junit.Assert._
 
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.NestedMethodsTestCase
-import org.scalaide.debug.internal.expression.TestValues
 import org.scalaide.debug.internal.expression.UnsupportedFeature
 import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
 

@@ -58,6 +58,25 @@ import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.compiler.ISourceMap
 import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
 import org.scalaide.core.compiler.IPositionInformation
+import org.scalaide.util.Utils
+
+object ScalaCompilationUnit extends HasLogger {
+
+  // This method is overloaded cause we have casts from 2 unrelated types in our codebase.
+  def castFrom(icu: InteractiveCompilationUnit): ScalaCompilationUnit = cast(icu)
+  def castFrom(tr: ITypeRoot): ScalaCompilationUnit = cast(tr)
+
+  // This method provides better error message if cast fails
+  private def cast(a: AnyRef): ScalaCompilationUnit = a match {
+    case scu: ScalaCompilationUnit => scu
+    case other =>
+      val message = """Underlying compilation unit is not a Scala Compilation unit.
+                      |This is most probably caused by disabled JDT weaving.
+                      |Run `Scala -> Run Setup Diagnostics` to enable it.""".stripMargin
+      logger.error(message)
+      throw new RuntimeException(message)
+  }
+}
 
 trait ScalaCompilationUnit extends Openable
   with env.ICompilationUnit
@@ -85,12 +104,11 @@ trait ScalaCompilationUnit extends Openable
   /** Lock object for operating on `cachedSourceFile` */
   private val sourceFileLock = new Object
 
-  // @GuardedBy("sourceFileLock")
   private var cachedSourceInfo: ISourceMap = _
 
   override def workspaceFile: IFile = getUnderlyingResource.asInstanceOf[IFile]
 
-  override def bufferChanged(e : BufferChangedEvent) {
+  override def bufferChanged(e : BufferChangedEvent): Unit = {
     if (!e.getBuffer.isClosed)
       scalaProject.presentationCompiler(_.scheduleReload(this, sourceMap(getContents).sourceFile))
 
@@ -102,7 +120,7 @@ trait ScalaCompilationUnit extends Openable
    *
    *  This code is copied from org.eclipse.jdt.internal.core.CompilationUnit
    */
-  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor) {
+  private def ensureBufferOpen(info: OpenableElementInfo, pm: IProgressMonitor): Unit = {
     // ensure buffer is opened
     val buffer = super.getBufferManager().getBuffer(this);
     if (buffer == null) {
@@ -119,42 +137,43 @@ trait ScalaCompilationUnit extends Openable
       val sourceFile = lastSourceMap().sourceFile
       val sourceLength = sourceFile.length
 
-      try {
-        logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
+      Utils.debugTimed("buildStructure") {
+        try {
+          logger.info("[%s] buildStructure for %s (%s)".format(scalaProject.underlying.getName(), this.getResource(), sourceFile.file))
 
-        val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
-        compiler.asyncExec {
-          new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
-        }.getOption() // block until the traverser finished
+          val tree = compiler.askStructure(sourceFile).getOrElse(compiler.EmptyTree)()
+          compiler.asyncExec {
+            new compiler.StructureBuilderTraverser(this, info, tmpMap, sourceLength).traverse(tree)
+          }.getOption() // block until the traverser finished
 
-        info match {
-          case cuei: CompilationUnitElementInfo =>
-            cuei.setSourceLength(sourceLength)
-          case _ =>
+          info match {
+            case cuei: CompilationUnitElementInfo =>
+              cuei.setSourceLength(sourceLength)
+            case _ =>
+          }
+
+          unsafeElements.putAll(tmpMap)
+          true
+        } catch {
+          case e: InterruptedException =>
+            Thread.currentThread().interrupt()
+            logger.info("ignored InterruptedException in build structure")
+            false
+
+          case ex: Exception =>
+            logger.error("Compiler crash while building structure for %s".format(file), ex)
+            false
         }
-
-        unsafeElements.putAll(tmpMap)
-        true
-      } catch {
-        case e: InterruptedException =>
-          Thread.currentThread().interrupt()
-          logger.info("ignored InterruptedException in build structure")
-          false
-
-        case ex: Exception =>
-          logger.error("Compiler crash while building structure for %s".format(file), ex)
-          false
       }
     } getOrElse false
   }
-
 
   /** Index this source file, but only if the project has the Scala nature.
    *
    *  This avoids crashes if the indexer kicks in on a project that has Scala sources
    *  but no Scala library on the classpath.
    */
-  def addToIndexer(indexer : ScalaSourceIndexer) {
+  def addToIndexer(indexer : ScalaSourceIndexer): Unit = {
     if (scalaProject.hasScalaNature) {
       try scalaProject.presentationCompiler.internal { compiler =>
         val tree = compiler.parseTree(lastSourceMap().sourceFile)
@@ -226,11 +245,11 @@ trait ScalaCompilationUnit extends Openable
   }
 
   override def codeComplete(cu : env.ICompilationUnit, unitToSkip : env.ICompilationUnit, position : Int,
-                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor) {
+                            requestor : CompletionRequestor, owner : WorkingCopyOwner, typeRoot : ITypeRoot, monitor : IProgressMonitor): Unit = {
     // This is a no-op. The Scala IDE provides code completions via an extension point
   }
 
-  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch) {
+  override def reportMatches(matchLocator : MatchLocator, possibleMatch : PossibleMatch): Unit = {
     scalaProject.presentationCompiler.internal { compiler =>
       compiler.askLoadedTyped(lastSourceMap().sourceFile, false).get match {
         case Left(tree) =>
@@ -243,7 +262,7 @@ trait ScalaCompilationUnit extends Openable
     }
   }
 
-  override def createOverrideIndicators(annotationMap : JMap[_, _]) {
+  override def createOverrideIndicators(annotationMap : JMap[_, _]): Unit = {
     if (scalaProject.hasScalaNature)
       scalaProject.presentationCompiler.internal { compiler =>
         try {

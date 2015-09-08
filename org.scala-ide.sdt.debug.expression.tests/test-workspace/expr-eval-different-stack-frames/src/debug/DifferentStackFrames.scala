@@ -11,7 +11,7 @@ object DifferentStackFrames extends App {
       recFunction(input - 1) + 5
   }
 
-  def compute() {
+  def compute(): Unit = {
     val input = 5
 
     recFunction(input - 2)

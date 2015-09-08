@@ -23,7 +23,7 @@ class StringTokenScanner(
   private var ranges: IndexedSeq[StyleRange] = _
   private var index: Int = _
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     ranges = tokenize(document, offset, length)
     index = 0
 

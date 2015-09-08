@@ -5,9 +5,6 @@ package org.scalaide.debug.internal.expression.proxies.primitives.operations.bit
 
 import org.junit.runner.RunWith
 import org.junit.runners.Suite
-import org.scalaide.debug.internal.expression.proxies.primitives.operations._
-import org.scalaide.debug.internal.expression.proxies.primitives.operations.bitwise._
-import org.scalaide.debug.internal.expression.proxies.primitives.operations.numeric._
 
 /**
  * Junit test suite for the Scala debugger.

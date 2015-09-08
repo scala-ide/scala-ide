@@ -1,77 +1,49 @@
 package org.scalaide.core.internal
 
-import org.eclipse.jdt.core.IJavaProject
 import scala.collection.mutable
-import scala.util.control.ControlThrowable
+import scala.collection.mutable.ListBuffer
+import scala.tools.nsc.settings.ScalaVersion
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
+import org.eclipse.core.resources.IResourceDelta
+import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Platform
-import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.content.IContentTypeSettings
+import org.eclipse.core.runtime.content.IContentType
 import org.eclipse.jdt.core.ElementChangedEvent
+import org.eclipse.jdt.core.IClassFile
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IElementChangedListener
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.internal.core.JavaModel
-import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.jdt.internal.core.PackageFragment
-import org.eclipse.jdt.internal.core.PackageFragmentRoot
-import org.eclipse.jdt.internal.core.util.Util
-import org.eclipse.jdt.internal.ui.javaeditor.IClassFileEditorInput
-import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.swt.graphics.Color
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.ui.IEditorInput
-import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.IPartListener
-import org.eclipse.ui.IWorkbenchPart
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.IPageListener
-import org.eclipse.ui.IEditorPart
-import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.util.eclipse.OSGiUtils
-import org.scalaide.ui.internal.templates.ScalaTemplateManager
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.core.resources.IResourceDelta
-import org.scalaide.logging.HasLogger
-import org.osgi.framework.Bundle
-import org.eclipse.jdt.core.ICompilationUnit
-import scala.tools.nsc.io.AbstractFile
-import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.core.resources.EclipseResource
-import org.scalaide.logging.PluginLogConfigurator
-import scala.tools.nsc.Settings
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.ui.internal.diagnostic
-import org.scalaide.util.internal.CompilerUtils
-import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
-import org.scalaide.util.internal.FixedSizeCache
 import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
-import org.eclipse.core.runtime.content.IContentType
-import org.scalaide.core.SdtConstants
-import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.core.IScalaPlugin
-import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.scalaide.util.Utils._
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
-import org.eclipse.jdt.core.IClassFile
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.project._
+import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.logging.HasLogger
+import org.scalaide.logging.PluginLogConfigurator
+import org.scalaide.ui.internal.diagnostic
+import org.scalaide.ui.internal.editor.ScalaDocumentProvider
+import org.scalaide.ui.internal.migration.RegistryExtender
+import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
 import org.scalaide.core.internal.statistics.Statistics
+import org.scalaide.util.eclipse.OSGiUtils
+import org.scalaide.util.internal.CompilerUtils._
+import org.scalaide.util.internal.FixedSizeCache
 
 object ScalaPlugin {
 
@@ -82,27 +54,27 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  import CompilerUtils.{ ShortScalaVersion, isBinaryPrevious, isBinarySame }
 
-  import org.scalaide.core.SdtConstants._
-
- /** Check if the given version is compatible with the current plug-in version.
-   *  Check on the major/minor number, discard the maintenance number.
-   *
-   *  For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
-   *  2.8.1 and 2.9.0 aren't.
-   */
-  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = {
-    if (project.isUsingCompatibilityMode())
+ /**
+  * Check if the given version is compatible with the current plug-in version.
+  * Check on the major/minor number, discard the maintenance number.
+  *
+  * For example 2.9.1 and 2.9.2-SNAPSHOT are compatible versions whereas
+  * 2.8.1 and 2.9.0 aren't.
+  */
+  def isCompatibleVersion(version: ScalaVersion, project: ScalaProject): Boolean = project.getCompatibilityMode match {
+    case Same ⇒
+      isBinarySame(ScalaVersion.current, version) // don't treat 2 unknown versions as equal
+    case Previous ⇒
       isBinaryPrevious(ScalaVersion.current, version)
-    else
-      isBinarySame(ScalaVersion.current, version)// don't treat 2 unknown versions as equal
+    case Subsequent ⇒
+      isBinarySubsequent(ScalaVersion.current, version)
   }
 
   private lazy val sdtCoreBundle = getBundle()
 
-  lazy val sbtCompilerBundle = Platform.getBundle(SbtPluginId)
-  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SbtCompilerInterfacePluginId)
+  lazy val sbtCompilerBundle = Platform.getBundle(SdtConstants.SbtPluginId)
+  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SdtConstants.SbtCompilerInterfacePluginId)
   lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
 
   lazy val templateManager = new ScalaTemplateManager()
@@ -160,7 +132,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   def statistics = stats
 
   override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
-    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input).asInstanceOf[ScalaCompilationUnit])
+    def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input)) map (ScalaCompilationUnit.castFrom)
 
     def unitOfClassFile = input.getAdapter(classOf[IClassFile]) match {
       case tr: ScalaClassFile => Some(tr)
@@ -200,7 +172,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   /** Restart all presentation compilers in the workspace. Need to do it in order
    *  for them to pick up the new std out/err streams.
    */
-  def resetAllPresentationCompilers() {
+  def resetAllPresentationCompilers(): Unit = {
     for {
       iProject <- ResourcesPlugin.getWorkspace.getRoot.getProjects
       if iProject.isOpen
@@ -208,21 +180,21 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     } scalaProject.presentationCompiler.askRestart()
   }
 
-  override def resourceChanged(event: IResourceChangeEvent) {
+  override def resourceChanged(event: IResourceChangeEvent): Unit = {
     (event.getResource, event.getType) match {
       case (project: IProject, IResourceChangeEvent.PRE_CLOSE) =>
         disposeProject(project)
       case _ =>
     }
-    (Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
+    Option(event.getDelta()) foreach (_.accept(new IResourceDeltaVisitor() {
       override def visit(delta: IResourceDelta): Boolean = {
         // This is obtained at project opening or closing, meaning the 'openness' state changed
-        if (delta.getFlags == IResourceDelta.OPEN){
+        if (delta.getFlags == IResourceDelta.OPEN) {
           val resource = delta.getResource().asInstanceOfOpt[IProject]
-          resource foreach {(r) =>
+          resource foreach { r =>
             // that particular classpath check can set the Installation (used, e.g., for sbt-eclipse imports)
             // setting the Installation triggers a recursive check
-            asScalaProject(r) foreach { (p) =>
+            asScalaProject(r) foreach { p =>
               try {
                 // It's important to save this /before/ checking classpath : classpath
                 // checks create their own preference modifications under some conditions.
@@ -234,13 +206,14 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
             }
           }
           false
-        } else
-        true
+        }
+        else
+          true
       }
-    })))
+    }))
   }
 
-  override def elementChanged(event: ElementChangedEvent) {
+  override def elementChanged(event: ElementChangedEvent): Unit = {
     import scala.collection.mutable.ListBuffer
     import IJavaElement._
     import IJavaElementDelta._
@@ -255,9 +228,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
         if (innerDelta.getKind() == CHANGED && (innerDelta.getFlags() & IJavaElementDelta.F_RESOLVED_CLASSPATH_CHANGED) != 0) {
           innerDelta.getElement() match {
             // classpath change should only impact projects
-            case javaProject: IJavaProject => {
-              asScalaProject(javaProject.getProject()).foreach{ (p) => p.classpathHasChanged(false) }
-            }
+            case javaProject: IJavaProject =>
+              asScalaProject(javaProject.getProject()) foreach (_.classpathHasChanged(queue = false))
             case _ =>
           }
         }
@@ -269,7 +241,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     val changed = new ListBuffer[ICompilationUnit]
     val projectsToReset = new mutable.HashSet[ScalaProject]
 
-    def findRemovedSources(delta: IJavaElementDelta) {
+    def findRemovedSources(delta: IJavaElementDelta): Unit = {
       val isChanged = delta.getKind == CHANGED
       val isRemoved = delta.getKind == REMOVED
       val isAdded = delta.getKind == ADDED
@@ -308,7 +280,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
         // TODO: the check should be done with isInstanceOf[ScalaSourceFile] instead of
         // endsWith(scalaFileExtn), but it is not working for Play 2.0 because of #1000434
-        case COMPILATION_UNIT if isChanged && elem.getResource != null && elem.getResource.getName.endsWith(ScalaFileExtn) =>
+        case COMPILATION_UNIT if isChanged && elem.getResource != null && elem.getResource.getName.endsWith(SdtConstants.ScalaFileExtn) =>
           val hasContentChanged = hasFlag(IJavaElementDelta.F_CONTENT)
           if (hasContentChanged)
             // mark the changed Scala files to be refreshed in the presentation compiler if needed

@@ -1,9 +1,8 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.separator
+
 import org.eclipse.core.runtime.IPath
-import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.Path
 
 /**
@@ -42,7 +41,7 @@ import org.eclipse.core.runtime.Path
  * Scala->Compiler preferences menu. If this flag is not set then compilation process
  * falls to old approach implemented in [[ProjectsDependentSbtBuildManager]].
  */
-trait CompileScope {
+sealed trait CompileScope {
 
   /** Can be human readable name. */
   def name: String
@@ -54,15 +53,15 @@ trait CompileScope {
   def isValidSourcePath(projectRelativePath: IPath): Boolean
   protected def isInPath(that: IPath, pathPatterns: IPath*): Boolean =
     pathPatterns.exists { _.isPrefixOf(that) }
-  protected implicit def toIPath(path: String): IPath = new Path(path)
+  protected def toIPath(path: String): IPath = new Path(path)
 }
 
 case object CompileMacrosScope extends CompileScope {
   override def name: String = "macros"
   override def dependentScopesInUpstreamProjects: Seq[CompileScope] = Seq(CompileMacrosScope, CompileMainScope)
   override def isValidSourcePath(path: IPath): Boolean = isInPath(path, default, play)
-  private val default = s"src${separator}macros"
-  private val play = "conf"
+  private val default = toIPath(s"src${separator}macros")
+  private val play = toIPath("conf")
 }
 
 case object CompileMainScope extends CompileScope {
@@ -77,6 +76,10 @@ case object CompileTestsScope extends CompileScope {
   override def dependentScopesInUpstreamProjects: Seq[CompileScope] =
     Seq(CompileMacrosScope, CompileMainScope, CompileTestsScope)
   override def isValidSourcePath(path: IPath): Boolean = isInPath(path, default, play)
-  private val default = s"src${separator}test"
-  private val play = "test"
+  private val default = toIPath(s"src${separator}test")
+  private val play = toIPath("test")
+}
+
+object CompileScope {
+  def scopesInCompileOrder: Seq[CompileScope] = Seq(CompileMacrosScope, CompileMainScope, CompileTestsScope)
 }

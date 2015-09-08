@@ -3,14 +3,19 @@ package org.scalaide.core.internal.builder.zinc
 import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.SubMonitor
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
 import sbt.ClasspathOptions
-import sbt.ScalaInstance
+import sbt.Logger.xlog2Log
 import sbt.classpath.ClasspathUtilities
 import sbt.compiler.AnalyzingCompiler
 import sbt.compiler.CompilerCache
@@ -28,7 +33,6 @@ import java.net.URLClassLoader
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.IPath
 
@@ -55,13 +59,9 @@ class SbtInputs(installation: IScalaInstallation,
     if (f.isFile)
       Maybe.just(Analysis.Empty)
     else {
-      def containsProduct(project: IScalaProject): Boolean =
-        project.sourceOutputFolders exists {
-          case (_, outputFolder) => outputFolder.getLocation.toFile == f
-        }
-
       val analysis = allProjects.collectFirst {
-        case project if containsProduct(project) => project.buildManager.latestAnalysis(incOptions)
+        case project if project.buildManager.buildManagerOf(f).nonEmpty =>
+          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
       }
       Maybe.just(analysis.getOrElse(Analysis.Empty))
     }
@@ -79,7 +79,13 @@ class SbtInputs(installation: IScalaInstallation,
   }
 
   def options = new Options {
-    def classpath = (project.scalaClasspath.userCp ++ addToClasspath).map(_.toFile.getAbsoluteFile).toArray
+    def outputFolders = srcOutputs.map {
+      case (_, out) => out.getRawLocation
+    }
+
+    def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+      .distinct
+      .map(_.toFile.getAbsoluteFile).toArray
 
     def sources = sourceFiles.toArray
 
@@ -119,7 +125,8 @@ class SbtInputs(installation: IScalaInstallation,
     }
   }
 
-  /** @return Right-biased instance of Either (error message in Left, value in Right)
+  /**
+   * @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
@@ -131,7 +138,7 @@ class SbtInputs(installation: IScalaInstallation,
         val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
         new Compilers[AnalyzingCompiler] {
           def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions, logger)
+          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions)
         }
     }
   }

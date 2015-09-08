@@ -3,7 +3,6 @@ package org.scalaide.util.internal
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
-import scala.language.dynamics
 import scala.reflect.runtime.{universe => u}
 import scala.util.Try
 
