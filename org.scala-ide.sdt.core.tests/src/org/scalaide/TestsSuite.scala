@@ -41,6 +41,7 @@ import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
 import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
+import org.scalaide.core.sbtbuilder.ScopeCompileConfigurationTest
 import org.scalaide.core.sbtbuilder.ScopeCompileTest
 import org.scalaide.core.sbtbuilder.TodoBuilderTest
 import org.scalaide.core.semantic.HighlightingTestsSuite
@@ -118,6 +119,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[ScalaProjectDependedOnJavaProjectTest],
     classOf[NameHashingVulnerabilityTest],
     classOf[JavaDependsOnScalaTest],
-    classOf[JavaDependsOnScalaBothAreOkTest]
+    classOf[JavaDependsOnScalaBothAreOkTest],
+    classOf[ScopeCompileConfigurationTest]
 ))
 class TestsSuite
