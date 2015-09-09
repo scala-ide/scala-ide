@@ -32,7 +32,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
 
   def step(): Unit = {
     sendRequests = programSends.flatMap(AsyncUtils.installMethodBreakpoint(debugTarget, _, internalActor, thread.threadRef)).toSet
-    receiveRequests = programReceives.flatMap(AsyncUtils.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
     internalActor.start()
     // CLIENT_REQUEST seems to be the only event that correctly updates the UI
     thread.resumeFromScala(DebugEvent.CLIENT_REQUEST)
@@ -58,6 +57,8 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         val args = topFrame.getArgumentValues()
         logger.debug(s"MESSAGE OUT intercepted: topFrame arguments: $args")
         watchedMessage = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
+        receiveRequests = programReceives.flatMap(AsyncUtils.installMethodBreakpoint(debugTarget, _, internalActor)).toSet
+        deleteSendRequests()
 
         reply(false) // don't suspend this thread
 
@@ -69,7 +70,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         val msg = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
         if (watchedMessage == msg) {
           logger.debug(s"MESSAGE IN! $msg")
-          deleteSendRequests()
+          deleteReceiveRequests()
 
           val targetThread = debugTarget.getScalaThread(breakpointEvent.thread())
           targetThread foreach { thread =>
@@ -103,27 +104,28 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       case _ => reply(false)
     }
 
-    private def deleteSendRequests(): Unit = {
+    private def deleteRequests(reqs: Set[EventRequest]): Unit = {
       val eventDispatcher = debugTarget.eventDispatcher
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
 
-      for (request <- sendRequests) {
+      for (request <- reqs) {
         request.disable()
         eventDispatcher.unsetActorFor(request)
         eventRequestManager.deleteEventRequest(request)
       }
+    }
+
+    private def deleteSendRequests(): Unit = {
+      deleteRequests(sendRequests)
       sendRequests = Set()
     }
 
-    private def disable(): Unit = {
-      val eventDispatcher = debugTarget.eventDispatcher
-      val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
-
-      for (request <- sendRequests ++ receiveRequests ++ stepRequests) {
-        request.disable()
-        eventDispatcher.unsetActorFor(request)
-        eventRequestManager.deleteEventRequest(request)
-      }
+    private def deleteReceiveRequests(): Unit = {
+      deleteRequests(receiveRequests)
+      receiveRequests = Set()
     }
+
+    private def disable(): Unit =
+      deleteRequests(sendRequests ++ receiveRequests ++ stepRequests)
   }
 }
