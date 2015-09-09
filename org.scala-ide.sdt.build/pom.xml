@@ -57,7 +57,7 @@
       <id>scala-refactoring</id>
       <name>Scala Refactoring p2 repository</name>
       <layout>p2</layout>
-      <url>${repo.scala-refactoring}</url>
+      <url>file:../org.scala-ide.refactoring/org.scala-ide.refactoring.update-site/target/site</url>
     </repository>
     <repository>
       <id>scalariform</id>

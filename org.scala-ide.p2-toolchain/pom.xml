@@ -26,6 +26,7 @@
 <!-- TODO enable back when multiple bundles of Scala are supported -->
 <!--        <module>../org.scala-ide.scala210.build</module> -->
         <module>../org.scala-ide.scala211.build</module>
+        <module>../org.scala-ide.refactoring</module>
       </modules>
     </profile>
     <profile>

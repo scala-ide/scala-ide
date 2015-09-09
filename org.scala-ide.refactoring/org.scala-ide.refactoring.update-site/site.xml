@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.scala-ide.refactoring.feature_0.0.0.jar" id="org.scala-ide.refactoring.feature" version="0.0.0">
+   </feature>
+</site>
+
