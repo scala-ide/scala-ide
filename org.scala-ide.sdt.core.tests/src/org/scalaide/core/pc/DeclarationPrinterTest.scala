@@ -142,5 +142,68 @@ class DeclarationPrinterTest {
         exp = exp.tail
       }
     }
+    Assert.assertTrue(exp.isEmpty)
+  }
+
+  @Test
+  def testVar(): Unit = {
+    runTestWithMarker(
+      """var a:Int=4
+         def f():Unit = {
+            println(a/**/)
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+  @Test
+  def testVarAssign(): Unit = {
+    runTestWithMarker(
+      """var a:Int=4
+         def f():Unit = {
+           println(a)
+           a/**/=5
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+
+  @Test
+  def testVarDeclr(): Unit = {
+    runTestWithMarker(
+      """var a/**/:Int=4
+         def f():Unit = {
+           println(a)
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+
+  private def runTestWithMarker(in: String, expected: String): Unit = {
+    import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+    import org.eclipse.core.resources.IFile
+    import org.scalaide.core.testsetup.SDTTestUtils._
+    import org.scalaide.util.eclipse.RegionUtils
+    import RegionUtils.RichRegion
+
+    val fullUnit = s"""|package pack
+                       |
+                       |trait Foo {
+                       |  $in
+                       |}
+                       |""".stripMargin
+
+    val offset = fullUnit.indexOf("/**/") - 1
+    changeContentOfFile(unit.getResource().asInstanceOf[IFile], fullUnit)
+    val scalaRegion = new org.eclipse.jface.text.Region(unit.sourceMap(fullUnit.toCharArray()).scalaPos(offset), 1)
+    unit.withSourceFile((file, comp) => {
+      comp.askReload(unit, unit.sourceMap(fullUnit.toCharArray()).sourceFile)
+      val r = scalaRegion.toRangePos(file)
+      val tree = comp.askTypeAt(r).getOption()
+      val tt = tree.get
+      val result = comp.asyncExec({
+        comp.declPrinter.defString(tt.symbol)(tt.tpe)
+      }).getOrElse("")()
+      Assert.assertEquals(result, expected)
+    })
   }
 }
