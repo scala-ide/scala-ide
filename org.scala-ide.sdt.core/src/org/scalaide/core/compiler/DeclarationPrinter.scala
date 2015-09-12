@@ -78,13 +78,21 @@ abstract class DeclarationPrinter extends HasLogger {
       else nonAccess + " " + access
     }
 
-    val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
-    compose(
-      // TODO: Annotations
-      flagString(sym, flagMask & sym.flags),
-      if (showKind) sym.keyString else "",
-      sym.varianceString + name + infoString(seenAs) // don't force the symbol
-      )
+    val gsym= sym.getterIn(sym.owner)
+    def hasGetterSetter(sym:Symbol)= gsym != NoSymbol && sym.setterIn(sym.owner) != NoSymbol
+
+    if(hasGetterSetter(sym)){
+      compose("", "var",sym.localName.toString.trim+": "+gsym.tpe.resultType)
+    } else{
+
+       val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
+       compose(
+         // TODO: Annotations
+         flagString(sym, flagMask & sym.flags),
+         if (showKind) sym.keyString else "",
+          sym.varianceString + name + infoString(seenAs) // don't force the symbol
+        )
+    }
   }
 
   /** Print the given type
