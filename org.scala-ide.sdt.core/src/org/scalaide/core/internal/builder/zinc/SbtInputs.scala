@@ -95,8 +95,20 @@ class SbtInputs(installation: IScalaInstallation,
 
       def outputGroups = sourceOutputFolders.map {
         case (src, out) => new MultipleOutput.OutputGroup {
-          def sourceDirectory = src.getLocation.toFile
-          def outputDirectory = out.getLocation.toFile
+          override def sourceDirectory = {
+            val loc = src.getLocation
+            if (loc != null)
+              loc.toFile()
+            else
+              throw new IllegalStateException(s"The source folder location `$src` is invalid.")
+          }
+          override def outputDirectory = {
+            val loc = out.getLocation
+            if (loc != null)
+              loc.toFile()
+            else
+              throw new IllegalStateException(s"The output folder location `$out` is invalid.")
+          }
         }
       }.toArray
     }
