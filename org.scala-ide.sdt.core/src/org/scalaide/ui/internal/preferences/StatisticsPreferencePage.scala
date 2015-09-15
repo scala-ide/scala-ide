@@ -41,9 +41,9 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     val base = new Composite(parent, SWT.NONE)
     base.setLayout(new GridLayout(1, true))
 
-    val charsSaved = filteredData.find(_.feature == CharactersSaved).get
+    val charsSaved = filteredData.find(_.feature == CharactersSaved).map(_.nrOfUses).getOrElse(0)
     mkLabel(base, s"Statistics tracking started at $startOfStats.")
-    mkLabel(base, s"Code completion has saved you from typing approx. ${charsSaved.nrOfUses} characters")
+    mkLabel(base, s"Code completion has saved you from typing approx. $charsSaved characters")
 
     val tableComposite = new Composite(base, SWT.NONE)
     tableComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1))
