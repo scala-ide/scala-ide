@@ -14,14 +14,14 @@ object ScalaIdeDataStore {
    * Preference store id that points to the location of Scala IDEs own Eclipse
    * independent data store.
    */
-  final val DataStoreId = "org.scalaide.core.dataStore"
+  val DataStoreId = "org.scalaide.core.dataStore"
 
   /**
    * The default location of the data store. Users can change it in the Scala
    * preference page. The data store can be shared between multiple Eclipse
    * instances.
    */
-  final val DefaultDataStoreLocation = s"$userHome$sep.scalaide"
+  val DefaultDataStoreLocation = s"$userHome$sep.scalaide"
 
   /**
    * The absolute path to the data store.

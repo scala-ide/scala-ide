@@ -30,9 +30,9 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
   /*
    * Some features should not be displayed in the list of used features. These
-   * are part of `filteredData`, the displayed ones are `data`
+   * are part of `filteredData`, the displayed ones are `displayedData`.
    */
-  private val (data, filteredData) = {
+  private val (displayedData, filteredData) = {
     val d = ScalaPlugin().statistics.data.toArray
     d.partition(fd ⇒ !Set(CharactersSaved, NotSpecified)(fd.feature))
   }
@@ -100,7 +100,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     }
     tcl.setColumnData(columnLastUsed.getColumn, new ColumnWeightData(1, true))
 
-    viewer.setInput(data)
+    viewer.setInput(displayedData)
 
     base
   }

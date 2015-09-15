@@ -24,7 +24,7 @@ class Statistics {
   def startOfStats: Long = firstStat
 
   def incUses(feature: Feature, numToInc: Int = 1): Unit = {
-    val stat = cache.get(feature).getOrElse(FeatureData(feature, 0, System.currentTimeMillis))
+    val stat = cache.getOrElse(feature, FeatureData(feature, 0, System.currentTimeMillis))
     cache += feature → stat.copy(nrOfUses = stat.nrOfUses + numToInc, lastUsed = System.currentTimeMillis)
 
     writeStats()

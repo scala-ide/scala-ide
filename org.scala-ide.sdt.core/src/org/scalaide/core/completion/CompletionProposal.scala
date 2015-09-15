@@ -214,7 +214,7 @@ case class CompletionProposal(
       val completedIdent = TextChange(sourceFile, startPos, endPos, completionFullString)
 
       val importStmt =
-      if (!needImport)
+        if (!needImport)
           Nil
         else {
           val refactoring = new AddImportStatement { val global = compiler }
