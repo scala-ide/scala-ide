@@ -72,7 +72,7 @@ object Groups {
 object Features {
   import Groups._
 
-  sealed abstract class Feature(val description: String, val group: Group)
+  abstract class Feature(val description: String, val group: Group)
   object ExplicitReturnType extends Feature("Add explicit return type", QuickAssist)
   object InlineLocalValue extends Feature("Inline local value", QuickAssist)
   object ExpandCaseClassBinding extends Feature("Expand case class binding", QuickAssist)
