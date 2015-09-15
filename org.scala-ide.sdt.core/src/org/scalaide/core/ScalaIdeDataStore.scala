@@ -1,6 +1,7 @@
 package org.scalaide.core
 
 import java.io.File
+import java.io.File.{ separator => sep }
 import java.io.IOException
 
 import org.scalaide.util.eclipse.EclipseUtils
@@ -8,7 +9,6 @@ import org.scalaide.util.eclipse.EclipseUtils
 object ScalaIdeDataStore {
 
   private val userHome = System.getProperty("user.home")
-  private val sep = File.separator
 
   /**
    * Preference store id that points to the location of Scala IDEs own Eclipse
