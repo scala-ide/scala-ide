@@ -6,6 +6,7 @@ import java.io.FileWriter
 import scala.collection.JavaConverters._
 
 import org.scalaide.core.ScalaIdeDataStore
+import org.scalaide.core.internal.ScalaPlugin
 
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
@@ -59,7 +60,7 @@ class Statistics {
 }
 
 object Groups {
-  sealed abstract class Group(val description: String)
+  abstract class Group(val description: String)
   object Miscellaneous extends Group("Miscellaneous")
   object QuickAssist extends Group("Quick Assist")
   object Refactoring extends Group("Refactoring")
@@ -72,35 +73,38 @@ object Groups {
 object Features {
   import Groups._
 
-  abstract class Feature(val description: String, val group: Group)
-  object ExplicitReturnType extends Feature("Add explicit return type", QuickAssist)
-  object InlineLocalValue extends Feature("Inline local value", QuickAssist)
-  object ExpandCaseClassBinding extends Feature("Expand case class binding", QuickAssist)
-  object ExpandImplicitConversion extends Feature("Expand implicit conversion", QuickAssist)
-  object ExpandImplicitArgument extends Feature("Expand implicit argument", QuickAssist)
-  object FixTypeMismatch extends Feature("Fix type mismatch", QuickAssist)
-  object ImportMissingMember extends Feature("Import missing member", QuickAssist)
-  object CreateClass extends Feature("Create class", QuickAssist)
-  object FixSpellingMistake extends Feature("Fix spelling mistake", QuickAssist)
-  object CreateMethod extends Feature("Create method", QuickAssist)
-  object ExtractCode extends Feature("Extract code", QuickAssist)
-  object CopyQualifiedName extends Feature("Copy qualified name", Miscellaneous)
-  object RestartPresentationCompiler extends Feature("Restart Presentation Compiler", Miscellaneous)
+  case class Feature(id: String)(val description: String, val group: Group) {
+    def incUses(numToInc: Int = 1): Unit =
+      ScalaPlugin().statistics.incUses(this, numToInc)
+  }
+  object ExplicitReturnType extends Feature("ExplicitReturnType")("Add explicit return type", QuickAssist)
+  object InlineLocalValue extends Feature("InlineLocalValue")("Inline local value", QuickAssist)
+  object ExpandCaseClassBinding extends Feature("ExpandCaseClassBinding")("Expand case class binding", QuickAssist)
+  object ExpandImplicitConversion extends Feature("ExpandImplicitConversion")("Expand implicit conversion", QuickAssist)
+  object ExpandImplicitArgument extends Feature("ExpandImplicitArgument")("Expand implicit argument", QuickAssist)
+  object FixTypeMismatch extends Feature("FixTypeMismatch")("Fix type mismatch", QuickAssist)
+  object ImportMissingMember extends Feature("ImportMissingMember")("Import missing member", QuickAssist)
+  object CreateClass extends Feature("CreateClass")("Create class", QuickAssist)
+  object FixSpellingMistake extends Feature("FixSpellingMistake")("Fix spelling mistake", QuickAssist)
+  object CreateMethod extends Feature("CreateMethod")("Create method", QuickAssist)
+  object ExtractCode extends Feature("ExtractCode")("Extract code", QuickAssist)
+  object CopyQualifiedName extends Feature("CopyQualifiedName")("Copy qualified name", Miscellaneous)
+  object RestartPresentationCompiler extends Feature("RestartPresentationCompiler")("Restart Presentation Compiler", Miscellaneous)
   /** Exists for backward compatibility with previous versions of the IDE. */
-  object NotSpecified extends Feature("<not specified>", Miscellaneous)
-  object CodeAssist extends Feature("Code completion", Editing)
-  object CharactersSaved extends Feature("Number of typed characters saved thanks to code completion", Editing)
-  object OrganizeImports extends Feature("Organize imports", Refactoring)
-  object ExtractMemberToTrait extends Feature("Extract member to trait", Refactoring)
-  object MoveConstructorToCompanion extends Feature("Move constructor to companion object", Refactoring)
-  object GenerateHashcodeAndEquals extends Feature("Generate hashCode and equals method", Refactoring)
-  object IntroduceProductNTrait extends Feature("Introduce ProductN trait", Refactoring)
-  object LocalRename extends Feature("Rename local value", Refactoring)
-  object GlobalRename extends Feature("Rename global value", Refactoring)
-  object MoveClass extends Feature("Move class/object/trait", Refactoring)
-  object SplitParameterLists extends Feature("Split parameter lists", Refactoring)
-  object MergeParameterLists extends Feature("Merge parameter lists", Refactoring)
-  object ChangeParameterOrder extends Feature("Change parameter order", Refactoring)
+  object NotSpecified extends Feature("NotSpecified")("<not specified>", Miscellaneous)
+  object CodeAssist extends Feature("CodeAssist")("Code completion", Editing)
+  object CharactersSaved extends Feature("CharactersSaved")("Number of typed characters saved thanks to code completion", Editing)
+  object OrganizeImports extends Feature("OrganizeImports")("Organize imports", Refactoring)
+  object ExtractMemberToTrait extends Feature("ExtractMemberToTrait")("Extract member to trait", Refactoring)
+  object MoveConstructorToCompanion extends Feature("MoveConstructorToCompanion")("Move constructor to companion object", Refactoring)
+  object GenerateHashcodeAndEquals extends Feature("GenerateHashcodeAndEquals")("Generate hashCode and equals method", Refactoring)
+  object IntroduceProductNTrait extends Feature("IntroduceProductNTrait")("Introduce ProductN trait", Refactoring)
+  object LocalRename extends Feature("LocalRename")("Rename local value", Refactoring)
+  object GlobalRename extends Feature("GlobalRename")("Rename global value", Refactoring)
+  object MoveClass extends Feature("MoveClass")("Move class/object/trait", Refactoring)
+  object SplitParameterLists extends Feature("SplitParameterLists")("Split parameter lists", Refactoring)
+  object MergeParameterLists extends Feature("MergeParameterLists")("Merge parameter lists", Refactoring)
+  object ChangeParameterOrder extends Feature("ChangeParameterOrder")("Change parameter order", Refactoring)
 }
 
 final case class StatData(firstStat: Long, featureData: Array[FeatureData])
