@@ -78,21 +78,12 @@
                   <artifactId>miglayout</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-pickling_${scala.minor.version}</artifactId>
+                  <groupId>com.cedarsoftware</groupId>
+                  <artifactId>json-io</artifactId>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-pickling_${scala.minor.version}</artifactId>
-                  <classifier>sources</classifier>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
+                  <groupId>com.cedarsoftware</groupId>
+                  <artifactId>json-io</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
               </artifactItems>

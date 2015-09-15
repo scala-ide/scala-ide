@@ -87,8 +87,7 @@
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
     <sbt.version>0.13.8</sbt.version>
-    <pickling.version>0.10.0</pickling.version>
-    <parser.combinators.version>1.0.2</parser.combinators.version>
+    <json-io.version>4.1.6</json-io.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
@@ -535,14 +534,9 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang.modules</groupId>
-        <artifactId>scala-pickling_${scala.minor.version}</artifactId>
-        <version>${pickling.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang.modules</groupId>
-        <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
-        <version>${parser.combinators.version}</version>
+        <groupId>com.cedarsoftware</groupId>
+        <artifactId>json-io</artifactId>
+        <version>${json-io.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

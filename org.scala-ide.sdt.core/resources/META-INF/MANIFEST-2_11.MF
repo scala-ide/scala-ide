@@ -182,8 +182,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
  target/lib/log4j-1.2.17.jar,
- target/lib/scala-parser-combinators_2.11-1.0.2.jar,
- target/lib/scala-pickling_2.11-0.10.0.jar
+ target/lib/json-io-4.1.6.jar
 Eclipse-ExtensibleAPI: 
  true
 

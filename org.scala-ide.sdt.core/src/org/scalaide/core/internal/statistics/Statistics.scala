@@ -3,22 +3,20 @@ package org.scalaide.core.internal.statistics
 import java.io.File
 import java.io.FileWriter
 
-import scala.pickling.FastTypeTag
-import scala.pickling.PBuilder
-import scala.pickling.PReader
-import scala.pickling.Pickler
-import scala.pickling.Unpickler
-import scala.pickling.pickler.AllPicklers
+import scala.collection.JavaConverters._
 
 import org.scalaide.core.ScalaIdeDataStore
+
+import com.cedarsoftware.util.io.JsonReader
+import com.cedarsoftware.util.io.JsonWriter
+
 import Features._
 
 class Statistics {
-  import scala.pickling.Defaults._
-  import scala.pickling.json._
 
   private var firstStat = 0L
   private var cache = Map[Feature, FeatureData]()
+  private val jsonArgs = Map[String, AnyRef](JsonWriter.PRETTY_PRINT → "true").asJava
 
   readStats()
 
@@ -34,8 +32,7 @@ class Statistics {
 
   private def readStats(): Unit = {
     ScalaIdeDataStore.read(ScalaIdeDataStore.statisticsLocation) { file ⇒
-      import Picklers._
-      val stats = read[StatData](file)
+      val stats = read(file)
       firstStat = stats.firstStat
       cache = stats.featureData.map(stat ⇒ stat.feature → stat)(collection.breakOut)
     }
@@ -46,22 +43,18 @@ class Statistics {
     val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
     ScalaIdeDataStore.write(ScalaIdeDataStore.statisticsLocation) { file ⇒
-      import Picklers._
       write(file, stats)
     }
   }
 
-  private def write[A : Pickler : Unpickler](file: File, value: A): Unit = {
-    val pickled = value.pickle
-    val json = pickled.value
-
+  private def write(file: File, value: StatData): Unit = {
+    val json = JsonWriter.objectToJson(value, jsonArgs)
     new FileWriter(file).append(json).close()
   }
 
-  private def read[A : Pickler : Unpickler](file: File): A = {
-    val readJson = io.Source.fromFile(file).mkString
-    val readPickled = pickling.json.JSONPickle(readJson)
-    readPickled.unpickle[A]
+  private def read(file: File): StatData = {
+    val json = io.Source.fromFile(file).mkString
+    JsonReader.jsonToJava(json).asInstanceOf[StatData]
   }
 }
 
@@ -110,178 +103,5 @@ object Features {
   object ChangeParameterOrder extends Feature("Change parameter order", Refactoring)
 }
 
-final case class StatData(firstStat: Long, featureData: Seq[FeatureData])
+final case class StatData(firstStat: Long, featureData: Array[FeatureData])
 final case class FeatureData(feature: Feature, nrOfUses: Int, lastUsed: Long)
-
-private object Picklers {
-  object fqn {
-    val fExplicitReturnType = FastTypeTag[ExplicitReturnType.type].key
-    val fInlineLocalValue = FastTypeTag[InlineLocalValue.type].key
-    val fExpandCaseClassBinding = FastTypeTag[ExpandCaseClassBinding.type].key
-    val fExpandImplicitConversion = FastTypeTag[ExpandImplicitConversion.type].key
-    val fExpandImplicitArgument = FastTypeTag[ExpandImplicitArgument.type].key
-    val fFixTypeMismatch = FastTypeTag[FixTypeMismatch.type].key
-    val fImportMissingMember = FastTypeTag[ImportMissingMember.type].key
-    val fCreateClass = FastTypeTag[CreateClass.type].key
-    val fFixSpellingMistake = FastTypeTag[FixSpellingMistake.type].key
-    val fCreateMethod = FastTypeTag[CreateMethod.type].key
-    val fExtractCode = FastTypeTag[ExtractCode.type].key
-    val fCopyQualifiedName = FastTypeTag[CopyQualifiedName.type].key
-    val fRestartPresentationCompiler = FastTypeTag[RestartPresentationCompiler.type].key
-    val fNotSpecified = FastTypeTag[NotSpecified.type].key
-    val fCodeAssist = FastTypeTag[CodeAssist.type].key
-    val fCharactersSaved = FastTypeTag[CharactersSaved.type].key
-    val fOrganizeImports = FastTypeTag[OrganizeImports.type].key
-    val fExtractMemberToTrait = FastTypeTag[ExtractMemberToTrait.type].key
-    val fMoveConstructorToCompanion = FastTypeTag[MoveConstructorToCompanion.type].key
-    val fGenerateHashcodeAndEquals = FastTypeTag[GenerateHashcodeAndEquals.type].key
-    val fIntroduceProductNTrait = FastTypeTag[IntroduceProductNTrait.type].key
-    val fLocalRename = FastTypeTag[LocalRename.type].key
-    val fGlobalRename = FastTypeTag[GlobalRename.type].key
-    val fMoveClass = FastTypeTag[MoveClass.type].key
-    val fSplitParameterLists = FastTypeTag[SplitParameterLists.type].key
-    val fMergeParameterLists = FastTypeTag[MergeParameterLists.type].key
-    val fChangeParameterOrder = FastTypeTag[ChangeParameterOrder.type].key
-
-    def asString(c: Feature): String = c match {
-      case ExplicitReturnType          ⇒ fExplicitReturnType
-      case InlineLocalValue            ⇒ fInlineLocalValue
-      case ExpandCaseClassBinding      ⇒ fExpandCaseClassBinding
-      case ExpandImplicitConversion    ⇒ fExpandImplicitConversion
-      case ExpandImplicitArgument      ⇒ fExpandImplicitArgument
-      case FixTypeMismatch             ⇒ fFixTypeMismatch
-      case ImportMissingMember         ⇒ fImportMissingMember
-      case CreateClass                 ⇒ fCreateClass
-      case FixSpellingMistake          ⇒ fFixSpellingMistake
-      case CreateMethod                ⇒ fCreateMethod
-      case ExtractCode                 ⇒ fExtractCode
-      case CopyQualifiedName           ⇒ fCopyQualifiedName
-      case RestartPresentationCompiler ⇒ fRestartPresentationCompiler
-      case NotSpecified                ⇒ fNotSpecified
-      case CodeAssist                  ⇒ fCodeAssist
-      case CharactersSaved             ⇒ fCharactersSaved
-      case OrganizeImports             ⇒ fOrganizeImports
-      case ExtractMemberToTrait        ⇒ fExtractMemberToTrait
-      case MoveConstructorToCompanion  ⇒ fMoveConstructorToCompanion
-      case GenerateHashcodeAndEquals   ⇒ fGenerateHashcodeAndEquals
-      case IntroduceProductNTrait      ⇒ fIntroduceProductNTrait
-      case LocalRename                 ⇒ fLocalRename
-      case GlobalRename                ⇒ fGlobalRename
-      case MoveClass                   ⇒ fMoveClass
-      case SplitParameterLists         ⇒ fSplitParameterLists
-      case MergeParameterLists         ⇒ fMergeParameterLists
-      case ChangeParameterOrder        ⇒ fChangeParameterOrder
-    }
-
-    def fromString(s: String): Feature = s match {
-      case `fExplicitReturnType`          ⇒ ExplicitReturnType
-      case `fInlineLocalValue`            ⇒ InlineLocalValue
-      case `fExpandCaseClassBinding`      ⇒ ExpandCaseClassBinding
-      case `fExpandImplicitConversion`    ⇒ ExpandImplicitConversion
-      case `fExpandImplicitArgument`      ⇒ ExpandImplicitArgument
-      case `fFixTypeMismatch`             ⇒ FixTypeMismatch
-      case `fImportMissingMember`         ⇒ ImportMissingMember
-      case `fCreateClass`                 ⇒ CreateClass
-      case `fFixSpellingMistake`          ⇒ FixSpellingMistake
-      case `fCreateMethod`                ⇒ CreateMethod
-      case `fExtractCode`                 ⇒ ExtractCode
-      case `fCopyQualifiedName`           ⇒ CopyQualifiedName
-      case `fRestartPresentationCompiler` ⇒ RestartPresentationCompiler
-      case `fNotSpecified`                ⇒ NotSpecified
-      case `fCodeAssist`                  ⇒ CodeAssist
-      case `fCharactersSaved`             ⇒ CharactersSaved
-      case `fOrganizeImports`             ⇒ OrganizeImports
-      case `fExtractMemberToTrait`        ⇒ ExtractMemberToTrait
-      case `fMoveConstructorToCompanion`  ⇒ MoveConstructorToCompanion
-      case `fGenerateHashcodeAndEquals`   ⇒ GenerateHashcodeAndEquals
-      case `fIntroduceProductNTrait`      ⇒ IntroduceProductNTrait
-      case `fLocalRename`                 ⇒ LocalRename
-      case `fGlobalRename`                ⇒ GlobalRename
-      case `fMoveClass`                   ⇒ MoveClass
-      case `fSplitParameterLists`         ⇒ SplitParameterLists
-      case `fMergeParameterLists`         ⇒ MergeParameterLists
-      case `fChangeParameterOrder`        ⇒ ChangeParameterOrder
-    }
-  }
-
-  implicit class RichPReader(private val reader: PReader) extends AnyVal {
-    def readTypedField[A](name: String, reader: PReader ⇒ A): A =
-      reader(this.reader.readField(name))
-  }
-
-  /*
-   * scala-pickling should actually generate the implementation of this pickler
-   * but because its macros fall flat on their faces while doing this the
-   * implementation was written manually. One related issue is at least SI-7588.
-   */
-  implicit val statPickler: Pickler[FeatureData] with Unpickler[FeatureData] = new Pickler[FeatureData] with Unpickler[FeatureData] {
-    override val tag = FastTypeTag[FeatureData]
-
-    override def pickle(s: FeatureData, b: PBuilder): Unit = {
-      b.pushHints()
-      b.hintTag(tag)
-
-      b.beginEntry(s)
-      b.putField("feature", b ⇒ {
-        b.pushHints()
-        b.hintTag(FastTypeTag.String)
-        b.hintStaticallyElidedType()
-        AllPicklers.stringPickler.pickle(fqn.asString(s.feature), b)
-        b.popHints()
-      })
-      b.putField("nrOfUses", b ⇒ {
-        b.pushHints()
-        b.hintTag(FastTypeTag.Int)
-        b.hintStaticallyElidedType()
-        AllPicklers.intPickler.pickle(s.nrOfUses, b)
-        b.popHints()
-      })
-      b.putField("lastUsed", b ⇒ {
-        b.pushHints()
-        b.hintTag(FastTypeTag.Long)
-        b.hintStaticallyElidedType()
-        AllPicklers.longPickler.pickle(s.lastUsed, b)
-        b.popHints()
-      })
-      b.endEntry()
-
-      b.popHints()
-    }
-
-    override def unpickle(tag: String, r: PReader): Any = {
-      r.pushHints()
-      r.hintTag(this.tag)
-      r.beginEntry()
-
-      val feature = r.readTypedField("feature", r ⇒ {
-        r.pushHints()
-        r.hintTag(FastTypeTag.String)
-        r.hintStaticallyElidedType()
-        val s = AllPicklers.stringPickler.unpickleEntry(r).asInstanceOf[String]
-        r.popHints()
-        fqn.fromString(s)
-      })
-      val nrOfUses = r.readTypedField("nrOfUses", r ⇒ {
-        r.pushHints()
-        r.hintTag(FastTypeTag.Int)
-        r.hintStaticallyElidedType()
-        val i = AllPicklers.intPickler.unpickleEntry(r).asInstanceOf[Int]
-        r.popHints()
-        i
-      })
-      val lastUsed = r.readTypedField("lastUsed", r ⇒ {
-        r.pushHints()
-        r.hintTag(FastTypeTag.Long)
-        r.hintStaticallyElidedType()
-        val l = AllPicklers.longPickler.unpickleEntry(r).asInstanceOf[Long]
-        r.popHints()
-        l
-      })
-
-      r.endEntry()
-      r.popHints()
-      FeatureData(feature, nrOfUses, lastUsed)
-    }
-
-  }
-}
