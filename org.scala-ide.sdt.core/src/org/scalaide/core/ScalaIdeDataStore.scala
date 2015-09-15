@@ -29,8 +29,18 @@ object ScalaIdeDataStore {
   def dataStoreLocation: String =
     IScalaPlugin().getPreferenceStore.getString(DataStoreId)
 
+  /**
+   * The location of the statistics file.
+   */
   def statisticsLocation: String =
     s"$dataStoreLocation${sep}statistics"
+
+  /**
+   * The location of the class file cache for
+   * [[org.scalaide.core.internal.extensions.ExtensionCompiler]].
+   */
+  def extensionsOutputDirectory: String =
+    s"$dataStoreLocation${sep}classes"
 
   def write[A](location: String)(f: File ⇒ A): Option[A] = {
     EclipseUtils.withSafeRunner(s"Error while writing to data store file '$location'") {

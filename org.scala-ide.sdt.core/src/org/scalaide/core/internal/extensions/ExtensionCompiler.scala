@@ -1,6 +1,7 @@
 package org.scalaide.core.internal.extensions
 
 import java.io.File
+import java.io.File.{ separator => sep }
 
 import scala.reflect.internal.util.AbstractFileClassLoader
 import scala.reflect.internal.util.BatchSourceFile
@@ -16,6 +17,7 @@ import scala.util.Try
 
 import org.eclipse.core.runtime.FileLocator
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.ScalaIdeDataStore
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaInstallation
@@ -89,8 +91,7 @@ object ExtensionCompiler extends AnyRef with HasLogger {
    * The location of the class file cache.
    */
   private val outputDir = {
-    val ps = File.separator
-    val f = new java.io.File(s"${System.getProperty("user.home")}$ps.scalaide${ps}classes$ps${vScala.unparse}$ps$vGenerated")
+    val f = new File(s"${ScalaIdeDataStore.extensionsOutputDirectory}$sep${vScala.unparse}$sep$vGenerated")
     f.mkdirs()
     new PlainDirectory(new Directory(f))
   }
