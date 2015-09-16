@@ -7,7 +7,7 @@ import org.junit._
 class CaseObjectTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_case_object() {
+  def basic_case_object(): Unit = {
     checkSymbolClassification("""
       case object CaseObject { CaseObject }
       """, """
@@ -17,7 +17,7 @@ class CaseObjectTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def pattern_match() {
+  def pattern_match(): Unit = {
     checkSymbolClassification("""
       object X {
         Option(42) match {
@@ -37,7 +37,7 @@ class CaseObjectTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def import_case_object() {
+  def import_case_object(): Unit = {
     checkSymbolClassification("""
       import scala.None
       class A { None }

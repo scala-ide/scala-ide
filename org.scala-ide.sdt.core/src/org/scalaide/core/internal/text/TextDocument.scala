@@ -35,6 +35,9 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
   override def lineInformation(lineNumber: Int): IRegion =
     doc.getLineInformation(lineNumber)
 
+  override def lineInformationOfOffset(offset: Int): IRegion =
+    doc.getLineInformationOfOffset(offset)
+
   override def replace(start: Int, end: Int, text: String): Unit =
     doc.replace(start, end-start, text)
 
@@ -73,6 +76,9 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
       Some(doc.getChar(length-1))
     else
       None
+
+  override def toString(): String =
+    text
 
   private def isEmpty: Boolean =
     length == 0

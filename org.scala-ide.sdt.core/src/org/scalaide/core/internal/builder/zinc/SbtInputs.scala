@@ -3,14 +3,19 @@ package org.scalaide.core.internal.builder.zinc
 import java.io.File
 import java.util.zip.ZipFile
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.SubMonitor
+import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.ui.internal.preferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
 import sbt.ClasspathOptions
-import sbt.ScalaInstance
+import sbt.Logger.xlog2Log
 import sbt.classpath.ClasspathUtilities
 import sbt.compiler.AnalyzingCompiler
 import sbt.compiler.CompilerCache
@@ -24,14 +29,12 @@ import xsbti.Reporter
 import xsbti.compile._
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
 import java.net.URLClassLoader
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.core.IScalaInstallation
-import scala.tools.nsc.settings.SpecificScalaVersion
-import scala.tools.nsc.settings.ScalaVersion
-import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.core.resources.IContainer
+import org.eclipse.core.runtime.IPath
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -39,12 +42,14 @@ import org.scalaide.core.internal.ScalaPlugin
  *  based on String maps. This allows us to use the transactional classfile writer.
  */
 class SbtInputs(installation: IScalaInstallation,
-  sourceFiles: Seq[File],
-  project: IScalaProject,
-  javaMonitor: SubMonitor,
-  scalaProgress: CompileProgress,
-  tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics
-  logger: Logger) {
+    sourceFiles: Seq[File],
+    project: IScalaProject,
+    javaMonitor: SubMonitor,
+    scalaProgress: CompileProgress,
+    tempDir: File, // used to store classfiles between compilation runs to implement all-or-nothing semantics
+    logger: Logger,
+    addToClasspath: Seq[IPath] = Seq.empty,
+    srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty) {
 
   def cache = CompilerCache.fresh // May want to explore caching possibilities.
 
@@ -53,11 +58,13 @@ class SbtInputs(installation: IScalaInstallation,
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
       Maybe.just(Analysis.Empty)
-    else
-      allProjects.find(_.sourceOutputFolders.map(_._2.getLocation().toFile()).toSeq contains f) map (_.buildManager) match {
-        case Some(sbtManager: EclipseSbtBuildManager) => Maybe.just(sbtManager.latestAnalysis(incOptions))
-        case _                                     => Maybe.just(Analysis.Empty)
+    else {
+      val analysis = allProjects.collectFirst {
+        case project if project.buildManager.buildManagerOf(f).nonEmpty =>
+          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
       }
+      Maybe.just(analysis.getOrElse(Analysis.Empty))
+    }
 
   def progress = Maybe.just(scalaProgress)
 
@@ -65,19 +72,28 @@ class SbtInputs(installation: IScalaInstallation,
     sbt.inc.IncOptions.Default.
       withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withNewClassfileManager(ClassfileManager.transactional(tempDir)).
+      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
       withApiDumpDirectory(None).
       withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
       withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
   }
 
   def options = new Options {
-    def classpath = project.scalaClasspath.userCp.map(_.toFile.getAbsoluteFile).toArray
+    def outputFolders = srcOutputs.map {
+      case (_, out) => out.getRawLocation
+    }
+
+    def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+      .distinct
+      .map(_.toFile.getAbsoluteFile).toArray
 
     def sources = sourceFiles.toArray
 
     def output = new MultipleOutput {
-      def outputGroups = project.sourceOutputFolders.map {
+      private def sourceOutputFolders =
+        if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
+
+      def outputGroups = sourceOutputFolders.map {
         case (src, out) => new MultipleOutput.OutputGroup {
           def sourceDirectory = src.getLocation.toFile
           def outputDirectory = out.getLocation.toFile
@@ -105,11 +121,12 @@ class SbtInputs(installation: IScalaInstallation,
     def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
       case "JavaThenScala" => JavaThenScala
       case "ScalaThenJava" => ScalaThenJava
-      case _               => Mixed
+      case _ => Mixed
     }
   }
 
-  /** @return Right-biased instance of Either (error message in Left, value in Right)
+  /**
+   * @return Right-biased instance of Either (error message in Left, value in Right)
    */
   def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
@@ -121,7 +138,7 @@ class SbtInputs(installation: IScalaInstallation,
         val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
         new Compilers[AnalyzingCompiler] {
           def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions, logger)
+          def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions)
         }
     }
   }

@@ -1,6 +1,12 @@
 package org.scalaide.debug.internal.model
 
+import scala.collection.JavaConverters.asScalaIteratorConverter
+
+import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.PoisonPill
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.internal.Suppress
+
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventSet
@@ -8,9 +14,9 @@ import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
-import scala.actors.Actor
+
+import ScalaJdiEventDispatcherActor.SetActorFor
+import ScalaJdiEventDispatcherActor.UnsetActorFor
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
@@ -25,12 +31,11 @@ object ScalaJdiEventDispatcher {
  * This class is thread safe. Instances have be created through its companion object.
  */
 
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Actor) extends Runnable with HasLogger {
-
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Suppress.DeprecatedWarning.Actor) extends Runnable with HasLogger {
   @volatile
   private var running = true
 
-  override def run() {
+  override def run(): Unit = {
     // the polling loop runs until the VM is disconnected, or it is told to stop.
     // The events which have been already read will still be processed by the actor.
     val eventQueue = virtualMachine.eventQueue
@@ -56,7 +61,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
   /**
    * release all resources
    */
-  private[model] def dispose() {
+  private[model] def dispose(): Unit = {
     running = false
     companionActor ! PoisonPill
   }
@@ -66,23 +71,23 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
    * TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
    *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
    */
-  def setActorFor(actor: Actor, request: EventRequest) {
+  def setActorFor(actor: Suppress.DeprecatedWarning.Actor, request: EventRequest): Unit = {
     companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
   }
 
   /**
    * Remove the call back target for the given request
    */
-  def unsetActorFor(request: EventRequest) {
+  def unsetActorFor(request: EventRequest): Unit = {
     companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
   }
 }
 
 private[model] object ScalaJdiEventDispatcherActor {
-  case class SetActorFor(actor: Actor, request: EventRequest)
+  case class SetActorFor(actor: Suppress.DeprecatedWarning.Actor, request: EventRequest)
   case class UnsetActorFor(request: EventRequest)
 
-  def apply(scalaDebugTargetActor: Actor): ScalaJdiEventDispatcherActor = {
+  def apply(scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor): ScalaJdiEventDispatcherActor = {
     val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
     actor.start()
     actor
@@ -94,18 +99,18 @@ private[model] object ScalaJdiEventDispatcherActor {
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor) extends BaseDebuggerActor {
+private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor) extends BaseDebuggerActor {
   import ScalaJdiEventDispatcherActor._
 
   /** event request to actor map */
-  private var eventActorMap = Map[EventRequest, Actor]()
+  private var eventActorMap = Map[EventRequest, Suppress.DeprecatedWarning.Actor]()
 
   override protected def postStart(): Unit = link(scalaDebugTargetActor)
 
   override protected def behavior = {
     case SetActorFor(actor, request) => eventActorMap += (request -> actor)
-    case UnsetActorFor(request)      => eventActorMap -= request
-    case eventSet: EventSet          => processEventSet(eventSet)
+    case UnsetActorFor(request) => eventActorMap -= request
+    case eventSet: EventSet => processEventSet(eventSet)
   }
 
   /**
@@ -142,7 +147,9 @@ private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Actor
     object FutureComputed
 
     // Change the actor's behavior to wait for the `futures` to complete
-    become { case FutureComputed => unbecome() }
+    become {
+      case FutureComputed => unbecome()
+    }
 
     var staySuspended = false
     val it = futures.iterator

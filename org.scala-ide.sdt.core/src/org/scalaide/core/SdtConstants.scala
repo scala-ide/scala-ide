@@ -9,6 +9,10 @@ object SdtConstants {
   // Eclipse ids
 
   final val PluginId = "org.scala-ide.sdt.core"
+  final val AspectsPluginId = "org.scala-ide.sdt.aspects"
+  final val DebuggerPluginId = "org.scala-ide.sdt.debug"
+  final val ExpressionEvaluatorPluginId = "org.scala-ide.sdt.debug.expression"
+  final val ScalaRefactoringPluginId = "org.scala-refactoring.library"
   final val LibraryPluginId = "org.scala-lang.scala-library"
   final val SbtPluginId = "org.scala-ide.sbt.full.library"
   final val SbtCompilerInterfacePluginId = "org.scala-ide.sbt.compiler.interface"
@@ -37,16 +41,26 @@ object SdtConstants {
   final val BuilderId = "org.scala-ide.sdt.core.scalabuilder"
 
   // wizards
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val ClassWizId = "org.scala-ide.sdt.core.wizards.newClass"
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val TraitWizId = "org.scala-ide.sdt.core.wizards.newTrait"
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val ObjectWizId = "org.scala-ide.sdt.core.wizards.newObject"
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val PackageObjectWizId = "org.scala-ide.sdt.core.wizards.newPackageObject"
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val ApplicationWizId = "org.scala-ide.sdt.core.wizards.newApplication"
-  final val ProjectWizId = "org.scala-ide.sdt.core.wizards.newProject"
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
   final val NetProjectWizId = "org.scala-ide.sdt.core.wizards.newNetProject"
-  final val ScalaFileCreatorWizId = "org.scalaide.ui.wizards.scalaCreator"
-  @deprecated("Use ScalaFileCreatorWizId instead", "4.0")
-  final val ScalaFileCreatorWidId = ScalaFileCreatorWizId
+  @deprecated("The wizard this constant belongs to doesn't exist anymore.", "4.0")
+  final val ScalaFileCreatorWidId = "org.scalaide.ui.wizards.scalaCreator"
+  final val ProjectWizId = "org.scala-ide.sdt.core.wizards.newProject"
+  final val ClassCreatorWizId = "org.scalaide.ui.wizards.classCreator"
+  final val TraitCreatorWizId = "org.scalaide.ui.wizards.traitCreator"
+  final val ObjectCreatorWizId = "org.scalaide.ui.wizards.objectCreator"
+  final val PackageObjectCreatorWizId = "org.scalaide.ui.wizards.packageObjectCreator"
+  final val AppCreatorWizId = "org.scalaide.ui.wizards.appCreator"
 
   // file extensions
   final val ScalaFileExtn = ".scala"

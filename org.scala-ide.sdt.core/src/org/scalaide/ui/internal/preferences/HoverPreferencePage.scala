@@ -16,7 +16,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.editor.hover.IScalaHover._
-import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class HoverPreferencePage extends PreferencePage with IWorkbenchPreferencePage {

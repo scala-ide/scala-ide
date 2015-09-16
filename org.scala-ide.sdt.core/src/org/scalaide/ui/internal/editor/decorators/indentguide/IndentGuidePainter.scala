@@ -27,13 +27,13 @@ class IndentGuidePainter(viewer: ISourceViewer)
     with IndentGuideGenerator {
 
   private object config {
-    final val LineStyle = SWT.LINE_DOT
-    final val LineWidth = 1
+    val LineStyle = SWT.LINE_DOT
+    val LineWidth = 1
     /**
      * Offset to move the guides to the right. This achieves that the guide
      * and the caret do not completely overlay
      */
-    final val GuideShift = 2
+    val GuideShift = 2
   }
 
   /** The width of a space in pixel */
@@ -115,7 +115,7 @@ class IndentGuidePainter(viewer: ISourceViewer)
  *   some other lines which contain only whitespace have to be invalidated. One
  *   possible case is
  *
- *     def f {
+ *     def f: Unit = {
  *
  *     def g = 0
  *     }

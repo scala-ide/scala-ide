@@ -1,7 +1,7 @@
 abstract class Foo {
   val obj/*ref*/ : Object
 
-  def foo() {
+  def foo(): Unit = {
     obj.toString
   }
 }

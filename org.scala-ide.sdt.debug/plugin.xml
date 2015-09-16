@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="eventHandler" name="Event Handler" schema="schema/eventHandler.exsd"/>
    <extension
          point="org.eclipse.debug.ui.debugModelPresentations">
       <debugModelPresentation
@@ -53,20 +54,39 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
             type="org.scala-ide.ew.launcher.JunitLaunchConfig">
       </launchDelegate>
+      <launchDelegate
+            delegate="org.scalaide.debug.internal.launching.ScalaJUnitLaunchConfigurationDelegate"
+            delegateDescription="The Scala JVM Launcher supports debugging of JUnit Scala using the new Scala debugger"
+            id="scala.junit.new"
+            modes="debug"
+            name="Scala JUnit (new debugger)"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            type="org.eclipse.jdt.junit.launchconfig">
+      </launchDelegate>
     </extension>
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
             category="org.scalaide.ui.preferences"
-            class="org.scalaide.debug.internal.preferences.DebuggerPreferences"
+            class="org.scalaide.debug.internal.preferences.DebuggerPreferencePage"
             id="org.scalaide.ui.preferences.debug"
             name="Debug">
+      </page>
+      <page
+            category="org.scalaide.ui.preferences.debug"
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug.async"
+            name="Async Debugger">
       </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">
       <initializer
             class="org.scalaide.debug.internal.preferences.DebugerPreferencesInitializer">
+      </initializer>
+      <initializer
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencesInitializer">
       </initializer>
    </extension>
    <extension
@@ -80,10 +100,161 @@
             id="org.scala-ide.sdt.debug.socketListenConnector">
       </vmConnector>
    </extension>
+
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            category="org.scala-ide.sdt.core.viewCategory"
+            class="org.scalaide.debug.internal.views.AsyncDebugView"
+            id="org.scala-ide.sdt.debug.asyncView"
+            name="Async Stack"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.contextViewBindings">
+      <contextViewBinding
+            autoOpen="true"
+            contextId="org.eclipse.debug.ui.debugging"
+            viewId="org.scala-ide.sdt.debug.asyncView">
+      </contextViewBinding>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            categoryId="org.scalaide.debug"
+            id="org.scalaide.debug.async.stepMessageOut"
+            name="Step Message Out">
+      </command>
+      <command
+            categoryId="org.scalaide.debug"
+            description="Break execution when a message is sent to dead letters"
+            id="org.scalaide.debug.async.stopOnDeadLetters"
+            name="Break on DeadLetter">
+      </command>
+      <category
+            description="Scala Debugger category"
+            id="org.scalaide.debug"
+            name="Scala Debugger">
+      </category>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.debug.ui.DebugView">
+         <command
+               commandId="org.scalaide.debug.async.stepMessageOut"
+               icon="icons/bang.png"
+               label="Step Message Out"
+               style="push"
+               tooltip="Step until a message is received">
+            <visibleWhen
+                  checkEnabled="true">
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.debug.ui.BreakpointView">
+          <command
+                commandId="org.scala-ide.sdt.debug.stopOnDeadLetters"
+                icon="icons/envelope-blue.png"
+                label="Break on Dead Letters"
+                style="toggle"
+                tooltip="Break when a message arrives in dead letters">
+          </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="org.scalaide.debug.internal.command.StepMessageOut"
+            commandId="org.scalaide.debug.async.stepMessageOut">
+      </handler>
+      <handler
+            class="org.scalaide.debug.internal.command.BreakOnDeadLettersAction"
+            commandId="org.scala-ide.sdt.debug.stopOnDeadLetters">
+      </handler>
+   </extension>
    <extension
          point="org.scala-ide.sdt.core.scalaHoverDebugOverride">
       <overrider
             hoverFactoryClass="org.scalaide.debug.internal.editor.TextHoverFactory">
       </overrider>
+   </extension>
+   <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabs">
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.scala-ide.ew.launcher.WorkbenchLauncherTabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.pde.ui.launch.tab.main">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.jdt.junit.launchConfigurationTabGroup.junit"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.junit.JUnitLaunchConfigurationTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="scala.scalatest.tabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="scala.tools.eclipse.launching.scalaTestMainTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="scala.application.tabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.debug.ui.javaMainTab">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.pde.ui.launcher.JUnitTabGroup"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.pde.ui.launch.tab.test">
+         </placement>
+      </tab>
+      <tab
+            class="org.scalaide.debug.internal.launching.ScalaDebuggerTab"
+            group="org.eclipse.jdt.debug.ui.launchConfigurationTabGroup.remoteJavaApplication"
+            id="org.scalaide.debug.ui.scalaDebuggerTab"
+            name="Scala Debugger">
+         <placement
+               after="org.eclipse.jdt.debug.ui.javaConnectTab">
+         </placement>
+      </tab>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="org.scalaide.debug.async.stepMessageOut"
+            contextId="org.eclipse.debug.ui.debugging"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M2+F5">
+      </key>
+   </extension>
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            class="org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage"
+            id="org.scalaide.ui.preferences.debug.async"
+            name="Scala Async Debugger">
+      </page>
    </extension>
 </plugin>

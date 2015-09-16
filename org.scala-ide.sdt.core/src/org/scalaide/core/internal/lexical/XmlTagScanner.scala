@@ -33,7 +33,7 @@ class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScala
 
   def getTokenLength = tokenLength
 
-  def setRange(document: IDocument, offset: Int, length: Int) {
+  def setRange(document: IDocument, offset: Int, length: Int): Unit = {
     this.document = document
     this.pos = offset
     this.end = offset + length - 1
@@ -49,9 +49,9 @@ class XmlTagScanner(val preferenceStore: IPreferenceStore) extends AbstractScala
       document.getChar(offset)
   }
 
-  private def accept() { pos += 1 }
+  private def accept(): Unit = { pos += 1 }
 
-  private def accept(n: Int) { pos += n }
+  private def accept(n: Int): Unit = { pos += n }
 
   def nextToken(): IToken = {
     val start = pos

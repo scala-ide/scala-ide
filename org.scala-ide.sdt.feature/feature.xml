@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.sdt.feature"
       label="Scala IDE for Eclipse"
-      version="4.1.0.qualifier"
+      version="4.2.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.sdt.core">
 
@@ -127,6 +127,13 @@ SUCH DAMAGE.
 
    <plugin
          id="org.eclipse.nebula.widgets.tablecombo"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.scala-ide.sdt.debug.expression"
          download-size="0"
          install-size="0"
          version="0.0.0"

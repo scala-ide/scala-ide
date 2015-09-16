@@ -10,6 +10,7 @@ import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import Thread.sleep
 
 import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+import org.scalaide.core.FlakyTest
 
 class PresentationCompilerActivityListenerTest {
 
@@ -222,7 +223,7 @@ class PresentationCompilerActivityListenerTest {
   }
 
   @Test
-  def changingManyPreferencesAtOnce(): Unit = {
+  def changingManyPreferencesAtOnce(): Unit = FlakyTest.retry("changingManyPreferencesAtOnce") {
     val shutdownMock = new MockShutdownFun
 
     val listener = createListener(shutdownMock, maxIdlenessLengthMillis = valuesForAnotherCalls(50000, 20, 50000), hasOpenEditors = false,

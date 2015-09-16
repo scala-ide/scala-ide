@@ -1,89 +1,19 @@
 package org.scalaide.ui.internal.editor
 
-import scalariform.formatter.preferences._
+import java.lang.Math.min
+
+import scala.annotation.tailrec
+import scala.util.control.Exception
+
 import org.eclipse.core.runtime.Assert
-import org.eclipse.jface.text.BadLocationException
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.formatter.DefaultCodeFormatterConstants
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.text.DocumentCharacterIterator
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
 import org.eclipse.jdt.internal.ui.text.Symbols
-import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil
-import org.eclipse.jdt.ui.PreferenceConstants
-import java.lang.Math.min
-import scala.collection.mutable.Map
-import scala.annotation.tailrec
-import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.formatter.FormatterPreferences
-import scalariform.formatter.preferences.IndentSpaces
-import scala.util.control.Exception
-
-// TODO Move this out into a new file
-trait PreferenceProvider {
-  private val preferences = Map.empty[String, String]
-
-  def updateCache(): Unit
-
-  def put(key: String, value: String) {
-    preferences(key) = value
-  }
-
-  def get(key: String): String = {
-    preferences(key)
-  }
-
-  def getBoolean(key: String): Boolean = {
-    get(key).toBoolean
-  }
-
-  def getInt(key: String): Int = {
-    get(key).toInt
-  }
-}
-
-// TODO Move this out into a new file
-class JdtPreferenceProvider(val project: IJavaProject) extends PreferenceProvider {
-  private def preferenceStore = JavaPlugin.getDefault().getCombinedPreferenceStore()
-
-  def updateCache(): Unit = {
-    put(PreferenceConstants.EDITOR_CLOSE_BRACES,
-      preferenceStore.getBoolean(PreferenceConstants.EDITOR_CLOSE_BRACES).toString)
-    put(PreferenceConstants.EDITOR_SMART_TAB,
-      preferenceStore.getBoolean(PreferenceConstants.EDITOR_SMART_TAB).toString)
-
-    val formatterPreferences = FormatterPreferences.getPreferences(project)
-    val indentWithTabs = formatterPreferences(IndentWithTabs).toString
-    val indentSpaces = formatterPreferences(IndentSpaces).toString
-
-    put(ScalaIndenter.TAB_SIZE, indentSpaces)
-    put(ScalaIndenter.INDENT_SIZE, indentSpaces)
-    put(ScalaIndenter.INDENT_WITH_TABS, indentWithTabs)
-
-    def populateFromProject(key: String) = {
-      put(key, project.getOption(key, true))
-    }
-
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_CONDITIONAL_EXPRESSION)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_SWITCH)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_CASES)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_PARAMETERS_IN_METHOD_DECLARATION)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_ARGUMENTS_IN_METHOD_INVOCATION)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_INDENT_STATEMENTS_COMPARE_TO_BLOCK)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_INDENT_STATEMENTS_COMPARE_TO_BODY)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_INDENT_BODY_DECLARATIONS_COMPARE_TO_TYPE_HEADER)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_BLOCK)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_ARRAY_INITIALIZER)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_METHOD_DECLARATION)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_BRACE_POSITION_FOR_TYPE_DECLARATION)
-    populateFromProject(DefaultCodeFormatterConstants.FORMATTER_CONTINUATION_INDENTATION)
-  }
-}
+import org.eclipse.jface.text.BadLocationException
+import org.eclipse.jface.text.IDocument
 
 /**
  * Holder for various constants used by the Scala indenter
@@ -133,8 +63,6 @@ class ScalaIndenter(
 
   private def prefIndentationSize = preferencesProvider.getInt(ScalaIndenter.INDENT_SIZE)
 
-  private def prefArrayDimensionsDeepIndent = true; // sensible default, no formatter setting
-
   private def prefArrayIndent: Int = {
     val option = getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_ALIGNMENT_FOR_EXPRESSIONS_IN_ARRAY_INITIALIZER)
     try {
@@ -166,13 +94,6 @@ class ScalaIndenter(
   }
 
   private def prefAssignmentIndent = prefBlockIndent
-
-  private def prefCaseBlockIndent: Int = {
-    if (DefaultCodeFormatterConstants.TRUE.equals(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_INDENT_SWITCHSTATEMENTS_COMPARE_TO_CASES)))
-      return prefBlockIndent
-    else
-      return 0
-  }
 
   private def prefSimpleIndent: Int = {
     if (prefIndentBracesForBlocks && prefBlockIndent == 0)
@@ -274,8 +195,6 @@ class ScalaIndenter(
       Integer.parseInt(getCoreFormatterOption(DefaultCodeFormatterConstants.FORMATTER_CONTINUATION_INDENTATION))
     }
   }
-
-  private def hasGenerics: Boolean = true
 
   /** The indentation accumulated by <code>findReferencePosition</code>. */
   private var fIndent: Int = 0
@@ -533,7 +452,6 @@ class ScalaIndenter(
     val tabSize = prefTabSize
     val maxCopyLength = if (tabSize > 0) minLength - minLength % tabSize else minLength // maximum indent to copy
     stripExceedingChars(buffer, maxCopyLength)
-
 
     def safeDivision(num: Int, denom: Int): (Int,Int) = if (denom > 0) (num / denom, num % denom) else (0, num)
 
@@ -1518,10 +1436,9 @@ class ScalaIndenter(
    */
   private def isStringOrCharLiteralAssignment(referenceTokenPos: Int, offset: Int) = {
     val restOfTheLine = document.get(referenceTokenPos, Math.max(offset - referenceTokenPos, 0))
-    val charLit = """'(.|\\\w|\\\\)'"""
-    val stringLit = """"(\\"|[^"])*")"""
-
-    val regex = s"(${charLit}|${stringLit}$$".r
+    val charLit = """'(\\?.|\\u[\da-fA-F]{4})'"""
+    val stringLit = "\".*\""
+    val regex = s"($charLit|$stringLit)".r
     regex.findFirstIn(restOfTheLine.trim).isDefined
   }
 }

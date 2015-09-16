@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/license.html
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.core.semantic
 
@@ -20,7 +18,7 @@ class CustomAnnotationHighlightingTest
   private def fooAnnotations = annotations("fooAnnotated") _
 
   @Test
-  def customValAnnotationHighlighting() {
+  def customValAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsVal.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [237, 10]")
@@ -31,7 +29,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customVarAnnotationHighlighting() {
+  def customVarAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsVar.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [240, 10]")
@@ -42,7 +40,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customValInBodyAnnotationHighlighting() {
+  def customValInBodyAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsValInBody.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [201, 3]",
@@ -54,7 +52,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customVarInBodyAnnotationHighlighting() {
+  def customVarInBodyAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsVarInBody.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [201, 3]",
@@ -66,7 +64,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customValInConstructorAnnotationHighlighting() {
+  def customValInConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsValConstructor.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [284, 10]")
@@ -77,7 +75,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customVarInConstructorAnnotationHighlighting() {
+  def customVarInConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsVarConstructor.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [282, 10]")
@@ -88,7 +86,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customValInCaseConstructorAnnotationHighlighting() {
+  def customValInCaseConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsValCaseConstructor.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [293, 10]")
@@ -99,7 +97,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customVarInCaseConstructorAnnotationHighlighting() {
+  def customVarInCaseConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsVarCaseConstructor.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [291, 10]")
@@ -110,7 +108,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customDefAnnotationHighlighting() {
+  def customDefAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsDef.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [240, 10]")
@@ -121,7 +119,7 @@ class CustomAnnotationHighlightingTest
   }
 
   @Test
-  def customParameterlessDefAnnotationHighlighting() {
+  def customParameterlessDefAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsDefParensless.scala") { (src, compiler) =>
 
       val expected = List("'annotations.foo' annotation found [251, 10]")

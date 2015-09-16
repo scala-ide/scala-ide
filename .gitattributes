@@ -1,6 +1,9 @@
 *.aj eol=lf
+.classpath eol=lf
 *.java eol=lf
+*.MD eol=lf
 *.MF eol=lf
+.project eol=lf
 *.properties eol=lf
 *.pom eol=lf
 *.scala eol=lf

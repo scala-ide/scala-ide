@@ -42,7 +42,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
    *
    *  The parent composite can be used directly, without additional composite. It is configured with a 2 columns [[GridLayout]] layout.
    */
-  protected def additionalCreateContent(parent: Composite) {}
+  protected def additionalCreateContent(parent: Composite): Unit = {}
 
   /** Returns the keys of the additional preferences to configure.
    */
@@ -51,7 +51,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
   /** Additional actions to be performed when the `Restore Default` button is used. Usually,
    *  resetting the UI according to the preferences defaults.
    */
-  def additionalPerformDefaults() {}
+  def additionalPerformDefaults(): Unit = {}
 
   setPreferenceStore(preferenceStore)
   protected val overlayStore = makeOverlayPreferenceStore
@@ -71,7 +71,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
   private var treeViewer: TreeViewer = _
   private var previewer: SourceViewer = _
 
-  def init(workbench: IWorkbench) {}
+  def init(workbench: IWorkbench): Unit = {}
 
   def createContents(parent: Composite): Control = {
     initializeDialogUnits(parent)
@@ -105,20 +105,20 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
     true
   }
 
-  override def dispose() {
+  override def dispose(): Unit = {
     overlayStore.stop()
     previewerFactory.disposePreviewer()
     super.dispose()
   }
 
-  override def performDefaults() {
+  override def performDefaults(): Unit = {
     super.performDefaults()
     overlayStore.loadDefaults()
     handleSyntaxColorListSelection()
     additionalPerformDefaults()
   }
 
-  def createTreeViewer(editorComposite: Composite) {
+  def createTreeViewer(editorComposite: Composite): Unit = {
     treeViewer = new TreeViewer(editorComposite, SWT.SINGLE | SWT.BORDER)
 
     val contentAndLabelProvider = new SyntaxColoringTreeContentAndLabelProvider(categories)
@@ -245,7 +245,7 @@ abstract class BaseSyntaxColoringPreferencePage(categories: List[ScalaSyntaxClas
     composite
   }
 
-  private def setUpSelectionListeners() {
+  private def setUpSelectionListeners(): Unit = {
     enabledCheckBox.addSelectionListener { () =>
       for (syntaxClass <- selectedSyntaxClass)
         overlayStore.setValue(syntaxClass.enabledKey, enabledCheckBox.getSelection)

@@ -3,10 +3,19 @@ package saveactions
 
 object AddReturnTypeToPublicSymbolsSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[AddReturnTypeToPublicSymbols],
-  name = "Add return type to public symbols",
+  name = "Add return type to public symbols (experimental)",
   description =
-    "Adds the return type to all public symbols when they not yet exist." +
-    " The symbols that can be public and can have types are defs, vars and vals.",
+    """|Adds the return type to all public symbols when they not yet exist. \
+       |The symbols that can be public and can have types are defs, vars and vals.
+       |
+       |Note: This save action is marked as experimental because it relies on compiler \
+       |support. This means that on the one side it may need a lot of time to complete \
+       |and on the other side it may introduce compilation errors due to the fact that \
+       |it relies on tree refactorings. You can enable this save action but please \
+       |consider to disable it again when it interferes in any way with your work \
+       |approach. The Scala IDE team would be happy when you also report back any \
+       |problems that you have with this save action.
+       |""".stripMargin.replaceAll("\\\\\n", ""),
   codeExample = """|class X {
                    |  def meth = new java.io.File("")
                    |  val value = new java.io.File("")

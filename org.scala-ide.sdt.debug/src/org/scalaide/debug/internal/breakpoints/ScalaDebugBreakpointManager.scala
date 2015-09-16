@@ -5,10 +5,10 @@ import org.eclipse.core.resources.IMarkerDelta
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.IBreakpointListener
 import org.eclipse.debug.core.model.IBreakpoint
-import scala.actors.Actor
-import BreakpointSupportActor.Changed
+import org.eclipse.jdt.internal.debug.core.breakpoints.JavaLineBreakpoint
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.PoisonPill
+import org.scalaide.util.internal.Suppress
 
 object ScalaDebugBreakpointManager {
   /** A debug message used to wait until all required messages have been processed.
@@ -33,7 +33,7 @@ object ScalaDebugBreakpointManager {
  *       actor. This seems useless (listeners are run in their own thread) and makes things somewhat harder to test.
  *       Maybe we should remove the companion actor in this case.
  */
-class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Actor) extends IBreakpointListener {
+class ScalaDebugBreakpointManager private (/*public field only for testing purposes */val companionActor: Suppress.DeprecatedWarning.Actor) extends IBreakpointListener {
   import ScalaDebugBreakpointManagerActor._
 
   // from org.eclipse.debug.core.IBreakpointsListener
@@ -50,15 +50,22 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
     companionActor ! BreakpointAdded(breakpoint)
   }
 
+  /**
+   * Intended to ensure that we'll hit already defined and enabled breakpoints after performing hcr.
+   * @param changedClassesNames fully qualified names of types
+   */
+  def reenableBreakpointsInClasses(changedClassesNames: Seq[String]): Unit =
+    companionActor ! ReenableBreakpointsAfterHcr(changedClassesNames)
+
   // ------------
 
-  def init() {
+  def init(): Unit = {
     // need to wait for all existing breakpoint to be initialized before continuing, the caller will resume the VM
     companionActor !? Initialize // FIXME: This could block forever
     DebugPlugin.getDefault.getBreakpointManager.addBreakpointListener(this)
   }
 
-  def dispose() {
+  def dispose(): Unit = {
     DebugPlugin.getDefault.getBreakpointManager.removeBreakpointListener(this)
     companionActor ! PoisonPill
   }
@@ -69,7 +76,7 @@ class ScalaDebugBreakpointManager private (/*public field only for testing purpo
    *
    * @note Use this for test purposes only!
    */
-  protected[debug] def waitForAllCurrentEvents() {
+  protected[debug] def waitForAllCurrentEvents(): Unit = {
     companionActor !? ScalaDebugBreakpointManager.ActorDebug
   }
 
@@ -89,9 +96,12 @@ private[debug] object ScalaDebugBreakpointManagerActor {
   case class BreakpointRemoved(breakpoint: IBreakpoint)
   case class BreakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta)
 
+  /** The message used to reenable all breakpoints related to given classes. */
+  case class ReenableBreakpointsAfterHcr(classNames: Seq[String])
+
   private final val JdtDebugUID = "org.eclipse.jdt.debug"
 
-  def apply(debugTarget: ScalaDebugTarget): Actor = {
+  def apply(debugTarget: ScalaDebugTarget): Suppress.DeprecatedWarning.Actor = {
     val actor = new ScalaDebugBreakpointManagerActor(debugTarget)
     actor.start()
     actor
@@ -101,8 +111,9 @@ private[debug] object ScalaDebugBreakpointManagerActor {
 private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTarget) extends BaseDebuggerActor {
   import ScalaDebugBreakpointManagerActor._
   import BreakpointSupportActor.Changed
+  import BreakpointSupportActor.ReenableBreakpointAfterHcr
 
-  private var breakpoints = Map[IBreakpoint, Actor]()
+  private var breakpoints = Map[IBreakpoint, Suppress.DeprecatedWarning.Actor]()
 
   override protected def postStart(): Unit = link(debugTarget.companionActor)
 
@@ -138,6 +149,8 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
         case _ =>
           // see previous comment
       }
+    case ReenableBreakpointsAfterHcr(changedClassesNames) =>
+      reenableBreakpointAfterHcr(changedClassesNames)
     case ScalaDebugBreakpointManager.ActorDebug =>
       reply(None)
 
@@ -151,6 +164,33 @@ private class ScalaDebugBreakpointManagerActor private(debugTarget: ScalaDebugTa
 
   private def createBreakpointSupport(breakpoint: IBreakpoint): Unit = {
     breakpoints += (breakpoint -> BreakpointSupport(breakpoint, debugTarget))
+  }
+
+  private def reenableBreakpointAfterHcr(changedClassesNames: Seq[String]): Unit = {
+    /*
+     * We need to prepare names of changed classes and these taken from breakpoints because
+     * for some reasons they differ. We need to change them slightly as:
+     *
+     * Type names used in breakpoints have double intermediate dollars,
+     * e.g. debug.Foo$$x$$Bar instead of debug.Foo$x$Bar, debug.Foo$$x$ instead of debug.Foo$x$.
+     *
+     * There are also anonymous types which really should have double dollars but anyway
+     * breakpoints for such types have currently set type like
+     * com.test.debug.Foo$$x$$Bar$java.lang.Object$java.lang.Object
+     * instead of
+     * debug.Foo$x$Bar$$anon$2$$anon$1
+     */
+    val anonTypePattern = """\$anon\$[1-9][0-9]*"""
+    val namesToCompareWithOnesFromBreakpoints = changedClassesNames.map(_.replaceAll(anonTypePattern, "java.lang.Object"))
+    def isChanged(typeName: String): Boolean =
+      namesToCompareWithOnesFromBreakpoints.contains(typeName.replace("$$", "$"))
+
+    val affectedBreakpoints = breakpoints.keys.collect {
+      case bp: JavaLineBreakpoint if isChanged(bp.getTypeName) => bp
+    }
+    affectedBreakpoints.foreach { breakpoint =>
+      breakpoints(breakpoint) ! ReenableBreakpointAfterHcr
+    }
   }
 
   override protected def preExit(): Unit = breakpoints.values.foreach(_ ! PoisonPill)

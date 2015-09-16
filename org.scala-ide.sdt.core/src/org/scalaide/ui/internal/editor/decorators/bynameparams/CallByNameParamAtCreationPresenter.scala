@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor.decorators.bynameparams
 
-import org.scalaide.core.extensions.SemanticHighlightingParticipant
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler
@@ -39,7 +38,7 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
       object traverser extends compiler.Traverser {
         var result: Map[Annotation, Position] = Map()
 
-        override def traverse(tree: compiler.Tree) {
+        override def traverse(tree: compiler.Tree): Unit = {
           result = tree match {
             case compiler.Apply(fun, args) if (fun.tpe != null) => result ++ processArgs(fun.tpe, args)
             case _ => result

@@ -1,15 +1,17 @@
 package org.scalaide.core.pc
 
-import org.scalaide.core.FlakyTest
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.doc.base.comment.Comment
-import scala.tools.nsc.interactive.Response
-import scala.reflect.internal.util.{ Position, SourceFile }
-import org.junit._
+
+import org.junit.After
+import org.junit.Assert
+import org.junit.Test
+import org.scalaide.core.FlakyTest
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 object PresentationCompilerDocTest extends TestProjectSetup("pc_doc")
 
@@ -20,7 +22,7 @@ class PresentationCompilerDocTest {
   def tearDown(): Unit = project.presentationCompiler.shutdown()
 
   @Test
-  def basicComment() {
+  def basicComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "This is a basic comment")
     }
@@ -28,7 +30,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def packagedComment() {
+  def packagedComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "This is another basic comment")
     }
@@ -36,7 +38,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def parametricComment() {
+  def parametricComment(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.todo, "implement me")
     }
@@ -44,7 +46,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def variableExpansion() {
+  def variableExpansion(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.body, "correctly got derived comment")
     }
@@ -52,7 +54,7 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def inheritedDoc() {
+  def inheritedDoc(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.todo, "implement me")
     }
@@ -68,18 +70,18 @@ class PresentationCompilerDocTest {
   }
 
   @Test
-  def returnValueDoc() {
+  def returnValueDoc(): Unit = {
     val expect: Comment => Boolean = { cmt =>
       existsText(cmt.result, "some value")
     }
     doTest(open("return.scala"), expect)
   }
 
-/**
- * @parameter preload compilation units expected to be loaded by the PC before the test
- * @parameter unit the compilation unit containing the position mark
- */
-  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil) {
+  /**
+   * @parameter preload compilation units expected to be loaded by the PC before the test
+   * @parameter unit the compilation unit containing the position mark
+   */
+  private def doTest(unit: ScalaCompilationUnit, expectation: Comment => Boolean, preload: List[ScalaCompilationUnit] = Nil): Unit = {
     for (u <- preload) { reload(u) }
     unit.withSourceFile { (src, compiler) =>
       val pos = docPosition(src, compiler)

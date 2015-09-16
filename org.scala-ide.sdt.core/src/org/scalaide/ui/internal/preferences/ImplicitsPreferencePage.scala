@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.preferences
 
-import org.eclipse.jface.preference._
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
@@ -24,11 +23,11 @@ class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the hi
     control
   }
 
-  override def createFieldEditors() {
+  override def createFieldEditors(): Unit = {
     addBooleanFieldEditors(
-      PActive -> "Enabled",
-      PBold -> "Bold",
-      PItalic -> "Italic",
+      PActive -> "Enable implicit highlighting",
+      PBold -> "Highlight in bold",
+      PItalic -> "Highlight in italic",
       PConversionsOnly -> "Only highlight implicit conversions",
       PFirstLineOnly -> "Only highlight the first line in an implicit conversion")
   }
@@ -46,7 +45,7 @@ class ImplicitsPagePreferenceInitializer extends AbstractPreferenceInitializer {
 
   import ImplicitsPreferencePage._
 
-  override def initializeDefaultPreferences() {
+  override def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     store.setDefault(PActive, true)
     store.setDefault(PBold, false)

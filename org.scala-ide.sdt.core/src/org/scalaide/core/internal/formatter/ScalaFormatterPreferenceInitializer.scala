@@ -10,7 +10,7 @@ class ScalaFormatterPreferenceInitializer extends AbstractPreferenceInitializer 
 
   import FormatterPreferences._
 
-  def initializeDefaultPreferences() {
+  def initializeDefaultPreferences(): Unit = {
     implicit val preferenceStore = IScalaPlugin().getPreferenceStore
     for (preference <- AllPreferences.preferences) {
       preference match {

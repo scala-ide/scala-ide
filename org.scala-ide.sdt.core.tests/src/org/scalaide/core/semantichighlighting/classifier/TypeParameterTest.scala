@@ -6,7 +6,7 @@ import org.junit._
 class TypeParameterTest extends AbstractSymbolClassifierTest {
 
   @Test
-  def basic_type_param() {
+  def basic_type_param(): Unit = {
     checkSymbolClassification("""
       trait C[TypeParam] {
         def x: TypeParam
@@ -18,7 +18,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def method_type_param() {
+  def method_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def x[TypeParam]: TypeParam
@@ -30,7 +30,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def parameterized_type_param() {
+  def parameterized_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Seq[TypeParam]
@@ -44,7 +44,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def nested_parameterized_type_param() {
+  def nested_parameterized_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Seq[Seq[TypeParam]]
@@ -58,7 +58,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def multiple_parameterized_type_param() {
+  def multiple_parameterized_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Map[TypeParam, Seq[TypeParam]]
@@ -72,7 +72,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def partial_compound_type_param() {
+  def partial_compound_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Seq[TypeParam] with collection.IterableLike[TypeParam, TypeParam]
@@ -87,7 +87,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST")
-  def full_compound_type_param() {
+  def full_compound_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Seq[TypeParam] with collection.IterableLike[TypeParam, TypeParam]
@@ -101,7 +101,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def context_bound_type_param() {
+  def context_bound_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[A : Ordering](a: A)
@@ -117,7 +117,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def function_literal_type_param() {
+  def function_literal_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def f: Int => String
@@ -133,7 +133,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def tuple_literal_type_param() {
+  def tuple_literal_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def f: (Int, String)
@@ -149,7 +149,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def partial_structural_type_param() {
+  def partial_structural_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def f(s: { def foo[TypeParam](i: TypeParam): Int })
@@ -164,7 +164,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST")
-  def full_structural_type_param() {
+  def full_structural_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def f(s: { def foo[TypeParam](i: TypeParam): Int })
@@ -178,7 +178,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def bounded_type_param() {
+  def bounded_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         type Type[TypeParam] >: List[TypeParam] <: Iterable[TypeParam]
@@ -192,7 +192,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def view_bound_type_param() {
+  def view_bound_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam <% Ordering[TypeParam]](a: TypeParam)
@@ -208,7 +208,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def higher_kinded_type_param() {
+  def higher_kinded_type_param(): Unit = {
     checkSymbolClassification("""
       trait M[A[_]]
       trait H extends M[List]
@@ -220,7 +220,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
   }
 
   @Test
-  def partial_existential_type_param() {
+  def partial_existential_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Res[TypeParam] forSome { type Res[_] <: Seq[_] }
@@ -235,7 +235,7 @@ class TypeParameterTest extends AbstractSymbolClassifierTest {
 
   @Test
   @Ignore("does not work until presentation compiler stores more information in the AST")
-  def full_existential_type_param() {
+  def full_existential_type_param(): Unit = {
     checkSymbolClassification("""
       trait X {
         def xs[TypeParam]: Res[TypeParam] forSome { type Res[_] <: Seq[_] }

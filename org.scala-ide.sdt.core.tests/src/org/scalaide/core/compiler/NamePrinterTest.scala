@@ -6,6 +6,7 @@ import org.junit.Test
 import org.scalaide.CompilerSupportTests
 import NamePrinterTest.mkScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.FlakyTest
 
 object NamePrinterTest extends CompilerSupportTests
 
@@ -13,7 +14,7 @@ class NamePrinterTest {
   import NamePrinterTest._
 
   @Test
-  def testWithTrivialClass() {
+  def testWithTrivialClass(): Unit = {
     testWith(
       """|package a.test.pgk.name
          |class TestClass/**/""",
@@ -21,7 +22,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithTrivialObject() {
+  def testWithTrivialObject(): Unit = {
     testWith(
       """|package a
          |object TestObject/**/""",
@@ -29,14 +30,14 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithTypeArg() {
+  def testWithTypeArg(): Unit = {
     testWith(
       "class TypeArg(list: List[String/**/])",
       "scala.Predef.String")
   }
 
   @Test
-  def testWithMethodArg() {
+  def testWithMethodArg(): Unit = {
     testWith(
       """|import scala.collection.mutable
          |
@@ -47,7 +48,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithMethod() {
+  def testWithMethod(): Unit = {
     testWith(
       """|package a.pkg
          |
@@ -58,7 +59,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithCurriedMethod() {
+  def testWithCurriedMethod(): Unit = {
     testWith(
       """|class Good {
          |def curry/**/(i: Int)(l1: Long, l2: Long)(s1: String, s2: String, s3: String) = Unit()
@@ -67,21 +68,21 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithTrivialGenericTrait() {
+  def testWithTrivialGenericTrait(): Unit = {
     testWith(
       "trait TrivialGenericTrait/**/[T]",
       "TrivialGenericTrait[T]")
   }
 
   @Test
-  def testWithTrivialTrait() {
+  def testWithTrivialTrait(): Unit = {
     testWith(
       "trait TrivialTrait/**/",
       "TrivialTrait")
   }
 
   @Test
-  def testWithGenericMethod() {
+  def testWithGenericMethod(): Unit = {
     testWith(
       """|trait GenericMethod {
          |def generic/**/[T <: AnyRef](obj: T): Unit
@@ -90,7 +91,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithTopLevelImport() {
+  def testWithTopLevelImport(): Unit = {
     testWith(
       """|import scala.collection.mutable/**/
          |class TopLevelImport""",
@@ -98,7 +99,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithNestedImport() {
+  def testWithNestedImport(): Unit = {
     testWith(
       """|object NestedImport
          |class NestedImport {
@@ -108,7 +109,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithMultiImportOnPackage() {
+  def testWithMultiImportOnPackage(): Unit = {
     testWith(
       """|import scala.collection.mutable/**/.{Set, Map, ListBuffer}
          |class MultiImportOnPackage""",
@@ -116,7 +117,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithMultiImportOnType() {
+  def testWithMultiImportOnType(): Unit = {
     testWith(
       """|import scala.collection.mutable.{Set, Map/**/, ListBuffer}
          |class MultiImportOnType""",
@@ -124,7 +125,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithRenamingImportOnOrigName() {
+  def testWithRenamingImportOnOrigName(): Unit = {
     testWith(
       """|import scala.collection.mutable.{Set/**/ => MySet}
          |class RenamingImportOnOrigName""",
@@ -132,7 +133,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithRenamingImportOnNewName() {
+  def testWithRenamingImportOnNewName(): Unit = {
     testWith(
       """|import scala.collection.mutable.{Set => MySet/**/}
          |class RenamingImportOnNewName""",
@@ -140,14 +141,14 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithCaseClassVal() {
+  def testWithCaseClassVal(): Unit = {
     testWith(
       "case class CaseClassVal(valium/**/: AnyRef)",
       "CaseClassVal.valium")
   }
 
   @Test
-  def testWithTraitVar() {
+  def testWithTraitVar(): Unit = {
     testWith(
       """|trait TraitVar {
          |  var varrus/**/: Int
@@ -156,14 +157,14 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithClassParameter() {
+  def testWithClassParameter(): Unit = {
     testWith(
       "class ClassParameter(paranormal/**/: String)",
       "ClassParameter.paranormal")
   }
 
   @Test
-  def testWithMethodParamOnDefinition() {
+  def testWithMethodParamOnDefinition(): Unit = {
     testWith(
       """|class MethodParamOnDefinition {
          |  def method(param/**/: Int) = param
@@ -172,7 +173,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithMethodParamOnUse() {
+  def testWithMethodParamOnUse(): Unit = {
     testWith(
       """|class MethodParamOnUse {
          |  def method(param: Int) = param/**/
@@ -181,7 +182,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithFunctionArgs() {
+  def testWithFunctionArgs(): Unit = {
     testWith(
       """|class FunctionArgs {
          |  def method/**/(f: (Int, String) => Long): Long = f(42, "42")
@@ -190,7 +191,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithByNameArg() {
+  def testWithByNameArg(): Unit = {
     testWith(
       """|class ByNameArg {
          |  def method/**/(f: => Long): Long = f
@@ -199,7 +200,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithParentClass() {
+  def testWithParentClass(): Unit = {
     testWith(
       """|package a.b.c
          |class Parent
@@ -208,7 +209,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithNestedMethod() {
+  def testWithNestedMethod(): Unit = {
     testWith(
       """|class NestedMethod {
          |  def nest(p1: Int) = {
@@ -223,7 +224,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithLocalClass() {
+  def testWithLocalClass(): Unit = {
     testWith(
       """|class LocalClass {
          |  def fun(p1: Int) = {
@@ -235,10 +236,10 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnDef() {
+  def testWithAnonClassOnDef() = FlakyTest.retry("testWithAnonClassOnDef") {
     testWith(
       """|class AnonClassOnDef {
-         |  def fun() {
+         |  def fun(): Unit = {
          |    new java.lang.Runnable() {
          |      def run/**/() = Unit
          |    }.run()
@@ -248,12 +249,12 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassWithMultipleParents() {
+  def testWithAnonClassWithMultipleParents(): Unit = {
     testWith(
       """|trait Trait1
          |trait Trait2
          |class AnonClassWithMultipleParents {
-         |  def fun() {
+         |  def fun(): Unit = {
          |    new java.lang.Runnable() with Trait1 with Trait2 {
          |      def run/**/() = Unit
          |    }.run()
@@ -263,10 +264,10 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnAnonClassOnCall() {
+  def testWithAnonClassOnCall(): Unit = {
     testWith(
       """|class AnonClassOnCall {
-         |  def fun() {
+         |  def fun(): Unit = {
          |    new java.lang.Runnable() {
          |      def run() = Unit
          |    }.run/**/()
@@ -276,7 +277,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWitnDeeplyNestedName() {
+  def testWithDeeplyNestedName(): Unit = {
     testWith(
       """|package deeply.nested
          |class Ca {
@@ -298,7 +299,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithLocalObject() {
+  def testWithLocalObject(): Unit = {
     testWith(
       """|class WithLocalObject {
          |  def fun(x: Int) = {
@@ -310,7 +311,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithPackageObject() {
+  def testWithPackageObject(): Unit = {
     testWith(
       """|package test.pkg
          |package object obj {
@@ -324,7 +325,7 @@ class NamePrinterTest {
    */
   @Test
   @Ignore
-  def testWithBackticks() {
+  def testWithBackticks(): Unit = {
     testWith(
       """|package `package`
          |class ` `
@@ -340,19 +341,19 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithAnotherDeeplyNestedName() {
+  def testWithAnotherDeeplyNestedName(): Unit = {
     testWith(
       """|class Using(something: String)
          |class AnotherDeeplyNestedName {
          |  object A {
-         |   def wwith(b: String) {
+         |   def wwith(b: String): Unit = {
          |     class And {
          |        class K {
          |          object C {
          |            new Using("") {
-         |              def c() {
+         |              def c(): Unit = {
          |                new Using("") {
-         |                  def e(f: Int) {
+         |                  def e(f: Int): Unit = {
          |                    object G {
          |                      val H/**/ = 3
          |                    }
@@ -370,7 +371,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithEncodedIdents() {
+  def testWithEncodedIdents(): Unit = {
     testWith(
       """|class :: {
          |  def +(i/**/: Int) = i + 44
@@ -379,7 +380,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithLazyVal() {
+  def testWithLazyVal(): Unit = {
     testWith(
       """|class WithLazyVal {
          |  lazy val x/**/ = 333
@@ -388,13 +389,13 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithMethodCallInNestedStructure() {
+  def testWithMethodCallInNestedStructure(): Unit = {
     testWith(
       """|object MethodcallInNestedStructure {
          |  def method = 999
          |}
          |class MethodcallInNestedStructure {
-         |  def otherMethod {
+         |  def otherMethod: Unit = {
          |     MethodcallInNestedStructure.method/**/
          |  }
          |}""",
@@ -402,11 +403,11 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithNamedParamCtorCallInMethod() {
+  def testWithNamedParamCtorCallInMethod(): Unit = {
     testWith(
       """|package test.named.param.ctor.call
          |class NamedParamCtorCallInMethod(arg: String) {
-         |  def method {
+         |  def method: Unit = {
          |    new NamedParamCtorCallInMethod(arg/**/ = "aaahrg")
          |  }
          |}""",
@@ -414,7 +415,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithSimpleAnnotation() {
+  def testWithSimpleAnnotation(): Unit = {
     testWith(
       """|import scala.annotation._
          |class SimpleAnnotation extends StaticAnnotation
@@ -425,7 +426,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithAnnotationOnDefOnParam() {
+  def testWithAnnotationOnDefOnParam(): Unit = {
     testWith(
       """|import scala.annotation._
          |class AnnotationOnDefOnParam(val name: String) extends StaticAnnotation
@@ -437,7 +438,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithAnnotationOnDef() {
+  def testWithAnnotationOnDef(): Unit = {
     testWith(
       """|import scala.annotation._
          |class AnnotationOnDef(val name: String) extends StaticAnnotation
@@ -449,7 +450,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithJavaxGeneratedAnnotationOnClass() {
+  def testWithJavaxGeneratedAnnotationOnClass(): Unit = {
     testWith(
       """|import javax.annotation._
          |@Generated/**/(Array("today"))
@@ -458,7 +459,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithJavaxGeneratedAnnotationOnMethod() {
+  def testWithJavaxGeneratedAnnotationOnMethod(): Unit = {
     testWith(
       """|import javax.annotation._
          |class WithJavaxGeneratedAnnotationOnMethod {
@@ -469,7 +470,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithJavaxResourceAnnotationOnMethod() {
+  def testWithJavaxResourceAnnotationOnMethod(): Unit = {
     testWith(
       """|import javax.annotation._
          |class WithJavaxResourceAnnotationOnResource {
@@ -480,17 +481,17 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithAuxillaryCtor() {
+  def testWithAuxillaryCtor(): Unit = {
     testWith(
       """|class WithAxillaryCtor(str: String) {
          |  def this(i: Int) = this(i.toString)
-         |  def foo() { new WithAxillaryCtor(/**/33) }
+         |  def foo(): Unit = { new WithAxillaryCtor(/**/33) }
          |}""",
       "WithAxillaryCtor(i: Int)")
   }
 
   @Test
-  def testWithMethodCallOnGeneric() {
+  def testWithMethodCallOnGeneric(): Unit = {
     testWith(
       """|class WithMethodCallOnGeneric[A](a: A) {
          |  def method[B, C](b: B, c: C) = b.hashCode + c.hashCode
@@ -502,7 +503,7 @@ class NamePrinterTest {
       "WithMethodCallOnGeneric.method[B, C](b: B, c: C)")
   }
 
-  private def testQnameWith(input: String, expected: Option[String]) {
+  private def testQnameWith(input: String, expected: Option[String]): Unit = {
     val source = input.stripMargin
     val cu = prepareCompilationUnit(source)
     val offset = verifyOffset(source.indexOf("/**/") - 1)
@@ -528,7 +529,7 @@ class NamePrinterTest {
     offset
   }
 
-  private def testWith(input: String, expected: String) {
+  private def testWith(input: String, expected: String): Unit = {
     testQnameWith(input, Option(expected))
   }
 

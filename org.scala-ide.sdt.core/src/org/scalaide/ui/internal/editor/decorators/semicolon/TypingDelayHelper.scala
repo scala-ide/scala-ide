@@ -8,7 +8,7 @@ import org.scalaide.util.internal.ThreadUtils.withLock
 
 object TypingDelayHelper {
 
-  val DELAY = 300 // milliseconds
+  val DelayInMillis = 300
 
 }
 
@@ -44,7 +44,7 @@ class TypingDelayHelper {
    * Schedule a callback on the UI thread (clearing any existing scheduled callback)
    */
   def scheduleCallback(f: => Any) = withLock(lock) {
-    val timeToFireEvent = new Date(System.currentTimeMillis + DELAY)
+    val timeToFireEvent = new Date(System.currentTimeMillis + DelayInMillis)
     nextScheduledEventOpt = Some((timeToFireEvent, () => f))
     condition.signal()
     SchedulerThread.interrupt()

@@ -40,7 +40,6 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     val document = new Document
     document.set(initialText)
 
-    import scala.collection.JavaConverters._
     TextUtilities.addDocumentPartitioners(document, asJavaHashMap(factoryConfiguration.getDocumentPartitioners()))
     previewViewer.setDocument(document)
 
@@ -62,11 +61,11 @@ class PreviewerFactory(factoryConfiguration: PreviewerFactoryConfiguration) exte
     res
   }
 
-  def disposePreviewer() {
+  def disposePreviewer(): Unit = {
     chainedPreferenceStore.removePropertyChangeListener(this)
   }
 
-  def propertyChange(event: PropertyChangeEvent) {
+  def propertyChange(event: PropertyChangeEvent): Unit = {
     // tell configuration to take into account the changes as well
     configuration.propertyChange(event)
     // refreshes the highlighting

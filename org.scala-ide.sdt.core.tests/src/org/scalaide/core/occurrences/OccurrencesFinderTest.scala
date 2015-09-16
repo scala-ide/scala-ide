@@ -20,7 +20,7 @@ object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking"
 class OccurrencesFinderTest {
   import OccurrencesFinderTest._
 
-  @Test def typeOccurrences() {
+  @Test def typeOccurrences(): Unit = {
     val unit = compilationUnit("occ/DummyOccurrences.scala").asInstanceOf[ScalaCompilationUnit];
 
     // first, 'open' the file by telling the compiler to load it

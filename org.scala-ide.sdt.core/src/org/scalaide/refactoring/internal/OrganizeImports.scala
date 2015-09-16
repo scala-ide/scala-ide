@@ -100,7 +100,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
      *
      * This uses the refactoring library's AddImportStatement refactoring.
      */
-    def addImports(imports: Iterable[TypeNameMatch], pm: IProgressMonitor) {
+    def addImports(imports: Iterable[TypeNameMatch], pm: IProgressMonitor): Unit = {
 
       /**
        * Creates the change objects that are needed to add the imports to the source file.
@@ -169,11 +169,11 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
      * If there are still problems remaining after all the imports have been added, the function calls
      * itself until all the missing type errors are gone. At most three passes are performed.
      */
-    def addMissingImportsToFile(missingTypes: Array[String], file: ScalaSourceFile, pm: IProgressMonitor) {
+    def addMissingImportsToFile(missingTypes: Array[String], file: ScalaSourceFile, pm: IProgressMonitor): Unit = {
 
       pm.subTask("Finding suggestions for the missing types..")
 
-      def iterate(missingTypes: Array[String], remainingPasses: Int) {
+      def iterate(missingTypes: Array[String], remainingPasses: Int): Unit = {
         findSuggestionsForMissingTypes(missingTypes, file, pm).partition(_.size <= 1) match {
           case (Nil, Nil) =>
 
@@ -217,6 +217,8 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
 
     val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { val global = c })
+
+    override protected def leaveDirty = true
 
     override def checkInitialConditions(pm: IProgressMonitor) = {
       val status = super.checkInitialConditions(pm)

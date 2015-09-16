@@ -31,11 +31,7 @@ final class NewFileWizardAdapter(
     setDescription("Creates a new file based on the contents of a template")
 
     override def shell = Display.getCurrent().getActiveShell()
-    override def fileCreatorId = {
-      val id = self.fileCreatorId
-      if (id != "org.scalaide.ui.wizards.scalaCreator") id
-      else "org.scalaide.ui.wizards.classCreator"
-    }
+    override def fileCreatorId = self.fileCreatorId
     override def defaultTypeName = self.defaultTypeName
 
     override def showErrorMessage(msg: String) =

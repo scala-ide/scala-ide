@@ -16,10 +16,10 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
  */
 class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigurationDelegate {
 
-  override def launch(configuration : ILaunchConfiguration, mode : String, launch : ILaunch, monitor : IProgressMonitor) {
+  override def launch(configuration : ILaunchConfiguration, mode : String, launch : ILaunch, monitor : IProgressMonitor): Unit = {
     val mon : IProgressMonitor = if(monitor == null) new NullProgressMonitor() else monitor
     //Helper method to actually perform the launch inside a try-catch block.
-    def doTheLaunch() {
+    def doTheLaunch(): Unit = {
       val mainClass = "scala.tools.nsc.MainGenericRunner"
 
       mon.beginTask(configuration.getName(), 3); //$NON-NLS-1$
@@ -92,10 +92,10 @@ class InterpreterLaunchConfigurationDelegate extends AbstractJavaLaunchConfigura
       }
     }
     /** Seeds the interpreter with imports */
-    def runSeedscripts() {
+    def runSeedscripts(): Unit = {
       import InterpreterLaunchConstants._
 
-      def seedInterpreter(namespace : Option[String], asNamespace : Boolean) {
+      def seedInterpreter(namespace : Option[String], asNamespace : Boolean): Unit = {
        for {pkg <- namespace
            process <- launch.getProcesses
            streamProxy = process.getStreamsProxy

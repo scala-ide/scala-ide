@@ -128,13 +128,13 @@ trait IScalaPresentationCompiler extends Global with CompilerApiExtensions with 
    *  If source is loaded, wait for it to be type-checked.
    *  In both cases, set response to parsed (and possibly type-checked) tree.
    *
-   *  @param keepSrcLoaded If set to `true`, source file will be kept as a loaded unit afterwards.
-   *  @param keepLoaded    Whether to keep that file in the PC if it was not loaded before. If
-   *                       the file is already loaded, this flag is ignored.
+   *  @param sourceFile The source file that needs to be fully typed.
+   *  @param keepLoaded Whether to keep that file in the PC if it was not loaded before. If
+   *                    the file is already loaded, this flag is ignored.
    */
   def askStructure(sourceFile: SourceFile, keepLoaded: Boolean = false): Response[Tree]
 
-  /** Ask to put scu in the beginning of the list of files to be typechecked.
+  /** Ask to put `scu` in the beginning of the list of files to be typechecked.
    *
    *  If the file has not been 'reloaded' first, it does nothing. If the file was marked as `crashed`,
    *  this method will add it back to the managed file set, and type-check it from now on.

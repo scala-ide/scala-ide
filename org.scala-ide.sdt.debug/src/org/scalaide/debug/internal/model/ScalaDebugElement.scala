@@ -40,7 +40,8 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // Members declared in org.eclipse.debug.core.model.IDebugElement
 
-  override val getModelIdentifier: String = ScalaDebugPlugin.id
+  // `ScalaDebugPlugin.id` calls some osgi and does classloading and we do not want to do it in tree view.
+  override lazy val getModelIdentifier: String = ScalaDebugPlugin.id
 
   // Members declared in org.eclipse.debug.core.model.ITerminate
 
@@ -63,9 +64,10 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
     * @throws DebugException The exception with a status code of `TARGET_REQUEST_FAILED`
     */
   private def targetRequestFailed(message: String, t: Throwable): Nothing = {
-    if (t == null || t.getClass().getName().startsWith("com.sun.jdi") || t.isInstanceOf[TimeoutException])
+    if (t == null || t.getClass().getName().startsWith("com.sun.jdi") || t.isInstanceOf[TimeoutException]) {
+      logger.error(message, t)
       throw new DebugException(new Status(IStatus.ERROR, ScalaDebugPlugin.id, DebugException.TARGET_REQUEST_FAILED, message, t))
-    else
+    } else
       throw t
   }
 }
@@ -122,7 +124,7 @@ trait HasMethodInvocation {
         case 1 =>
           ScalaValue(jdiInvokeMethod(methods.get(0), thread, args.map(_.underlying): _*), getDebugTarget)
         case _ =>
-          throw new IllegalArgumentException("More than on method '%s(..)' for '%s'".format(methodName, classType.name()))
+          throw new IllegalArgumentException("More than on method '%s(..)' for '%s': %s".format(methodName, classType.name(), methods))
       }
     }
   }

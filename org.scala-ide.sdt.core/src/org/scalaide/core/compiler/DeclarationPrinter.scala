@@ -78,13 +78,21 @@ abstract class DeclarationPrinter extends HasLogger {
       else nonAccess + " " + access
     }
 
-    val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
-    compose(
-      // TODO: Annotations
-      flagString(sym, flagMask & sym.flags),
-      if (showKind) sym.keyString else "",
-      sym.varianceString + name + infoString(seenAs) // don't force the symbol
-      )
+    val gsym= sym.getterIn(sym.owner)
+    def hasGetterSetter(sym:Symbol)= gsym != NoSymbol && sym.setterIn(sym.owner) != NoSymbol
+
+    if(hasGetterSetter(sym)){
+      compose("", "var",sym.localName.toString.trim+": "+gsym.tpe.resultType)
+    } else{
+
+       val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
+       compose(
+         // TODO: Annotations
+         flagString(sym, flagMask & sym.flags),
+         if (showKind) sym.keyString else "",
+          sym.varianceString + name + infoString(seenAs) // don't force the symbol
+        )
+    }
   }
 
   /** Print the given type
@@ -148,7 +156,6 @@ abstract class DeclarationPrinter extends HasLogger {
   }
 
   def showPrefix(tpe: TypeRef): String = {
-    //    showSymbolName(tpe.sym)
     if (tpe.termSymbol.hasPackageFlag) ""
     else {
       val prefix = showType(tpe.pre)
@@ -157,14 +164,9 @@ abstract class DeclarationPrinter extends HasLogger {
     }
   }
 
-  def showThisType(tt: ThisType) = {
-    //    if (sym.hasPackageFlag) ""
-    //    else sym.nameString + ".this"
-    "" // disable all types of the form Foo.this
-  }
+  def showThisType(tt: ThisType) = "" // disable all types of the form Foo.this
 
   def showFunction(tpe: TypeRef): String = {
-    import tpe._
     import definitions._
 
     val noArgsString = s"${showSymbolName(tpe.sym)}"
@@ -266,7 +268,7 @@ abstract class DeclarationPrinter extends HasLogger {
     str.filter(_ != "").mkString(" ")
 
   def showSingleType(st: SingleType) = {
-    val ending = "" //if (st.termSymbol.hasPackageFlag) "" else ".type"
+    val ending = ""
     val skippable = (st.sym.hasPackageFlag || st.sym.isPackageObject || st.sym == definitions.PredefModule)
     val name = if (skippable) "" else st.sym.nameString
     showType(st.pre) + name + ending

@@ -35,6 +35,7 @@ private[launching] abstract class JUnit4TestClassesCollector extends HasLogger {
 
     override def traverse(tree: Tree): Unit = tree match {
       case _: PackageDef => super.traverse(tree)
+      case _: DocDef => super.traverse(tree)
       case cdef: ClassDef if isRunnableTestClass(cdef) => hits += cdef
       case _ => ()
     }

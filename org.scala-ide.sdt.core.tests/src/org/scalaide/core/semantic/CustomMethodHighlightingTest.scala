@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/license.html
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.core.semantic
 
@@ -16,7 +14,7 @@ class CustomMethodHighlightingTest
   with CustomHighlightingTest {
 
   @Test
-  def customMethodHighlighting() {
+  def customMethodHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/Methods.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(
@@ -40,7 +38,7 @@ class CustomMethodHighlightingTest
   }
 
   @Test
-  def customMethodHighlightingWithInheritance() {
+  def customMethodHighlightingWithInheritance(): Unit = {
     withCompilationUnitAndCompiler("custom/MethodsInheritance.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(
@@ -67,7 +65,7 @@ class CustomMethodHighlightingTest
   }
 
   @Test
-  def mixingMethodsAndAnnotations() {
+  def mixingMethodsAndAnnotations(): Unit = {
     withCompilationUnitAndCompiler("custom/Mix.scala") { (src, compiler) =>
       val traversers = Seq(
         MethodTraverserDef(

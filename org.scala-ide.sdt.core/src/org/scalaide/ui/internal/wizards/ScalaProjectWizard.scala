@@ -29,6 +29,7 @@ class ScalaProjectWizard extends {
   setDefaultPageImageDescriptor(ScalaImages.SCALA_PROJECT_WIZARD);
 
   pageOne.setTitle("Create a Scala project")
+  pageOne.setDescription("Create a Scala project in the workspace or in an external location.")
   pageTwo.setTitle("Scala Settings")
   pageTwo.setDescription("Define the Scala build settings.")
 }
@@ -40,7 +41,7 @@ class NewScalaProjectWizardPageOne extends NewJavaProjectWizardPageOne {
 
 class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extends NewJavaProjectWizardPageTwo(pageOne) {
   import NewScalaProjectWizardPageTwoUtils._
-  override def configureJavaProject(newProjectCompliance : String, monitor0 : IProgressMonitor) {
+  override def configureJavaProject(newProjectCompliance : String, monitor0 : IProgressMonitor): Unit = {
     val monitor = if (monitor0 != null) monitor0 else new NullProgressMonitor
     val nSteps = 6
     monitor.beginTask(NewWizardMessages.JavaCapabilityConfigurationPage_op_desc_java, nSteps)
@@ -55,7 +56,7 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
     }
   }
 
-  def addScalaNatures(monitor : IProgressMonitor) {
+  def addScalaNatures(monitor : IProgressMonitor): Unit = {
     if (monitor != null && monitor.isCanceled)
       throw new OperationCanceledException
     val project = getJavaProject.getProject

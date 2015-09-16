@@ -4,7 +4,6 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.eclipse.jface.text.ITextHover
 import org.eclipse.jface.text.ITextHoverExtension

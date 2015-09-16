@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala JDT Weaving
 Bundle-SymbolicName: org.scala-ide.sdt.aspects;singleton:=true
-Bundle-Version: 4.1.0.qualifier
+Bundle-Version: 4.2.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-Activator: scala.tools.eclipse.contribution.weaving.jdt.ScalaJDTWeavingPlugin
 Require-Bundle: 
@@ -21,6 +21,7 @@ Require-Bundle:
  org.eclipse.ui.editors,
  org.eclipse.ui.ide,
  org.eclipse.ui.workbench.texteditor,
+ org.eclipse.jdt.debug,
  org.eclipse.jdt.debug.ui,
  org.aspectj.runtime,
  org.eclipse.jdt.junit.core
@@ -29,6 +30,7 @@ Eclipse-SupplementBundle:
  org.eclipse.debug.core,
  org.eclipse.jdt.core,
  org.eclipse.jdt.debug.ui,
+ org.eclipse.jdt.debug,
  org.eclipse.jdt.launching,
  org.eclipse.jdt.ui,
  org.eclipse.pde.ui,
@@ -49,7 +51,8 @@ Export-Package: scala.tools.eclipse.contribution.weaving.jdt,scala.too
  tion.weaving.jdt.ui,scala.tools.eclipse.contribution.weaving.jdt.ui.a
  ctions,scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor,sca
  la.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter,sca
- la.tools.eclipse.contribution.weaving.pde.ui
+ la.tools.eclipse.contribution.weaving.pde.ui,scala.tools.eclipse.cont
+ ribution.weaving.jdt.jdi
 Bundle-RequiredExecutionEnvironment: J2SE-1.5
 Import-Package: org.eclipse.equinox.frameworkadmin,
  org.eclipse.equinox.internal.simpleconfigurator.manipulator,

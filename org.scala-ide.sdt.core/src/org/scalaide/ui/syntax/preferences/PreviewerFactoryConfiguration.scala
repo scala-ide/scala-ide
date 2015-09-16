@@ -5,7 +5,6 @@ import org.eclipse.jface.util.IPropertyChangeListener
 import org.eclipse.jface.text.source.SourceViewerConfiguration
 import org.eclipse.jface.text.IDocumentPartitioner
 import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.util.PropertyChangeEvent
 
 /** Configuration for a previewer, like the one used in syntax coloring preferences page.
  *  It returns the configuration for the source viewer, and the document partitioners to use.

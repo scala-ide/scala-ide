@@ -51,10 +51,17 @@ setVersion $1
 
 cat <<EOF
 !!!!
-!!!! Don't forget to manually update versions in:
-!!!!     <parent> tag in org.scala-ide.sdt.build, build-toolchain and p2-toolchain
-!!!!     org.scala-ide.sdt.feature/resources/*.xml
-!!!!     org.scala-ide.sdt.source.feature/resources/*.xml
+!!!! Some files still need to be updated manually:
+!!!!     <parent> tag of pom.xml in org.scala-ide.{sdt.build,build-toolchain,p2-toolchain}
+!!!!     */resources/{feature,pom}.xml
+!!!!     */resources/META-INF/MANIFEST-*.MF
 !!!!
+!!!! This can be done with the following command:
+!!!!
+!!!!   ag "<old-version>" | awk -F ':' '{print $1}' | xargs sed -i 's/<old-version>/<new-version>/'
+!!!!
+!!!! where <old-version> is the version of the previous release and <new-version> the version of the next release.
+!!!! ag is a tool similar to grep or ack, it is also called "The Silver Searcher": https://github.com/ggreer/the_silver_searcher
+!!!! In constract to grep or ack, ag considers the .gitignore files and therefore makes updating the relevant versions easier.
 
 EOF

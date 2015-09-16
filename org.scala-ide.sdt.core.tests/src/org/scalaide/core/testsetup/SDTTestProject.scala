@@ -56,7 +56,7 @@ class SDTTestProject(project : IProject) {
     })
   }
 
-  def addJar(plugin : String, jar : String) {
+  def addJar(plugin : String, jar : String): Unit = {
     val result = findFileInPlugin(plugin, jar)
     addToClasspath(JavaCore.newLibraryEntry(result, null, null))
   }
@@ -88,7 +88,7 @@ class SDTTestProject(project : IProject) {
     folder
   }
 
-  def dispose() {
+  def dispose(): Unit = {
     if (project.exists)
       project.delete(true, true, null)
     else
@@ -101,25 +101,25 @@ class SDTTestProject(project : IProject) {
     binFolder
   }
 
-  def addJavaNature() {
+  def addJavaNature(): Unit = {
     addNature(JavaCore.NATURE_ID)
   }
 
-  def addScalaNature() {
+  def addScalaNature(): Unit = {
     addNature(SdtConstants.NatureId)
   }
 
-  def addNature(natureId : String) {
+  def addNature(natureId : String): Unit = {
     val description = project.getDescription
     description.setNatureIds(natureId +: description.getNatureIds)
     project.setDescription(description, null)
   }
 
-  def addToClasspath(entry : IClasspathEntry) {
+  def addToClasspath(entry : IClasspathEntry): Unit = {
     javaProject.setRawClasspath(entry +: javaProject.getRawClasspath, null)
   }
 
-  def createOutputFolder(binFolder : IFolder) {
+  def createOutputFolder(binFolder : IFolder): Unit = {
     val outputLocation = binFolder.getFullPath
     javaProject.setOutputLocation(outputLocation, null)
   }
@@ -132,11 +132,11 @@ class SDTTestProject(project : IProject) {
     root
   }
 
-  def addJavaSystemLibraries() {
+  def addJavaSystemLibraries(): Unit = {
     addToClasspath(JavaRuntime.getDefaultJREContainerEntry)
   }
 
-  def addScalaSystemLibraries() {
+  def addScalaSystemLibraries(): Unit = {
     addToClasspath(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
   }
 

@@ -18,18 +18,18 @@ class ScalaClass(nonFieldClassParamOnlyUsedInCtor /*{non-field class param only 
 
     nested1
 
-    def nested1 {
+    def nested1: Unit = {
       val nested1Local = "nested1Local"
       nested2("nesteds parameter")
 
-      def nested2(nestedMethodParam /*{nested method param}*/: String) {val nested2Local /*{nested method local}*/ = "nested2Local"
+      def nested2(nestedMethodParam /*{nested method param}*/: String): Unit = {val nested2Local /*{nested method local}*/ = "nested2Local"
         nested1Local /*{enclosing nested method local}*/
         localVall /*{root enclosing method local}*/
       }
     }
   }
 
-  def someMethodWeWillNeverStepInto(funcParam /*{similarly named param of a method we are not in}*/: String = "similarly named") {
+  def someMethodWeWillNeverStepInto(funcParam /*{similarly named param of a method we are not in}*/: String = "similarly named"): Unit = {
     val localVall /*{similarly named local var of a method we are not in}*/ = "Similarly Named"
   }
 }

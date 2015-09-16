@@ -35,7 +35,7 @@ class LocalRename extends RefactoringExecutor {
 
   override def perform(): Unit = {
 
-    def runInlineRename(r: RenameScalaIdeRefactoring) {
+    def runInlineRename(r: RenameScalaIdeRefactoring): Unit = {
       import r.refactoring._
       val selectedSymbolTree = r.selection().selectedSymbolTree
 

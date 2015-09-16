@@ -17,7 +17,7 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
    *          if the default JDT implementation should be used.
    */
   override def create(contents: Array[Byte], parent: PackageFragment, name: String): ClassFile = {
-    def updateCache(isScalaClassfile: Boolean) {
+    def updateCache(isScalaClassfile: Boolean): Unit = {
       val pfr = parent.getPackageFragmentRoot()
       if (pfr ne null)
         scalaPackageFragments.synchronized {

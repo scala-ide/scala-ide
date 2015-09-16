@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/license.html
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.ui.internal.editor.decorators
 
@@ -14,7 +12,7 @@ class HighlightingTextStyleStrategy(var fontStyle: Int) extends AnnotationPainte
   // `applyTextStyle` is called by the AnnotatinPainter when the text is painted,
   // so we don't have to notify the `styleRange` of any changes to `fontStyle`.
 
-  def applyTextStyle(styleRange: StyleRange, annotationColor: Color) {
+  def applyTextStyle(styleRange: StyleRange, annotationColor: Color): Unit = {
     styleRange.fontStyle = fontStyle
     styleRange.underline = false
     styleRange.underlineColor = annotationColor

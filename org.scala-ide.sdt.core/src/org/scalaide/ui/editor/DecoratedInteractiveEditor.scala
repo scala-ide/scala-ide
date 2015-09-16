@@ -15,21 +15,21 @@ import org.scalaide.util.ui.DisplayThread
 trait DecoratedInteractiveEditor extends ISourceViewerEditor {
 
   /** Return the annotation model associated with the current document. */
-  private def annotationModel = getDocumentProvider.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModel]
+  private def annotationModel = Option(getDocumentProvider).map(_.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModel])
 
   private var previousAnnotations = List[Annotation]()
 
   /**
    * Update annotations on the editor from a list of IProblems
    */
-  def updateErrorAnnotations(errors: List[IProblem], cu: ICompilationUnit) {
+  def updateErrorAnnotations(errors: List[IProblem], cu: ICompilationUnit): Unit = annotationModel foreach { model ⇒
     val newAnnotations: Map[Annotation, Position] = (for (e <- errors) yield {
       val annotation = new ProblemAnnotation(e, cu) // no compilation unit
       val position = new Position(e.getSourceStart, e.getSourceEnd - e.getSourceStart + 1)
       (annotation, position)
     })(breakOut)
 
-    annotationModel.replaceAnnotations(previousAnnotations, newAnnotations)
+    model.replaceAnnotations(previousAnnotations, newAnnotations)
     previousAnnotations = newAnnotations.keys.toList
 
     // This shouldn't be necessary in @dragos' opinion. But see #84 and

@@ -6,7 +6,7 @@ import org.scalaide.core.quickassist.UiQuickAssistTests
 class CreateMethodTests {
   import UiQuickAssistTests._
 
-    @Test def createMethod() {
+    @Test def createMethod(): Unit = {
     withQuickFixes("createmethod/CreateMethod.scala")(
         "Create method 'easy1(String, Int)' in type 'OtherClass'",
         "Create method 'easy2(OtherClass)'",

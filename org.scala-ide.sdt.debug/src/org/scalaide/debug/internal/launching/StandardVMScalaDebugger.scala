@@ -1,14 +1,12 @@
 package org.scalaide.debug.internal.launching
 
-import org.scalaide.debug.internal.model.ScalaDebugTarget
-
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.model.IDebugTarget
 import org.eclipse.debug.core.model.IProcess
-
 import org.eclipse.jdt.internal.launching.StandardVMDebugger
 import org.eclipse.jdt.launching.IVMInstall
 import org.eclipse.jdt.launching.VMRunnerConfiguration
+import org.scalaide.debug.internal.model.ScalaDebugTarget
 
 import com.sun.jdi.VirtualMachine
 
@@ -19,7 +17,9 @@ import com.sun.jdi.VirtualMachine
 class StandardVMScalaDebugger(vm: IVMInstall) extends StandardVMDebugger(vm) {
 
   override def createDebugTarget(unusedConfiguration: VMRunnerConfiguration, launch: ILaunch, unusedPort: Int, process: IProcess, virtualMachine: VirtualMachine): IDebugTarget = {
-    ScalaDebugTarget(virtualMachine, launch, process, allowDisconnect= false, allowTerminate= true)
+    ScalaDebugTarget(virtualMachine, launch, process,
+      allowDisconnect = false, allowTerminate = true,
+      classPath = Some(unusedConfiguration.getClassPath))
   }
 
 }

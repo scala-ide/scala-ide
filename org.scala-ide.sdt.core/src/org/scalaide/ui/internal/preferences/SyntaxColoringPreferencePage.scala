@@ -7,7 +7,6 @@ import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import org.scalaide.ui.syntax.preferences.BaseSyntaxColoringPreferencePage
 import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.core.internal.decorators.semantichighlighting.Position
@@ -18,10 +17,12 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
  */
 class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
   ScalaSyntaxClasses.categories,
-  scalaSyntacticCategory,
+  ScalaSyntaxClasses.scalaSyntacticCategory,
   IScalaPlugin().getPreferenceStore,
   SyntaxColoringPreferencePage.PreviewText,
   SemanticPreviewerFactoryConfiguration) {
+
+  import ScalaSyntaxClasses._
 
   private var enableSemanticHighlightingCheckBox: Button = _
   private var extraAccuracyCheckBox: Button = _
@@ -32,7 +33,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     new OverlayKey(BOOLEAN, USE_SYNTACTIC_HINTS),
     new OverlayKey(BOOLEAN, STRIKETHROUGH_DEPRECATED))
 
-  override def additionalPerformDefaults() {
+  override def additionalPerformDefaults(): Unit = {
     enableSemanticHighlightingCheckBox.setSelection(overlayStore getBoolean ENABLE_SEMANTIC_HIGHLIGHTING)
     extraAccuracyCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)
     strikethroughDeprecatedCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)
@@ -40,7 +41,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     strikethroughDeprecatedCheckBox.setSelection(overlayStore getBoolean STRIKETHROUGH_DEPRECATED)
   }
 
-  override def additionalCreateContent(parent: Composite) {
+  override def additionalCreateContent(parent: Composite): Unit = {
     enableSemanticHighlightingCheckBox = new Button(parent, SWT.CHECK)
     enableSemanticHighlightingCheckBox.setText("Enable semantic highlighting")
     enableSemanticHighlightingCheckBox.setLayoutData(gridData(horizontalSpan = 2))
@@ -61,7 +62,7 @@ class SyntaxColoringPreferencePage extends BaseSyntaxColoringPreferencePage(
     setUpSelectionListener
   }
 
-  private def setUpSelectionListener {
+  private def setUpSelectionListener() = {
     enableSemanticHighlightingCheckBox.addSelectionListener { () =>
       overlayStore.setValue(ENABLE_SEMANTIC_HIGHLIGHTING, enableSemanticHighlightingCheckBox.getSelection)
       extraAccuracyCheckBox.setEnabled(enableSemanticHighlightingCheckBox.getSelection)

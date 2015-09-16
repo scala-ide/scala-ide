@@ -9,38 +9,42 @@ import org.eclipse.ui.navigator.resources.ProjectExplorer
 import org.scalaide.core.SdtConstants
 
 /**
- * New wizard entries that are added to this factory also need to be registered
- * for automatic activation, see the following method for more details:
+ * This class is called the first time the Scala perspective is created. Once
+ * the Scala perspective is created, it is cached in the platform, which means
+ * that any changes to this class won't be seen by users, which already have a
+ * Scala perspective.
+ *
+ * Therefore, new wizard entries that are added to this factory also need to be
+ * registered for automatic activation, see the following method for more details:
  *
  * [[org.scalaide.ui.internal.migration.MigrationPreferenceInitializer.activateNewWizardShortcut]]
  */
 class PerspectiveFactory extends IPerspectiveFactory {
-  def createInitialLayout(layout : IPageLayout) = {
+
+  def createInitialLayout(layout: IPageLayout) = {
     createFolders(layout)
     addShortcuts(layout)
     layout.addActionSet(IDebugUIConstants.LAUNCH_ACTION_SET)
     layout.addActionSet(JavaUI.ID_ACTION_SET)
   }
-  private def addShortcuts(layout : IPageLayout) = {
+
+  private def addShortcuts(layout: IPageLayout) = {
     layout.addNewWizardShortcut(SdtConstants.ProjectWizId)
-    layout.addNewWizardShortcut(SdtConstants.NetProjectWizId)
-    layout.addNewWizardShortcut("org.scalaide.ui.wizards.scalaCreator")
     layout.addNewWizardShortcut("org.eclipse.jdt.ui.wizards.NewPackageCreationWizard")
-    layout.addNewWizardShortcut(SdtConstants.ClassWizId)
-    layout.addNewWizardShortcut(SdtConstants.TraitWizId)
-    layout.addNewWizardShortcut(SdtConstants.ObjectWizId)
-    layout.addNewWizardShortcut(SdtConstants.PackageObjectWizId)
-    layout.addNewWizardShortcut(SdtConstants.ApplicationWizId)
+    layout.addNewWizardShortcut(SdtConstants.ClassCreatorWizId)
+    layout.addNewWizardShortcut(SdtConstants.TraitCreatorWizId)
+    layout.addNewWizardShortcut(SdtConstants.ObjectCreatorWizId)
+    layout.addNewWizardShortcut(SdtConstants.PackageObjectCreatorWizId)
+    layout.addNewWizardShortcut(SdtConstants.AppCreatorWizId)
     layout.addNewWizardShortcut("org.eclipse.jdt.ui.wizards.NewSourceFolderCreationWizard")
     layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.folder")
     layout.addNewWizardShortcut("org.eclipse.ui.wizards.new.file")
 
-    layout.addShowViewShortcut(IPageLayout.ID_RES_NAV)
     layout.addShowViewShortcut(ProjectExplorer.VIEW_ID)
     layout.addShowViewShortcut(IPageLayout.ID_OUTLINE)
-    layout.addShowViewShortcut("org.eclipse.pde.runtime.LogView")
   }
-  private def createFolders(layout : IPageLayout) = {
+
+  private def createFolders(layout: IPageLayout) = {
     val editorArea = layout.getEditorArea()
 
     val explorerFolder = layout.createFolder("explorer", IPageLayout.LEFT, 0.25f, editorArea)
@@ -50,9 +54,8 @@ class PerspectiveFactory extends IPerspectiveFactory {
     problemsFolder.addView(IPageLayout.ID_PROBLEM_VIEW)
     problemsFolder.addView(IPageLayout.ID_TASK_LIST)
     problemsFolder.addView(IConsoleConstants.ID_CONSOLE_VIEW)
-//    problemsFolder.addView("org.eclipse.pde.runtime.LogView")
 
-    val outlineFolder = layout.createFolder("right", IPageLayout.RIGHT,0.75f,editorArea)
+    val outlineFolder = layout.createFolder("right", IPageLayout.RIGHT, 0.75f, editorArea)
     outlineFolder.addView(IPageLayout.ID_OUTLINE)
   }
 }

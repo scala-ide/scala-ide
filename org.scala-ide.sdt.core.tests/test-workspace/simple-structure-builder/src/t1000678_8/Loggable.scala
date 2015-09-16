@@ -13,7 +13,7 @@ object Loggable {
       def foo: Unit
     }
     class C extends IC {
-      def foo {}
+      def foo: Unit = {}
     }
   }
 }

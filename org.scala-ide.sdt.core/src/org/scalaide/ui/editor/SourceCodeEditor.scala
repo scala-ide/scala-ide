@@ -1,7 +1,5 @@
 package org.scalaide.ui.editor
 
-import org.scalaide.ui.editor.ISourceViewerEditor
-import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import org.eclipse.jface.preference.IPreferenceStore
@@ -29,7 +27,7 @@ trait SourceCodeEditor extends ISourceViewerEditor with InteractiveCompilationUn
   /** Return the annotation model associated with the current document. */
   private def annotationModel: IAnnotationModelExtended = getDocumentProvider.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModelExtended]
 
-  def updateErrorAnnotations(errors: List[IProblem]) {
+  def updateErrorAnnotations(errors: List[IProblem]): Unit = {
     import scala.collection.JavaConverters._
 
     def position(p: IProblem) = new Position(p.getSourceStart, p.getSourceEnd - p.getSourceStart + 1)

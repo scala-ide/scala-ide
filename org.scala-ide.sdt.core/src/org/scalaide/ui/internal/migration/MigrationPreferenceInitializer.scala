@@ -6,6 +6,7 @@ import org.eclipse.e4.ui.model.application.ui.advanced.MPerspective
 import org.eclipse.e4.ui.workbench.modeling.EModelService
 import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
+import org.eclipse.ui.IWorkbenchWindow
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
@@ -21,13 +22,17 @@ import org.scalaide.util.eclipse.SWTUtils
  */
 class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with HasLogger {
 
-  private lazy val window = SWTUtils.getWorkbenchWindow.get
-
   override def initializeDefaultPreferences(): Unit = {
     // do not run in an UI less environment
     if (!IScalaPlugin().headlessMode) {
-      copyKeyBindings()
-      activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ScalaFileCreatorWizId)
+      SWTUtils.getWorkbenchWindow.foreach { window =>
+        copyKeyBindings(window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ClassCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.TraitCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.ObjectCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.PackageObjectCreatorWizId, window)
+        activateNewWizardShortcut(SdtConstants.ScalaPerspectiveId, SdtConstants.AppCreatorWizId, window)
+      }
     }
   }
 
@@ -46,7 +51,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
    * by Eclipse but this doesn't work anymore in Kepler and Luna, the relevant
    * ticket is: https://bugs.eclipse.org/bugs/show_bug.cgi?id=191256
    */
-  private def activateNewWizardShortcut(perspId: String, wizardId: String) = {
+  private def activateNewWizardShortcut(perspId: String, wizardId: String, window: IWorkbenchWindow) = {
     val prefStore = IScalaPlugin().getPreferenceStore()
     val prefId = s"org.scalaide.ui.wizardActivated_$wizardId"
 
@@ -59,7 +64,7 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
 
       perspectives.asScala.headOption foreach { persp =>
         val tags = persp.getTags().asScala
-        val tag = ModeledPageLayout.NEW_WIZARD_TAG+wizardId
+        val tag = ModeledPageLayout.NEW_WIZARD_TAG + wizardId
         val alreadyActivated = tags.contains(tag)
 
         if (!alreadyActivated) {
@@ -72,13 +77,13 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     }
   }
 
-  private def copyKeyBindings() = {
+  private def copyKeyBindings(window: IWorkbenchWindow) = {
     val service = window.serviceOf[IBindingService]
 
     /**
      * This copies the old preference value and set it as default value for the
      * new preference. This is only done when the new preference is not already
-     * set, i.e exaclty once when a new version of the IDE is started and all
+     * set, i.e exactly once when a new version of the IDE is started and all
      * values are copied.
      *
      * Furthermore, the old preference value is set to an undefined state, which
@@ -136,6 +141,6 @@ class MigrationPreferenceInitializer extends AbstractPreferenceInitializer with 
     copyKeyBinding("scala.tools.eclipse.refactoring.command.Rename", "org.scalaide.refactoring.Rename")
     copyKeyBinding("scala.tools.eclipse.refactoring.command.ExpandCaseClassBinding", "org.scalaide.refactoring.ExpandCaseClassBinding")
     copyKeyBinding("scala.tools.eclipse.refactoring.commands.quickMenu", "org.scalaide.ui.menu.quickMenu")
-    copyKeyBinding("scala.tools.eclipse.interpreter.RunSelection", "org.scalaide.core.handler.RunSelection")
+    copyKeyBinding("scala.tools.eclipse.interpreter.RunSelection", "org.scalaide.core.handler.RunSelectionInInterpreter")
   }
 }

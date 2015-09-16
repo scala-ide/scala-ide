@@ -41,7 +41,6 @@ import org.scalaide.util.internal.CompilerUtils.shortString
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.SdtConstants
-import org.scalaide.ui.internal.preferences.PropertyStore
 import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.core.internal.jdt.util.ScalaClasspathContainerHandler
 
@@ -51,7 +50,6 @@ abstract class ScalaClasspathContainerInitializer(desc: String) extends Classpat
   override def initialize(containerPath: IPath, project: IJavaProject) = {
     val iProject = project.getProject()
 
-    val storage = new PropertyStore(new ProjectScope(iProject), SdtConstants.PluginId)
     val setter = new ClasspathContainerSetter(project)
     val proj =     ScalaPlugin().asScalaProject(iProject)
     val install = proj map (_.effectiveScalaInstallation())
@@ -83,7 +81,6 @@ abstract class ScalaClasspathContainerPage(containerPath: IPath, name: String, o
   with IClasspathContainerPage
   with IClasspathContainerPageExtension
   with ScalaInstallationChoiceUIProviders {
-
 
   private var choiceOfScalaInstallation: ScalaInstallationChoice = null
   protected var scalaProject: Option[ScalaProject] = None

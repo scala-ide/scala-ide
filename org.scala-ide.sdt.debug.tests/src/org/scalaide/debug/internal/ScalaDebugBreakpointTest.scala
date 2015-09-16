@@ -19,7 +19,7 @@ object ScalaDebugBreakpointTest extends TestProjectSetup("breakpoints", bundleNa
   def initDebugSession(launchConfigurationName: String): ScalaDebugTestSession = ScalaDebugTestSession(file(launchConfigurationName + ".launch"))
 
   @AfterClass
-  def deleteProject() {
+  def deleteProject(): Unit = {
     SDTTestUtils.deleteProjects(project)
   }
 }
@@ -31,7 +31,7 @@ class ScalaDebugBreakpointTest {
   var session: ScalaDebugTestSession = null
 
   @Before
-  def initializeTests() {
+  def initializeTests(): Unit = {
     SDTTestUtils.enableAutoBuild(false)
     if (!initialized) {
       project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
@@ -41,33 +41,35 @@ class ScalaDebugBreakpointTest {
   }
 
   @After
-  def cleanDebugSession() {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
     }
   }
 
+  private val mainBreakpoint = 32
+
   @Test
-  def simpleBreakpointEnableDisable() {
+  def simpleBreakpointEnableDisable(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp11 = session.addLineBreakpoint(BP_TYPENAME, 11)
     val bp13 = session.addLineBreakpoint(BP_TYPENAME, 13)
     try {
       session.waitForBreakpointsToBeEnabled(bp11, bp13)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 13)
 
       bp11.setEnabled(false)
       session.waitForBreakpointsToBeDisabled(bp11)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 13)
 
       bp11.setEnabled(true); bp13.setEnabled(false)
@@ -75,10 +77,10 @@ class ScalaDebugBreakpointTest {
       session.waitForBreakpointsToBeEnabled(bp11)
       session.waitForBreakpointsToBeDisabled(bp13)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
       session.resumeToCompletion()
@@ -92,9 +94,9 @@ class ScalaDebugBreakpointTest {
    *  the second one, in a different closure (ClassPrepareEvents might be the same)
    */
   @Test
-  def breakpointsWithClosures() {
+  def breakpointsWithClosures(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp22 = session.addLineBreakpoint(BP_TYPENAME, 22)
@@ -102,13 +104,13 @@ class ScalaDebugBreakpointTest {
     try {
       session.waitForBreakpointsToBeEnabled(bp20, bp22, bp26)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "fors()V", 20)
 
       bp22.setEnabled(false)
       session.waitForBreakpointsToBeDisabled(bp22)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$2", "apply$mcVI$sp(I)V", 26)
 
       bp26.setEnabled(false)
@@ -124,7 +126,7 @@ class ScalaDebugBreakpointTest {
    *  and function properly.
    */
   @Test
-  def breakpointsStartDisabled() {
+  def breakpointsStartDisabled(): Unit = {
     session = initDebugSession("Breakpoints")
     val bp10 = session.addLineBreakpoint(BP_TYPENAME, 10)
     val bp11 = session.addLineBreakpoint(BP_TYPENAME, 11)
@@ -134,14 +136,14 @@ class ScalaDebugBreakpointTest {
     allBps.foreach(_.setEnabled(false))
     session.waitForBreakpointsToBeDisabled(allBps: _*)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
 
       bp11.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp11)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "simple1()V", 11)
 
       bp11.setEnabled(false)
@@ -155,14 +157,14 @@ class ScalaDebugBreakpointTest {
 
   /** Test disabling and re-enabling a breakpoint does work (class prepare events are still handled)  */
   @Test
-  def breakpointsDisbaleDoesNotInterfereWithLoadedClasses() {
+  def breakpointsDisbaleDoesNotInterfereWithLoadedClasses(): Unit = {
     session = initDebugSession("Breakpoints")
     val bp22 = session.addLineBreakpoint(BP_TYPENAME, 22)
 
     bp22.setEnabled(true)
     session.waitForBreakpointsToBeEnabled(bp22)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
 
@@ -172,7 +174,7 @@ class ScalaDebugBreakpointTest {
       bp22.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp22)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 22)
 
       bp22.setEnabled(false)
@@ -186,7 +188,7 @@ class ScalaDebugBreakpointTest {
 
   /** Test disabling and re-enabling a breakpoint does work (class prepare events are still handled)  */
   @Test
-  def breakpointsDisbaleDoesNotInterfereWithLoadedClassesWhenTwoBreakpointsWatchTheSameClasses() {
+  def disabledBreakpointsDoNotInterfereWithLoadedClassesWhenTwoBreakpointsWatchTheSameClasses(): Unit = {
     session = initDebugSession("Breakpoints")
     // both breakpoints watch the same class prepare events (are in the same method, but in different closures)
     val bp21 = session.addLineBreakpoint(BP_TYPENAME, 21)
@@ -196,13 +198,13 @@ class ScalaDebugBreakpointTest {
     allBps.foreach(_.setEnabled(false))
     session.waitForBreakpointsToBeDisabled(allBps: _*)
 
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     try {
       bp21.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp21)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 21)
       // by now, the class has been loaded, so ClassPrepareEvent won't be triggered for the next breakpoint
 
@@ -214,7 +216,7 @@ class ScalaDebugBreakpointTest {
       bp22.setEnabled(true)
       session.waitForBreakpointsToBeEnabled(bp22)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME + "$$anonfun$fors$1", "apply$mcVI$sp(I)V", 22)
 
       bp22.setEnabled(false)
@@ -233,7 +235,7 @@ class ScalaDebugBreakpointTest {
    * see ticket #1001197
    */
   @Test
-  def breakpointInDelayedInit() {
+  def breakpointInDelayedInit(): Unit = {
     val DI_TYPENAME = "breakpoints.DelayedInit"
     session = initDebugSession("DelayedInit")
 
@@ -260,7 +262,7 @@ class ScalaDebugBreakpointTest {
    * Test case from ticket #1001367
    */
   @Test
-  def breakpointWithBadTypeName() {
+  def breakpointWithBadTypeName(): Unit = {
     val A_TYPENAME = "breakpoints.A_1001367"
     session = initDebugSession("A_1001367")
 
@@ -277,9 +279,9 @@ class ScalaDebugBreakpointTest {
 
   /** Test that if `skipAllBreakpoints` is enabled, no breakpoint request will be honored.*/
   @Test
-  def skipAllBreakpoints_entails_breakpointsAreNotHonored() {
+  def skipAllBreakpoints_entails_breakpointsAreNotHonored(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
@@ -298,16 +300,16 @@ class ScalaDebugBreakpointTest {
 
   /** Test that enabling `skipAllBreakpoints` in the middle of a debug session does indeed disable all existing breakpoints. */
   @Test
-  def skipAllBreakpointsInTheMiddleOfDebugSession() {
+  def skipAllBreakpointsInTheMiddleOfDebugSession(): Unit = {
     session = initDebugSession("Breakpoints")
-    session.runToLine("breakpoints.Breakpoints", 32) // stop in main
+    session.runToLine("breakpoints.Breakpoints", mainBreakpoint)
 
     val bp20 = session.addLineBreakpoint(BP_TYPENAME, 20)
     val bp26 = session.addLineBreakpoint(BP_TYPENAME, 26)
     try {
       session.waitForBreakpointsToBeEnabled(bp20, bp26)
 
-      session.resumetoSuspension()
+      session.resumeToSuspension()
       session.checkStackFrame(BP_TYPENAME, "fors()V", 20)
 
       session.skipAllBreakpoints(true)

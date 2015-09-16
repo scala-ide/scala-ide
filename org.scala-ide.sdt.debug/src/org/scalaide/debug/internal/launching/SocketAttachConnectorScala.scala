@@ -41,14 +41,14 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
 
   override def getName(): String = "Scala debugger (Socket Attach)"
 
-  override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch) {
+  override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch): Unit = {
 
     val arguments = generateArguments(params)
 
     try {
       // connect and create the debug session
       val virtualMachine = connector.attach(arguments)
-      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate(launch))
+      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate = allowTerminate(launch))
       target.attached() // tell the debug target to initialize
     } catch {
       case e: TimeoutException =>

@@ -7,11 +7,11 @@ import com.sun.jdi.Location
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.ObjectCollectedException
 import com.sun.jdi.VMOutOfMemoryException
+import com.sun.jdi.ClassType
 
 object JDIUtil {
 
-  /**
-   * Return the list of executable lines of the given method.
+  /** Return the list of executable lines of the given method.
    */
   def methodToLines(method: Method): Seq[Int] = {
     import scala.collection.JavaConverters._
@@ -24,9 +24,8 @@ object JDIUtil {
     }
   }
 
-  /**
-   * Return the valid locations in the given reference type, without
-   * throwing AbsentInformationException if the information is missing.
+  /** Return the valid locations in the given reference type, without
+   *  throwing AbsentInformationException if the information is missing.
    */
   def referenceTypeToLocations(referenceType: ReferenceType): Seq[Location] = {
     import scala.collection.JavaConverters._
@@ -55,4 +54,11 @@ object JDIUtil {
       classOf[VMDisconnectedException],
       classOf[ObjectCollectedException],
       classOf[VMOutOfMemoryException])(defaultValue)
+
+  /** Checks 'implements' with Java meaning
+   */
+  def implements(classType: ClassType, interfaceName: String): Boolean = {
+    import scala.collection.JavaConverters._
+    classType.allInterfaces.asScala.exists(_.name == interfaceName)
+  }
 }

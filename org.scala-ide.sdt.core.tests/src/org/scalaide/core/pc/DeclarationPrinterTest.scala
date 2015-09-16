@@ -1,7 +1,6 @@
 package org.scalaide.core.pc
 
 import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.testsetup.SDTTestUtils._
 import org.scalaide.core.CompilerTestUtils
 import org.junit.Test
 import org.junit.Assert
@@ -18,7 +17,7 @@ class DeclarationPrinterTest {
   import DeclarationPrinterTest._
 
   @Test
-  def simpleTypes() {
+  def simpleTypes(): Unit = {
     runTest(
       """import java.io._
          val target1: java.io.File
@@ -35,7 +34,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def existentialTests() {
+  def existentialTests(): Unit = {
     runTest(
       """import java.io.File
          val target4: Class[_]
@@ -49,7 +48,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def typeTests() {
+  def typeTests(): Unit = {
     runTest(
       """type targetPair = (java.io.File, Int)
          type targetGenericPair[+T] = (T, T)
@@ -64,7 +63,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def innerTypeTests() {
+  def innerTypeTests(): Unit = {
     runTest("""import java.io.File
         class Inner1
         trait targetInner2 extends Inner1
@@ -79,7 +78,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def functionTests() {
+  def functionTests(): Unit = {
     runTest(
       """val target4: (Int, Int) => Option[String]
          val target5: (java.io.File) => String => String => java.io.File
@@ -91,7 +90,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def modifierTests() {
+  def modifierTests(): Unit = {
     runTest(
       """import java.io._
          private val target1: java.io.File
@@ -106,7 +105,7 @@ class DeclarationPrinterTest {
   }
 
   @Test
-  def refinedTypeTests() {
+  def refinedTypeTests(): Unit = {
     runTest(
       """type targetRefined = String {
             def refinedMethod[T](x: T*): java.io.File
@@ -117,13 +116,13 @@ class DeclarationPrinterTest {
 
   @Test
   @Ignore("Current implementation does not print annotations")
-  def annotationsTest() {
+  def annotationsTest(): Unit = {
     runTest("""
       @deprecated val target3: (File, List[java.io.File])""",
       List("@deprecated val target3: (File, List[File])"))
   }
 
-  private def runTest(in: String, expected: List[String]) {
+  private def runTest(in: String, expected: List[String]): Unit = {
     val fullUnit = s"""|package pack
                        |
                        |trait Foo {
@@ -143,5 +142,68 @@ class DeclarationPrinterTest {
         exp = exp.tail
       }
     }
+    Assert.assertTrue(exp.isEmpty)
+  }
+
+  @Test
+  def testVar(): Unit = {
+    runTestWithMarker(
+      """var a:Int=4
+         def f():Unit = {
+            println(a/**/)
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+  @Test
+  def testVarAssign(): Unit = {
+    runTestWithMarker(
+      """var a:Int=4
+         def f():Unit = {
+           println(a)
+           a/**/=5
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+
+  @Test
+  def testVarDeclr(): Unit = {
+    runTestWithMarker(
+      """var a/**/:Int=4
+         def f():Unit = {
+           println(a)
+         }
+         """.stripMargin,
+      "var a: Int")
+  }
+
+  private def runTestWithMarker(in: String, expected: String): Unit = {
+    import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+    import org.eclipse.core.resources.IFile
+    import org.scalaide.core.testsetup.SDTTestUtils._
+    import org.scalaide.util.eclipse.RegionUtils
+    import RegionUtils.RichRegion
+
+    val fullUnit = s"""|package pack
+                       |
+                       |trait Foo {
+                       |  $in
+                       |}
+                       |""".stripMargin
+
+    val offset = fullUnit.indexOf("/**/") - 1
+    changeContentOfFile(unit.getResource().asInstanceOf[IFile], fullUnit)
+    val scalaRegion = new org.eclipse.jface.text.Region(unit.sourceMap(fullUnit.toCharArray()).scalaPos(offset), 1)
+    unit.withSourceFile((file, comp) => {
+      comp.askReload(unit, unit.sourceMap(fullUnit.toCharArray()).sourceFile)
+      val r = scalaRegion.toRangePos(file)
+      val tree = comp.askTypeAt(r).getOption()
+      val tt = tree.get
+      val result = comp.asyncExec({
+        comp.declPrinter.defString(tt.symbol)(tt.tpe)
+      }).getOrElse("")()
+      Assert.assertEquals(result, expected)
+    })
   }
 }

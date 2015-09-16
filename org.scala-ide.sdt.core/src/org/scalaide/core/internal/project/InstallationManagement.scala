@@ -1,7 +1,5 @@
 package org.scalaide.core.internal.project
 
-import language.implicitConversions
-
 import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.internal.CompilerUtils
@@ -97,7 +95,7 @@ trait InstallationManagement { this: ScalaProject =>
     (ScalaInstallation.resolve _).get(desiredinstallationChoice())
   }
 
-  private def turnOnProjectSpecificSettings(reason: String){
+  private def turnOnProjectSpecificSettings(reason: String): Unit ={
     if (!usesProjectSettings) {
       val pName = this.toString
       eclipseLog.debug(s"Turning on project-specific settings for $pName because of $reason")
@@ -105,7 +103,7 @@ trait InstallationManagement { this: ScalaProject =>
     }
   }
 
-  private def turnOffProjectSpecificSettings(reason: String){
+  private def turnOffProjectSpecificSettings(reason: String): Unit ={
     if (usesProjectSettings){
       val pName = this.toString
       eclipseLog.debug(s"Turning off project-specific settings for $pName because of $reason")
@@ -136,35 +134,32 @@ trait InstallationManagement { this: ScalaProject =>
     publish(ScalaInstallationChange())
   }
 
-  def setDesiredSourceLevel(scalaVersion: ScalaVersion = ScalaVersion(desiredSourceLevel()),
+  def setDesiredSourceLevel(
+      scalaVersion: ScalaVersion = ScalaVersion(desiredSourceLevel()),
       slReason: String = "requested Source Level change",
       customBundleUpdater: Option[() => Unit] = None): Unit = {
+
     projectSpecificStorage.removePropertyChangeListener(compilerSettingsListener)
     turnOnProjectSpecificSettings(slReason)
-    // is the required sourceLevel the bundled scala version ?
-    if (isUsingCompatibilityMode()) {
-      if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)) {
-        unSetXSourceAndMaybeUntoggleProjectSettings(slReason)
-      }
-    } else {
-      if (CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, scalaVersion)) {
-        toggleProjectSpecificSettingsAndSetXsource(scalaVersion, slReason)
-      }
-    }
+
+    if (CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion))
+      unsetXSourceAndMaybeTurnOffProjectSettings(slReason)
+    else
+      turnOnProjectSpecificSettingsAndSetXSource(scalaVersion, slReason)
+
     // The ordering from here until reactivating the listener is important
     projectSpecificStorage.setValue(SettingConverterUtil.SCALA_DESIRED_SOURCELEVEL, CompilerUtils.shortString(scalaVersion))
-    val updater = customBundleUpdater.getOrElse({() =>
+    val updater = customBundleUpdater getOrElse { () =>
       val setter = new ClasspathContainerSetter(javaProject)
       setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaLibContId), scalaVersion)
       setter.updateBundleFromSourceLevel(new Path(SdtConstants.ScalaCompilerContId), scalaVersion)
-      }
-    )
+    }
     updater()
     classpathHasChanged()
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
 
-  private def toggleProjectSpecificSettingsAndSetXsource(scalaVersion: ScalaVersion, reason: String) = {
+  private def turnOnProjectSpecificSettingsAndSetXSource(scalaVersion: ScalaVersion, reason: String) = {
     turnOnProjectSpecificSettings("requested Xsource change")
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
@@ -175,8 +170,8 @@ trait InstallationManagement { this: ScalaProject =>
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }
 
-  private def unSetXSourceAndMaybeUntoggleProjectSettings(reason: String) = {
-    if (usesProjectSettings) { // if no project-specific settings, Xsource is ineffective anyway
+  private def unsetXSourceAndMaybeTurnOffProjectSettings(reason: String) = {
+    if (usesProjectSettings) {
       val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
 
       val (superfluousArgs, curatedArgs) = extraArgs.partition { s => s.startsWith("-Xsource") || s.equals("-Ymacro-expand:none") }
@@ -185,49 +180,54 @@ trait InstallationManagement { this: ScalaProject =>
       storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" "))
 
       // values in shownSettings are fetched from currentStorage, which here means projectSpecificSettings
-      val projectSettingsSameAsWorkSpace = shownSettings(ScalaPresentationCompiler.defaultScalaSettings(), _ => true) forall {
+      def projectSettingsSameAsWorkspace = shownSettings(ScalaPresentationCompiler.defaultScalaSettings(), _ => true) forall {
         case (setting, value) => IScalaPlugin().getPreferenceStore().getString(SettingConverterUtil.convertNameToProperty(setting.name)) == value
       }
-      val scalaInstallationIsSameAsDefault = {
+      def scalaInstallationIsSameAsDefault = {
         val desiredInstallChoice = desiredinstallationChoice()
         desiredInstallChoice.marker match {
           case Left(scalaVersion) => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, scalaVersion)
           case Right(_) => false
         }
       }
-      if (projectSettingsSameAsWorkSpace && scalaInstallationIsSameAsDefault) {
+      def workspaceAdditionalParams = ScalaPresentationCompiler.defaultScalaSettings().splitParams(IScalaPlugin().getPreferenceStore().getString(CompilerSettings.ADDITIONAL_PARAMS)).toSet
+      def additionalSettingsSameAsWorskspace = curatedArgs forall workspaceAdditionalParams
+
+      if (projectSettingsSameAsWorkspace && scalaInstallationIsSameAsDefault && additionalSettingsSameAsWorskspace) {
         turnOffProjectSpecificSettings("Settings are all identical to workspace after Xsource removal.")
       }
     }
   }
 
-  /** This compares the bundled version and the Xsource version found
-  * in arguments, and returns false if they are binary-compatible,
-  * and true otherwise.  Since this is the final, observable
-  * setting on the running presentation Compiler (independently of
-  * Eclipse's settings), it's considered to be the reference on
-  * whether the PC is in compatibility mode or not.  It's a bad
-  * idea to cache this one (desired sourcelevel & al. need to sync
-  * on it).
-  */
-  private def getCompatibilityMode(): Boolean = {
+  /**
+   * This compares the bundled version and the Xsource version found
+   * in arguments, and returns false if they are binary-compatible,
+   * and true otherwise.  Since this is the final, observable
+   * setting on the running presentation Compiler (independently of
+   * Eclipse's settings), it's considered to be the reference on
+   * whether the PC is in compatibility mode or not.  It's a bad
+   * idea to cache this one (desired sourcelevel & al. need to sync
+   * on it).
+   */
+  private[core] def getCompatibilityMode: CompatibilityMode = {
     val versionInArguments = this.scalacArguments filter { _.startsWith("-Xsource:") } map { _.stripPrefix("-Xsource:")}
     val l = versionInArguments.length
     val specdVersion = versionInArguments.headOption
 
     if (l >= 2)
       eclipseLog.error(s"Found two versions of -Xsource in compiler options, only considering the first! ($specdVersion)")
-    if (specdVersion exists (ScalaVersion(_) > IScalaPlugin().scalaVersion))
-      eclipseLog.error(s"Incompatible Xsource setting found in Compiler options: $specdVersion")
+
     if (l < 1 || (specdVersion exists (x => CompilerUtils.isBinarySame(IScalaPlugin().scalaVersion, ScalaVersion(x)))))
-      false
+      Same
+    else if (specdVersion exists (x => CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, ScalaVersion(x))))
+      Previous
     else
-      specdVersion exists (x => CompilerUtils.isBinaryPrevious(IScalaPlugin().scalaVersion, ScalaVersion(x)))
+      Subsequent
   }
 
   /** TODO: letting this be a workspace-wide setting.
    */
-  def isUsingCompatibilityMode(): Boolean = getCompatibilityMode()
+  def isUsingCompatibilityMode: Boolean = getCompatibilityMode != Same
 
   /** Does this project use project-specific compiler settings? */
   def usesProjectSettings: Boolean =
@@ -235,19 +235,18 @@ trait InstallationManagement { this: ScalaProject =>
 
   import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
   val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
-    {
-      import org.scalaide.util.Utils.WithAsInstanceOfOpt
-      if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
-        val installString = (event.getNewValue()).asInstanceOfOpt[String]
-        val installChoice = installString flatMap (parseScalaInstallationChoice(_))
-        // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
-        // will not turn on the project settings and depends on them being set right beforehand
-        installChoice foreach (setDesiredInstallation(_, "requested Scala Installation change from settings update"))
-      }
-      if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE) {
-        if (isUnderlyingValid) classpathHasChanged()
-      }
+    import org.scalaide.util.Utils.WithAsInstanceOfOpt
+
+    if (event.getProperty() == SettingConverterUtil.SCALA_DESIRED_INSTALLATION) {
+      val installString = (event.getNewValue()).asInstanceOfOpt[String]
+      val installChoice = installString flatMap (parseScalaInstallationChoice(_))
+      // This can't use the default argument of setDesiredInstallation: getDesiredXXX() ...
+      // will not turn on the project settings and depends on them being set right beforehand
+      installChoice foreach (setDesiredInstallation(_, "requested Scala Installation change from settings update"))
     }
+    if (event.getProperty() == CompilerSettings.ADDITIONAL_PARAMS || event.getProperty() == SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
+      if (isUnderlyingValid)
+        classpathHasChanged()
   }
 
 }

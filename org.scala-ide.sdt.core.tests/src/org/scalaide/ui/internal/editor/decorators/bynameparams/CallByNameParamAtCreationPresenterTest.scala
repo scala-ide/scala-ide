@@ -17,7 +17,7 @@ class CallByNameParamAtCreationPresenterTest {
   import CallByNameParamAtCreationPresenterTest._
 
   @Test
-  def testWithStringArgument() {
+  def testWithStringArgument(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = Unit
@@ -27,7 +27,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithValArgument() {
+  def testWithValArgument(): Unit = {
     testWithSingleLineCfg("""
       object O {
         val wert = 43
@@ -38,7 +38,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMultipleMethods() {
+  def testWithMultipleMethods(): Unit = {
     testWithSingleLineCfg("""
       object O {
         val wert = 43
@@ -51,7 +51,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMathExpression() {
+  def testWithMathExpression(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(i: => Int) = Unit
@@ -61,7 +61,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithStringExpression() {
+  def testWithStringExpression(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = Unit
@@ -71,7 +71,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithRecursion() {
+  def testWithRecursion(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = s
@@ -81,7 +81,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMultipleArgs() {
+  def testWithMultipleArgs(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s1: => String, s2: String) = s1 + s2
@@ -91,7 +91,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMultipleArgLists() {
+  def testWithMultipleArgLists(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s1: => String)(s2: String)(i1: Int, i2: => Int, i3: Int) = Unit
@@ -101,7 +101,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithCompilationErrorAlreadyDefined() {
+  def testWithCompilationErrorAlreadyDefined(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def alreadyDefined(s: => String) = Unit
@@ -111,7 +111,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithBrokenMethodCall() {
+  def testWithBrokenMethodCall(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = Unit
@@ -120,7 +120,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithMuliLineCfgWithMultipleLines() {
+  def testWithMuliLineCfgWithMultipleLines(): Unit = {
     testWithMultiLineCfg("""
       object O {
         def method(s: => String) = Unit
@@ -133,7 +133,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithSingleLineCfgWithMultipleLines() {
+  def testWithSingleLineCfgWithMultipleLines(): Unit = {
     testWithSingleLineCfg("""
       object O {
         def method(s: => String) = Unit
@@ -144,7 +144,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithSimplePartiallyAppliedFunction() {
+  def testWithSimplePartiallyAppliedFunction() = FlakyTest.retry("testWithSimplePartiallyAppliedFunction") {
     testWithSingleLineCfg("""
       object X {
         def f(i: => Int) = i
@@ -154,7 +154,7 @@ class CallByNameParamAtCreationPresenterTest {
   }
 
   @Test
-  def testWithPartiallyAppliedFunctionFromBug1002381() {
+  def testWithPartiallyAppliedFunctionFromBug1002381(): Unit = {
     testWithSingleLineCfg("""
       object X extends App {
         def f(a: Boolean)(i: => Int) = if (a) i else 0
@@ -179,7 +179,7 @@ class CallByNameParamAtCreationPresenterTest {
       }""", "11", "22")
   }
 
-  private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*) {
+  private def testWith(source: String, firstLineOnly: Boolean, paramCreations: EmbeddedSubstr*): Unit = {
     val sourceWithPkg = addUniquePkgDecl(source)
 
     val cu = mkScalaCompilationUnit(sourceWithPkg)
@@ -197,11 +197,11 @@ class CallByNameParamAtCreationPresenterTest {
     }
   }
 
-  private def testWithSingleLineCfg(source: String, paramCreations: EmbeddedSubstr*) {
+  private def testWithSingleLineCfg(source: String, paramCreations: EmbeddedSubstr*): Unit = {
     testWith(source, true, paramCreations: _*)
   }
 
-  private def testWithMultiLineCfg(source: String, paramCreations: EmbeddedSubstr*) {
+  private def testWithMultiLineCfg(source: String, paramCreations: EmbeddedSubstr*): Unit = {
     testWith(source, false, paramCreations: _*)
   }
 }

@@ -53,14 +53,6 @@ class JavaJUnit4TestFinder extends HasLogger {
       }
     }
 
-    // add all classes implementing JUnit 3.8's Test interface in the region
-    //    val testInterface = javaProject.findType(JUnitCorePlugin.TEST_INTERFACE_NAME)
-    //    if (testInterface != null) {
-    //      CoreTestSearchEngine.findTestImplementorClasses(hierarchy, testInterface, region, result);
-    //    }
-
-    //JUnit 4.3 can also run JUnit-3.8-style public static Test suite() methods:
-    //      CoreTestSearchEngine.findSuiteMethods(element, result, new SubProgressMonitor(pm, 1));
     result.toSeq
   } catch {
     case e: Exception =>
@@ -71,7 +63,7 @@ class JavaJUnit4TestFinder extends HasLogger {
   }
 
   private class AnnotationSearchRequestor(hierarchy: ITypeHierarchy, result: mutable.Set[IType]) extends SearchRequestor {
-    def acceptSearchMatch(smatch: SearchMatch) {
+    def acceptSearchMatch(smatch: SearchMatch): Unit = {
       if (smatch.getAccuracy() == SearchMatch.A_ACCURATE && !smatch.isInsideDocComment()) {
         smatch.getElement() match {
           case tpe: IType    => addTypeAndSubtypes(tpe)
@@ -80,7 +72,7 @@ class JavaJUnit4TestFinder extends HasLogger {
       }
     }
 
-    private def addTypeAndSubtypes(tpe: IType) {
+    private def addTypeAndSubtypes(tpe: IType): Unit = {
       if (result.add(tpe))
         hierarchy.getSubclasses(tpe).foreach(addTypeAndSubtypes)
     }

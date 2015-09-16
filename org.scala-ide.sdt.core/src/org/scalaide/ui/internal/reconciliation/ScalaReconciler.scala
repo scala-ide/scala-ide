@@ -39,7 +39,6 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
   strategy: IReconcilingStrategy,
   isIncremental: Boolean) extends MonoReconciler(strategy, isIncremental) with HasLogger {
 
-  @volatile private var editorActive: Boolean = true
   // both these fields are set during `install`, and should be non-null afterwards
   @volatile private var compilerProxy: IPresentationCompilerProxy = _
   @volatile private var activationListener: ActivationListener = _
@@ -49,13 +48,10 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
     override def partActivated(part: IWorkbenchPart): Unit = {
       if (part == editor) {
         forceReconciling()
-        editorActive = true
       }
     }
 
-    override def partDeactivated(part: IWorkbenchPart): Unit = {
-      if (part == editor) editorActive = false
-    }
+    override def partDeactivated(part: IWorkbenchPart): Unit = {}
   }
 
   /** Listen for presentation-compiler restart events. */
@@ -74,19 +70,11 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
   class ActivationListener(control: Control) extends ShellAdapter {
     override def shellActivated(event: ShellEvent): Unit = {
       if (!control.isDisposed() && control.isVisible()) {
-        editorActive = true
         forceReconciling()
       }
     }
 
-    override def shellDeactivated(event: ShellEvent): Unit = {
-      if (!control.isDisposed() && control.getShell == event.getSource)
-        editorActive = false
-    }
-  }
-
-  private def getResource(): IFile = {
-    editor.getInteractiveCompilationUnit().workspaceFile
+    override def shellDeactivated(event: ShellEvent): Unit = {}
   }
 
   override def install(textViewer: ITextViewer): Unit = {
@@ -105,7 +93,7 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
     Option(SWTUtils.getShell).map(_.addShellListener(activationListener))
   }
 
-  override def uninstall() {
+  override def uninstall(): Unit = {
     super.uninstall()
 
     compilerProxy.asInstanceOfOpt[PresentationCompilerProxy].map(_.removeSubscription(compilerListener))

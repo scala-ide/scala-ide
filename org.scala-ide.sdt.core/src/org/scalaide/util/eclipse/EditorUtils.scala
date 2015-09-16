@@ -120,6 +120,15 @@ object EditorUtils {
     r <- Option(e.getEditorInput().getAdapter(classOf[IResource]))
   } yield r.asInstanceOf[IResource]
 
+  /**
+   * Returns true if `p` is the active editor (the editor that has the focus).
+   */
+  def isActiveEditor(part: IEditorPart): Boolean = (for {
+    w ← activeWorkbenchWindow
+    p ← activePage(w)
+    e ← activeEditor(p)
+  } yield e == part).getOrElse(false)
+
   /** Type-safe downcast of an [[IEditorPart]] to a [[ISourceViewerEditor]].
    */
   def textEditor(e: IEditorPart): Option[ISourceViewerEditor] =

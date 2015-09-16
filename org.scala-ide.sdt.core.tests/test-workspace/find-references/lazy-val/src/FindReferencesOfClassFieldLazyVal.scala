@@ -3,7 +3,7 @@ class Foo {
 }
 
 class Bar {
-  def meth {
+  def meth: Unit = {
     val obj = new Foo
     obj.lazyX
   }

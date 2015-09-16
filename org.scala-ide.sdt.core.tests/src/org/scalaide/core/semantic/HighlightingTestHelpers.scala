@@ -1,7 +1,5 @@
 /*
- * Copyright (c) 2014 Contributor. All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Scala License which accompanies this distribution, and
- * is available at http://www.scala-lang.org/license.html
+ * Copyright (c) 2014 Contributor. All rights reserved.
  */
 package org.scalaide.core.semantic
 
@@ -12,7 +10,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
 
-  def withCompilationUnitAndCompiler(path: String)(test: (IScalaPresentationCompiler, ScalaCompilationUnit) => Unit) {
+  def withCompilationUnitAndCompiler(path: String)(test: (IScalaPresentationCompiler, ScalaCompilationUnit) => Unit): Unit = {
 
     val unit = projectSetup.scalaCompilationUnit(path)
 
@@ -26,7 +24,7 @@ class HighlightingTestHelpers(projectSetup: TestProjectSetup) {
     }
   }
 
-  def assertSameLists(l1: List[String], l2: List[String]) {
+  def assertSameLists(l1: List[String], l2: List[String]): Unit = {
     Assert.assertEquals(l1.mkString("\n"), l2.mkString("\n"))
   }
 }

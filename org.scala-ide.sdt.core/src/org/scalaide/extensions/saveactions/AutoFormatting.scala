@@ -12,11 +12,11 @@ import scalariform.utils.TextEdit
 object AutoFormattingSetting extends SaveActionSetting(
   id = ExtensionSetting.fullyQualifiedName[AutoFormatting],
   name = "Auto formatting",
-  description =
+  description = ExtensionSetting.formatDescription(
     """|Formats the entire document based on the configuration options in \
        |"Scala > Editor > Formatter". If project specific formatting is enabled, \
        |these formatting options are considered instead.
-       |""".stripMargin.replaceAll("\\\\\n", ""),
+       |"""),
   codeExample = """|class C {
                    |  def f = {
                    |    val a=0

@@ -1,24 +1,25 @@
 package org.scalaide.debug.internal.editor
 
+import scala.reflect.internal.util.OffsetPosition
 import scala.util.Try
-import scala.reflect.internal.util.{Position, OffsetPosition}
-import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.debug.internal.ScalaDebugRunningTest
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.junit.Test
-import org.junit.Before
-import org.junit.Assert._
-import org.junit.After
-import org.eclipse.core.runtime.NullProgressMonitor
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.junit.Assert._
+import org.junit.Before
+import org.junit.Test
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.ScalaDebugRunningTest
+import org.scalaide.debug.internal.ScalaDebugTestSession
+import org.scalaide.debug.internal.ScalaDebugger
 
 object StackFrameVariableOfTreeFinderTest
-extends TestProjectSetup("sfValFinding", bundleName = "org.scala-ide.sdt.debug.tests")
-with ScalaDebugRunningTest {
+  extends TestProjectSetup("sfValFinding", bundleName = "org.scala-ide.sdt.debug.tests")
+  with ScalaDebugRunningTest {
+
   val ScalaClassName = "valfinding.ScalaClass"
   val OuterClassName = "valfinding.OuterClass"
   val BaseClassName = "valfinding.BaseClass"
@@ -43,7 +44,7 @@ class StackFrameVariableOfTreeFinderTest {
   var testsAreInitialized = false
 
   @Before
-  def initTests() {
+  def initTests(): Unit = {
     if(! testsAreInitialized) {
       project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
       project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
@@ -51,8 +52,7 @@ class StackFrameVariableOfTreeFinderTest {
     }
   }
 
-  def assertFoundValue(atMarker: String, when: String = null, is: Option[String])
-  (implicit cu: ScalaCompilationUnit) {
+  def assertFoundValue(atMarker: String, when: String = null, is: Option[String])(implicit cu: ScalaCompilationUnit): Unit = {
     import IScalaPresentationCompiler.Implicits._
     cu.withSourceFile {(src, compiler) =>
       import compiler.{Try => _, _}
@@ -83,7 +83,7 @@ class StackFrameVariableOfTreeFinderTest {
     }
   }
 
-  def withDebugSession(test: ScalaDebugTestSession => Unit) {
+  def withDebugSession(test: ScalaDebugTestSession => Unit): Unit = {
     val session = ScalaDebugTestSession(file("ValFindingDemo.launch"))
     test(session)
     session.terminate
@@ -93,7 +93,7 @@ class StackFrameVariableOfTreeFinderTest {
     compilationUnit(filePath).asInstanceOf[ScalaCompilationUnit]
 
   @Test
-  def testClassFields() {
+  def testClassFields(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ScalaClassFile)
 
@@ -112,7 +112,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testMethodParamsAndLocals() {
+  def testMethodParamsAndLocals(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ScalaClassFile)
 
@@ -131,7 +131,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def localVarAccessFromNestedMethods() {
+  def localVarAccessFromNestedMethods(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ScalaClassFile)
 
@@ -145,7 +145,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testFieldAccessInNestedClasses() {
+  def testFieldAccessInNestedClasses(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(NestedClassesFile)
 
@@ -164,7 +164,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testFieldAccessBaseAndDerivedClasses() {
+  def testFieldAccessBaseAndDerivedClasses(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(InheritanceFile)
 
@@ -181,7 +181,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testTraitFieldAccess() {
+  def testTraitFieldAccess(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(InheritanceFile)
 
@@ -203,7 +203,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testAccessToFieldsOfEnclosingTraitAndTheEnclosed() {
+  def testAccessToFieldsOfEnclosingTraitAndTheEnclosed(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(EnclosingTraitFile)
 
@@ -216,7 +216,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testAccessToObjectFields() {
+  def testAccessToObjectFields(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ObjectFieldsFile)
 
@@ -228,7 +228,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
-  def testClosureSupport() {
+  def testClosureSupport(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ClosuresFile)
 

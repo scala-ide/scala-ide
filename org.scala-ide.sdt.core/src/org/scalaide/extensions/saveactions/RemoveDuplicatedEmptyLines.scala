@@ -26,7 +26,7 @@ trait RemoveDuplicatedEmptyLines extends SaveAction with DocumentSupport {
       case (r, _) => r.trimRight(document).length == 0
     }
 
-    val removedLines = emptyLines.sliding(2) flatMap {
+    def removedLines = emptyLines.sliding(2) flatMap {
       case Seq((l1, i1), (l2, i2)) =>
         if (i1+1 == i2)
           Seq(Remove(l1.start, l1.end+1))
@@ -34,6 +34,9 @@ trait RemoveDuplicatedEmptyLines extends SaveAction with DocumentSupport {
           Seq()
     }
 
-    removedLines.toList
+    if (emptyLines.lengthCompare(1) == 0)
+      Nil
+    else
+      removedLines.toList
   }
 }

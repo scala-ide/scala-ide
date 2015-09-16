@@ -34,14 +34,13 @@ import org.scalaide.core.lexical.AbstractScalaScanner
  */
 class ScalaCommentScanner(
     override val preferenceStore: IPreferenceStore,
-    javaPreferenceStore: IPreferenceStore,
     syntaxClass: ScalaSyntaxClass,
     taskTagClass: ScalaSyntaxClass)
       extends RuleBasedScanner with AbstractScalaScanner {
 
   private val wordMatcher = {
-    val taskTags = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
-    val isCaseSensitive = javaPreferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
+    val taskTags = preferenceStore.getString(JavaCore.COMPILER_TASK_TAGS)
+    val isCaseSensitive = preferenceStore.getString(JavaCore.COMPILER_TASK_CASE_SENSITIVE) == JavaCore.ENABLED
     val wm = new WordMatcher
     val cwr = new CombinedWordRule(new IdentifierDetector, wm)
 
@@ -59,7 +58,7 @@ class ScalaCommentScanner(
    * This method differ from `setRules`, which overwrites all existing rules with
    * the passed ones.
    */
-  protected def appendRules(rules: Array[IRule]) {
+  protected def appendRules(rules: Array[IRule]): Unit = {
     if (fRules == null)
       fRules = rules.clone()
     else
@@ -69,7 +68,7 @@ class ScalaCommentScanner(
   /**
    * Overwritten because it needs to listen to task tag changes stored in JDT.
    */
-  override def adaptToPreferenceChange(event: PropertyChangeEvent) {
+  override def adaptToPreferenceChange(event: PropertyChangeEvent): Unit = {
     super.adaptToPreferenceChange(event)
 
     event.getProperty() match {
@@ -86,7 +85,7 @@ class ScalaCommentScanner(
    * Task tags are stored by JDT as a comma separated string. This function decodes
    * and stores them correctly.
    */
-  private def addTaskTags(wordMatcher: WordMatcher, tags: String, token: IToken) {
+  private def addTaskTags(wordMatcher: WordMatcher, tags: String, token: IToken): Unit = {
     tags.split(",") foreach { w =>
       wordMatcher.addWord(w, token)
     }
@@ -167,14 +166,14 @@ private class WordMatcher {
    * If [[isCaseSensitve]] is not set the word is stored in a way that case
    * sensitivity doesn't matter.
    */
-  def addWord(word: String, token: IToken) {
+  def addWord(word: String, token: IToken): Unit = {
     words += (if (isCaseSensitive) word else word.toUpperCase()) -> token
   }
 
   /**
    * Clears all the containing words.
    */
-  def clearWords() {
+  def clearWords(): Unit = {
     words = Map()
   }
 

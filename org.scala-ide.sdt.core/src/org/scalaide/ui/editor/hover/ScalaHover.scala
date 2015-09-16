@@ -9,7 +9,7 @@ import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
  *  @note Prefer factory methods in `IScalaHover` over directly manipulating this class.
  */
 final class ScalaHover(editor: InteractiveCompilationUnitEditor) extends ScalaHoverImpl(editor) {
-  def this() {
+  def this() = {
     this(null)
   }
 }

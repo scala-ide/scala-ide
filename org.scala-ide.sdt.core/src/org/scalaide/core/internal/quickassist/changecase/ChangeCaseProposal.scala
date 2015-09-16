@@ -4,7 +4,6 @@ package changecase
 import scala.reflect.internal.util.RangePosition
 
 import org.eclipse.jface.text.IDocument
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages

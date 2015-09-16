@@ -26,14 +26,14 @@ trait AbstractPopupAction extends AbstractHandler with IObjectActionDelegate {
    * This method is called if either the menu entry is invoked or the handler
    * (if it exists) is called when an [[IResource]] element is selected.
    */
-  def performAction(project: IProject)
+  def performAction(project: IProject): Unit
 
   override def execute(event: ExecutionEvent): AnyRef = {
     EditorUtils.resourceOfActiveEditor flatMap (r ⇒ Option(r.getProject)) foreach performAction
     null
   }
 
-  override def selectionChanged(action: IAction, selection: ISelection) { this.selectionOption = Option(selection) }
+  override def selectionChanged(action: IAction, selection: ISelection): Unit = { this.selectionOption = Option(selection) }
 
   override def run(action: IAction) = {
     for {
@@ -49,5 +49,5 @@ trait AbstractPopupAction extends AbstractHandler with IObjectActionDelegate {
     case _ => None
   }
 
-  def setActivePart(action: IAction, targetPart: IWorkbenchPart) {  }
+  def setActivePart(action: IAction, targetPart: IWorkbenchPart): Unit = {  }
 }

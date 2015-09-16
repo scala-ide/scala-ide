@@ -216,4 +216,46 @@ class DocumentTest {
   @Test
   def lastOpt_on_empty_file_returns_none() =
     document("").lastOpt === None
+
+  @Test
+  def lineInformation_on_non_empty_file_succeeds() = {
+    val d = document("""|first
+                        |second
+                        |third
+                        |""".stripMargin)
+    d.lineInformation(1).text(d) === "second"
+  }
+
+  @Test(expected = classOf[BadLocationException])
+  def lineInformation_fails_for_line_number_gt_number_of_lines(): Unit = {
+    val d = document("abc")
+    d.lineInformation(2)
+  }
+
+  @Test(expected = classOf[BadLocationException])
+  def lineInformation_fails_for_line_number_lt_zero(): Unit = {
+    val d = document("abc")
+    d.lineInformation(-1)
+  }
+
+  @Test
+  def lineInformationOfOffset_on_non_empty_file_succeeds() = {
+    val d = document("""|first
+                        |second
+                        |third
+                        |""".stripMargin)
+    d.lineInformationOfOffset(9).text(d) === "second"
+  }
+
+  @Test(expected = classOf[BadLocationException])
+  def lineInformationOfOffset_fails_for_offset_gteq_length(): Unit = {
+    val d = document("abc")
+    d.lineInformationOfOffset(4)
+  }
+
+  @Test(expected = classOf[BadLocationException])
+  def lineInformationOfOffset_fails_for_offset_lt_zero(): Unit = {
+    val d = document("abc")
+    d.lineInformationOfOffset(-1)
+  }
 }

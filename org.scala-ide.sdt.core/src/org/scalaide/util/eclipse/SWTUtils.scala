@@ -1,3 +1,6 @@
+/*
+ * Copyright (c) 2014 Contributor. All rights reserved.
+ */
 package org.scalaide.util.eclipse
 
 import org.eclipse.jface.preference._
@@ -7,26 +10,13 @@ import org.eclipse.swt.SWT
 import org.eclipse.swt.events._
 import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
-import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.PlatformUI
-import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.IWorkbenchWindow
+import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.dialogs.PreferencesUtil
 
 // TODO move out implicit conversions to a separate module?
 object SWTUtils {
-
-  import scala.language.implicitConversions
-
-  @deprecated("Use org.scalaide.util.ui.DisplayThread.asyncExec", "3.0.0")
-  private def asyncExec(f: => Unit) {
-    DisplayThread.asyncExec(f)
-  }
-
-  @deprecated("Use org.scalaide.util.ui.DisplayThread.syncExec", "3.0.0")
-  private def syncExec(f: => Unit) {
-    DisplayThread.syncExec(f)
-  }
 
   /** Returns the active workbench window's shell
    *
@@ -35,11 +25,9 @@ object SWTUtils {
    */
   def getShell: Shell = getWorkbenchWindow.map(_.getShell).orNull
 
-  /** Returns the currently active window for this workbench (if any). Returns
-   *  `null` if there is no active workbench window. Returns
-   *  `null` if called from a non-UI thread.
+  /** Returns the currently active window for this workbench (if any).
    *
-   *  @return the active workbench window, or `null` if there is
+   *  @return the active workbench window, or `None` if there is
    *         no active workbench window or if called from a non-UI thread
    */
   def getWorkbenchWindow: Option[IWorkbenchWindow] = {
@@ -56,6 +44,10 @@ object SWTUtils {
     override def modifyText(e: ModifyEvent) = f(e)
   }
 
+  implicit def noArgFnToModifyListener(f: () => Unit): ModifyListener = new ModifyListener {
+    def modifyText(e: ModifyEvent) = f()
+  }
+
   /** Returns an adapter class that provides default implementations for the
    *  methods described by the SelectionListener interface.
    *
@@ -63,18 +55,18 @@ object SWTUtils {
    */
   implicit def fnToSelectionAdapter(p: SelectionEvent => Any): SelectionAdapter =
     new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) { p(e) }
+      override def widgetSelected(e: SelectionEvent): Unit = { p(e) }
     }
 
   implicit def fnToSelectionChangedEvent(p: SelectionChangedEvent => Unit): ISelectionChangedListener = new ISelectionChangedListener() {
-    override def selectionChanged(e: SelectionChangedEvent) { p(e) }
+    override def selectionChanged(e: SelectionChangedEvent): Unit = { p(e) }
   }
 
   /** A null-arity version of [[ fnToSelectionAdapter ]]
    */
   implicit def noArgFnToSelectionAdapter(p: () => Any): SelectionAdapter =
     new SelectionAdapter() {
-      override def widgetSelected(e: SelectionEvent) { p() }
+      override def widgetSelected(e: SelectionEvent): Unit = { p() }
     }
 
   /** Returns an adapter class that provides default implementations for the
@@ -93,14 +85,14 @@ object SWTUtils {
    */
   implicit def fnToPropertyChangeListener(p: PropertyChangeEvent => Any): IPropertyChangeListener =
     new IPropertyChangeListener() {
-      override def propertyChange(e: PropertyChangeEvent) { p(e) }
+      override def propertyChange(e: PropertyChangeEvent): Unit = { p(e) }
     }
 
   /** A null-arity version of [[ fnToSelectionChangedEvent ]]
    */
   implicit def noArgFnToSelectionChangedListener(p: () => Any): ISelectionChangedListener =
     new ISelectionChangedListener {
-      override def selectionChanged(event: SelectionChangedEvent) { p() }
+      override def selectionChanged(event: SelectionChangedEvent): Unit = { p() }
     }
 
   /** Returns a class that provides implementations for the
@@ -110,7 +102,7 @@ object SWTUtils {
    */
   implicit def fnToDoubleClickListener(p: DoubleClickEvent => Any): IDoubleClickListener =
     new IDoubleClickListener {
-      override def doubleClick(event: DoubleClickEvent) { p(event) }
+      override def doubleClick(event: DoubleClickEvent): Unit = { p(event) }
     }
 
   implicit def fnToCheckStateListener(p: CheckStateChangedEvent => Unit): ICheckStateListener =
@@ -123,21 +115,21 @@ object SWTUtils {
    */
   implicit class RichControl(private val control: Control) extends AnyVal {
 
-    def onKeyReleased(p: KeyEvent => Any) {
+    def onKeyReleased(p: KeyEvent => Any): Unit = {
       control.addKeyListener(new KeyAdapter {
-        override def keyReleased(e: KeyEvent) { p(e) }
+        override def keyReleased(e: KeyEvent): Unit = { p(e) }
       })
     }
 
-    def onKeyReleased(p: => Any) {
+    def onKeyReleased(p: => Any): Unit = {
       control.addKeyListener(new KeyAdapter {
-        override def keyReleased(e: KeyEvent) { p }
+        override def keyReleased(e: KeyEvent): Unit = { p }
       })
     }
 
-    def onFocusLost(p: => Any) {
+    def onFocusLost(p: => Any): Unit = {
       control.addFocusListener(new FocusAdapter {
-        override def focusLost(e: FocusEvent) { p }
+        override def focusLost(e: FocusEvent): Unit = { p }
       })
     }
 
@@ -166,6 +158,31 @@ object SWTUtils {
 
     def +=(f: SelectionEvent => Unit): Unit =
       getChangeControl(parent) addSelectionListener { (e: SelectionEvent) => f(e) }
+  }
+
+  /**
+   * Creates a multi line text area, whose layout data interops with the grid
+   * layout.
+   */
+  def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1, style: Int = 0): Text = {
+    val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | style)
+    t.setText(initialText)
+    t.setLayoutData({
+      val gd = new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1)
+      gd.heightHint = lineHeight * t.getLineHeight()
+      gd
+    })
+    t
+  }
+
+  /**
+   * Creates a label, whose layout data interops with the grid layout.
+   */
+  def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
+    val lb = new Label(parent, SWT.NONE)
+    lb.setText(text)
+    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
+    lb
   }
 
   /** Returns a [[GridData]] configuration, with the given properties.

@@ -3,7 +3,6 @@ package org.scalaide.util.eclipse
 import java.io.ByteArrayInputStream
 import java.io.File
 
-import org.scalaide.util.eclipse.EclipseUtils
 import scala.tools.nsc.io.AbstractFile
 import scala.util.Try
 
@@ -40,23 +39,14 @@ object FileUtils {
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
       val path = Path.fromOSString(abstractFile.path)
-      toIFile(path)
+      resourceForPath(path)
   }
 
-  @deprecated("Use resourceForPath instead", "4.0.0")
-  private def toIFile(path: IPath): Option[IFile] = {
-    val file = ResourcesPlugin.getWorkspace.getRoot.getFileForLocation(path)
-
-    if (file == null || !file.exists) None
-    else Some(file)
-  }
-
-  private def length(file: IFile) = {
-    val fs = FileBuffers.getFileStoreAtLocation(file.getLocation)
-    if (fs != null)
-      fs.fetchInfo.getLength.toInt
-    else
-      -1
+  /**
+   * Returns the full path of this file.
+   */
+  def toIPath(file: AbstractFile): Option[IPath] = {
+    toIFile(file).map(_.getFullPath)
   }
 
   /**
@@ -65,16 +55,6 @@ object FileUtils {
   def clearBuildErrors(file: IFile, monitor: IProgressMonitor) =
     try {
       file.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
-    } catch {
-      case _: ResourceException =>
-    }
-
-  /**
-   * Removes all task markers from this file.
-   */
-  def clearTasks(file: IFile, monitor: IProgressMonitor) =
-    try {
-      file.deleteMarkers(SdtConstants.TaskMarkerId, true, IResource.DEPTH_INFINITE)
     } catch {
       case _: ResourceException =>
     }
@@ -90,38 +70,6 @@ object FileUtils {
    */
   def hasBuildErrors(file: IResource): Boolean =
     file.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE).exists(_.getAttribute(IMarker.SEVERITY) == IMarker.SEVERITY_ERROR)
-
-  private def task(file: IFile, tag: String, msg: String, priority: String, offset: Int, length: Int, line: Int, monitor: IProgressMonitor) = {
-    val mrk = file.createMarker(SdtConstants.TaskMarkerId)
-    val values = new Array[AnyRef](taskMarkerAttributeNames.length)
-
-    val prioNum = priority match {
-      case JavaCore.COMPILER_TASK_PRIORITY_HIGH => IMarker.PRIORITY_HIGH
-      case JavaCore.COMPILER_TASK_PRIORITY_LOW  => IMarker.PRIORITY_LOW
-      case _                                    => IMarker.PRIORITY_NORMAL
-    }
-
-    values(0) = tag + " " + msg
-    values(1) = Integer.valueOf(prioNum)
-    values(2) = Integer.valueOf(IProblem.Task)
-    values(3) = Integer.valueOf(offset)
-    values(4) = Integer.valueOf(offset + length + 1)
-    values(5) = Integer.valueOf(line)
-    values(6) = java.lang.Boolean.valueOf(false)
-    values(7) = JavaBuilder.SOURCE_ID
-    mrk.setAttributes(taskMarkerAttributeNames, values);
-  }
-
-  private val taskMarkerAttributeNames = Array(
-    IMarker.MESSAGE,
-    IMarker.PRIORITY,
-    IJavaModelMarker.ID,
-    IMarker.CHAR_START,
-    IMarker.CHAR_END,
-    IMarker.LINE_NUMBER,
-    IMarker.USER_EDITABLE,
-    IMarker.SOURCE_ID
-  )
 
   /** Delete directory recursively. Does nothing if dir is not a directory. */
   def deleteDir(dir: File): Unit = {
@@ -151,7 +99,7 @@ object FileUtils {
   }
 
   /**
-   * Find a File that matches the given absolute location on the file systme. Since a given
+   * Find a File that matches the given absolute location on the file system. Since a given
    * file might "mounted" under multiple locations in the Eclipse file system, the `prefix`
    * path is used disambiguate.
    */

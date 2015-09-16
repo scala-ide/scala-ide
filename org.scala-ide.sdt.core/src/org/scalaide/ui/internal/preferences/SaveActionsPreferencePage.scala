@@ -1,6 +1,7 @@
 package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
+import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
 import org.eclipse.jface.layout.TableColumnLayout
 import org.eclipse.jface.preference.PreferencePage
 import org.eclipse.jface.text.IDocument
@@ -23,14 +24,13 @@ import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.extensions.SaveActionSetting
-import org.scalaide.ui.internal.editor.SaveActionExtensions
 import org.scalaide.util.eclipse.SWTUtils._
 
 /** This class is referenced through plugin.xml */
 class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
-  private val prefStore = IScalaPlugin().getPreferenceStore()
   private val MinSaveActionTimeout = 100
 
   private var textBefore: IDocument = _
@@ -39,9 +39,18 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   private var timeoutValue: Text = _
   private var viewer: CheckboxTableViewer = _
 
-  private val settings = SaveActionExtensions.saveActionSettings.toArray
+  private val settings = SaveActions.saveActionSettings.toArray
 
-  private var changes = Set[SaveActionSetting]()
+  private val prefStore = {
+    val ps = IScalaPlugin().getPreferenceStore
+    import OverlayPreferenceStore._
+    val keys = new OverlayKey(STRING, SaveActions.SaveActionTimeoutId) +: settings.map { s =>
+      new OverlayKey(BOOLEAN, s.id)
+    }
+    val store = new OverlayPreferenceStore(ps, keys)
+    store.load()
+    store
+  }
 
   override def createContents(parent: Composite): Control = {
     val base = new Composite(parent, SWT.NONE)
@@ -54,9 +63,9 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     timeout.setLayout(new GridLayout(2, false))
 
     timeoutValue = new Text(timeout, SWT.BORDER | SWT.SINGLE)
-    timeoutValue.setText(prefStore.getString(SaveActionExtensions.SaveActionTimeoutId))
+    timeoutValue.setText(prefStore.getString(SaveActions.SaveActionTimeoutId))
     timeoutValue.addModifyListener { e: ModifyEvent =>
-      def error = {
+      def error() = {
         setValid(false)
         setErrorMessage(s"Timeout value needs to be >= $MinSaveActionTimeout ms")
       }
@@ -91,7 +100,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
       }
     }
     viewer.addCheckStateListener { e: CheckStateChangedEvent =>
-      toggleSaveAction(e.getElement().asInstanceOf[SaveActionSetting])
+      prefStore.setValue(e.getElement.asInstanceOf[SaveActionSetting].id, e.getChecked)
     }
 
     val columnEnabled = new TableViewerColumn(viewer, SWT.NONE)
@@ -105,7 +114,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
 
     mkLabel(base, "Description:", columnSize = 2)
 
-    descriptionArea = mkTextArea(base, lineHeight = 3, columnSize = 2)
+    descriptionArea = mkTextArea(base, lineHeight = 3, initialText = "", columnSize = 2)
 
     mkLabel(base, "Before:")
     mkLabel(base, "After:")
@@ -126,24 +135,19 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   override def init(workbench: IWorkbench): Unit = ()
 
   override def performOk(): Boolean = {
-    changes foreach { saveAction =>
-      val previousValue = prefStore.getBoolean(saveAction.id)
-      prefStore.setValue(saveAction.id, !previousValue)
-    }
-    prefStore.setValue(SaveActionExtensions.SaveActionTimeoutId, timeoutValue.getText())
-    changes = Set()
+    prefStore.setValue(SaveActions.SaveActionTimeoutId, timeoutValue.getText())
+    prefStore.propagate()
     super.performOk()
   }
 
   override def performDefaults(): Unit = {
     timeoutValue.setText(SaveActionsPreferenceInitializer.SaveActionDefaultTimeout.toString())
     viewer.setAllChecked(false)
-    changes = Set()
-    settings foreach (changes += _)
+    prefStore.loadDefaults()
     super.performDefaults
   }
 
-  private def mkTextArea(parent: Composite, lineHeight: Int = 1, initialText: String = "", columnSize: Int = 1): Text = {
+  private def mkTextArea(parent: Composite, lineHeight: Int, initialText: String, columnSize: Int): Text = {
     val t = new Text(parent, SWT.MULTI | SWT.BORDER | SWT.V_SCROLL | SWT.WRAP | SWT.READ_ONLY)
     t.setText(initialText)
     t.setLayoutData({
@@ -164,13 +168,6 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   private def isEnabled(saveAction: SaveActionSetting): Boolean =
     prefStore.getBoolean(saveAction.id)
 
-  private def toggleSaveAction(saveAction: SaveActionSetting) = {
-    if (changes.contains(saveAction))
-      changes -= saveAction
-    else
-      changes += saveAction
-  }
-
   private def selectSaveAction(saveAction: SaveActionSetting) = {
     textBefore.set(saveAction.codeExample)
     textAfter.set("Previewing the behavior of the save action is not yet implemented.")
@@ -178,7 +175,7 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
   }
 
   private def createPreviewer(parent: Composite)(f: IDocument => Unit): Control = {
-    val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, prefStore, "")
+    val previewer = new PreviewerFactory(ScalaPreviewerFactoryConfiguration).createPreviewer(parent, IScalaPlugin().getPreferenceStore, "")
     f(previewer.getDocument())
     previewer.getControl
   }
@@ -205,9 +202,9 @@ class SaveActionsPreferenceInitializer extends AbstractPreferenceInitializer {
   import SaveActionsPreferenceInitializer._
 
   override def initializeDefaultPreferences(): Unit = {
-    SaveActionExtensions.saveActionSettings foreach { s =>
+    SaveActions.saveActionSettings foreach { s =>
       IScalaPlugin().getPreferenceStore().setDefault(s.id, false)
     }
-    IScalaPlugin().getPreferenceStore().setDefault(SaveActionExtensions.SaveActionTimeoutId, SaveActionDefaultTimeout)
+    IScalaPlugin().getPreferenceStore().setDefault(SaveActions.SaveActionTimeoutId, SaveActionDefaultTimeout)
   }
 }

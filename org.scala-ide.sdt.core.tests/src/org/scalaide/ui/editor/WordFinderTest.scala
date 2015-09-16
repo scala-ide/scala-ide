@@ -25,35 +25,35 @@ class WordFinderTest {
   }
 
   @Test
-  def findWord_whenCaretIsInTheMiddle() {
+  def findWord_whenCaretIsInTheMiddle(): Unit = {
     document {
       "necess|ary"
     } shouldFind ("necessary")
   }
 
   @Test
-  def findWord_whenCaretIsAtTheEnd() {
+  def findWord_whenCaretIsAtTheEnd(): Unit = {
     document {
       "necessary|"
     } shouldFind ("necessary")
   }
 
   @Test
-  def findWord_whenCaretIsAtTheBeginning() {
+  def findWord_whenCaretIsAtTheBeginning(): Unit = {
     document {
       "|necessary"
     } shouldFind ("necessary")
   }
 
   @Test
-  def noWord_whenCaretIsSurroundedByWhitespaces() {
+  def noWord_whenCaretIsSurroundedByWhitespaces(): Unit = {
     document {
       "it is | necessary"
     } shouldFind ("")
   }
 
   @Test
-  def noWord_whenCaretIsAtTheEndAfterWhitespace() {
+  def noWord_whenCaretIsAtTheEndAfterWhitespace(): Unit = {
     document {
       "necessary |"
     } shouldFind ("")

@@ -15,7 +15,7 @@ import org.scalaide.util.eclipse.EclipseUtils
 
 object Nature {
 
-  def removeScalaLib(jp: IJavaProject) {
+  def removeScalaLib(jp: IJavaProject): Unit = {
     val scalaLibPath = Path.fromPortableString(SdtConstants.ScalaLibContId)
     val buf = jp.getRawClasspath filter (_.getPath!= scalaLibPath)
     jp.setRawClasspath(buf, null)
@@ -25,7 +25,7 @@ object Nature {
    * Removes any existing scala library from the classpath, and adds the ScalaPlugin.scalaLibId
    * library container to the classpath. Saves the project settings of `jp`.
    */
-  def addScalaLibAndSave(project: IProject) {
+  def addScalaLibAndSave(project: IProject): Unit = {
     val jp = JavaCore.create(project)
     Nature.removeScalaLib(jp)
 
@@ -51,32 +51,32 @@ class Nature extends IProjectNature {
   override def getProject = project
   override def setProject(project : IProject) = this.project = project
 
-  override def configure() {
+  override def configure(): Unit = {
     if (project == null || !project.isOpen)
       return
 
     updateBuilders(project, List(JavaCore.BUILDER_ID), SdtConstants.BuilderId)
 
-    EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath.") {
+    EclipseUtils.withSafeRunner("Error occurred while trying to add Scala library to classpath") {
       Nature.addScalaLibAndSave(getProject)
     }
   }
 
-  override def deconfigure() {
+  override def deconfigure(): Unit = {
     if (project == null || !project.isOpen)
       return
 
     updateBuilders(project, List(SdtConstants.BuilderId), JavaCore.BUILDER_ID)
 
-    EclipseUtils.withSafeRunner("Error occurred while trying to remove Scala library from classpath.") {
+    EclipseUtils.withSafeRunner("Error occurred while trying to remove Scala library from classpath") {
       val jp = JavaCore.create(getProject)
       Nature.removeScalaLib(jp)
       jp.save(null, true)
     }
   }
 
-  private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String) {
-    EclipseUtils.withSafeRunner(s"Error occurred while trying to update builder of project '$project'.") {
+  private def updateBuilders(project: IProject, buildersToRemove: List[String], builderToAdd: String): Unit = {
+    EclipseUtils.withSafeRunner(s"Error occurred while trying to update builder of project '$project'") {
       val description = project.getDescription
       val previousCommands = description.getBuildSpec
       val filteredCommands = previousCommands.filterNot(buildersToRemove contains _.getBuilderName)

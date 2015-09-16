@@ -7,7 +7,7 @@ trait T {
 }
 
 abstract class C extends T {
-  override def foo() {}
+  override def foo(): Unit = {}
 
   /*s*/foo/*e*/()
 }

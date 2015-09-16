@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.util.concurrent.TimeoutException
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
@@ -17,6 +18,7 @@ import org.eclipse.core.resources.IProjectDescription
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.preferences.InstanceScope
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import scala.reflect.internal.util.SourceFile
@@ -38,14 +40,15 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaProject
 
-/** Utility functions for setting up test projects.
+/**
+ * Utility functions for setting up test projects.
  *
  */
 object SDTTestUtils extends HasLogger {
 
   enableAutoBuild(false)
   // Be nice to Mac users and use a default encoding other than MacRoman
-  ResourcesPlugin.getPlugin().getPluginPreferences().setValue(ResourcesPlugin.PREF_ENCODING, "UTF-8")
+  InstanceScope.INSTANCE.getNode(SdtConstants.PluginId).put(ResourcesPlugin.PREF_ENCODING, "UTF-8")
 
   lazy val workspace = ResourcesPlugin.getWorkspace
 
@@ -63,16 +66,26 @@ object SDTTestUtils extends HasLogger {
   }
 
   /** Return the Java problem markers corresponding to the given compilation unit. */
-  def findProblemMarkers(unit: ICompilationUnit) =
+  def findProblemMarkers(unit: ICompilationUnit): Array[IMarker] =
     unit.getUnderlyingResource().findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
 
-  /** Setup the project in the target workspace. The 'name' project should
+  def findProjectProblemMarkers(project: IProject, types: String*): Seq[IMarker] =
+    for {
+      typ <- types
+      markers <- project.findMarkers(typ, false, IResource.DEPTH_INFINITE)
+    } yield markers
+
+  def markersMessages(markers: List[IMarker]): List[String] =
+    markers.map(_.getAttribute(IMarker.MESSAGE).asInstanceOf[String])
+
+  /**
+   * Setup the project in the target workspace. The 'name' project should
    *  exist in the source workspace.
    */
   def setupProject(name: String, bundleName: String): IScalaProject =
     internalSetupProject(name, bundleName)
 
-  private [core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
+  private[core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
@@ -82,12 +95,14 @@ object SDTTestUtils extends HasLogger {
       val project = workspace.getRoot.getProject(name)
       project.create(null)
       project.open(null)
+      project.setDefaultCharset("UTF-8", /*progressMonitor =*/ null)
       JavaCore.create(project)
     }
     ScalaPlugin().getScalaProject(workspace.getRoot.getProject(name))
   }
 
-  /** Return all positions (offsets) of the given str in the given source file.
+  /**
+   * Return all positions (offsets) of the given str in the given source file.
    */
   def positionsOf(source: Array[Char], str: String): Seq[Int] = {
     val buf = new mutable.ListBuffer[Int]
@@ -99,7 +114,8 @@ object SDTTestUtils extends HasLogger {
     buf.toList
   }
 
-  /** Return all positions and the number in the given marker. The marker is
+  /**
+   * Return all positions and the number in the given marker. The marker is
    *  wrapped by /**/, and the method returns matches for /*[0-9]+*/, as a sequence
    *  of pairs (offset, parsedNumber)
    */
@@ -142,7 +158,8 @@ object SDTTestUtils extends HasLogger {
       deleteRecursive(rootDir)
   }
 
-  /** Add a new file to the given project. The given path is relative to the
+  /**
+   * Add a new file to the given project. The given path is relative to the
    *  project.
    *
    *  The file must not exist.
@@ -193,14 +210,14 @@ object SDTTestUtils extends HasLogger {
   }
 
   def createProjectInLocalFileSystem(parentFile: File, projectName: String): IProject = {
-    val project = ResourcesPlugin.getWorkspace.getRoot.getProject(projectName)
+    val project = workspace.getRoot.getProject(projectName)
     if (project.exists)
       project.delete(true, null)
     val testFile = new File(parentFile, projectName)
     if (testFile.exists)
       deleteRecursive(testFile)
 
-    val desc = ResourcesPlugin.getWorkspace.newProjectDescription(projectName)
+    val desc = workspace.newProjectDescription(projectName)
     desc.setLocation(new Path(new File(parentFile, projectName).getPath))
     project.create(desc, null)
     project.open(null)
@@ -245,7 +262,7 @@ object SDTTestUtils extends HasLogger {
     names map (n => createProjectInWorkspace(n, true))
 
   private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
-    names map (n => internalCreateProjectInWorkspace(n, true))
+    names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
 
   def deleteProjects(projects: IScalaProject*): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
@@ -254,13 +271,15 @@ object SDTTestUtils extends HasLogger {
   }
 
   /** Wait until `pred` is true, or timeout (in ms). */
-  def waitUntil(timeout: Int)(pred: => Boolean): Unit = {
+  def waitUntil(timeout: Int, withTimeoutException: Boolean = false)(pred: => Boolean): Unit = {
     val start = System.currentTimeMillis()
     var cond = pred
     while ((System.currentTimeMillis() < start + timeout) && !cond) {
       Thread.sleep(100)
       cond = pred
     }
+    if (!cond && withTimeoutException)
+      throw new TimeoutException(s"Predicate is not fulfiled after declared time limit ($timeout millis).")
   }
 
   /**
@@ -290,25 +309,41 @@ object SDTTestUtils extends HasLogger {
         override lazy val project = scalaProject
       }
       projectSetup.project.presentationCompiler { c => f(c) }
-    }
-    finally deleteProjects(projectSetup.project)
+    } finally deleteProjects(projectSetup.project)
   }
 
-  /** Create a project in the current workspace. If `withSourceRoot` is true,
+  /**
+   * Create a project in the current workspace. If `withSourceRoot` is true,
    *  it creates a source folder called `src`.
    */
   def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): IScalaProject =
-    internalCreateProjectInWorkspace(projectName, withSourceRoot)
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
 
-  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): ScalaProject = {
-    val workspace = ResourcesPlugin.getWorkspace()
+  def createProjectInWorkspace(projectName: String, withSrcOutputStructure: SrcPathOutputEntry): IScalaProject =
+    internalCreateProjectInWorkspace(projectName, withSrcOutputStructure)
+
+  type SrcPathOutputEntry = (IProject, IJavaProject) => Seq[IClasspathEntry]
+
+  private def withNoSourceRoot: SrcPathOutputEntry = (_, _) => Seq.empty[IClasspathEntry]
+
+  private def withSourceRootOnly: SrcPathOutputEntry = (thisProject, correspondingJavaProject) => {
+    val sourceFolder = thisProject.getFolder("/src")
+    sourceFolder.create( /* force = */ false, /* local = */ true, /* monitor = */ null)
+    val root = correspondingJavaProject.getPackageFragmentRoot(sourceFolder)
+    Seq(JavaCore.newSourceEntry(root.getPath()))
+  }
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean): ScalaProject =
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
+
+  final def createJavaProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): IJavaProject = {
     val workspaceRoot = workspace.getRoot()
     val project = workspaceRoot.getProject(projectName)
     project.create(null)
     project.open(null)
 
     val description = project.getDescription()
-    description.setNatureIds(Array(SdtConstants.NatureId, JavaCore.NATURE_ID))
+    description.setNatureIds(Array(JavaCore.NATURE_ID))
     project.setDescription(description, null)
 
     val javaProject = JavaCore.create(project)
@@ -317,17 +352,23 @@ object SDTTestUtils extends HasLogger {
     val entries = new ArrayBuffer[IClasspathEntry]()
     entries += JavaRuntime.getDefaultJREContainerEntry()
 
-    if (withSourceRoot) {
-      val sourceFolder = project.getFolder("/src")
-      sourceFolder.create(false, true, null)
-      val root = javaProject.getPackageFragmentRoot(sourceFolder)
-      entries += JavaCore.newSourceEntry(root.getPath())
+    entries ++= withSourceFolders(project, javaProject)
+
+    javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
+    javaProject
+  }
+
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): ScalaProject = {
+    def withScalaFolders(project: IProject, jProject: IJavaProject) =
+      withSourceFolders(project, jProject) ++ Seq(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
+    def addScalaNature(project: IProject) = {
+      val description = project.getDescription
+      description.setNatureIds(SdtConstants.NatureId +: description.getNatureIds)
+      project.setDescription(description, null)
+      project
     }
 
-    entries += JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId))
-    javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
-
-    ScalaPlugin().getScalaProject(project)
+    ScalaPlugin().getScalaProject(addScalaNature(createJavaProjectInWorkspace(projectName, withScalaFolders).getProject))
   }
 
   def withWorkspacePreference[A](name: String, value: Boolean)(thunk: => A): A = {
@@ -341,5 +382,5 @@ object SDTTestUtils extends HasLogger {
   }
 
   def buildWorkspace(): Unit =
-    ResourcesPlugin.getWorkspace().build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
 }
