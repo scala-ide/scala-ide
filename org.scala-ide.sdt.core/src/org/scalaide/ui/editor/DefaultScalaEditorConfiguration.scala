@@ -20,6 +20,7 @@ import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.text.DocumentEvent
 import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.jface.text.rules.DefaultDamagerRepairer
+import org.eclipse.ui.texteditor.ChainedPreferenceStore
 
 /** A default SourceViewerConfiguration class for Scala-based editors.
  *
@@ -34,14 +35,16 @@ import org.eclipse.jface.text.rules.DefaultDamagerRepairer
  *  @note Standard content assist is missing from this configuration, but should be easy to add
  *        in a subsequent release
  *
- *  @since 4.1.0
+ *  @since 4.3.0
  */
 trait DefaultScalaEditorConfiguration extends SourceViewerConfiguration {
   val javaPreferenceStore: IPreferenceStore
   val textEditor: InteractiveCompilationUnitEditor
 
   protected def scalaPreferenceStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
-  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(scalaPreferenceStore, javaPreferenceStore)
+  private val combinedPrefStore = new ChainedPreferenceStore(
+    Array(scalaPreferenceStore, javaPreferenceStore))
+  private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
   override def getPresentationReconciler(sv: ISourceViewer) = {
     val reconciler = super.getPresentationReconciler(sv).asInstanceOf[PresentationReconciler]
@@ -64,11 +67,11 @@ trait DefaultScalaEditorConfiguration extends SourceViewerConfiguration {
 
   /** Ask the underlying unit to be scheduled for the next reconciliation round */
   private object reloader extends IDocumentListener {
-    override def documentChanged(event: DocumentEvent) {
+    override def documentChanged(event: DocumentEvent) = {
       textEditor.getInteractiveCompilationUnit().scheduleReconcile(event.getDocument.get.toCharArray)
     }
 
-    override def documentAboutToBeChanged(event: DocumentEvent) {}
+    override def documentAboutToBeChanged(event: DocumentEvent) = {}
   }
 
   override def getTextHover(viewer: ISourceViewer, contentType: String): ITextHover = {
@@ -98,7 +101,7 @@ trait DefaultScalaEditorConfiguration extends SourceViewerConfiguration {
     p
   }
 
-  def propertyChange(event: PropertyChangeEvent) {
+  def propertyChange(event: PropertyChangeEvent): Unit = {
     codeHighlightingScanners.values.foreach(_.adaptToPreferenceChange(event))
   }
 }

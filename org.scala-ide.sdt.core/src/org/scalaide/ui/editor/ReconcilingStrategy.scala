@@ -8,12 +8,13 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.scalaide.logging.HasLogger
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.core.runtime.IProgressMonitor
+import org.scalaide.util.internal.Suppress.DeprecatedWarning
 
 class ReconcilingStrategy(sourceEditor: InteractiveCompilationUnitEditor with DecoratedInteractiveEditor,
     documentListener: IDocumentListener) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
   private var document: Option[IDocument] = None
 
-  def this(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) {
+  def this(sourceEditor: DeprecatedWarning.SourceCodeEditor, documentListener: IDocumentListener) {
     this(sourceEditor: InteractiveCompilationUnitEditor with DecoratedInteractiveEditor, documentListener)
   }
 

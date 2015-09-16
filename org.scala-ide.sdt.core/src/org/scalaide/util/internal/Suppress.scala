@@ -41,6 +41,7 @@ object Suppress {
     type ResizableThreadPoolScheduler = scala.actors.scheduler.ResizableThreadPoolScheduler
     type ForkJoinScheduler = scala.actors.scheduler.ForkJoinScheduler
     type Lock = scala.concurrent.Lock
+    type SourceCodeEditor = org.scalaide.ui.editor.SourceCodeEditor
 
     /** Refers to deprecated Eclipse/JDT API */
     def getBufferFactory(o: Openable): IBufferFactory =

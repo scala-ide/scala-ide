@@ -30,11 +30,9 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.ui.completion.ScalaCompletionProposal
 import org.scalaide.ui.editor.DefaultScalaEditorConfiguration
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
-import org.scalaide.ui.internal.editor.autoedits.BracketAutoEditStrategy
 import org.scalaide.ui.internal.editor.autoedits.CommentAutoIndentStrategy
 import org.scalaide.ui.internal.editor.autoedits.LiteralAutoEditStrategy
 import org.scalaide.ui.internal.editor.autoedits.StringAutoEditStrategy
-import org.scalaide.ui.internal.editor.autoedits.TabsToSpacesConverter
 import org.scalaide.util.ScalaWordFinder
 
 class SbtEditor extends TextEditor with InteractiveCompilationUnitEditor with HasLogger {
@@ -51,13 +49,13 @@ class SbtEditor extends TextEditor with InteractiveCompilationUnitEditor with Ha
     SbtCompilationUnit.fromEditor(this)
   }
 
-  def getViewer(): ISourceViewer = getSourceViewer
+  override def getViewer(): ISourceViewer = getSourceViewer
 }
 
 class SbtEditorConfiguration(
     val pluginPreferenceStore: IPreferenceStore,
-    val javaPreferenceStore: IPreferenceStore,
-    val textEditor: SbtEditor) extends SourceViewerConfiguration with DefaultScalaEditorConfiguration {
+    override val javaPreferenceStore: IPreferenceStore,
+    override val textEditor: SbtEditor) extends SourceViewerConfiguration with DefaultScalaEditorConfiguration {
 
   override def getContentAssistant(sourceViewer: ISourceViewer): IContentAssistant = {
     val assistant = new ContentAssistant
@@ -82,14 +80,13 @@ class SbtEditorConfiguration(
     val partitioning = getConfiguredDocumentPartitioning(sourceViewer)
     contentType match {
       case IJavaPartitions.JAVA_DOC | IJavaPartitions.JAVA_MULTI_LINE_COMMENT | ScalaPartitions.SCALADOC_CODE_BLOCK =>
-        Array(new CommentAutoIndentStrategy(scalaPreferenceStore, partitioning), new TabsToSpacesConverter(scalaPreferenceStore))
+        Array(new CommentAutoIndentStrategy(scalaPreferenceStore, partitioning))
 
       case IJavaPartitions.JAVA_STRING =>
         Array(new StringAutoEditStrategy(partitioning, scalaPreferenceStore))
 
       case _ =>
-        Array(new BracketAutoEditStrategy(scalaPreferenceStore),
-          new DefaultIndentLineAutoEditStrategy(),
+        Array(new DefaultIndentLineAutoEditStrategy(),
           new LiteralAutoEditStrategy(scalaPreferenceStore))
     }
   }
