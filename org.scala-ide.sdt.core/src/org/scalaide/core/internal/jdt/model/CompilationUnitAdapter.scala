@@ -44,7 +44,7 @@ import org.eclipse.jdt.internal.core.PackageDeclaration
 import org.scalaide.util.internal.Suppress
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {
-  override def getAdapter(adapter : Class[_]) : AnyRef = (classFile : IAdaptable).getAdapter(adapter)
+  override def getAdapter[T](adapter : Class[T]): T = (classFile : IAdaptable).getAdapter(adapter)
 
   override def equals(o : Any) = classFile.equals(o)
   override def hashCode() = classFile.hashCode()
@@ -228,6 +228,6 @@ object CompilationUnitAdapter {
     override def getAttachedJavadoc(monitor: IProgressMonitor): String = throw new UnsupportedOperationException
     override def getAncestor(ancestorType: Int): IJavaElement = throw new UnsupportedOperationException
 
-    override def getAdapter(adapter: Class[_]): AnyRef = throw new UnsupportedOperationException
+    override def getAdapter[T](adapter: Class[T]): T = throw new UnsupportedOperationException
   }
 }

@@ -37,6 +37,8 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
+import org.eclipse.ui.part.WorkbenchPart
+
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -380,7 +382,7 @@ class ScalaSourceFileEditor
     }
 
     override def smartBackspaceManager: SmartBackspaceManager =
-      self.getAdapter(classOf[SmartBackspaceManager]).asInstanceOf[SmartBackspaceManager]
+      (self: WorkbenchPart).getAdapter(classOf[SmartBackspaceManager]).asInstanceOf[SmartBackspaceManager]
 
     /** Calls auto edits and if they produce no changes the super implementation. */
     override def handleVerifyEvent(e: VerifyEvent): Unit = {
