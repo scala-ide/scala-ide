@@ -178,6 +178,16 @@ class DeclarationPrinterTest {
       "var a: Int")
   }
 
+  @Test
+  def testModifierVarDeclr(): Unit = {
+    runTestWithMarker(
+      """protected[this] var a/**/:Int=4
+         def f():Unit = {
+           println(a)
+         }
+         """.stripMargin,
+      "protected[this] var a: Int")
+  }
   private def runTestWithMarker(in: String, expected: String): Unit = {
     import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
     import org.eclipse.core.resources.IFile
@@ -200,10 +210,15 @@ class DeclarationPrinterTest {
       val r = scalaRegion.toRangePos(file)
       val tree = comp.askTypeAt(r).getOption()
       val tt = tree.get
+      val tpe = tt match {
+        case comp.ValDef(_, _, tpt, _) => tpt.tpe
+        case _ => tt.tpe
+      }
+
       val result = comp.asyncExec({
-        comp.declPrinter.defString(tt.symbol)(tt.tpe)
+        comp.declPrinter.defString(tt.symbol)(tpe)
       }).getOrElse("")()
-      Assert.assertEquals(result, expected)
+      Assert.assertEquals(expected, result)
     })
   }
 }
