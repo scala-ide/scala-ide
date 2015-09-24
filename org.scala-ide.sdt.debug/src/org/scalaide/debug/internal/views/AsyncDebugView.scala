@@ -215,7 +215,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
     def loadFadingPackages = {
       val pkgs = store.getString(AsyncDebuggerPreferencePage.FadingPackages)
-      pkgs.split(',').toSet
+      pkgs.split(AsyncDebuggerPreferencePage.DataDelimiter).toSet
     }
 
     def loadFadingColor = {
