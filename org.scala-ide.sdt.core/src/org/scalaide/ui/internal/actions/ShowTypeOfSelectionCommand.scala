@@ -48,7 +48,9 @@ object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
           import compiler._
 
           def typeInfo(tpe: Type): String =
-            Option(tpe).map(tpe => createHtmlOutput { _ append convertContentToHtml(tpe.toString) }).orNull
+            Option(tpe).map(tpe =>
+              createHtmlOutput { _ append convertContentToHtml(compiler.declPrinter.showType(tpe)) }
+            ).orNull
 
           (for {
             t <- askTypeAt(region.toRangePos(src)).getOption()
