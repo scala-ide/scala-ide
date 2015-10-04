@@ -37,4 +37,8 @@ object ScalaImages {
   val DESC_SETTINGS_OBJ: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/settings.gif")
 
   val ADD_METHOD_PROPOSAL: Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
+  val PRIVATE_VAR :ImageDescriptor = JavaPluginImages.DESC_FIELD_PRIVATE
+  val PUBLIC_VAR :ImageDescriptor = JavaPluginImages.DESC_FIELD_PUBLIC
+  val PROTECTED_VAR :ImageDescriptor = JavaPluginImages.DESC_FIELD_PROTECTED
+  val PACKAGE: ImageDescriptor = JavaPluginImages.DESC_OBJS_PACKAGE
 }

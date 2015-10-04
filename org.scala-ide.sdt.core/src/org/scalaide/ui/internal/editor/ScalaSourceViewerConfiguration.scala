@@ -203,6 +203,7 @@ class ScalaSourceViewerConfiguration(
       val s = new CompositeReconcilingStrategy
       s.setReconcilingStrategies(Array(
           new ScalaReconcilingStrategy(editor),
+          new ScalaOutlineReconcilingStrategy(editor.asInstanceOf[ScalaSourceFileEditor]),
           new SpellingReconcileStrategy(
               editor,
               editor.getViewer(),

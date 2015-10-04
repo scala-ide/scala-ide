@@ -57,7 +57,10 @@ import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.dom.AST
 import org.scalaide.util.Utils
-
+import org.eclipse.ui.views.contentoutline.IContentOutlinePage
+import org.eclipse.jdt.internal.ui.javaeditor.JavaEditor
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.IStructuredSelection
 class ScalaSourceFileEditor
     extends CompilationUnitEditor
     with ScalaCompilationUnitEditor
@@ -95,9 +98,7 @@ class ScalaSourceFileEditor
     }
 
     override def aboutToBeReconciled() = ()
-    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
-      getInteractiveCompilationUnit() match {
-        case scu: ScalaCompilationUnit => exts foreach { ext =>
+    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {      getInteractiveCompilationUnit() match {        case scu: ScalaCompilationUnit => exts foreach { ext =>
           EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'") {
             ext(scu)
           }
@@ -439,7 +440,36 @@ class ScalaSourceFileEditor
       else
         super.requestWidgetToken(requester, priority)
   }
+  private var outlinePage:ScalaOutlinePage = null
+  def getOutlinePage = outlinePage
+  override def getAdapter( required:Class[_]):AnyRef={
+    required match{
+      case  ScalaSourceFileEditor.iContentOutlinePage => {
+        if(outlinePage == null)
+          outlinePage = createScalaOutlinePage
+        outlinePage
+      }
+      case _ => super.getAdapter(required)
+    }
 
+  }
+
+  private def createScalaOutlinePage:ScalaOutlinePage ={
+    val sop = new ScalaOutlinePage(this)
+    sop.setInput(new RootNode)
+    sop
+  }
+  override def doSelectionChanged(selection:ISelection)={
+    selection match {
+      case ss:IStructuredSelection =>
+        if(!ss.isEmpty()){
+          ss.getFirstElement match {
+            case n:Node => setHighlightRange(n.start, n.end - n.start, true);
+            case _ => super.doSelectionChanged(selection)
+          }
+        }
+    }
+  }
 }
 
 object ScalaSourceFileEditor {
@@ -472,4 +502,7 @@ object ScalaSourceFileEditor {
 
     def removeReconcileListener(listener: IJavaReconcilingListener): Unit = reconcilingListeners.remove(listener)
   }
+  val iContentOutlinePage = classOf[IContentOutlinePage]
 }
+
+
