@@ -20,7 +20,7 @@ class ScalaContentProvider extends ITreeContentProvider {
    */
   override def  getChildren( o:Object):Array[Object]= {
     o match {
-      case p:ContainerNode => p.getChildren.values.toArray
+      case p:ContainerNode => p.children.values.toArray
       case _ => NONODES
     }
   }
@@ -63,7 +63,7 @@ class ScalaContentProvider extends ITreeContentProvider {
   override def getElements( root:Object):Array[Object] ={
 
     root match {
-      case r:RootNode => r.getChildren.values.toArray
+      case r:RootNode => r.children.values.toArray
       case _ => throw new IllegalArgumentException("Root is expected")
     }
   }

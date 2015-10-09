@@ -456,7 +456,6 @@ class ScalaSourceFileEditor
 
   private def createScalaOutlinePage:ScalaOutlinePage ={
     val sop = new ScalaOutlinePage(this)
-    sop.setInput(new RootNode)
     sop
   }
   override def doSelectionChanged(selection:ISelection)={

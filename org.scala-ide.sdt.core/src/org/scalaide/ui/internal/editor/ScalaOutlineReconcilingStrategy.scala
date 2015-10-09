@@ -21,19 +21,18 @@ class ScalaOutlineReconcilingStrategy(icuEditor:ScalaSourceFileEditor) extends I
 
   override def reconcile(partition: IRegion): Unit = {
     val sop = icuEditor.getOutlinePage
-    logger.info(sop + " outline reconcile for " + partition)
-    val start = System.currentTimeMillis()
     try {
       if (sop != null) {
-        val rootNode = sop.getInput
+        val oldRoot = sop.getInput
         icUnit.scalaProject.presentationCompiler.apply(comp => {
-          val builder = new ModelBuilder(comp)
-          val delta = builder.updateTree(rootNode, icUnit.sourceMap(icuEditor.getViewer.getDocument.get.toCharArray()).sourceFile)
-          logger.info(delta)
-          logger.info("It took "+(System.currentTimeMillis() - start))
+          val rootNode =ModelBuilder.buildTree(comp, icUnit.sourceMap(icuEditor.getViewer.getDocument.get.toCharArray()).sourceFile)
+          val delta = if(oldRoot!= null) oldRoot.diff(rootNode) else null
           icuEditor.getEditorSite.getShell.getDisplay.asyncExec(new Runnable() {
             def run = {
-              sop.update(delta)
+              if(delta eq null)
+                sop.setInput(rootNode)
+              else
+                sop.update(delta)
             }
           })
         })

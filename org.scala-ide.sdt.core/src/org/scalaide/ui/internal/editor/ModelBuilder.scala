@@ -9,28 +9,19 @@ import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.interactive.Response
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
+import scala.collection.mutable.MutableList
 
-/**
- * @author ailinykh
- */
-
-
-
-trait HasReturnType { self: Node =>
+trait HasReturnType {
   private var rt: Option[String] = None
   def returnType = rt
   def returnType_=(rt: Option[String]) = {
-    if (this.rt != rt)
-      dirty = true
     this.rt = rt
   }
 }
-trait HasModifiers { self: Node =>
+trait HasModifiers {
   import scala.reflect.internal.Flags._
-  private var flags = 0L
+  private[editor] var flags = 0L
   def setFlags(f: Long) = {
-    if (flags != f)
-      dirty = true
     flags = f
   }
   def isPrivate = (flags & PRIVATE) != 0
@@ -42,48 +33,25 @@ abstract class NodeKey
 abstract class Node(val isLeaf: Boolean) extends HasModifiers {
   def name: String
   def parent: ContainerNode
-  var visited = false
-  private var _start: Int = 0
-  private var _end: Int = 0
-  var dirty = false
-  //def isDirty = dirty
-  def start = _start
-  def end = _end
-  def start_=(pos: Int) = {
-    _start = pos
-    // dirty = true
-  }
-  def end_=(pos: Int) = {
-    _end = pos
-    //dirty = true
-  }
-
+  var start: Int = 0
+  var end: Int = 0
   def displayName: String
   def key: NodeKey
-  def op(f: Node => Unit) = f(this)
-  def clearDirtyFlags() = dirty = false
-  //def collect(f:Node => Boolean):List[Node]= if(f(this)) List(this) else List()
+  def <= (that:Node):Boolean={
+    start= that.start
+    end = that.end
+    val f = flags
+    flags = that.flags
+    f != that.flags
+  }
 }
 
 abstract class ContainerNode(parent: ContainerNode) extends Node(false) {
-  var structDirty = false
-  protected var children: Map[NodeKey, Node] = collection.immutable.ListMap[NodeKey, Node]()
-  def getChildren = children
+  protected var _children: Map[NodeKey, Node] =  new scala.collection.immutable.ListMap[NodeKey, Node]()
+  def children = _children
+  def children_=(ch:Map[NodeKey, Node])= _children =ch
   def addChild(ch: Node) = {
-    children += (ch.key -> ch)
-    structDirty = true
-  }
-  def removeChild(key: NodeKey) = {
-    children -= key
-    structDirty = true
-  }
-  override def op(f: Node => Unit) = {
-    f(this)
-    children.values.foreach(n => n.op(f))
-  }
-  override def clearDirtyFlags() = {
-    dirty = false
-    structDirty = false
+    _children += (ch.key -> ch)
   }
 }
 
@@ -115,6 +83,46 @@ case class RootNode() extends ContainerNode(null) {
   override def name = "ROOT"
   override def displayName = name
   override def key = null
+  def diff(rn:RootNode):(Iterable[Node],Iterable[Node])={
+    val toUpdate= new MutableList[Node]
+    val toRefresh= new MutableList[Node]
+    def visitContainer(cn:ContainerNode, cn1:ContainerNode):Unit={
+      var children = collection.immutable.ListMap[NodeKey, Node]()
+      var hasNew = false
+
+      cn1.children.foreach(p =>
+        cn.children.get(p._1) match {
+          case Some(n) =>
+             visitNode(n, p._2)
+             children += (p._1-> n)
+           case None =>
+             hasNew =true
+             children += (p._1-> p._2)
+        }
+        )
+        if(children.size != cn.children.size)
+          hasNew = true
+        if(hasNew )
+          toUpdate += cn
+        cn.children = children
+      }
+
+    def visitNode(n:Node, n1:Node)= {
+      if(n <= n1)
+           toRefresh += n
+      n match {
+        case cn:ContainerNode =>
+          n1 match {
+            case cn1:ContainerNode =>
+              visitContainer(cn, cn1)
+            case _ =>
+          }
+        case _ =>
+      }
+    }
+    visitContainer(this, rn)
+    (toUpdate,toRefresh)
+  }
 }
 
 case class MethodKey(name: String, pList: List[List[String]] = List()) extends NodeKey
@@ -122,6 +130,16 @@ case class MethodNode(name: String, parent: ContainerNode, val argTypes: List[Li
     extends Node(true) with HasModifiers with HasReturnType {
   override def displayName = name
   override def key = MethodKey(name, argTypes)
+  override def <= (n:Node):Boolean={
+    val b =super.<=(n)
+    n match {
+      case that:MethodNode =>
+        val rt= returnType
+        returnType=that.returnType
+        b || rt != returnType
+      case _ => b
+    }
+  }
 }
 
 //case class FieldKey(name: String) extends NodeKey
@@ -130,67 +148,73 @@ case class ValNode(name: String, parent: ContainerNode, rt: String)
 
   override def displayName = name
   override def key = MethodKey(name)
+  override def <= (n:Node):Boolean={
+    val b =super.<=(n)
+    n match {
+      case that:ValNode =>
+        val rt= returnType
+        returnType=that.returnType
+        b || rt != returnType
+      case _ => b
+    }
+  }
 }
 
 case class VarNode(name: String, parent: ContainerNode, rt: String)
     extends Node(true) with HasModifiers with HasReturnType {
   override def displayName = name
   override def key = MethodKey(name)
+  override def <= (n:Node):Boolean={
+    val b =super.<=(n)
+    n match {
+      case that:VarNode =>
+        val rt= returnType
+        returnType=that.returnType
+        b || rt != returnType
+      case _ => b
+    }
+  }
 }
 
-//case class ModelChangedEvent(updatedNodes:Iterable[Node], structureModifiedNodes:Iterable[Node])
 
-class ModelBuilder(comp: IScalaPresentationCompiler) extends HasLogger /*(settings: Settings) extends Global(settings, new ConsoleReporter(settings))*/ {
-  import comp._
 
-  def updateTree(rootNode: RootNode, src: SourceFile): (Iterable[Node], Iterable[Node]) = {
+object ModelBuilder extends HasLogger {
+
+  def buildTree(comp: IScalaPresentationCompiler,src:SourceFile):RootNode={
+    import comp._
     import scala.reflect.internal.Flags._
-    rootNode.op(n => n.clearDirtyFlags)
-    rootNode.op(n => n.visited = false)
     def setPos(n: Node, t: Tree) = {
       if (t.pos.isDefined) {
         n.end = t.pos.end
         n.start = t.pos.start
-      }
-      n.visited = true
-    }
-    def getOrAdd(parent: ContainerNode, key: NodeKey, f: => Node) = {
-      parent.getChildren.get(key) match {
-        case Some(node) => node
-        case None => {
-          val ch = f
-          parent.addChild(ch)
-          ch
-        }
       }
     }
     def updateTree(parent: ContainerNode, t: Tree): Unit = {
       t match {
         case Template(_, _, _) => t.children.foreach(x => updateTree(parent, x))
         case PackageDef(pid, stats) => {
-          val ch = getOrAdd(parent, PackageKey(pid.toString()), PackageNode(pid.toString(), parent))
+          val ch = PackageNode(pid.toString(), parent)
           setPos(ch, t)
+          parent.addChild(ch)
           t.children.foreach(x => updateTree(parent, x))
         }
         case ClassDef(mods, name, tpars, templ) => {
           //logger.info("ClassDef "+mods+", "+name)//+", "+tpars+", "+templ )
-          val ch = getOrAdd(parent, ClassKey(name.toString()), ClassNode(name.toString(), parent))
-          setPos(ch, t);
+          val ch = ClassNode(name.toString(), parent)
+          setPos(ch, t)
+          parent.addChild(ch)
           ch.setFlags(mods.flags)
-          t.children.foreach(x => updateTree(ch.asInstanceOf[ContainerNode], x))
+          t.children.foreach(x => updateTree(ch, x))
         }
         case `noSelfType` =>
         case ValDef(mods, name, tpt, rsh) => {
-          val ch = getOrAdd(
-            parent,
-            MethodKey(name.toString()),
-            if ((mods.flags & MUTABLE) == 0)
+          val ch =  if ((mods.flags & MUTABLE) == 0)
               ValNode(name.toString(), parent, tpt.toString())
             else
-              VarNode(name.toString(), parent, tpt.toString()))
+              VarNode(name.toString(), parent, tpt.toString())
           setPos(ch, t)
           ch.setFlags(mods.flags)
-          ch.asInstanceOf[HasModifiers].setFlags(mods.flags)
+          parent.addChild(ch)
         }
         //        case Select(qualifier: Tree, name: Name) => logger.info("Select "+qualifier+", "+name)
         //        case TypeDef(mods: Modifiers, name: TypeName, tparams: List[TypeDef], rhs: Tree) => logger.info("TypeDef "+name)
@@ -201,93 +225,33 @@ class ModelBuilder(comp: IScalaPresentationCompiler) extends HasLogger /*(settin
             def typeList = {
               vparamss.map { x => x.map { v => v.tpt.toString() } }
             }
-            val ch = getOrAdd(parent, MethodKey(name.toString(), typeList), MethodNode(name.toString(), parent, typeList))
+            val ch =  MethodNode(name.toString(), parent, typeList)
             //logger.info("DefDef " + name + ", modes=" + mods + ", tpt=" + tpt.hasSymbolField + ", " + rsh)
-            ch.asInstanceOf[HasReturnType].returnType = if (tpt.hasSymbolField) Some(tpt.toString) else None
+            ch.returnType = if (tpt.hasSymbolField) Some(tpt.toString) else None
             setPos(ch, t)
             ch.setFlags(mods.flags)
+            parent.addChild(ch)
           }
 
-        case ModuleDef(_, name, _) => {
-          val ch = getOrAdd(parent, ObjectKey(name.toString()), ObjectNode(name.toString(), parent))
+        case ModuleDef(mods, name, _) => {
+          //logger.info("ModuleDef "+name)
+          val ch =  ObjectNode(name.toString(), parent)
           setPos(ch, t)
-          t.children.foreach(x => updateTree(ch.asInstanceOf[ContainerNode], x))
+          ch.setFlags(mods.flags)
+          parent.addChild(ch)
+          t.children.foreach(x => updateTree(ch, x))
 
         }
         case DocDef(comment: DocComment, definition: Tree) => updateTree(parent, definition)
         case _ => //logger.info("_"+t.getClass)
       }
     }
+    val rootNode = new RootNode
     val t = comp.parseTree(src)
-    //comp.askParsedEntered(src, false).get.left.get
     updateTree(rootNode, t)
-    val ml = new scala.collection.mutable.MutableList[Node]()
-    rootNode.op(n => {
-      if (!n.visited) ml += n
-    })
-
-    ml.foreach { x => if (x.parent != null) x.parent.removeChild(x.key) }
-    ml.clear()
-    rootNode.op {
-      case cn: ContainerNode => if (cn.structDirty) ml += cn
-      case _ =>
-    }
-    val refreshList = new scala.collection.mutable.MutableList[Node]()
-    rootNode.op { n => if (n.dirty) refreshList += n }
-    (ml, refreshList)
+    rootNode
   }
 
-  //////////////////////
-  def printTree(ident: Int, t: Tree): Unit = {
-    def printSymbol(): String = {
-      if (t.symbol eq null) "NS<" + t.summaryString
-      else
-        t.symbol.nameString
-
-    }
-    for (i <- 0 to ident) {
-      print(" ")
-    }
-
-    println(t.getClass.getSimpleName + "(" + printSymbol + "){")
-
-    t.children.foreach(x => printTree(ident + 2, x))
-    for (i <- 0 to ident) {
-      print(" ")
-    }
-    println("}")
-
-    /*
-    t match {
-      case Template(_, _, _) => t.children.foreach(x => printTree(ident + 2, x))
-      case PackageDef(pid, stats) => {
-        println(pid)
-        t.children.foreach(x => printTree(ident + 2, x))
-      }
-      case ClassDef(mods, name, tpars, templ) => {
-
-        println("Class(" + name + ", mods=" + mods)
-        t.children.foreach(x => printTree(ident + 2, x))
-      }
-      case ValDef(mods, name, tpt, rsh) => {
-
-        println("Val(" + name + ", tpt=" + tpt + ", mods=" + mods)
-        t.children.foreach(x => printTree(ident + 2, x))
-      }
-      case DefDef(mods, name, _, _, _, _) => {
-        println("Def(" + name+", flags = "+mods)
-        t.children.foreach(x => printTree(ident + 2, x))
-      }
-      case ModuleDef(mods, name, _) => {
-        println("Object(" + name+" mods="+mods)
-        t.children.foreach(x => printTree(ident + 2, x))
-      }
-      case _ => println()
-    }
-    */
-    //println(t.symbol +": ")
-
-  }
 }
 
 

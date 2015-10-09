@@ -27,9 +27,9 @@ class ScalaLabelProvider extends ILabelProvider{
     val reg = ScalaPlugin().imageDescriptorRegistry
     o match {
       case n:ClassNode => if(n.isTrait) reg.get( SCALA_TRAIT) else reg.get( SCALA_CLASS)
-      case n:ValNode => if(n.isPrivate) reg.get( PRIVATE_VAL) else if(n.isProtected) reg.get(PRIVATE_VAL) else reg.get(PUBLIC_VAL)
-      case n:VarNode => if(n.isPrivate) reg.get( PRIVATE_VAR) else if(n.isProtected) reg.get(PRIVATE_VAR) else reg.get(PUBLIC_VAR)
-      case n:MethodNode => if(n.isPrivate) reg.get( PRIVATE_DEF) else if(n.isProtected) reg.get(PRIVATE_DEF) else reg.get(PUBLIC_DEF)
+      case n:ValNode => if(n.isPrivate) reg.get( PRIVATE_VAL) else if(n.isProtected) reg.get(PROTECTED_VAL) else reg.get(PUBLIC_VAL)
+      case n:VarNode => if(n.isPrivate) reg.get( PRIVATE_VAR) else if(n.isProtected) reg.get(PROTECTED_VAR) else reg.get(PUBLIC_VAR)
+      case n:MethodNode => if(n.isPrivate) reg.get( PRIVATE_DEF) else if(n.isProtected) reg.get(PROTECTED_DEF) else reg.get(PUBLIC_DEF)
       case n:ObjectNode => reg.get(SCALA_OBJECT)
       case n:PackageNode => reg.get(PACKAGE)
       case _ => null
@@ -53,7 +53,7 @@ class ScalaLabelProvider extends ILabelProvider{
         sb.append(")")
         })
     }
-    val u = System.currentTimeMillis()
+    val u = ""//System.currentTimeMillis()
     o match {
       case c:PackageNode => c.displayName+ " "+u
       case c:ClassNode => c.displayName+ " "+u
