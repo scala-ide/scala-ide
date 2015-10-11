@@ -24,7 +24,7 @@ class Statistics {
   def data: Seq[FeatureData] = cache.values.toList
   def startOfStats: Long = firstStat
 
-  def incUses(feature: Feature, numToInc: Int = 1): Unit = {
+  def incUsageCounter(feature: Feature, numToInc: Int = 1): Unit = {
     val stat = cache.getOrElse(feature, FeatureData(feature, 0, System.currentTimeMillis))
     cache += feature → stat.copy(nrOfUses = stat.nrOfUses + numToInc, lastUsed = System.currentTimeMillis)
 
@@ -74,8 +74,8 @@ object Features {
   import Groups._
 
   case class Feature(id: String)(val description: String, val group: Group) {
-    def incUses(numToInc: Int = 1): Unit =
-      ScalaPlugin().statistics.incUses(this, numToInc)
+    def incUsageCounter(numToInc: Int = 1): Unit =
+      ScalaPlugin().statistics.incUsageCounter(this, numToInc)
   }
   object ExplicitReturnType extends Feature("ExplicitReturnType")("Add explicit return type", QuickAssist)
   object InlineLocalValue extends Feature("InlineLocalValue")("Inline local value", QuickAssist)

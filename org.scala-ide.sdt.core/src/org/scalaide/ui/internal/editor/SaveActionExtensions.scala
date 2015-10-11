@@ -246,7 +246,7 @@ trait SaveActionExtensions extends HasLogger {
       return
 
     val feature = Feature(setting.id)(setting.name, Groups.SaveAction)
-    feature.incUses()
+    feature.incUsageCounter()
 
     val sf = lastSourceFile.lastSourceMap().sourceFile
     val len = udoc.getLength()

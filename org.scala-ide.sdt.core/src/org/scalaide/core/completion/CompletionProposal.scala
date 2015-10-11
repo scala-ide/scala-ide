@@ -217,7 +217,7 @@ case class CompletionProposal(
         if (!needImport)
           Nil
         else {
-          val refactoring = new AddImportStatement { val global = compiler }
+          val refactoring = new AddImportStatement { override val global = compiler }
           refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
         }
 
@@ -227,8 +227,8 @@ case class CompletionProposal(
         && explicitParamNames.flatten.nonEmpty)
 
       val charactersAdded = completionFullString.length-(offset-startPos)
-      ScalaPlugin().statistics.incUses(CharactersSaved, numToInc = charactersAdded)
-      importStmt foreach (_ ⇒ ScalaPlugin().statistics.incUses(ImportMissingMember))
+      ScalaPlugin().statistics.incUsageCounter(CharactersSaved, numToInc = charactersAdded)
+      importStmt foreach (_ ⇒ ScalaPlugin().statistics.incUsageCounter(ImportMissingMember))
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring

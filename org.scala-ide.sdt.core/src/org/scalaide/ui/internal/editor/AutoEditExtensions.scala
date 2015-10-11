@@ -210,7 +210,7 @@ trait AutoEditExtensions extends HasLogger {
     val id = autoEdit.setting.id
 
     val feature = Feature(id)(autoEdit.setting.name, Groups.AutoEdit)
-    feature.incUses()
+    feature.incUsageCounter()
 
     handlers find (_ isDefinedAt change) flatMap { handler =>
       EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'.") {

@@ -121,7 +121,7 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
-    ScalaPlugin().statistics.incUses(CodeAssist)
+    ScalaPlugin().statistics.incUsageCounter(CodeAssist)
 
     val showOnlyTooltips = context == CompletionContext.NewContext || context == CompletionContext.ApplyContext
 

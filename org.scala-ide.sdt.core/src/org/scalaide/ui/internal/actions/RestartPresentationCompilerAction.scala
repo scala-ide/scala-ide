@@ -7,7 +7,7 @@ import org.scalaide.core.internal.statistics.Features
 
 class RestartPresentationCompilerAction extends AbstractPopupAction {
   override def performAction(project: IProject): Unit = {
-    ScalaPlugin().statistics.incUses(Features.RestartPresentationCompiler)
+    ScalaPlugin().statistics.incUsageCounter(Features.RestartPresentationCompiler)
 
     val scalaProject = IScalaPlugin().asScalaProject(project)
     scalaProject foreach (_.presentationCompiler.askRestart())

@@ -40,7 +40,7 @@ abstract class BasicCompletionProposal(val feature: Feature, relevance: Int, dis
   override def getContextInformation(): IContextInformation = null
 
   final override def apply(doc: IDocument): Unit = {
-    ScalaPlugin().statistics.incUses(feature)
+    ScalaPlugin().statistics.incUsageCounter(feature)
     applyProposal(doc)
   }
 
