@@ -98,7 +98,9 @@ class ScalaSourceFileEditor
     }
 
     override def aboutToBeReconciled() = ()
-    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {      getInteractiveCompilationUnit() match {        case scu: ScalaCompilationUnit => exts foreach { ext =>
+    override def reconciled(ast: CompilationUnit, forced: Boolean, progressMonitor: IProgressMonitor) = {
+      getInteractiveCompilationUnit() match {
+        case scu: ScalaCompilationUnit => exts foreach { ext =>
           EclipseUtils.withSafeRunner(s"Error occurred while executing '${nameOf(ext)}'") {
             ext(scu)
           }

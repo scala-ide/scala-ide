@@ -123,7 +123,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   /** A LRU cache of class loaders for Scala builders */
   lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
-  /** eventually scala plugin should have its own image description registry */
+  // TODO: eventually scala plugin should have its own image description registry
   lazy val imageDescriptorRegistry = JavaPlugin.getImageDescriptorRegistry
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]

@@ -15,6 +15,9 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.javaeditor.JavaEditorMessages
 import org.scalaide.logging.HasLogger
 
+/**
+ * The content outline page of the scala editor. Based on  org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage.
+ */
 class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlinePage with HasLogger {
   import org.eclipse.jface.viewers.ViewerComparator
   import org.eclipse.jface.viewers.Viewer
@@ -23,6 +26,7 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
       def cn(e: AnyRef): (Int, String) = e match {
         case n: PackageNode => (0, n.name)
         case n: ContainerNode => (1, n.name)
+        case n: TypeNode => (1, n.name)
         case n: Node => (2, n.name)
         case _ => (3, "")
       }
@@ -41,15 +45,16 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
   }
   private var input: Object = null
   var fOpenAndLinkWithEditorHelper: org.eclipse.ui.OpenAndLinkWithEditorHelper = _
-  class LexicalSortingAction extends Action {
-    PlatformUI.getWorkbench().getHelpSystem().setHelp(this, IJavaHelpContextIds.LEXICAL_SORTING_OUTLINE_ACTION);
-    setText("Sort");
-    JavaPluginImages.setLocalImageDescriptors(this, "alphab_sort_co.gif"); //$NON-NLS-1$
-    setToolTipText("Sort");
-    setDescription("Enable Sort");
 
-    val checked = JavaPlugin.getDefault().getPreferenceStore().getBoolean("LexicalSortingAction.isChecked"); //$NON-NLS-1$
-    valueChanged(checked, false);
+  class LexicalSortingAction extends Action {
+    PlatformUI.getWorkbench().getHelpSystem().setHelp(this, IJavaHelpContextIds.LEXICAL_SORTING_OUTLINE_ACTION)
+    setText("Sort")
+    JavaPluginImages.setLocalImageDescriptors(this, "alphab_sort_co.gif")
+    setToolTipText("Sort")
+    setDescription("Enable Sort")
+
+    val checked = JavaPlugin.getDefault().getPreferenceStore().getBoolean("LexicalSortingAction.isChecked")
+    valueChanged(checked, false)
     override def run() = {
       valueChanged(isChecked, true)
     }
@@ -61,16 +66,17 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
         getTreeViewer.setComparator(new ScalaComparator)
     }
   }
+
   override def createControl(parent: Composite) = {
 
-    super.createControl(parent);
+    super.createControl(parent)
 
     val viewer = getTreeViewer()
-    viewer.setContentProvider(new ScalaContentProvider());
-    viewer.setLabelProvider(new ScalaLabelProvider());
-    viewer.addSelectionChangedListener(this);
+    viewer.setContentProvider(new ScalaContentProvider())
+    viewer.setLabelProvider(new ScalaLabelProvider())
+    viewer.addSelectionChangedListener(this)
     if (input != null)
-      viewer.setInput(input);
+      viewer.setInput(input)
     fOpenAndLinkWithEditorHelper = new org.eclipse.ui.OpenAndLinkWithEditorHelper(viewer) {
 
       override def activate(selection: ISelection) = {
@@ -79,21 +85,21 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
       }
 
       override def linkToEditor(selection: ISelection) = {
-        fEditor.doSelectionChanged(selection);
+        fEditor.doSelectionChanged(selection)
 
       }
 
       override def open(selection: ISelection, activate: Boolean) = {
-        fEditor.doSelectionChanged(selection);
+        fEditor.doSelectionChanged(selection)
         if (activate)
-          getSite().getPage().activate(fEditor);
+          getSite().getPage().activate(fEditor)
       }
 
-    };
+    }
     fOpenAndLinkWithEditorHelper.setLinkWithEditor(true)
-    val site = getSite();
-    val actionBars = site.getActionBars();
-    registerToolbarActions(actionBars);
+    val site = getSite()
+    val actionBars = site.getActionBars()
+    registerToolbarActions(actionBars)
   }
 
   def registerToolbarActions(actionBars: IActionBars) = {
@@ -109,23 +115,26 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
     this.input = input
     update()
   }
+
   def getInput: RootNode = input.asInstanceOf[RootNode]
   /**
    * Updates the outline page.
    */
+
   def update(): Unit = {
-    val viewer = getTreeViewer();
+    val viewer = getTreeViewer()
 
     if (viewer != null) {
-      val control = viewer.getControl();
+      val control = viewer.getControl()
       if (control != null && !control.isDisposed()) {
-        control.setRedraw(false);
-        viewer.setInput(input);
-        viewer.expandAll();
-        control.setRedraw(true);
+        control.setRedraw(false)
+        viewer.setInput(input)
+        viewer.expandAll()
+        control.setRedraw(true)
       }
     }
   }
+
   def update(delta: (Iterable[Node], Iterable[Node])) = {
     val viewer = getTreeViewer()
     delta._1.foreach(n => viewer.refresh(n, false))
