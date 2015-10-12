@@ -6,6 +6,13 @@ import java.io.IOException
 
 import org.scalaide.util.eclipse.EclipseUtils
 
+/**
+ * Contains definitions that provide access to the Scala IDE data store. The
+ * data store is persisted on disk at any location the user has defined and can
+ * be used by every feature in the IDE to persist data that should be available
+ * between multiple startups of the IDE or even between multiple instances of
+ * the IDE running at the same time.
+ */
 object ScalaIdeDataStore {
 
   private val userHome = System.getProperty("user.home")
@@ -42,14 +49,13 @@ object ScalaIdeDataStore {
   def extensionsOutputDirectory: String =
     s"$dataStoreLocation${sep}classes"
 
-  def write[A](location: String)(f: File ⇒ A): Option[A] = {
-    EclipseUtils.withSafeRunner(s"Error while writing to data store file '$location'") {
-      f(validateFile(location))
-    }
-  }
-
-  def read[A](location: String)(f: File ⇒ A): Option[A] = {
-    EclipseUtils.withSafeRunner(s"Error while reading from data store file '$location'") {
+  /**
+   * Takes an absolute path as `location` and calls `f` with a file that
+   * represents `location` if the path is valid. The return value of `f` is
+   * returned in this case, otherwise `f` is not called and `None` is returned.
+   */
+  def validate[A](location: String)(f: File ⇒ A): Option[A] = {
+    EclipseUtils.withSafeRunner(s"Error while trying to access data store file '$location'.") {
       f(validateFile(location))
     }
   }

@@ -8,8 +8,7 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextSelection
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.core.internal.statistics.Features.CharactersSaved
-import org.scalaide.core.internal.statistics.Features.ImportMissingMember
+import org.scalaide.core.internal.statistics.Features
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.eclipse.TextEditUtils
@@ -227,8 +226,8 @@ case class CompletionProposal(
         && explicitParamNames.flatten.nonEmpty)
 
       val charactersAdded = completionFullString.length-(offset-startPos)
-      ScalaPlugin().statistics.incUsageCounter(CharactersSaved, numToInc = charactersAdded)
-      importStmt foreach (_ ⇒ ScalaPlugin().statistics.incUsageCounter(ImportMissingMember))
+      Features.CharactersSaved.incUsageCounter(numToInc = charactersAdded)
+      Features.ImportMissingMember.incUsageCounter(numToInc = importStmt.size)
 
       // Apply the two changes in one step, if done separately we would need an
       // another `waitLoadedType` to update the positions for the refactoring

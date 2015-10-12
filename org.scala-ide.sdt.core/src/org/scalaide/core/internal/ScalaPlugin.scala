@@ -129,6 +129,7 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   private lazy val stats = new Statistics
 
+  /** Returns the statistics tracker. */
   def statistics = stats
 
   override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {

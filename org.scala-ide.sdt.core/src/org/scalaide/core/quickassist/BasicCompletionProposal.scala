@@ -25,11 +25,11 @@ import org.scalaide.core.internal.statistics.Features._
 abstract class BasicCompletionProposal(val feature: Feature, relevance: Int, displayString: String, image: Image = null)
     extends IJavaCompletionProposal {
 
-  @deprecated("use primary constructor instead", "4.1")
+  @deprecated("use primary constructor instead", "4.3")
   def this(relevance: Int, displayString: String) =
     this(NotSpecified, relevance, displayString, null)
 
-  @deprecated("use primary constructor instead", "4.1")
+  @deprecated("use primary constructor instead", "4.3")
   def this(relevance: Int, displayString: String, image: Image) =
     this(NotSpecified, relevance, displayString, image)
 

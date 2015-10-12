@@ -13,6 +13,9 @@ import com.cedarsoftware.util.io.JsonWriter
 
 import Features._
 
+/**
+ * Contains all definitions that belong to the statistics tracker.
+ */
 class Statistics {
 
   private var firstStat = 0L
@@ -21,18 +24,26 @@ class Statistics {
 
   readStats()
 
-  def data: Seq[FeatureData] = cache.values.toList
-  def startOfStats: Long = firstStat
+  /** Returns the internal data structure of the statistics tracker. */
+  private[scalaide] def data: Seq[FeatureData] = cache.values.toList
+  /** Returns the timestamp where statistics tracking has been started. */
+  private[scalaide] def startOfStats: Long = firstStat
 
+  /**
+   * Increments the usage counter of `feature` by `numToInc`. The usage counter
+   * is the number of times the feature has already been used.
+   */
   def incUsageCounter(feature: Feature, numToInc: Int = 1): Unit = {
-    val stat = cache.getOrElse(feature, FeatureData(feature, 0, System.currentTimeMillis))
-    cache += feature → stat.copy(nrOfUses = stat.nrOfUses + numToInc, lastUsed = System.currentTimeMillis)
+    if (numToInc > 0) {
+      val stat = cache.getOrElse(feature, FeatureData(feature, 0, System.currentTimeMillis))
+      cache += feature → stat.copy(nrOfUses = stat.nrOfUses + numToInc, lastUsed = System.currentTimeMillis)
 
-    writeStats()
+      writeStats()
+    }
   }
 
   private def readStats(): Unit = {
-    ScalaIdeDataStore.read(ScalaIdeDataStore.statisticsLocation) { file ⇒
+    ScalaIdeDataStore.validate(ScalaIdeDataStore.statisticsLocation) { file ⇒
       val stats = read(file)
       firstStat = stats.firstStat
       cache = stats.featureData.map(stat ⇒ stat.feature → stat)(collection.breakOut)
@@ -43,7 +54,7 @@ class Statistics {
     if (firstStat == 0) firstStat = System.currentTimeMillis
     val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
-    ScalaIdeDataStore.write(ScalaIdeDataStore.statisticsLocation) { file ⇒
+    ScalaIdeDataStore.validate(ScalaIdeDataStore.statisticsLocation) { file ⇒
       write(file, stats)
     }
   }
@@ -60,6 +71,7 @@ class Statistics {
 }
 
 object Groups {
+  /** Specifies to which group a [[Features.Feature]] belongs to. */
   abstract class Group(val description: String)
   object Miscellaneous extends Group("Miscellaneous")
   object QuickAssist extends Group("Quick Assist")
@@ -73,10 +85,23 @@ object Groups {
 object Features {
   import Groups._
 
+  /**
+   * Every feature of the IDE that should be tracked by the statistics tracker
+   * needs to be represented by this class. `id` is a unique identifier for the
+   * feature, `description` is a short text that can be shown to users to
+   * explain what exactly a feature is doing and `group` specifies to which
+   * group a feature belongs.
+   */
   case class Feature(id: String)(val description: String, val group: Group) {
+
+    /**
+     * Increments the usage counter of this feature by `numToInc`. The usage
+     * counter is the number of times the feature has already been used.
+     */
     def incUsageCounter(numToInc: Int = 1): Unit =
       ScalaPlugin().statistics.incUsageCounter(this, numToInc)
   }
+
   object ExplicitReturnType extends Feature("ExplicitReturnType")("Add explicit return type", QuickAssist)
   object InlineLocalValue extends Feature("InlineLocalValue")("Inline local value", QuickAssist)
   object ExpandCaseClassBinding extends Feature("ExpandCaseClassBinding")("Expand case class binding", QuickAssist)
@@ -115,5 +140,5 @@ object Features {
   object AutoAddStripMargin extends Feature("AutoAddStripMargin")("Automatically add strip margins when multi line string starts with a |", Editing)
 }
 
-final case class StatData(firstStat: Long, featureData: Array[FeatureData])
-final case class FeatureData(feature: Feature, nrOfUses: Int, lastUsed: Long)
+private[scalaide] final case class StatData(firstStat: Long, featureData: Array[FeatureData])
+private[scalaide] final case class FeatureData(feature: Feature, nrOfUses: Int, lastUsed: Long)
