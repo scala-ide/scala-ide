@@ -22,7 +22,8 @@ import org.scalaide.core.internal.statistics.Features._
  *        An image shown beside the `displayString`. If this is `null` no image
  *        is shown.
  */
-abstract class BasicCompletionProposal(val feature: Feature, relevance: Int, displayString: String, image: Image = null) extends IJavaCompletionProposal {
+abstract class BasicCompletionProposal(val feature: Feature, relevance: Int, displayString: String, image: Image = null)
+    extends IJavaCompletionProposal {
 
   @deprecated("use primary constructor instead", "4.1")
   def this(relevance: Int, displayString: String) =
@@ -39,7 +40,9 @@ abstract class BasicCompletionProposal(val feature: Feature, relevance: Int, dis
   override def getImage(): Image = image
   override def getContextInformation(): IContextInformation = null
 
-  final override def apply(doc: IDocument): Unit = {
+  /** Override [[applyProposal]] instead. */
+  // TODO make final after source compatibility with 4.3 is dropped.
+  /*final*/ override def apply(doc: IDocument): Unit = {
     ScalaPlugin().statistics.incUsageCounter(feature)
     applyProposal(doc)
   }
