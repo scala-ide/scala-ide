@@ -1,11 +1,12 @@
 package org.scalaide.ui.internal.editor.autoedits
 
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
+import org.scalaide.core.internal.statistics.Features
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /**
  * Applies several auto edit actions if one adds ore removes a sign inside of
@@ -13,7 +14,7 @@ import org.eclipse.jface.text.TextUtilities
  */
 class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) extends IAutoEditStrategy {
 
-  def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
+  override def customizeDocumentCommand(document: IDocument, command: DocumentCommand): Unit = {
 
     val isAutoEscapeLiteralEnabled = prefStore.getBoolean(
         EditorPreferencePage.P_ENABLE_AUTO_ESCAPE_LITERALS)
@@ -40,15 +41,19 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
         """btnfr"'\""".contains(document.getChar(command.offset + i))
 
       if (ch(-1, '\\') && isEscapeSequence(0)) {
+        Features.AutoRemoveEscapedSign.incUsageCounter()
         command.length = 2
         command.offset -= 1
       } else if (ch(0, '\\') && isEscapeSequence(1)) {
         if (ch(1, '"')) {
           if (isStringTerminated) {
+            Features.AutoRemoveEscapedSign.incUsageCounter()
             command.length = 2
           }
-        } else
+        } else {
+          Features.AutoRemoveEscapedSign.incUsageCounter()
           command.length = 2
+        }
       }
     }
 
@@ -61,6 +66,7 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
       if (ch(0, '"') && ch(-1, '"') && !ch(-2, '\\'))
         jumpOverClosingLiteral()
       else if (isAutoEscapeLiteralEnabled && isStringTerminated) {
+        Features.AutoEscapeLiterals.incUsageCounter()
         if (ch(-1, '\\')) {
           if (ch(-2, '\\'))
             command.text = "\\\""
@@ -70,6 +76,7 @@ class StringAutoEditStrategy(partitioning: String, prefStore: IPreferenceStore) 
     }
 
     def handleEscapeSign(): Unit = {
+      Features.AutoEscapeBackslashes.incUsageCounter()
       if (ch(-1, '\\')) {
         if (ch(-2, '\\'))
           command.text = "\\\\"

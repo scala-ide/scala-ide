@@ -4,6 +4,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IAutoEditStrategy
 import org.eclipse.jface.text.IDocument
+import org.scalaide.core.internal.statistics.Features
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /**
@@ -43,6 +44,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
 
     def removeEscapedSign(): Unit = {
       if (ch(-1, '\\')) {
+        Features.AutoRemoveEscapedSign.incUsageCounter()
         command.length = 2
         command.offset -= 1
       }
@@ -61,6 +63,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def handleEscapeSign(): Unit = {
+      Features.AutoEscapeBackslashes.incUsageCounter()
       if (!ch(-1, '\\')) {
         command.text = "\\\\"
       }

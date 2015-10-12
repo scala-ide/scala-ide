@@ -105,6 +105,14 @@ object Features {
   object SplitParameterLists extends Feature("SplitParameterLists")("Split parameter lists", Refactoring)
   object MergeParameterLists extends Feature("MergeParameterLists")("Merge parameter lists", Refactoring)
   object ChangeParameterOrder extends Feature("ChangeParameterOrder")("Change parameter order", Refactoring)
+  object AutoClosingComments extends Feature("AutoClosingComments")("Automatically close multi line comments and Scaladoc", Editing)
+  object AutoEscapeLiterals extends Feature("AutoEscapeLiterals")("Automatically escape \" signs in string literals", Editing)
+  object AutoEscapeBackslashes extends Feature("AutoEscapeBackslashes")("Automatically escape \\ signs in string and character literals", Editing)
+  object AutoRemoveEscapedSign extends Feature("AutoRemoveEscapedSign")("Automatically remove complete escaped sign in string and character literals", Editing)
+  object AutoBreakComments extends Feature("AutoBreakComments")("Automatically break multi-line comments and Scaladoc after the Print Margin", Editing)
+  object AutoIndentOnTab extends Feature("AutoIndentOnTab")("Automatically indent when tab is pressed", Editing)
+  object AutoIndentMultiLineStrings extends Feature("AutoIndentMultiLineStrings")("Automatically indent in multi line string literals", Editing)
+  object AutoAddStripMargin extends Feature("AutoAddStripMargin")("Automatically add strip margins when multi line string starts with a |", Editing)
 }
 
 final case class StatData(firstStat: Long, featureData: Array[FeatureData])
