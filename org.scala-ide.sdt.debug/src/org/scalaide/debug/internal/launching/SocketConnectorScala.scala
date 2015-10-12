@@ -82,5 +82,8 @@ trait SocketConnectorScala extends IVMConnector {
     arguments
   }
 
-
+  def extractProjectClasspath(params: Map[String, String]): Option[Seq[String]] = {
+    import ScalaRemoteApplicationLaunchConfigurationDelegate._
+    params.get(DebugeeProjectClasspath).map { _.split(DebugeeProjectClasspathSeparator).toSeq }
+  }
 }
