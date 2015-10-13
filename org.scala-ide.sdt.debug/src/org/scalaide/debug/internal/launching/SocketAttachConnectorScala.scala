@@ -16,6 +16,7 @@ import org.scalaide.debug.internal.model.ScalaDebugTarget
 import java.io.IOException
 import com.sun.jdi.connect.TransportTimeoutException
 import org.eclipse.jdi.TimeoutException
+import org.eclipse.debug.core.ILaunchConfiguration
 
 /**
  * Attach connector creating a Scala debug session.
@@ -27,7 +28,7 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
   override def connector(): AttachingConnector = {
     import scala.collection.JavaConverters._
     Bootstrap.virtualMachineManager().attachingConnectors().asScala.find(_.name() == SocketAttachName).getOrElse(
-        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI AttachingConnector", null))
+      throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI AttachingConnector", null))
   }
 
   // from org.eclipse.jdt.launching.IVMConnector
@@ -42,13 +43,14 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
   override def getName(): String = "Scala debugger (Socket Attach)"
 
   override def connect(params: JMap[String, String], monitor: IProgressMonitor, launch: ILaunch): Unit = {
-
+    import scala.collection.JavaConverters._
     val arguments = generateArguments(params)
 
     try {
       // connect and create the debug session
       val virtualMachine = connector.attach(arguments)
-      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true, allowTerminate = allowTerminate(launch))
+      val target = ScalaDebugTarget(virtualMachine, launch, null, allowDisconnect = true,
+        allowTerminate = allowTerminate(launch), extractProjectClasspath(params.asScala.toMap))
       target.attached() // tell the debug target to initialize
     } catch {
       case e: TimeoutException =>
@@ -57,7 +59,4 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
         throw ScalaDebugPlugin.wrapInCoreException("Unable to connect to the remote VM", e)
     }
   }
-
-  // ------------
-
 }
