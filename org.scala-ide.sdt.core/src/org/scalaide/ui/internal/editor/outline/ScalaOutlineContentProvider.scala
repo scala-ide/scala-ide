@@ -1,12 +1,9 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.internal.editor.outline
 import org.eclipse.jface.viewers.ITreeContentProvider
 import org.eclipse.jface.viewers.Viewer
 
 
-
-
-
-class ScalaContentProvider extends ITreeContentProvider {
+class ScalaOutlineContentProvider extends ITreeContentProvider {
 
   val NONODES = new Array[Object](0)
 

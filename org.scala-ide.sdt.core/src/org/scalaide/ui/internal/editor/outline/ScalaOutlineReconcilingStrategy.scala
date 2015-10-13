@@ -1,4 +1,4 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.internal.editor.outline
 
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.scalaide.util.ui.DisplayThread
 
-class ScalaOutlineReconcilingStrategy(icuEditor: ScalaSourceFileEditor) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
+class ScalaOutlineReconcilingStrategy(icuEditor: OutlinePageEditorExtension) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
   private def icUnit = icuEditor.getInteractiveCompilationUnit()
 
   override def setDocument(doc: IDocument): Unit = {}

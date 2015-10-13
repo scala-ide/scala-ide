@@ -1,24 +1,21 @@
-package org.scalaide.ui.internal.editor
+package org.scalaide.ui.internal.editor.outline
 import org.eclipse.ui.views.contentoutline.ContentOutlinePage
 import org.eclipse.swt.widgets.Composite
-import org.eclipse.jface.viewers.ISelectionChangedListener
-import org.eclipse.jface.viewers.SelectionChangedEvent
-import org.eclipse.jface.viewers.ISelection
 import org.eclipse.ui.IActionBars
 import org.eclipse.jdt.internal.ui.actions.CollapseAllAction
 import org.eclipse.ui.handlers.CollapseAllHandler
 import org.eclipse.jface.action.Action
+import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.JavaEditorMessages
 import org.scalaide.logging.HasLogger
 
 /**
  * The content outline page of the scala editor. Based on  org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage.
  */
-class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlinePage with HasLogger {
+class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentOutlinePage with HasLogger {
   import org.eclipse.jface.viewers.ViewerComparator
   import org.eclipse.jface.viewers.Viewer
   class LexicalComparator extends ViewerComparator {
@@ -72,8 +69,8 @@ class ScalaOutlinePage(val fEditor: ScalaSourceFileEditor) extends ContentOutlin
     super.createControl(parent)
 
     val viewer = getTreeViewer()
-    viewer.setContentProvider(new ScalaContentProvider())
-    viewer.setLabelProvider(new ScalaLabelProvider())
+    viewer.setContentProvider(new ScalaOutlineContentProvider())
+    viewer.setLabelProvider(new ScalaOutlineLabelProvider())
     viewer.addSelectionChangedListener(this)
     if (input != null)
       viewer.setInput(input)

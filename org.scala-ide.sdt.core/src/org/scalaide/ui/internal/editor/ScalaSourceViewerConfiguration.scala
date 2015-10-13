@@ -61,6 +61,7 @@ import org.scalaide.core.lexical.ScalaCodeScanners
 import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconciler
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineReconcilingStrategy
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
