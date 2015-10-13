@@ -52,13 +52,12 @@ trait SurroundBlock extends AutoEdit {
       case Add(start, "{") =>
         surroundLocation(start) map {
           case (pos, indentLen, token) =>
-            val sep = System.getProperty("line.separator")
             val indent = " " * indentLen
 
             val change = if (elseLikeTokens(token.tokenType))
               Replace(start, pos + indentLen, s"{${document.textRange(start, pos)}$indent} ")
             else
-              Replace(start, pos, s"{${document.textRange(start, pos)}$indent}$sep")
+              Replace(start, pos, s"{${document.textRange(start, pos)}$indent}${document.defaultLineDelimiter}")
             change.withCursorPos(start+1)
         }
     }
