@@ -39,6 +39,15 @@ trait Document {
   def last: Char
 
   def lastOpt: Option[Char]
+
+  /**
+   * This is either the delimiter of the first line, the platform line delimiter
+   * if it is a legal line delimiter or the first one of the legal line
+   * delimiters. The default line delimiter should be used when performing
+   * document manipulations that span multiple lines. The legal line delimiters
+   * usually are "\r", "\n" and "\r\n".
+   */
+  def defaultLineDelimiter: String
 }
 
 private[core] trait InternalDocument extends Document {
