@@ -214,8 +214,11 @@ case class CompletionProposal(
         if (!needImport)
           Nil
         else {
-          val refactoring = new AddImportStatement { val global = compiler }
-          refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+          import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+          compiler.asyncExec {
+            val refactoring = new AddImportStatement { override val global = compiler }
+            refactoring.addImport(scalaSourceFile.file, fullyQualifiedName)
+          }.getOrElse(Nil)()
         }
 
       val applyLinkedMode =
