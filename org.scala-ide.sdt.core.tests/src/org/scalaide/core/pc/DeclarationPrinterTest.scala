@@ -95,11 +95,13 @@ class DeclarationPrinterTest {
       """import java.io._
          private val target1: java.io.File
          protected[pack] val target2: (Int, String)
+         private[pack] val target3: java.io.File
          private[this] object targetObj
          protected def targetM[A, B <: Option[File]](x: B)(y: File*): File
         """,
       List("private val target1: File",
-        "protected[package pack] val target2: (Int, String)",
+        "protected[pack] val target2: (Int, String)",
+        "private[pack] val target3: File",
         "private[this] object targetObj",
         "protected def targetM[A, B <: Option[File]](x: B)(y: File*): File"))
   }
