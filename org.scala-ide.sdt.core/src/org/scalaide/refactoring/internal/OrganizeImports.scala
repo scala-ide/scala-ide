@@ -244,6 +244,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
           case ExpandImports => List(refactoring.ExpandImports)
           case CollapseImports => List(refactoring.CollapseImports, refactoring.SortImportSelectors)
           case PreserveExistingGroups => Nil // this is not passed as an option
+          case PreserveWildcards => List(refactoring.ExpandImports)
         }
 
         val wildcards = refactoring.AlwaysUseWildcards(getWildcardImportsForProject(project).toSet)
@@ -263,7 +264,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
         if(compilationUnitHasProblems) {
           // this is safer when there are problems in the compilation unit
           refactoring.Dependencies.RemoveUnneeded
-        } else if (organizationStrategy == PreserveExistingGroups) {
+        } else if (organizationStrategy == PreserveExistingGroups || organizationStrategy == PreserveWildcards) {
           // preserve the existing grouping of imports, but still remove all unneeded ones
           refactoring.Dependencies.RecomputeAndModify
         } else {
