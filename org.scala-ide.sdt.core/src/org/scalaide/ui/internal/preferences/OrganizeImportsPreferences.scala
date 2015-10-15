@@ -72,9 +72,10 @@ class OrganizeImportsPreferencesPage extends FieldEditors {
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       val options = Array(
-          Array("one import statement per importee", ExpandImports.toString),
-          Array("collapse into single import statement", CollapseImports.toString),
-          Array("preserve existing groups", PreserveExistingGroups.toString)
+          Array("One import statement per importee", ExpandImports.toString),
+          Array("Collapse into single import statement", CollapseImports.toString),
+          Array("Preserve existing groups", PreserveExistingGroups.toString),
+          Array("Preserve only wildcards; one import statement per importee otherwise", PreserveWildcards.toString)
       )
       new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 1, options, parent, true) {
         allEnableDisableControls += getRadioBoxControl(parent)
@@ -131,6 +132,7 @@ object OrganizeImportsPreferences extends Enumeration {
   val ExpandImports = Value("expand")
   val CollapseImports = Value("collapse")
   val PreserveExistingGroups = Value("preserve")
+  val PreserveWildcards = Value("preserveWildcards")
 
   val groupsKey         = "organizeimports.groups"
   val wildcardsKey      = "organizeimports.wildcards"
@@ -163,6 +165,7 @@ object OrganizeImportsPreferences extends Enumeration {
       case x if x == ExpandImports.toString => ExpandImports
       case x if x == CollapseImports.toString => CollapseImports
       case x if x == PreserveExistingGroups.toString => PreserveExistingGroups
+      case x if x == PreserveWildcards.toString => PreserveWildcards
     }
   }
 }
