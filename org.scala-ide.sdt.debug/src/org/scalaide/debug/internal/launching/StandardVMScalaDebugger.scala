@@ -16,10 +16,10 @@ import com.sun.jdi.VirtualMachine
  */
 class StandardVMScalaDebugger(vm: IVMInstall) extends StandardVMDebugger(vm) {
 
-  override def createDebugTarget(unusedConfiguration: VMRunnerConfiguration, launch: ILaunch, unusedPort: Int, process: IProcess, virtualMachine: VirtualMachine): IDebugTarget = {
+  override def createDebugTarget(runnerConfiguration: VMRunnerConfiguration, launch: ILaunch, unusedPort: Int, process: IProcess, virtualMachine: VirtualMachine): IDebugTarget = {
     ScalaDebugTarget(virtualMachine, launch, process,
       allowDisconnect = false, allowTerminate = true,
-      classPath = Some(unusedConfiguration.getClassPath))
+      classPath = Some(runnerConfiguration.getClassPath))
   }
 
 }

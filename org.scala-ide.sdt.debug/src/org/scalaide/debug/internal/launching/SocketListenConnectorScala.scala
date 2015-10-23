@@ -3,8 +3,9 @@ package org.scalaide.debug.internal.launching
 import java.io.IOException
 import java.util.{ List => JList }
 import java.util.{ Map => JMap }
-import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.scalaide.debug.internal.model.ScalaDebugTarget
+
+import scala.collection.JavaConverters
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -15,10 +16,13 @@ import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.debug.core.model.IStreamsProxy
 import org.eclipse.jdi.Bootstrap
+import org.eclipse.jdt.launching.IVMConnector
+import org.scalaide.debug.internal.ScalaDebugPlugin
+import org.scalaide.debug.internal.model.ScalaDebugTarget
+
 import com.sun.jdi.connect.Connector
 import com.sun.jdi.connect.ListeningConnector
 import com.sun.jdi.connect.TransportTimeoutException
-import org.eclipse.jdt.launching.IVMConnector
 
 /**
  * Listen connector creating a Scala debug session.
@@ -30,7 +34,7 @@ class SocketListenConnectorScala extends IVMConnector with SocketConnectorScala 
   override def connector(): ListeningConnector = {
     import scala.collection.JavaConverters._
     Bootstrap.virtualMachineManager().listeningConnectors().asScala.find(_.name() == SocketListenName).getOrElse(
-        throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI ListeningConnector", null))
+      throw ScalaDebugPlugin.wrapInCoreException("Unable to find JDI ListeningConnector", null))
   }
 
   // from org.eclipse.jdt.launching.IVMConnector
@@ -60,7 +64,7 @@ class SocketListenConnectorScala extends IVMConnector with SocketConnectorScala 
     val process = ListenForConnectionProcess(launch, port)
 
     // Start a job to wait for VM connections
-    val job = new ListenForConnectionJob(launch, process, connector(), arguments);
+    val job = new ListenForConnectionJob(launch, process, connector(), arguments, extractProjectClasspath(params.asScala.toMap))
     job.setPriority(Job.SHORT)
 
     job.schedule()
@@ -170,7 +174,8 @@ class ListenForConnectionProcess private (launch: ILaunch, port: Int) extends IP
  * Job waiting for a VM to connect.
  * If it is successful, it creates a debug target, otherwise an error message is displayed in the debug view.
  */
-class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProcess, connector: ListeningConnector, arguments: JMap[String, Connector.Argument]) extends Job("Scala debugger remote connection listener") {
+class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProcess, connector: ListeningConnector, arguments: JMap[String, Connector.Argument], projectClasspath: Option[Seq[String]])
+    extends Job("Scala debugger remote connection listener") {
   import SocketConnectorScala._
 
   // -- from org.eclipse.core.runtime.jobs.Job
@@ -181,7 +186,7 @@ class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProces
       val virtualMachine = connector.accept(arguments)
       connector.stopListening(arguments)
 
-      ScalaDebugTarget(virtualMachine, launch, null, true, allowTerminate(launch))
+      ScalaDebugTarget(virtualMachine, launch, null, true, allowTerminate(launch), projectClasspath)
 
       connectionSuccesful()
       Status.OK_STATUS

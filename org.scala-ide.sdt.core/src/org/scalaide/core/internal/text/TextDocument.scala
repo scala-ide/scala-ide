@@ -2,7 +2,7 @@ package org.scalaide.core.internal.text
 
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.Region
+import org.eclipse.jface.text.TextUtilities
 import org.scalaide.core.text.Document
 import org.scalaide.core.text.InternalDocument
 
@@ -76,6 +76,9 @@ class TextDocument(private val doc: IDocument) extends Document with InternalDoc
       Some(doc.getChar(length-1))
     else
       None
+
+  override def defaultLineDelimiter: String =
+    TextUtilities.getDefaultLineDelimiter(doc)
 
   override def toString(): String =
     text
