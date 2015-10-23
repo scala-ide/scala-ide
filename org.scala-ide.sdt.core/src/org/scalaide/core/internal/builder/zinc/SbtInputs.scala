@@ -75,7 +75,10 @@ class SbtInputs(installation: IScalaInstallation,
 
     override def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
       .distinct
-      .map(_.toFile.getAbsoluteFile).toArray
+      .map { cp ⇒
+        val location = Option(cp.toFile).flatMap(f ⇒ Option(f.getAbsoluteFile))
+        location getOrElse (throw new IllegalStateException(s"The classpath location `$cp` is invalid."))
+      }.toArray
 
     override def sources = sourceFiles.toArray
 
