@@ -54,12 +54,20 @@ sealed abstract class Node(val isLeaf: Boolean, val parent: ContainerNode) exten
   var end: Int = 0
   def displayName = name
   def key: NodeKey
-  def cp(that: Node): Boolean = {
-    start = that.start
-    end = that.end
+  /**
+   * makes this node equal to source. Returns true if any changes are visible.
+   * For example, if user just added a new line, node position (start, end) is different now. But this change is not visible, so
+   * no updates should be generated.
+   *
+   * @param src a node to make equal to
+   * @return true if any changes are visible, false otherwise
+   */
+  def update(src: Node): Boolean = {
+    start = src.start
+    end = src.end
     val f = flags
-    flags = that.flags
-    f != that.flags
+    flags = src.flags
+    f != src.flags
   }
 }
 
@@ -97,7 +105,14 @@ case class PackageNode(name: String, override val parent: ContainerNode) extends
 case class RootNode() extends ContainerNode(null) {
   override def name = "ROOT"
   override def key = null
-  def diff(rn: RootNode): (Iterable[Node], Iterable[Node]) = {
+  /**
+   * iterates through whole tree and makes it equal to src.
+   * It returns two sets of nodes- with structural changes (some node where added or removed) and content changes.
+   *
+   * @param src new generated tree
+   * @return nodes with structural and content difference.
+   */
+  def updateAll(src: RootNode): (Iterable[Node], Iterable[Node]) = {
     val toUpdate = new MutableList[Node]
     val toRefresh = new MutableList[Node]
     def visitContainer(cn: ContainerNode, cn1: ContainerNode): Unit = {
@@ -122,7 +137,7 @@ case class RootNode() extends ContainerNode(null) {
     }
 
     def visitNode(n: Node, n1: Node): Boolean = {
-      val b = n.cp(n1)
+      val b = n.update(n1)
       if (b)
         toRefresh += n
       n match {
@@ -136,7 +151,7 @@ case class RootNode() extends ContainerNode(null) {
       }
       b
     }
-    visitContainer(this, rn)
+    visitContainer(this, src)
     (toUpdate, toRefresh)
   }
 }
@@ -161,8 +176,8 @@ case class MethodNode(name: String, override val parent: ContainerNode, val argT
     sb.toString
   }
   override def key = MethodKey(name, argTypes)
-  override def cp(n: Node): Boolean = {
-    val b = super.cp(n)
+  override def update(n: Node): Boolean = {
+    val b = super.update(n)
     n match {
       case that: MethodNode =>
         val rt = returnType
@@ -178,8 +193,8 @@ case class ValNode(name: String, override val parent: ContainerNode, rt: Option[
   returnType = rt
   override def displayName = name + returnType.map(": " + _).getOrElse("")
   override def key = MethodKey(name)
-  override def cp(n: Node): Boolean = {
-    val b = super.cp(n)
+  override def update(n: Node): Boolean = {
+    val b = super.update(n)
     n match {
       case that: ValNode =>
         val rt = returnType
@@ -195,8 +210,8 @@ case class VarNode(name: String, override val parent: ContainerNode, rt: Option[
   returnType = rt
   override def displayName = name + returnType.map(": " + _).getOrElse("")
   override def key = MethodKey(name)
-  override def cp(n: Node): Boolean = {
-    val b = super.cp(n)
+  override def update(n: Node): Boolean = {
+    val b = super.update(n)
     n match {
       case that: VarNode =>
         val rt = returnType
@@ -274,6 +289,9 @@ object ModelBuilder  extends HasLogger{
             renderTuple(sb, args)
             if (dp)
               sb.append(")")
+          case "_root_.scala.<byname>" =>
+            sb.append("=> ")
+            renderType(sb, args.head, dp)
           case _ => sb.append(tt.toString)
         }
       }
@@ -408,7 +426,7 @@ object ModelBuilder  extends HasLogger{
     }
     val rootNode = new RootNode
     val t = comp.parseTree(src)
-    comp.asyncExec(updateTree(rootNode, t)).get
+    updateTree(rootNode, t)
     rootNode
   }
 

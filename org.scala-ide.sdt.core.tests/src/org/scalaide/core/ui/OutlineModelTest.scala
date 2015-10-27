@@ -50,7 +50,7 @@ class OutlineModelTest {
   }
 
   @Test
-  def testFunArg(): Unit = {
+  def testFuncArg(): Unit = {
     runTest("""package pack
                class Foo{
                 def p2= {""}
@@ -58,6 +58,8 @@ class OutlineModelTest {
                 def a(f:Int =>MyType)(implicit a:Int,  b:Long) = {}
                 def a1(f:(Int, Long) =>String) = {}
                 def a2(f:((Int, Double)) =>String) = {}
+                def a3(i:String):(Long,Int) ={(1,1)}
+                def a4(i: => (Int,Long)) ={}
                }
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
@@ -67,6 +69,8 @@ class OutlineModelTest {
       Assert.assertEquals("a(f: Int => MyType)(implicit a: Int, b: Long)", childAt(rn, 1, 3).displayName)
       Assert.assertEquals("a1(f: (Int, Long) => String)", childAt(rn, 1, 4).displayName)
       Assert.assertEquals("a2(f: ((Int, Double)) => String)", childAt(rn, 1, 5).displayName)
+      Assert.assertEquals("a3(i: String): (Long, Int)", childAt(rn, 1, 6).displayName)
+      Assert.assertEquals("a4(i: => (Int, Long))", childAt(rn, 1, 7).displayName)
     })
   }
 
@@ -85,6 +89,7 @@ class OutlineModelTest {
       Assert.assertEquals("b: Int", childAt(rn, 1, 1, 0).displayName)
             })
   }
+
   private def runTest(str: String, f: RootNode => Unit): Unit = {
     import OutlineModelTest._
     unit.scalaProject.presentationCompiler(comp => {

@@ -25,7 +25,7 @@ class ScalaOutlineReconcilingStrategy(icuEditor: OutlinePageEditorExtension) ext
       val oldRoot = sop.get.getInput
       icUnit.scalaProject.presentationCompiler.apply(comp => {
         val rootNode = ModelBuilder.buildTree(comp, icUnit.sourceMap(icuEditor.getViewer.getDocument.get.toCharArray()).sourceFile)
-        val delta = if (oldRoot != null) oldRoot.diff(rootNode) else null
+        val delta = if (oldRoot != null) oldRoot.updateAll(rootNode) else null
         DisplayThread.asyncExec(
           if (delta eq null)
             sop.get.setInput(rootNode)
