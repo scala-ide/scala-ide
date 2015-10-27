@@ -38,6 +38,6 @@ trait OutlinePageEditorExtension extends ScalaCompilationUnitEditor {
 
 }
 
-object OutlinePageEditorExtension{
+object OutlinePageEditorExtension {
   val iContentOutlinePage = classOf[org.eclipse.ui.views.contentoutline.IContentOutlinePage]
 }

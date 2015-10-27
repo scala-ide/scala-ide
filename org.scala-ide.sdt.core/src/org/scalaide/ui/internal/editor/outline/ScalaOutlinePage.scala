@@ -11,7 +11,7 @@ import org.eclipse.ui.PlatformUI
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.scalaide.logging.HasLogger
-
+import org.scalaide.core.internal.ScalaPlugin
 /**
  * The content outline page of the scala editor. Based on  org.eclipse.jdt.internal.ui.javaeditor.JavaOutlinePage.
  */
@@ -22,10 +22,11 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
     override def compare(viewer: Viewer, e1: AnyRef, e2: AnyRef): Int = {
       def cn(e: AnyRef): (Int, String) = e match {
         case n: PackageNode => (0, n.name)
-        case n: ContainerNode => (1, n.name)
-        case n: TypeNode => (1, n.name)
-        case n: Node => (2, n.name)
-        case _ => (3, "")
+        case n: ImportsNode => (1, n.name)
+        case n: ContainerNode => (2, n.name)
+        case n: TypeNode => (2, n.name)
+        case n: Node => (3, n.name)
+        case _ => (4, "")
       }
       val cn1 = cn(e1)
       val cn2 = cn(e2)
@@ -35,13 +36,34 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
         cn1._1 - cn2._1
     }
   }
+
   class ScalaComparator extends ViewerComparator {
     override def compare(viewer: Viewer, e1: AnyRef, e2: AnyRef): Int = {
       e1.asInstanceOf[Node].start - e2.asInstanceOf[Node].start
     }
   }
   private var input: Object = null
+  private val contentProvider =new ScalaOutlineContentProvider()
   var fOpenAndLinkWithEditorHelper: org.eclipse.ui.OpenAndLinkWithEditorHelper = _
+
+  class PublicOnlyAction extends Action{
+    setText("Hide non-public members")
+    setToolTipText("Hide non-public members")
+    setDescription("Hide non-public members")
+    JavaPluginImages.setLocalImageDescriptors(this, "public_co.gif")
+    val checked = ScalaPlugin().getPreferenceStore().getBoolean("PublicOnlyAction.isChecked")
+    valueChanged(checked, false)
+    override def run() = {
+      valueChanged(isChecked, true)
+    }
+    private def valueChanged(checked: Boolean, save: Boolean) = {
+      setChecked(checked)
+      contentProvider.publicOnly = checked
+      getTreeViewer.refresh()
+      if(save)
+        ScalaPlugin().getPreferenceStore().setValue("PublicOnlyAction.isChecked", if(checked) true else false)
+    }
+  }
 
   class LexicalSortingAction extends Action {
     PlatformUI.getWorkbench().getHelpSystem().setHelp(this, IJavaHelpContextIds.LEXICAL_SORTING_OUTLINE_ACTION)
@@ -50,7 +72,7 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
     setToolTipText("Sort")
     setDescription("Enable Sort")
 
-    val checked = JavaPlugin.getDefault().getPreferenceStore().getBoolean("LexicalSortingAction.isChecked")
+    val checked = ScalaPlugin().getPreferenceStore().getBoolean("LexicalSortingAction.isChecked")
     valueChanged(checked, false)
     override def run() = {
       valueChanged(isChecked, true)
@@ -61,6 +83,8 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
         getTreeViewer.setComparator(new LexicalComparator)
       else
         getTreeViewer.setComparator(new ScalaComparator)
+      if(save)
+        ScalaPlugin().getPreferenceStore().setValue("LexicalSortingAction.isChecked", if(checked) true else false)
     }
   }
 
@@ -69,7 +93,7 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
     super.createControl(parent)
 
     val viewer = getTreeViewer()
-    viewer.setContentProvider(new ScalaOutlineContentProvider())
+    viewer.setContentProvider(contentProvider)
     viewer.setLabelProvider(new ScalaOutlineLabelProvider())
     viewer.addSelectionChangedListener(this)
     if (input != null)
@@ -106,6 +130,7 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
     fCollapseAllAction.setActionDefinitionId(CollapseAllHandler.COMMAND_ID)
     toolBarManager.add(fCollapseAllAction)
     toolBarManager.add(new LexicalSortingAction)
+    toolBarManager.add(new PublicOnlyAction)
   }
 
   def setInput(input: Object): Unit = {
