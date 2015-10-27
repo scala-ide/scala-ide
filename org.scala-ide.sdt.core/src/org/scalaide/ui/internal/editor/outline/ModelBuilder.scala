@@ -223,7 +223,7 @@ case class ImportsNode(override val parent: ContainerNode) extends ContainerNode
   override def key = ObjectKey(name)
 }
 
-object ModelBuilder /* extends HasLogger*/ {
+object ModelBuilder  extends HasLogger{
   def buildTree(comp: IScalaPresentationCompiler, src: SourceFile): RootNode = {
     import comp._
     import scala.reflect.internal.Flags._
@@ -347,17 +347,13 @@ object ModelBuilder /* extends HasLogger*/ {
 
           }
           val ch = MethodNode(name.decodedName.toString(), parent, typeList)
-          //logger.info("DefDef " + name + ", modes=" + mods + ", tpt=" + tpt.hasSymbolField + ", " + rsh)
           ch.returnType = if (!tpt.isEmpty) Some(showType(tpt)) else None
           setPos(ch, t)
           ch.setFlags(mods.flags)
-          //logger.info("Method " + ch.name + " " + ch.isSynthetic)
           parent.addChild(ch)
           updateTree(ch, rsh)
-        //t.children.foreach(x => updateTree(ch, x))
 
         case ModuleDef(mods, name, _) => {
-          //logger.info("ModuleDef "+name)
           val ch = ObjectNode(name.decodedName.toString(), parent)
           setPos(ch, t)
           ch.setFlags(mods.flags)
@@ -368,7 +364,6 @@ object ModelBuilder /* extends HasLogger*/ {
         case DocDef(comment: DocComment, definition: Tree) => updateTree(parent, definition)
 
         case Block(stats: List[Tree], expr: Tree) => {
-          //logger.info("Block "+expr.getClass +", "+stats);
           stats.foreach(updateTree(parent, _))
         }
 
