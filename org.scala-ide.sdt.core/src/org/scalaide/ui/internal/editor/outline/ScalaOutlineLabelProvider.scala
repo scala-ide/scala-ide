@@ -29,7 +29,24 @@ class ScalaOutlineLabelProvider extends ILabelProvider {
 
   override def getText(o: Object): String = {
     o match {
-      case c: Node => c.displayName
+      case c: MethodNode =>
+        val sb = new StringBuilder
+        def renderArgList() = {
+          c.argTypes.foreach(list => {
+            sb.append("(")
+            list.foreach { s => sb.append(s); sb.append(", ") }
+            if (!list.isEmpty)
+              sb.setLength(sb.length - 2)
+            sb.append(")")
+          })
+        }
+        sb.append(c.name)
+        renderArgList
+        sb.append(c.returnType.map(": " + _).getOrElse(""))
+        sb.toString
+      case c: ValNode => c.name + c.returnType.map(": " + _).getOrElse("")
+      case c: VarNode => c.name + c.returnType.map(": " + _).getOrElse("")
+      case c: Node => c.name
       case _ => ""
     }
 

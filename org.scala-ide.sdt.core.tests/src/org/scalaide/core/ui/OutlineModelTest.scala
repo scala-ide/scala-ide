@@ -24,14 +24,18 @@ class OutlineModelTest {
       }
   }
 
+  def nameAt(p: Node, pos: Int*)={
+    new ScalaOutlineLabelProvider().getText(childAt(p, pos: _*))
+  }
+
   @Test
   def testImport(): Unit = {
     runTest("""package pack
                import scala.Any
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
-      Assert.assertEquals("import declarations", childAt(rn, 1).displayName)
-      Assert.assertEquals("scala.Any", childAt(rn, 1, 0).displayName)
+      Assert.assertEquals("import declarations", nameAt(rn, 1))
+      Assert.assertEquals("scala.Any", nameAt(rn, 1, 0))
     })
   }
 
@@ -43,8 +47,8 @@ class OutlineModelTest {
                }
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
-      Assert.assertEquals("Foo", childAt(rn, 1).displayName)
-      Assert.assertEquals("MyType", childAt(rn, 1, 1).displayName)
+      Assert.assertEquals("Foo", nameAt(rn, 1))
+      Assert.assertEquals("MyType", nameAt(rn, 1, 1))
       Assert.assertTrue(childAt(rn, 1, 1).isInstanceOf[TypeNode])
     })
   }
@@ -63,14 +67,14 @@ class OutlineModelTest {
                }
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
-      Assert.assertEquals("Foo", childAt(rn, 1).displayName)
-      Assert.assertEquals("p2", childAt(rn, 1, 1).displayName)
-      Assert.assertEquals("p: Int => Int", childAt(rn, 1, 2).displayName)
-      Assert.assertEquals("a(f: Int => MyType)(implicit a: Int, b: Long)", childAt(rn, 1, 3).displayName)
-      Assert.assertEquals("a1(f: (Int, Long) => String)", childAt(rn, 1, 4).displayName)
-      Assert.assertEquals("a2(f: ((Int, Double)) => String)", childAt(rn, 1, 5).displayName)
-      Assert.assertEquals("a3(i: String): (Long, Int)", childAt(rn, 1, 6).displayName)
-      Assert.assertEquals("a4(i: => (Int, Long))", childAt(rn, 1, 7).displayName)
+      Assert.assertEquals("Foo", nameAt(rn, 1))
+      Assert.assertEquals("p2", nameAt(rn, 1, 1))
+      Assert.assertEquals("p: Int => Int", nameAt(rn, 1, 2))
+      Assert.assertEquals("a(f: Int => MyType)(implicit a: Int, b: Long)", nameAt(rn, 1, 3))
+      Assert.assertEquals("a1(f: (Int, Long) => String)", nameAt(rn, 1, 4))
+      Assert.assertEquals("a2(f: ((Int, Double)) => String)", nameAt(rn, 1, 5))
+      Assert.assertEquals("a3(i: String): (Long, Int)", nameAt(rn, 1, 6))
+      Assert.assertEquals("a4(i: => (Int, Long))", nameAt(rn, 1, 7))
     })
   }
 
@@ -84,9 +88,9 @@ class OutlineModelTest {
                }
             """, rn =>{
       Assert.assertEquals(2, rn.children.size)
-      Assert.assertEquals("Foo", childAt(rn, 1).displayName)
-      Assert.assertEquals("a(i: Int): Unit", childAt(rn, 1, 1).displayName)
-      Assert.assertEquals("b: Int", childAt(rn, 1, 1, 0).displayName)
+      Assert.assertEquals("Foo", nameAt(rn, 1))
+      Assert.assertEquals("a(i: Int): Unit", nameAt(rn, 1, 1))
+      Assert.assertEquals("b: Int", nameAt(rn, 1, 1, 0))
             })
   }
 

@@ -9,7 +9,7 @@ trait OutlinePageEditorExtension extends ScalaCompilationUnitEditor {
   def getOutlinePage = outlinePage
   override def getAdapter(required: Class[_]): AnyRef = {
     required match {
-      case OutlinePageEditorExtension.iContentOutlinePage ⇒ {
+      case OutlinePageEditorExtension.IContentOutlinePage ⇒ {
         if (outlinePage == null)
           outlinePage = createScalaOutlinePage
         outlinePage
@@ -39,5 +39,5 @@ trait OutlinePageEditorExtension extends ScalaCompilationUnitEditor {
 }
 
 object OutlinePageEditorExtension {
-  val iContentOutlinePage = classOf[org.eclipse.ui.views.contentoutline.IContentOutlinePage]
+  val IContentOutlinePage = classOf[org.eclipse.ui.views.contentoutline.IContentOutlinePage]
 }
