@@ -14,40 +14,87 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.core.IScalaPlugin
+import org.eclipse.core.resources.IProject
 
 class ProjectDependenciesTest {
 
   import SDTTestUtils._
 
+  private implicit class TestableProject(from: IScalaProject) {
+    def dependsOnAndExports(dep: IScalaProject, exported: Boolean = true): Unit =
+      addToClasspath(from, JavaCore.newProjectEntry(dep.underlying.getFullPath, exported))
+
+    def onlyDependsOn(dep: IScalaProject) = dependsOnAndExports(dep, false)
+
+    def shouldDependOn(msg: String, deps: IScalaProject*): Unit = {
+      val expected = deps.map(_.underlying).sortBy(_.getName)
+      val computed = from.transitiveDependencies.sortBy(_.getName)
+      Assert.assertEquals(s"${msg.capitalize} for ${from.underlying.getName}", expected, computed)
+    }
+  }
+
+
+  @Test def transitive_dependencies_more_complicated_tree(): Unit = {
+    val allProj @ Seq(prjA, prjB, prjC, prjD, prjE, prjF, prjG) = createProjects("A", "B", "C", "D", "E", "F", "G")
+    try {
+      prjB dependsOnAndExports prjA
+
+      prjD dependsOnAndExports prjC
+
+      prjE onlyDependsOn prjB
+
+      prjE dependsOnAndExports prjD
+
+      prjF dependsOnAndExports prjA
+      prjF dependsOnAndExports prjE
+
+      prjG dependsOnAndExports prjE
+      prjG dependsOnAndExports prjC
+
+
+      prjB.shouldDependOn("Only A", prjA)
+      prjD.shouldDependOn("Only C", prjC)
+      prjE.shouldDependOn("A, B, C,D", prjB, prjD, prjA, prjC)
+      prjG.shouldDependOn("C, D, E - C should not be added twice, B and A should be excluded", prjC, prjE, prjD)
+
+    } finally {
+      deleteProjects(allProj: _*)
+    }
+  }
+
   @Test def transitive_dependencies_no_export(): Unit = {
-    val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
+    val Seq(prjA, prjB, prjC, prjD) = createProjects("A", "B", "C", "D")
 
     try {
-      // A -> B -> C
-      addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, false))
-      addToClasspath(prjC, JavaCore.newProjectEntry(prjB.underlying.getFullPath, false))
+      prjB onlyDependsOn prjA
+      prjC onlyDependsOn prjB
+      prjD onlyDependsOn prjC
 
-      Assert.assertEquals("No dependencies for base project", Seq(), prjA.transitiveDependencies)
-      Assert.assertEquals("One direct dependency for B", Seq(prjA.underlying), prjB.transitiveDependencies)
-      Assert.assertEquals("One transitive dependency for C", Seq(prjB.underlying), prjC.transitiveDependencies)
+
+      prjA.shouldDependOn("Nothing - base project")
+      prjB.shouldDependOn("Only A", prjA)
+      prjC.shouldDependOn("Only B", prjB)
+      prjD.shouldDependOn("Only C", prjC)
     } finally {
-      deleteProjects(prjA, prjB, prjC)
+      deleteProjects(prjA, prjB, prjC, prjD)
     }
   }
 
   @Test def transitive_dependencies_with_export(): Unit = {
-    val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
+    val Seq(prjA, prjB, prjC, prjD) = createProjects("A", "B", "C", "D")
 
     try {
-      // A -> B -> C
-      addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, true))
-      addToClasspath(prjC, JavaCore.newProjectEntry(prjB.underlying.getFullPath, false))
+      prjB dependsOnAndExports prjA
+      prjC dependsOnAndExports prjB
+      prjD dependsOnAndExports prjC
 
-      Assert.assertEquals("No dependencies for base project", Seq(), prjA.transitiveDependencies)
-      Assert.assertEquals("One direct dependency for B", Seq(prjA.underlying), prjB.transitiveDependencies)
-      Assert.assertEquals("Two transitive dependencies for C", Seq(prjB.underlying, prjA.underlying), prjC.transitiveDependencies)
+
+      prjA.shouldDependOn("Nothing - base project")
+      prjB.shouldDependOn("Only A", prjA)
+      prjC.shouldDependOn("A and B", prjA, prjB)
+      prjD.shouldDependOn("A, B and C", prjA, prjB, prjC)
     } finally {
-      deleteProjects(prjA, prjB, prjC)
+      deleteProjects(prjA, prjB, prjC, prjD)
     }
   }
 
@@ -55,9 +102,8 @@ class ProjectDependenciesTest {
     val Seq(prjA, prjB, prjC) = createProjects("A", "B", "C")
 
     try {
-      // A -> B -> C
-      addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, true))
-      addToClasspath(prjC, JavaCore.newProjectEntry(prjB.underlying.getFullPath, false))
+      prjB dependsOnAndExports prjA
+      prjC onlyDependsOn prjB
 
       val Seq(packA, packB, packC) = Seq(prjA, prjB, prjC).map(createSourcePackage("test"))
 
@@ -103,8 +149,8 @@ class ProjectDependenciesTest {
 
     try {
       // A -> B -> C
-      addToClasspath(prjB, JavaCore.newProjectEntry(prjA.underlying.getFullPath, /* isExported = */ true))
-      addToClasspath(prjC, JavaCore.newProjectEntry(prjB.underlying.getFullPath, false))
+      prjB dependsOnAndExports prjA
+      prjC onlyDependsOn prjB
 
       val Seq(packA, _, packC) = Seq(prjA, prjB, prjC).map(createSourcePackage("test"))
 

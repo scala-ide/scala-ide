@@ -2,6 +2,7 @@ package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
 import scala.Right
+import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable
 import scala.collection.mutable.Publisher
@@ -131,9 +132,35 @@ object ScalaProject {
       case _:
       CoreException => false
     }
+
+  private def dependenciesForProject(project: IProject): Set[IPath] = {
+    def isExportedProject(e: IClasspathEntry) =
+      e.isExported && e.getEntryKind == IClasspathEntry.CPE_PROJECT
+
+    val classpath = JavaCore.create(project).getResolvedClasspath(true)
+    val exportedProjects = classpath.filter(isExportedProject)
+    val exportedPaths = exportedProjects.map(_.getPath).toSet
+
+    exportedPaths
+  }
+
+  /**
+   * Computes exported project dependencies for set of project.
+   */
+  @tailrec
+  private[project] def exportedDependenciesForProjects(newProjects: Set[IProject], exportedProjects: Set[IProject] = Set.empty): Set[IProject] = {
+    val projectsToTest = newProjects diff exportedProjects
+    if (projectsToTest.isEmpty)
+      exportedProjects
+    else {
+      exportedDependenciesForProjects(
+        projectsToTest.flatMap(dependenciesForProject).map(EclipseUtils.projectFromPath),
+        exportedProjects union projectsToTest)
+    }
+  }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
+class ScalaProject private(val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -189,14 +216,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     underlying.getReferencedProjects.filter(_.isOpen)
 
   def transitiveDependencies: Seq[IProject] =
-    directDependencies ++ (directDependencies flatMap (p => IScalaPlugin().getScalaProject(p).exportedDependencies))
+    if (underlying.isOpen)
+      ScalaProject.exportedDependenciesForProjects(directDependencies.toSet).toSeq
+    else Nil
 
-  def exportedDependencies: Seq[IProject] = {
-    for {
-      entry <- resolvedClasspath
-      if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
-    } yield EclipseUtils.workspaceRoot.getProject(entry.getPath().toString)
-  }
+  def exportedDependencies: Seq[IProject] =
+    if (underlying.isOpen)
+      ScalaProject.dependenciesForProject(underlying)
+        .map(EclipseUtils.projectFromPath).toSeq
+    else Nil
 
   lazy val javaProject: IJavaProject = JavaCore.create(underlying)
 
@@ -268,7 +296,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       else {
         val prefixPath = entry.getPath().removeTrailingSeparator();
         for (pattern <- patterns)
-          yield prefixPath.append(pattern).toString().toCharArray();
+        yield prefixPath.append(pattern).toString().toCharArray();
       }
     }
 

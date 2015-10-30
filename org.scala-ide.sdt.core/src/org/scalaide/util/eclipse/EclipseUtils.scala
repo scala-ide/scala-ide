@@ -224,4 +224,6 @@ object EclipseUtils extends HasLogger {
    */
   def workspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
+
+  def projectFromPath(project: IPath): IProject = EclipseUtils.workspaceRoot.getProject(project.toString)
 }
