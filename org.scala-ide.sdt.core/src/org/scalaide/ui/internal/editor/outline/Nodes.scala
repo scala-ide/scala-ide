@@ -23,11 +23,12 @@ trait HasModifiers {
 }
 sealed abstract class NodeKey
 
-sealed abstract class Node(val isLeaf: Boolean, val parent: ContainerNode) extends HasModifiers {
+sealed abstract class Node(val parent: ContainerNode) extends HasModifiers {
   def name: String
   var start: Int = 0
   var end: Int = 0
   def key: NodeKey
+  def isLeaf = true
   /**
    * makes this node equal to source. Returns true if any changes are visible.
    * For example, if user just added a new line, node position (start, end) is different now. But this change is not visible, so
@@ -45,7 +46,7 @@ sealed abstract class Node(val isLeaf: Boolean, val parent: ContainerNode) exten
   }
 }
 
-sealed abstract class ContainerNode(parent: ContainerNode) extends Node(false, parent) {
+sealed abstract class ContainerNode(parent: ContainerNode) extends Node(parent) {
   protected var _children: Map[NodeKey, Node] = new scala.collection.immutable.ListMap[NodeKey, Node]()
   def children = _children
   def children_=(ch: Map[NodeKey, Node]) = _children = ch
@@ -54,11 +55,22 @@ sealed abstract class ContainerNode(parent: ContainerNode) extends Node(false, p
     _children += (ch.key -> ch)
   }
   var last: Option[Node] = None
+  override def isLeaf = children.size == 0
 }
 
 case class ClassKey(name: String) extends NodeKey
-case class ClassNode(name: String, override val parent: ContainerNode) extends ContainerNode(parent) {
+case class ClassNode(name: String, override val parent: ContainerNode, var typePar: String) extends ContainerNode(parent) {
   override def key = ClassKey(name)
+  override def update(src: Node): Boolean = {
+    val b = super.update(src)
+    src match {
+      case c: ClassNode =>
+        val r = typePar != c.typePar
+        typePar = c.typePar;
+        r || b
+      case _ => b
+    }
+  }
 }
 
 case class ObjectKey(name: String) extends NodeKey
@@ -66,13 +78,8 @@ case class ObjectNode(name: String, override val parent: ContainerNode) extends 
   override def key = ObjectKey(name)
 }
 
-case class TraitKey(name: String) extends NodeKey
-case class TraitNode(name: String, override val parent: ContainerNode) extends ContainerNode(parent) {
-  override def key = ObjectKey(name)
-}
-
 case class PackageKey(name: String) extends NodeKey
-case class PackageNode(name: String, override val parent: ContainerNode) extends Node(true, parent) {
+case class PackageNode(name: String, override val parent: ContainerNode) extends Node(parent) {
   override def key = PackageKey(name)
 }
 
@@ -131,7 +138,7 @@ case class RootNode() extends ContainerNode(null) {
 }
 
 case class MethodKey(name: String, pList: List[List[String]] = List()) extends NodeKey
-case class MethodNode(name: String, override val parent: ContainerNode, val argTypes: List[List[String]] = List())
+case class MethodNode(name: String, override val parent: ContainerNode, var typePar: String, val argTypes: List[List[String]] = List())
     extends ContainerNode(parent) with HasModifiers with HasReturnType {
   override def key = MethodKey(name, argTypes)
   override def update(n: Node): Boolean = {
@@ -140,14 +147,16 @@ case class MethodNode(name: String, override val parent: ContainerNode, val argT
       case that: MethodNode =>
         val rt = returnType
         returnType = that.returnType
-        b || rt != returnType
+        val tp = typePar
+        typePar = that.typePar
+        b || rt != returnType || tp != typePar
       case _ => b
     }
   }
 }
 
 case class ValNode(name: String, override val parent: ContainerNode, rt: Option[String])
-    extends Node(true, parent) with HasModifiers with HasReturnType {
+    extends Node(parent) with HasModifiers with HasReturnType {
   returnType = rt
   override def key = MethodKey(name)
   override def update(n: Node): Boolean = {
@@ -163,7 +172,7 @@ case class ValNode(name: String, override val parent: ContainerNode, rt: Option[
 }
 
 case class VarNode(name: String, override val parent: ContainerNode, rt: Option[String])
-    extends Node(true, parent) with HasModifiers with HasReturnType {
+    extends Node(parent) with HasModifiers with HasReturnType {
   returnType = rt
   override def key = MethodKey(name)
   override def update(n: Node): Boolean = {
@@ -179,12 +188,12 @@ case class VarNode(name: String, override val parent: ContainerNode, rt: Option[
 }
 case class TypeKey(name: String) extends NodeKey
 case class TypeNode(name: String, override val parent: ContainerNode)
-    extends Node(true, parent) with HasModifiers {
+    extends Node(parent) with HasModifiers {
   override def key = TypeKey(name)
 }
 
 case class ImportNode(name: String, override val parent: ContainerNode)
-    extends Node(true, parent) with HasModifiers {
+    extends Node(parent) with HasModifiers {
   override def key = ObjectKey(name)
 }
 

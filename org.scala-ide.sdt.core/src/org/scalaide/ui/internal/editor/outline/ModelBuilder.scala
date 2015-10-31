@@ -10,7 +10,7 @@ import scala.tools.nsc.interactive.Response
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.MutableList
-
+import scala.reflect.internal.util.OffsetPosition
 
 /**
  * ModelBuilder is the "heart" of Outline View. It maps scala source into a tree of nodes (model). Each node
@@ -28,7 +28,9 @@ import scala.collection.mutable.MutableList
  *
  * Using mutable model allows to update only nodes are modified.
  */
-object ModelBuilder  extends HasLogger{
+object ModelBuilder extends HasLogger {
+  private val tuple = """scala.Tuple[0-9]+""".r
+  private val func = """_root_.scala.Function[0-9]+""".r
   def buildTree(comp: IScalaPresentationCompiler, src: SourceFile): RootNode = {
     import comp._
     import scala.reflect.internal.Flags._
@@ -60,13 +62,11 @@ object ModelBuilder  extends HasLogger{
           case Nil =>
         }
       }
-      def renderATT(sb: StringBuilder, tt: Tree, tpt: Tree, args: List[Tree], dp: Boolean) = {
-        val tuple = """scala.Tuple[0-9]+""".r
-        val func = """_root_.scala.Function[0-9]+""".r
+      def renderATT(sb: StringBuilder, tt: Tree, tpt: Tree, args: List[Tree], dp: Boolean): Unit = {
         tpt.toString match {
           case func(_*) =>
             if (args.length == 2) {
-              renderType(sb, args.head, true)
+              renderType(sb, args.head, List(), true)
               sb.append(" => ")
               renderType(sb, args.tail.head)
             } else {
@@ -81,47 +81,59 @@ object ModelBuilder  extends HasLogger{
               sb.append(")")
           case "_root_.scala.<byname>" =>
             sb.append("=> ")
-            renderType(sb, args.head, dp)
-          case _ => sb.append(tt.toString)
+            renderType(sb, args.head, List(), dp)
+          case "_root_.scala.<repeated>" =>
+            renderType(sb, args.head, List(), dp)
+            sb.append("*")
+          case _ =>
+            renderType(sb, tpt, args)
         }
       }
-      def renderType(sb: StringBuilder, tt: Tree, dp: Boolean = false): Unit = {
+      def renderType(sb: StringBuilder, tt: Tree, args: List[Tree] = List(), dp: Boolean = false): Unit = {
         tt match {
           case AppliedTypeTree(tpt: Tree, args: List[Tree]) => renderATT(sb, tt, tpt, args, dp)
-          case _ => sb.append(tt.toString())
+          case _ =>
+            sb.append(tt.toString().split("\\.").reverse.head)
+            if (!args.isEmpty) {
+              sb.append("[")
+              args.foreach(a => { renderType(sb, a, List(), dp); sb.append(", ") })
+              sb.setLength(sb.length - 2)
+              sb.append("]")
+            }
         }
       }
       def showType(tt: Tree): String = {
         val sb = new StringBuilder
         renderType(sb, tt)
+        sb.toString() //.split("\\.").reverse.head
+      }
+      def showTypeList(tl: List[TypeDef]): String = {
+        val sb = new StringBuilder
+        renderTypeList(sb, tl)
         sb.toString()
       }
-      def printTree(tt: Tree): String = {
-        def printATT(tpt: Tree, args: List[Tree]) = {
-          tpt.toString match {
-            case "_root_.scala.Function1" => args.head.toString + "=>" + args.tail.head.toString
-            case _ => tpt.toString + args.toString
-          }
-        }
-        tt match {
-          case AppliedTypeTree(tpt: Tree, args: List[Tree]) => printATT(tpt, args)
-          case ValDef(mods, name, tpt, rsh) => tpt.tpe + ", ValDef, mods=" + mods + ", name=" + name + ", tpt=" + printTree(tpt) + ", rsh" + printTree(rsh)
-          case Select(qualifier: Tree, name: Name) => qualifier.tpe + ", Select, qualifier=" + printTree(qualifier) + ", name=" + name.decoded
-          case Ident(name: Name) => "Ident, name=" + name.decoded
-          case _ => tt.getClass + "! " + tt.toString
+      def renderTypeList(sb: StringBuilder, tl: List[TypeDef]): Unit = {
+        if (!tl.isEmpty) {
+          sb.append("[")
+          tl.foreach(td => { sb.append(td.name); renderTypeList(sb, td.tparams); sb.append(", ") })
+          sb.setLength(sb.length - 2)
+          sb.append("]")
         }
       }
       t match {
         case Template(_, _, _) => t.children.foreach(x => updateTree(parent, x))
         case PackageDef(pid, stats) => {
-          val ch = PackageNode(pid.toString(), parent)
-          setPos(ch, t)
-          parent.addChild(ch)
+          if (pid.pos.isDefined && pid.pos.start != pid.pos.end) {
+            val ch = PackageNode(pid.toString(), parent)
+            setPos(ch, t)
+            parent.addChild(ch)
+            //t.children.foreach(x => updateTree(parent, x))
+          }
           t.children.foreach(x => updateTree(parent, x))
         }
 
         case ClassDef(mods, name, tpars, templ) => {
-          val ch = ClassNode(name.decodedName.toString(), parent)
+          val ch = ClassNode(name.decodedName.toString(), parent, showTypeList(tpars))
           setPos(ch, t)
           parent.addChild(ch)
           ch.setFlags(mods.flags)
@@ -130,18 +142,20 @@ object ModelBuilder  extends HasLogger{
 
         case `noSelfType` =>
 
-        case ValDef(mods, name, tpt, rsh) => {
-          val ch = if ((mods.flags & MUTABLE) == 0)
-            ValNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
-          else
-            VarNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
-          setPos(ch, t)
-          ch.setFlags(mods.flags)
-          parent.addChild(ch)
-        }
+        case ValDef(mods, name, tpt, rsh) =>
+          if ((mods.flags & SYNTHETIC) == 0) {
+            val ch = if ((mods.flags & MUTABLE) == 0)
+              ValNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
+            else
+              VarNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
+            setPos(ch, t)
+            ch.setFlags(mods.flags)
+            parent.addChild(ch)
+
+          }
 
         case DefDef(mods, name, tparamss, vparamss, tpt, rsh) =>
-          def typeList = {
+          def argList = {
             vparamss.map { x =>
               {
                 if (!x.isEmpty) {
@@ -154,13 +168,15 @@ object ModelBuilder  extends HasLogger{
             }
 
           }
-          val ch = MethodNode(name.decodedName.toString(), parent, typeList)
-          ch.returnType = if (!tpt.isEmpty) Some(showType(tpt)) else None
-          setPos(ch, t)
-          ch.setFlags(mods.flags)
-          parent.addChild(ch)
-          updateTree(ch, rsh)
-
+          //logger.info("DefDef "+name+" -- tparamss="+ tparamss.map(td => td.name))
+          if (t.pos.isOpaqueRange) {
+            val ch = MethodNode(name.decodedName.toString(), parent, showTypeList(tparamss), argList)
+            ch.returnType = if (!tpt.isEmpty) Some(showType(tpt)) else None
+            setPos(ch, t)
+            ch.setFlags(mods.flags)
+            parent.addChild(ch)
+            updateTree(ch, rsh)
+          }
         case ModuleDef(mods, name, _) => {
           val ch = ObjectNode(name.decodedName.toString(), parent)
           setPos(ch, t)
@@ -190,8 +206,8 @@ object ModelBuilder  extends HasLogger{
               sb.append("." + selectors.head.name)
             else {
               sb.append(".{")
-              selectors.foreach(s => sb.append(s.name + ","))
-              sb.setLength(sb.length - 1)
+              selectors.foreach(s => sb.append(s.name + ", "))
+              sb.setLength(sb.length - 2)
               sb.append("}")
             }
             sb.toString
@@ -204,6 +220,7 @@ object ModelBuilder  extends HasLogger{
             }
             case _ => {
               val ip = ImportsNode(parent)
+              setPos(ip, t)
               parent.addChild(ip)
               val in = ImportNode(printImport, ip)
               ip.addChild(in)

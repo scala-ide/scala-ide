@@ -41,9 +41,11 @@ class ScalaOutlineLabelProvider extends ILabelProvider {
           })
         }
         sb.append(c.name)
+        sb.append(c.typePar)
         renderArgList
         sb.append(c.returnType.map(": " + _).getOrElse(""))
         sb.toString
+      case c: ClassNode => c.name + c.typePar
       case c: ValNode => c.name + c.returnType.map(": " + _).getOrElse("")
       case c: VarNode => c.name + c.returnType.map(": " + _).getOrElse("")
       case c: Node => c.name

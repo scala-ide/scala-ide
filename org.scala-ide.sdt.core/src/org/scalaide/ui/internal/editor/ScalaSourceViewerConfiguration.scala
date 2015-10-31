@@ -52,7 +52,7 @@ import org.scalaide.ui.internal.editor.spelling.ScalaSpellingEngine
 import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
 import org.scalaide.ui.internal.editor.spelling.SpellingService
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
-import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
+import org.scalaide.ui.syntax.{ ScalaSyntaxClasses => SSC }
 import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
 import org.scalaide.core.internal.ScalaPlugin
@@ -62,6 +62,7 @@ import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconciler
 import org.scalaide.ui.internal.editor.outline.ScalaOutlineReconcilingStrategy
+import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -74,7 +75,7 @@ class ScalaSourceViewerConfiguration(
       IJavaPartitions.JAVA_PARTITIONING) with IPropertyChangeListener {
 
   private val combinedPrefStore = new ChainedPreferenceStore(
-      Array(scalaPreferenceStore, javaPreferenceStore))
+    Array(scalaPreferenceStore, javaPreferenceStore))
 
   private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
@@ -126,9 +127,7 @@ class ScalaSourceViewerConfiguration(
    * but they also can't apply there Java hover specific configurations
    * anymore.
    */
-  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false)
-      with IAnnotationHoverExtension
-      with HtmlHover {
+  private val annotationHover = new DefaultAnnotationHover( /* showLineNumber */ false) with IAnnotationHoverExtension with HtmlHover {
 
     override def isIncluded(a: Annotation) =
       isShowInVerticalRuler(a)
@@ -203,14 +202,14 @@ class ScalaSourceViewerConfiguration(
     Option(editor).map { editor =>
       val s = new CompositeReconcilingStrategy
       s.setReconcilingStrategies(Array(
-          new ScalaReconcilingStrategy(editor),
-          new ScalaOutlineReconcilingStrategy(editor.asInstanceOf[ScalaSourceFileEditor]),
-          new SpellingReconcileStrategy(
-              editor,
-              editor.getViewer(),
-              new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
-              ScalaPlugin().scalaSourceFileContentType,
-              EditorsUI.getPreferenceStore())))
+        new ScalaReconcilingStrategy(editor),
+        new ScalaOutlineReconcilingStrategy(editor.asInstanceOf[OutlinePageEditorExtension]),
+        new SpellingReconcileStrategy(
+          editor,
+          editor.getViewer(),
+          new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
+          ScalaPlugin().scalaSourceFileContentType,
+          EditorsUI.getPreferenceStore())))
 
       val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
@@ -250,8 +249,8 @@ class ScalaSourceViewerConfiguration(
 
     (provider, input) match {
       case (icudp: ICompilationUnitDocumentProvider, _) => icudp getWorkingCopy input
-      case (_, icfei: IClassFileEditorInput)            => icfei.getClassFile
-      case _                                            => null
+      case (_, icfei: IClassFileEditorInput) => icfei.getClassFile
+      case _ => null
     }
   }
 
