@@ -46,4 +46,7 @@ object ExpressionEvaluatorPreferences {
 
   def shouldRefreshVariablesViewAfterEvaluation: Boolean =
     preferenceStore.getBoolean(RefreshVariablesViewAfterEvaluation)
+
+  def isAddImportsFromCurrentFile: Boolean =
+    preferenceStore.getBoolean(AddImportsFromCurrentFile)
 }
