@@ -310,4 +310,22 @@ object TestValues {
     val objectParam = 3
     val objectMethod = 3
   }
+
+  object NestedPackagesTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-nested-packages"
+    val fileName = "NestedPackagesConsumer"
+    val breakpointLine = 6
+  }
+
+  object NestedLambdaTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-nested-lambda"
+    val fileName = "NestedLambda"
+    val breakpointLine = 17
+  }
+
+  object NestedLambdaInObjectTestCase extends IntegrationTestCaseSettings {
+    val projectName = "expr-eval-nested-lambda-object"
+    val fileName = "NestedLambdaObject"
+    val breakpointLine = 17
+  }
 }
