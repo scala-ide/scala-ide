@@ -6,11 +6,12 @@ package org.scalaide.debug.internal.expression
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 import scala.util.Try
+
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.phases._
-import org.scalaide.debug.internal.preferences.ExpressionEvaluatorPreferences.isAddImportsFromCurrentFile
+import org.scalaide.debug.internal.preferences.ExpressionEvaluatorPreferences.shouldAddImportsFromCurrentFile
 import org.scalaide.logging.HasLogger
 
 object ExpressionEvaluator {
@@ -55,7 +56,7 @@ object ExpressionEvaluator {
       ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.context.localVariablesNames()),
       ctx => new MockAssignment,
       ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context),
-      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage, isAddImportsFromCurrentFile),
+      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage, shouldAddImportsFromCurrentFile),
       ctx => new MockThis,
       ctx => new MockSuper(ctx.toolbox),
       ctx => MockTypedLambda(ctx.toolbox))
