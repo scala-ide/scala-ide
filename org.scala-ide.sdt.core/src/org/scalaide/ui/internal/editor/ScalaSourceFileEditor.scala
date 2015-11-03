@@ -392,8 +392,7 @@ class ScalaSourceFileEditor
     override def documentPartitioning: String = getDocumentPartitioning()
 
     override def updateTextViewer(cursorPos: Int): Unit = {
-      val widgetCaret = modelOffset2WidgetOffset(cursorPos)
-      setSelectedRange(widgetCaret, 0)
+      setSelectedRange(cursorPos, 0)
     }
 
     override def smartBackspaceManager: SmartBackspaceManager =
