@@ -1,6 +1,7 @@
 package org.scalaide.debug.internal.launching
 
-import scala.collection.JavaConverters
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.util.Properties
 import scala.util.Try
 
@@ -67,7 +68,6 @@ private class GeneralSettingsBlock(val tab: ScalaDebuggerTab) {
    */
   def initializeFrom(configuration: ILaunchConfiguration): Unit = {
     globalAsyncDebuggerSwitchButton.setSelection(configuration.getAttribute(LaunchWithAsyncDebugger, false))
-    import scala.collection.JavaConverters._
     stepOutExcludePackages.setText(configuration.getAttribute(StepOutExcludePkgsOrClasses,
       List.empty[String].asJava).asScala.mkString(DataDelimiter))
   }
@@ -82,9 +82,8 @@ private class GeneralSettingsBlock(val tab: ScalaDebuggerTab) {
     } else {
       configuration.removeAttribute(LaunchWithAsyncDebugger)
     }
-    import scala.collection.JavaConverters._
     configuration.setAttribute(StepOutExcludePkgsOrClasses,
-      stepOutExcludePackages.getText.split(DataDelimiter).filterNot { _.isEmpty }.toList.asJava)
+      stepOutExcludePackages.getText.split(DataDelimiter).filter { _.nonEmpty }.toList.asJava)
   }
 
   /**

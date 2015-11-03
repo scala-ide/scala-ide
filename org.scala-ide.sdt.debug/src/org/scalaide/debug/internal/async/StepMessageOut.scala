@@ -31,10 +31,10 @@ import com.sun.jdi.request.StepRequest
 case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) extends HasLogger {
   import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
   import scala.collection.JavaConverters._
-  private val StepMessageOut = "StepMessageOut" + UUID.randomUUID.toString
-  private val IsSearchingReceiveMethodKey = "search"
-  private val StackTraceDepth = "StackTraceDepth"
-  private val StartLineNumber = "StartLineNumber"
+  private val StepMessageOut = "org.scala-ide.debug.async.step-out.StepMessageOut" + UUID.randomUUID.toString
+  private val IsSearchingReceiveMethodKey = "org.scala-ide.debug.async.step-out.Search"
+  private val StackTraceDepth = "org.scala-ide.debug.async.step-out.StackTraceDepth"
+  private val StartLineNumber = "org.scala-ide.debug.async.step-out.StartLineNumber"
   private var watchedMessage: Option[ObjectReference] = None
   private var watchedActor: String = _
   val programSends = List(
@@ -62,23 +62,18 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   private[async] def findThisType(stepEvent: StepEvent): String = {
     val loc = stepEvent.location()
     val declType = loc.declaringType().name()
-    Try {
-      val thisObject = stepEvent.thread().frame(0).thisObject()
-      if (thisObject ne null)
-        thisObject.referenceType().name()
-      else
-        declType
-    }.recover {
-      case e: Throwable =>
-        declType
-    }.get
+    val thisObject = stepEvent.thread().frame(0).thisObject()
+    if (thisObject ne null)
+      thisObject.referenceType().name()
+    else
+      declType
   }
 
   object subordinate extends BaseDebuggerActor {
     import scala.collection.JavaConverters._
     private def isReceiveHandler(stepEvent: StepEvent): Boolean = {
       val thisType = findThisType(stepEvent)
-      stepEvent.location.method.name.contains("applyOrElse") &&
+      "applyOrElse" == stepEvent.location.method.name &&
         !stepOutNotStopInClasses.exists { thisType.startsWith }
     }
 
