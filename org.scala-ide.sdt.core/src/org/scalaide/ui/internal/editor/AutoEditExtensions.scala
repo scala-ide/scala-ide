@@ -1,8 +1,5 @@
 package org.scalaide.ui.internal.editor
 
-import scala.util.Failure
-import scala.util.Success
-
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager
 import org.eclipse.jdt.internal.ui.text.SmartBackspaceManager.UndoSpec
 import org.eclipse.jface.text.IDocument
@@ -22,6 +19,8 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.extensions.AutoEdits
 import org.scalaide.core.internal.extensions.ExtensionCompiler
 import org.scalaide.core.internal.extensions.ExtensionCreators
+import org.scalaide.core.internal.statistics.Features.Feature
+import org.scalaide.core.internal.statistics.Groups
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.CursorUpdate
@@ -209,6 +208,9 @@ trait AutoEditExtensions extends HasLogger {
    */
   private def applyChange(change: Change, autoEdit: AutoEdit, handlers: Seq[Handler]): Option[Unit] = {
     val id = autoEdit.setting.id
+
+    val feature = Feature(id)(autoEdit.setting.name, Groups.AutoEdit)
+    feature.incUsageCounter()
 
     handlers find (_ isDefinedAt change) flatMap { handler =>
       EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'.") {

@@ -6,11 +6,12 @@ import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2
 import org.eclipse.ui.IFileEditorInput
+import org.scalaide.core.internal.statistics.Features.ExtractCode
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.util.eclipse.EditorUtils
 
 abstract class ExtractionProposal(displayString: String, hightlightFrom: Int, highlightTo: Int, relevance: Int = 0)
-  extends BasicCompletionProposal(relevance, displayString) with ICompletionProposalExtension2 {
+  extends BasicCompletionProposal(ExtractCode, relevance, displayString) with ICompletionProposalExtension2 {
 
   private var markerOpt: Option[IMarker] = None
 

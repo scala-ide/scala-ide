@@ -148,6 +148,12 @@
             name="Save Actions">
       </page>
       <page
+            category="org.scalaide.ui.preferences"
+            class="org.scalaide.ui.internal.preferences.StatisticsPreferencePage"
+            id="org.scalaide.ui.preferences.statistics"
+            name="Statistics">
+      </page>
+      <page
             category="org.scalaide.ui.preferences.editor"
             class="org.scalaide.ui.internal.preferences.AutoEditsPreferencePage"
             id="org.scalaide.ui.preferences.editor.autoedits"
@@ -884,6 +890,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.SaveActionsPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ScalaPreferenceInitializer">
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.AutoEditsPreferenceInitializer">

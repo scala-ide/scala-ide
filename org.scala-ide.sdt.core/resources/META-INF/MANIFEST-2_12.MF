@@ -117,6 +117,7 @@ Export-Package:
  org.scalaide.core.internal.quickassist.extract,
  org.scalaide.core.internal.quickassist.inline,
  org.scalaide.core.internal.repl,
+ org.scalaide.core.internal.statistics,
  org.scalaide.core.internal.text,
  org.scalaide.core.lexical,
  org.scalaide.core.quickassist,
@@ -179,7 +180,8 @@ Export-Package:
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
- target/lib/log4j-1.2.17.jar
+ target/lib/log4j-1.2.17.jar,
+ target/lib/json-io-4.1.6.jar
 Eclipse-ExtensibleAPI: 
  true
 

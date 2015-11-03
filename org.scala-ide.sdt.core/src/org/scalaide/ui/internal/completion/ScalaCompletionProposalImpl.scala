@@ -45,6 +45,9 @@ import org.scalaide.core.completion.MemberKind
 import org.scalaide.ui.ScalaImages
 import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.scalaide.ui.completion.ScalaCompletionProposal
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.statistics.Features.CodeAssist
+import org.scalaide.core.internal.statistics.Features.CharactersSaved
 
 /** A completion proposal for the Eclipse completion framework. It wraps a [[CompletionProposal]] returned
  *  by the presentation compiler, and implements the methods needed by the platform.
@@ -118,6 +121,8 @@ class ScalaCompletionProposalImpl(proposal: CompletionProposal)
   }
 
   override def apply(viewer: ITextViewer, trigger: Char, stateMask: Int, offset: Int): Unit = {
+    CodeAssist.incUsageCounter()
+
     val showOnlyTooltips = context == CompletionContext.NewContext || context == CompletionContext.ApplyContext
 
     if (!showOnlyTooltips) {

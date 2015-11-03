@@ -2,7 +2,9 @@ package org.scalaide.refactoring.internal
 
 import java.text.Collator
 import java.util.Comparator
+
 import scala.tools.refactoring.implementations
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
@@ -18,6 +20,7 @@ import org.eclipse.jface.window.Window
 import org.scalaide.core.internal.jdt.model.LazyToplevelClass
 import org.scalaide.core.internal.jdt.model.ScalaElement
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.OrganizeImports
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
@@ -218,7 +221,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
     }
   }
 
-  class OrganizeImportsScalaIdeRefactoring(override val file: ScalaSourceFile) extends ScalaIdeRefactoring("Organize Imports", file, 0, 0) {
+  class OrganizeImportsScalaIdeRefactoring(override val file: ScalaSourceFile) extends ScalaIdeRefactoring(OrganizeImports, "Organize Imports", file, 0, 0) {
 
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
 

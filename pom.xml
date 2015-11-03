@@ -87,6 +87,7 @@
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
     <sbt.version>0.13.8</sbt.version>
+    <json-io.version>4.1.6</json-io.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>

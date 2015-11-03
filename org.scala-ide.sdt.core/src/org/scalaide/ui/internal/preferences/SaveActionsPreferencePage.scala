@@ -158,13 +158,6 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
     t
   }
 
-  private def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
-    val lb = new Label(parent, SWT.NONE)
-    lb.setText(text)
-    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
-    lb
-  }
-
   private def isEnabled(saveAction: SaveActionSetting): Boolean =
     prefStore.getBoolean(saveAction.id)
 

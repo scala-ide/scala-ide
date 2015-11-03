@@ -1,32 +1,32 @@
 package org.scalaide.core.internal.quickassist.abstractimpl
 
-import scala.tools.nsc.interactive.Global
 import scala.tools.refactoring.implementations.AddMethodTarget
 
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.internal.quickassist.AddFieldProposal
 import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
 import org.scalaide.core.internal.quickassist.createmethod.ParameterList
 import org.scalaide.core.internal.quickassist.createmethod.ReturnType
 import org.scalaide.core.internal.quickassist.createmethod.TypeParameterList
+import org.scalaide.core.internal.statistics.Features.CreateMethod
 
 object AbstractMemberProposal {
   def apply(global: IScalaPresentationCompiler)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
     icu: Option[InteractiveCompilationUnit], addMethodTarget: AddMethodTarget) = {
 
-    new {
+    new AbstractMemberProposal {
       override val compiler: global.type = global
       override val targetSourceFile = icu
       override val abstractMethod = abstrMethod
       override val implDef = impl
       override val target = addMethodTarget
-    } with AbstractMemberProposal
+    }
   }
 }
 
-trait AbstractMemberProposal extends AddValOrDefProposal with AddMethodProposal with AddFieldProposal {
+abstract class AbstractMemberProposal extends AddValOrDefProposal(CreateMethod) with AddMethodProposal with AddFieldProposal {
   protected val compiler: IScalaPresentationCompiler
   import compiler._
 

@@ -4,6 +4,7 @@ import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.TextUtilities
+import org.scalaide.core.internal.statistics.Features
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.util.eclipse.RegionUtils._
 
@@ -63,6 +64,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
      * after a newline.
      */
     def autoIndentAfterNewLine() = {
+      Features.AutoIndentMultiLineStrings.incUsageCounter()
       val lineOfCursor = doc.getLineOfOffset(cmd.offset)
       val (start, end, isFirstLine) = {
         val p = partitionAt(cmd.offset, preferOpenPartitions = true)
@@ -123,6 +125,7 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
           doc.getChar(start + 3) == '|'
 
         def handleFirstStripMarginLine() = {
+          Features.AutoAddStripMargin.incUsageCounter()
           val indent = mkIndent
           val isMultiLineStringClosed = end != doc.length
 
@@ -142,8 +145,10 @@ class MultiLineStringAutoIndentStrategy(partitioning: String, prefStore: IPrefer
           copyIndentOfPreviousLine("  ")
       }
 
-      def handleStripMarginLine() =
+      def handleStripMarginLine() = {
+        Features.AutoAddStripMargin.incUsageCounter()
         cmd.text = mkIndent
+      }
 
       if (isFirstLine)
         handleFirstLine

@@ -52,7 +52,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_AUTO_BREAKING_COMMENTS, "Automatically break multi-line comments and Scaladoc after the Print Margin", typing)
 
     val indent = group("Indentation", base)
-    checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Enable auto indent when tab is pressed", indent)
+    checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Automatically indent when tab is pressed", indent)
     checkBox(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, "Enable auto indent for multi line string literals", indent)
     checkBox(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, "Automatically add strip margins when multi line string starts with a |", indent)
 

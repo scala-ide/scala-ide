@@ -45,7 +45,7 @@ object SWTUtils {
   }
 
   implicit def noArgFnToModifyListener(f: () => Unit): ModifyListener = new ModifyListener {
-    def modifyText(e: ModifyEvent) = f()
+    override def modifyText(e: ModifyEvent) = f()
   }
 
   /** Returns an adapter class that provides default implementations for the
@@ -176,7 +176,7 @@ object SWTUtils {
   }
 
   /**
-   * Creates a label, whose layout data interops with the grid layout.
+   * Creates a label on a given `parent` whose layout is `GridLayout`.
    */
   def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
     val lb = new Label(parent, SWT.NONE)

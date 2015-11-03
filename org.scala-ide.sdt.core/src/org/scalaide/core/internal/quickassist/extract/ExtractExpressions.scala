@@ -33,7 +33,7 @@ class ExtractExpressions extends QuickAssist {
         val pos = extraction.extractionTarget.enclosing.pos
 
         proposals += new ExtractionProposal(extraction.displayName, pos.start, pos.end, relevance) {
-          override def apply(doc: IDocument) = {
+          override def applyProposal(doc: IDocument) = {
             refactoring.perform(extraction) match {
               case Right((change: TextChange) :: Nil) =>
                 EditorUtils.doWithCurrentEditor { editor =>

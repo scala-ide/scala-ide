@@ -5,6 +5,7 @@ import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.internal.formatter.FormatterPreferences._
+import org.scalaide.core.internal.statistics.Features
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 import scalariform.formatter.preferences._
@@ -64,6 +65,7 @@ class AutoIndentStrategy(prefStore: IPreferenceStore) extends DefaultIndentLineA
    * applies it to the command.
    */
   protected def indentOnTab(doc: IDocument, cmd: DocumentCommand, indentWithTabs: Boolean, tabSize: Int): Unit = {
+    Features.AutoIndentOnTab.incUsageCounter()
     def textSize(indent: String) =
       indent.map(c => if (c == '\t') tabSize else 1).sum
 
