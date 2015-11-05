@@ -63,6 +63,14 @@ import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconciler
 import org.scalaide.ui.internal.editor.outline.ScalaOutlineReconcilingStrategy
 import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineInformationControl
+import org.eclipse.jface.text.information.IInformationPresenter
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.jdt.internal.ui.text.JavaElementProvider
+import org.eclipse.swt.SWT
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
+import org.eclipse.jface.text.AbstractInformationControlManager
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineModelProvider
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -79,6 +87,30 @@ class ScalaSourceViewerConfiguration(
 
   private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
+  private def getOutlinePresenterControlCreator(sourceViewer: ISourceViewer, commandId: String): IInformationControlCreator =
+    new IInformationControlCreator {
+      def createInformationControl(parent: Shell): IInformationControl = {
+        val shellStyle = SWT.RESIZE;
+        val treeStyle = SWT.V_SCROLL | SWT.H_SCROLL;
+        new ScalaOutlineInformationControl(parent, shellStyle, treeStyle, commandId, editor.asInstanceOf[OutlinePageEditorExtension]);
+      }
+    }
+
+  override def getOutlinePresenter(sourceViewer: ISourceViewer, doCodeResolve: Boolean): IInformationPresenter = {
+
+    val presenter = new InformationPresenter(getOutlinePresenterControlCreator(sourceViewer, IJavaEditorActionDefinitionIds.SHOW_OUTLINE))
+    presenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
+    presenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL)
+    val provider = new ScalaOutlineModelProvider(getEditor())
+    presenter.setInformationProvider(provider, IDocument.DEFAULT_CONTENT_TYPE)
+    presenter.setInformationProvider(provider, IJavaPartitions.JAVA_DOC)
+    presenter.setInformationProvider(provider, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)
+    presenter.setInformationProvider(provider, IJavaPartitions.JAVA_SINGLE_LINE_COMMENT)
+    presenter.setInformationProvider(provider, IJavaPartitions.JAVA_STRING)
+    presenter.setInformationProvider(provider, IJavaPartitions.JAVA_CHARACTER)
+    presenter.setSizeConstraints(50, 20, true, false)
+    presenter
+  }
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
     combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 

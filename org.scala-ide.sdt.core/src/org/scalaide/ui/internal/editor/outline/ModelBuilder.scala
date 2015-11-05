@@ -11,6 +11,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.MutableList
 import scala.reflect.internal.util.OffsetPosition
+import scala.reflect.internal.util.RangePosition
 
 /**
  * ModelBuilder is the "heart" of Outline View. It maps scala source into a tree of nodes (model). Each node
@@ -34,11 +35,9 @@ object ModelBuilder extends HasLogger {
   def buildTree(comp: IScalaPresentationCompiler, src: SourceFile): RootNode = {
     import comp._
     import scala.reflect.internal.Flags._
-    def setPos(n: Node, t: Tree) = {
-      if (t.pos.isDefined) {
-        n.end = t.pos.end
-        n.start = t.pos.start
-      }
+    def setPos(n: Node, s: Int, e: Int) = {
+      n.end = e
+      n.start = s
     }
 
     def updateTree(parent: ContainerNode, t: Tree): Unit = {
@@ -125,7 +124,7 @@ object ModelBuilder extends HasLogger {
         case PackageDef(pid, stats) => {
           if (pid.pos.isDefined && pid.pos.start != pid.pos.end) {
             val ch = PackageNode(pid.toString(), parent)
-            setPos(ch, t)
+            setPos(ch, pid.pos.start, pid.pos.end)
             parent.addChild(ch)
             //t.children.foreach(x => updateTree(parent, x))
           }
@@ -134,7 +133,7 @@ object ModelBuilder extends HasLogger {
 
         case ClassDef(mods, name, tpars, templ) => {
           val ch = ClassNode(name.decodedName.toString(), parent, showTypeList(tpars))
-          setPos(ch, t)
+          setPos(ch, t.pos.point, t.pos.point + ch.name.length)
           parent.addChild(ch)
           ch.setFlags(mods.flags)
           t.children.foreach(x => updateTree(ch, x))
@@ -148,7 +147,7 @@ object ModelBuilder extends HasLogger {
               ValNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
             else
               VarNode(name.decodedName.toString(), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
-            setPos(ch, t)
+            setPos(ch, t.pos.point, t.pos.point + ch.name.length)
             ch.setFlags(mods.flags)
             parent.addChild(ch)
 
@@ -172,14 +171,14 @@ object ModelBuilder extends HasLogger {
           if (t.pos.isOpaqueRange) {
             val ch = MethodNode(name.decodedName.toString(), parent, showTypeList(tparamss), argList)
             ch.returnType = if (!tpt.isEmpty) Some(showType(tpt)) else None
-            setPos(ch, t)
+            setPos(ch, t.pos.point, t.pos.point + ch.name.length)
             ch.setFlags(mods.flags)
             parent.addChild(ch)
             updateTree(ch, rsh)
           }
         case ModuleDef(mods, name, _) => {
           val ch = ObjectNode(name.decodedName.toString(), parent)
-          setPos(ch, t)
+          setPos(ch, t.pos.point, t.pos.point + ch.name.length)
           ch.setFlags(mods.flags)
           parent.addChild(ch)
           t.children.foreach(x => updateTree(ch, x))
@@ -193,7 +192,7 @@ object ModelBuilder extends HasLogger {
 
         case TypeDef(mods: Modifiers, name: TypeName, tparams: List[TypeDef], rhs: Tree) =>
           val ch = TypeNode(name.decodedName.toString(), parent)
-          setPos(ch, t)
+          setPos(ch, t.pos.point, t.pos.point + name.length)
           ch.setFlags(mods.flags)
           if (!ch.isParam)
             parent.addChild(ch)
@@ -216,15 +215,15 @@ object ModelBuilder extends HasLogger {
             case Some(p: ImportsNode) => {
               val in = ImportNode(printImport, p)
               p.addChild(in)
-              setPos(in, t)
+              setPos(in, t.pos.point, t.pos.end)
             }
             case _ => {
               val ip = ImportsNode(parent)
-              setPos(ip, t)
+              setPos(ip, t.pos.point, t.pos.end)
               parent.addChild(ip)
               val in = ImportNode(printImport, ip)
               ip.addChild(in)
-              setPos(in, t)
+              setPos(in, t.pos.point, t.pos.end)
             }
           }
 
