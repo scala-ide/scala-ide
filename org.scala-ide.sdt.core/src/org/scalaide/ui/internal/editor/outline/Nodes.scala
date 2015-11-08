@@ -66,7 +66,7 @@ case class ClassNode(name: String, override val parent: ContainerNode, var typeP
     src match {
       case c: ClassNode =>
         val r = typePar != c.typePar
-        typePar = c.typePar;
+        typePar = c.typePar
         r || b
       case _ => b
     }
@@ -155,10 +155,11 @@ case class MethodNode(name: String, override val parent: ContainerNode, var type
   }
 }
 
+case class ValKey(name:String) extends NodeKey
 case class ValNode(name: String, override val parent: ContainerNode, rt: Option[String])
     extends Node(parent) with HasModifiers with HasReturnType {
   returnType = rt
-  override def key = MethodKey(name)
+  override def key = ValKey(name)
   override def update(n: Node): Boolean = {
     val b = super.update(n)
     n match {
@@ -171,10 +172,11 @@ case class ValNode(name: String, override val parent: ContainerNode, rt: Option[
   }
 }
 
+case class VarKey(name:String) extends NodeKey
 case class VarNode(name: String, override val parent: ContainerNode, rt: Option[String])
     extends Node(parent) with HasModifiers with HasReturnType {
   returnType = rt
-  override def key = MethodKey(name)
+  override def key = VarKey(name)
   override def update(n: Node): Boolean = {
     val b = super.update(n)
     n match {

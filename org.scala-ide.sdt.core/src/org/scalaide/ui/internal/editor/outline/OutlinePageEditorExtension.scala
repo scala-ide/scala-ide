@@ -29,7 +29,7 @@ trait OutlinePageEditorExtension extends ScalaCompilationUnitEditor {
       case ss: IStructuredSelection =>
         if (!ss.isEmpty()) {
           ss.getFirstElement match {
-            case n: Node => selectAndReveal(n.start, n.end - n.start);
+            case n: Node => selectAndReveal(n.start, n.end - n.start)
             case _ => super.doSelectionChanged(selection)
           }
         }

@@ -52,13 +52,13 @@ import org.eclipse.jface.action.Separator
  * So, a big chunk of logic just translated to scala line by line.
  */
 
-class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeStyle: Int, commandId: String, editor: AbstractTextEditor)
+final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeStyle: Int, commandId: String, editor: AbstractTextEditor)
     extends PopupDialog(parent, shellStyle, true, true, false, true, true, null, null) with IInformationControl with IInformationControlExtension with IInformationControlExtension2 {
 
   private var namePattern: String = ""
   private val contentProvider = new ScalaOutlineContentProvider
   protected def getId(): String = "org.scalaide.ui.internal.editor.outline.QuickOutline"
-  var filterText: Text = _
+  private var filterText: Text = _
 
   create()
 
@@ -317,10 +317,10 @@ class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeStyle: 
 
   override def getDialogSettings() = {
     import org.scalaide.core.internal.ScalaPlugin
-    val sectionName = getId();
-    var settings = ScalaPlugin().getDialogSettings().getSection(sectionName);
+    val sectionName = getId()
+    var settings = ScalaPlugin().getDialogSettings().getSection(sectionName)
     if (settings eq null)
-      settings = ScalaPlugin().getDialogSettings().addNewSection(sectionName);
+      settings = ScalaPlugin().getDialogSettings().addNewSection(sectionName)
 
     settings
   }

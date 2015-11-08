@@ -89,7 +89,7 @@ class LexicalSortingAction(treeViewer: TreeViewer) extends Action {
 class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentOutlinePage with HasLogger {
   private var input: Object = null
   private val contentProvider = new ScalaOutlineContentProvider()
-  var fOpenAndLinkWithEditorHelper: org.eclipse.ui.OpenAndLinkWithEditorHelper = _
+  private var fOpenAndLinkWithEditorHelper: org.eclipse.ui.OpenAndLinkWithEditorHelper = _
 
   override def createControl(parent: Composite) = {
 

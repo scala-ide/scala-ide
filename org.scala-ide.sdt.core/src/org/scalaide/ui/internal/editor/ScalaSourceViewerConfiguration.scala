@@ -101,7 +101,7 @@ class ScalaSourceViewerConfiguration(
     val presenter = new InformationPresenter(getOutlinePresenterControlCreator(sourceViewer, IJavaEditorActionDefinitionIds.SHOW_OUTLINE))
     presenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
     presenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL)
-    val provider = new ScalaOutlineModelProvider(getEditor())
+    val provider = new ScalaOutlineModelProvider(editor.asInstanceOf[ScalaCompilationUnitEditor])
     presenter.setInformationProvider(provider, IDocument.DEFAULT_CONTENT_TYPE)
     presenter.setInformationProvider(provider, IJavaPartitions.JAVA_DOC)
     presenter.setInformationProvider(provider, IJavaPartitions.JAVA_MULTI_LINE_COMMENT)

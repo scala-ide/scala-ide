@@ -1,16 +1,12 @@
 package org.scalaide.core.ui
 
-import org.scalaide.core.testsetup.TestProjectSetup
-import org.scalaide.core.CompilerTestUtils
 import org.junit.Test
 import org.junit.Assert
 import org.scalaide.ui.internal.editor.outline._
-import org.hamcrest.core.IsInstanceOf
+import org.scalaide.CompilerSupportTests
 
-object OutlineModelTest extends TestProjectSetup("outline-model") {
-  val unit = scalaCompilationUnit("/pack/Target.scala")
+object OutlineModelTest extends CompilerSupportTests{
 
-  val compUtils = new CompilerTestUtils(unit)
 }
 
 class OutlineModelTest {
@@ -30,18 +26,24 @@ class OutlineModelTest {
 
   @Test
   def testImport(): Unit = {
-    runTest("""package pack
+    runTest("""package testImport
                import scala.Any
+               import scala.{Predef => _}
+               import java.util._
+               import com.{a=> A, b=>B}
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
       Assert.assertEquals("import declarations", textAt(rn, 1))
       Assert.assertEquals("scala.Any", textAt(rn, 1, 0))
+      Assert.assertEquals("scala.{Predef => _}", textAt(rn, 1, 1))
+      Assert.assertEquals("java.util._", textAt(rn, 1, 2))
+      Assert.assertEquals("com.{a => A, b => B}", textAt(rn, 1, 3))
     })
   }
 
   @Test
   def testType(): Unit = {
-    runTest("""package pack
+    runTest("""package testType
                class Foo{
                 type MyType =Int
                }
@@ -54,8 +56,22 @@ class OutlineModelTest {
   }
 
   @Test
+  def testFuncArg1(): Unit = {
+    runTest("""package testFuncArg1
+               class Foo{
+                def p:(Int => Long) =>Double
+                def p1:Int => Int =>Int
+               }
+            """, rn => {
+      Assert.assertEquals(2, rn.children.size)
+      Assert.assertEquals("Foo", textAt(rn, 1))
+      Assert.assertEquals("p: (Int => Long) => Double", textAt(rn, 1, 0))
+      Assert.assertEquals("p1: Int => Int => Int", textAt(rn, 1, 1))
+    })
+  }
+  @Test
   def testFuncArg(): Unit = {
-    runTest("""package pack
+    runTest("""package testFuncArg
                class Foo{
                 def p2= {""}
                 def p:Int => Int ={i => i*i}
@@ -82,7 +98,7 @@ class OutlineModelTest {
 
   @Test
   def testInnerFunc(): Unit = {
-    runTest("""package pack
+    runTest("""package testInnerFunc
                class Foo{
                  def a(i: Int): Unit ={
                    def b:Int = 0
@@ -98,7 +114,7 @@ class OutlineModelTest {
 
   @Test
   def testClassOnly(): Unit = {
-    runTest("""package pack
+    runTest("""package testClassOnly
                class Foo{
                  def p ={""}
                }
@@ -112,7 +128,7 @@ class OutlineModelTest {
 
   @Test
   def testTupleVal(): Unit = {
-    runTest("""package pack
+    runTest("""package testTupleVal
                class Foo{
                  val (t1, t2) =(1, 2)
                }
@@ -127,7 +143,7 @@ class OutlineModelTest {
 
   @Test
   def testTruncate(): Unit = {
-    runTest("""package pack
+    runTest("""package testTruncate
                class Foo{
                  val b:x.y.Z
                  def a(x:x.y.Z):a.b.C=c
@@ -143,24 +159,32 @@ class OutlineModelTest {
 
   @Test
   def testTypeParameter(): Unit = {
-    runTest("""package pack
+    runTest("""package testTypeParameter
                class Foo{
                  def a[A](x:A)= 0
                  val x:List[X]
                }
+               trait MyTrait[T] {
+                 type P[T]
+                 def a[X]:(T,X)
+               }
             """, rn => {
-      Assert.assertEquals(2, rn.children.size)
+      Assert.assertEquals(3, rn.children.size)
       Assert.assertEquals("Foo", textAt(rn, 1))
       Assert.assertEquals(2, childAt(rn, 1).asInstanceOf[ContainerNode].children.size)
       Assert.assertEquals("a[A](x: A)", textAt(rn, 1, 0))
       Assert.assertEquals("x: List[X]", textAt(rn, 1, 1))
+      Assert.assertEquals("P[T]", textAt(rn, 2, 0))
+      Assert.assertEquals("a[X]: (T, X)", textAt(rn, 2, 1))
     })
   }
   private def runTest(str: String, f: RootNode => Unit): Unit = {
     import OutlineModelTest._
-    unit.scalaProject.presentationCompiler(comp => {
+    withCompiler { comp =>
+      val unit = mkScalaCompilationUnit(str)
       val rn = ModelBuilder.buildTree(comp, unit.sourceMap(str.toCharArray).sourceFile)
       f(rn)
-    })
+    }
   }
+
 }
