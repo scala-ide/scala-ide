@@ -26,6 +26,7 @@ import org.scalaide.core.pc.PresentationCompilerRefreshTest
 import org.scalaide.core.pc.PresentationCompilerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.project.ScalaInstallationTest
+import org.scalaide.core.sbtbuilder.BuildScopeUnitsTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.sbtbuilder.JavaDependsOnScalaBothAreOkTest
 import org.scalaide.core.sbtbuilder.JavaDependsOnScalaTest
@@ -50,6 +51,7 @@ import org.scalaide.core.semantichighlighting.classifier.SymbolClassifierTestSui
 import org.scalaide.core.structurebuilder.ScalaJavaMapperTest
 import org.scalaide.core.structurebuilder.StructureBuilderTest
 import org.scalaide.core.text.TextTestSuite
+import org.scalaide.core.ui.OutlineModelTest
 import org.scalaide.core.ui.ScalaTemplateContextTest
 import org.scalaide.core.ui.UITestSuite
 import org.scalaide.core.ui.completion.CompletionTestSuite
@@ -59,11 +61,11 @@ import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAt
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
-import org.scalaide.core.ui.OutlineModelTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[BuildScopeUnitsTest],
     classOf[ProjectsCleanJobTest],
     classOf[ClasspathTests],
     classOf[ClasspathContainersTests],

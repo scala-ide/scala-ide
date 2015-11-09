@@ -77,6 +77,8 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
     }
   }
 
+  def isAnySourceDirAssignToScope: Boolean = sources.nonEmpty
+
   private def areDependedUnitsBuilt = {
     val wrongScopes = dependentUnitInstances filter { _.hasErrors } map { _.scope }
     if (wrongScopes.nonEmpty) {
@@ -119,3 +121,4 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
       .filter { _.getLocation.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) })
   }
 }
+

@@ -18,7 +18,8 @@ import sbt.inc.Analysis
 import sbt.inc.IncOptions
 import java.io.File
 
-/** Manages of source compilation for all scopes.
+/**
+ * Manages of source compilation for all scopes.
  *  Refer to [[CompileScope]]
  */
 class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: Settings)
@@ -37,7 +38,9 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
 
   override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit = {
     owningProject.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
-    val scopesAndProjectsInError = buildScopeUnits.map { unit =>
+    val scopesAndProjectsInError = buildScopeUnits.filter {
+      _.isAnySourceDirAssignToScope
+    }.map { unit =>
       ScopeUnitWithProjectsInError(unit, findProjectsInError(unit))
     }
     scopesAndProjectsInError.foreach { scopePotentiallyToRebuild =>

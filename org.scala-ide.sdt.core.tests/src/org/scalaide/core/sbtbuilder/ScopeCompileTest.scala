@@ -1,11 +1,7 @@
 package org.scalaide.core
 package sbtbuilder
 
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.junit.AfterClass
@@ -17,17 +13,6 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.IProjectHelpers
 import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.testsetup.SDTTestUtils.SrcPathOutputEntry
-import org.scalaide.core.testsetup.SDTTestUtils.addToClasspath
-import org.scalaide.core.testsetup.SDTTestUtils.changeContentOfFile
-import org.scalaide.core.testsetup.SDTTestUtils.createProjectInWorkspace
-import org.scalaide.core.testsetup.SDTTestUtils.findProjectProblemMarkers
-import org.scalaide.core.testsetup.SDTTestUtils.markersMessages
-import org.scalaide.core.testsetup.SDTTestUtils.workspace
-
-import ScopeCompileTest.errorTypes
-import ScopeCompileTest.projectA
-import ScopeCompileTest.projectB
 
 object ScopeCompileTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
@@ -74,24 +59,10 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   import org.scalaide.core.testsetup.SDTTestUtils._
   import ScopeCompileTest._
 
-  def whenFileInScopeIsDamaged(project: IScalaProject, scopeRootPath: String, packageName: String, fileName: String)(thenAssertThat: => Unit): Unit = {
-    val toChangeRoot = project.javaProject.findPackageFragmentRoot(new Path("/" + project.underlying.getName + scopeRootPath))
-    val compilationUnit = toChangeRoot.getPackageFragment(packageName).getCompilationUnit(fileName)
-    val unit = compilationUnit.getResource.asInstanceOf[IFile]
-    val revert = compilationUnit.getBuffer.getContents
-    try {
-      changeContentOfFile(compilationUnit.getResource().asInstanceOf[IFile], changedToNonCompiling)
-      workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-
-      thenAssertThat
-    } finally
-      changeContentOfFile(unit, revert)
-  }
-
   @Test def shouldFailProjectBTestScope(): Unit = {
     givenCleanWorkspaceForProjects(projectB)
 
-    whenFileInScopeIsDamaged(projectB, "/src/test", "acme", "AcmeRefTest.scala") {
+    whenFileInScopeIsDamaged(projectB, "/src/test", "acme", "AcmeRefTest.scala", changedToNonCompiling) {
       val expectedOneError =
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
@@ -102,7 +73,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   @Test def shouldFailProjectBMainScopeAndTestIsNotBuilt(): Unit = {
     givenCleanWorkspaceForProjects(projectB)
 
-    whenFileInScopeIsDamaged(projectB, "/src/main", "acme", "AcmeMainRef.scala") {
+    whenFileInScopeIsDamaged(projectB, "/src/main", "acme", "AcmeMainRef.scala", changedToNonCompiling) {
       val expectedTwoErrors =
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
@@ -113,7 +84,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   @Test def shouldFailProjectBMacrosScopeAndMainTestIsNotBuilt(): Unit = {
     givenCleanWorkspaceForProjects(projectB)
 
-    whenFileInScopeIsDamaged(projectB, "/src/macros", "acme", "AcmeMacroRef.scala") {
+    whenFileInScopeIsDamaged(projectB, "/src/macros", "acme", "AcmeMacroRef.scala", changedToNonCompiling) {
       val expectedThreeErrors =
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
@@ -124,7 +95,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   @Test def shouldFailProjectATestScopeAndProjectBTestIsNotBuilt(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/test", "acme", "AcmeTest.scala") {
+    whenFileInScopeIsDamaged(projectA, "/src/test", "acme", "AcmeTest.scala", changedToNonCompiling) {
       val expectedOneError =
         markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedOneErrorInB =
@@ -138,7 +109,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   @Test def shouldFailProjectAMainScopeAndItsTestAndProjectBMacrosMainTestNotBuilt(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/main", "acme", "AcmeMain.scala") {
+    whenFileInScopeIsDamaged(projectA, "/src/main", "acme", "AcmeMain.scala", changedToNonCompiling) {
       val expectedTwoErrors =
         markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedThreeErrorInB =
@@ -152,7 +123,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   @Test def shouldFailProjectAMacrosScopeAndItsMainTestAndProjectBMacrosMainTestNotBuilt(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala") {
+    whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
       val expectedThreeErrors =
         markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
       val expectedThreeErrorInB =
