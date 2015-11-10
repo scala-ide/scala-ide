@@ -169,13 +169,13 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       resource <- ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(file.toURI())
       // this file might have been deleted in the meantime
       if resource.exists() && !compiledFiles(resource)
-    } createMarkers(resource, info)
+    } createMarkers(info)
   }
 
   /**
    * Create problem markers for the given source info.
    */
-  private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
+  private def createMarkers(sourceInfo: SourceInfo) = {
     for (problem <- sourceInfo.reportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }

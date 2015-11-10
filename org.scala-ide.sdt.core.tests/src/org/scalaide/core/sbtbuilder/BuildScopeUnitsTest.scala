@@ -12,6 +12,8 @@ import org.scalaide.core.testsetup.IProjectHelpers
 import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.scalaide.util.internal.SettingConverterUtil
 
 object BuildScopeUnitsTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
@@ -40,9 +42,63 @@ class BuildScopeUnitsTest extends IProjectOperations with IProjectHelpers with H
   import org.scalaide.core.testsetup.SDTTestUtils._
   import BuildScopeUnitsTest._
 
+  private def resetClasspathEntries(): Unit = {
+    val mainDir = project.getFolder("/src/main")
+    val testDir = project.getFolder("/src/test")
+    val jProject = project.javaProject
+    val mainEntry = JavaCore.newSourceEntry(jProject.getPackageFragmentRoot(mainDir).getPath)
+    val testEntry = JavaCore.newSourceEntry(jProject.getPackageFragmentRoot(testDir).getPath)
+    jProject.setRawClasspath(jProject.readRawClasspath.filterNot {
+      Seq(mainEntry, testEntry).contains
+    }, true, null)
+  }
+
   @Test
-  def shouldRecognizeAutomaticallyAddedSourceFoldersAndCreateMarkersCorrectly(): Unit = {
+  def shouldRecognizeAutomaticallyAddedSourceFoldersAndCreateMarkersCorrectlyForStopOnErrors(): Unit = {
     givenCleanWorkspaceForProjects(project)
+    resetClasspathEntries()
+    toggleStopOnErrorsProperty(project, on = true)
+
+    whenFileInScopeIsDamaged(project, "/src/macros", "acme", "Macro.scala", changedToNonCompiling) {
+      val expectedOneError =
+        markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
+
+      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
+    }
+
+    thenAddMainScopeSourceDirToProject()
+
+    whenFileInScopeIsDamaged(project, "/src/macros", "acme", "Macro.scala", changedToNonCompiling) {
+      val expectedOneError =
+        markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
+
+      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
+    }
+
+    thenAddTestsScopeSourceDirToProject()
+
+    whenFileInScopeIsDamaged(project, "/src/macros", "acme", "Macro.scala", changedToNonCompiling) {
+      val expectedOneError =
+        markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
+
+      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
+    }
+
+    thenRemoveMainScopeForExampleFromProject()
+
+    whenFileInScopeIsDamaged(project, "/src/macros", "acme", "Macro.scala", changedToNonCompiling) {
+      val expectedOneError =
+        markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
+
+      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
+    }
+  }
+
+  @Test
+  def shouldRecognizeAutomaticallyAddedSourceFoldersAndCreateMarkersCorrectlyForNonStopOnErrors(): Unit = {
+    givenCleanWorkspaceForProjects(project)
+    resetClasspathEntries()
+    toggleStopOnErrorsProperty(project, on = false)
 
     whenFileInScopeIsDamaged(project, "/src/macros", "acme", "Macro.scala", changedToNonCompiling) {
       val expectedOneError =

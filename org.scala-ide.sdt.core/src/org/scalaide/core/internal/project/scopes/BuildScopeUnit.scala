@@ -1,9 +1,7 @@
 package org.scalaide.core.internal.project.scopes
 
 import java.io.File
-
 import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -20,9 +18,9 @@ import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.CompileScope
 import org.scalaide.ui.internal.preferences.ScopesSettings
 import org.scalaide.util.internal.SettingConverterUtil
-
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 /**
  * Manages compilation of sources for given scope.
@@ -62,7 +60,7 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
   override def clean(implicit monitor: IProgressMonitor): Unit = delegate.clean
 
   override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit = {
-    hasInternalErrors = if (areDependedUnitsBuilt) {
+    hasInternalErrors = if (areDependedUnitsBuilt || doesContinueBuildOnErrors) {
       def javaHasErrors: Boolean = {
         val SeverityNotSet = -1
         owningProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE).exists { marker =>
@@ -79,14 +77,13 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
 
   def isAnySourceDirAssignToScope: Boolean = sources.nonEmpty
 
-  private def areDependedUnitsBuilt = {
-    val wrongScopes = dependentUnitInstances filter { _.hasErrors } map { _.scope }
-    if (wrongScopes.nonEmpty) {
-      BuildProblemMarker.create(owningProject.underlying,
-        s"${owningProject.underlying.getName}'s ${scope.name} not built due to errors in dependent scope(s) ${wrongScopes.map(_.name).toSet.mkString(", ")}")
-      false
-    } else true
+  private def doesContinueBuildOnErrors = {
+    val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
+    !owningProject.storage.getBoolean(stopBuildOnErrorsProperty)
   }
+
+  private def areDependedUnitsBuilt =
+    !dependentUnitInstances.exists { _.hasErrors }
 
   private def toCompile(sources: Set[IFile]) = (for {
     (src, _) <- srcOutputs

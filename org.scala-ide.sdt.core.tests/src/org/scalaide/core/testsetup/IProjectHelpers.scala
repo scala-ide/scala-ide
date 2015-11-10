@@ -10,7 +10,9 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaProject
 import org.junit.Assert
 import org.scalaide.core.IScalaProject
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 /**
  * Collects implicits playing with `IProject` object
@@ -108,5 +110,13 @@ trait IProjectOperations {
       thenAssertThat
     } finally
       changeContentOfFile(unit, revert)
+  }
+
+  /**
+   * Utility to toggle `stopBuildOnErrors` flag.
+   */
+  def toggleStopOnErrorsProperty(project: IScalaProject, on: Boolean): Unit = {
+    val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
+    project.storage.setValue(stopBuildOnErrorsProperty, on)
   }
 }

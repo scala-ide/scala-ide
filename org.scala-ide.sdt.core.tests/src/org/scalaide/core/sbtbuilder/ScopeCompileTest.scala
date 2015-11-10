@@ -46,6 +46,8 @@ object ScopeCompileTest extends IProjectOperations {
     initializeProjects(bundleName, Seq(projectAName, projectBName)) {
       projectA = createProjectInWorkspace(projectAName, withSrcOutputStructure)
       projectB = createProjectInWorkspace(projectBName, withSrcOutputStructure)
+      toggleStopOnErrorsProperty(projectA, on = false)
+      toggleStopOnErrorsProperty(projectB, on = false)
       addToClasspath(projectB, JavaCore.newProjectEntry(projectA.underlying.getFullPath, false))
     }
   }
@@ -77,7 +79,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
       val expectedTwoErrors =
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
-      Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 2 == expectedTwoErrors.length)
+      Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 1 == expectedTwoErrors.length)
     }
   }
 
@@ -88,7 +90,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
       val expectedThreeErrors =
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
-      Assert.assertTrue("See what's wrong: " + expectedThreeErrors.mkString(", "), 3 == expectedThreeErrors.length)
+      Assert.assertTrue("See what's wrong: " + expectedThreeErrors.mkString(", "), 1 == expectedThreeErrors.length)
     }
   }
 
@@ -116,7 +118,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
         markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
       val errors = expectedTwoErrors ++ expectedThreeErrorInB
 
-      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 5 == errors.length)
+      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 4 == errors.length)
     }
   }
 
@@ -131,7 +133,7 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
 
       val errors = expectedThreeErrors ++ expectedThreeErrorInB
 
-      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 6 == errors.length)
+      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 4 == errors.length)
     }
   }
 
