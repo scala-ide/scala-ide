@@ -5,7 +5,7 @@ import org.junit.Assert
 import org.scalaide.ui.internal.editor.outline._
 import org.scalaide.CompilerSupportTests
 
-object OutlineModelTest extends CompilerSupportTests{
+object OutlineModelTest extends CompilerSupportTests {
 
 }
 
@@ -176,6 +176,24 @@ class OutlineModelTest {
       Assert.assertEquals("x: List[X]", textAt(rn, 1, 1))
       Assert.assertEquals("P[T]", textAt(rn, 2, 0))
       Assert.assertEquals("a[X]: (T, X)", textAt(rn, 2, 1))
+    })
+  }
+  @Test
+  def testBackTicks(): Unit = {
+    runTest("""package testBackTicks
+               class `A.B`{
+                 val `a.b`=0
+                 def f:`A.B`
+                 def g(i: Int): `A.B`.type = ???
+               }
+               object `X Y`{}
+            """, rn => {
+      Assert.assertEquals(3, rn.children.size)
+      Assert.assertEquals("`A.B`", textAt(rn, 1))
+      Assert.assertEquals("`a.b`", textAt(rn, 1, 0))
+      Assert.assertEquals("f: `A.B`", textAt(rn, 1, 1))
+      Assert.assertEquals("g(i: Int): `A.B`.type", textAt(rn, 1, 2))
+      Assert.assertEquals("`X Y`", textAt(rn, 2))
     })
   }
   private def runTest(str: String, f: RootNode => Unit): Unit = {
