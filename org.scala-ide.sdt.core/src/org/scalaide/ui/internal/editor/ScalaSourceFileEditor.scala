@@ -57,11 +57,13 @@ import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.dom.AST
 import org.scalaide.util.Utils
+import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 
 class ScalaSourceFileEditor
     extends CompilationUnitEditor
     with ScalaCompilationUnitEditor
     with MarkOccurrencesEditorExtension
+    with OutlinePageEditorExtension
     with HasLogger { self ⇒
 
   import ScalaSourceFileEditor._

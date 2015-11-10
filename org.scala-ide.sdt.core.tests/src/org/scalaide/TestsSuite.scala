@@ -59,6 +59,7 @@ import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAt
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
+import org.scalaide.core.ui.OutlineModelTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -120,6 +121,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[NameHashingVulnerabilityTest],
     classOf[JavaDependsOnScalaTest],
     classOf[JavaDependsOnScalaBothAreOkTest],
-    classOf[ScopeCompileConfigurationTest]
+    classOf[ScopeCompileConfigurationTest],
+    classOf[OutlineModelTest]
 ))
 class TestsSuite
