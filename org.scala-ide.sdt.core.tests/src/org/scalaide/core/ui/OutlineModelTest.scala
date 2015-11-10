@@ -25,6 +25,15 @@ class OutlineModelTest {
   }
 
   @Test
+  def testPackage(): Unit = {
+    runTest("""package x.y.z
+            """, rn => {
+      Assert.assertEquals(1, rn.children.size)
+      Assert.assertEquals("x.y.z", textAt(rn,0))
+    })
+  }
+
+  @Test
   def testImport(): Unit = {
     runTest("""package testImport
                import scala.Any

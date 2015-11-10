@@ -159,11 +159,26 @@ object ModelBuilder extends HasLogger {
         else
           name.decoded.split("\\.").reverse.head
       }
+
+      def renderQualifier(sb: StringBuilder, t: Tree): Unit = {
+        t match {
+          case Ident(name) =>
+            sb.append(name)
+          case Select(qualifier: Tree, name: Name) =>
+            renderQualifier(sb, qualifier)
+            sb.append(".")
+            sb.append(name)
+          case _ => logger.error("Unknown Qualifier tree " + t.getClass)
+        }
+      }
+
       t match {
         case Template(_, _, _) => t.children.foreach(x => updateTree(parent, x))
         case PackageDef(pid, stats) => {
           if (pid.pos.isDefined && pid.pos.start != pid.pos.end) {
-            val ch = PackageNode(showName(pid.name), parent)
+            val sb = new StringBuilder
+            renderQualifier(sb, pid)
+            val ch = PackageNode(sb.toString, parent)
             setPos(ch, pid.pos.start, pid.pos.end)
             parent.addChild(ch)
           }
@@ -249,19 +264,7 @@ object ModelBuilder extends HasLogger {
                 sb.append(is.name + " => " + is.rename)
             }
 
-            def renderQualifier(t: Tree): Unit = {
-              t match {
-                case Ident(name) =>
-                  sb.append(name)
-                case Select(qualifier: Tree, name: Name) =>
-                  renderQualifier(qualifier)
-                  sb.append(".")
-                  sb.append(name)
-                case _ => logger.error("Unknown import tree " + expr.getClass)
-              }
-            }
-
-            renderQualifier(expr)
+            renderQualifier(sb, expr)
             if (selectors.size == 1) {
               val s = selectors.head
               sb.append(".")
