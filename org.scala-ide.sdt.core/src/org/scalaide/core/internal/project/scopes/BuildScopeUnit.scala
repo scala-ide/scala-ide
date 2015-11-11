@@ -1,7 +1,9 @@
 package org.scalaide.core.internal.project.scopes
 
 import java.io.File
+
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -12,15 +14,15 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.CompileScope
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.ui.internal.preferences.ScopesSettings
 import org.scalaide.util.internal.SettingConverterUtil
+
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 
 /**
  * Manages compilation of sources for given scope.
@@ -100,6 +102,9 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
       case (sourceFolder, outputFolder) if outputFolder.getLocation.toFile == outputFile &&
         managesSrcFolder(sourceFolder) => this
     }
+  override def buildErrors: Set[IMarker] = sources.flatMap {
+    _.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
+  }.toSet
 }
 
 private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owningProject: IScalaProject) {

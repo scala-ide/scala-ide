@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.SubMonitor
 import sbt.inc.IncOptions
 import sbt.inc.Analysis
 import java.io.File
+import org.eclipse.core.resources.IMarker
 
 /**
  * Abstraction which exposes sbt compiler to eclipse.
@@ -36,6 +37,9 @@ trait EclipseBuildManager {
    * @return `Option[EclipseBuildManager]` when found or `None` otherwise
    */
   def buildManagerOf(outputFile: File): Option[EclipseBuildManager]
+
+  /** Returns error markers on underlying resources. */
+  def buildErrors: Set[IMarker]
 }
 
 /** Keeps collected analysis persistently in store. This store is exposed outdoor. */

@@ -1,7 +1,9 @@
 package org.scalaide.core.internal.project
 
+import java.io.File
 import scala.tools.nsc.Settings
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
@@ -16,7 +18,7 @@ import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
-import java.io.File
+import scala.util.Properties
 
 /**
  * Manages of source compilation for all scopes.
@@ -44,10 +46,11 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
       ScopeUnitWithProjectsInError(unit, findProjectsInError(unit))
     }
     scopesAndProjectsInError.foreach { scopePotentiallyToRebuild =>
-      putMarkersForTransitives(scopePotentiallyToRebuild)
-      if (!(scopePotentiallyToRebuild.projectsInError.nonEmpty && isStopBuildOnErrors)) {
+      if (scopePotentiallyToRebuild.projectsInError.isEmpty || doesContinueBuildOnErrors) {
         val scopeUnit = scopePotentiallyToRebuild.owner
         scopeUnit.build(addedOrUpdated, removed, monitor)
+      } else {
+        putMarkersForTransitives(scopePotentiallyToRebuild)
       }
     }
     hasInternalErrors = scopesAndProjectsInError.exists { scopeWithErrors =>
@@ -55,34 +58,45 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     }
   }
 
+  override def buildErrors: Set[IMarker] = buildScopeUnits.flatMap { _.buildErrors }.toSet
   override def invalidateAfterLoad: Boolean = true
   override def clean(implicit monitor: IProgressMonitor): Unit = buildScopeUnits.foreach { _.clean }
   override def canTrackDependencies: Boolean = true
 
   private def findProjectsInError(scopeUnit: BuildScopeUnit) = {
-    def hasErrors(project: IProject, scope: CompileScope): Boolean = {
-      IScalaPlugin().getScalaProject(project).buildManager match {
-        case manager: SbtScopesBuildManager => manager.hasErrors(scope)
-        case manager: EclipseBuildManager => manager.hasErrors
-      }
-    }
+    def hasErrors(project: IProject, scope: CompileScope): Boolean =
+      IScalaPlugin().asScalaProject(project).map {
+        _.buildManager match {
+          case manager: SbtScopesBuildManager => manager.hasErrors(scope)
+          case manager: EclipseBuildManager => manager.hasErrors
+        }
+      }.getOrElse(false)
     for {
       scope <- scopeUnit.scope.dependentScopesInUpstreamProjects
       project <- owningProject.transitiveDependencies if hasErrors(project, scope)
     } yield project
   }
 
-  private def isStopBuildOnErrors = {
+  private def doesContinueBuildOnErrors = {
     val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
-    owningProject.storage.getBoolean(stopBuildOnErrorsProperty)
+    !owningProject.storage.getBoolean(stopBuildOnErrorsProperty)
   }
 
   private def putMarkersForTransitives(scopeWithError: ScopeUnitWithProjectsInError): Unit = {
     if (scopeWithError.projectsInError.nonEmpty) {
       val errorProjects = scopeWithError.projectsInError.map(_.getName).toSet.mkString(", ")
+      val rootErrors = scopeWithError.projectsInError.flatMap { project =>
+        IScalaPlugin().asScalaProject(project).toList.flatMap {
+          _.buildManager.buildErrors
+        }
+      }.toSet[IMarker].map {
+        _.getAttribute(IMarker.MESSAGE, "No message")
+      }.mkString(";")
       val currentScopeName = scopeWithError.owner.scope.name
       BuildProblemMarker.create(owningProject.underlying,
-        s"Project ${owningProject.underlying.getName} ${currentScopeName} not built due to errors in dependent project(s) $errorProjects")
+        s"""Project: "${owningProject.underlying.getName}" in scope: "${currentScopeName}" not built due to
+          | errors in dependent project(s): $errorProjects.
+          | Root error(s): $rootErrors""".stripMargin)
     }
   }
 
