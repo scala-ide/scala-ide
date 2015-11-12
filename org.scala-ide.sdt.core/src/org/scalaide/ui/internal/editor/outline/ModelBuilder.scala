@@ -90,7 +90,7 @@ object ModelBuilder extends HasLogger {
                 renderType(sb, args.head, List(), false)
                 sb.append("*")
 
-              case _ => sb.append(showName(name))
+              case _ => sb.append(showName(name, t))
             }
           case _ => logger.error("renderATT. Unknown Tree type " + t.getClass)
         }
@@ -101,7 +101,7 @@ object ModelBuilder extends HasLogger {
           case AppliedTypeTree(tpt: Tree, args: List[Tree]) => renderATT(sb, tpt, args, needParenthesis)
 
           case Ident(name) =>
-            sb.append(showName(name))
+            sb.append(showName(name, tt))
             if (!args.isEmpty) {
               sb.append("[")
               args.foreach(a => { renderType(sb, a, List(), false); sb.append(", ") })
@@ -110,7 +110,7 @@ object ModelBuilder extends HasLogger {
             }
 
           case Select(qualifier: Tree, name: Name) =>
-            sb.append(showName(name))
+            sb.append(showName(name, qualifier))
 
           case SingletonTypeTree(ref) =>
             renderType(sb, ref)
@@ -145,16 +145,15 @@ object ModelBuilder extends HasLogger {
         }
       }
 
-      def nameLen(name: Name) = {
-        if (name.toString.contains("$"))
+      def nameLen(name: Name, t:Tree) = {
+        if (src.content(t.pos.point) == '`')
           name.decoded.length() + 2
         else
           name.decoded.length()
       }
 
-      def showName(name: Name) = {
-        val str = name.toString
-        if (str.contains("$"))
+      def showName(name: Name, t:Tree) = {
+        if (src.content(t.pos.point) == '`')
           "`" + name.decoded + "`"
         else
           name.decoded.split("\\.").reverse.head
@@ -188,8 +187,8 @@ object ModelBuilder extends HasLogger {
 
         case ClassDef(mods, name, tpars, templ) => {
           if (name.toString() != "$anon") {
-            val ch = ClassNode(showName(name), parent, showTypeList(tpars))
-            setPos(ch, t.pos.point, t.pos.point + nameLen(name))
+            val ch = ClassNode(showName(name, t), parent, showTypeList(tpars))
+            setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
             parent.addChild(ch)
             ch.setFlags(mods.flags)
             t.children.foreach(x => updateTree(ch, x))
@@ -201,10 +200,10 @@ object ModelBuilder extends HasLogger {
         case ValDef(mods, name, tpt, rsh) =>
           if ((mods.flags & SYNTHETIC) == 0) {
             val ch = if ((mods.flags & MUTABLE) == 0)
-              ValNode(showName(name), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
+              ValNode(showName(name, t), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
             else
-              VarNode(showName(name), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
-            setPos(ch, t.pos.point, t.pos.point + nameLen(name))
+              VarNode(showName(name, t), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
+            setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
             ch.setFlags(mods.flags)
             parent.addChild(ch)
 
@@ -225,17 +224,17 @@ object ModelBuilder extends HasLogger {
 
           }
           if (t.pos.isOpaqueRange) {
-            val ch = MethodNode(showName(name), parent, showTypeList(tparamss), argList)
+            val ch = MethodNode(showName(name, t), parent, showTypeList(tparamss), argList)
             ch.returnType = if (!tpt.isEmpty) Some(showType(tpt)) else None
-            setPos(ch, t.pos.point, t.pos.point + nameLen(name))
+            setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
             ch.setFlags(mods.flags)
             parent.addChild(ch)
             updateTree(ch, rsh)
           }
 
         case ModuleDef(mods, name, _) => {
-          val ch = ObjectNode(showName(name), parent)
-          setPos(ch, t.pos.point, t.pos.point + nameLen(name))
+          val ch = ObjectNode(showName(name, t), parent)
+          setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
           ch.setFlags(mods.flags)
           parent.addChild(ch)
           t.children.foreach(x => updateTree(ch, x))
@@ -248,8 +247,8 @@ object ModelBuilder extends HasLogger {
         }
 
         case TypeDef(mods: Modifiers, name: TypeName, tparams: List[TypeDef], rhs: Tree) =>
-          val ch = TypeNode(showName(name) + showTypeList(tparams), parent)
-          setPos(ch, t.pos.point, t.pos.point + nameLen(name))
+          val ch = TypeNode(showName(name, t) + showTypeList(tparams), parent)
+          setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
           ch.setFlags(mods.flags)
           if (!ch.isParam)
             parent.addChild(ch)

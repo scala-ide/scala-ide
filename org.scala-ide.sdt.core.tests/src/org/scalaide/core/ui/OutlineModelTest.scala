@@ -195,7 +195,9 @@ class OutlineModelTest {
                  def f:`A.B`
                  def g(i: Int): `A.B`.type = ???
                }
-               object `X Y`{}
+               object `X Y`{
+                 def +++ = 0
+               }
             """, rn => {
       Assert.assertEquals(3, rn.children.size)
       Assert.assertEquals("`A.B`", textAt(rn, 1))
@@ -203,6 +205,7 @@ class OutlineModelTest {
       Assert.assertEquals("f: `A.B`", textAt(rn, 1, 1))
       Assert.assertEquals("g(i: Int): `A.B`.type", textAt(rn, 1, 2))
       Assert.assertEquals("`X Y`", textAt(rn, 2))
+      Assert.assertEquals("+++", textAt(rn, 2, 0))
     })
   }
   private def runTest(str: String, f: RootNode => Unit): Unit = {
