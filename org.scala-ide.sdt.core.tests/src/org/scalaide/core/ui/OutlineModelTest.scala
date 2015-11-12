@@ -29,7 +29,7 @@ class OutlineModelTest {
     runTest("""package x.y.z
             """, rn => {
       Assert.assertEquals(1, rn.children.size)
-      Assert.assertEquals("x.y.z", textAt(rn,0))
+      Assert.assertEquals("x.y.z", textAt(rn, 0))
     })
   }
 
