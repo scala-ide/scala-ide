@@ -145,14 +145,14 @@ object ModelBuilder extends HasLogger {
         }
       }
 
-      def nameLen(name: Name, t:Tree) = {
+      def nameLen(name: Name, t: Tree) = {
         if (src.content(t.pos.point) == '`')
           name.decoded.length() + 2
         else
           name.decoded.length()
       }
 
-      def showName(name: Name, t:Tree) = {
+      def showName(name: Name, t: Tree) = {
         if (src.content(t.pos.point) == '`')
           "`" + name.decoded + "`"
         else
