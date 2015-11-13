@@ -1,9 +1,11 @@
 package org.scalaide.ui.internal.editor.outline
+
 import org.eclipse.jface.viewers.ITreeContentProvider
 import org.eclipse.jface.viewers.Viewer
+import org.scalaide.core.internal.ScalaPlugin
 
 class ScalaOutlineContentProvider extends ITreeContentProvider {
-  var publicOnly = true
+  var publicOnly = ScalaPlugin().getPreferenceStore().getBoolean("PublicOnlyAction.isChecked")
   val NONODES = new Array[Object](0)
 
   private def filter(nodes: Iterable[Node]) = {
