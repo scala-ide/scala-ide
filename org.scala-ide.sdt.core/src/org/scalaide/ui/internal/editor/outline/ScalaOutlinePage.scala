@@ -31,7 +31,7 @@ class PublicOnlyAction(contentProvider: ScalaOutlineContentProvider, viewer: Vie
     contentProvider.publicOnly = checked
     viewer.refresh()
     if (save)
-      ScalaPlugin().getPreferenceStore().setValue("PublicOnlyAction.isChecked", if (checked) true else false)
+      ScalaPlugin().getPreferenceStore().setValue("PublicOnlyAction.isChecked", checked)
   }
 }
 
