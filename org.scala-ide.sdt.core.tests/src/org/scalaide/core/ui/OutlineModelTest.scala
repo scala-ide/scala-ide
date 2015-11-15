@@ -90,6 +90,7 @@ class OutlineModelTest {
                 def a3(i:String):(Long,Int) ={(1,1)}
                 def a4(i: => (Int,Long)) ={}
                 def a5(i:(Int,Long)*) ={}
+                def a6(i: () => Any): () => Any = i
                }
             """, rn => {
       Assert.assertEquals(2, rn.children.size)
@@ -102,6 +103,7 @@ class OutlineModelTest {
       Assert.assertEquals("a3(i: String): (Long, Int)", textAt(rn, 1, 5))
       Assert.assertEquals("a4(i: => (Int, Long))", textAt(rn, 1, 6))
       Assert.assertEquals("a5(i: (Int, Long)*)", textAt(rn, 1, 7))
+      Assert.assertEquals("a6(i: () => Any): () => Any", textAt(rn, 1, 8))
     })
   }
 

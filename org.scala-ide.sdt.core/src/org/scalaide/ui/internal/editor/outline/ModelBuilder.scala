@@ -57,7 +57,7 @@ object ModelBuilder extends HasLogger {
         } else {
           sb.append("(")
           args.dropRight(1).foreach(x => { renderType(sb, x); sb.append(", ") })
-          sb.setLength(sb.length - 2)
+          sb.setLength(math.max(1, sb.length - 2))
           sb.append(") => ")
           renderType(sb, args.last)
         }
@@ -306,5 +306,3 @@ object ModelBuilder extends HasLogger {
   }
 
 }
-
-
