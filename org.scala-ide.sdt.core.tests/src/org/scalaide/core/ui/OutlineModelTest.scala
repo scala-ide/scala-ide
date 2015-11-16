@@ -208,6 +208,18 @@ class OutlineModelTest {
       Assert.assertEquals("+++", textAt(rn, 2, 0))
     })
   }
+
+  @Test
+  def classCtor(): Unit = {
+    runTest("""package classCtor
+               class Test(val v: Int) {
+                 def this(v1: Int, v2: Int) = this(v1+v2)
+               }
+            """, rn => {
+      Assert.assertEquals("this(v1: Int, v2: Int)", textAt(rn, 1, 1))
+    })
+  }
+
   private def runTest(str: String, f: RootNode => Unit): Unit = {
     import OutlineModelTest._
     withCompiler { comp =>
