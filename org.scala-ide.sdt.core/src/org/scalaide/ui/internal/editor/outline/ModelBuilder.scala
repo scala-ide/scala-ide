@@ -153,10 +153,15 @@ object ModelBuilder extends HasLogger {
       }
 
       def showName(name: Name, t: Tree) = {
-        if (src.content(t.pos.point) == '`')
-          "`" + name.decoded + "`"
-        else
-          name.decoded.split("\\.").reverse.head
+        t match {
+          case t: DefDef if t.name == nme.CONSTRUCTOR =>
+            "this"
+          case _ =>
+            if (src.content(t.pos.point) == '`')
+              "`" + name.decoded + "`"
+            else
+              name.decoded.split("\\.").reverse.head
+        }
       }
 
       def renderQualifier(sb: StringBuilder, t: Tree): Unit = {
