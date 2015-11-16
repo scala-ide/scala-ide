@@ -3,9 +3,11 @@ package org.scalaide.debug.internal.async
 import java.util.UUID
 
 import scala.collection.JavaConverters
+import scala.util.Try
 
 import org.eclipse.debug.core.DebugEvent
 import org.scalaide.debug.internal.BaseDebuggerActor
+import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.async.AsyncUtils.AsyncProgramPointKey
 import org.scalaide.debug.internal.async.AsyncUtils.RequestOwnerKey
 import org.scalaide.debug.internal.async.AsyncUtils.installMethodBreakpoint
@@ -13,6 +15,7 @@ import org.scalaide.debug.internal.async.AsyncUtils.isAsyncProgramPoint
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaThread
+import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.Field
@@ -26,8 +29,12 @@ import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
 
 case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) extends HasLogger {
-  private val StepMessageOut = "StepMessageOut" + UUID.randomUUID.toString
-  private val IsSearchingReceiveMethodKey = "search"
+  import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
+  import scala.collection.JavaConverters._
+  private val StepMessageOut = "org.scala-ide.debug.async.step-out.StepMessageOut" + UUID.randomUUID.toString
+  private val IsSearchingReceiveMethodKey = "org.scala-ide.debug.async.step-out.Search"
+  private val StackTraceDepth = "org.scala-ide.debug.async.step-out.StackTraceDepth"
+  private val StartLineNumber = "org.scala-ide.debug.async.step-out.StartLineNumber"
   private var watchedMessage: Option[ObjectReference] = None
   private var watchedActor: String = _
   val programSends = List(
@@ -38,11 +45,13 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
     AsyncProgramPoint("akka.actor.ActorCell", "receiveMessage", 0))
   private var receiveRequest: Option[EventRequest] = None
   private var stepRequests = Set[EventRequest]()
-  private var steps = 0
   private val depth = thread.getScalaStackFrames.size
   private val line = thread.getTopStackFrame().getLineNumber()
   private val Halt = true
   private val Continue = false
+  private val ProcessMailbox = 8
+  private[async] val stepOutNotStopInClasses =
+    debugTarget.getLaunch.getLaunchConfiguration.getAttribute(StepOutExcludePkgsOrClasses, List.empty[String].asJava).asScala
 
   def step(): Unit = {
     subordinate.start()
@@ -50,38 +59,52 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
     thread.resumeFromScala(DebugEvent.CLIENT_REQUEST)
   }
 
+  private[async] def findThisType(stepEvent: StepEvent): String = {
+    val loc = stepEvent.location()
+    val declType = loc.declaringType().name()
+    val thisObject = stepEvent.thread().frame(0).thisObject()
+    if (thisObject ne null)
+      thisObject.referenceType().name()
+    else
+      declType
+  }
+
   object subordinate extends BaseDebuggerActor {
     import scala.collection.JavaConverters._
-    private def isReceiveHandler(loc: com.sun.jdi.Location): Boolean =
-      loc.method().name().contains("applyOrElse")
+    private def isReceiveHandler(stepEvent: StepEvent): Boolean = {
+      val thisType = findThisType(stepEvent)
+      "applyOrElse" == stepEvent.location.method.name &&
+        !stepOutNotStopInClasses.exists { thisType.startsWith }
+    }
 
     override protected def behavior = {
       case breakpointEvent: BreakpointEvent if isSearchingReceiveMethod(breakpointEvent) =>
-        val topFrame = breakpointEvent.thread().frame(0)
+        val currentThread = breakpointEvent.thread
+        val topFrame = currentThread.frame(0)
         val args = topFrame.getArgumentValues()
         logger.debug(s"receive intercepted: topFrame arguments: $args")
         val app = breakpointEvent.request().getProperty(AsyncProgramPointKey).asInstanceOf[AsyncProgramPoint]
         val msg = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
-        if (watchedMessage == msg && watchedActor == actorPathValue(path(self(topFrame.thisObject())), breakpointEvent.thread)) {
+        if (watchedMessage == msg && watchedActor == actorPathValue(path(self(topFrame.thisObject())), currentThread)) {
           logger.debug(s"MESSAGE IN! $msg")
-          val targetThread = debugTarget.getScalaThread(breakpointEvent.thread())
+          val targetThread = debugTarget.getScalaThread(currentThread)
           targetThread foreach { thread =>
             deleteReceiveRequest()
-            establishRequestToStopInReceiveMethod(thread)
+            establishRequestToStopInReceiveMethod(thread, currentThread.frameCount(), breakpointEvent.location().lineNumber())
           }
         }
         reply(Continue)
 
-      case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && isReceiveHandler(stepEvent.location) =>
+      case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && isReceiveHandler(stepEvent) =>
         terminate()
         logger.debug(s"Suspending thread ${stepEvent.thread.name()}")
         // most likely the breakpoint was hit on a different thread than the one we started with, so we find it here
         debugTarget.getScalaThread(stepEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
         reply(Halt)
 
-      case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && steps >= 20 =>
+      case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && shouldStopSteppingForReceiveMethod(stepEvent) =>
         terminate()
-        logger.debug(s"Giving up on stepping after 15 steps")
+        logger.debug(s"Receive method not found. Leaving...")
         reply(Continue)
 
       case stepEvent: StepEvent if isSearchingTellMethod(stepEvent) =>
@@ -105,11 +128,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         }
         reply(decision)
 
-      case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) =>
-        steps += 1
-        logger.debug(s"Step $steps: ${stepEvent.location.declaringType}.${stepEvent.location.method}")
-        reply(Continue)
-
       case _ =>
         reply(Continue)
     }
@@ -129,14 +147,22 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       receiveRequest.foreach { _.putProperty(IsSearchingReceiveMethodKey, true) }
     }
 
-    private def establishRequestToStopInReceiveMethod(thread: ScalaThread): Unit = {
+    private def establishRequestToStopInReceiveMethod(thread: ScalaThread, stackTraceDepth: Int, locationLine: Int): Unit = {
       val stepReq = JdiRequestFactory.createStepRequest(StepRequest.STEP_LINE, StepRequest.STEP_INTO, thread)
       stepReq.putProperty(RequestOwnerKey, StepMessageOut)
       stepReq.putProperty(IsSearchingReceiveMethodKey, true)
+      stepReq.putProperty(StackTraceDepth, stackTraceDepth)
+      stepReq.putProperty(StartLineNumber, locationLine)
       stepReq.enable()
       debugTarget.eventDispatcher.setActorFor(this, stepReq)
       stepRequests = Set(stepReq)
-      steps = 0
+    }
+
+    private def shouldStopSteppingForReceiveMethod(event: StepEvent) = {
+      val depth = event.request().getProperty(StackTraceDepth)
+      val startLine = event.request().getProperty(StartLineNumber).asInstanceOf[Int]
+      event.thread().frameCount() == depth && event.location().lineNumber() > startLine ||
+        event.thread().frameCount() < ProcessMailbox
     }
 
     private def isOwning(event: Event) = event.request.getProperty(RequestOwnerKey) == StepMessageOut
