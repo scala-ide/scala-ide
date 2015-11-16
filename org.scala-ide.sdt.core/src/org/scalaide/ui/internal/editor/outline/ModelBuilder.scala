@@ -41,11 +41,18 @@ object ModelBuilder extends HasLogger {
     }
 
     def updateTree(parent: ContainerNode, t: Tree): Unit = {
+      def renderArgs[A](sb: StringBuilder, args: List[A])(f: A => Unit) = {
+        args match {
+          case head :: tail =>
+            f(head)
+            tail.foreach { a => sb.append(", "); f(a) }
+          case _ =>
+        }
+      }
+
       def renderTuple(sb: StringBuilder, args: List[Tree]) = {
         sb.append("(")
-        args.foreach(a => { renderType(sb, a); sb.append(", ") })
-        if (!args.isEmpty)
-          sb.setLength(sb.length - 2)
+        renderArgs(sb, args)(renderType(sb, _))
         sb.append(")")
       }
 
@@ -56,8 +63,7 @@ object ModelBuilder extends HasLogger {
           renderType(sb, args.last)
         } else {
           sb.append("(")
-          args.dropRight(1).foreach(x => { renderType(sb, x); sb.append(", ") })
-          sb.setLength(sb.length - 2)
+          renderArgs(sb, args.dropRight(1))(renderType(sb, _))
           sb.append(") => ")
           renderType(sb, args.last)
         }
@@ -104,8 +110,7 @@ object ModelBuilder extends HasLogger {
             sb.append(showName(name, tt))
             if (!args.isEmpty) {
               sb.append("[")
-              args.foreach(a => { renderType(sb, a, List(), false); sb.append(", ") })
-              sb.setLength(sb.length - 2)
+              renderArgs(sb, args)(renderType(sb, _, Nil, needParenthesis = false))
               sb.append("]")
             }
 
@@ -139,8 +144,7 @@ object ModelBuilder extends HasLogger {
       def renderTypeList(sb: StringBuilder, tl: List[TypeDef]): Unit = {
         if (!tl.isEmpty) {
           sb.append("[")
-          tl.foreach(td => { sb.append(td.name); renderTypeList(sb, td.tparams); sb.append(", ") })
-          sb.setLength(sb.length - 2)
+          renderArgs(sb, tl) { td => sb.append(td.name); renderTypeList(sb, td.tparams) }
           sb.append("]")
         }
       }
@@ -280,8 +284,7 @@ object ModelBuilder extends HasLogger {
                 sb.append("}")
             } else {
               sb.append(".{")
-              selectors.foreach(s => { renderSelector(s); sb.append(", ") })
-              sb.setLength(sb.length - 2)
+              renderArgs(sb, selectors)(renderSelector(_))
               sb.append("}")
             }
             sb.toString
@@ -311,5 +314,3 @@ object ModelBuilder extends HasLogger {
   }
 
 }
-
-
