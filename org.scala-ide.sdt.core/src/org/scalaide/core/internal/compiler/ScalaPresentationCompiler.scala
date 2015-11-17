@@ -394,7 +394,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
 
     val signature =
       if (sym.isMethod) {
-        declPrinter.defString(sym, flagMask = 0L, showKind = false)(tpe)
+        declPrinter.defString(sym, flagMask = 0L, showKind = false, showAccessor = false)(tpe)
       } else name
     val container = sym.owner.enclClass.fullName
 
