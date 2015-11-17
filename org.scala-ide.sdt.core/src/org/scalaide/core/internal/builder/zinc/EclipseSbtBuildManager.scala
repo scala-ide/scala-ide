@@ -5,7 +5,6 @@ import java.io.File
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
 
-import scala.annotation.migration
 import scala.collection.mutable
 import scala.tools.nsc.Settings
 

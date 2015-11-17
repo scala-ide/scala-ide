@@ -77,8 +77,6 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
     }
   }
 
-  def isAnySourceDirAssignToScope: Boolean = sources.nonEmpty
-
   private def doesContinueBuildOnErrors = {
     val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
     !owningProject.storage.getBoolean(stopBuildOnErrorsProperty)

@@ -1,7 +1,9 @@
 package org.scalaide.core.internal.project
 
 import java.io.File
+
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
@@ -16,9 +18,9 @@ import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.project.scopes.BuildScopeUnit
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
+
 import sbt.inc.Analysis
 import sbt.inc.IncOptions
-import scala.util.Properties
 
 /**
  * Manages of source compilation for all scopes.
@@ -41,12 +43,12 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
   override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit = {
     owningProject.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     val scopesAndProjectsInError = buildScopeUnits.filter {
-      _.isAnySourceDirAssignToScope
+      _.sources.nonEmpty
     }.map { unit =>
       ScopeUnitWithProjectsInError(unit, findProjectsInError(unit))
     }
     scopesAndProjectsInError.foreach { scopePotentiallyToRebuild =>
-      if (scopePotentiallyToRebuild.projectsInError.isEmpty || doesContinueBuildOnErrors) {
+      if (scopePotentiallyToRebuild.projectsInError.isEmpty || shouldBuildContinueOnErrors) {
         val scopeUnit = scopePotentiallyToRebuild.owner
         scopeUnit.build(addedOrUpdated, removed, monitor)
       } else {
@@ -77,7 +79,7 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     } yield project
   }
 
-  private def doesContinueBuildOnErrors = {
+  private def shouldBuildContinueOnErrors = {
     val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
     !owningProject.storage.getBoolean(stopBuildOnErrorsProperty)
   }
@@ -86,17 +88,17 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     if (scopeWithError.projectsInError.nonEmpty) {
       val errorProjects = scopeWithError.projectsInError.map(_.getName).toSet.mkString(", ")
       val rootErrors = scopeWithError.projectsInError.flatMap { project =>
-        IScalaPlugin().asScalaProject(project).toList.flatMap {
+        val foundErrors = IScalaPlugin().asScalaProject(project).toList.flatMap {
           _.buildManager.buildErrors
         }
+        foundErrors
       }.toSet[IMarker].map {
         _.getAttribute(IMarker.MESSAGE, "No message")
       }.mkString(";")
       val currentScopeName = scopeWithError.owner.scope.name
       BuildProblemMarker.create(owningProject.underlying,
-        s"""Project: "${owningProject.underlying.getName}" in scope: "${currentScopeName}" not built due to
-          | errors in dependent project(s): $errorProjects.
-          | Root error(s): $rootErrors""".stripMargin)
+        s"""Project: "${owningProject.underlying.getName}" in scope: "${currentScopeName}" not built due to errors""" +
+          s""" in dependent project(s): $errorProjects. Root error(s): $rootErrors""")
     }
   }
 
