@@ -116,7 +116,17 @@ class ScalaHoverImpl extends ITextHover with ITextHoverExtension with ITextHover
 
         val scalaRegion = new Region(icu.sourceMap(viewer.getDocument.get.toCharArray).scalaPos(region.getOffset), region.getLength)
 
-        def typeInfo(t: Tree): Option[String] = (for (sym <- Option(t.symbol); tpe <- Option(t.tpe)) yield compiler.headerForSymbol(sym, tpe)).flatten
+        def pre(tsym: Symbol, t: Tree): Type = t match {
+          case Apply(fun, _)                   => pre(tsym, fun)
+          case Select(qual, _)                 => qual.tpe
+          case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
+          case _                               => NoType
+        }
+
+        def typeInfo(t: Tree): Option[String] =
+          (for (sym <- Option(t.symbol);
+                tpe <- Option(pre(sym, t)))
+            yield compiler.headerForSymbol(sym, tpe)).flatten
 
         def typecheckingErrorMessage(problems: Seq[IProblem]) = {
           createHtmlOutput { sb =>
@@ -208,12 +218,6 @@ class ScalaHoverImpl extends ITextHover with ITextHoverExtension with ITextHover
             val tree = askTypeAt(pos).getOption()
             val askedOpt = asyncExec {
 
-              def pre(tsym: Symbol, t: Tree): Type = t match {
-                case Apply(fun, _) => pre(tsym, fun)
-                case Select(qual, _) => qual.tpe
-                case _ if tsym.enclClass ne NoSymbol => ThisType(tsym.enclClass)
-                case _ => NoType
-              }
               for (
                 t <- tree;
                 tsym <- Option(t.symbol);
