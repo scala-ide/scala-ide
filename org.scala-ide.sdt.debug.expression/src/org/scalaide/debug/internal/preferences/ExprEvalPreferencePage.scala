@@ -71,6 +71,6 @@ class ExprEvalPreferencesInitializer extends AbstractPreferenceInitializer {
     store.setDefault(LayoutType, ExpressionEvaluatorViewLayoutType.ConsoleAndTreeHorizontally.id.toString())
     store.setDefault(ShowCollectionsLogicalStructure, true)
     store.setDefault(RefreshVariablesViewAfterEvaluation, true)
-    store.setDefault(AddImportsFromCurrentFile, true)
+    store.setDefault(AddImportsFromCurrentFile, false)
   }
 }
