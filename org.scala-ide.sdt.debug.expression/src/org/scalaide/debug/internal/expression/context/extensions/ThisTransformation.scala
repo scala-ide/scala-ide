@@ -58,7 +58,7 @@ final case class ThisTransformation private(thisHistory: Seq[ThisElement], impor
     import org.scalaide.debug.internal.expression.Names.Debugger._
 
     def code(valName: Option[universe.TermName]) =
-      s"""$contextParamName.proxyForField(${valName.get}, "$fieldName")"""
+      s"""$contextParamName.$objectProxyForFieldMethodName(${valName.get}, "$fieldName")"""
 
     val newType = new ThisElement(refType, Some(headElement), code)
 

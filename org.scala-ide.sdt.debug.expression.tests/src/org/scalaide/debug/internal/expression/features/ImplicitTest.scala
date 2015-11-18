@@ -4,12 +4,16 @@
 package org.scalaide.debug.internal.expression
 package features
 
-import org.junit.Ignore
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.Test
+import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.UnsupportedFeature
+import org.scalaide.debug.internal.preferences.ExprEvalPreferencePage
 
 import Names.Java
 import Names.Scala
-
 import TestValues.ImplicitsTestCase
 
 class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
@@ -104,4 +108,14 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
   //TODO make sure that we use correct implicits O-8575
 }
 
-object ImplicitTest extends BaseIntegrationTestCompanion(ImplicitsTestCase)
+object ImplicitTest extends BaseIntegrationTestCompanion(ImplicitsTestCase) {
+  @BeforeClass
+  def setupForTest(): Unit = {
+    ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, true)
+  }
+
+  @AfterClass
+  def tearDownAfterTest(): Unit = {
+    ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, false)
+  }
+}

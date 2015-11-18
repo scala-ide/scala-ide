@@ -208,4 +208,12 @@ private[context] trait Proxyfier {
     valueProxy(proxy.__value.getValue(field))
   }
 
+  /**
+   * `proxyForField` flavor which casts result to `ObjectJdiProxy`.
+   * @param proxy - proxy to get value from
+   * @param name - name of value
+   * @throws NoSuchFieldError if field is not found.
+   */
+  final def objectProxyForField(proxy: ObjectJdiProxy, name: String): ObjectJdiProxy =
+    proxyForField(proxy, name).asInstanceOf[ObjectJdiProxy]
 }

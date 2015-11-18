@@ -309,6 +309,8 @@ object Names {
       .map(_.getSimpleName)
 
     val newClassName = "CustomFunction"
+
+    val objectProxyForFieldMethodName = "objectProxyForField"
   }
 
 }
