@@ -10,6 +10,7 @@ import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
@@ -17,10 +18,8 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.CachedAnalysisBuildManager
 import org.scalaide.core.internal.builder.EclipseBuildManager
@@ -40,7 +39,6 @@ import sbt.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
-import xsbti.compile.JavaCompiler
 
 /** An Eclipse builder using the Sbt engine.
  *
@@ -169,13 +167,13 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       resource <- ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(file.toURI())
       // this file might have been deleted in the meantime
       if resource.exists() && !compiledFiles(resource)
-    } createMarkers(resource, info)
+    } createMarkers(info)
   }
 
   /**
    * Create problem markers for the given source info.
    */
-  private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
+  private def createMarkers(sourceInfo: SourceInfo) = {
     for (problem <- sourceInfo.reportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }
@@ -195,6 +193,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    * Knows nothing about output files.
    */
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] = None
+
+  /**
+   * Knows nothing about errors.
+   */
+  override def buildErrors: Set[IMarker] = Set.empty
 
   /** Inspired by IC.compile
    *

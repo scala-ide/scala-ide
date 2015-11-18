@@ -1,11 +1,7 @@
 package org.scalaide.core
 package sbtbuilder
 
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
 import org.junit.AfterClass
@@ -17,17 +13,8 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.IProjectHelpers
 import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.testsetup.SDTTestUtils.SrcPathOutputEntry
-import org.scalaide.core.testsetup.SDTTestUtils.addToClasspath
-import org.scalaide.core.testsetup.SDTTestUtils.changeContentOfFile
-import org.scalaide.core.testsetup.SDTTestUtils.createProjectInWorkspace
-import org.scalaide.core.testsetup.SDTTestUtils.findProjectProblemMarkers
-import org.scalaide.core.testsetup.SDTTestUtils.markersMessages
-import org.scalaide.core.testsetup.SDTTestUtils.workspace
-
-import ScopeCompileTest.errorTypes
-import ScopeCompileTest.projectA
-import ScopeCompileTest.projectB
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.util.internal.SettingConverterUtil
 
 object ScopeCompileTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
@@ -57,10 +44,20 @@ object ScopeCompileTest extends IProjectOperations {
     }
   }
 
+  def defaultStopOnErrors() = {
+    toggleStopOnErrorsProperty(projectA, on = false)
+    toggleStopOnErrorsProperty(projectB, on = false)
+  }
+
   @BeforeClass def setup(): Unit = {
     initializeProjects(bundleName, Seq(projectAName, projectBName)) {
       projectA = createProjectInWorkspace(projectAName, withSrcOutputStructure)
+      projectA.asInstanceOf[ScalaProject].projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+      projectA.asInstanceOf[ScalaProject].projectSpecificStorage.save()
       projectB = createProjectInWorkspace(projectBName, withSrcOutputStructure)
+      projectB.asInstanceOf[ScalaProject].projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+      projectB.asInstanceOf[ScalaProject].projectSpecificStorage.save()
+      defaultStopOnErrors()
       addToClasspath(projectB, JavaCore.newProjectEntry(projectA.underlying.getFullPath, false))
     }
   }
@@ -74,93 +71,104 @@ class ScopeCompileTest extends IProjectOperations with IProjectHelpers {
   import org.scalaide.core.testsetup.SDTTestUtils._
   import ScopeCompileTest._
 
-  def whenFileInScopeIsDamaged(project: IScalaProject, scopeRootPath: String, packageName: String, fileName: String)(thenAssertThat: => Unit): Unit = {
-    val toChangeRoot = project.javaProject.findPackageFragmentRoot(new Path("/" + project.underlying.getName + scopeRootPath))
-    val compilationUnit = toChangeRoot.getPackageFragment(packageName).getCompilationUnit(fileName)
-    val unit = compilationUnit.getResource.asInstanceOf[IFile]
-    val revert = compilationUnit.getBuffer.getContents
+  private def runWithStopOnErrors(settings: (IScalaProject, Boolean)*)(run: => Unit): Unit = synchronized {
     try {
-      changeContentOfFile(compilationUnit.getResource().asInstanceOf[IFile], changedToNonCompiling)
-      workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-
-      thenAssertThat
-    } finally
-      changeContentOfFile(unit, revert)
-  }
-
-  @Test def shouldFailProjectBTestScope(): Unit = {
-    givenCleanWorkspaceForProjects(projectB)
-
-    whenFileInScopeIsDamaged(projectB, "/src/test", "acme", "AcmeRefTest.scala") {
-      val expectedOneError =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
-
-      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
+      settings.foreach {
+        case (project, stopOnErrors) => toggleStopOnErrorsProperty(project, stopOnErrors)
+      }
+      run
+    } finally {
+      defaultStopOnErrors()
     }
   }
 
-  @Test def shouldFailProjectBMainScopeAndTestIsNotBuilt(): Unit = {
-    givenCleanWorkspaceForProjects(projectB)
+  @Test def shouldFailProjectAWithOneErrorBecauseOnStopErrorIsOnSoOtherScopesAreNotBuilt(): Unit = {
+    givenCleanWorkspaceForProjects(projectA)
 
-    whenFileInScopeIsDamaged(projectB, "/src/main", "acme", "AcmeMainRef.scala") {
-      val expectedTwoErrors =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
+    runWithStopOnErrors((projectA, true)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedOneError =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
 
-      Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 2 == expectedTwoErrors.length)
+        Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.size)
+      }
     }
   }
 
-  @Test def shouldFailProjectBMacrosScopeAndMainTestIsNotBuilt(): Unit = {
-    givenCleanWorkspaceForProjects(projectB)
+  @Test def shouldFailProjectAWithTwoErrorsBecauseOnStopErrorIsOffSoTriesToBuildMainScope(): Unit = {
+    givenCleanWorkspaceForProjects(projectA)
 
-    whenFileInScopeIsDamaged(projectB, "/src/macros", "acme", "AcmeMacroRef.scala") {
-      val expectedThreeErrors =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
+    runWithStopOnErrors((projectA, false)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedTwoErrors =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
 
-      Assert.assertTrue("See what's wrong: " + expectedThreeErrors.mkString(", "), 3 == expectedThreeErrors.length)
+        Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 2 == expectedTwoErrors.size)
+      }
     }
   }
 
-  @Test def shouldFailProjectATestScopeAndProjectBTestIsNotBuilt(): Unit = {
+  @Test def shouldFailProjectsWithFourErrorsBecauseNonBNotBuildDueToErrorsInA(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/test", "acme", "AcmeTest.scala") {
-      val expectedOneError =
-        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
-      val expectedOneErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
+    runWithStopOnErrors((projectA, true), (projectB, true)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedOneErrorInA =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
+        val expectedThreeErrorsInB =
+          markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
-      val errors = expectedOneError ++ expectedOneErrorInB
-      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 2 == errors.length)
+        val errors = expectedOneErrorInA ++ expectedThreeErrorsInB
+        Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 4 == errors.size)
+      }
     }
   }
 
-  @Test def shouldFailProjectAMainScopeAndItsTestAndProjectBMacrosMainTestNotBuilt(): Unit = {
+  @Test def shouldFailProjectsWithThreeErrorsBecauseBBuildsMacroScopeOnly(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/main", "acme", "AcmeMain.scala") {
-      val expectedTwoErrors =
-        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
-      val expectedThreeErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
-      val errors = expectedTwoErrors ++ expectedThreeErrorInB
+    runWithStopOnErrors((projectA, true), (projectB, false)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedOneErrorInA =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
+        val expectedTwoErrorsInB =
+          markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
-      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 5 == errors.length)
+        val errors = expectedOneErrorInA ++ expectedTwoErrorsInB
+        Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 3 == errors.size)
+      }
     }
   }
 
-  @Test def shouldFailProjectAMacrosScopeAndItsMainTestAndProjectBMacrosMainTestNotBuilt(): Unit = {
+  @Test def shouldFailProjectsWithFiveErrorsSoTestScopeOfAIsBuiltOnly(): Unit = {
     givenCleanWorkspaceForProjects(projectA, projectB)
 
-    whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala") {
-      val expectedThreeErrors =
-        markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
-      val expectedThreeErrorInB =
-        markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
+    runWithStopOnErrors((projectA, false), (projectB, true)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedTwoErrorsInA =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
+        val expectedThreeErrorsInB =
+          markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
 
-      val errors = expectedThreeErrors ++ expectedThreeErrorInB
+        val errors = expectedTwoErrorsInA ++ expectedThreeErrorsInB
+        Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 5 == errors.size)
+      }
+    }
+  }
 
-      Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 6 == errors.length)
+  @Test def shouldFailProjectsWithFourErrorsSoTestScopeOfAAndMacroScopeInBAreBuilt(): Unit = {
+    givenCleanWorkspaceForProjects(projectA, projectB)
+
+    runWithStopOnErrors((projectA, false), (projectB, false)) {
+      whenFileInScopeIsDamaged(projectA, "/src/macros", "acme", "AcmeMacro.scala", changedToNonCompiling) {
+        val expectedTwoErrorsInA =
+          markersMessages(findProjectProblemMarkers(projectA, errorTypes: _*).toList)
+        val expectedTwoErrorsInB =
+          markersMessages(findProjectProblemMarkers(projectB, errorTypes: _*).toList)
+
+        val errors = expectedTwoErrorsInA ++ expectedTwoErrorsInB
+        Assert.assertTrue("See what's wrong: " + errors.mkString(", "), 4 == errors.size)
+      }
     }
   }
 

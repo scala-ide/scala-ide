@@ -1,5 +1,5 @@
 package acme
 
 class AcmeMain {
-  def bar = "5"
+  def bar = (new AcmeMacro).foo
 }

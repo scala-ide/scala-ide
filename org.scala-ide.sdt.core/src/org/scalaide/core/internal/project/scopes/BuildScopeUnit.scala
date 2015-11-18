@@ -14,10 +14,10 @@ import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.CompileScope
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.ui.internal.preferences.ScopesSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
@@ -62,7 +62,7 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
   override def clean(implicit monitor: IProgressMonitor): Unit = delegate.clean
 
   override def build(addedOrUpdated: Set[IFile], removed: Set[IFile], monitor: SubMonitor): Unit = {
-    hasInternalErrors = if (areDependedUnitsBuilt) {
+    hasInternalErrors = if (areDependedUnitsBuilt || doesContinueBuildOnErrors) {
       def javaHasErrors: Boolean = {
         val SeverityNotSet = -1
         owningProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE).exists { marker =>
@@ -77,14 +77,13 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
     }
   }
 
-  private def areDependedUnitsBuilt = {
-    val wrongScopes = dependentUnitInstances filter { _.hasErrors } map { _.scope }
-    if (wrongScopes.nonEmpty) {
-      BuildProblemMarker.create(owningProject.underlying,
-        s"${owningProject.underlying.getName}'s ${scope.name} not built due to errors in dependent scope(s) ${wrongScopes.map(_.name).toSet.mkString(", ")}")
-      false
-    } else true
+  private def doesContinueBuildOnErrors = {
+    val stopBuildOnErrorsProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.stopBuildOnErrors.name)
+    !owningProject.storage.getBoolean(stopBuildOnErrorsProperty)
   }
+
+  private def areDependedUnitsBuilt =
+    !dependentUnitInstances.exists { _.hasErrors }
 
   private def toCompile(sources: Set[IFile]) = (for {
     (src, _) <- srcOutputs
@@ -101,6 +100,9 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
       case (sourceFolder, outputFolder) if outputFolder.getLocation.toFile == outputFile &&
         managesSrcFolder(sourceFolder) => this
     }
+  override def buildErrors: Set[IMarker] = sources.flatMap {
+    _.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
+  }.toSet
 }
 
 private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owningProject: IScalaProject) {
@@ -119,3 +121,4 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
       .filter { _.getLocation.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) })
   }
 }
+
