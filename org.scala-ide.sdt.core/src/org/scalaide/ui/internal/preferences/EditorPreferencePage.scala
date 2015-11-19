@@ -62,6 +62,9 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 
     val completion = group("Completion", base)
     checkBox(P_ENABLE_HOF_COMPLETION, "Always insert lambdas when completing higher-order functions", completion)
+
+    val outline = group("Outline", base)
+    checkBox(P_INITIAL_IMPORT_FOLD, "Fold import nodes by default", outline)
 }
 
   private def group(text: String, parent: Composite): Group = {
@@ -115,6 +118,7 @@ object EditorPreferencePage {
   final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
   final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
   final val P_ENABLE_HOF_COMPLETION = BASE + "completionAlwaysLambdas"
+  final val P_INITIAL_IMPORT_FOLD = BASE + "initialImportFold"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -139,5 +143,7 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
     store.setDefault(INDENT_GUIDE_ENABLE, false)
     store.setDefault(INDENT_GUIDE_COLOR, "72,72,72")
+
+    store.setDefault(P_INITIAL_IMPORT_FOLD, true)
   }
 }

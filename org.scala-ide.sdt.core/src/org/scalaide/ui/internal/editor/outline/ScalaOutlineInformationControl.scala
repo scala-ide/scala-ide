@@ -45,6 +45,8 @@ import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.ui.texteditor.AbstractTextEditor
 import org.eclipse.jface.action.IMenuManager
 import org.eclipse.jface.action.Separator
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /**
  * ScalaOutlineInformationControl is based on AbstractInformationControl and JavaOutlineInformationControl.
@@ -189,6 +191,8 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
 
   def setInput(input: Any): Unit = {
     treeViewer.setInput(input)
+    if (ScalaPlugin().getPreferenceStore().getBoolean(EditorPreferencePage.P_INITIAL_IMPORT_FOLD))
+      OutlineHelper.foldImportNodes(treeViewer, input)
   }
 
   def addDisposeListener(listener: org.eclipse.swt.events.DisposeListener): Unit = {
