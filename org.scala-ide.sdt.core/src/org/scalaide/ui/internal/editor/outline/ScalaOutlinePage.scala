@@ -15,6 +15,7 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.viewers.ViewerComparator
 import org.eclipse.jface.viewers.Viewer
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 class PublicOnlyAction(contentProvider: ScalaOutlineContentProvider, viewer: Viewer) extends Action {
   setText("Hide non-public members")
@@ -148,13 +149,14 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
 
   def update(): Unit = {
     val viewer = getTreeViewer()
-
     if (viewer != null) {
       val control = viewer.getControl()
       if (control != null && !control.isDisposed()) {
         control.setRedraw(false)
         viewer.setInput(input)
         viewer.expandAll()
+        if (ScalaPlugin().getPreferenceStore().getBoolean(EditorPreferencePage.P_INITIAL_IMPORT_FOLD))
+          OutlineHelper.foldImportNodes(viewer, input)
         control.setRedraw(true)
       }
     }
