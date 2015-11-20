@@ -21,7 +21,6 @@ import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.builder.BuildProblemMarker
-import org.scalaide.core.internal.builder.CachedAnalysisBuildManager
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.TaskManager
 import org.scalaide.logging.HasLogger
@@ -51,7 +50,7 @@ import xsbti.compile.CompileProgress
  */
 class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
   addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
-    extends CachedAnalysisBuildManager with HasLogger {
+    extends EclipseBuildManager with HasLogger {
 
   /** Initialized in `build`, used by the SbtProgress. */
   private var monitor: SubMonitor = _
@@ -59,7 +58,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   private val sources: mutable.Set[IFile] = mutable.Set.empty
   private val cached = new AtomicReference[SoftReference[Analysis]]
 
-  def analysisStore = analysisCache.getOrElse(project.underlying.getFile(".cache"))
+  private def analysisStore = analysisCache.getOrElse(project.underlying.getFile(".cache"))
   private def cacheFile = analysisStore.getLocation.toFile
 
   // this directory is used by Sbt to store classfiles between
@@ -96,6 +95,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
     }
     hasInternalErrors = sbtReporter.hasErrors || hasInternalErrors
+    analysisStore.refreshLocal(IResource.DEPTH_ZERO, null)
   }
 
   override def clean(implicit monitor: IProgressMonitor): Unit = {

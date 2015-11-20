@@ -41,8 +41,3 @@ trait EclipseBuildManager {
   /** Returns error markers on underlying resources. */
   def buildErrors: Set[IMarker]
 }
-
-/** Keeps collected analysis persistently in store. This store is exposed outdoor. */
-trait CachedAnalysisBuildManager extends EclipseBuildManager {
-  def analysisStore: IFile
-}
