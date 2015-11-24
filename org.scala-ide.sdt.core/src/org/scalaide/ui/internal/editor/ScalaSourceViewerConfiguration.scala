@@ -71,6 +71,8 @@ import org.eclipse.swt.SWT
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.text.AbstractInformationControlManager
 import org.scalaide.ui.internal.editor.outline.ScalaOutlineModelProvider
+import org.scalaide.util.eclipse.EditorUtils
+import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -228,15 +230,28 @@ class ScalaSourceViewerConfiguration(
     // the editor is null for the Syntax coloring previewer pane (so no reconciliation)
     Option(editor).map { editor =>
       val s = new CompositeReconcilingStrategy
-      s.setReconcilingStrategies(Array(
-        new ScalaReconcilingStrategy(editor),
+
+      val fileInSourcePath = (for {
+        f <- EditorUtils.file(editor)
+        scalaProject <- IScalaPlugin().asScalaProject(f.getProject)
+      } yield
+        scalaProject.allSourceFiles().contains(f)).getOrElse(false)
+
+
+      val baseReconcilers: Array[IReconcilingStrategy] = Array(
         new ScalaOutlineReconcilingStrategy(editor.asInstanceOf[OutlinePageEditorExtension]),
         new SpellingReconcileStrategy(
           editor,
           editor.getViewer(),
           new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
           ScalaPlugin().scalaSourceFileContentType,
-          EditorsUI.getPreferenceStore())))
+          EditorsUI.getPreferenceStore()))
+
+      s.setReconcilingStrategies(
+        if (fileInSourcePath)
+          new ScalaReconcilingStrategy(editor) +: baseReconcilers
+        else
+          baseReconcilers)
 
       val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
       reconciler.setDelay(500)
