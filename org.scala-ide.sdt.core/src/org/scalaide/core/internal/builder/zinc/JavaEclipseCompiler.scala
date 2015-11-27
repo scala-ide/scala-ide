@@ -40,7 +40,11 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
       // refresh output directories, since SBT removes classfiles that the Eclipse
       // Java compiler expects to find
       for (folder <- scalaProject.outputFolders) {
-        val container = ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
+        val container =
+          if (project.getFullPath == folder)
+            project
+          else
+            ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
         container.refreshLocal(IResource.DEPTH_INFINITE, null)
       }
 
