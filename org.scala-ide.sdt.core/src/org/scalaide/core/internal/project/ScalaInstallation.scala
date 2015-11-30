@@ -1,40 +1,36 @@
 package org.scalaide.core.internal.project
 
+import java.net.URLClassLoader
 import java.util.Properties
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+
+import scala.Left
+import scala.Right
+import scala.collection.mutable.Set
 import scala.tools.nsc.settings.ScalaVersion
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import org.eclipse.core.runtime.FileLocator
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
-import org.osgi.framework.Bundle
-import org.osgi.framework.Version
-import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
-import org.scalaide.util.eclipse.OSGiUtils
-import xsbti.compile.ScalaInstance
-import java.net.URLClassLoader
-import scala.tools.nsc.settings.SpecificScalaVersion
-import scala.collection.mutable.Set
-import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.runtime.IStatus
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.IOException
-import org.eclipse.core.runtime.CoreException
-import java.io.File
-import org.eclipse.core.runtime.Status
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
+import org.osgi.framework.Bundle
+import org.osgi.framework.Version
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaInstallationChoice
+import org.scalaide.core.IScalaModule
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.CompilerUtils.isBinarySame
 import org.scalaide.util.internal.CompilerUtils.shortString
-import org.scalaide.core.IScalaInstallationChoice
-import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.IScalaModule
+
+import xsbti.compile.ScalaInstance
 
 sealed trait ScalaInstallationLabel extends Serializable
 case class BundledScalaInstallationLabel() extends ScalaInstallationLabel
@@ -66,11 +62,12 @@ case class ScalaInstallationChoice(marker: Either[ScalaVersion, Int]) extends Se
 }
 
 object ScalaInstallationChoice {
-  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice( Right(si.hashString.hashCode()) )
-  def apply(sv: ScalaVersion): ScalaInstallationChoice = ScalaInstallationChoice( Left(sv) )
+  def apply(si: LabeledScalaInstallation): ScalaInstallationChoice = ScalaInstallationChoice(Right(si.hashString.hashCode()))
+  def apply(sv: ScalaVersion): ScalaInstallationChoice = ScalaInstallationChoice(Left(sv))
 }
 
-/** This class represents a valid Scala installation. It encapsulates
+/**
+ * This class represents a valid Scala installation. It encapsulates
  *  a Scala version and paths to the standard Scala jar files:
  *
  *  - scala-library.jar
@@ -89,7 +86,8 @@ trait ScalaInstallation extends IScalaInstallation {
 
   def extraJars: Seq[ScalaModule]
 
-  /** All jars provided by Scala (including the compiler)
+  /**
+   * All jars provided by Scala (including the compiler)
    *  @see The note in [[MultiBundleScalaInstallation]] below
    */
   def allJars: Seq[ScalaModule] =
@@ -108,26 +106,26 @@ trait ScalaInstallation extends IScalaInstallation {
  *  A tag for serializable tagging of Scala Installations
  */
 trait LabeledScalaInstallation extends ScalaInstallation {
-      def label: ScalaInstallationLabel
-      // to recover bundle-less Bundle values from de-serialized Scala Installations
-      // this should be relaxed for bundles : our bundles are safe, having one with just the same version should be enough
-      def similar(that: LabeledScalaInstallation): Boolean =
-        this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
+  def label: ScalaInstallationLabel
+  // to recover bundle-less Bundle values from de-serialized Scala Installations
+  // this should be relaxed for bundles : our bundles are safe, having one with just the same version should be enough
+  def similar(that: LabeledScalaInstallation): Boolean =
+    this.label == that.label && this.compiler == that.compiler && this.library == that.library && this.extraJars.toSet == that.extraJars.toSet
 
-      def getName():Option[String] = PartialFunction.condOpt(label) {case CustomScalaInstallationLabel(tag) => tag}
-      def hashString: String = {
-        val jarSeq = allJars map (_.hashString)
-        getName().fold(jarSeq)(str => str +: jarSeq).mkString
-      }
+  def getName(): Option[String] = PartialFunction.condOpt(label) { case CustomScalaInstallationLabel(tag) => tag }
+  def hashString: String = {
+    val jarSeq = allJars map (_.hashString)
+    getName().fold(jarSeq)(str => str +: jarSeq).mkString
+  }
 
-      override def hashCode() = hashString.hashCode()
-      override def equals(o: Any) = PartialFunction.cond(o){ case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
+  override def hashCode() = hashString.hashCode()
+  override def equals(o: Any) = PartialFunction.cond(o) { case lsi: LabeledScalaInstallation => lsi.hashCode() == this.hashCode() }
 }
 
 case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends IScalaModule {
 
   def isValid(): Boolean = {
-    sourceJar.fold(List(classJar))(List(_, classJar)) forall {path => path.toFile().isFile()}
+    sourceJar.fold(List(classJar))(List(_, classJar)) forall { path => path.toFile().isFile() }
   }
 
   def libraryEntries(): IClasspathEntry = {
@@ -137,7 +135,7 @@ case class ScalaModule(classJar: IPath, sourceJar: Option[IPath]) extends IScala
   private def relativizedString(path: IPath) = {
     path.makeRelativeTo(ScalaPlugin().getStateLocation()).toPortableString()
   }
-  def hashString: String = sourceJar.map{relativizedString}.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
+  def hashString: String = sourceJar.map { relativizedString }.fold(relativizedString(classJar))(s => relativizedString(classJar) + s)
 }
 
 object ScalaModule {
@@ -146,17 +144,18 @@ object ScalaModule {
   }
 }
 
-/** Represent a version of Scala installed as a bundle containing the necessary jars.
+/**
+ * Represent a version of Scala installed as a bundle containing the necessary jars.
  */
 case class BundledScalaInstallation(
-  override val version: ScalaVersion,
-  bundle: Bundle,
-  override val library: ScalaModule,
-  override val compiler: ScalaModule) extends LabeledScalaInstallation {
+    override val version: ScalaVersion,
+    bundle: Bundle,
+    override val library: ScalaModule,
+    override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import BundledScalaInstallation._
 
-  override val label =  BundledScalaInstallationLabel()
+  override val label = BundledScalaInstallationLabel()
   def osgiVersion = bundle.getVersion()
 
   override lazy val extraJars =
@@ -199,7 +198,8 @@ object BundledScalaInstallation {
 
   val ScalaBundleJarsRegex = "org\\.scala-ide\\.scala[0-9]{3}\\.jars".r
 
-  /** Find and return the complete bundled Scala installations.
+  /**
+   * Find and return the complete bundled Scala installations.
    */
   def detectBundledInstallations(): List[BundledScalaInstallation] = {
     // find the bundles with the right pattern
@@ -211,7 +211,8 @@ object BundledScalaInstallation {
   }
 }
 
-/** Represent a version of Scala installed as a set of bundles, each bundle with an identical version.
+/**
+ * Represent a version of Scala installed as a set of bundles, each bundle with an identical version.
  *
  *  TODO: We SHOULD reuse the current class loader if this installation is the platform installation.
  *
@@ -222,14 +223,14 @@ object BundledScalaInstallation {
  *        See ticket #1002175
  */
 case class MultiBundleScalaInstallation(
-  override val version: ScalaVersion,
-  libraryBundleVersion: Version,
-  override val library: ScalaModule,
-  override val compiler: ScalaModule) extends LabeledScalaInstallation {
+    override val version: ScalaVersion,
+    libraryBundleVersion: Version,
+    override val library: ScalaModule,
+    override val compiler: ScalaModule) extends LabeledScalaInstallation {
 
   import MultiBundleScalaInstallation._
 
-  override val label =  MultiBundleScalaInstallationLabel()
+  override val label = MultiBundleScalaInstallationLabel()
   def osgiVersion = libraryBundleVersion
 
   override lazy val extraJars = Seq(
@@ -252,7 +253,15 @@ object MultiBundleScalaInstallation {
     Path.fromOSString(FileLocator.getBundleFile(bundle).getAbsolutePath())
 
   private def findBundle(bundleId: String, version: Version): Option[Bundle] = {
-    Option(Platform.getBundles(bundleId, null)).getOrElse(Array()).to[List].find(_.getVersion() == version)
+    def doesBundleVersionQualifierEncloseVersionQualifier(bundleQualifier: String, qualifier: String) =
+      qualifier.intersect(bundleQualifier) == qualifier
+    Option(Platform.getBundles(bundleId, null)).getOrElse(Array()).to[List].find { bundle =>
+      val bundleVersion = bundle.getVersion
+      bundleVersion.getMajor == version.getMajor &&
+        bundleVersion.getMinor == version.getMinor &&
+        bundleVersion.getMicro == version.getMicro &&
+        doesBundleVersionQualifierEncloseVersionQualifier(bundleVersion.getQualifier, version.getQualifier)
+    }
   }
 
   private def findLibraryForBundle(bundleId: String, version: Version): Option[ScalaModule] = {
@@ -287,7 +296,7 @@ object ScalaInstallation {
   val installationsTracker = new ScalaInstallationSaver()
   private def savedScalaInstallations() = Try(installationsTracker.getSavedInstallations())
   lazy val initialScalaInstallations = savedScalaInstallations() match {
-    case Success(sis) => sis filter (_.isValid()) filter {deserial => !(bundledInstallations ++ multiBundleInstallations exists (_.similar(deserial)))}
+    case Success(sis) => sis filter (_.isValid()) filter { deserial => !(bundledInstallations ++ multiBundleInstallations exists (_.similar(deserial))) }
     // we need to silently fail, as this happens early in initialization
     case Failure(throwable) => Nil
   }
@@ -305,10 +314,10 @@ object ScalaInstallation {
   }
 
   def scalaInstanceForInstallation(si: IScalaInstallation): ScalaInstance = {
-      val store = ScalaPlugin().classLoaderStore
-      val scalaLoader: ClassLoader = store.getOrUpdate(si)(new URLClassLoader(si.allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
+    val store = ScalaPlugin().classLoaderStore
+    val scalaLoader: ClassLoader = store.getOrUpdate(si)(new URLClassLoader(si.allJars.map(_.classJar.toFile.toURI.toURL).toArray, ClassLoader.getSystemClassLoader))
 
-      new sbt.ScalaInstance(si.version.unparse, scalaLoader, si.library.classJar.toFile, si.compiler.classJar.toFile, si.extraJars.map(_.classJar.toFile).toList, None)
+    new sbt.ScalaInstance(si.version.unparse, scalaLoader, si.library.classJar.toFile, si.compiler.classJar.toFile, si.extraJars.map(_.classJar.toFile).toList, None)
   }
 
   lazy val customInstallations: Set[LabeledScalaInstallation] = initialScalaInstallations.map(customize(_))(collection.breakOut)
@@ -323,7 +332,7 @@ object ScalaInstallation {
   lazy val multiBundleInstallations: List[LabeledScalaInstallation] =
     MultiBundleScalaInstallation.detectInstallations()
 
-  def availableBundledInstallations : List[LabeledScalaInstallation] = {
+  def availableBundledInstallations: List[LabeledScalaInstallation] = {
     multiBundleInstallations ++ bundledInstallations
   }
 
@@ -333,7 +342,7 @@ object ScalaInstallation {
 
   val LibraryPropertiesPath = "library.properties"
 
-  def labelInFile(scalaPath: IPath) : Option[String] = {
+  def labelInFile(scalaPath: IPath): Option[String] = {
     val scalaJarRegex = """scala-(\w+)(?:.2\.\d+(?:\.\d*)?(?:-.*)?)?.jar""".r
     scalaPath.toFile().getName() match {
       case scalaJarRegex(qualifier) => Some(qualifier + ".properties")
@@ -361,7 +370,7 @@ object ScalaInstallation {
 
   }
 
-  def resolve(choice: IScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match{
+  def resolve(choice: IScalaInstallationChoice): Option[LabeledScalaInstallation] = choice.marker match {
     case Left(version) => availableBundledInstallations.filter { si => isBinarySame(version, si.version) }.sortBy(_.version).lastOption
     case Right(hash) => availableInstallations.find(si => ScalaInstallationChoice(si).toString equals hash.toString())
   }
