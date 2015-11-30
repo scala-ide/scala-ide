@@ -7,7 +7,9 @@ import scala.collection.JavaConverters._
 
 import org.scalaide.core.ScalaIdeDataStore
 import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.logging.HasLogger
 
+import com.cedarsoftware.util.io.JsonIoException
 import com.cedarsoftware.util.io.JsonReader
 import com.cedarsoftware.util.io.JsonWriter
 
@@ -16,9 +18,12 @@ import Features._
 /**
  * Contains all definitions that belong to the statistics tracker.
  */
-class Statistics {
+class Statistics extends AnyRef with HasLogger {
 
-  private var firstStat = 0L
+  /** No statistics have been created yet. */
+  private val NoStat = 0L
+
+  private var firstStat = NoStat
   private var cache = Map[Feature, FeatureData]()
   private val jsonArgs = Map[String, AnyRef](JsonWriter.PRETTY_PRINT → "true").asJava
 
@@ -51,7 +56,7 @@ class Statistics {
   }
 
   private def writeStats(): Unit = {
-    if (firstStat == 0) firstStat = System.currentTimeMillis
+    if (firstStat == NoStat) firstStat = System.currentTimeMillis
     val stats = StatData(firstStat, cache.map(_._2)(collection.breakOut))
 
     ScalaIdeDataStore.validate(ScalaIdeDataStore.statisticsLocation) { file ⇒
@@ -66,7 +71,12 @@ class Statistics {
 
   private def read(file: File): StatData = {
     val json = io.Source.fromFile(file).mkString
-    JsonReader.jsonToJava(json).asInstanceOf[StatData]
+    try JsonReader.jsonToJava(json).asInstanceOf[StatData] catch {
+      // the file is corrupted for whatever reason
+      case e: JsonIoException ⇒
+        logger.error(s"Statistics file `$file` is corrupted. A new one is being created. Corrupted content was:\n$json", e)
+        StatData(NoStat, Array())
+    }
   }
 }
 
