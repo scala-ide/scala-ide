@@ -1,21 +1,20 @@
 package org.scalaide.core.project
 
-import org.junit.Test
-import org.junit.Assert._
-import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.IScalaPlugin
-import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.util.eclipse.OSGiUtils
-import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.core.internal.project.BundledScalaInstallation
-import org.eclipse.core.runtime.Platform
-import org.scalaide.core.internal.project.MultiBundleScalaInstallation
-import org.osgi.framework.Bundle
-import org.eclipse.core.runtime.Path
+
 import org.eclipse.core.runtime.IPath
-import org.junit.Ignore
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Platform
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
+import org.osgi.framework.Bundle
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.project.BundledScalaInstallation
+import org.scalaide.core.internal.project.MultiBundleScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.util.eclipse.OSGiUtils
 
 class ScalaInstallationTest {
 
@@ -70,7 +69,6 @@ class ScalaInstallationTest {
   }
 
   @Test
-  @Ignore("Looks like 2.11.8.v20151124-185958-8363c20de8 does not contain scala-actor lib")
   def multiBundleInstallationsTest(): Unit = {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
 
