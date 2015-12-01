@@ -177,8 +177,8 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   private[debug] val hcrManager: Option[ScalaHotCodeReplaceManager]
   private[debug] val subordinate: ScalaDebugTargetSubordinate
   private[debug] val cache: ScalaDebugCache
-  val retainedStack: RetainedStackManager
-  val breakOnDeadLetters: BreakOnDeadLetters = new BreakOnDeadLetters(this)
+  private[debug] val retainedStack: RetainedStackManager
+  private[debug] val breakOnDeadLetters: BreakOnDeadLetters = new BreakOnDeadLetters(this)
 
   /** Initialize the dependent components
    */
@@ -377,6 +377,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
       hcrManager.foreach(_.dispose())
       cache.dispose()
       retainedStack.dispose()
+      breakOnDeadLetters.dispose()
       clearAsyncDebugView()
       disposeThreads()
       fireTerminateEvent()
