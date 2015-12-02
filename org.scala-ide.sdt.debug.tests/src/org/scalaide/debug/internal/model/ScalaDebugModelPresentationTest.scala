@@ -18,8 +18,6 @@ import com.sun.jdi.IntegerValue
 import com.sun.jdi.Value
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ClassType
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
 import org.junit.After
 
 /**

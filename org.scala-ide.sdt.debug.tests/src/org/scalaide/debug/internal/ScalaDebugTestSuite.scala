@@ -38,7 +38,6 @@ import org.scalaide.debug.internal.model.ScalaJdiEventDispatcherTest
     classOf[LibraryJarInBootstrapTest],
     classOf[ScalaDebugTargetTest],
     classOf[ScalaDebuggerDisconnectTests],
-    classOf[BaseDebuggerActorTest],
     classOf[DebugTargetTerminationTest],
     classOf[RemoteConnectorTest],
     classOf[ScalaDebugBreakpointTest],
