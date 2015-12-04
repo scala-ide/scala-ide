@@ -3,8 +3,6 @@ package org.scalaide.debug.internal.model
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

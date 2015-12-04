@@ -5,25 +5,19 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-<<<<<<< HEAD
-=======
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
->>>>>>> Merge with async stack tracer
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Try
 
-<<<<<<< HEAD
 import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.ScalaDebugPlugin
-=======
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.model.ClassPrepareListener
->>>>>>> Merge with async stack tracer
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaValue
@@ -134,12 +128,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
     stackFrames.get(future).flatMap(_(messageOrdinal))
 
-<<<<<<< HEAD
-  def start(): Unit = if (debugTarget.getLaunch.getLaunchConfiguration.getAttribute(LaunchWithAsyncDebugger, false)) {
-    actor.start()
-=======
   def start(): Unit = {
->>>>>>> Merge with async stack tracer
     for {
       app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
       refType = debugTarget.virtualMachine.classesByName(clazz).asScala
@@ -149,8 +138,6 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
       // in case it's not been loaded yet
       debugTarget.cache.addClassPrepareEventListener(subordinate, clazz)
   }
-<<<<<<< HEAD
-=======
 
   def dispose(): Unit = Future {
     breakpointRequests.foreach { br =>
@@ -160,7 +147,6 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     breakpointRequests.clear()
     stackFrames.clear()
   }
->>>>>>> Merge with async stack tracer
 }
 
 object RetainedStackManager {

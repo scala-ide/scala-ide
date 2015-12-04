@@ -4,7 +4,6 @@ import java.util.UUID
 import scala.collection.JavaConverters
 import scala.util.Try
 import org.eclipse.debug.core.DebugEvent
-import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.async.AsyncUtils.AsyncProgramPointKey
 import org.scalaide.debug.internal.async.AsyncUtils.RequestOwnerKey
