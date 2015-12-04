@@ -150,7 +150,6 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
 /**
  * Test using the Scala remote connectors to debug applications
  */
-@Ignore("Enable it once #1001464 is fixed")
 class RemoteConnectorTest {
 
   import RemoteConnectorTest._
@@ -217,13 +216,13 @@ class RemoteConnectorTest {
 
     session = initDebugSession("Remote attaching", port)
     session.launch()
-    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 7)
+    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 8)
     bp1.setEnabled(true)
 
     application.getProcesses()(0).getStreamsProxy().write("Scala IDE\n")
 
     session.waitUntilSuspended()
-    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
+    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 8)
   }
 
   /**

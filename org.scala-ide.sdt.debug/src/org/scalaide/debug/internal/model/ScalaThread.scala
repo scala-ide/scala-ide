@@ -264,6 +264,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   private[model] def resume(eventDetail: Int): Unit = {
     suspended.getAndSet(false)
     stackFrames.getAndSet(Nil)
+    threadRef.resume()
     fireResumeEvent(eventDetail)
   }
 
@@ -339,7 +340,6 @@ private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {
   private[model] def resumeFromScala(step: Option[ScalaStep], eventDetail: Int): Future[Unit] = Future {
     currentStep.getAndSet(step)
     thread.resume(eventDetail)
-    thread.threadRef.resume()
   }
 
   private[model] def invokeMethod(objectReference: ObjectReference, method: Method, args: List[Value]): Future[Either[Throwable, Value]] = Future {

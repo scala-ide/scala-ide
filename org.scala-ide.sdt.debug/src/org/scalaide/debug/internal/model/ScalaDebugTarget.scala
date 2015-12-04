@@ -93,7 +93,7 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
-  override def breakpointAdded(breakponit: IBreakpoint): Unit = ???
+  override def breakpointAdded(breakpoint: IBreakpoint): Unit = ???
 
   override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ???
 
@@ -481,9 +481,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
 
   override protected[model] def innerHandle = vmEventsHandle orElse threadEventsHandle
 
-  private[model] def attachedToVm(): Future[Unit] = Future {
-    initialize()
-  }
+  private[model] def attachedToVm(): Unit = initialize()
 
   private[model] def threadSuspended(thread: ThreadReference, eventDetail: Int): Future[Unit] = Future {
     // forward the event to the right thread
