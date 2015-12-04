@@ -3,9 +3,7 @@ package org.scalaide.debug.internal.model
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.eclipse.core.resources.IMarkerDelta
@@ -18,11 +16,11 @@ import org.eclipse.debug.core.sourcelookup.ISourceLookupDirector
 import org.eclipse.ui.PlatformUI
 import org.osgi.framework.Version
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.ScalaSourceLookupParticipant
 import org.scalaide.debug.internal.async.BreakOnDeadLetters
 import org.scalaide.debug.internal.async.RetainedStackManager
 import org.scalaide.debug.internal.breakpoints.ScalaDebugBreakpointManager
-import org.scalaide.debug.internal.hcr.ClassFileResource
 import org.scalaide.debug.internal.hcr.HotCodeReplaceExecutor
 import org.scalaide.debug.internal.hcr.ScalaHotCodeReplaceManager
 import org.scalaide.debug.internal.hcr.ui.HotCodeReplaceListener
@@ -86,10 +84,17 @@ object ScalaDebugTarget extends HasLogger {
 /** A debug target in the Scala debug model.
  *  This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
-  launch: ILaunch, process: IProcess, allowDisconnect: Boolean,
-  allowTerminate: Boolean, val classPath: Option[Seq[String]])
-    extends ScalaDebugElement(null) with JdiEventReceiver with IDebugTarget with HasLogger {
+abstract class ScalaDebugTarget private(
+    val virtualMachine: VirtualMachine,
+    launch: ILaunch,
+    process: IProcess,
+    allowDisconnect: Boolean,
+    allowTerminate: Boolean,
+    val classPath: Option[Seq[String]])
+  extends ScalaDebugElement(null) with JdiEventReceiver with IDebugTarget with HasLogger {
+
+  override def toString =
+    s"ScalaDebugTarget(vm = $virtualMachine, launch = $launch, process = $process, allowDisconnect = $allowDisconnect, allowTerminate = $allowTerminate, classpath = ${classPath.map(_.mkString(":")).mkString})"
 
   // Members declared in org.eclipse.debug.core.IBreakpointListener
 
@@ -451,10 +456,9 @@ abstract class ScalaDebugTarget private (val virtualMachine: VirtualMachine,
   private[model] def getScalaThreads: List[ScalaThread] = threads.get
 
   def getScalaThread(threadRef: ThreadReference) =
-    threads.find(_.threadRef == threadRef)
+    threads.get.find(_.threadRef == threadRef)
 
-  private[model] def canPopFrames: Boolean = running && virtualMachine.canPopFrames()
-
+  private[model] def canPopFrames: Boolean = running.get && virtualMachine.canPopFrames()
 }
 
 private[model] object ScalaDebugTargetSubordinate {
@@ -474,8 +478,9 @@ private[model] object ScalaDebugTargetSubordinate {
  *  of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
  *  linked actors).
  */
-private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
-    extends JdiEventReceiver with HotCodeReplaceExecutor {
+private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, override protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
+    extends JdiEventReceiver
+    with HotCodeReplaceExecutor {
   /** Is this actor initialized and listening to thread events? */
   private val initialized = new AtomicBoolean
 

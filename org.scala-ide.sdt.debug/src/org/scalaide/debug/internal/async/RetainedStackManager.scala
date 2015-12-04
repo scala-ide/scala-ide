@@ -14,7 +14,6 @@ import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Try
 
-import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.model.ClassPrepareListener
@@ -128,7 +127,7 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   def getStackFrameForFuture(future: ObjectReference, messageOrdinal: Int): Option[AsyncStackTrace] =
     stackFrames.get(future).flatMap(_(messageOrdinal))
 
-  def start(): Unit = {
+  def start(): Unit = if (debugTarget.getLaunch.getLaunchConfiguration.getAttribute(LaunchWithAsyncDebugger, false)) {
     for {
       app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
       refType = debugTarget.virtualMachine.classesByName(clazz).asScala

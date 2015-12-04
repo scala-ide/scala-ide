@@ -6,17 +6,16 @@ import java.util.concurrent.atomic.AtomicReference
 import scala.Left
 import scala.Right
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Either
-import scala.util.control.Exception
 import scala.util.control.Exception.Catch
 
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
+import org.scalaide.debug.internal.JDIUtil._
+import org.scalaide.debug.internal.async.StepMessageOut
 import org.scalaide.debug.internal.JDIUtil.safeVmCalls
 import org.scalaide.debug.internal.command.ScalaStep
 import org.scalaide.debug.internal.command.ScalaStepInto
@@ -24,6 +23,7 @@ import org.scalaide.debug.internal.command.ScalaStepOver
 import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
+import org.scalaide.util.Utils.jdiSynchronized
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.IncompatibleThreadStateException
@@ -33,6 +33,7 @@ import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMCannotBeModifiedException
 import com.sun.jdi.Value
 
+import scala.collection.JavaConverters.asScalaBufferConverter
 
 class ThreadNotSuspendedException extends Exception
 
@@ -62,17 +63,19 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   private def canStep = suspended.get && !target.isPerformingHotCodeReplace.get
 
   override def stepInto(): Unit = {
-    for (head <- stackFrames.headOption) {
+    for (head <- stackFrames.get.headOption) {
       wrapJDIException("Exception while performing `step into`") { ScalaStepInto(head).step() }
     }
   }
+
   override def stepOver(): Unit = {
-    for (head <- stackFrames.headOption) {
+    for (head <- stackFrames.get.headOption) {
       wrapJDIException("Exception while performing `step over`") { ScalaStepOver(head).step() }
     }
   }
+
   override def stepReturn(): Unit = {
-    for (head <- stackFrames.headOption) {
+    for (head <- stackFrames.get.headOption) {
       wrapJDIException("Exception while performing `step return`") { ScalaStepReturn(head).step() }
     }
   }
