@@ -414,13 +414,15 @@ abstract class ScalaDebugTarget private(
   /** Add a thread to the list of threads.
    *  FOR THE COMPANION ACTOR ONLY.
    */
-  private[model] def addThread(thread: ThreadReference): Unit = {
+  private[model] def addThread(thread: ThreadReference): ScalaThread = {
     // TODO: replace with getAndUpdate when java 1.8
     var prev, next: List[ScalaThread] = Nil
+    val threadToAdd = ScalaThread(this, thread)
     do {
       prev = threads.get
-      next = if (prev.exists(_.threadRef eq thread)) prev else prev :+ ScalaThread(this, thread)
+      next = if (prev.exists(_.threadRef eq thread)) prev else prev :+ threadToAdd
     } while (!threads.compareAndSet(prev, next))
+    threadToAdd
   }
 
   /** Remove a thread from the list of threads
@@ -489,8 +491,18 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
   private[model] def attachedToVm(): Unit = initialize()
 
   private[model] def threadSuspended(thread: ThreadReference, eventDetail: Int): Future[Unit] = Future {
-    // forward the event to the right thread
-    debugTarget.getScalaThreads.find(_.threadRef == thread).foreach(_.suspendedFromScala(eventDetail))
+    def forwardEventToRightThread(thread: ThreadReference, eventDetail: Int) = {
+      def findThisThread(thread: ThreadReference) =
+        debugTarget.getScalaThreads.find(_.threadRef == thread)
+      def addNewThread(thread: ThreadReference) = {
+        logger.info(s"Adding thread for debugging ${thread.name}")
+        Option(debugTarget.addThread(thread))
+      }
+      findThisThread(thread)
+        .orElse(addNewThread(thread))
+        .foreach(_.suspendedFromScala(eventDetail))
+    }
+    forwardEventToRightThread(thread, eventDetail)
   }
 
   private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
