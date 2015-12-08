@@ -535,15 +535,21 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
    *   - listen to thread start/death events
    *   - initialize the companion debug target
    */
+  private val waitOnInit = new AtomicBoolean
   private def initialize(): Unit = {
-    if (!initialized.getAndSet(true)) {
-      val eventDispatcher = debugTarget.eventDispatcher
-      // enable the thread management requests
-      eventDispatcher.register(this, threadStartRequest)
-      threadStartRequest.enable()
-      eventDispatcher.register(this, threadDeathRequest)
-      threadDeathRequest.enable()
-      debugTarget.vmStarted()
+    if (!waitOnInit.getAndSet(true)) {
+      if (!initialized.getAndSet(true)) {
+        val eventDispatcher = debugTarget.eventDispatcher
+        // enable the thread management requests
+        eventDispatcher.register(this, threadStartRequest)
+        threadStartRequest.enable()
+        eventDispatcher.register(this, threadDeathRequest)
+        threadDeathRequest.enable()
+        debugTarget.vmStarted()
+      }
+      waitOnInit.getAndSet(false)
+    } else {
+      while (waitOnInit.get) {}
     }
   }
 

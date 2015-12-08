@@ -145,6 +145,10 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
 
+  private val monitor = new Object
+  def sequentially[T] = monitor.synchronized[T] _
+
+  final val Timeout = 5000L
 }
 
 /**
@@ -162,17 +166,17 @@ class RemoteConnectorTest {
   private var debugConnectionTimeout: Int = -1
 
   @Before
-  def savePreferences(): Unit = {
+  def savePreferences(): Unit = sequentially {
     debugConnectionTimeout = JavaRuntime.getPreferences().getInt(JavaRuntime.PREF_CONNECT_TIMEOUT)
   }
 
   @After
-  def restorePreferences(): Unit = {
+  def restorePreferences(): Unit = sequentially {
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, debugConnectionTimeout)
   }
 
   @After
-  def cleanDebugSession(): Unit = {
+  def cleanDebugSession(): Unit = sequentially {
     if (session ne null) {
       session.terminate()
       session = null
@@ -190,8 +194,8 @@ class RemoteConnectorTest {
   /**
    * Check if it is possible to connect to a running VM.
    */
-  @Test(timeout = 5000)
-  def attachToRunningVM(): Unit = {
+  @Test(timeout = Timeout)
+  def attachToRunningVM(): Unit = sequentially {
     val port = freePort()
     application = launchInRunMode("HelloWorld listening", port)
 
@@ -207,8 +211,8 @@ class RemoteConnectorTest {
   /**
    * Check if it is possible to connect to a running VM that did not suspend.
    */
-  @Test(timeout = 5000)
-  def attachToNonSuspendedRunningVM(): Unit = {
+  @Test(timeout = Timeout)
+  def attachToNonSuspendedRunningVM(): Unit = sequentially {
     val port = freePort()
     application = launchInRunMode("HelloWorld listening not suspended", port)
 
@@ -216,13 +220,13 @@ class RemoteConnectorTest {
 
     session = initDebugSession("Remote attaching", port)
     session.launch()
-    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 8)
+    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 7)
     bp1.setEnabled(true)
 
     application.getProcesses()(0).getStreamsProxy().write("Scala IDE\n")
 
     session.waitUntilSuspended()
-    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 8)
+    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
   }
 
   /**
@@ -232,8 +236,8 @@ class RemoteConnectorTest {
    * Test timeout set to 5s. The connection timeout is set to 3s.
    * A passing test should not be more than a couple of seconds.
    */
-  @Test(timeout = 5000)
-  def listenToAttachingVM(): Unit = {
+  @Test(timeout = Timeout)
+  def listenToAttachingVM(): Unit = sequentially {
     val port = freePort()
     // tweak the timeout preference. 3s should be good enough.
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 3000)
@@ -252,7 +256,7 @@ class RemoteConnectorTest {
    * Check exception throw when trying to connect to a not available VM.
    */
   @Test(expected = classOf[CoreException])
-  def attachToNothing(): Unit = {
+  def attachToNothing(): Unit = sequentially {
     val port = freePort()
     session = initDebugSession("Remote attaching", port)
 
@@ -266,8 +270,8 @@ class RemoteConnectorTest {
    * Test timeout set to 2s. The connection timeout is set to 10ms.
    * A passing test should not be more than 1second
    */
-  @Test(timeout = 5000)
-  def listeningToNobody(): Unit = {
+  @Test(timeout = Timeout)
+  def listeningToNobody(): Unit = sequentially {
     val port = freePort()
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
@@ -289,8 +293,8 @@ class RemoteConnectorTest {
   /**
    * Check that disconnect releases a VM, without killing it.
    */
-  @Test(timeout = 5000)
-  def disconnectReleaseRunningVM(): Unit = {
+  @Test(timeout = Timeout)
+  def disconnectReleaseRunningVM(): Unit = sequentially {
     val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
@@ -325,8 +329,8 @@ class RemoteConnectorTest {
   /**
    * Check that canTerminate is correctly set
    */
-  @Test(timeout = 2000)
-  def cannotTerminate(): Unit = {
+  @Test(timeout = Timeout)
+  def cannotTerminate(): Unit = sequentially {
     val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
@@ -348,8 +352,8 @@ class RemoteConnectorTest {
   /**
    * Check that canTerminate is correctly enabled, and kill the VM when used.
    */
-  @Test(timeout = 5000)
-  def terminateKillsRunningVM(): Unit = {
+  @Test(timeout = Timeout)
+  def terminateKillsRunningVM(): Unit = sequentially {
     val port = freePort()
 
     application = launchInRunMode("HelloWorld listening", port)
