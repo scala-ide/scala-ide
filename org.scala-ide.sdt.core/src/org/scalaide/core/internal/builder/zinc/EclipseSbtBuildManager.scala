@@ -27,10 +27,7 @@ import org.scalaide.core.internal.builder.TaskManager
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.internal.Suppress.DeprecatedWarning.AggressiveCompile
-import org.scalaide.util.internal.Suppress.DeprecatedWarning.aggressivelyCompile
 
-import sbt.Logger.xlog2Log
 import sbt.compiler.CompileFailed
 import sbt.compiler.IC
 import sbt.inc.Analysis
@@ -40,7 +37,8 @@ import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
 
-/** An Eclipse builder using the Sbt engine.
+/**
+ * An Eclipse builder using the Sbt engine.
  *
  *  The classpath is handled by delegating to the underlying project. That means
  *  a valid Scala library has to exist on the classpath, but it's not limited to
@@ -116,7 +114,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       sources --= files
   }
 
-  /** The given files have been modified by the user. Recompile
+  /**
+   * The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
   private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]): Unit = {
@@ -209,17 +208,9 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    *  need a richer (IncOptions) parameter type, here.
    */
   private def aggressiveCompile(in: SbtInputs, log: Logger): Analysis = {
-    val options = in.options; import options.{ options => scalacOptions, _ }
-    val compilers = in.compilers
-    val agg = new AggressiveCompile(cacheFile)
-    val aMap = (f: File) => SbtUtils.m2o(in.analysisMap(f))
-    val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
-
-    compilers match {
+    in.compilers match {
       case Right(comps) =>
-        import comps._
-        aggressivelyCompile(agg)(log)(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress),
-          scalacOptions, javacOptions, aMap, defClass, sbtReporter, order, /* skip = */ false, in.incOptions)
+        CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
         throw CompilerInterfaceFailed
