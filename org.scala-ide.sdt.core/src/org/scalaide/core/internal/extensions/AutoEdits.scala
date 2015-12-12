@@ -20,6 +20,7 @@ object AutoEdits {
     fullyQualifiedName[JumpOverClosingParenthesis] → JumpOverClosingParenthesisSetting,
     fullyQualifiedName[JumpOverClosingBracket] → JumpOverClosingBracketSetting,
     fullyQualifiedName[JumpOverClosingAngleBracket] → JumpOverClosingAngleBracketSetting,
+    fullyQualifiedName[JumpOverBacktick] → JumpOverBacktickSetting,
     fullyQualifiedName[CloseString] → CloseStringSetting,
     fullyQualifiedName[CloseChar] → CloseCharSetting,
     fullyQualifiedName[SurroundBlock] → SurroundBlockSetting,
@@ -31,7 +32,8 @@ object AutoEdits {
     fullyQualifiedName[CloseCurlyBrace] → CloseCurlyBraceSetting,
     fullyQualifiedName[CloseParenthesis] → CloseParenthesisSetting,
     fullyQualifiedName[CloseBracket] → CloseBracketSetting,
-    fullyQualifiedName[CloseAngleBracket] → CloseAngleBracketSetting
+    fullyQualifiedName[CloseAngleBracket] → CloseAngleBracketSetting,
+    fullyQualifiedName[CloseBacktick] → CloseBacktickSetting
   )
 
   /**
