@@ -138,7 +138,7 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
     import scala.collection.JavaConverters._
 
     var staySuspendeds = List[Future[Boolean]]()
-
+eventSet.asScala.foreach { println }
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
      *

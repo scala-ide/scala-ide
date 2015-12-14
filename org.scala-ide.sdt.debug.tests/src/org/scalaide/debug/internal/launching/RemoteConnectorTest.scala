@@ -211,7 +211,7 @@ class RemoteConnectorTest {
   /**
    * Check if it is possible to connect to a running VM that did not suspend.
    */
-  @Test(timeout = Timeout)
+  @Test(timeout = 10000L)
   def attachToNonSuspendedRunningVM(): Unit = sequentially {
     val port = freePort()
     application = launchInRunMode("HelloWorld listening not suspended", port)
