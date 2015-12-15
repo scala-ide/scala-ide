@@ -70,7 +70,7 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
    *
    * @param changedClassesNames fully qualified names of types
    */
-  def reenableBreakpointsInClasses(changedClassesNames: Seq[String]): Unit = {
+  def reenableBreakpointsInClasses(changedClassesNames: Seq[String]): Future[Unit] = {
     subordinate.reenableBreakpointsAfterHcr(changedClassesNames)
   }
 

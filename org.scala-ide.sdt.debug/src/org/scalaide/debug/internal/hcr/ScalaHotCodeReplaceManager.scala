@@ -3,9 +3,13 @@
  */
 package org.scalaide.debug.internal.hcr
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters
 import scala.collection.mutable.Publisher
+import scala.concurrent.ExecutionContext.Implicits
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+
 import org.eclipse.core.resources.IResourceChangeEvent
 import org.eclipse.core.resources.IResourceChangeListener
 import org.eclipse.core.resources.ResourcesPlugin
@@ -15,7 +19,9 @@ import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
+
 import com.sun.jdi.ReferenceType
+
 import ScalaHotCodeReplaceManager.HCRFailed
 import ScalaHotCodeReplaceManager.HCRNotSupported
 import ScalaHotCodeReplaceManager.HCRResult
@@ -117,6 +123,7 @@ class ScalaHotCodeReplaceManager private (hcrExecutor: HotCodeReplaceExecutor) e
 
 private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with HasLogger {
   import scala.collection.JavaConverters._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   protected val debugTarget: ScalaDebugTarget
 
@@ -136,29 +143,36 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
     }
   }
 
+  private def doHotCodeReplaceErrorHandler(launchName: String, error: Throwable) = {
+    eclipseLog.error(s"Error occurred while redefining classes in VM for debug configuration '$launchName'.", error)
+    runAsynchronously {
+      () => publish(HCRFailed(launchName))
+    }
+  }
+
   private def doHotCodeReplace(launchName: String, typesToReplace: Seq[ClassFileResource]): Unit = {
-    try {
-      logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName'")
-      debugTarget.isPerformingHotCodeReplace.getAndSet(true)
-      // FIXME We need the automatic semantic dropping frames BEFORE HCR to prevent VM crashes.
-      // We should drop possibly affected frames in this place (remember to wait for the end of such
-      // an operation) and run Step Into after HCR. If no frames will be dropped, we'll just refresh
-      // current stack frames.
+    logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName'")
+    debugTarget.isPerformingHotCodeReplace.getAndSet(true)
+    // FIXME We need the automatic semantic dropping frames BEFORE HCR to prevent VM crashes.
+    // We should drop possibly affected frames in this place (remember to wait for the end of such
+    // an operation) and run Step Into after HCR. If no frames will be dropped, we'll just refresh
+    // current stack frames.
+    Future {
       redefineTypes(typesToReplace)
+    }.flatMap { _ =>
       updateScalaDebugEnv(typesToReplace)
-      logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName' succeeded")
-      runAsynchronously {
-        () => publish(HCRSucceeded(launchName))
-      }
-    } catch {
-      case e: Exception =>
-        eclipseLog.error(s"Error occurred while redefining classes in VM for debug configuration '$launchName'.", e)
+    }.andThen {
+      case _ =>
+        debugTarget.isPerformingHotCodeReplace.getAndSet(false)
+        debugTarget.fireChangeEvent(DebugEvent.CONTENT)
+    }.onComplete {
+      case Success(_) =>
+        logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName' succeeded")
         runAsynchronously {
-          () => publish(HCRFailed(launchName))
+          () => publish(HCRSucceeded(launchName))
         }
-    } finally {
-      debugTarget.isPerformingHotCodeReplace.getAndSet(false)
-      debugTarget.fireChangeEvent(DebugEvent.CONTENT)
+      case Failure(error) =>
+        doHotCodeReplaceErrorHandler(launchName, error)
     }
   }
 
@@ -169,9 +183,12 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
     debugTarget.virtualMachine.redefineClasses(bytesForClasses.asJava)
   }
 
-  private def updateScalaDebugEnv(changedClasses: Seq[ClassFileResource]): Unit = {
-    debugTarget.updateStackFramesAfterHcr(HotCodeReplacePreferences.dropObsoleteFramesAutomatically)
-    debugTarget.breakpointManager.reenableBreakpointsInClasses(changedClasses.map(_.fullyQualifiedName))
+  private def updateScalaDebugEnv(changedClasses: Seq[ClassFileResource]): Future[Unit] = {
+    val stackFramesRefreshResult = debugTarget.updateStackFramesAfterHcr(HotCodeReplacePreferences.dropObsoleteFramesAutomatically)
+    val breakpointsRefreshResult = debugTarget.breakpointManager.reenableBreakpointsInClasses(changedClasses.map(_.fullyQualifiedName))
+    stackFramesRefreshResult.flatMap { _ =>
+      breakpointsRefreshResult
+    }
   }
 
   // it has no sense to try to replace classes which are not loaded to VM

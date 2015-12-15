@@ -213,7 +213,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   def refreshStackFrames(shouldFireChangeEvent: Boolean): Unit =
     subordinate.rebindStackFrames(shouldFireChangeEvent)
 
-  private[internal] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Unit =
+  private[internal] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Future[Unit] =
     subordinate.updateStackFramesAfterHcr(dropAffectedFrames)
 
   private def processMethodInvocationResult(res: Option[Any]): Value = res match {

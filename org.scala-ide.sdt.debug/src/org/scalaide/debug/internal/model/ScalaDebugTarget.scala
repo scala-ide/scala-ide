@@ -449,7 +449,7 @@ abstract class ScalaDebugTarget private(
   /**
    * Refreshes frames of all suspended, non-system threads and optionally drops affected stack frames.
    */
-  private[internal] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Unit =
+  private[internal] def updateStackFramesAfterHcr(dropAffectedFrames: Boolean): Future[Unit] =
     subordinate.updateStackFrameAfterHcr(dropAffectedFrames)
 
   /**
@@ -505,10 +505,11 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
     forwardEventToRightThread(thread, eventDetail)
   }
 
-  private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = Future {
+  private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = {
     println("scala debug target update stack frame")
     val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
-    nonSystemThreads.foreach(_.updateStackFramesAfterHcr(dropAffectedFrames))
+    val updatedNonSystemThreads = nonSystemThreads.map(_.updateStackFramesAfterHcr(dropAffectedFrames))
+    Future.reduce { updatedNonSystemThreads }((_, _) => ())
   }
 
   private def threadEventsHandle: PartialFunction[Event, StaySuspended] = {
