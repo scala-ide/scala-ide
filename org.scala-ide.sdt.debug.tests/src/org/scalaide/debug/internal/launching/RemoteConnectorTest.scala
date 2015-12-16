@@ -26,23 +26,15 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.debug.internal.EclipseDebugEvent
 import org.junit.Ignore
+import org.junit.Rule
+import org.junit.rules.Timeout
+import org.junit.rules.ExternalResource
 
 object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   import ScalaDebugTestSession._
 
   final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
   final val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
-
-  /**
-   * Select a free port by letting the OS pick one and then closing it.
-   */
-  def freePort(): Int = {
-    val socket= new Socket()
-    socket.bind(new InetSocketAddress(0)) // bind on all network interface, on a port chosen by the OS
-    val port= socket.getLocalPort()
-    socket.close()
-    port
-  }
 
   /**
    * Create a debug session for the given launch configuration, using the given port.
@@ -147,8 +139,6 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
 
   private val monitor = new Object
   def sequentially[T] = monitor.synchronized[T] _
-
-  final val Timeout = 5000L
 }
 
 /**
@@ -191,12 +181,35 @@ class RemoteConnectorTest {
     }
   }
 
+  val Timeout = new Timeout(5000)
+  @Rule
+  def timeout = Timeout
+
+  var port: Int = -1
+  @Rule
+  def portSetter = PortSetter
+  val PortSetter = new ExternalResource {
+    /**
+     * Select a free port by letting the OS pick one and then closing it.
+     */
+    private def freePort(): Int = {
+      val socket = new Socket()
+      socket.bind(new InetSocketAddress(0)) // bind on all network interface, on a port chosen by the OS
+      val port = socket.getLocalPort()
+      socket.close()
+      port
+    }
+
+    override protected def before(): Unit = {
+      port = freePort()
+    }
+  }
+
   /**
    * Check if it is possible to connect to a running VM.
    */
-  @Test(timeout = Timeout)
+  @Test
   def attachToRunningVM(): Unit = sequentially {
-    val port = freePort()
     application = launchInRunMode("HelloWorld listening", port)
 
     waitForOpenSocket(port)
@@ -214,7 +227,6 @@ class RemoteConnectorTest {
   @Ignore("Debugee cannot guarantee to wait for its Debugging")
   @Test(timeout = 10000L)
   def attachToNonSuspendedRunningVM(): Unit = sequentially {
-    val port = freePort()
     application = launchInRunMode("HelloWorld listening not suspended", port)
 
     waitForOpenSocket(port)
@@ -237,9 +249,8 @@ class RemoteConnectorTest {
    * Test timeout set to 5s. The connection timeout is set to 3s.
    * A passing test should not be more than a couple of seconds.
    */
-  @Test(timeout = Timeout)
+  @Test
   def listenToAttachingVM(): Unit = sequentially {
-    val port = freePort()
     // tweak the timeout preference. 3s should be good enough.
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 3000)
 
@@ -258,7 +269,6 @@ class RemoteConnectorTest {
    */
   @Test(expected = classOf[CoreException])
   def attachToNothing(): Unit = sequentially {
-    val port = freePort()
     session = initDebugSession("Remote attaching", port)
 
     session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
@@ -271,9 +281,8 @@ class RemoteConnectorTest {
    * Test timeout set to 2s. The connection timeout is set to 10ms.
    * A passing test should not be more than 1second
    */
-  @Test(timeout = Timeout)
+  @Test
   def listeningToNobody(): Unit = sequentially {
-    val port = freePort()
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
 
@@ -294,10 +303,8 @@ class RemoteConnectorTest {
   /**
    * Check that disconnect releases a VM, without killing it.
    */
-  @Test(timeout = Timeout)
+  @Test
   def disconnectReleaseRunningVM(): Unit = sequentially {
-    val port = freePort()
-
     application = launchInRunMode("HelloWorld listening", port)
 
     waitForOpenSocket(port)
@@ -330,10 +337,8 @@ class RemoteConnectorTest {
   /**
    * Check that canTerminate is correctly set
    */
-  @Test(timeout = Timeout)
+  @Test
   def cannotTerminate(): Unit = sequentially {
-    val port = freePort()
-
     application = launchInRunMode("HelloWorld listening", port)
 
     waitForOpenSocket(port)
@@ -353,10 +358,8 @@ class RemoteConnectorTest {
   /**
    * Check that canTerminate is correctly enabled, and kill the VM when used.
    */
-  @Test(timeout = Timeout)
+  @Test
   def terminateKillsRunningVM(): Unit = sequentially {
-    val port = freePort()
-
     application = launchInRunMode("HelloWorld listening", port)
 
     waitForOpenSocket(port)
