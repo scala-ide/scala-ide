@@ -219,7 +219,6 @@ class RemoteConnectorTest extends RemoteConnectorTestPortResource {
   /**
    * Check if it is possible to connect to a running VM that did not suspend.
    */
-  @Ignore("Debugee cannot guarantee to wait for its Debugging")
   @Test(timeout = 10000)
   def attachToNonSuspendedRunningVM(): Unit = {
     application = launchInRunMode("HelloWorld listening not suspended", port)
