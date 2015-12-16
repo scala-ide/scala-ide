@@ -236,6 +236,7 @@ class RemoteConnectorTest extends RemoteConnectorTestPortResource {
     session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
 
     application.terminate()
+    application = null
   }
 
   /**
