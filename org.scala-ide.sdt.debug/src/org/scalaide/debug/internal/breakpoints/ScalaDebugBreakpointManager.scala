@@ -47,21 +47,21 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
    */
   private val waitForAllCurrentFutures: AtomicReference[Future[Unit]] = new AtomicReference(Future.successful {})
 
-  private def ravelFutures[T](b: => Future[T])(implicit ec: ExecutionContext): Unit = {
+  private def entangleFutures[T](b: => Future[T])(implicit ec: ExecutionContext): Unit = {
     val p = Promise[Unit]
     b.onComplete { t => p.success {}; }
     waitForAllCurrentFutures.getAndSet(waitForAllCurrentFutures.get.flatMap { _ => p.future })
   }
 
-  override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ravelFutures {
+  override def breakpointChanged(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = entangleFutures {
     subordinate.breakpointChanged(breakpoint, delta)
   }
 
-  override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = ravelFutures {
+  override def breakpointRemoved(breakpoint: IBreakpoint, delta: IMarkerDelta): Unit = entangleFutures {
     subordinate.breakpointRemoved(breakpoint)
   }
 
-  override def breakpointAdded(breakpoint: IBreakpoint): Unit = ravelFutures {
+  override def breakpointAdded(breakpoint: IBreakpoint): Unit = entangleFutures {
     subordinate.breakpointAdded(breakpoint)
   }
 
