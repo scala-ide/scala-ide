@@ -24,7 +24,7 @@ object ScalaStepReturn {
 }
 
 /**
- * Actor used to manage a Scala step return. It keeps track of the request needed to perform this step.
+ * Class used to manage a Scala step return. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepReturn object.
  */
 private[command] class ScalaStepReturnSubordinate(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepReturnRequest: StepRequest)

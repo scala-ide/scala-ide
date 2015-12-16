@@ -57,9 +57,9 @@ object ScalaDebugCache {
 
 /**
  * A cache used to keep the list of nested classes of a outer class.
- *  It is used by for the line breakpoints and step-over.
+ * It is used by for the line breakpoints and step-over.
  *
- *  Most of the methods are synchronous calls made to the underlying actor.
+ * Most of the methods are synchronous calls made to the underlying actor.
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
   import ScalaDebugCache._
@@ -68,7 +68,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Return the list of type which are nested under the same outer type as the type with the given name,
-   *  and which are currently loaded in the debugged VM.
+   * and which are currently loaded in the debugged VM.
    */
   def getLoadedNestedTypes(typeName: String): Set[ReferenceType] = {
     val outerTypeName = extractOuterTypeName(typeName)
@@ -85,27 +85,27 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
   }
 
   /**
-   * Adds the given actor as a listener for class prepare events in the debugged VM,
-   *  for types which are nested under the same outer type as the type with the given name.
-   *  The event is sent as a ClassPrepareEvent to the actor.
+   * Adds the given listener for class prepare events in the debugged VM,
+   * for types which are nested under the same outer type as the type with the given name.
+   * The event is sent as a ClassPrepareEvent to the listener.
    *
-   *  This method is synchronous. Once this method returns, all subsequent ClassPrepareEvents
-   *  will be sent to the listener actor.
+   * This method is synchronous. Once this method returns, all subsequent ClassPrepareEvents
+   * will be sent to the listener.
    *
-   *  Does nothing if the actor has already been added for the same outer type.
+   * Does nothing if the listener has already been added for the same outer type.
    */
   def addClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Unit = {
     subordinate.addClassPreparedEventListener(listener, extractOuterTypeName(typeName))
   }
 
   /**
-   * Removes the given actor as being a listener for class prepare events in the debugged VM,
-   *  for types which are nested under the same outer type as the type with the given name.
+   * Removes the given listener for class prepare events in the debugged VM,
+   * for types which are nested under the same outer type as the type with the given name.
    *
-   *  Does nothing if the actor was not registered as a listener for the outer type of the type with the given name.
+   * Does nothing if the listener was not registered for the outer type of the type with the given name.
    *
-   *  This method is asynchronous. There might be residual ClassPrepareEvents being
-   *  sent to this listener.
+   * This method is asynchronous. There might be residual ClassPrepareEvents being
+   * sent to this listener.
    */
   def removeClassPrepareEventListener(listener: ClassPrepareListener, typeName: String): Unit =
     subordinate.removeClassPreparedEventListener(listener, extractOuterTypeName(typeName))
@@ -115,7 +115,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Return the method containing the actual code of the anon function, if it is contained
-   *  in the given range, <code>None</code> otherwise.
+   * in the given range, <code>None</code> otherwise.
    */
   def getAnonFunctionsInRange(refType: ReferenceType, range: Range): Option[Method] = {
     getCachedAnonFunction(refType).filter(method => range.contains(method.location.lineNumber))
@@ -135,8 +135,8 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Is this location opaque? Returns `true` for all locations in which the
-   *  debugger should not stop. It won't stop in anything below this call either (any
-   *  methods called by methods at this location).
+   * debugger should not stop. It won't stop in anything below this call either (any
+   * methods called by methods at this location).
    */
   def isOpaqueLocation(location: Location): Boolean = {
     getCachedMethodFlags(location.method()).isOpaque
@@ -144,7 +144,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Returns the anon function for the given type, if it exists. The cache is checked
-   *  before doing the actual search.
+   * before doing the actual search.
    */
   private def getCachedAnonFunction(refType: ReferenceType): Option[Method] = {
     typeCacheLock synchronized {
@@ -200,7 +200,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
 
   /**
    * Returns the flags for the given method. The cache is checked
-   *  before doing the actual computation.
+   * before doing the actual computation.
    */
   private def getCachedMethodFlags(method: Method): MethodFlags = {
     typeCacheLock synchronized {

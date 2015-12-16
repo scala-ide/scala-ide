@@ -472,18 +472,16 @@ private[model] object ScalaDebugTargetSubordinate {
   }
 }
 
-/** Actor used to manage a Scala debug target. It keeps track of the existing threads.
+/** Class used to manage a Scala debug target. It keeps track of the existing threads.
  *  This class is thread safe. Instances are not to be created outside of the ScalaDebugTarget object.
  *
- *  The `ScalaDebugTargetActor` is linked to both the `ScalaJdiEventDispatcherActor and the
- *  `ScalaDebugBreakpointManagerActor`, this implies that if any of the three actors terminates (independently
- *  of the reason), all other actors will also be terminated (an `Exit` message will be sent to each of the
- *  linked actors).
+ *  The `ScalaDebugTarget` is linked to both the `ScalaJdiEventDispatcher` and the
+ *  `ScalaDebugBreakpointManager`, this implies that if any of the three instances terminates (independently
+ *  of the reason), all other instences will also be terminated.
  */
 private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: ThreadStartRequest, threadDeathRequest: ThreadDeathRequest, override protected val debugTarget: ScalaDebugTarget)(implicit ec: ExecutionContext)
     extends JdiEventReceiver
     with HotCodeReplaceExecutor {
-  /** Is this actor initialized and listening to thread events? */
   private val initialized = new AtomicBoolean
 
   override protected[model] def innerHandle = vmEventsHandle orElse threadEventsHandle
@@ -531,7 +529,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
   }
 
   /**
-   * Initialize this debug target actor:
+   * Initialize this debug target instance:
    *
    *   - listen to thread start/death events
    *   - initialize the companion debug target

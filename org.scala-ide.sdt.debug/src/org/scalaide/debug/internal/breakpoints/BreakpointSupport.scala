@@ -44,11 +44,11 @@ private[debug] object BreakpointSupport {
   final val ATTR_TYPE_NAME = "org.eclipse.jdt.debug.core.typeName"
 
   /**
-   * Create the breakpoint support actor.
+   * Create the breakpoint support.
    *
-   *  @note `BreakpointSupportActor` instances are created only by the `ScalaDebugBreakpointManagerActor`, hence
-   *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupportActor.apply`)
-   *        will be caught by the `ScalaDebugBreakpointManagerActor` default exceptions' handler.
+   *  @note `BreakpointSupport` instances are created only by the `ScalaDebugBreakpointManager`, hence
+   *        any uncaught exception that may occur during initialization (i.e., in `BreakpointSupport.apply`)
+   *        will be caught by the `ScalaDebugBreakpointManager` default exceptions' handler.
    */
   def apply(breakpoint: IBreakpoint, debugTarget: ScalaDebugTarget): BreakpointSupportSubordinate = {
     BreakpointSupportSubordinate(breakpoint, debugTarget)
@@ -105,7 +105,7 @@ private object BreakpointSupportSubordinate {
 }
 
 /**
- * This actor manages the given breakpoint and its corresponding VM requests. It receives messages from:
+ * This class manages the given breakpoint and its corresponding VM requests. It receives messages from:
  *
  *  - the JDI event queue, when a breakpoint is hit
  *  - the platform, when a breakpoint is changed (for instance, disabled)

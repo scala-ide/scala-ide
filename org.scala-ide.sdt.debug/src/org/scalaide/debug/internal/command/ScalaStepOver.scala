@@ -63,7 +63,7 @@ object ScalaStepOver {
 }
 
 /**
- * Actor used to manage a Scala step over. It keeps track of the request needed to perform this step.
+ * Class used to manage a Scala step over. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepOver object.
  */
 private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, typeName: String, rangeOpt: Option[Range], thread: ScalaThread, requests: ListBuffer[EventRequest])
