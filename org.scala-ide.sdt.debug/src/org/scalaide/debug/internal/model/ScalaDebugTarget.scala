@@ -506,7 +506,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
   }
 
   private[model] def updateStackFrameAfterHcr(dropAffectedFrames: Boolean): Future[Unit] = {
-    println("scala debug target update stack frame")
+    logger.debug("scala debug target update stack frame")
     val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
     val updatedNonSystemThreads = nonSystemThreads.map(_.updateStackFramesAfterHcr(dropAffectedFrames))
     Future.reduce { updatedNonSystemThreads }((_, _) => ())

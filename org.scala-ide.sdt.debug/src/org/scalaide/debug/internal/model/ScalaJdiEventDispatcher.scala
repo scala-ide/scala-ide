@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.model
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-
 import scala.annotation.implicitNotFound
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
@@ -10,12 +9,10 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
-
 import org.scalaide.debug.internal.JdiEventDispatcher
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Suppress
-
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventSet
@@ -23,6 +20,7 @@ import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
+import scala.util.Properties
 
 object ScalaJdiEventDispatcher {
   def apply(virtualMachine: VirtualMachine, scalaDebugTarget: JdiEventReceiver): ScalaJdiEventDispatcher = {
@@ -110,7 +108,7 @@ private[model] object ScalaJdiEventDispatcherSubordinate {
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarget: JdiEventReceiver) {
+private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarget: JdiEventReceiver) extends HasLogger {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   /** event request to receiver map */
@@ -138,7 +136,9 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
     import scala.collection.JavaConverters._
 
     var staySuspendeds = List[Future[Boolean]]()
-eventSet.asScala.foreach { println }
+    logger.debug {
+      eventSet.asScala.mkString(Properties.lineSeparator)
+    }
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
      *
