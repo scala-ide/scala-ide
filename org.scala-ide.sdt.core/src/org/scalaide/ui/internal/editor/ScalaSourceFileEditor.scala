@@ -222,7 +222,12 @@ class ScalaSourceFileEditor
     }
 
     def fixBrokenGroups(): Unit = {
-      findJdtSourceMenuManager(menu.getItems) foreach { mm =>
+      val items = menu.getItems
+
+      // hide quick fix entry from menu since it invokes JDT quick fixes
+      items.find(_.getId == "QuickAssist").foreach(_.setVisible(false))
+
+      findJdtSourceMenuManager(items) foreach { mm =>
 
         val groups = groupMenuItemsByGroupId(mm.getItems)
 
