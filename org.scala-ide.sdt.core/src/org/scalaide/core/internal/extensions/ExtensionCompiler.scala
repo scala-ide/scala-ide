@@ -122,10 +122,12 @@ object ExtensionCompiler extends AnyRef with HasLogger {
      */
     def devBundles = {
       import SdtConstants._
+      val refactoringBundle = bundles.find(_.getSymbolicName == ScalaRefactoringPluginId).map(FileLocator.getBundleFile).map(ref ⇒ s"${ref}${File.separator}bin")
+
       val pluginIds = Seq(AspectsPluginId, PluginId, DebuggerPluginId, ExpressionEvaluatorPluginId, ScalaRefactoringPluginId)
       val devBundles = pluginIds flatMap (id ⇒ bundles.find(_.getSymbolicName == id))
 
-      devBundles.map(FileLocator.getBundleFile).map(ref ⇒ s"${ref}${File.separator}target${File.separator}classes")
+      refactoringBundle.toSeq ++ devBundles.map(FileLocator.getBundleFile).map(ref ⇒ s"${ref}${File.separator}target${File.separator}classes")
     }
 
     /*
