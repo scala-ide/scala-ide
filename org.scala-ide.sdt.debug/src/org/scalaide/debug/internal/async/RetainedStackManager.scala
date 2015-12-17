@@ -4,18 +4,16 @@ import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.collection.JavaConverters
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Try
 
-import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.JdiEventReceiver
+import org.scalaide.debug.internal.ScalaDebugPlugin
+import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration
 import org.scalaide.debug.internal.model.ClassPrepareListener
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
@@ -23,6 +21,7 @@ import org.scalaide.debug.internal.model.ScalaValue
 import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
+import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.StackFrame
@@ -37,11 +36,15 @@ import com.sun.jdi.request.BreakpointRequest
  */
 class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
   import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   final val MaxEntries = 20000
   private val stackFrames: mutable.Map[ObjectReference, AsyncStackTraces] = {
     import scala.collection.JavaConverters._
-    new ConcurrentHashMap[ObjectReference, AsyncStackTraces](MaxEntries).asScala
+    new ConcurrentLinkedHashMap.Builder[ObjectReference, AsyncStackTraces]()
+      .maximumWeightedCapacity(MaxEntries)
+      .build()
+      .asScala
   }
   private val breakpointRequests: mutable.Set[BreakpointRequest] = {
     import scala.collection.JavaConverters._
