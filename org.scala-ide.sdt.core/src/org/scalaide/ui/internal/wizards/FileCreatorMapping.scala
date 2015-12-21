@@ -47,7 +47,7 @@ case class FileCreatorMapping
    * result of the function.
    */
   def withInstance[A](f: FileCreator => A): Option[A] = {
-    EclipseUtils.withSafeRunner(s"An error occured while executing file creator '$name'.") {
+    EclipseUtils.withSafeRunner(s"An error occured while executing file creator '$name'") {
       f(unsafeInstanceAccess)
     }
   }

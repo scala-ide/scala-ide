@@ -213,7 +213,7 @@ trait AutoEditExtensions extends HasLogger {
     feature.incUsageCounter()
 
     handlers find (_ isDefinedAt change) flatMap { handler =>
-      EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'.") {
+      EclipseUtils.withSafeRunner(s"An error occurred while applying changes of auto edit '$id'") {
         handler(change)
       }
     }
@@ -227,7 +227,7 @@ trait AutoEditExtensions extends HasLogger {
     val id = instance.setting.id
 
     if (isEnabled(id))
-      EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'.") {
+      EclipseUtils.withSafeRunner(s"An error occurred while executing auto edit '$id'") {
         instance.perform() match {
           case None                                                       => None
           case o @ Some(_: TextChange | _: CursorUpdate | _: LinkedModel) => o

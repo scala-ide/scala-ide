@@ -162,7 +162,7 @@ trait SaveActionExtensions extends HasLogger {
 
       case (setting, ext) +: xs if isEnabled(setting.id) ⇒
         val res = FutureUtils.performWithTimeout(timeout) {
-          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'.") {
+          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'") {
             createExtensionWithCompilerSupport(ext) map { instance =>
               instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
                 instance.perform()
@@ -173,7 +173,7 @@ trait SaveActionExtensions extends HasLogger {
 
         res match {
           case Success(changes) ⇒
-            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'.") {
+            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'") {
               applyChanges(setting, changes, udoc)
             }
             loop(xs)
@@ -214,14 +214,14 @@ trait SaveActionExtensions extends HasLogger {
     val timeout = saveActionTimeout
 
     val res = FutureUtils.performWithTimeout(timeout) {
-      EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
+      EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'") {
         ext
       }.getOrElse(Seq())
     }
 
     res match {
       case Success(changes) =>
-        EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
+        EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'") {
           applyChanges(instance.setting, changes, udoc)
         }
 

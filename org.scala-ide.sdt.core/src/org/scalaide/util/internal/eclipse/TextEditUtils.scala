@@ -9,6 +9,7 @@ import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextSelection
 import org.eclipse.jface.text.TextSelection
 import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.text.edits.MalformedTreeException
 import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.text.edits.RangeMarker
 import org.eclipse.text.edits.ReplaceEdit
@@ -28,6 +29,17 @@ object TextEditUtils {
 
   /** Creates a `TextFileChange` which always contains a `MultiTextEdit`. */
   def createTextFileChange(file: IFile, fileChanges: List[TextChange], leaveDirty: Boolean): TextFileChange = {
+    try checkedCreateTextFileChange(file, fileChanges, leaveDirty) catch {
+      case e: MalformedTreeException ⇒
+        throw new IllegalStateException(s"""|Couldn't create text file change, see root cause.
+                                            |The following changes were expected to be created: $fileChanges.
+                                            |Document was:
+                                            |${io.Source.fromInputStream(file.getContents)(io.Codec.UTF8).mkString}
+                                            |""".stripMargin, e)
+    }
+  }
+
+  private def checkedCreateTextFileChange(file: IFile, fileChanges: List[TextChange], leaveDirty: Boolean): TextFileChange = {
     new TextFileChange(file.getName(), file) {
 
       val fileChangeRootEdit = new MultiTextEdit
@@ -63,6 +75,25 @@ object TextEditUtils {
       file: AbstractFile,
       changes: List[TextChange],
       leaveDirty: Boolean = false): Option[ITextSelection] = {
+
+    try checkedApplyChangesToFile(document, textSelection, file, changes, leaveDirty) catch {
+      case e: MalformedTreeException ⇒
+        val sel = s"start=${textSelection.getOffset}, length=${textSelection.getLength}, text=${textSelection.getText}"
+        throw new IllegalStateException(s"""|Couldn't perform text file change, see root cause.
+                                            |The selection was: $sel.
+                                            |The following changes were expected to be applied: $changes.
+                                            |Document was:
+                                            |${document.get}
+                                            |""".stripMargin, e)
+    }
+  }
+
+  private def checkedApplyChangesToFile(
+      document: IDocument,
+      textSelection: ITextSelection,
+      file: AbstractFile,
+      changes: List[TextChange],
+      leaveDirty: Boolean): Option[ITextSelection] = {
 
     FileUtils.toIFile(file) map { f =>
       createTextFileChange(f, changes, leaveDirty).getEdit match {
