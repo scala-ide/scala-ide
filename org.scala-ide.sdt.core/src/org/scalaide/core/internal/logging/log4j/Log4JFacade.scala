@@ -39,6 +39,7 @@ private[logging] abstract class Log4JFacade {
   }
 
   private def toLog4JLevel(level: Level.Value): Log4JLevel = level match {
+    case Level.TRACE => Log4JLevel.TRACE
     case Level.DEBUG => Log4JLevel.DEBUG
     case Level.INFO => Log4JLevel.INFO
     case Level.WARN => Log4JLevel.WARN
