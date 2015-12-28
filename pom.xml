@@ -88,9 +88,10 @@
     <version.tag>local</version.tag>
     <sbt.version>0.13.8</sbt.version>
     <json-io.version>4.1.6</json-io.version>
+    <scala-refactoring.version>0.9.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- the repos containing the Scala dependencies -->
-    <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-${scala.short.version}x</repo.scala-refactoring>
+    <repo.scala-refactoring>${repo.scala-ide.root}/scala-refactoring-lib</repo.scala-refactoring>
     <repo.scalariform>${repo.scala-ide.root}/scalariform-${scala.short.version}x</repo.scalariform>
     <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
