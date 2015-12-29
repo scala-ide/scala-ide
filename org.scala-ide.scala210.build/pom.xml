@@ -32,12 +32,6 @@
       <artifactId>scala-compiler</artifactId>
       <version>${scala210.version}</version>
     </dependency>
-    <!-- modules -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-      <version>${scala210.version}</version>
-    </dependency>
     <!-- sources -->
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -55,13 +49,6 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>${scala210.version}</version>
-      <classifier>sources</classifier>
-    </dependency>
-    <!-- modules -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
     </dependency>

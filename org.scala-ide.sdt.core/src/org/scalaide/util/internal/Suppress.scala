@@ -29,17 +29,6 @@ object Suppress {
     type IBufferFactory = org.eclipse.jdt.core.IBufferFactory
     type ICodeCompletionRequestor = org.eclipse.jdt.core.ICodeCompletionRequestor
     type ICompletionRequestor = org.eclipse.jdt.core.ICompletionRequestor
-    type Actor = scala.actors.Actor
-    val Actor = scala.actors.Actor
-    type DaemonActor = scala.actors.DaemonActor
-    type AbstractActor = scala.actors.AbstractActor
-    type Exit = scala.actors.Exit
-    val State = scala.actors.Actor.State
-    type OutputChannel[A] = scala.actors.OutputChannel[A]
-    type IScheduler = scala.actors.IScheduler
-    type SingleThreadedScheduler = scala.actors.scheduler.SingleThreadedScheduler
-    type ResizableThreadPoolScheduler = scala.actors.scheduler.ResizableThreadPoolScheduler
-    type ForkJoinScheduler = scala.actors.scheduler.ForkJoinScheduler
     type Lock = scala.concurrent.Lock
 
     /** Refers to deprecated Eclipse/JDT API */

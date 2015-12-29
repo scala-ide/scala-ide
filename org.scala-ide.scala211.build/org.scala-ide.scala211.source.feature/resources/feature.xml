@@ -78,13 +78,6 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.scala-actors.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="org.scala-lang.modules.scala-xml.source"
          download-size="0"
          install-size="0"

@@ -14,6 +14,7 @@ import org.scalaide.core.completion.ScalaJavaCompletionTests
 import org.scalaide.core.findreferences.FindReferencesTests
 import org.scalaide.core.hyperlink.HyperlinkDetectorTests
 import org.scalaide.core.hyperlink.ScalaWordFinderTest
+import org.scalaide.core.interpreter.EclipseReplTest
 import org.scalaide.core.jcompiler.AbstractMethodVerifierTest
 import org.scalaide.core.launching.MainClassVerifierTest
 import org.scalaide.core.launching.RunAsTest
@@ -76,7 +77,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[ScalaJavaCompletionTests],
     classOf[FindReferencesTests],
     classOf[HyperlinkDetectorTests],
-    // classOf[scala.tools.eclipse.interpreter.EclipseReplTest], // see comments there
+    classOf[EclipseReplTest],
     classOf[AbstractMethodVerifierTest],
     classOf[MainClassVerifierTest],
     classOf[ScalaDocumentPartitionerTest],

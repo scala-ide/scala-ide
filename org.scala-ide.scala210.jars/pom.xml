@@ -32,13 +32,6 @@
       <version>${scala210.version}</version>
       <optional>true</optional>
     </dependency>
-    <!-- modules -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-      <version>${scala210.version}</version>
-      <optional>true</optional>
-    </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-swing</artifactId>
@@ -64,14 +57,6 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>${scala210.version}</version>
-      <classifier>sources</classifier>
-      <optional>true</optional>
-    </dependency>
-    <!-- modules -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
       <version>${scala210.version}</version>
       <classifier>sources</classifier>
       <optional>true</optional>
@@ -120,13 +105,6 @@
                   <type>jar</type>
                   <destFileName>scala-compiler.jar</destFileName>
                 </artifactItem>
-                <!-- modules -->
-                <artifactItem>
-                  <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-actors</artifactId>
-                  <type>jar</type>
-                  <destFileName>scala-actor.jar</destFileName>
-                </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-swing</artifactId>
@@ -155,14 +133,6 @@
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-compiler-src.jar</destFileName>
-                </artifactItem>
-                <!-- modules -->
-                <artifactItem>
-                  <groupId>org.scala-lang</groupId>
-                  <artifactId>scala-actors</artifactId>
-                  <classifier>sources</classifier>
-                  <type>jar</type>
-                  <destFileName>scala-actor-src.jar</destFileName>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>

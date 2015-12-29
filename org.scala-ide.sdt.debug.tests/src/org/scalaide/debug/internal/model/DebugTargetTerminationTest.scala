@@ -22,7 +22,7 @@ import org.mockito.Mockito.when
 import org.scalaide.debug.internal.EclipseDebugEvent
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.debug.internal.TestFutureUtil.waitForConditionOrTimeout
+import org.scalaide.util.TestFutureUtil.waitForConditionOrTimeout
 import org.scalaide.logging.HasLogger
 
 import com.sun.jdi.ThreadReference
@@ -96,7 +96,7 @@ class DebugTargetTerminationTest extends HasLogger {
     override def handleDebugEvents(events: Array[DebugEvent]): Unit = f(events)
   }
 
-  import org.scalaide.debug.internal.TestFutureUtil._
+  import org.scalaide.util.TestFutureUtil._
   import scala.concurrent.ExecutionContext.Implicits.global
 
   @Test
