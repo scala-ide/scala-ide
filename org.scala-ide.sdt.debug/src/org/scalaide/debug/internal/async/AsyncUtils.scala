@@ -1,16 +1,15 @@
 package org.scalaide.debug.internal.async
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.Suppress
-
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.request.BreakpointRequest
+import org.scalaide.debug.internal.JdiEventReceiver
 
 object AsyncUtils extends HasLogger {
   val AsyncProgramPointKey = "app"
@@ -28,7 +27,7 @@ object AsyncUtils extends HasLogger {
   def installMethodBreakpoint(
     debugTarget: ScalaDebugTarget,
     app: AsyncProgramPoint,
-    actor: Suppress.DeprecatedWarning.Actor,
+    eventReceiver: JdiEventReceiver,
     requestOwner: Option[String] = None,
     threadRef: ThreadReference = null): Seq[BreakpointRequest] = {
 
@@ -37,7 +36,7 @@ object AsyncUtils extends HasLogger {
       method <- findAsyncProgramPoint(app, tpe)
     } yield {
       val req = JdiRequestFactory.createMethodEntryBreakpoint(method, debugTarget)
-      debugTarget.eventDispatcher.setActorFor(actor, req)
+      debugTarget.eventDispatcher.register(eventReceiver, req)
       req.putProperty(AsyncProgramPointKey, app)
       requestOwner.foreach { req.putProperty(RequestOwnerKey, _) }
       if (threadRef ne null)

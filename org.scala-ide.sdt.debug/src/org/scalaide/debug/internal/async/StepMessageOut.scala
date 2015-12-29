@@ -1,12 +1,9 @@
 package org.scalaide.debug.internal.async
 
 import java.util.UUID
-
 import scala.collection.JavaConverters
 import scala.util.Try
-
 import org.eclipse.debug.core.DebugEvent
-import org.scalaide.debug.internal.BaseDebuggerActor
 import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.async.AsyncUtils.AsyncProgramPointKey
 import org.scalaide.debug.internal.async.AsyncUtils.RequestOwnerKey
@@ -17,7 +14,6 @@ import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
-
 import com.sun.jdi.Field
 import com.sun.jdi.ObjectReference
 import com.sun.jdi.StringReference
@@ -27,6 +23,8 @@ import com.sun.jdi.event.Event
 import com.sun.jdi.event.StepEvent
 import com.sun.jdi.request.EventRequest
 import com.sun.jdi.request.StepRequest
+import org.scalaide.debug.internal.JdiEventReceiver
+import java.util.concurrent.atomic.AtomicReference
 
 case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) extends HasLogger {
   import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration._
@@ -35,16 +33,18 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
   private val IsSearchingReceiveMethodKey = "org.scala-ide.debug.async.step-out.Search"
   private val StackTraceDepth = "org.scala-ide.debug.async.step-out.StackTraceDepth"
   private val StartLineNumber = "org.scala-ide.debug.async.step-out.StartLineNumber"
-  private var watchedMessage: Option[ObjectReference] = None
-  private var watchedActor: String = _
+  private val watchedMessageRef: AtomicReference[Option[ObjectReference]] = new AtomicReference(None)
+  private def watchedMessage = watchedMessageRef.get
+  private val watchedActorRef: AtomicReference[String] = new AtomicReference
+  private def watchedActor = watchedActorRef.get
   val programSends = List(
     AsyncProgramPoint("akka.actor.RepointableActorRef", "$bang", 0),
     AsyncProgramPoint("akka.actor.LocalActorRef", "$bang", 0),
     AsyncProgramPoint("scala.actors.InternalReplyReactor$class", "$bang", 1))
   val programReceives = List(
     AsyncProgramPoint("akka.actor.ActorCell", "receiveMessage", 0))
-  private var receiveRequest: Option[EventRequest] = None
-  private var stepRequests = Set[EventRequest]()
+  private val receiveRequestRef: AtomicReference[Option[EventRequest]] = new AtomicReference(None)
+  private val stepRequestsRef: AtomicReference[Set[EventRequest]] = new AtomicReference(Set())
   private val depth = thread.getScalaStackFrames.size
   private val line = thread.getTopStackFrame().getLineNumber()
   private val Halt = true
@@ -54,7 +54,6 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
     debugTarget.getLaunch.getLaunchConfiguration.getAttribute(StepOutExcludePkgsOrClasses, List.empty[String].asJava).asScala
 
   def step(): Unit = {
-    subordinate.start()
     subordinate.establishRequestToStopInTellMethod()
     thread.resumeFromScala(DebugEvent.CLIENT_REQUEST)
   }
@@ -69,7 +68,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       declType
   }
 
-  object subordinate extends BaseDebuggerActor {
+  object subordinate extends JdiEventReceiver {
     import scala.collection.JavaConverters._
     private def isReceiveHandler(stepEvent: StepEvent): Boolean = {
       val thisType = findThisType(stepEvent)
@@ -77,7 +76,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
         !stepOutNotStopInClasses.exists { thisType.startsWith }
     }
 
-    override protected def behavior = {
+    override protected def innerHandle: PartialFunction[Event, StaySuspended] = {
       case breakpointEvent: BreakpointEvent if isSearchingReceiveMethod(breakpointEvent) =>
         val currentThread = breakpointEvent.thread
         val topFrame = currentThread.frame(0)
@@ -93,19 +92,19 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
             establishRequestToStopInReceiveMethod(thread, currentThread.frameCount(), breakpointEvent.location().lineNumber())
           }
         }
-        reply(Continue)
+        Continue
 
       case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && isReceiveHandler(stepEvent) =>
         terminate()
         logger.debug(s"Suspending thread ${stepEvent.thread.name()}")
         // most likely the breakpoint was hit on a different thread than the one we started with, so we find it here
         debugTarget.getScalaThread(stepEvent.thread()).foreach(_.suspendedFromScala(DebugEvent.BREAKPOINT))
-        reply(Halt)
+        Halt
 
       case stepEvent: StepEvent if isSearchingReceiveMethod(stepEvent) && shouldStopSteppingForReceiveMethod(stepEvent) =>
         terminate()
         logger.debug(s"Receive method not found. Leaving...")
-        reply(Continue)
+        Continue
 
       case stepEvent: StepEvent if isSearchingTellMethod(stepEvent) =>
         val decision = if (stepEvent.thread().frameCount() == depth && stepEvent.location().lineNumber() > line) {
@@ -120,16 +119,13 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
             val topFrame = stepEvent.thread().frame(0)
             val args = topFrame.getArgumentValues()
             logger.debug(s"MESSAGE OUT intercepted: topFrame arguments: $args")
-            watchedMessage = Option(args.get(app.paramIdx).asInstanceOf[ObjectReference])
-            watchedActor = actorPathValue(path(topFrame.thisObject()), thread.threadRef)
+            watchedMessageRef.getAndSet(Option(args.get(app.paramIdx).asInstanceOf[ObjectReference]))
+            watchedActorRef.getAndSet(actorPathValue(path(topFrame.thisObject()), thread.threadRef))
             establishRequestToStopInReceiveMessageMethod()
           }
           Continue
         }
-        reply(decision)
-
-      case _ =>
-        reply(Continue)
+        decision
     }
 
     private[async] def establishRequestToStopInTellMethod(): Unit = {
@@ -138,13 +134,13 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       stepIntoReq.putProperty(AsyncProgramPointKey, programReceives)
       stepIntoReq.putProperty(RequestOwnerKey, StepMessageOut)
       stepIntoReq.enable()
-      stepRequests = Set(stepIntoReq)
-      debugTarget.eventDispatcher.setActorFor(this, stepIntoReq)
+      stepRequestsRef.getAndSet(Set(stepIntoReq))
+      debugTarget.eventDispatcher.register(this, stepIntoReq)
     }
 
     private def establishRequestToStopInReceiveMessageMethod(): Unit = {
-      receiveRequest = programReceives.flatMap(installMethodBreakpoint(debugTarget, _, this, Some(StepMessageOut))).headOption
-      receiveRequest.foreach { _.putProperty(IsSearchingReceiveMethodKey, true) }
+      receiveRequestRef.getAndSet(programReceives.flatMap(installMethodBreakpoint(debugTarget, _, this, Some(StepMessageOut))).headOption)
+      receiveRequestRef.get.foreach { _.putProperty(IsSearchingReceiveMethodKey, true) }
     }
 
     private def establishRequestToStopInReceiveMethod(thread: ScalaThread, stackTraceDepth: Int, locationLine: Int): Unit = {
@@ -154,8 +150,8 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       stepReq.putProperty(StackTraceDepth, stackTraceDepth)
       stepReq.putProperty(StartLineNumber, locationLine)
       stepReq.enable()
-      debugTarget.eventDispatcher.setActorFor(this, stepReq)
-      stepRequests = Set(stepReq)
+      debugTarget.eventDispatcher.register(this, stepReq)
+      stepRequestsRef.getAndSet(Set(stepReq))
     }
 
     private def shouldStopSteppingForReceiveMethod(event: StepEvent) = {
@@ -191,7 +187,7 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
       val eventRequestManager = debugTarget.virtualMachine.eventRequestManager
       for (request <- reqs) {
         request.disable()
-        eventDispatcher.unsetActorFor(request)
+        eventDispatcher.unregister(request)
         eventRequestManager.deleteEventRequest(request)
       }
     }
@@ -202,18 +198,15 @@ case class StepMessageOut(debugTarget: ScalaDebugTarget, thread: ScalaThread) ex
     }
 
     private def deleteStepRequests(): Unit = {
-      deleteRequests(stepRequests)
-      stepRequests = Set()
+      deleteRequests(stepRequestsRef.getAndSet(Set()))
     }
 
     private def deleteReceiveRequest(): Unit = {
-      deleteRequests(receiveRequest.toSet)
-      receiveRequest = None
+      deleteRequests(receiveRequestRef.getAndSet(None).toSet)
     }
 
     private def terminate(): Unit = {
       deleteAllRequests()
-      poison()
     }
   }
 }

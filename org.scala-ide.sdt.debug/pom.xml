@@ -13,8 +13,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
+      <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+      <artifactId>concurrentlinkedhashmap-lru</artifactId>
     </dependency>
   </dependencies>
 
@@ -67,8 +67,8 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.apache.commons</groupId>
-                  <artifactId>commons-collections4</artifactId>
+                  <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+                  <artifactId>concurrentlinkedhashmap-lru</artifactId>
                   <outputDirectory>${project.build.directory}/lib</outputDirectory>
                 </artifactItem>
               </artifactItems>
