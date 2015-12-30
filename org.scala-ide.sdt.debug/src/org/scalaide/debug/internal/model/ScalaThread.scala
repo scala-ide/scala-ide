@@ -204,6 +204,8 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
         val startFrameForStepInto = frames(frames.indexOf(frame) + 1)
         threadRef.popFrames(frame.stackFrame)
         stepIntoFrame(startFrameForStepInto)
+      } else {
+        logger.debug(s"cannot drop to frame at the moment when related to HCR is $relatedToHcr")
       }
     })
 
