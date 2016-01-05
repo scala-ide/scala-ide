@@ -1,38 +1,20 @@
 package org.scalaide.core
 package sbtbuilder
 
-import org.junit.Test
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.jdt.core.JavaCore
-import org.junit.Assert
-import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.scalaide.ui.internal.preferences.IDESettings
-import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.eclipse.jdt.core.IPackageFragment
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.junit.Assert
+import org.junit.Test
 import org.scalaide.core.IScalaPlugin
-import org.eclipse.core.resources.IProject
+import org.scalaide.ui.internal.preferences.ScalaPluginSettings
+import org.scalaide.util.internal.SettingConverterUtil
+
+import testsetup.Implicits
+import testsetup.SDTTestUtils
 
 class ProjectDependenciesTest {
 
   import SDTTestUtils._
-
-  private implicit class TestableProject(from: IScalaProject) {
-    def dependsOnAndExports(dep: IScalaProject, exported: Boolean = true): Unit =
-      addToClasspath(from, JavaCore.newProjectEntry(dep.underlying.getFullPath, exported))
-
-    def onlyDependsOn(dep: IScalaProject) = dependsOnAndExports(dep, false)
-
-    def shouldDependOn(msg: String, deps: IScalaProject*): Unit = {
-      val expected = deps.map(_.underlying).sortBy(_.getName)
-      val computed = from.transitiveDependencies.sortBy(_.getName)
-      Assert.assertEquals(s"${msg.capitalize} for ${from.underlying.getName}", expected, computed)
-    }
-  }
-
+  import Implicits.TestableProject
 
   @Test def transitive_dependencies_more_complicated_tree(): Unit = {
     val allProj @ Seq(prjA, prjB, prjC, prjD, prjE, prjF, prjG) = createProjects("A", "B", "C", "D", "E", "F", "G")
