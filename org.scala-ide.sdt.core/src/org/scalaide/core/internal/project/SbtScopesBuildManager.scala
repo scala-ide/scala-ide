@@ -2,6 +2,7 @@ package org.scalaide.core.internal.project
 
 import java.io.File
 
+import scala.annotation.migration
 import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IFile
@@ -10,6 +11,7 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
@@ -60,7 +62,11 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     }
   }
 
-  override def buildErrors: Set[IMarker] = buildScopeUnits.flatMap { _.buildErrors }.toSet
+  private def foundJavaMarkers = owningProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+  private def foundGlobalScalaMarkers = owningProject.underlying.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_ZERO)
+  override def buildErrors: Set[IMarker] = buildScopeUnits.flatMap { _.buildErrors }.toSet ++
+    foundJavaMarkers ++
+    foundGlobalScalaMarkers
   override def invalidateAfterLoad: Boolean = true
   override def clean(implicit monitor: IProgressMonitor): Unit = buildScopeUnits.foreach { _.clean }
   override def canTrackDependencies: Boolean = true
