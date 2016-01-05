@@ -3,6 +3,8 @@
  */
 package org.scalaide.debug.internal.hcr
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.collection.JavaConverters
 import scala.collection.mutable.Publisher
 import scala.concurrent.ExecutionContext.Implicits
@@ -150,8 +152,17 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
     }
   }
 
+  protected val doHotCodeReplaceBarrier = new AtomicBoolean
+  private def waitForBarrier(): Unit = {
+    if (doHotCodeReplaceBarrier.getAndSet(true)) {
+      while (doHotCodeReplaceBarrier.get) {}
+      waitForBarrier
+    }
+  }
+
   private def doHotCodeReplace(launchName: String, typesToReplace: Seq[ClassFileResource]): Unit = {
     logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName'")
+    waitForBarrier
     debugTarget.isPerformingHotCodeReplace.getAndSet(true)
     // FIXME We need the automatic semantic dropping frames BEFORE HCR to prevent VM crashes.
     // We should drop possibly affected frames in this place (remember to wait for the end of such
@@ -165,6 +176,7 @@ private[internal] trait HotCodeReplaceExecutor extends Publisher[HCRResult] with
       case _ =>
         debugTarget.isPerformingHotCodeReplace.getAndSet(false)
         debugTarget.fireChangeEvent(DebugEvent.CONTENT)
+        doHotCodeReplaceBarrier.getAndSet(false)
     }.onComplete {
       case Success(_) =>
         logger.debug(s"Performing Hot Code Replace for debug configuration '$launchName' succeeded")
