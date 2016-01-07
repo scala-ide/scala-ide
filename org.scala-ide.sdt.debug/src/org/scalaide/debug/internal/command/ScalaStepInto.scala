@@ -41,7 +41,7 @@ object ScalaStepInto {
 }
 
 /**
- * Actor used to manage a Scala step into. It keeps track of the request needed to perform this step.
+ * Subordinate used to manage a Scala step into. It keeps track of the request needed to perform this step.
  * This class is thread safe. Instances are not to be created outside of the ScalaStepInto object.
  */
 private[command] class ScalaStepIntoSubordinate(debugTarget: ScalaDebugTarget, thread: ScalaThread, stepIntoRequest: StepRequest, stepOutRequest: StepRequest, stackDepth: Int, stackLine: Int)

@@ -60,15 +60,14 @@ object EclipseRepl
     */
   val Drop = new Object { override def toString = "Drop" }
 
-  /** Performs `Stop` and `Drop`, then de-schedules the `Actor`, allowing
+  /** Performs `Stop` and `Drop`, then de-schedules the `Future`, allowing
     * it to be garbage collected.
     */
   val Quit = new Object { override def toString = "Quit" }
 
-  /** Almost a `Listener`. Status calls are dispatched on the `Actor`'s thread,
+  /** Almost a `Listener`. Status calls are dispatched on the `EclipseRepl` `Future`'s thread,
     * so implementors must be careful to avoid race conditions. If the `Client`
-    * is SWT-based it must use something like `SWTUtils.asyncExec`. If the
-    * `Client` is another `Actor` it could send messages to itself.
+    * is SWT-based it must use something like `SWTUtils.asyncExec`.
     */
   trait Client
   {
@@ -100,13 +99,13 @@ object EclipseRepl
     def done(exec: Exec, result: Result, output: String): Unit = {}
     // at exit from `doit` : `Init`, `Exec`
 
-    /** Called just before the `Actor` enters its `Terminated` state. */
+    /** Called just before the `Future` enters its `Terminated` state. */
     def terminating(): Unit = {} // at exit from the handler for `Quit`, in catch
 
     /** Called for any unrecognized message. */
     def unknown(request:Any): Unit = {}
 
-    /** Called when something is thrown. The `Actor` responds to any exception
+    /** Called when something is thrown. The `EclipseRepl` `Future` responds to any exception
       * by behaving as if `Quit` had been called.
       *
       * `boot` can fail if the settings are bad.
@@ -138,7 +137,7 @@ object EclipseRepl
   /** Allows plugging in alternate (i.e. test) `Interpreter`s. */
   trait Builder
   {
-    /** Called by `EclipseRepl` constructor, calls its `Actor.start`. */
+    /** Called by `EclipseRepl` constructor, calls its `Worker.start`. */
     def constructed(a: EclipseRepl): Unit = {}
 
     /** Returns a new `Interpreter`. */

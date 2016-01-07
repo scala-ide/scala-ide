@@ -45,10 +45,10 @@ import EclipseReplTest._
 
 // capitalization is important...
 // in the EclipseRepl public API:
-//  - capitalized {Init,Stop,Exec,Drop,Quit} are message/types sent to the Actor
+//  - capitalized {Init,Stop,Exec,Drop,Quit} are message/types sent to the Future
 //  - lowercase {starting,...,unknown} are listener methods on the Client
 // in this file we need to write test input and expected output values:
-//  - lowercase {init,stop,exec,drop,quit} are inputs for the Actor messages
+//  - lowercase {init,stop,exec,drop,quit} are inputs for the Future functions
 //  - capitalized {Starting,...,Unknown} are expected for the Client methods
 
 class EclipseReplTest {
@@ -105,7 +105,7 @@ class EclipseReplTest {
     test(Echopreter.steal(unknowns))
   }
 
-  // next use multiple EclipseRepls in parallel to test the Actor stuff ...
+  // next use multiple EclipseRepls in parallel to test the Future stuff ...
 
   @Test def multiple_RTPScheduler(): Unit = {
     test(multiple(6): _*)

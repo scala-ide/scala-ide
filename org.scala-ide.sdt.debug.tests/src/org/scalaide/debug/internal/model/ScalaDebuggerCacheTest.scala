@@ -82,7 +82,7 @@ class ScalaDebugCacheTest {
 
     val (debugCache, classPrepareRequest1, classPrepareRequest2) = initNestedTypesMocks(BaseName, BaseName + "$", BaseName + "$a")
 
-    // a latch listener actor. It releases the latch when it receives a ClassPrepareEvent
+    // a latch listener. It releases the latch when it receives a ClassPrepareEvent
     val testing = new ClassPrepareListener {
       val latch: AtomicReference[CountDownLatch] = new AtomicReference(new CountDownLatch(1))
 
@@ -106,7 +106,7 @@ class ScalaDebugCacheTest {
     // 'receive' a ClassPrepareEvent from the VM
     debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))
 
-    assertTrue("Message was not received by listening actor before timeout", testing.awaitLatch(500))
+    assertTrue("Message was not received by listener before timeout", testing.awaitLatch(500))
 
     // unregister listener, and check get no data
     debugCache.removeClassPrepareEventListener(testing, BaseName)
@@ -115,7 +115,7 @@ class ScalaDebugCacheTest {
 
     debugCache.subordinate.handle(createClassPrepareEvent(BaseName + "$b"))
 
-    assertFalse("Unexpected message was received by listening actor before timeout", testing.awaitLatch(500))
+    assertFalse("Unexpected message was received by listener before timeout", testing.awaitLatch(500))
 
     verifyNestedTypesCalls(debugCache, classPrepareRequest1, classPrepareRequest2, BaseName)
   }

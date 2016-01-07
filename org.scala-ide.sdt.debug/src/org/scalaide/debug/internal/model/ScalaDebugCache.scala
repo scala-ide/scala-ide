@@ -59,7 +59,7 @@ object ScalaDebugCache {
  * A cache used to keep the list of nested classes of a outer class.
  * It is used by for the line breakpoints and step-over.
  *
- * Most of the methods are synchronous calls made to the underlying actor.
+ * Most of the methods are synchronous calls made to the underlying subordinate.
  */
 abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLogger {
   import ScalaDebugCache._
@@ -76,7 +76,7 @@ abstract class ScalaDebugCache(val debugTarget: ScalaDebugTarget) extends HasLog
       case Some(types) =>
         types
       case None =>
-        logger.info("TIMEOUT waiting for debug cache actor in getLoadedNestedTypes")
+        logger.info("TIMEOUT waiting for debug cache subordinate in getLoadedNestedTypes")
         Set()
       case unknown =>
         logger.error("Unknown return value to LoadedNestedTypes message: %s".format(unknown))
@@ -282,7 +282,7 @@ protected[debug] class ScalaDebugCacheSubordinate(debugCache: ScalaDebugCache, d
               _.notify(event)
             }
           }
-        }) logger.info("TIMOUT waiting for the listener actor in `classLoaded`")
+        }) logger.info("TIMOUT waiting for the listener subordinate in `classLoaded`")
       case None =>
         logger.warn("Received ClassPrepareEvent for not expected type: %s".format(refType.name()))
     }

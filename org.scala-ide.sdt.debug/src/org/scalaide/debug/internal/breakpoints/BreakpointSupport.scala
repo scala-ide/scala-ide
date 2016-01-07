@@ -129,7 +129,7 @@ class BreakpointSupportSubordinate private (
   /** Returns true if the `breakpoint` is enabled and its state should indeed be considered. */
   private def isEnabled: Boolean = breakpoint.isEnabled() && DebugPlugin.getDefault().getBreakpointManager().isEnabled()
 
-  /** Register `this` actor to receive all notifications from the `eventDispatcher` related to the passed `request`.*/
+  /** Register `this` subordinate to receive all notifications from the `eventDispatcher` related to the passed `request`.*/
   private def listenForBreakpointRequest(request: EventRequest): Unit =
     eventDispatcher.register(this, request)
 
