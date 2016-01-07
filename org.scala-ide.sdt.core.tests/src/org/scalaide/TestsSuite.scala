@@ -34,6 +34,7 @@ import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.sbtbuilder.MultipleErrorsTest
 import org.scalaide.core.sbtbuilder.NameHashingVulnerabilityTest
 import org.scalaide.core.sbtbuilder.NestedProjectsTest
+import org.scalaide.core.sbtbuilder.NonScalaSourceErrorMarkersTest
 import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
 import org.scalaide.core.sbtbuilder.SbtBuilderTest
@@ -124,6 +125,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[JavaDependsOnScalaTest],
     classOf[JavaDependsOnScalaBothAreOkTest],
     classOf[ScopeCompileConfigurationTest],
-    classOf[OutlineModelTest]
+    classOf[OutlineModelTest],
+    classOf[NonScalaSourceErrorMarkersTest]
 ))
 class TestsSuite
