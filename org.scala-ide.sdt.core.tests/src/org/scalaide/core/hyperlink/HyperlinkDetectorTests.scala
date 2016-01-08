@@ -41,7 +41,7 @@ class HyperlinkDetectorTests {
     val oracle = List(
       Link("type scala.Predef.Set"),
       Link("type hyperlinks.SimpleHyperlinking.Tpe"),
-      Link("method scala.Array.apply", "object scala.Array"),
+      Link("object scala.Array", "method scala.Array.apply"),
       Link("method scala.collection.TraversableOnce.sum"),
       Link("type scala.Predef.String"),
       Link("object scala.Some"),
@@ -55,12 +55,12 @@ class HyperlinkDetectorTests {
   @Test
   def scalaPackageLinks() = FlakyTest.retry("simpleHyperlinks", "expected 2 link, found 1 expected:<2> but was:<1>") {
     val oracle = List(
-        Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"),
+        Link("object scala.collection.immutable.List", "method scala.collection.immutable.List.apply"),
         Link("object scala.collection.immutable.List"),
-        Link("method scala.collection.generic.GenericCompanion.apply", "object scala.collection.Seq"),
+        Link("object scala.collection.Seq", "method scala.collection.generic.GenericCompanion.apply"),
         Link("object scala.collection.Seq"),
         Link("object scala.collection.immutable.Nil"),
-        Link("method scala.collection.LinearSeqOptimized.apply", "value scalalinks.Foo.xs")
+        Link("value scalalinks.Foo.xs", "method scala.collection.LinearSeqOptimized.apply")
     )
 
     loadTestUnit("scalalinks/ScalaListLinks.scala").andCheckAgainst(oracle)
@@ -87,7 +87,7 @@ class HyperlinkDetectorTests {
 
   @Test
   def test1000656(): Unit = {
-    val oracle = List(Link("type util.Box.myInt"), Link("method util.Full.apply", "object util.Full"))
+    val oracle = List(Link("type util.Box.myInt"), Link("object util.Full", "method util.Full.apply"))
     loadTestUnit("bug1000656/Client.scala").andCheckAgainst(oracle)
   }
 
@@ -102,7 +102,7 @@ class HyperlinkDetectorTests {
 
   @Test
   def hyperlinkOnList_t1001215(): Unit = {
-    val oracle = List(Link("method scala.collection.immutable.List.apply", "object scala.collection.immutable.List"))
+    val oracle = List(Link("object scala.collection.immutable.List", "method scala.collection.immutable.List.apply"))
 
     loadTestUnit("t1001215/A.scala").andCheckAgainst(oracle)
   }
