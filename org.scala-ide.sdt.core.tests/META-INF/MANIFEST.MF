@@ -7,7 +7,8 @@ Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/mockito-all-1.9.5.jar
+ target/lib/mockito-all-1.9.5.jar,
+ target/lib/log4j-1.2.17.jar
 Require-Bundle: org.scala-lang.scala-library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,

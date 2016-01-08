@@ -54,24 +54,6 @@ object Utils extends HasLogger {
     }
   }
 
-  /**
-   * Scala wrapper on [[JdiInvocationSynchronizer]]. Remark: the actor thread can be killed in any moment
-   * by [[ActorSystem]] so the lock is not released then. To avoid it call [[jdiSynchronized.apply]] wrapped
-   * in [[Future]] like in example:
-   * {{{
-   *   def receive = {
-   *     case msg =>
-   *       val replyTo = sender
-   *       Future {
-   *         jdiSynchronized {
-   *           eventSet.resume()
-   *         }
-   *       } onComplete {
-   *         replyTo ! Done
-   *       }
-   *   }
-   * }}}
-   */
   object jdiSynchronized {
     import java.util.concurrent.Callable
 

@@ -161,7 +161,6 @@ case class BundledScalaInstallation(
   override lazy val extraJars =
     Seq(
       findExtraJar(bundle, ScalaReflectPath, ScalaReflectSourcesPath),
-      findExtraJar(bundle, ScalaActorPath, ScalaActorSourcesPath),
       findExtraJar(bundle, ScalaSwingPath, ScalaSwingSourcesPath)).flatten
 
   private def findExtraJar(bundle: Bundle, classPath: String, sourcePath: String): Option[ScalaModule] = {
@@ -179,8 +178,6 @@ object BundledScalaInstallation {
   val ScalaCompilerSourcesPath = "target/jars/scala-compiler-src.jar"
   val ScalaReflectPath = "target/jars/scala-reflect.jar"
   val ScalaReflectSourcesPath = "target/jars/scala-reflect-src.jar"
-  val ScalaActorPath = "target/jars/scala-actor.jar"
-  val ScalaActorSourcesPath = "target/jars/scala-actor-src.jar"
   val ScalaSwingPath = "target/jars/scala-swing.jar"
   val ScalaSwingSourcesPath = "target/jars/scala-swing-src.jar"
 
@@ -235,7 +232,6 @@ case class MultiBundleScalaInstallation(
 
   override lazy val extraJars = Seq(
     findLibraryForBundle(ScalaReflectBundleId, libraryBundleVersion),
-    findLibraryForBundle(ScalaActorsBundleId, libraryBundleVersion),
     findLibraryForBundle(ScalaSwingBundleId, libraryBundleVersion)).flatten
 }
 
@@ -245,7 +241,6 @@ object MultiBundleScalaInstallation {
   val ScalaCompilerBundleId = "org.scala-lang.scala-compiler"
   val ScalaSwingBundleId = "org.scala-lang.scala-swing"
   val ScalaReflectBundleId = "org.scala-lang.scala-reflect"
-  val ScalaActorsBundleId = "org.scala-lang.scala-actors"
   val ScalaXmlBundleId = "org.scala-lang.modules.scala-xml"
   val ScalaParserCombinatorsBundleId = "org.scala-lang.modules.scala-parser-combinators"
 

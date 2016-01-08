@@ -39,11 +39,9 @@ case object Dispatch {
 }
 
 /**
- * Actor based system pulling event from the vm event queue, and dispatching
- * them to the registered actors.
+ * System pulling event from the vm event queue, and dispatching them to the registered subordinates.
  * This class is thread safe. Instances have be created through its companion object.
  */
-
 class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val subordinate: ScalaJdiEventDispatcherSubordinate)
     extends Runnable with HasLogger with JdiEventDispatcher {
 
@@ -84,8 +82,8 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
   private[model] def isRunning: Boolean = running.get
 
   /**
-   * Register the actor as recipient of the call back for the given request
-   * TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
+   * Register the subordinate as recipient of the call back for the given request
+   * TODO: I think we should try to use JDI's mechanisms to associate the subordinate to the request:
    *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
    */
   override def register(eventReceiver: JdiEventReceiver, request: EventRequest): Unit =
@@ -104,7 +102,7 @@ private[model] object ScalaJdiEventDispatcherSubordinate {
 }
 
 /**
- * Actor used to manage a Scala event dispatcher. It keeps track of the registered actors,
+ * Class used to manage a Scala event dispatcher. It keeps track of the registered subordinates,
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
@@ -128,8 +126,8 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
 
   /**
    * go through the events of the EventSet, and forward them to the registered
-   * actors.
-   * Resume or not the stopped threads depending on actor's answers
+   * subordinates.
+   * Resume or not the stopped threads depending on subordinate's answers
    */
   private def processEventSet(eventSet: EventSet): Unit = {
     import scala.concurrent.ExecutionContext.Implicits._
@@ -143,12 +141,12 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
      * but the eclipse implementation doesn't.
      *
      * see eclipse bug #383625 */
-    // forward each event to the interested actor
+    // forward each event to the interested subordinate
     eventSet.eventIterator.asScala.foreach {
       case event @ (_: VMStartEvent | _: VMDisconnectEvent | _: VMDeathEvent) =>
         staySuspendeds ::= scalaDebugTarget.handle(event)
       case event =>
-        /* TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
+        /* TODO: I think we should try to use JDI's mechanisms to associate the subordinate to the request:
          *  @see EventRequest.setProperty(k, v) and EventRequest.getProperty */
         eventReceiversMap.get(event.request).foreach { receiver =>
           staySuspendeds ::= receiver.handle(event)

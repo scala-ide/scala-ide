@@ -12,7 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
-import org.scalaide.debug.internal.TestFutureUtil
+import org.scalaide.util.TestFutureUtil
 import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration
 
 import com.sun.jdi.ThreadReference
@@ -51,7 +51,7 @@ object ScalaDebugTargetTest {
 
 class ScalaDebugTargetTest {
   import ScalaDebugTargetTest._
-  import org.scalaide.debug.internal.TestFutureUtil._
+  import org.scalaide.util.TestFutureUtil._
   import scala.concurrent.ExecutionContext.Implicits.global
 
   @Before
@@ -90,7 +90,7 @@ class ScalaDebugTargetTest {
   }
 
   /**
-   * Check that calling #getThreads doesn't create a freeze. It used to be making a sync call to the actor, even if it was shutdown.
+   * Check that calling #getThreads doesn't create a freeze. It used to be making a sync call to the subordinate, even if it was shutdown.
    * #1001308
    */
   @Test(timeout = 2000)

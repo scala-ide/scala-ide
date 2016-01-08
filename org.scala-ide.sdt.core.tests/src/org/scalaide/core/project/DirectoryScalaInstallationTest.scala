@@ -156,9 +156,8 @@ class DirectoryScalaInstallationTest {
 
     val extraJars1 = checkExtraJar("reflect", "_2.10.2-mixedCompatibleVersionsWithName", si.extraJars)
     val extraJars2 = checkExtraJar("swing", "", extraJars1)
-    val extraJars3 = checkExtraJar("actor", "", extraJars2)
 
-    val extraJarsFinal = extraJars3
+    val extraJarsFinal = extraJars2
 
     assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }
@@ -194,9 +193,8 @@ class DirectoryScalaInstallationTest {
 
     val extraJars1 = checkExtraJar(withReflect, "reflect", si.extraJars)
     val extraJars2 = checkExtraJar(withSwing, "swing", extraJars1)
-    val extraJars3 = checkExtraJar(withActor, "actor", extraJars2)
 
-    val extraJarsFinal = extraJars3
+    val extraJarsFinal = extraJars2
 
     assertTrue(s"Unexpected extra jars: $extraJarsFinal", extraJarsFinal.isEmpty)
   }

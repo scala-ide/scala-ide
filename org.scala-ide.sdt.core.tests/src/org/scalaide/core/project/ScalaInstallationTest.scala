@@ -46,7 +46,6 @@ class ScalaInstallationTest {
         val expectedAllJars = Seq(
           bundlePath.append(BundledScalaInstallation.ScalaLibraryPath),
           bundlePath.append(BundledScalaInstallation.ScalaCompilerPath),
-          bundlePath.append(BundledScalaInstallation.ScalaActorPath),
           bundlePath.append(BundledScalaInstallation.ScalaReflectPath),
           bundlePath.append(BundledScalaInstallation.ScalaSwingPath)).sortBy(_.toOSString())
 
@@ -55,7 +54,6 @@ class ScalaInstallationTest {
         val expectedAllSourceJars = Seq(
           bundlePath.append(BundledScalaInstallation.ScalaLibrarySourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaCompilerSourcesPath),
-          bundlePath.append(BundledScalaInstallation.ScalaActorSourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaReflectSourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaSwingSourcesPath)).sortBy(_.toOSString())
 
@@ -138,7 +136,6 @@ class ScalaInstallationTest {
     val expectedAllJars = Seq(
       binaryPathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
       binaryPathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
-      binaryPathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId),
       binaryPathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
 
     assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
@@ -146,7 +143,6 @@ class ScalaInstallationTest {
     val expectedAllSourceJars = Seq(
       sourcePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
       sourcePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
-      sourcePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId),
       sourcePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
 
     assertEquals("Wrong all sources jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))

@@ -106,7 +106,7 @@ class ScalaThreadTest {
   }
 
   /**
-   * Check that calling #getStackFrame doesn't create a freeze. It used to be making a sync call to the actor, even if it was shutdown.
+   * Check that calling #getStackFrame doesn't create a freeze. It used to be making a sync call to the subordinate, even if it was shutdown.
    * #1001308
    */
   @Test(timeout = 2000)

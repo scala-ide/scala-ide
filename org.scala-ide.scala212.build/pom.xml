@@ -34,11 +34,6 @@
     </dependency>
     <!-- modules -->
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
-      <version>${scala212.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-xml_${scala212.binary.version}</artifactId>
       <version>${scala212.scala-xml.version}</version>
@@ -68,12 +63,6 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-compiler</artifactId>
-      <version>${scala212.version}</version>
-      <classifier>sources</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-actors</artifactId>
       <version>${scala212.version}</version>
       <classifier>sources</classifier>
     </dependency>

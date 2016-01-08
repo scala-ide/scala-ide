@@ -40,7 +40,6 @@ Require-Bundle:
  org.eclipse.pde.core;resolution:=optional,
  org.eclipse.pde.ui;resolution:=optional,
  org.scala-lang.scala-library;bundle-version="[2.12,2.13)",
- org.scala-lang.scala-actors;bundle-version="[2.12,2.13)",
  org.scala-lang.scala-reflect;bundle-version="[2.12,2.13)",
  org.scala-lang.scala-compiler;bundle-version="[2.12,2.13)",
  org.scala-refactoring.library,

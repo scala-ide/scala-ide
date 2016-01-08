@@ -122,7 +122,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   /**
    * The current list of stack frames.
-   * THE VALUE IS MODIFIED ONLY BY THE COMPANION ACTOR, USING METHODS DEFINED LOWER.
+   * THE VALUE IS MODIFIED ONLY BY THE SUBORDINATE, USING METHODS DEFINED LOWER.
    */
   private val stackFrames: AtomicReference[List[ScalaStackFrame]] = new AtomicReference(Nil)
 
@@ -146,9 +146,9 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * Invoke the given method on the given instance with the given arguments.
    *
-   *  This method should not be called directly.
-   *  Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
-   *  or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
+   * This method should not be called directly.
+   * Use [[ScalaObjectReference.invokeMethod(String, ScalaThread, ScalaValue*)]]
+   * or [[ScalaObjectReference.invokeMethod(String, String, ScalaThread, ScalaValue*)]] instead.
    */
   def invokeMethod(objectReference: ObjectReference, method: Method, args: Value*): Value = {
     processMethodInvocationResult(SyncCall.timeoutWithResult(subordinate.invokeMethod(objectReference, method, args.toList)))
@@ -157,8 +157,8 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * Invoke the given static method on the given type with the given arguments.
    *
-   *  This method should not be called directly.
-   *  Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
+   * This method should not be called directly.
+   * Use [[ScalaClassType.invokeMethod(String, ScalaThread,ScalaValue*)]] instead.
    */
   def invokeStaticMethod(classType: ClassType, method: Method, args: Value*): Value = {
     processMethodInvocationResult(SyncCall.timeoutWithResult(subordinate.invokeStaticMethod(classType, method, args.toList)))
@@ -195,7 +195,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   /**
    * Removes all top stack frames starting from a given one and performs StepInto to reach the given frame again.
-   * FOR THE COMPANION ACTOR ONLY.
+   * FOR THE SUBORDINATE ONLY.
    */
   private[model] def dropToFrameInternal(frame: ScalaStackFrame, relatedToHcr: Boolean = false): Unit =
     (safeThreadCalls(()) or wrapJDIException("Exception while performing Drop To Frame"))(jdiSynchronized {
@@ -242,13 +242,13 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   }
 
   /*
-   * Methods used by the companion actor to update this object internal states
-   * FOR THE COMPANION ACTOR ONLY.
+   * Methods used by the subordinate to update this object internal states
+   * FOR THE SUBORDINATE ONLY.
    */
 
   /**
    * Set the this object internal states to suspended.
-   * FOR THE COMPANION ACTOR ONLY.
+   * FOR THE SUBORDINATE ONLY.
    */
   private[model] def suspend(eventDetail: Int) = {
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
@@ -264,7 +264,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   /**
    * Set the this object internal states to resumed.
-   * FOR THE COMPANION ACTOR ONLY.
+   * FOR THE SUBORDINATE ONLY.
    */
   private[model] def resume(eventDetail: Int): Unit = {
     suspended.getAndSet(false)
@@ -276,7 +276,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
   /**
    * Rebind the Scala stack frame to the new underlying frames.
    * TO BE USED ONLY IF THE NUMBER OF FRAMES MATCHES
-   * FOR THE COMPANION ACTOR ONLY.
+   * FOR THE SUBORDINATE ONLY.
    */
   private[model] def rebindScalaStackFrames(): Unit = (safeThreadCalls(()) or wrapJDIException("Exception while rebinding stack frames")) {
     rebindFrames()
@@ -291,7 +291,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
 
   /**
    * Refreshes frames and optionally drops affected ones.
-   * FOR THE COMPANION ACTOR ONLY.
+   * FOR THE SUBORDINATE ONLY.
    */
   private[model] def updateScalaStackFramesAfterHcr(dropAffectedFrames: Boolean): Unit =
     (safeThreadCalls(()) or wrapJDIException("Exception while rebinding stack frames")) {
@@ -327,7 +327,7 @@ private[model] object ScalaThreadSubordinate {
 }
 
 /**
- * Actor used to manage a Scala thread. It keeps track of the existing stack frames, and of the execution status.
+ * Class used to manage a Scala thread. It keeps track of the existing stack frames, and of the execution status.
  * This class is thread safe. Instances are not to be created outside of the ScalaThread object.
  */
 private[model] class ScalaThreadSubordinate private (thread: ScalaThread) {

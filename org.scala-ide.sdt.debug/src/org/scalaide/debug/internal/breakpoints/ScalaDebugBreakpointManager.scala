@@ -35,9 +35,7 @@ object ScalaDebugBreakpointManager {
 /**
  * Setup the initial breakpoints, and listen to breakpoint changes, for the given ScalaDebugTarget.
  *
- * @note All breakpoint-event related methods in this class are asynchronous, by delegating to the companion
- *       actor. This seems useless (listeners are run in their own thread) and makes things somewhat harder to test.
- *       Maybe we should remove the companion actor in this case.
+ * @note All breakpoint-event related methods in this class are asynchronous, by delegating to the subordinate.
  */
 class ScalaDebugBreakpointManager private ( /*public field only for testing purposes */ val subordinate: ScalaDebugBreakpointSubordinate) extends IBreakpointListener {
   /**

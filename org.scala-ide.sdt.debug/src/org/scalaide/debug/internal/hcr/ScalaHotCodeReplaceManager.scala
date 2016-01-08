@@ -45,7 +45,7 @@ private[internal] object ScalaHotCodeReplaceManager {
 }
 
 /**
- * Monitors changed resources and notifies debug target's companion actor, when there are some changed class files
+ * Monitors changed resources and notifies debug target's subordinate, when there are some changed class files
  * which could be replaced in VM.
  *
  * Note: It seems that currently deltas for changed resources work differently when compiling Java and Scala files.
