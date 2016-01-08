@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Scala Plugin (Test)
+Bundle-Name: Scala Debug Plugin (Test)
 Bundle-SymbolicName: org.scala-ide.sdt.debug.tests
 Bundle-Version: 4.4.0.qualifier
 Bundle-Vendor: scala-ide.org
