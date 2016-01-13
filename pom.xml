@@ -21,9 +21,9 @@
   <properties>
     <sbtrc.version>0.3.4</sbtrc.version>
     <pickling.version>0.10.0</pickling.version>
-    <akka.version>2.3.9</akka.version>
-    <akka.stream.version>1.0-M3</akka.stream.version>
-    <reactive.stream.version>1.0.0.RC2</reactive.stream.version>
+    <akka.version>2.3.13</akka.version>
+    <akka.stream.version>1.0</akka.stream.version>
+    <reactive.stream.version>1.0.0</reactive.stream.version>
     <config.version>1.2.1</config.version>
     <parser.combinators.version>1.0.2</parser.combinators.version>
   </properties>

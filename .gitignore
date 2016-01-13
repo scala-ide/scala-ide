@@ -1,3 +1,2 @@
-.cache
+.cache*
 target/
-.settings/

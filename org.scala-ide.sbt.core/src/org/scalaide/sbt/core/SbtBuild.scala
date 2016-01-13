@@ -14,7 +14,7 @@ import org.scalaide.sbt.util.SbtUtils
 import org.scalaide.sbt.util.SourceUtils
 
 import akka.actor.ActorSystem
-import akka.stream.ActorFlowMaterializer
+import akka.stream.ActorMaterializer
 import sbt.client.SbtClient
 import sbt.client.SbtConnector
 import sbt.protocol.LogEvent
@@ -69,7 +69,7 @@ object SbtBuild extends AnyRef with HasLogger {
 
     def onConnect(client: SbtClient): Unit = {
       implicit val ctx = SbtUtils.RunOnSameThreadContext
-      implicit val materializer = ActorFlowMaterializer()
+      implicit val materializer = ActorMaterializer()
 
       val src = SbtUtils.protocolEventWatcher[LogEvent](client)
       src.runForeach (_.entry match {
@@ -114,7 +114,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
 
   import system.dispatcher
   import SourceUtils._
-  implicit val materializer = ActorFlowMaterializer()
+  implicit val materializer = ActorMaterializer()
 
   /**
    * Triggers the compilation of the given project.
