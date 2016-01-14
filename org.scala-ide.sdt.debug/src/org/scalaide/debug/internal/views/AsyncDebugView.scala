@@ -84,7 +84,8 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
    */
   def clearDebugView(): Unit = {
     setInputSafely(null)
-    viewer.getTable.removeAll()
+    if (!viewer.getTable.isDisposed())
+      viewer.getTable.removeAll()
     currentFrame = None
   }
 
