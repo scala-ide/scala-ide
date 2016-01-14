@@ -20,7 +20,7 @@ import org.scalaide.logging.Logger
  *  there is really nothing we can do about it. The issue is that the `logs` map accessed in
  *  [[org.eclipse.core.internal.runtime.InternalPlatform.getLog(bundle)]] is not synchronized.
  *
- *  Mantainers should evolve this class by keeping in mind that the `EclipseLogger` will be
+ *  Maintainers should evolve this class by keeping in mind that the `EclipseLogger` will be
  *  accessed by different threads at the same time, so it is important to keep this class lock-free,
  *  and thread-safe (or maybe a better wording would be: as much thread-safe as it can be).
  *  And that is actually the main motivation for using an [[java.util.concurrent.atomic.AtomicReference]]
@@ -33,51 +33,51 @@ object EclipseLogger extends Logger {
 
   private val lastCrash: AtomicReference[Throwable] = new AtomicReference
 
-  def trace(message: => Any): Unit = {
+  override def trace(message: => Any): Unit = {
     info(message)
   }
 
-  def trace(message: => Any, t: Throwable): Unit = {
+  override def trace(message: => Any, t: Throwable): Unit = {
     info(message, t)
   }
 
-  def debug(message: => Any): Unit = {
+  override def debug(message: => Any): Unit = {
     info(message)
   }
 
-  def debug(message: => Any, t: Throwable): Unit = {
+  override def debug(message: => Any, t: Throwable): Unit = {
     info(message, t)
   }
 
-  def info(message: => Any): Unit = {
+  override def info(message: => Any): Unit = {
     info(message, null)
   }
 
-  def info(message: => Any, t: Throwable): Unit = {
+  override def info(message: => Any, t: Throwable): Unit = {
     log(IStatus.INFO, message, t)
   }
 
-  def warn(message: => Any): Unit = {
+  override def warn(message: => Any): Unit = {
     warn(message, null)
   }
 
-  def warn(message: => Any, t: Throwable): Unit = {
+  override def warn(message: => Any, t: Throwable): Unit = {
     log(IStatus.WARNING, message, t)
   }
 
-  def error(message: => Any): Unit = {
+  override def error(message: => Any): Unit = {
     error(message, null)
   }
 
-  def error(message: => Any, t: Throwable): Unit = {
+  override def error(message: => Any, t: Throwable): Unit = {
     log(IStatus.ERROR, message, t)
   }
 
-  def fatal(message: => Any): Unit = {
+  override def fatal(message: => Any): Unit = {
     error(message)
   }
 
-  def fatal(message: => Any, t: Throwable): Unit = {
+  override def fatal(message: => Any, t: Throwable): Unit = {
     error(message, t)
   }
 
