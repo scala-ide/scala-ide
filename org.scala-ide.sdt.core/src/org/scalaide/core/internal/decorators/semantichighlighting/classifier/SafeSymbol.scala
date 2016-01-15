@@ -101,7 +101,7 @@ private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
         else NoSymbol
 
         if (sym1 eq NoSymbol) List()
-        else if (sym1.isOverloaded) sym1.alternatives.take(1).zip(List(pos))
+        else if (sym1.isOverloaded) global.asyncExec(sym1.alternatives.take(1).zip(List(pos))).getOrElse(Nil)()
         else List((sym1, pos))
       }).flatten
 
