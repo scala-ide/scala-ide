@@ -100,7 +100,9 @@ object EclipseLogger extends Logger {
 
   // Because of a potential deadlock in the Eclipse internals (look at #1000914), the log action need to be executed in the UI thread.
   private def logInUiThread(severity: Int, message: Any, exception: Throwable): Unit = {
-    if (message != null || exception != null) {
+    if (message == null && exception == null)
+      error("Error occurred in logger: message and exception are both null", new IllegalArgumentException)
+    else {
       val status = new Status(severity, IScalaPlugin().getBundle.getSymbolicName, if (message == null) "" else message.toString, exception)
       if (IScalaPlugin().headlessMode) pluginLogger.log(status)
       else DisplayThread.asyncExec { pluginLogger.log(status) }
