@@ -63,7 +63,7 @@
       <id>scalariform</id>
       <name>Scalariform Scala p2 repository</name>
       <layout>p2</layout>
-      <url>${repo.scalariform}</url>
+      <url>file:../org.scala-ide.scalariform/org.scala-ide.scalariform.update-site/target/site</url>
     </repository>
     <repository>
       <id>equinox.launcher</id>

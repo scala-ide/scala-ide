@@ -27,6 +27,7 @@
 <!--        <module>../org.scala-ide.scala210.build</module> -->
         <module>../org.scala-ide.scala211.build</module>
         <module>../org.scala-ide.refactoring</module>
+        <module>../org.scala-ide.scalariform</module>
       </modules>
     </profile>
     <profile>
