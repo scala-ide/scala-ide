@@ -8,17 +8,10 @@ import org.junit.Test
 import org.mockito.Mockito._
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.ThreadGroupReference
-import com.sun.jdi.StackFrame
-import com.sun.jdi.Location
-import com.sun.jdi.Method
-import com.sun.jdi.ReferenceType
 import com.sun.jdi.StringReference
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.IntegerValue
 import com.sun.jdi.Value
-import com.sun.jdi.ObjectReference
-import com.sun.jdi.ClassType
-import org.junit.After
 
 /**
  * More tests related of the ScalaDebugModelPresentation are in ScalaDebugComputeDetailTest.

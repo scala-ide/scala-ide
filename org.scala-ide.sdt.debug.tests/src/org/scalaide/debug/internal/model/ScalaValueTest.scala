@@ -14,11 +14,9 @@ import com.sun.jdi.IntegerValue
 import com.sun.jdi.LongValue
 import com.sun.jdi.ShortValue
 import com.sun.jdi.StringReference
-import com.sun.jdi.ReferenceType
 import com.sun.jdi.Field
 import java.util.{ List => JList }
 import com.sun.jdi.ObjectReference
-import org.eclipse.jdt.internal.debug.core.model.JDIReferenceType
 import com.sun.jdi.ArrayReference
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassType

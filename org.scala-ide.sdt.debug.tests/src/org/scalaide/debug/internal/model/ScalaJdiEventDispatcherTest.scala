@@ -3,7 +3,6 @@ package org.scalaide.debug.internal.model
 import org.junit.Test
 import scala.concurrent.Future
 import org.junit.Assert
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Await
 
 class ScalaJdiEventDispatcherTest {

@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.model
 
 import java.util.ArrayList
 
-import scala.concurrent.ExecutionContext.Implicits
 
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.debug.core.ILaunchConfiguration
@@ -12,7 +11,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
-import org.scalaide.util.TestFutureUtil
 import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration
 
 import com.sun.jdi.ThreadReference

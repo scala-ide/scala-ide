@@ -97,7 +97,6 @@ class DebugTargetTerminationTest extends HasLogger {
   }
 
   import org.scalaide.util.TestFutureUtil._
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   @Test
   def abruptTerminationOf_DebugTarget_is_gracefully_handled(): Unit = {
