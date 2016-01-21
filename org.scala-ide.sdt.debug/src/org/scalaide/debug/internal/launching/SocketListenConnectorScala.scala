@@ -4,7 +4,6 @@ import java.io.IOException
 import java.util.{ List => JList }
 import java.util.{ Map => JMap }
 
-import scala.collection.JavaConverters
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus

@@ -4,7 +4,6 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Suppress
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.ThreadReference

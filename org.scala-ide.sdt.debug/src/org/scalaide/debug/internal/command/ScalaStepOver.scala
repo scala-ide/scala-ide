@@ -6,7 +6,6 @@ import scala.Option.option2Iterable
 import scala.Range
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.eclipse.debug.core.DebugEvent

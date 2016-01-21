@@ -6,7 +6,6 @@ package org.scalaide.debug.internal.breakpoints
 import java.util.concurrent.atomic.AtomicBoolean
 
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.eclipse.core.resources.IMarkerDelta

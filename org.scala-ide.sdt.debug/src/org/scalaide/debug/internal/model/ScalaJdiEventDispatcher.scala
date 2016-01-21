@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.model
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.annotation.implicitNotFound
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.concurrent.ExecutionContext
@@ -12,7 +11,6 @@ import scala.util.Success
 import org.scalaide.debug.internal.JdiEventDispatcher
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Suppress
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventSet
