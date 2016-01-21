@@ -52,8 +52,6 @@ import org.scalaide.ui.internal.editor.spelling.ScalaSpellingEngine
 import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
 import org.scalaide.ui.internal.editor.spelling.SpellingService
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
-import org.scalaide.ui.syntax.{ ScalaSyntaxClasses => SSC }
-import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.util.IPropertyChangeListener
@@ -66,7 +64,6 @@ import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 import org.scalaide.ui.internal.editor.outline.ScalaOutlineInformationControl
 import org.eclipse.jface.text.information.IInformationPresenter
 import org.eclipse.jface.text.IInformationControlCreator
-import org.eclipse.jdt.internal.ui.text.JavaElementProvider
 import org.eclipse.swt.SWT
 import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
 import org.eclipse.jface.text.AbstractInformationControlManager

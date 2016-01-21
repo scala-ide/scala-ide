@@ -3,8 +3,6 @@ package org.scalaide.core.internal.repl
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicReference
 
-import scala.collection.JavaConverters
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.Results.Result

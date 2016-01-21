@@ -12,7 +12,6 @@ import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.IWorkbenchWindow
-import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.dialogs.PreferencesUtil
 
 // TODO move out implicit conversions to a separate module?

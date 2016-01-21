@@ -6,7 +6,6 @@ import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.IFileEditorInput
-import org.eclipse.jface.action.IAction
 import org.eclipse.jface.dialogs.MessageDialog
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.console.IConsoleFactory

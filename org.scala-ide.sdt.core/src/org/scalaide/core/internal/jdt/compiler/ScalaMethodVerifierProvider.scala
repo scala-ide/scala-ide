@@ -2,13 +2,9 @@ package org.scalaide.core.internal.jdt.compiler
 
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.IMethodVerifierProvider
 import org.eclipse.jdt.internal.compiler.lookup.MethodBinding
-import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.resources.IProject
 import org.scalaide.logging.HasLogger
-import org.eclipse.ui.IEditorInput
-import org.eclipse.ui.IFileEditorInput
 import org.eclipse.core.resources.IFile
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.internal.project.ScalaProject

@@ -2,7 +2,6 @@ package org.scalaide.core.compiler
 
 import scala.tools.nsc.interactive.Global
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.core.resources.IFile
 import org.scalaide.core.completion.CompletionContext
 import org.scalaide.core.completion.CompletionProposal

@@ -2,12 +2,10 @@ package org.scalaide.ui.internal.preferences
 
 import org.eclipse.core.runtime.Path
 import org.eclipse.jface.preference.PreferencePage
-import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.ListViewer
 import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
@@ -30,10 +28,7 @@ import org.scalaide.core.internal.project.LabeledDirectoryScalaInstallation
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.debug.core.DebugPlugin
 import org.eclipse.core.runtime.Status
-import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.ModifiedScalaInstallations
-import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import scala.collection.mutable.Publisher

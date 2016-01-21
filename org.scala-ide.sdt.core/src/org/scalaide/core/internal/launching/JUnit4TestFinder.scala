@@ -9,7 +9,6 @@ import org.eclipse.jdt.core.IType
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.core.resources.IProject
-import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.search.core.text.TextSearchScope
 import org.eclipse.core.resources.IResource
 import org.eclipse.search.core.text.TextSearchEngine
@@ -21,14 +20,12 @@ import org.eclipse.jdt.core.JavaCore
 import scala.collection.JavaConverters._
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.junit.JUnitMessages
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.internal.junit.launcher.ITestFinder
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.jdt.core.IMember
 import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.IParent
 import scala.tools.eclipse.contribution.weaving.jdt.launching.ISearchMethods
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
@@ -209,7 +206,6 @@ object JUnit4TestFinder extends HasLogger {
   private val FILE_NAME_PATTERN = """(.*\.java$)|(.*\.scala$)""".r
 
   def findTestClasses(scu: ScalaSourceFile): List[IType] = scu.withSourceFile { (source, comp) =>
-    import comp.ClassDef
     import org.scalaide.util.Utils.WithAsInstanceOfOpt
 
     val trees = comp.askParsedEntered(source, keepLoaded = false).getOrElse(comp.EmptyTree)()

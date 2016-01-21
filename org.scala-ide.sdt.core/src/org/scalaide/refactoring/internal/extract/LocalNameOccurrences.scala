@@ -1,6 +1,5 @@
 package org.scalaide.refactoring.internal.extract
 
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.common.Occurrences
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.InteractiveScalaCompiler

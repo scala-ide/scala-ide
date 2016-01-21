@@ -1,7 +1,5 @@
 package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
-import scalariform.lexer.ScalaLexer
-import scalariform.lexer.Token
 import scalariform.parser._
 import scalariform.utils.Range
 import org.eclipse.jface.text.Region

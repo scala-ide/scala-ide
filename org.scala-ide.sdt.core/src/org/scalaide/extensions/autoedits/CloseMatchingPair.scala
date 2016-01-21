@@ -1,7 +1,6 @@
 package org.scalaide.extensions
 package autoedits
 
-import org.eclipse.jface.text.IRegion
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.eclipse.RegionUtils._
 

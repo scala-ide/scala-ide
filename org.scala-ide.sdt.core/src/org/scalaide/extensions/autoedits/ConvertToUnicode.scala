@@ -2,7 +2,6 @@ package org.scalaide.extensions
 package autoedits
 
 import org.scalaide.core.text.TextChange
-import org.scalaide.core.text.Replace
 
 object ConvertToUnicodeSetting extends AutoEditSetting(
   id = ExtensionSetting.fullyQualifiedName[ConvertToUnicode],

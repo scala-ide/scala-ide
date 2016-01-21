@@ -12,7 +12,6 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.jface.text.templates.GlobalTemplateVariables
 import org.eclipse.jface.text.templates.TemplateContextType
 import org.scalaide.core.IScalaPlugin
-import org.eclipse.jface.text.templates.DocumentTemplateContext
 import org.scalaide.core.SdtConstants
 
 /**

@@ -7,7 +7,6 @@ import org.eclipse.ui.IFileEditorInput
 import org.eclipse.ui.IWorkbenchPage
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.lexical.ScalaPartitions
-import org.scalaide.util.Utils.WithAsInstanceOfOpt
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.core.lexical.ScalaCodePartitioner
 import org.scalaide.ui.editor.ISourceViewerEditor

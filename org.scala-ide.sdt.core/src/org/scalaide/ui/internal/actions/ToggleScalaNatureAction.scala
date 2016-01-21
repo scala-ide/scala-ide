@@ -2,8 +2,6 @@ package org.scalaide.ui.internal.actions
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.Platform
-import org.eclipse.ui.IObjectActionDelegate
-import org.eclipse.ui.IWorkbenchPart
 import org.scalaide.core.internal.project.ScalaLibraryPluginDependencyUtils
 import org.scalaide.core.SdtConstants
 import org.scalaide.util.eclipse.EclipseUtils

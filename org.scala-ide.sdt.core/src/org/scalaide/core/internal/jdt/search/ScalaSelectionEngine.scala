@@ -3,16 +3,12 @@ package org.scalaide.core.internal.jdt.search
 import java.{ util => ju }
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.symtab.Flags
-import org.eclipse.jdt.core.Signature
 import org.eclipse.jdt.core.compiler.CharOperation
-import org.eclipse.jdt.core.compiler.InvalidInputException
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.internal.codeassist.ISearchRequestor
-import org.eclipse.jdt.internal.codeassist.ISelectionRequestor
 import org.eclipse.jdt.internal.codeassist.impl.AssistParser
 import org.eclipse.jdt.internal.codeassist.impl.Engine
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
 import org.eclipse.jdt.internal.compiler.env.AccessRestriction
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.SearchableEnvironment

@@ -1,11 +1,9 @@
 package org.scalaide.core.internal.lexical
 
-import org.scalaide.ui.syntax.ScalaSyntaxClass
 import scalariform.lexer.ScalaLexer
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.annotation.tailrec
-import org.eclipse.jface.text.IDocument
 import scalariform.ScalaVersion
 import scalariform.lexer.{ Token => ScalariformToken }
 import scalariform.lexer.Tokens._

@@ -11,7 +11,6 @@ import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 

@@ -2,7 +2,6 @@ package org.scalaide.core.internal.formatter
 
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
-import org.eclipse.core.runtime.preferences.DefaultScope
 import org.scalaide.core.IScalaPlugin
 import scalariform.formatter.preferences._
 

@@ -52,9 +52,7 @@ import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.project.ScalaInstallationUIProviders
-import org.scalaide.util.Utils
 import org.scalaide.util.eclipse.EclipseUtils
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.util.ui.DisplayThread
 

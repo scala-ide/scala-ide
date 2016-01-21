@@ -2,27 +2,22 @@ package org.scalaide.core.internal.jdt.search
 
 import org.eclipse.jdt.core.search.SearchMatch
 import org.eclipse.jdt.core.search.SearchPattern
-import org.eclipse.jdt.core.search.SearchParticipant
 import org.eclipse.jdt.core.search.TypeDeclarationMatch
 import org.eclipse.jdt.core.search.TypeReferenceMatch
 import org.eclipse.jdt.core.search.MethodReferenceMatch
 import org.eclipse.jdt.core.search.FieldReferenceMatch
 import org.eclipse.jdt.core.compiler.{ CharOperation => CharOp }
-import org.eclipse.jdt.internal.compiler.ast.SingleTypeReference
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch
 import scala.reflect.internal.util.RangePosition
-import scala.reflect.internal.util.Position
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.internal.ReflectionUtils
-import org.eclipse.jdt.internal.core.search.matching.PatternLocator
 import org.eclipse.jdt.internal.core.search.matching.FieldPattern
 import org.eclipse.jdt.internal.core.search.matching.MethodPattern
 import org.eclipse.jdt.internal.core.search.matching.TypeReferencePattern
 import org.eclipse.jdt.internal.core.search.matching.TypeDeclarationPattern
 import org.eclipse.jdt.internal.core.search.matching.OrPattern
-import org.eclipse.jdt.core.IJavaElement
 import org.scalaide.core.internal.jdt.model._
 
 //FIXME should report all and let matcher to the selection OR only report matcher interest (pre select by type) OR ...

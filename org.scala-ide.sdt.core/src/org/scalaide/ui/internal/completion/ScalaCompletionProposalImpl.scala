@@ -2,7 +2,6 @@ package org.scalaide.ui.internal.completion
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.eclipse.jface.preference.PreferenceConverter
@@ -42,12 +41,8 @@ import org.scalaide.ui.internal.editor.hover.HoverControlCreator
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.core.completion.MemberKind
-import org.scalaide.ui.ScalaImages
-import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.scalaide.ui.completion.ScalaCompletionProposal
-import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.statistics.Features.CodeAssist
-import org.scalaide.core.internal.statistics.Features.CharactersSaved
 
 /** A completion proposal for the Eclipse completion framework. It wraps a [[CompletionProposal]] returned
  *  by the presentation compiler, and implements the methods needed by the platform.

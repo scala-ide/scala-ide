@@ -37,8 +37,6 @@ object ImplicitHighlightingPresenter {
   def findAllImplicitConversions(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.Tree
     import compiler.Traverser
-    import compiler.Apply
-    import compiler.Select
     import compiler.ApplyImplicitView
     import compiler.ApplyToImplicitArgs
 

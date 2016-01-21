@@ -13,7 +13,6 @@ import org.scalaide.ui.ScalaImages
 import org.eclipse.jface.resource.ImageDescriptor
 import org.eclipse.ui.plugin.AbstractUIPlugin
 import java.io.IOException
-import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 
 object OSGiUtils {
 

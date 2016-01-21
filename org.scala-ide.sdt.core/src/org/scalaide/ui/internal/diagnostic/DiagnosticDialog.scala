@@ -1,12 +1,10 @@
 package org.scalaide.ui.internal.diagnostic
 
-import org.eclipse.jface.window.Window
 import org.eclipse.jface.dialogs.ErrorDialog
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.IDialogConstants
-import org.eclipse.jface.action.IAction
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.swt.widgets.{ List => SWTList, _ }
+import org.eclipse.swt.widgets.{ List => _, _ }
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.SWT
@@ -16,7 +14,6 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Font
-import org.eclipse.swt.graphics.FontData
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jdt.internal.corext.util.Messages
@@ -24,8 +21,6 @@ import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Platform
 import scala.tools.eclipse.contribution.weaving.jdt.configuration.WeavingStateConfigurer
 import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.browser.IWorkbenchBrowserSupport
-import org.scalaide.core.internal.logging.LogManager
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import java.io.File
 import java.net.URI

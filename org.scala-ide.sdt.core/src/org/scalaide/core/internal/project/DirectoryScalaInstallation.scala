@@ -2,18 +2,9 @@ package org.scalaide.core.internal.project
 
 import java.io.File
 import java.io.FileFilter
-import java.io.IOException
-import java.io.InputStream
-import java.net.URLClassLoader
-import java.util.Properties
-import java.util.zip.ZipFile
 import scala.tools.nsc.settings.ScalaVersion
-import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
-import org.scalaide.core.internal.ScalaPlugin
-import sbt.ScalaInstance
-import java.util.zip.ZipEntry
 import org.scalaide.util.internal.CompilerUtils.isBinarySame
 import org.scalaide.core.internal.project.ScalaInstallation.extractVersion
 import scala.util.Try

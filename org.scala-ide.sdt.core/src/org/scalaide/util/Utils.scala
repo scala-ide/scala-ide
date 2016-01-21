@@ -3,7 +3,6 @@ package org.scalaide.util
 import scala.reflect.ClassTag
 import scala.tools.eclipse.contribution.weaving.jdt.jdi.JdiInvocationSynchronizer
 import org.scalaide.logging.HasLogger
-import scala.concurrent.Future
 
 object Utils extends HasLogger {
 

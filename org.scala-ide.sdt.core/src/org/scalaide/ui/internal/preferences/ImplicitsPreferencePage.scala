@@ -1,17 +1,9 @@
 package org.scalaide.ui.internal.preferences
 
-import org.eclipse.ui.IWorkbenchPreferencePage
-import org.eclipse.ui.IWorkbench
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
-import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.core.IScalaPlugin
-import org.eclipse.swt.widgets.Link
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
-import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
-import org.eclipse.swt.SWT
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.ui.dialogs.PreferencesUtil
 import org.scalaide.util.eclipse.SWTUtils
 
 class ImplicitsPreferencePage extends BasicFieldEditorPreferencePage("Set the highlighting for implicit conversions and implicit parameters") {

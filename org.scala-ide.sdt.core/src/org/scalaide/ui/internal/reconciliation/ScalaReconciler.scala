@@ -1,16 +1,13 @@
 package org.scalaide.ui.internal.reconciliation
 
 import org.eclipse.jface.text.reconciler.MonoReconciler
-import org.eclipse.ui.IPartListener2
 import org.scalaide.ui.internal.actions.PartAdapter
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.ITextViewer
-import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.eclipse.ui.IPartService
 import org.eclipse.ui.texteditor.ITextEditor
-import org.scalaide.core.internal.project.ScalaProject
 import scala.collection.mutable.Subscriber
 import org.scalaide.core.internal.compiler.PresentationCompilerActivity
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
@@ -21,10 +18,6 @@ import org.eclipse.swt.events.ShellAdapter
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.events.ShellEvent
 import org.scalaide.util.eclipse.SWTUtils
-import org.eclipse.core.resources.IResourceChangeListener
-import org.eclipse.core.resources.IResourceChangeEvent
-import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IResourceDelta
 import org.scalaide.core.internal.compiler.Restart
 
 /** A Scala reconciler that forces reconciliation on various events:

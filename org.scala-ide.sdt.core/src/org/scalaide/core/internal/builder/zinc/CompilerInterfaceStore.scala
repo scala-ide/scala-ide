@@ -1,14 +1,11 @@
 package org.scalaide.core.internal.builder.zinc
 
 import org.eclipse.core.runtime.IPath
-import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.core.runtime.IProgressMonitor
 import org.scalaide.core.IScalaInstallation
 import sbt.compiler.IC
 import org.scalaide.core.internal.ScalaPlugin
-import org.eclipse.core.runtime.Platform
 import org.scalaide.util.eclipse.OSGiUtils
-import java.io.File
 import xsbti.Logger
 import org.scalaide.logging.HasLogger
 import scala.collection.mutable.ListBuffer

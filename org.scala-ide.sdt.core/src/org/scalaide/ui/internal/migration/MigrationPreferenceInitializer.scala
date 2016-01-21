@@ -7,7 +7,6 @@ import org.eclipse.e4.ui.workbench.modeling.EModelService
 import org.eclipse.jface.bindings.Binding
 import org.eclipse.jface.bindings.keys.KeyBinding
 import org.eclipse.ui.IWorkbenchWindow
-import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.e4.compatibility.ModeledPageLayout
 import org.eclipse.ui.keys.IBindingService
 import org.scalaide.core.IScalaPlugin

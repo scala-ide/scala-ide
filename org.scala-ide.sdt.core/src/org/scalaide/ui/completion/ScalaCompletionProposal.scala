@@ -1,11 +1,7 @@
 package org.scalaide.ui.completion
 
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.JavaPluginImages
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jface.preference.PreferenceConverter
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.eclipse.swt.graphics.Color
 import org.scalaide.core.completion.CompletionProposal
 import org.scalaide.ui.ScalaImages
 

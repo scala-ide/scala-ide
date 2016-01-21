@@ -5,7 +5,6 @@ package org.scalaide.ui.internal.repl
 
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.syntax.ScalariformToSyntaxClass
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT

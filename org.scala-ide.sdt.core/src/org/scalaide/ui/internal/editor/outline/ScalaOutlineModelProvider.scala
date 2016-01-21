@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor.outline
 import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.information.IInformationProviderExtension
-import org.eclipse.ui.IEditorPart
 import org.scalaide.ui.internal.editor.ScalaCompilationUnitEditor
 import org.eclipse.jdt.internal.ui.text.JavaWordFinder
 import org.eclipse.jface.text.Region

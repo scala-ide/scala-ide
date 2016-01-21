@@ -2,7 +2,6 @@ package org.scalaide.core.internal.project
 
 import java.io.File
 
-import scala.annotation.migration
 import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IFile

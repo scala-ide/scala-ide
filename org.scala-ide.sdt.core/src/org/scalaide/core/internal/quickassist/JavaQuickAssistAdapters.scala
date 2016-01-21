@@ -10,7 +10,6 @@ import org.eclipse.jface.text.IDocument
 import org.scalaide.core.quickassist.AssistLocation
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
-import org.scalaide.core.internal.statistics.Features.NotSpecified
 import org.scalaide.core.internal.statistics.Features.Feature
 
 /**
