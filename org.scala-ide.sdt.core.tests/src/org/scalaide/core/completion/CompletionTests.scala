@@ -2,19 +2,10 @@ package org.scalaide.core.completion
 
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import scala.tools.nsc.interactive.Response
 import org.scalaide.util.ScalaWordFinder
-import scala.reflect.internal.util.SourceFile
-import org.eclipse.jface.text.contentassist.ICompletionProposal
 import org.junit.Assert._
 import org.junit.Test
 import org.scalaide.core.testsetup.TestProjectSetup
-import org.eclipse.jdt.core.search.SearchEngine
-import org.eclipse.jdt.core.search.IJavaSearchConstants
-import org.eclipse.jdt.core.search.IJavaSearchScope
-import org.eclipse.jdt.core.search.SearchPattern
-import org.eclipse.jdt.core.search.TypeNameRequestor
-import org.eclipse.jdt.core.IJavaElement
 import org.junit.Ignore
 import scala.reflect.internal.util.OffsetPosition
 
@@ -24,9 +15,6 @@ object CompletionTests extends TestProjectSetup("completion")
 class CompletionTests {
   import CompletionTests._
 
-  import org.eclipse.core.runtime.IProgressMonitor
-  import org.eclipse.jface.text.IDocument
-  import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 
   private def withCompletions(path2source: String)(body: (Int, OffsetPosition, List[CompletionProposal]) => Unit): Unit = {
     val unit = compilationUnit(path2source).asInstanceOf[ScalaCompilationUnit]

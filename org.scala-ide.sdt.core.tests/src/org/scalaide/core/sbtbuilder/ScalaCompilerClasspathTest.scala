@@ -6,18 +6,12 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.IProblemRequestor
-import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.resources.IResource
 import org.junit.Assert
-import org.eclipse.core.resources.IMarker
 
 import testsetup.SDTTestUtils
-import org.eclipse.core.resources.IFile
-import org.junit.Ignore
 import org.junit.Before
-import org.junit.After
 
 object ScalaCompilerClasspathTest extends testsetup.TestProjectSetup("builder-compiler-classpath") {
   val baseRawClasspath = project.javaProject.getRawClasspath()

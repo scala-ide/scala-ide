@@ -1,13 +1,11 @@
 package org.scalaide.core
 package quickassist
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
 import org.junit.AfterClass
 import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
 import testsetup.SDTTestUtils
-import scala.util.control.Exception
 import org.scalaide.core.internal.quickassist.abstractimpl.ImplAbstractMembers
 import org.scalaide.core.internal.quickassist.abstractimpl.AbstractMemberProposal
 

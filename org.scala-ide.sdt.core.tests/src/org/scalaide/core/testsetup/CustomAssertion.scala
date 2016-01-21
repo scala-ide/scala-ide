@@ -1,7 +1,5 @@
 package org.scalaide.core.testsetup
 
-import org.scalaide.core.IScalaProject
-import org.eclipse.jdt.core.ICompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.junit.Assert._
 

@@ -9,7 +9,6 @@ import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.core.testsetup.SDTTestUtils
 
-import ScalaJavaDepWhenJavaIsWrongTest.allBuildErrorsOf
 import ScalaJavaDepWhenJavaIsWrongTest.cleanProject
 import ScalaJavaDepWhenJavaIsWrongTest.compilationUnit
 import ScalaJavaDepWhenJavaIsWrongTest.project

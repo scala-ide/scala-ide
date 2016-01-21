@@ -5,7 +5,6 @@ import scala.concurrent.Await
 import scala.util.Try
 import org.junit.Assert
 import scala.concurrent.Promise
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.duration.DurationInt
 
 object TestFutureUtil {

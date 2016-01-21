@@ -4,7 +4,6 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.PropertyStore
-import org.scalaide.core.testsetup.TestProjectSetup
 import org.junit.Assert._
 import org.junit.Test
 import org.junit.BeforeClass
@@ -16,8 +15,6 @@ import org.eclipse.core.runtime.preferences.InstanceScope
 import org.junit.After
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.eclipse.core.runtime.preferences.ConfigurationScope
-import org.eclipse.core.runtime.Platform
-import org.osgi.service.prefs.Preferences
 import scala.tools.nsc.Settings
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.SDTTestUtils

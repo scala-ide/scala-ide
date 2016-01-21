@@ -1,9 +1,7 @@
 package org.scalaide.core.lexical
 
 import scala.xml.Elem
-import org.eclipse.jface.text.IDocument
 import org.junit.Test
-import org.junit.Before
 import org.scalaide.core.lexical.ScalaPartitions._
 import org.eclipse.jface.text.IDocument.DEFAULT_CONTENT_TYPE
 import org.eclipse.jdt.ui.text.IJavaPartitions._

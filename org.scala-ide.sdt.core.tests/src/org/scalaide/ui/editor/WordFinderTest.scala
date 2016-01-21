@@ -1,7 +1,6 @@
 package org.scalaide.ui.editor
 
 import org.junit.Test
-import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.Document
 import org.junit.Assert
 

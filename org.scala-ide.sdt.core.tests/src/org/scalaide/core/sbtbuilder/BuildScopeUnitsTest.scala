@@ -12,8 +12,6 @@ import org.scalaide.core.testsetup.IProjectHelpers
 import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.scalaide.util.internal.SettingConverterUtil
 
 object BuildScopeUnitsTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._

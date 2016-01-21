@@ -1,11 +1,9 @@
 package org.scalaide.core
 
 import org.scalaide.core.testsetup.SDTTestUtils._
-import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.eclipse.core.resources.IFile
-import scala.collection.mutable.ListBuffer
 
 class CompilerTestUtils(unit: ScalaSourceFile) {
 

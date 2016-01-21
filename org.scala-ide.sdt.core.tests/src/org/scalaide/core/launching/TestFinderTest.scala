@@ -5,7 +5,6 @@ import testsetup.TestProjectSetup
 import org.junit.Test
 import org.eclipse.jdt.core.IType
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.junit.Assert
 import org.eclipse.core.runtime.Path
 import collection.JavaConverters._
 import org.eclipse.core.resources.IResource

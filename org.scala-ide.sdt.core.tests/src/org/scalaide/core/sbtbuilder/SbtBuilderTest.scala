@@ -10,13 +10,8 @@ import org.junit.Assert
 import org.eclipse.core.resources.IMarker
 import testsetup._
 import org.eclipse.core.resources.IFile
-import org.junit.Ignore
 import org.junit.Before
-import org.mockito.Matchers.any
-import org.eclipse.jdt.core.IProblemRequestor
-import org.eclipse.jdt.core.WorkingCopyOwner
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import scala.util.matching.Regex
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import scala.tools.nsc.Settings

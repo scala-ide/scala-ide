@@ -4,7 +4,6 @@ import org.junit.Test
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.ScalaPlugin
 import org.junit.Assert
-import org.eclipse.core.runtime.Platform
 
 class CompilerInterfaceStoreTest {
 

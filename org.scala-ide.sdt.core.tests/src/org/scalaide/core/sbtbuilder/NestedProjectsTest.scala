@@ -17,7 +17,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
-import junit.framework.Assert
 import org.eclipse.core.resources.IMarker
 
 /**
