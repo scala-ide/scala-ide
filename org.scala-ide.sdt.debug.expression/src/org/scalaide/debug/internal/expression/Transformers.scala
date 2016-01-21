@@ -5,7 +5,6 @@ package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.context.JdiContext
 
 import Names.Debugger
 import Names.Scala

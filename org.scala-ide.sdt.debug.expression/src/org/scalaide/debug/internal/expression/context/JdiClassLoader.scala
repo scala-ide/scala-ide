@@ -7,8 +7,6 @@ package context
 import scala.collection.JavaConversions._
 
 import com.sun.jdi.ClassObjectReference
-import com.sun.jdi.ClassType
-import com.sun.jdi.ObjectReference
 
 import javax.xml.bind.DatatypeConverter
 

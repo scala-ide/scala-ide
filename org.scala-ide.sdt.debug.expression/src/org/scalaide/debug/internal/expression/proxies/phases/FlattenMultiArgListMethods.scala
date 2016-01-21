@@ -6,7 +6,6 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import Names.Debugger
 
 /**
  * Flattens the methods parameters lists.

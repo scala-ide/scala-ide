@@ -7,7 +7,6 @@ package proxies.phases
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-import Names.Scala
 
 /**
  * Responsible for extracting all functions created from code and rewriting them to proxies.

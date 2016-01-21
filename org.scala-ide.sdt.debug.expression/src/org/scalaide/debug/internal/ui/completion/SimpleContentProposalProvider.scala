@@ -5,7 +5,6 @@ package org.scalaide.debug.internal.ui.completion
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.reflect.NameTransformer
-import scala.reflect.runtime.universe
 import scala.reflect.runtime.{universe => ru}
 
 import org.eclipse.jface.fieldassist.ContentProposal

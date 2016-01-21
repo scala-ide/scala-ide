@@ -6,9 +6,7 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import com.sun.jdi.ClassType
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.proxies.JdiProxyCompanion
 
 import TypeNames._
 
