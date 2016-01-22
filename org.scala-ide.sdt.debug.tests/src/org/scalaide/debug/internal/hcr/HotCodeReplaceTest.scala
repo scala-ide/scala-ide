@@ -135,6 +135,7 @@ private object HotCodeReplaceTest {
  * Tests whether HCR works (classes are correctly replaced in VM and we get new values)
  * and whether associated settings are correctly applied.
  */
+@Ignore("Tests fail on some systems. Reactivate once #1002640 is fixed.")
 class HotCodeReplaceTest
     extends TestProjectSetup("hot-code-replace", bundleName = "org.scala-ide.sdt.debug.tests")
     with ScalaDebugRunningTest {
