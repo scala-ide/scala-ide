@@ -9,27 +9,20 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
-import org.junit.Before
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.resources.IMarker
 import org.scalaide.core.IScalaPlugin
 import org.junit.After
-import org.junit.Ignore
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.eclipse.EclipseUtils.prepareJob
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.jobs.IJobChangeEvent
-import org.eclipse.core.runtime.jobs.JobChangeAdapter
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import scala.tools.nsc.Settings
 import org.scalaide.util.internal.SettingConverterUtil
-import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.project.ScalaProject
 
 object ClasspathTests extends TestProjectSetup("classpath") {
 

@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.annotation.implicitNotFound
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy

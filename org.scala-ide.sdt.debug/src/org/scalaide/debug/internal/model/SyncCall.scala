@@ -6,7 +6,6 @@ import scala.concurrent.Future
 import org.scalaide.logging.HasLogger
 
 object SyncCall extends HasLogger {
-  import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
   val Timeout = 500 millis
 

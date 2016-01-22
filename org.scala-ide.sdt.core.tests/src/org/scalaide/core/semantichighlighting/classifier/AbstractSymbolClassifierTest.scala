@@ -3,7 +3,6 @@ package semantichighlighting.classifier
 
 import scala.reflect.internal.util.BatchSourceFile
 import org.junit.Before
-import testsetup.TestProjectSetup
 import org.scalaide.core.IScalaProject
 import org.junit.After
 import org.eclipse.core.runtime.NullProgressMonitor

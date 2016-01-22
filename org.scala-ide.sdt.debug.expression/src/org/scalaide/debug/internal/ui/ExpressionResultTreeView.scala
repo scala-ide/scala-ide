@@ -31,7 +31,6 @@ import org.eclipse.ui.ISharedImages
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
-import org.scalaide.debug.internal.expression.TypeNames.javaNameToScalaName
 import org.scalaide.debug.internal.model.ScalaArrayElementVariable
 import org.scalaide.debug.internal.model.ScalaArrayReference
 import org.scalaide.debug.internal.model.ScalaFieldVariable

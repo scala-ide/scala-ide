@@ -23,7 +23,6 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.internal.eclipse.AnnotationUtils
 import org.scalaide.util.eclipse.EclipseUtils
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 
 /**
  * Represents basic properties - enabled, bold an italic.

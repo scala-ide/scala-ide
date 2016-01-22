@@ -10,7 +10,6 @@ import org.eclipse.jface.viewers.TreeViewer
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.ui.PlatformUI
 import org.eclipse.jdt.internal.ui.IJavaHelpContextIds
-import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.viewers.ViewerComparator

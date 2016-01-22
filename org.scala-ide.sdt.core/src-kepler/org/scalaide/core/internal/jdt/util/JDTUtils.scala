@@ -18,7 +18,6 @@ import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.ImportContainerInfo
 import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.NameLookup
-import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.ui.packageview.PackageExplorerPart
 import org.eclipse.ui.progress.UIJob
 import org.scalaide.util.internal.ReflectionUtils

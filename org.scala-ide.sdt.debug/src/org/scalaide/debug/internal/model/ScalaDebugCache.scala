@@ -5,9 +5,7 @@ import java.util.concurrent.ConcurrentHashMap
 import scala.collection.JavaConverters.asScalaBufferConverter
 
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
 
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.ScalaDebugPlugin
@@ -18,7 +16,6 @@ import com.sun.jdi.Location
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.event.ClassPrepareEvent
-import com.sun.jdi.event.Event
 
 import ScalaDebugCache.HiddenTypes
 import ScalaDebugCache.extractOuterTypeName

@@ -1,18 +1,12 @@
 package org.scalaide.debug.internal.launching
 
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 import scala.io.Codec
 import scala.io.Source
 
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchManager
-import org.eclipse.debug.core.ILaunchesListener2
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before

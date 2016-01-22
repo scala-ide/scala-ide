@@ -4,7 +4,6 @@ import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.JavaConverters
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -13,7 +12,6 @@ import scala.util.Try
 
 import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.scalaide.debug.internal.launching.ScalaDebuggerConfiguration
 import org.scalaide.debug.internal.model.ClassPrepareListener
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget

@@ -9,8 +9,6 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.core.runtime.IAdaptable
 import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
-import org.eclipse.jface.viewers.IContentProvider
-import org.eclipse.jface.viewers.ILabelProvider
 import org.eclipse.ui.dialogs.ElementListSelectionDialog
 import org.eclipse.jface.window.Window
 import org.scalaide.core.internal.project.ScalaInstallation

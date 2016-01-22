@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor.hover
 
-import scala.tools.nsc.symtab.Flags
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.jdt.core.compiler.IProblem
@@ -12,25 +11,18 @@ import org.eclipse.jface.text.ITextHoverExtension
 import org.eclipse.jface.text.ITextHoverExtension2
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.swt.widgets.Display
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.resources.ScalaMarkers
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.eclipse.EditorUtils
-import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.eclipse.RegionUtils
 import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.SdtConstants
-import scala.tools.nsc.interactive.CompilerControl
-import scala.tools.nsc.symtab.Flags
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.eclipse.jdt.internal.ui.text.java.hover.JavadocHover
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.eclipse.core.filebuffers.FileBuffers
 import org.scalaide.core.extensions.SourceFileProviderRegistry
-import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.jface.text.Region
 import org.scalaide.ui.editor.hover.IScalaHover
 

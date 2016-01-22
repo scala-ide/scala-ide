@@ -3,17 +3,11 @@ package internal.compiler
 
 import org.scalaide.logging.HasLogger
 import scala.tools.nsc.Settings
-import java.util.concurrent.atomic.AtomicBoolean
 import scala.reflect.internal.MissingRequirementError
 import scala.reflect.internal.FatalError
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.MultiStatus
-import org.eclipse.debug.core.DebugPlugin
-import org.eclipse.core.runtime.Status
 import org.scalaide.core.compiler._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.InteractiveCompilationUnit
-import org.scalaide.ui.internal.editor.ScalaEditor
 import scala.collection.mutable.Publisher
 
 /** Holds a reference to a 'live' presentation compiler and manages its lifecycle.

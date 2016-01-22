@@ -1,17 +1,8 @@
 package org.scalaide.ui.internal.editor.outline
 
-import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.CompilerControl
-import scala.tools.nsc.interactive.Global
-import scala.tools.nsc.reporters.ConsoleReporter
-import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.internal.util.SourceFile
-import scala.tools.nsc.interactive.Response
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.logging.HasLogger
-import scala.collection.mutable.MutableList
-import scala.reflect.internal.util.OffsetPosition
-import scala.reflect.internal.util.RangePosition
 
 /**
  * ModelBuilder is the "heart" of Outline View. It maps scala source into a tree of nodes (model). Each node

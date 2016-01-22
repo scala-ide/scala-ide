@@ -1,6 +1,5 @@
 package org.scalaide.ui.internal.editor.decorators.bynameparams
 
-import scala.annotation.migration
 import org.eclipse.jface.text.Region
 import org.junit.Assert.assertEquals
 import org.junit.Assert._

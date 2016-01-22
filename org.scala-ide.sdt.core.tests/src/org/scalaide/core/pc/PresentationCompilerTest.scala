@@ -5,8 +5,6 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import testsetup.SDTTestUtils
 import org.scalaide.logging.Logger
-import scala.tools.nsc.interactive.InteractiveReporter
-import org.eclipse.jdt.core.ICompilationUnit
 import org.junit._
 import org.mockito.Matchers._
 import org.mockito.Mockito._
@@ -14,7 +12,6 @@ import hyperlink.HyperlinkTester
 import testsetup.CustomAssertion
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.eclipse.jdt.core.JavaCore
 
 object PresentationCompilerTest extends testsetup.TestProjectSetup("pc") with CustomAssertion with HyperlinkTester

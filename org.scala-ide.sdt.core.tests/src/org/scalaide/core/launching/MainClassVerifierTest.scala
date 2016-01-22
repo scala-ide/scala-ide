@@ -2,7 +2,6 @@ package org.scalaide.core
 package launching
 
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import testsetup.SDTTestUtils
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor

@@ -6,7 +6,6 @@ package org.scalaide.ui.internal.repl
 import org.scalaide.ui.ScalaImages
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
-import org.scalaide.ui.syntax.ScalariformToSyntaxClass
 import scala.tools.nsc.Settings
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
@@ -16,21 +15,15 @@ import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.debug.internal.ui.DebugPluginImages
 import org.eclipse.debug.internal.ui.IInternalDebugUIConstants
-import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jface.action.Action
 import org.eclipse.jface.action.IAction
 import org.eclipse.jface.action.Separator
-import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.swt.SWT
-import org.eclipse.swt.custom.StyleRange
-import org.eclipse.swt.custom.StyledText
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.graphics.Color
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button
-import org.eclipse.swt.widgets.Caret
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.List
@@ -40,7 +33,6 @@ import org.eclipse.ui.internal.console.ConsolePluginImages
 import org.eclipse.ui.internal.console.IInternalConsoleConstants
 import org.eclipse.ui.part.ViewPart
 import org.scalaide.core.internal.repl.EclipseRepl.Exec
-import scalariform.lexer.ScalaLexer
 import org.scalaide.core.internal.repl.EclipseRepl
 import org.scalaide.util.ui.DisplayThread
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation

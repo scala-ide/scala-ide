@@ -10,7 +10,6 @@ import org.eclipse.debug.core.DebugPlugin
 import com.sun.jdi.ObjectCollectedException
 import com.sun.jdi.ThreadGroupReference
 import org.junit.Ignore
-import org.junit.After
 
 object ScalaThreadTest {
   private def createThreadGroup() = {

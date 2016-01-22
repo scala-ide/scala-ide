@@ -3,20 +3,14 @@ package org.scalaide.debug.internal.launching
 import java.util.{ List => JList }
 import java.util.{ Map => JMap }
 import org.scalaide.debug.internal.ScalaDebugPlugin
-import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.IStatus
-import org.eclipse.core.runtime.Status
 import org.eclipse.debug.core.ILaunch
 import org.eclipse.jdi.Bootstrap
 import org.eclipse.jdt.launching.IVMConnector
 import com.sun.jdi.connect.AttachingConnector
-import com.sun.jdi.connect.Connector
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import java.io.IOException
-import com.sun.jdi.connect.TransportTimeoutException
 import org.eclipse.jdi.TimeoutException
-import org.eclipse.debug.core.ILaunchConfiguration
 
 /**
  * Attach connector creating a Scala debug session.

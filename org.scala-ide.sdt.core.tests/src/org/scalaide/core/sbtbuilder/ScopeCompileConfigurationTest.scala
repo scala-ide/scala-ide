@@ -14,7 +14,6 @@ import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.IProjectHelpers
 import org.scalaide.core.testsetup.IProjectOperations
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.ui.internal.preferences.PropertyStore
 import org.eclipse.ui.preferences.ScopedPreferenceStore
 
 object ScopeCompileConfigurationTest extends IProjectOperations {

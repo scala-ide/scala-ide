@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.model
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 
 import org.eclipse.debug.core.ILogicalStructureProvider
 import org.eclipse.debug.core.ILogicalStructureType

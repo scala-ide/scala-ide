@@ -1,23 +1,17 @@
 package org.scalaide.core.internal.jdt.model
 
 import java.util.{ HashMap => JHashMap }
-import java.util.{ Map => JMap }
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.IBuffer
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.util.HandleFactory
-import org.eclipse.jdt.internal.core.BufferManager
 import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit }
 import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.core.PackageFragment
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil
-import org.eclipse.swt.widgets.Display
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.io.VirtualFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaSourceFile
@@ -28,7 +22,6 @@ import org.scalaide.core.extensions.SourceFileProvider
 import org.eclipse.jdt.core.JavaModelException
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.NullProgressMonitor
 import scala.util.control.Exception
 import org.eclipse.core.runtime.CoreException
 import org.scalaide.core.compiler.ScalaCompilationProblem

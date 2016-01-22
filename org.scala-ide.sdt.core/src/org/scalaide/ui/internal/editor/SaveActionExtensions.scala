@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor
 
 import scala.concurrent.duration._
-import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{ TextChange => RTextChange }
 import scala.util.Failure
 import scala.util.Left

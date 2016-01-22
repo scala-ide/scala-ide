@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
-import scala.collection.mutable.ArrayBuffer
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor

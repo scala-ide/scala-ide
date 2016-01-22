@@ -1,17 +1,9 @@
 package org.scalaide.core.internal.launching
 
 import org.eclipse.core.expressions.PropertyTester
-import org.eclipse.core.resources.IContainer
-import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IAdaptable
-import org.eclipse.jdt.core.Flags
-import org.eclipse.jdt.core.IClassFile
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.IMember
-import org.eclipse.jdt.core.IMethod
-import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaModelException
 import org.scalaide.util.eclipse.EclipseUtils.RichAdaptable
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile

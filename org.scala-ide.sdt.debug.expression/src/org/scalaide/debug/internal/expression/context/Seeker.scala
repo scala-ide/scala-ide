@@ -7,7 +7,6 @@ package context
 import scala.collection.JavaConversions._
 import scala.reflect.NameTransformer
 
-import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 

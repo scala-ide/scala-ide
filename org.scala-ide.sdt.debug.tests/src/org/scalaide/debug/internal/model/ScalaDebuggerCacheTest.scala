@@ -19,7 +19,6 @@ import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.ClassPrepareEvent
 import com.sun.jdi.request.ClassPrepareRequest
 import com.sun.jdi.request.EventRequestManager
-import org.scalaide.core.testsetup.SDTTestUtils
 import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext

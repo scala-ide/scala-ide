@@ -14,7 +14,6 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
@@ -24,10 +23,6 @@ import org.scalaide.core.SdtConstants
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.common.RenameSourceFileChange
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.IPath
-import scala.reflect.io.AbstractFile
-import org.eclipse.core.resources.ResourcesPlugin
 import org.scalaide.core.internal.statistics.Features.Feature
 import org.scalaide.core.internal.ScalaPlugin
 

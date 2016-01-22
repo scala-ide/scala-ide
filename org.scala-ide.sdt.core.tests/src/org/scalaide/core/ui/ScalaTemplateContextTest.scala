@@ -3,8 +3,6 @@ package org.scalaide.core.ui
 import org.junit.runner.RunWith
 import org.junit.internal.runners.JUnit4ClassRunner
 import org.eclipse.jface.text.Document
-import org.eclipse.jface.text.templates.TemplateContextType
-import org.scalaide.ui.internal.templates.ScalaTemplateCompletionProcessor
 import org.scalaide.ui.internal.templates.ScalaTemplateContextType
 import org.scalaide.ui.internal.templates.ScalaTemplateContext
 import org.eclipse.jface.text.templates.Template

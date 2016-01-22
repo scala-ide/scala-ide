@@ -2,7 +2,6 @@ package org.scalaide.core.internal.jdt.util
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -15,14 +14,10 @@ import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallationLabel
 import org.scalaide.core.internal.project.ScalaModule
 import scala.tools.nsc.settings.NoScalaVersion
-import org.scalaide.core.internal.ScalaPlugin
-import sbt.ScalaInstance
-import java.net.URLClassLoader
 import java.io.ObjectStreamClass
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
-import org.eclipse.core.runtime.CoreException
 
 class ContextualizedObjectInputStream(in: InputStream) extends ObjectInputStream(in) {
 

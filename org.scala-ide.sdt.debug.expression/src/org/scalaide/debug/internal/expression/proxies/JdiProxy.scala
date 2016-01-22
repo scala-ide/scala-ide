@@ -13,7 +13,6 @@ import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiPro
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 
 import com.sun.jdi.ObjectReference
-import com.sun.jdi.ReferenceType
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 

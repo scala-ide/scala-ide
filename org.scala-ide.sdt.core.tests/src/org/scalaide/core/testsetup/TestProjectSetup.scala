@@ -1,6 +1,5 @@
 package org.scalaide.core.testsetup
 
-import scala.tools.nsc.interactive.Response
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder

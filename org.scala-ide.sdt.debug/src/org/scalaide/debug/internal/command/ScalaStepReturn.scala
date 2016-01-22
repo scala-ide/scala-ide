@@ -2,7 +2,6 @@ package org.scalaide.debug.internal.command
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 import org.eclipse.debug.core.DebugEvent

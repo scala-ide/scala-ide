@@ -7,7 +7,6 @@ package context.invoker
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
-import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
 import org.scalaide.debug.internal.expression.proxies.StringJdiProxy
 
 import com.sun.jdi.Value

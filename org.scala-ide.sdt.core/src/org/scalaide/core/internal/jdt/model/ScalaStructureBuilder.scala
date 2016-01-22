@@ -1,22 +1,15 @@
 package org.scalaide.core.internal.jdt.model
 
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.util.{ Map => JMap }
-import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.IAnnotation
-import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IMemberValuePair
-import org.eclipse.jdt.core.Signature
-import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.{ Annotation => JDTAnnotation }
 import org.eclipse.jdt.internal.core.{ AnnotationInfo => JDTAnnotationInfo }
 import org.eclipse.jdt.internal.core.AnnotatableInfo
 import org.eclipse.jdt.internal.core.{ CompilationUnit => JDTCompilationUnit }
 import org.eclipse.jdt.internal.core.ImportContainer
 import org.eclipse.jdt.internal.core.ImportContainerInfo
-import org.eclipse.jdt.internal.core.ImportDeclaration
 import org.eclipse.jdt.internal.core.ImportDeclarationElementInfo
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.JavaElementInfo
@@ -30,7 +23,6 @@ import org.eclipse.jdt.ui.JavaElementImageDescriptor
 import scala.collection.Map
 import scala.collection.mutable.HashMap
 import scala.tools.nsc.symtab.Flags
-import scala.tools.nsc.util.NoPosition
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils

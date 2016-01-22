@@ -1,13 +1,9 @@
 package org.scalaide.core.interpreter
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.Promise
-import scala.concurrent.duration.DurationInt
 import scala.tools.nsc.interpreter.Results.Result
 import scala.tools.nsc.interpreter.Results.Success
-import scala.util.Try
 
 import org.apache.log4j.BasicConfigurator
 import org.junit.Assert.assertEquals

@@ -8,7 +8,6 @@ import scala.Right
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.concurrent.Future
 import scala.util.Either
-import scala.util.control.Exception.Catch
 
 import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint

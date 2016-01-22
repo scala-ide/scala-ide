@@ -3,7 +3,6 @@ package org.scalaide.debug.internal.async
 import java.util.concurrent.atomic.AtomicReference
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
 import org.eclipse.debug.core.DebugEvent

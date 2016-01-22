@@ -4,16 +4,10 @@ package occurrences
 import testsetup.SDTTestUtils
 import testsetup.TestProjectSetup
 import org.scalaide.core.internal.jdt.model._
-import org.eclipse.jdt.core.IPackageFragmentRoot
-import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert._
-import org.eclipse.core.runtime.Path
 import org.junit.Test
-import org.junit.Ignore
-import org.eclipse.jface.text.Region
 import org.scalaide.core.internal.decorators.markoccurrences.ScalaOccurrencesFinder
 import org.scalaide.util.ScalaWordFinder
-import scala.tools.nsc.interactive.Response
 
 object OccurrencesFinderTest extends TestProjectSetup("occurrences-hyperlinking")
 

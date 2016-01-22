@@ -8,10 +8,7 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import java.util.Collections.{ emptyList => javaEmptyList }
 import org.eclipse.jdt.core._
-import org.eclipse.jface.text.Document
-import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.completion.ScalaCompletionProposal
-import org.eclipse.jdt.core.dom.ASTParser
 import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.ASTVisitor
 import org.eclipse.jdt.core.dom.ASTNode
@@ -22,8 +19,6 @@ import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.core.dom.Block
 import org.eclipse.jdt.core.dom.TypeDeclaration
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.viewers.ISelectionProvider
 import org.eclipse.jdt.core.dom.Assignment
 import org.eclipse.jdt.core.dom.ITypeBinding
 import org.eclipse.jdt.core.dom.Expression
@@ -32,7 +27,6 @@ import org.eclipse.jdt.core.dom.Comment
 import org.eclipse.jdt.core.dom.FieldDeclaration
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment
 import org.eclipse.jdt.core.dom.Statement
-import org.eclipse.jdt.internal.compiler.ast.FieldReference
 import org.eclipse.jdt.core.dom.FieldAccess
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement
 import org.eclipse.jdt.core.dom.ClassInstanceCreation

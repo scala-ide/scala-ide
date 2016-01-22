@@ -4,13 +4,9 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.core.internal.project.DirectoryScalaInstallation
 import org.junit.Test
 import org.junit.Assert._
-import org.eclipse.core.runtime.IPath
 import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.tools.nsc.settings.Development
-import org.eclipse.core.runtime.Path
 import org.scalaide.core.IScalaModule
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.core.IScalaPlugin
 import org.junit.AfterClass
 import org.scalaide.core.testsetup.SDTTestUtils
 

@@ -10,9 +10,7 @@ import com.sun.jdi.Location
 import com.sun.jdi.Method
 import com.sun.jdi.ReferenceType
 import com.sun.jdi.BooleanType
-import java.util.{ List => JList }
 import com.sun.jdi.Type
-import org.eclipse.jdt.internal.debug.core.model.JDIReferenceType
 import com.sun.jdi.ByteType
 import com.sun.jdi.CharType
 import com.sun.jdi.DoubleType

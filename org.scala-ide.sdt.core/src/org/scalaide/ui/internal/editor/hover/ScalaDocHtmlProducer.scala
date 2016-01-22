@@ -1,18 +1,10 @@
 package org.scalaide.ui.internal.editor.hover
 
-import scala.tools.nsc.doc.html.HtmlPage
 import scala.tools.nsc.doc.base._
 import scala.tools.nsc.doc.base.comment._
-import scala.reflect.internal.util.SourceFile
 import org.eclipse.jface.internal.text.html.BrowserInformationControlInput
 import scala.xml.NodeSeq
-import scala.beans.BeanProperty
-import scala.tools.nsc.interactive.Response
-import scala.reflect.api.Position
 import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.eclipse.jdt.core.IJavaElement
-import scala.reflect.internal.Flags
-import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.internal.text.html.BrowserInput
 
 class ScalaDocHtmlProducer extends HtmlHover {

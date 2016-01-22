@@ -2,7 +2,6 @@ package org.scalaide.ui.internal.editor
 
 import org.eclipse.core.runtime.Assert
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.ToolFactory
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.core.compiler.ITerminalSymbols
@@ -16,7 +15,6 @@ import org.eclipse.jdt.core.dom.ForStatement
 import org.eclipse.jdt.core.dom.IfStatement
 import org.eclipse.jdt.core.dom.WhileStatement
 import org.eclipse.jdt.internal.corext.dom.NodeFinder
-import org.eclipse.jdt.internal.corext.util.CodeFormatterUtil
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.internal.ui.text.JavaHeuristicScanner
 import org.eclipse.jdt.internal.ui.text.Symbols
@@ -24,7 +22,6 @@ import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
-import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
@@ -32,7 +29,6 @@ import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.ITextEditorExtension3
-import org.scalaide.core.lexical.ScalaCodePartitioner
 
 /**
  * Auto indent strategy sensitive to brackets.

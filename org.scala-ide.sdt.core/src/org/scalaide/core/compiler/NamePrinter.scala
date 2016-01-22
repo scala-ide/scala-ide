@@ -3,7 +3,6 @@ package org.scalaide.core.compiler
 import scala.reflect.internal.util.SourceFile
 
 import org.eclipse.jface.text.Region
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.RegionUtils.RichRegion
 

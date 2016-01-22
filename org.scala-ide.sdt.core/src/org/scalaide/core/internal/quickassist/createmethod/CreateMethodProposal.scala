@@ -1,9 +1,7 @@
 package org.scalaide.core.internal.quickassist.createmethod
 
 import scala.reflect.internal.util.RangePosition
-import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-import org.eclipse.jface.text.Position
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils

@@ -13,7 +13,6 @@ import com.sun.jdi.ReferenceType
 import com.sun.jdi.Value
 import org.eclipse.debug.core.DebugException
 import org.eclipse.jdi.TimeoutException
-import com.sun.jdi.VMDisconnectedException
 import org.eclipse.core.runtime.Status
 import org.eclipse.core.runtime.IStatus
 import scala.util.control.Exception

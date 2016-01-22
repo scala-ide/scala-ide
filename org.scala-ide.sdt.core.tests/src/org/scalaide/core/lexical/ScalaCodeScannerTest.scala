@@ -5,7 +5,6 @@ import org.scalaide.ui.syntax._
 import org.scalaide.ui.syntax.ScalaSyntaxClasses._
 import testsetup.SDTTestUtils
 import org.junit.ComparisonFailure
-import org.junit.Ignore
 import org.junit.Test
 import scalariform.ScalaVersions
 import org.scalaide.core.internal.lexical.ScalaCodeTokenizerScalariformBased

@@ -7,7 +7,6 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core._
 import org.eclipse.jdt.internal.junit.util.CoreTestSearchEngine
-import org.eclipse.jdt.internal.junit.JUnitCorePlugin
 import org.eclipse.jdt.core.dom.IAnnotationBinding
 import org.eclipse.jdt.core.dom.ITypeBinding
 import scala.annotation.tailrec

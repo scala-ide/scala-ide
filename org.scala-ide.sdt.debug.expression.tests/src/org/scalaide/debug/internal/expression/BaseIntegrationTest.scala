@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 
 import scala.runtime.ScalaRunTime
-import scala.tools.reflect.ToolBoxError
 import scala.util.Failure
 import scala.util.Success
 

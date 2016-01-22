@@ -7,11 +7,7 @@ import org.mockito.Mockito._
 import org.mockito.Matchers._
 import testsetup.SDTTestUtils
 import org.eclipse.jdt.core._
-import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.search._
-import scala.collection.mutable.ListBuffer
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.eclipse.jdt.internal.corext.util.JavaModelUtil
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder
 

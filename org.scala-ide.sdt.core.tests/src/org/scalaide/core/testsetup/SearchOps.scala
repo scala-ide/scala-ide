@@ -1,6 +1,5 @@
 package org.scalaide.core.testsetup
 
-import scala.collection.JavaConverters.asScalaBufferConverter
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
@@ -8,7 +7,6 @@ import org.eclipse.jdt.core.search.SearchMatch
 import org.eclipse.jdt.core.search.SearchParticipant
 import org.eclipse.jdt.core.search.SearchPattern
 import org.eclipse.jdt.internal.corext.util.SearchUtils
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jdt.core.search.SearchRequestor
 import scala.collection.mutable.ListBuffer
 

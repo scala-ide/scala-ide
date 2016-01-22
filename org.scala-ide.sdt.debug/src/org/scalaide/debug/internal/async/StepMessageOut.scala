@@ -1,10 +1,7 @@
 package org.scalaide.debug.internal.async
 
 import java.util.UUID
-import scala.collection.JavaConverters
-import scala.util.Try
 import org.eclipse.debug.core.DebugEvent
-import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.scalaide.debug.internal.async.AsyncUtils.AsyncProgramPointKey
 import org.scalaide.debug.internal.async.AsyncUtils.RequestOwnerKey
 import org.scalaide.debug.internal.async.AsyncUtils.installMethodBreakpoint
@@ -12,7 +9,6 @@ import org.scalaide.debug.internal.async.AsyncUtils.isAsyncProgramPoint
 import org.scalaide.debug.internal.model.JdiRequestFactory
 import org.scalaide.debug.internal.model.ScalaDebugTarget
 import org.scalaide.debug.internal.model.ScalaThread
-import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 import com.sun.jdi.Field
 import com.sun.jdi.ObjectReference

@@ -13,7 +13,6 @@ import org.scalaide.util.eclipse.SWTUtils
 
 object MessageDialog {
   import org.eclipse.jface.dialogs.{ MessageDialog => JFMessageDialog }
-  import org.eclipse.swt.widgets.Shell
   def apply(heading: String, message: String, labels: (Int, String)*) =
     new JFMessageDialog(SWTUtils.getShell, heading, null, message, JFMessageDialog.QUESTION, labels.map(_._2).toArray, 0).open()
   def confirm(heading: String, message: String) =

@@ -11,9 +11,6 @@ import org.eclipse.jdt.core.JavaCore
 import org.junit.Assert
 import org.junit.Test
 import org.scalaide.core.testsetup.SDTTestUtils
-import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.junit.Before
-import org.junit.After
 import org.scalaide.core.internal.builder.ProjectsCleanJob
 
 class ProjectsCleanJobTest {

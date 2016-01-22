@@ -11,7 +11,6 @@ import org.eclipse.jface.viewers.Viewer
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.swt.events.MouseAdapter
 import org.eclipse.swt.events.MouseEvent
-import org.eclipse.swt.events.MouseListener
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Button

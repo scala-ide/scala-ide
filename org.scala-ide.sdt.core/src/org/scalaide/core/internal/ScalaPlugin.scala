@@ -1,7 +1,6 @@
 package org.scalaide.core.internal
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.settings.ScalaVersion
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject

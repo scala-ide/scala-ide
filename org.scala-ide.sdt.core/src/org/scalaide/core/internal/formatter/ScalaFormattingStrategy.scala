@@ -1,19 +1,15 @@
 package org.scalaide.core.internal.formatter
 
-import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.IAdaptable
 import org.eclipse.jface.text._
 import org.eclipse.jface.text.TextUtilities.getDefaultLineDelimiter
 import org.eclipse.jface.text.formatter._
-import org.eclipse.jface.text.source.ISourceViewer
-import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.text.undo.DocumentUndoManagerRegistry
 import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
 import org.eclipse.ui.texteditor.ITextEditor
 import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
 import scalariform.utils.TextEdit
-import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.resources.IResource
 
 class ScalaFormattingStrategy(val editor: ITextEditor) extends IFormattingStrategy with IFormattingStrategyExtension {

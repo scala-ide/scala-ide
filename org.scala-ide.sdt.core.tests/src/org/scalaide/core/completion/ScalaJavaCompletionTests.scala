@@ -6,17 +6,6 @@ import org.junit.Test
 import org.junit.Assert._
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.ui.completion.ScalaCompletionProposal
-import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.IEditorDescriptor
-import org.eclipse.ui.part.FileEditorInput
-import org.eclipse.core.resources.IFile
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.ITextOperationTarget
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import scala.tools.nsc.interactive.Response
 import org.scalaide.core.internal.completion.ScalaJavaCompletionProposalComputer
 
 object ScalaJavaCompletionTests extends TestProjectSetup("completion")

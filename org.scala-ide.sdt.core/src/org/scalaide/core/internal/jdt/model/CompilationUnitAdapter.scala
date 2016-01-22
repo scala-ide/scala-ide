@@ -12,9 +12,6 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.eclipse.jdt.core.BufferChangedEvent
 import org.eclipse.jdt.core.CompletionRequestor
 import org.eclipse.jdt.core.IBuffer
-import org.eclipse.jdt.core.IBufferFactory
-import org.eclipse.jdt.core.ICodeCompletionRequestor
-import org.eclipse.jdt.core.ICompletionRequestor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IImportContainer
 import org.eclipse.jdt.core.IImportDeclaration
@@ -27,7 +24,6 @@ import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.ISourceRange
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.ITypeRoot
-import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.compiler.env
@@ -40,7 +36,6 @@ import org.eclipse.jdt.internal.core.PackageFragmentRoot
 import org.eclipse.jdt.internal.core.util.MementoTokenizer
 import org.eclipse.text.edits.TextEdit
 import org.eclipse.text.edits.UndoEdit
-import org.eclipse.jdt.internal.core.PackageDeclaration
 import org.scalaide.util.internal.Suppress
 
 class CompilationUnitAdapter(classFile : ScalaClassFile) extends Openable(classFile.getParent.asInstanceOf[JavaElement]) with ICompilationUnit with env.ICompilationUnit {

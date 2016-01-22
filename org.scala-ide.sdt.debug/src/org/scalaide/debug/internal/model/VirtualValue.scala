@@ -1,8 +1,6 @@
 package org.scalaide.debug.internal.model
 
 import org.eclipse.debug.core.model.IValue
-import org.scalaide.debug.internal.ScalaDebugger
-import org.scalaide.debug.internal.ScalaDebugPlugin
 import org.eclipse.debug.core.model.IVariable
 
 case class VirtualValue

@@ -5,9 +5,7 @@ package org.scalaide.debug.internal.hcr
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import scala.collection.JavaConverters
 import scala.collection.mutable.Publisher
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success

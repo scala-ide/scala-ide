@@ -5,7 +5,6 @@ import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.JavaCore
 import org.junit.After
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.IScalaPlugin
@@ -14,7 +13,6 @@ import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import org.eclipse.core.runtime.IPath
 import java.io.File
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.junit.AfterClass
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.SDTTestUtils

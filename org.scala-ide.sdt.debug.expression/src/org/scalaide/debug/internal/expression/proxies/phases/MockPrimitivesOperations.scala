@@ -8,7 +8,6 @@ import Names.Debugger
 
 import scala.reflect.NameTransformer
 import scala.reflect.runtime.universe
-import scala.util.Success
 
 import org.scalaide.debug.internal.expression.Names.Debugger
 

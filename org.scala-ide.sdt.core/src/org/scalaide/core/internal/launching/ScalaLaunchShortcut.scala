@@ -14,8 +14,6 @@ import org.eclipse.jdt.debug.ui.launchConfigurations.JavaLaunchShortcut
 import org.eclipse.jdt.internal.debug.ui.launcher.LauncherMessages
 import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
 import org.eclipse.jface.operation.IRunnableContext
-import org.eclipse.jface.window.Window
-import org.eclipse.ui.dialogs.ElementListSelectionDialog
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 
 /* This class can be eliminated in favour of JavaApplicationLaunch shortcut as soon as

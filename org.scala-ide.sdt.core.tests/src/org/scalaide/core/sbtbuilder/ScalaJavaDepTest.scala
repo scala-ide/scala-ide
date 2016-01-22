@@ -4,8 +4,6 @@ package sbtbuilder
 import org.junit.Test
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.jdt.core.IJavaModelMarker
-import org.eclipse.core.resources.IResource
 import org.junit.Assert._
 import org.eclipse.core.resources.IMarker
 import testsetup.SDTTestUtils

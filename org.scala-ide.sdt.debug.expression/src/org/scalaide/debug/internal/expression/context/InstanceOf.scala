@@ -17,7 +17,6 @@ import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 import com.sun.jdi.ArrayType
 import com.sun.jdi.ClassType
 import com.sun.jdi.InterfaceType
-import com.sun.jdi.ReferenceType
 
 import TypeNames._
 

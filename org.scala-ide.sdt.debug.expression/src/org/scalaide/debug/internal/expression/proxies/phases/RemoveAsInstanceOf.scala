@@ -6,8 +6,6 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Scala
 
 /**
  * Transformer for removing `asInstanceOf` method invocations on proxies. Those are not needed after `typecheck`,
