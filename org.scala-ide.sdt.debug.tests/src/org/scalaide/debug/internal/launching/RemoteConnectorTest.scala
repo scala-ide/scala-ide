@@ -17,6 +17,7 @@ import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchManager
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.jdt.launching.JavaRuntime
+import org.eclipse.jdt.launching.SocketUtil
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -147,17 +148,6 @@ trait RemoteConnectorTestPortResource {
   @Rule
   def resourceManager = ResourceManager
   private val ResourceManager = new ExternalResource {
-    /**
-     * Select a free port by letting the OS pick one and then closing it.
-     */
-    private def freePort(): Int = {
-      val socket = new Socket()
-      socket.bind(new InetSocketAddress(0)) // bind on all network interface, on a port chosen by the OS
-      val port = socket.getLocalPort()
-      socket.close()
-      port
-    }
-
     private def savePreferences(): Unit = {
       debugConnectionTimeout = JavaRuntime.getPreferences().getInt(JavaRuntime.PREF_CONNECT_TIMEOUT)
     }
@@ -182,7 +172,7 @@ trait RemoteConnectorTestPortResource {
     }
 
     override protected def before(): Unit = {
-      port_ = freePort()
+      port_ = SocketUtil.findFreePort
       savePreferences()
     }
 
@@ -208,7 +198,6 @@ trait RemoteConnectorTestPortResource {
 /**
  * Test using the Scala remote connectors to debug applications
  */
-@Ignore("Tests fail on some systems. Reactivate once #1002640 is fixed.")
 class RemoteConnectorTest extends RemoteConnectorTestPortResource {
   import RemoteConnectorTest._
   import ScalaDebugTestSession._
