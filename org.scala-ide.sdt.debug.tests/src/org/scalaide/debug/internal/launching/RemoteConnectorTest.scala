@@ -198,6 +198,7 @@ trait RemoteConnectorTestPortResource {
 /**
  * Test using the Scala remote connectors to debug applications
  */
+@Ignore("Tests fail on some systems. Reactivate once #1002640 is fixed.")
 class RemoteConnectorTest extends RemoteConnectorTestPortResource {
   import RemoteConnectorTest._
   import ScalaDebugTestSession._
