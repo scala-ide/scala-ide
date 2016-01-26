@@ -19,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
+import org.scalaide.logging.HasLogger
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.ScalaDebugRunningTest
@@ -135,10 +136,9 @@ private object HotCodeReplaceTest {
  * Tests whether HCR works (classes are correctly replaced in VM and we get new values)
  * and whether associated settings are correctly applied.
  */
-@Ignore("Tests fail on some systems. Reactivate once #1002640 is fixed.")
 class HotCodeReplaceTest
     extends TestProjectSetup("hot-code-replace", bundleName = "org.scala-ide.sdt.debug.tests")
-    with ScalaDebugRunningTest {
+    with ScalaDebugRunningTest with HasLogger {
 
   import HotCodeReplaceTest._
 
@@ -247,6 +247,9 @@ class HotCodeReplaceTest
           testSessionIsSuspended
       }
     } finally {
+      logger.debug(s"""HCR success event came: ${hcrEventsSubscriber.checkIfSucceeded},
+        | Debug Change came: $threadContentChangedEventReceived,
+        | test is suspended: $testSessionIsSuspended""".stripMargin)
       hcrEventsPublisher.removeSubscription(hcrEventsSubscriber)
       ScalaDebugTestSession.removeDebugEventListener(debugEventListener)
     }
