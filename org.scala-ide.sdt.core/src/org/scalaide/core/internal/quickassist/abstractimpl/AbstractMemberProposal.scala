@@ -16,13 +16,13 @@ object AbstractMemberProposal {
   def apply(global: IScalaPresentationCompiler)(abstrMethod: global.MethodSymbol, impl: global.ImplDef)(
     icu: Option[InteractiveCompilationUnit], addMethodTarget: AddMethodTarget) = {
 
-    new AbstractMemberProposal {
+    new {
       override val compiler: global.type = global
       override val targetSourceFile = icu
       override val abstractMethod = abstrMethod
       override val implDef = impl
       override val target = addMethodTarget
-    }
+    } with AbstractMemberProposal
   }
 }
 
