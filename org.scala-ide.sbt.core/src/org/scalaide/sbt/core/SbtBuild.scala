@@ -58,7 +58,6 @@ object SbtBuild extends AnyRef with HasLogger {
   /** Create and initialize a SbtBuild instance for the given path.
    */
   private def apply(buildRoot: File)(implicit system: ActorSystem): SbtBuild = {
-    import system.dispatcher
     val connector = SbtConnector("scala-ide-sbt-integration", "Scala IDE sbt integration", buildRoot)
     val client = sbtClientWatcher(connector)
     new SbtBuild(buildRoot, client, ConsoleProvider(buildRoot))

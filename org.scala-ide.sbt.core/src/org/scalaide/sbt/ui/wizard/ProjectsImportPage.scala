@@ -6,7 +6,6 @@ import scala.collection._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.Promise
 import scala.concurrent.duration._
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ResourcesPlugin
