@@ -67,13 +67,16 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     }
   }
 
-  private def appHit(thread: ThreadReference, app: AsyncProgramPoint, messageOrdinal: Int): Unit = {
+  private def appHit(thread: ThreadReference, app: AsyncProgramPoint, messageOrdinal: => Int): Unit = {
     val topFrame = thread.frame(0)
     val args = topFrame.getArgumentValues()
-
     val body = args.get(app.paramIdx)
-    val frames = thread.frames().asScala.toList
-    addAsyncStackFrame(body.asInstanceOf[ObjectReference], mkStackTrace(frames, messageOrdinal), messageOrdinal)
+    try {
+      val frames = thread.frames().asScala.toList
+      addAsyncStackFrame(body.asInstanceOf[ObjectReference], mkStackTrace(frames, messageOrdinal), messageOrdinal)
+    } catch {
+      case t: Throwable => logger.error("Don't break here, allow it to fail later.", t)
+    }
   }
 
   private def addAsyncStackFrame(key: ObjectReference, asyncStackTrace: AsyncStackTrace, ordinal: Int): Unit = {
