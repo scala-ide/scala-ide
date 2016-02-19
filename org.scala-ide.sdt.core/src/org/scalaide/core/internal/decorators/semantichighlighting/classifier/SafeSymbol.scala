@@ -2,7 +2,7 @@ package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.CompilerAccess
-import scala.tools.refactoring.common.PimpedTrees
+import scala.tools.refactoring.common.EnrichedTrees
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
@@ -29,7 +29,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
  * name and there are no trees for the getter yet (added by phase lazyvals). We need
  * to return the accessor, who can later be classified as `lazy`.
  */
-private[classifier] trait SafeSymbol extends CompilerAccess with PimpedTrees {
+private[classifier] trait SafeSymbol extends CompilerAccess with EnrichedTrees {
 
   override val global: IScalaPresentationCompiler
 
