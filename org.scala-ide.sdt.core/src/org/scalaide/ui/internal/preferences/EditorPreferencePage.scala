@@ -65,6 +65,9 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 
     val outline = group("Outline", base)
     checkBox(P_INITIAL_IMPORT_FOLD, "Fold import nodes by default", outline)
+
+    val refactoring = group("Refactoring", base)
+    checkBox(SPACES_AROUND_IMPORT_BLOCKS, "Add spaces around braces in multi-import block", refactoring)
 }
 
   private def group(text: String, parent: Composite): Group = {
@@ -119,6 +122,8 @@ object EditorPreferencePage {
   final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
   final val P_ENABLE_HOF_COMPLETION = BASE + "completionAlwaysLambdas"
   final val P_INITIAL_IMPORT_FOLD = BASE + "initialImportFold"
+
+  final val SPACES_AROUND_IMPORT_BLOCKS = BASE + "spacesAroundImportBlocks"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -145,5 +150,7 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(INDENT_GUIDE_COLOR, "72,72,72")
 
     store.setDefault(P_INITIAL_IMPORT_FOLD, true)
+
+    store.setDefault(SPACES_AROUND_IMPORT_BLOCKS, true)
   }
 }
