@@ -25,10 +25,12 @@
     <repo.eclipse.juno>http://download.eclipse.org/releases/juno</repo.eclipse.juno>
     <repo.eclipse.kepler>http://download.eclipse.org/releases/kepler</repo.eclipse.kepler>
     <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
+    <repo.eclipse.mars>http://download.eclipse.org/releases/mars</repo.eclipse.mars>
     <repo.ajdt.indigo>http://download.eclipse.org/tools/ajdt/37/update</repo.ajdt.indigo>
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
+    <repo.ajdt.mars>http://download.eclipse.org/tools/ajdt/45/dev/update</repo.ajdt.mars>
     <repo.equinox.launcher>http://downloads.typesafe.com/scalaide/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
     <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
@@ -42,8 +44,8 @@
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
     <scala.plugin.version>3.2.0</scala.plugin.version>
-    <aspectj.plugin.version>1.7</aspectj.plugin.version>
-    <aspectj.version>1.8.2</aspectj.version>
+    <aspectj.plugin.version>1.8</aspectj.plugin.version>
+    <aspectj.version>1.8.7</aspectj.version>
     <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
@@ -176,6 +178,18 @@
         <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
         <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
         <weaving.hook.plugin.version>1.1.100.weaving-hook-20140821</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <!-- Eclipse Mars -->
+      <id>eclipse-mars</id>
+      <properties>
+        <eclipse.codename>mars</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.mars}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.mars}</repo.ajdt>
+        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
+        <weaving.hook.plugin.version>1.1.100.v20140821-1915</weaving.hook.plugin.version>
       </properties>
     </profile>
 
