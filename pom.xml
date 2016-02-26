@@ -29,7 +29,7 @@
     <repo.ajdt.juno>http://download.eclipse.org/tools/ajdt/42/update</repo.ajdt.juno>
     <repo.ajdt.kepler>http://download.eclipse.org/tools/ajdt/43/update</repo.ajdt.kepler>
     <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
-    <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
+    <repo.equinox.launcher>http://downloads.typesafe.com/scalaide/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
     <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
 
@@ -92,7 +92,7 @@
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
-    <repo.scalariform>${repo.scala-ide.root}/scalariform-${scala.short.version}x</repo.scalariform>
+    <repo.scalariform>http://downloads.typesafe.com/scalaide/scalariform-${scala.short.version}x</repo.scalariform>
     <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>
