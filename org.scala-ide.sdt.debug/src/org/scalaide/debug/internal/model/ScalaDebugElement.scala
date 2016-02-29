@@ -25,11 +25,10 @@ import scala.util.control.Exception.Catch
 abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugElement(debugTarget) with ITerminate with HasLogger {
 
   // Members declared in org.eclipse.core.runtime.IAdaptable
-
-  override def getAdapter(adapter: Class[_]): Object = {
+  override def getAdapter[T](adapter: Class[T]): T = {
     adapter match {
       case ScalaDebugger.classIDebugModelProvider =>
-        modelProvider
+        modelProvider.asInstanceOf[T]
       case _ =>
         super.getAdapter(adapter)
     }
