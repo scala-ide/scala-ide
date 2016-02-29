@@ -16,6 +16,11 @@ class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEdit
 
   private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
 
+  override def dispose() = {
+    super.dispose()
+    implicitHighlighter.dispose()
+  }
+
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
     super.createPartControl(parent)
 

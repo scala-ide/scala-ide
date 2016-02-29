@@ -3,16 +3,15 @@
  */
 package org.scalaide.ui.internal.actions
 
+import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
-import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
+import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.commands.ICommandService
 import org.eclipse.ui.commands.IElementUpdater
-import org.eclipse.ui.PlatformUI
-import org.scalaide.core.IScalaPlugin
 import org.eclipse.ui.menus.UIElement
-import org.scalaide.ui.internal.editor.decorators.PropertyChangeListenerProxy
-import org.eclipse.core.commands.AbstractHandler
-import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.core.IScalaPlugin
 
 /** Base handler for a toggle command linked to a platform preference.
  *
@@ -24,45 +23,46 @@ import org.scalaide.util.eclipse.SWTUtils
  *  - https://bugs.eclipse.org/bugs/show_bug.cgi?id=154130#c27
  *  - http://wiki.eclipse.org/Menu_Contributions
  */
-abstract class AbstractToggleHandler(commandId: String, preferenceId: String) extends AbstractHandler with IElementUpdater {
+abstract class AbstractToggleHandler(commandId: String, preferenceId: String)
+    extends AbstractHandler
+    with IElementUpdater
+    with IPropertyChangeListener {
 
-  private def pluginStore: IPreferenceStore = IScalaPlugin().getPreferenceStore
+  prefStore.addPropertyChangeListener(this)
 
-  /** Call when the button is push.
-   */
-  def execute(event: ExecutionEvent): Object = {
+  override def execute(event: ExecutionEvent): Object = {
     toggle()
     null
   }
 
-  /** Update the UI element state according to the preference.
-   */
-  def updateElement(element: UIElement, parameters: java.util.Map[_, _]): Unit = {
+  override def updateElement(element: UIElement, parameters: java.util.Map[_, _]): Unit = {
     element.setChecked(isChecked)
   }
 
+  override def dispose() = {
+    super.dispose()
+    prefStore.removePropertyChangeListener(this)
+  }
+
+  override def propertyChange(event: PropertyChangeEvent): Unit = {
+    if (event.getProperty() == preferenceId)
+      refresh()
+  }
+
   private def isChecked: Boolean = {
-    pluginStore.getBoolean(preferenceId)
+    prefStore.getBoolean(preferenceId)
   }
 
   private def toggle(): Boolean = {
-    val newValue = !pluginStore.getBoolean(preferenceId)
-    pluginStore.setValue(preferenceId, newValue)
+    val newValue = !prefStore.getBoolean(preferenceId)
+    prefStore.setValue(preferenceId, newValue)
     newValue
   }
-
-  // listen change on the property regardless the source of the change (preferences page, widget linked to the handler)
-  private val _listener = SWTUtils.fnToPropertyChangeListener {
-    event =>
-      if (event.getProperty() == preferenceId) {
-        refresh()
-      }
-  }
-
-  PropertyChangeListenerProxy(_listener, pluginStore).autoRegister()
 
   private def refresh(): Unit = {
     val service = PlatformUI.getWorkbench().getService(classOf[ICommandService]).asInstanceOf[ICommandService]
     service.refreshElements(commandId, null)
   }
+
+  private def prefStore = IScalaPlugin().getPreferenceStore
 }

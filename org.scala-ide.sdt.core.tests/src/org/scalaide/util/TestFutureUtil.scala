@@ -10,7 +10,7 @@ import scala.concurrent.duration.DurationInt
 object TestFutureUtil {
   import scala.concurrent.ExecutionContext.Implicits.global
   import scala.concurrent.duration._
-  val DefaultTimeout = 200 millis
+  val DefaultTimeout = 1000 millis
 
   def whenReady[T](future: => Future[T], timeout: Duration = DefaultTimeout)(withal: T => Unit): Unit =
     withal(Await.result(future, timeout))
