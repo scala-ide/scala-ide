@@ -111,6 +111,11 @@ class ScalaSourceFileEditor
   setPartName("Scala Editor")
   setDocumentProvider(ScalaPlugin().documentProvider)
 
+  override def dispose() = {
+    super.dispose()
+    semanticHighlightingParticipants.exts foreach (_.dispose())
+  }
+
   override protected def createActions(): Unit = {
     super.createActions()
 
