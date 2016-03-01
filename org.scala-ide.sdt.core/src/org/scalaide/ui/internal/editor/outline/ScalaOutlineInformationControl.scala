@@ -17,6 +17,7 @@ import org.eclipse.ui.texteditor.AbstractTextEditor
 
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.util.eclipse.SWTUtils._
 
 /**
  * ScalaOutlineInformationControl is based on AbstractInformationControl and JavaOutlineInformationControl.
@@ -24,7 +25,10 @@ import org.scalaide.ui.internal.preferences.EditorPreferencePage
  * So, a big chunk of logic just translated to scala line by line.
  */
 final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeStyle: Int, commandId: String, editor: AbstractTextEditor)
-    extends PopupDialog(parent, shellStyle, true, true, false, true, true, null, null) with IInformationControl with IInformationControlExtension with IInformationControlExtension2 {
+    extends PopupDialog(parent, shellStyle, true, true, false, true, true, null, null)
+    with IInformationControl
+    with IInformationControlExtension
+    with IInformationControlExtension2 {
 
   private var namePattern: String = ""
   private val contentProvider = new ScalaOutlineContentProvider
@@ -129,7 +133,6 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
     treeViewer.getControl()
   }
 
-
   /** This is used to select the first match in the UI. */
   private var matchedNode: Option[Node] = None
 
@@ -146,7 +149,7 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
             nameMatch(n.name, namePattern) || n.children.values.exists { x => matchPattern(x) }
 
           case n: Node => nameMatch(n.name, namePattern)
-          case _ => false
+          case _       => false
         }
       }
       val node = element.asInstanceOf[Node]
@@ -251,12 +254,10 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
   private def installFilter() = {
     filterText.setText("")
 
-    filterText.addModifyListener(new ModifyListener() {
-      def modifyText(e: ModifyEvent) = {
-        val text = e.widget.asInstanceOf[Text].getText()
-        setMatcherString(text, true)
-      }
-    })
+    filterText.addModifyListener { (e: ModifyEvent) =>
+      val text = e.widget.asInstanceOf[Text].getText()
+      setMatcherString(text, true)
+    }
   }
 
   private def gotoSelectedElement() = {
@@ -310,7 +311,6 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
   }
 
   def fillViewMenu(viewMenu: IMenuManager) = {
-
     viewMenu.add(new Separator("Sorters"))
     viewMenu.add(new LexicalSortingAction(treeViewer))
     viewMenu.add(new PublicOnlyAction(contentProvider, treeViewer))
