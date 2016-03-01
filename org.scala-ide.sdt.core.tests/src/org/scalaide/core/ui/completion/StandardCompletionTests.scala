@@ -1,9 +1,9 @@
 package org.scalaide.core.ui.completion
 
 import org.junit.Test
+import org.scalaide.core.FlakyTest
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.core.FlakyTest
 
 object StandardCompletionTests extends CompletionTests
 class StandardCompletionTests {
@@ -154,7 +154,7 @@ class StandardCompletionTests {
   """ after Completion("forall(p: Char => Boolean): Boolean")
 
   @Test
-  def completeJavaType() = """
+  def completeJavaType() = FlakyTest.retry("completeJavaType") { """
     class Ticket1000476 {
       val a = new ArrayLis^
     }
@@ -169,6 +169,7 @@ class StandardCompletionTests {
           "ArrayList - java.util.Arrays",
           "ArrayList - java.util",
           "ArrayLister"))
+  }
 
   @Test
   def completeJavaTypeWithFullyQualifiedIdent() = """
