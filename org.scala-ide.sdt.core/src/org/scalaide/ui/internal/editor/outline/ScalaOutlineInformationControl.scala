@@ -1,49 +1,34 @@
 package org.scalaide.ui.internal.editor.outline
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.jface.viewers.TreeViewer
-import org.eclipse.jface.viewers.ViewerFilter
-import org.eclipse.jface.viewers.Viewer
-import org.eclipse.swt.SWT
-import org.eclipse.swt.events.KeyEvent
-import org.eclipse.swt.events.MouseEvent
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.events.MouseAdapter
-import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.swt.widgets.Text
-import org.eclipse.swt.widgets.Tree
-import org.eclipse.swt.widgets.TreeItem
-import org.eclipse.jface.viewers.AbstractTreeViewer
+
+import org.eclipse.jface.action.IMenuManager
+import org.eclipse.jface.action.Separator
+import org.eclipse.jface.dialogs.Dialog
+import org.eclipse.jface.dialogs.PopupDialog
 import org.eclipse.jface.text.IInformationControl
 import org.eclipse.jface.text.IInformationControlExtension
 import org.eclipse.jface.text.IInformationControlExtension2
-import org.eclipse.jface.dialogs.PopupDialog
-import org.eclipse.swt.events.ModifyListener
-import org.eclipse.swt.events.ModifyEvent
+import org.eclipse.jface.viewers._
+import org.eclipse.swt.SWT
+import org.eclipse.swt.events._
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.widgets.Composite
-import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.events.KeyListener
-import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.events.MouseMoveListener
-import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.jface.dialogs.Dialog
+import org.eclipse.swt.widgets._
 import org.eclipse.ui.texteditor.AbstractTextEditor
-import org.eclipse.jface.action.IMenuManager
-import org.eclipse.jface.action.Separator
+
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.util.eclipse.SWTUtils._
 
 /**
  * ScalaOutlineInformationControl is based on AbstractInformationControl and JavaOutlineInformationControl.
  * AbstractInformationControl has private members written against Java model, which makes impossible to use this class as a base class.
  * So, a big chunk of logic just translated to scala line by line.
  */
-
 final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeStyle: Int, commandId: String, editor: AbstractTextEditor)
-    extends PopupDialog(parent, shellStyle, true, true, false, true, true, null, null) with IInformationControl with IInformationControlExtension with IInformationControlExtension2 {
+    extends PopupDialog(parent, shellStyle, true, true, false, true, true, null, null)
+    with IInformationControl
+    with IInformationControlExtension
+    with IInformationControlExtension2 {
 
   private var namePattern: String = ""
   private val contentProvider = new ScalaOutlineContentProvider
@@ -148,17 +133,32 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
     treeViewer.getControl()
   }
 
+  /** This is used to select the first match in the UI. */
+  private var matchedNode: Option[Node] = None
+
   class NameFilter extends ViewerFilter {
     override def select(viewer: Viewer, parentElement: Object, element: Object): Boolean = {
+
+      def nameMatch(name: String, pattern: String): Boolean =
+        name.toLowerCase().contains(pattern.toLowerCase())
+
       def matchPattern(node: Any): Boolean = {
         node match {
           case n: RootNode => true
-          case n: ContainerNode => n.name.contains(namePattern) || n.children.values.exists { x => matchPattern(x) }
-          case n: Node => n.name.contains(namePattern)
-          case _ => false
+          case n: ContainerNode =>
+            nameMatch(n.name, namePattern) || n.children.values.exists { x => matchPattern(x) }
+
+          case n: Node => nameMatch(n.name, namePattern)
+          case _       => false
         }
       }
-      matchPattern(element)
+      val node = element.asInstanceOf[Node]
+      val matched = matchPattern(element)
+
+      if (matched) {
+        matchedNode = Some(node)
+      }
+      matched
     }
   }
 
@@ -173,8 +173,24 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
     treeViewer.getControl().setRedraw(false)
     treeViewer.refresh()
     treeViewer.expandAll()
-    //selectFirstMatch();
+    selectMatchedNode();
     treeViewer.getControl().setRedraw(true)
+  }
+
+  private def selectMatchedNode(): Unit = {
+    def findElement(node: Node, items: Array[TreeItem]): Option[TreeItem] = {
+      if (items.isEmpty)
+        None
+      else
+        items.find { x => x.getData == node } orElse findElement(node, items.flatMap(_.getItems))
+    }
+
+    for {
+      node <- matchedNode
+      treeItem <- findElement(node, treeViewer.getTree.getItems)
+    } {
+      treeViewer.getTree.setSelection(treeItem)
+    }
   }
 
   def setInput(input: Any): Unit = {
@@ -238,12 +254,10 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
   private def installFilter() = {
     filterText.setText("")
 
-    filterText.addModifyListener(new ModifyListener() {
-      def modifyText(e: ModifyEvent) = {
-        val text = e.widget.asInstanceOf[Text].getText()
-        setMatcherString(text, true)
-      }
-    })
+    filterText.addModifyListener { (e: ModifyEvent) =>
+      val text = e.widget.asInstanceOf[Text].getText()
+      setMatcherString(text, true)
+    }
   }
 
   private def gotoSelectedElement() = {
@@ -253,15 +267,16 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
         editor.selectAndReveal(n.start, n.end - n.start)
       case _ =>
     }
+
     if (selectedElement ne null) {
-
       dispose()
-
     }
   }
+
   def getSelectedElement() = {
     treeViewer.getSelection().asInstanceOf[IStructuredSelection].getFirstElement
   }
+
   def createFilterText(parent: Composite): Text = {
     filterText = new Text(parent, SWT.NONE)
     Dialog.applyDialogFont(filterText)
@@ -296,7 +311,6 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
   }
 
   def fillViewMenu(viewMenu: IMenuManager) = {
-
     viewMenu.add(new Separator("Sorters"))
     viewMenu.add(new LexicalSortingAction(treeViewer))
     viewMenu.add(new PublicOnlyAction(contentProvider, treeViewer))
