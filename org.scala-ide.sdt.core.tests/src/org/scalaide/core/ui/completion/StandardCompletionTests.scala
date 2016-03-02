@@ -1,5 +1,6 @@
 package org.scalaide.core.ui.completion
 
+import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.core.FlakyTest
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -153,8 +154,9 @@ class StandardCompletionTests {
     }
   """ after Completion("forall(p: Char => Boolean): Boolean")
 
+  @Ignore("This test nearly always fails on Scala PR validation. Disabled for an indefinite time.")
   @Test
-  def completeJavaType() = FlakyTest.retry("completeJavaType") { """
+  def completeJavaType() = { """
     class Ticket1000476 {
       val a = new ArrayLis^
     }
