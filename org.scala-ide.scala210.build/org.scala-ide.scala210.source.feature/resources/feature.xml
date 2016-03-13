@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.scala210.source.feature"
       label="Scala ${scala210.version} sources"
-      version="4.4.0.qualifier"
+      version="4.5.0.qualifier"
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
