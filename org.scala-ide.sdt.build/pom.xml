@@ -11,7 +11,7 @@
   <packaging>pom</packaging>
   <version>4.4.0-SNAPSHOT</version>
 
-  <!-- scm configuration is require to extract the github hash-->
+  <!-- scm configuration is required to extract the github hash-->
   <scm>
     <connection>scm:git://github.com/scala-ide/scala-ide.git</connection>
     <url>https://github.com/scala-ide/scala-ide</url>
