@@ -154,7 +154,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
         mapModifiers(td.mods),
         packageName.toString.toCharArray,
         td.name.toChars,
-        Array.empty,
+        enclClassNames.reverse.toArray,
         Array.empty,
         Array.empty,
         Array.empty,
