@@ -6,6 +6,14 @@ import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.completion.CompletionProposal
+import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
+import org.scalaide.core.testsetup.BlockingProgressMonitor
+import org.eclipse.core.resources.IResource
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.eclipse.core.runtime.NullProgressMonitor
+import scala.reflect.internal.util.SourceFile
+import org.eclipse.core.resources.IncrementalProjectBuilder
 
 /**
  * This provides a test suite for the code completion functionality.
@@ -27,6 +35,11 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
    *        two parameter lists that both take an `Int` or `foo(): Int - a.b.Type`
    *        for a function that has a zero arg parameter list, returns `Int` and
    *        is located in `a.b.Type`.
+   *
+   *        Use an empty string if you only want to check the suggested completions.
+   *        (Making this argument an `Option` might be cleaner, but then all tests
+   *        that use this parameter would have to wrap it in `Some(...)`, unless
+   *        we declare apply functions, which has its own drawbacks.)
    * @param enableOverwrite
    *        If `true` the completion overwrite feature is enabled
    * @param expectedCompletions
@@ -40,23 +53,41 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
    *        proposal order
    */
   case class Completion(
-      completionToApply: String,
+      completionToApply: String = "",
       enableOverwrite: Boolean = false,
       expectedCompletions: Seq[String] = Nil,
       expectedNumberOfCompletions: Int = -1,
-      respectOrderOfExpectedCompletions: Boolean = false)
+      respectOrderOfExpectedCompletions: Boolean = false,
+      sourcesToPreload: Seq[String] = Nil)
         extends Operation {
 
     override def execute() = {
-      val unit = mkScalaCompilationUnit(doc.get())
+      def basename(path: String) = {
+        path.split("/").last
+      }
 
-      val src = unit.sourceMap(doc.get.toCharArray()).sourceFile
+      def lastIndexBuilderTraversals: Seq[String] = withCompiler {
+        case indexBuilder: ScalaIndexBuilder => indexBuilder.lastIndexBuilderTraversals
+      }.get
 
-      // first, 'open' the file by telling the compiler to load it
-      unit.scalaProject.presentationCompiler { compiler =>
-        compiler.askReload(List(unit)).get
+      def loadCompilationUnit(input: String) = {
+        val unit = mkScalaCompilationUnit(input)
+        unit
+      }
 
-        compiler.askLoadedTyped(src, false).get
+      val preloadedUnits = sourcesToPreload.map(loadCompilationUnit)
+      val unit = loadCompilationUnit(source)
+      val filesToIndex = preloadedUnits.map(_.file.canonicalPath).toSet
+
+      def filesNotYetIndexed: Set[String] = {
+        filesToIndex.diff(lastIndexBuilderTraversals.toSet)
+      }
+
+      SDTTestUtils.buildWorkspace()
+
+      while(filesNotYetIndexed.nonEmpty) {
+        println(s"Waiting for ${filesNotYetIndexed.map(basename)} to be indexed (already indexed ${lastIndexBuilderTraversals.map(basename)})...")
+        Thread.sleep(250)
       }
 
       val completions = new ScalaCompletions()
@@ -79,8 +110,6 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
           case index => Some(completions.apply(index))
         }
 
-      val completion = findCompletion(completionToApply)
-
       val missingCompletions = expectedCompletions.filter(c => findCompletion(c).isEmpty)
       if (missingCompletions.nonEmpty)
         throw new ComparisonFailure("There are expected completions that do not exist.", missingCompletions.mkString("\n"), completionList)
@@ -102,21 +131,46 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
             s"${completions.size} completions found:\n\n$completionList")
       }
 
-      completion.fold(
-          throw new ComparisonFailure(
-              s"The completion '$completionToApply' does not exist.", completionToApply, completionList)) {
-        completion => completion.applyCompletionToDocument(doc, unit, caretOffset, enableOverwrite) foreach {
-          case (cursorPos, applyLinkedMode) =>
-            caretOffset =
-              if (!applyLinkedMode)
-                cursorPos
-              else
-                applyLinkedModel(doc, cursorPos, completion.linkedModeGroups)
+      if (completionToApply.nonEmpty) {
+        val completion = findCompletion(completionToApply)
+
+        completion.fold(
+            throw new ComparisonFailure(
+                s"The completion '$completionToApply' does not exist.", completionToApply, completionList)) {
+          completion => completion.applyCompletionToDocument(doc, unit, caretOffset, enableOverwrite) foreach {
+            case (cursorPos, applyLinkedMode) =>
+              caretOffset =
+                if (!applyLinkedMode)
+                  cursorPos
+                else
+                  applyLinkedModel(doc, cursorPos, completion.linkedModeGroups)
+          }
         }
+
       }
 
-      // unload given unit, otherwise the compiler will keep type-checking it together with the other tests
-      unit.scalaProject.presentationCompiler(_.discardCompilationUnit(unit))
+      // Clean up so that subsequent tests find an empty environment:
+      val unitsToDelete = (unit +: preloadedUnits)
+      val sourceFilesToDelete = unitsToDelete.map(_.lastSourceMap().sourceFile)
+
+      project.presentationCompiler(_.askFilesDeleted(sourceFilesToDelete.toList).get)
+      unitsToDelete.foreach(_.resource().delete(true, new NullProgressMonitor()))
+    }
+  }
+
+  implicit class CompletionTestExpectationOps(source: String) {
+    def expectCompletions(completions: Seq[String]) = {
+      source.isNotModified.after(Completion(expectedCompletions = completions, sourcesToPreload = sourcesToPreload))
+    }
+
+    def sourcesToPreload: Seq[String] = Nil
+  }
+
+  implicit class CompletionTestSetupOps(sourceToPreload: String) {
+    def andInSeparateFile(otherSource: String) = {
+      new CompletionTestExpectationOps(otherSource) {
+        override def sourcesToPreload = Seq(sourceToPreload)
+      }
     }
   }
 }
