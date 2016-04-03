@@ -1,9 +1,12 @@
 package org.scalaide.core.internal.hyperlink
 
+import scala.collection.mutable.ListBuffer
+
 import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.hyperlink.IHyperlink
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 
 private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
 
@@ -23,15 +26,18 @@ private class ImplicitHyperlinkDetector extends BaseHyperlinkDetector {
     import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitConversionAnnotation
     import org.scalaide.util.eclipse.EditorUtils
 
-    var hyperlinks = List[IHyperlink]()
-
-    for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, offset)) ann match {
-      case a: ImplicitConversionAnnotation if a.sourceLink.isDefined =>
-        hyperlinks = a.sourceLink.get :: hyperlinks
-      case _ => ()
+    val hyperlinks = ListBuffer[IHyperlink]()
+    editor match {
+      case icuEditor: InteractiveCompilationUnitEditor =>
+        for ((ann, pos) <- EditorUtils.getAnnotationsAtOffset(editor, offset)) ann match {
+          case a: ImplicitConversionAnnotation =>
+            hyperlinks ++= a.sourceLink(icuEditor)
+          case _ => ()
+        }
+      case _ =>
     }
 
-    hyperlinks
+    hyperlinks.toList
   }
 }
 
