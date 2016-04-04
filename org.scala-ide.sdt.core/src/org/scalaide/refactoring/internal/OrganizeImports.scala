@@ -275,7 +275,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
         }
       }
 
-      new refactoring.RefactoringParameters(options = options, deps = deps)
+      new refactoring.RefactoringParameters(options = options, deps = deps, organizeLocalImports = shouldOrganizeLocalImports(project))
     }
   }
 

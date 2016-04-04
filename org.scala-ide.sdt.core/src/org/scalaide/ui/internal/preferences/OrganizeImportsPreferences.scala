@@ -22,7 +22,9 @@ class OrganizeImportsPreferencesPage extends FieldEditors {
 
   override def createContents(parent: Composite): Control = {
     initUnderlyingPreferenceStore(SdtConstants.PluginId, IScalaPlugin().getPreferenceStore)
-    mkMainControl(parent)(createEditors)
+    val oiControl = mkMainControl(parent)(createEditors)
+    oiControl.pack()
+    oiControl
   }
 
   def createEditors(control: Composite): Unit = {
@@ -63,6 +65,12 @@ class OrganizeImportsPreferencesPage extends FieldEditors {
       new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 1, options, parent, true) {
         allEnableDisableControls += getRadioBoxControl(parent)
         allEnableDisableControls ++= getRadioBoxControl(parent).getChildren
+      }
+    }
+
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
+      new BooleanFieldEditor(organizeLocalImportsKey, "Organize imports in classes, objects, traits and methods", parent) {
+        allEnableDisableControls += getChangeControl(parent)
       }
     }
 
@@ -120,6 +128,7 @@ object OrganizeImportsPreferences extends Enumeration {
   val groupsKey         = "organizeimports.groups"
   val wildcardsKey      = "organizeimports.wildcards"
   val expandCollapseKey = "organizeimports.expandcollapse"
+  val organizeLocalImportsKey = "organizeImports.local"
 
   val omitScalaPackage = "organizeimports.scalapackage"
 
@@ -137,6 +146,10 @@ object OrganizeImportsPreferences extends Enumeration {
 
   def shouldOmitScalaPackage(project: IProject) = {
     getPreferenceStore(project).getBoolean(omitScalaPackage)
+  }
+
+  def shouldOrganizeLocalImports(project: IProject) = {
+    getPreferenceStore(project).getBoolean(organizeLocalImportsKey)
   }
 
   def getWildcardImportsForProject(project: IProject) = {
@@ -159,6 +172,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
   override def initializeDefaultPreferences(): Unit = {
     val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
     node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
+    node.put(OrganizeImportsPreferences.organizeLocalImportsKey, "true")
     node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
     node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")
     node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)
