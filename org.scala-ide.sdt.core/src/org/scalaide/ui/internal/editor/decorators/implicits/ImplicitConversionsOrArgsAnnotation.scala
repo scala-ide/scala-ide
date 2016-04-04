@@ -35,7 +35,7 @@ class ImplicitConversionAnnotation(pos: Position, region: IRegion, text: String)
         while (sourcefile.content(offset).isWhitespace)
           offset += 1
         val start = offset
-        while (sourcefile.content(offset) != '\n')
+        while (!sourcefile.isEndOfLine(offset))
           offset += 1
         compiler.rangePos(sourcefile, start, start, offset)
       }
