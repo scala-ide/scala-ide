@@ -19,10 +19,9 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbtrc.version>0.3.4</sbtrc.version>
+    <sbtrc.version>0.3.5</sbtrc.version>
     <pickling.version>0.10.0</pickling.version>
-    <akka.version>2.3.13</akka.version>
-    <akka.stream.version>1.0</akka.stream.version>
+    <akka.version>2.4.2</akka.version>
     <reactive.stream.version>1.0.0</reactive.stream.version>
     <config.version>1.2.1</config.version>
     <parser.combinators.version>1.0.2</parser.combinators.version>
@@ -41,8 +40,8 @@
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-stream-experimental_2.11</artifactId>
-      <version>${akka.stream.version}</version>
+      <artifactId>akka-stream_2.11</artifactId>
+      <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>

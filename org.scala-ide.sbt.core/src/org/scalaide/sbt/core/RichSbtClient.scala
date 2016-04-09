@@ -15,6 +15,7 @@ import sbt.client.Interaction
 import sbt.client.SbtClient
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ScopedKey
+import akka.NotUsed
 
 /**
  * Wrapper around [[sbt.client.SbtClient]] to provide more functionality.
@@ -29,7 +30,7 @@ class RichSbtClient(private[core] val client: SbtClient) {
    * Retrieves elements that get send to [[sbt.client.SbtClient.watchBuild]] by
    * a Source.
    */
-  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure, Unit] = {
+  def watchBuild()(implicit ctx: ExecutionContext): Source[MinimalBuildStructure, NotUsed] = {
     SourceUtils.fromEventStream[MinimalBuildStructure] { subs ⇒
       val c = client.watchBuild { b ⇒
         subs.onNext(b)
@@ -61,7 +62,7 @@ class RichSbtClient(private[core] val client: SbtClient) {
   def requestExecution(commandOrTask: String, interaction: Option[(Interaction, ExecutionContext)] = None): Future[Long] =
     client.requestExecution(commandOrTask, interaction)
 
-  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A], Unit] = {
+  private def watchKey[A : Unpickler, KP[_] : KeyProvider](key: KP[A])(implicit ctx: ExecutionContext): Source[Out[A], NotUsed] = {
     SourceUtils.fromEventStream[Out[A]] { subs ⇒
       val cancellation = implicitly[KeyProvider[KP]].watch(key) { (key, res) ⇒
         val elem = res map (key → _)

@@ -9,6 +9,7 @@ import org.reactivestreams.Subscription
 
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
+import akka.NotUsed
 
 object SourceUtils {
 
@@ -32,8 +33,8 @@ object SourceUtils {
    * need to be sent to `subs`, which needs to return a function that allows the
    * `Source` to cancel the event stream.
    */
-  def fromEventStream[A](subs: Subscriber[_ >: A] ⇒ () ⇒ Unit): Source[A, Unit] = {
-    Source(new Publisher[A] {
+  def fromEventStream[A](subs: Subscriber[_ >: A] ⇒ () ⇒ Unit): Source[A, NotUsed] = {
+    Source.fromPublisher(new Publisher[A] {
       var cancellation: () ⇒ Unit = _
       override def subscribe(s: Subscriber[_ >: A]): Unit = {
         s.onSubscribe(new Subscription {

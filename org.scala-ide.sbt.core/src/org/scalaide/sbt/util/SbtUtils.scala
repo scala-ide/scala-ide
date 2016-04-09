@@ -5,6 +5,7 @@ import scala.concurrent.ExecutionContext
 import akka.stream.scaladsl.Source
 import sbt.client.SbtClient
 import sbt.protocol.Event
+import akka.NotUsed
 
 object SbtUtils {
 
@@ -19,7 +20,7 @@ object SbtUtils {
    * Retrieves a `Source` that gets its elements from `client`. All events that
    * are subtypes of `A` are fed into the returned `Source`.
    */
-  def protocolEventWatcher[A <: Event : reflect.ClassTag](client: SbtClient)(implicit ctx: ExecutionContext): Source[A, Unit] = {
+  def protocolEventWatcher[A <: Event : reflect.ClassTag](client: SbtClient)(implicit ctx: ExecutionContext): Source[A, NotUsed] = {
     SourceUtils.fromEventStream { subs ⇒
       val cancellation = client handleEvents {
         case e: A ⇒ subs.onNext(e)

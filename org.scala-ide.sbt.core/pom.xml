@@ -62,11 +62,11 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-stream-experimental_2.11</artifactId>
+                  <artifactId>akka-stream_2.11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-stream-experimental_2.11</artifactId>
+                  <artifactId>akka-stream_2.11</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
