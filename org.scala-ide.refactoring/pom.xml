@@ -17,7 +17,7 @@
   <dependencies>
     <dependency>
       <groupId>org.scala-refactoring</groupId>
-      <artifactId>org.scala-refactoring.library_${scala.minor.version}</artifactId>
+      <artifactId>org.scala-refactoring.library_${scala.version}</artifactId>
       <version>${scala-refactoring.version}</version>
     </dependency>
   </dependencies>
