@@ -84,7 +84,8 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
    */
   def clearDebugView(): Unit = {
     setInputSafely(null)
-    viewer.getTable.removeAll()
+    if (!viewer.getTable.isDisposed())
+      viewer.getTable.removeAll()
     currentFrame = None
   }
 
@@ -215,7 +216,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
     def loadFadingPackages = {
       val pkgs = store.getString(AsyncDebuggerPreferencePage.FadingPackages)
-      pkgs.split(',').toSet
+      pkgs.split(AsyncDebuggerPreferencePage.DataDelimiter).toSet
     }
 
     def loadFadingColor = {

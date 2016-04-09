@@ -52,8 +52,6 @@ import org.scalaide.ui.internal.editor.spelling.ScalaSpellingEngine
 import org.scalaide.ui.internal.editor.spelling.SpellingReconcileStrategy
 import org.scalaide.ui.internal.editor.spelling.SpellingService
 import org.scalaide.ui.internal.reconciliation.ScalaReconcilingStrategy
-import org.scalaide.ui.syntax.{ScalaSyntaxClasses => SSC}
-import scalariform.ScalaVersions
 import scalariform.formatter.preferences._
 import org.scalaide.core.internal.ScalaPlugin
 import org.eclipse.jface.util.IPropertyChangeListener
@@ -61,6 +59,18 @@ import org.scalaide.core.lexical.ScalaCodeScanners
 import org.scalaide.core.lexical.ScalaPartitions
 import org.scalaide.ui.editor.hover.IScalaHover
 import org.scalaide.ui.internal.reconciliation.ScalaReconciler
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineReconcilingStrategy
+import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineInformationControl
+import org.eclipse.jface.text.information.IInformationPresenter
+import org.eclipse.jface.text.IInformationControlCreator
+import org.eclipse.swt.SWT
+import org.eclipse.jdt.ui.actions.IJavaEditorActionDefinitionIds
+import org.eclipse.jface.text.AbstractInformationControlManager
+import org.scalaide.ui.internal.editor.outline.ScalaOutlineModelProvider
+import org.scalaide.util.eclipse.EditorUtils
+import org.eclipse.jface.text.reconciler.IReconcilingStrategy
+import org.scalaide.ui.internal.preferences.ScalaPreferences
 
 class ScalaSourceViewerConfiguration(
   javaPreferenceStore: IPreferenceStore,
@@ -73,10 +83,29 @@ class ScalaSourceViewerConfiguration(
       IJavaPartitions.JAVA_PARTITIONING) with IPropertyChangeListener {
 
   private val combinedPrefStore = new ChainedPreferenceStore(
-      Array(scalaPreferenceStore, javaPreferenceStore))
+    Array(scalaPreferenceStore, javaPreferenceStore))
 
   private val codeHighlightingScanners = ScalaCodeScanners.codeHighlightingScanners(combinedPrefStore)
 
+  private def getOutlinePresenterControlCreator(sourceViewer: ISourceViewer, commandId: String): IInformationControlCreator =
+    new IInformationControlCreator {
+      override def createInformationControl(parent: Shell): IInformationControl = {
+        val shellStyle = SWT.RESIZE
+        val treeStyle = SWT.V_SCROLL | SWT.H_SCROLL
+        new ScalaOutlineInformationControl(parent, shellStyle, treeStyle, commandId, editor.asInstanceOf[OutlinePageEditorExtension])
+      }
+    }
+
+  override def getOutlinePresenter(sourceViewer: ISourceViewer, doCodeResolve: Boolean): IInformationPresenter = {
+
+    val presenter = new InformationPresenter(getOutlinePresenterControlCreator(sourceViewer, IJavaEditorActionDefinitionIds.SHOW_OUTLINE))
+    presenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
+    presenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL)
+    val provider = new ScalaOutlineModelProvider(editor.asInstanceOf[ScalaCompilationUnitEditor])
+    getConfiguredContentTypes(sourceViewer).foreach { presenter.setInformationProvider(provider, _) }
+    presenter.setSizeConstraints(50, 20, true, false)
+    presenter
+  }
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
     combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 
@@ -125,9 +154,7 @@ class ScalaSourceViewerConfiguration(
    * but they also can't apply there Java hover specific configurations
    * anymore.
    */
-  private val annotationHover = new DefaultAnnotationHover(/* showLineNumber */ false)
-      with IAnnotationHoverExtension
-      with HtmlHover {
+  private val annotationHover = new DefaultAnnotationHover( /* showLineNumber */ false) with IAnnotationHoverExtension with HtmlHover {
 
     override def isIncluded(a: Annotation) =
       isShowInVerticalRuler(a)
@@ -198,23 +225,40 @@ class ScalaSourceViewerConfiguration(
    * Creates a reconciler with a delay of 500ms.
    */
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
+    reconciler
+
+  lazy val reconciler = {
     // the editor is null for the Syntax coloring previewer pane (so no reconciliation)
     Option(editor).map { editor =>
       val s = new CompositeReconcilingStrategy
-      s.setReconcilingStrategies(Array(
-          new ScalaReconcilingStrategy(editor),
-          new SpellingReconcileStrategy(
-              editor,
-              editor.getViewer(),
-              new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
-              ScalaPlugin().scalaSourceFileContentType,
-              EditorsUI.getPreferenceStore())))
+
+      val fileInSourcePath = (for {
+        f <- EditorUtils.file(editor)
+        scalaProject <- IScalaPlugin().asScalaProject(f.getProject)
+      } yield
+        scalaProject.allSourceFiles().contains(f)).getOrElse(false)
+
+      val baseReconcilers: Array[IReconcilingStrategy] = Array(
+        new ScalaOutlineReconcilingStrategy(editor.asInstanceOf[OutlinePageEditorExtension]),
+        new SpellingReconcileStrategy(
+          editor,
+          editor.getViewer(),
+          new SpellingService(EditorsUI.getPreferenceStore(), new ScalaSpellingEngine),
+          ScalaPlugin().scalaSourceFileContentType,
+          EditorsUI.getPreferenceStore()))
+
+      s.setReconcilingStrategies(
+        if (fileInSourcePath)
+          new ScalaReconcilingStrategy(editor) +: baseReconcilers
+        else
+          baseReconcilers)
 
       val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
-      reconciler.setDelay(500)
+      reconciler.setDelay(IScalaPlugin().getPreferenceStore.getInt(ScalaPreferences.ReconcilerDelayId))
       reconciler.setProgressMonitor(new NullProgressMonitor())
       reconciler
     }.orNull
+  }
 
   override def getPresentationReconciler(sourceViewer: ISourceViewer): ScalaPresentationReconciler = {
     val reconciler = new ScalaPresentationReconciler()
@@ -248,8 +292,8 @@ class ScalaSourceViewerConfiguration(
 
     (provider, input) match {
       case (icudp: ICompilationUnitDocumentProvider, _) => icudp getWorkingCopy input
-      case (_, icfei: IClassFileEditorInput)            => icfei.getClassFile
-      case _                                            => null
+      case (_, icfei: IClassFileEditorInput) => icfei.getClassFile
+      case _ => null
     }
   }
 
@@ -308,6 +352,11 @@ class ScalaSourceViewerConfiguration(
   override def handlePropertyChangeEvent(event: PropertyChangeEvent): Unit = {
     super.handlePropertyChangeEvent(event)
     codeHighlightingScanners.values foreach (_ adaptToPreferenceChange event)
+    event.getProperty match {
+      case ScalaPreferences.ReconcilerDelayId ⇒
+        reconciler.setDelay(event.getNewValue.toString.toInt)
+      case _ ⇒
+    }
   }
 
   override def propertyChange(event: PropertyChangeEvent): Unit = {

@@ -14,6 +14,7 @@ import org.scalaide.core.completion.ScalaJavaCompletionTests
 import org.scalaide.core.findreferences.FindReferencesTests
 import org.scalaide.core.hyperlink.HyperlinkDetectorTests
 import org.scalaide.core.hyperlink.ScalaWordFinderTest
+import org.scalaide.core.interpreter.EclipseReplTest
 import org.scalaide.core.jcompiler.AbstractMethodVerifierTest
 import org.scalaide.core.launching.MainClassVerifierTest
 import org.scalaide.core.launching.RunAsTest
@@ -26,6 +27,7 @@ import org.scalaide.core.pc.PresentationCompilerRefreshTest
 import org.scalaide.core.pc.PresentationCompilerTest
 import org.scalaide.core.project.DirectoryScalaInstallationTest
 import org.scalaide.core.project.ScalaInstallationTest
+import org.scalaide.core.sbtbuilder.BuildScopeUnitsTest
 import org.scalaide.core.sbtbuilder.DeprecationWarningsTests
 import org.scalaide.core.sbtbuilder.JavaDependsOnScalaBothAreOkTest
 import org.scalaide.core.sbtbuilder.JavaDependsOnScalaTest
@@ -33,6 +35,7 @@ import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.sbtbuilder.MultipleErrorsTest
 import org.scalaide.core.sbtbuilder.NameHashingVulnerabilityTest
 import org.scalaide.core.sbtbuilder.NestedProjectsTest
+import org.scalaide.core.sbtbuilder.NonScalaSourceErrorMarkersTest
 import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
 import org.scalaide.core.sbtbuilder.SbtBuilderTest
@@ -50,6 +53,7 @@ import org.scalaide.core.semantichighlighting.classifier.SymbolClassifierTestSui
 import org.scalaide.core.structurebuilder.ScalaJavaMapperTest
 import org.scalaide.core.structurebuilder.StructureBuilderTest
 import org.scalaide.core.text.TextTestSuite
+import org.scalaide.core.ui.OutlineModelTest
 import org.scalaide.core.ui.ScalaTemplateContextTest
 import org.scalaide.core.ui.UITestSuite
 import org.scalaide.core.ui.completion.CompletionTestSuite
@@ -63,6 +67,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
   Array(
+    classOf[BuildScopeUnitsTest],
     classOf[ProjectsCleanJobTest],
     classOf[ClasspathTests],
     classOf[ClasspathContainersTests],
@@ -73,7 +78,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[ScalaJavaCompletionTests],
     classOf[FindReferencesTests],
     classOf[HyperlinkDetectorTests],
-    // classOf[scala.tools.eclipse.interpreter.EclipseReplTest], // see comments there
+    classOf[EclipseReplTest],
     classOf[AbstractMethodVerifierTest],
     classOf[MainClassVerifierTest],
     classOf[ScalaDocumentPartitionerTest],
@@ -120,6 +125,8 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[NameHashingVulnerabilityTest],
     classOf[JavaDependsOnScalaTest],
     classOf[JavaDependsOnScalaBothAreOkTest],
-    classOf[ScopeCompileConfigurationTest]
+    classOf[ScopeCompileConfigurationTest],
+    classOf[OutlineModelTest],
+    classOf[NonScalaSourceErrorMarkersTest]
 ))
 class TestsSuite

@@ -52,7 +52,7 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
     checkBox(P_ENABLE_AUTO_BREAKING_COMMENTS, "Automatically break multi-line comments and Scaladoc after the Print Margin", typing)
 
     val indent = group("Indentation", base)
-    checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Enable auto indent when tab is pressed", indent)
+    checkBox(P_ENABLE_AUTO_INDENT_ON_TAB, "Automatically indent when tab is pressed", indent)
     checkBox(P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING, "Enable auto indent for multi line string literals", indent)
     checkBox(P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING, "Automatically add strip margins when multi line string starts with a |", indent)
 
@@ -62,6 +62,12 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 
     val completion = group("Completion", base)
     checkBox(P_ENABLE_HOF_COMPLETION, "Always insert lambdas when completing higher-order functions", completion)
+
+    val outline = group("Outline", base)
+    checkBox(P_INITIAL_IMPORT_FOLD, "Fold import nodes by default", outline)
+
+    val refactoring = group("Refactoring", base)
+    checkBox(SPACES_AROUND_IMPORT_BLOCKS, "Add spaces around braces in multi-import block", refactoring)
 }
 
   private def group(text: String, parent: Composite): Group = {
@@ -98,23 +104,24 @@ class EditorPreferencePage extends PreferencePage with IWorkbenchPreferencePage 
 }
 
 object EditorPreferencePage {
-  private final val BASE = "scala.tools.eclipse.editor."
+  final val P_ENABLE_AUTO_CLOSING_COMMENTS = "scala.tools.eclipse.editor.autoClosingComments"
+  final val P_ENABLE_AUTO_ESCAPE_LITERALS = "scala.tools.eclipse.editor.autoEscapeLiterals"
+  final val P_ENABLE_AUTO_ESCAPE_SIGN = "scala.tools.eclipse.editor.autoEscapeSign"
+  final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = "scala.tools.eclipse.editor.autoRemoveEscapedSign"
+  final val P_ENABLE_AUTO_INDENT_ON_TAB = "scala.tools.eclipse.editor.autoIndent"
+  final val P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING = "scala.tools.eclipse.editor.autoIndentMultiLineString"
+  final val P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING = "scala.tools.eclipse.editor.autoStringMarginInMultiLineString"
+  final val P_ENABLE_AUTO_BREAKING_COMMENTS = "scala.tools.eclipse.editor.autoBreakingComments"
 
-  final val P_ENABLE_AUTO_CLOSING_COMMENTS = BASE + "autoClosingComments"
-  final val P_ENABLE_AUTO_ESCAPE_LITERALS = BASE + "autoEscapeLiterals"
-  final val P_ENABLE_AUTO_ESCAPE_SIGN = BASE + "autoEscapeSign"
-  final val P_ENABLE_AUTO_REMOVE_ESCAPED_SIGN = BASE + "autoRemoveEscapedSign"
-  final val P_ENABLE_AUTO_INDENT_ON_TAB = BASE + "autoIndent"
-  final val P_ENABLE_AUTO_INDENT_MULTI_LINE_STRING = BASE + "autoIndentMultiLineString"
-  final val P_ENABLE_AUTO_STRIP_MARGIN_IN_MULTI_LINE_STRING = BASE + "autoStringMarginInMultiLineString"
-  final val P_ENABLE_AUTO_BREAKING_COMMENTS = BASE + "autoBreakingComments"
+  final val P_ENABLE_MARK_OCCURRENCES = "scala.tools.eclipse.editor.markOccurences"
+  final val P_SHOW_INFERRED_SEMICOLONS = "scala.tools.eclipse.editor.showInferredSemicolons"
 
-  final val P_ENABLE_MARK_OCCURRENCES = BASE + "markOccurences"
-  final val P_SHOW_INFERRED_SEMICOLONS = BASE + "showInferredSemicolons"
+  final val INDENT_GUIDE_ENABLE = "scala.tools.eclipse.editor.indentGuideEnable"
+  final val INDENT_GUIDE_COLOR = "scala.tools.eclipse.editor.indentGuideColor"
+  final val P_ENABLE_HOF_COMPLETION = "scala.tools.eclipse.editor.completionAlwaysLambdas"
+  final val P_INITIAL_IMPORT_FOLD = "scala.tools.eclipse.editor.initialImportFold"
 
-  final val INDENT_GUIDE_ENABLE = BASE + "indentGuideEnable"
-  final val INDENT_GUIDE_COLOR = BASE + "indentGuideColor"
-  final val P_ENABLE_HOF_COMPLETION = BASE + "completionAlwaysLambdas"
+  final val SPACES_AROUND_IMPORT_BLOCKS = "scala.tools.eclipse.editor.spacesAroundImportBlocks"
 }
 
 class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
@@ -139,5 +146,9 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
 
     store.setDefault(INDENT_GUIDE_ENABLE, false)
     store.setDefault(INDENT_GUIDE_COLOR, "72,72,72")
+
+    store.setDefault(P_INITIAL_IMPORT_FOLD, true)
+
+    store.setDefault(SPACES_AROUND_IMPORT_BLOCKS, true)
   }
 }

@@ -1,10 +1,6 @@
 package org.scalaide.core.ui.completion
 
 import org.junit.Test
-import org.junit.AfterClass
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.core.FlakyTest
 
 object CompletionOrderTests extends CompletionTests
 

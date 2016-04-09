@@ -1,16 +1,10 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
-import scala.Right
+import scala.annotation.tailrec
 import scala.collection.immutable
-import scala.collection.mutable
 import scala.collection.mutable.Publisher
-import scala.reflect.internal.util.SourceFile
 import scala.tools.nsc.Settings
-import scala.tools.nsc.settings.ScalaVersion
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -28,35 +22,26 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.core.util.Util
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.eclipse.jface.util.PropertyChangeEvent
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaProjectEvent
-import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.ScalaPlugin.plugin
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
-import org.scalaide.core.internal.builder
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.resources.EclipseResource
-import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.util.Utils.WithAsInstanceOfOpt
-import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.core.runtime.CoreException
@@ -131,9 +116,35 @@ object ScalaProject {
       case _:
       CoreException => false
     }
+
+  private def dependenciesForProject(project: IProject): Set[IPath] = {
+    def isExportedProject(e: IClasspathEntry) =
+      e.isExported && e.getEntryKind == IClasspathEntry.CPE_PROJECT
+
+    val classpath = JavaCore.create(project).getResolvedClasspath(true)
+    val exportedProjects = classpath.filter(isExportedProject)
+    val exportedPaths = exportedProjects.map(_.getPath).toSet
+
+    exportedPaths
+  }
+
+  /**
+   * Computes exported project dependencies for set of project.
+   */
+  @tailrec
+  private[project] def exportedDependenciesForProjects(newProjects: Set[IProject], exportedProjects: Set[IProject] = Set.empty): Set[IProject] = {
+    val projectsToTest = newProjects diff exportedProjects
+    if (projectsToTest.isEmpty)
+      exportedProjects
+    else {
+      exportedDependenciesForProjects(
+        projectsToTest.flatMap(dependenciesForProject).map(EclipseUtils.projectFromPath),
+        exportedProjects union projectsToTest)
+    }
+  }
 }
 
-class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
+class ScalaProject private(val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -189,14 +200,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
     underlying.getReferencedProjects.filter(_.isOpen)
 
   def transitiveDependencies: Seq[IProject] =
-    directDependencies ++ (directDependencies flatMap (p => IScalaPlugin().getScalaProject(p).exportedDependencies))
+    if (underlying.isOpen)
+      ScalaProject.exportedDependenciesForProjects(directDependencies.toSet).toSeq
+    else Nil
 
-  def exportedDependencies: Seq[IProject] = {
-    for {
-      entry <- resolvedClasspath
-      if entry.getEntryKind == IClasspathEntry.CPE_PROJECT && entry.isExported
-    } yield EclipseUtils.workspaceRoot.getProject(entry.getPath().toString)
-  }
+  def exportedDependencies: Seq[IProject] =
+    if (underlying.isOpen)
+      ScalaProject.dependenciesForProject(underlying)
+        .map(EclipseUtils.projectFromPath).toSeq
+    else Nil
 
   lazy val javaProject: IJavaProject = JavaCore.create(underlying)
 
@@ -268,7 +280,7 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       else {
         val prefixPath = entry.getPath().removeTrailingSeparator();
         for (pattern <- patterns)
-          yield prefixPath.append(pattern).toString().toCharArray();
+        yield prefixPath.append(pattern).toString().toCharArray();
       }
     }
 

@@ -9,6 +9,7 @@ import org.eclipse.jface.wizard.WizardDialog
 import org.scalaide.ui.ScalaImages
 import org.scalaide.ui.internal.wizards.NewFileWizardAdapter
 import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.core.internal.statistics.Features.CreateClass
 
 /**
  * Opens a `NewFileWizard`, which has the class creator selected on startup. If
@@ -18,11 +19,12 @@ import org.scalaide.core.quickassist.BasicCompletionProposal
  */
 case class CreateClassProposal(className: String, compilationUnit: ICompilationUnit)
   extends BasicCompletionProposal(
+    feature = CreateClass,
     relevance = RelevanceValues.CreateClassProposal,
     displayString = s"Create class '$className'",
     image = ScalaImages.NEW_CLASS.createImage()) {
 
-  override def apply(document: IDocument): Unit = {
+  override def applyProposal(document: IDocument): Unit = {
     val wizard = new NewFileWizardAdapter("org.scalaide.ui.wizards.classCreator", className)
     wizard.init(JavaPlugin.getDefault().getWorkbench(), new StructuredSelection(compilationUnit))
 

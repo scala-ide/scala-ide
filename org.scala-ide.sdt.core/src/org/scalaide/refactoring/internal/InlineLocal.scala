@@ -3,6 +3,7 @@ package org.scalaide.refactoring.internal
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations
+import org.scalaide.core.internal.statistics.Features.NotSpecified
 
 /**
  * The Inline Local -- also known as Inline Temp -- refactoring is the dual to Extract Local.
@@ -17,7 +18,8 @@ class InlineLocal extends RefactoringExecutor with RefactoringExecutorWithoutWiz
     new InlineLocalScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class InlineLocalScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-      extends ScalaIdeRefactoring("Inline Local", file, start, end) {
+      // feature marked as [[NotSpecified]] because it is already categorized as quick assist
+      extends ScalaIdeRefactoring(NotSpecified, "Inline Local", file, start, end) {
 
     val refactoring = file.withSourceFile((sourceFile, compiler) => new implementations.InlineLocal with GlobalIndexes {
       val global = compiler

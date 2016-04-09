@@ -2,13 +2,13 @@ package org.scalaide.core.internal.quickassist.explicit
 
 import scala.reflect.internal.Chars
 import scala.tools.nsc.ast.parser.Tokens
-
-import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits.RichResponse
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.compiler.Token
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
+import org.scalaide.core.internal.statistics.Features.ExplicitReturnType
 
 /** A quick fix that adds an explicit return type to a given val or def */
 class ExplicitReturnType extends QuickAssist {
@@ -51,7 +51,7 @@ class ExplicitReturnType extends QuickAssist {
               if (Chars.isOperatorPart(sourceFile.content(insertion - 1))) " : "
               else ": "
 
-            Some(new ExpandText(150, s"Add explicit type $tpe", colonSpace + tpe, insertion))
+            Some(new ExpandText(ExplicitReturnType, 150, s"Add explicit type $tpe", colonSpace + tpe, insertion))
           } else None
         }
 

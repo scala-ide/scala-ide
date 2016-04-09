@@ -6,10 +6,9 @@ import org.eclipse.jdt.core.refactoring.CompilationUnitChange
 import org.eclipse.jdt.ui.cleanup.ICleanUpFix
 import org.eclipse.jface.text.Document
 import org.eclipse.jface.text.TextUtilities
-import org.eclipse.text.edits.{ TextEdit => JFaceTextEdit, _ }
+import org.eclipse.text.edits.MultiTextEdit
 import scalariform.formatter.ScalaFormatter
 import scalariform.parser.ScalaParserException
-import scalariform.utils.TextEdit
 import scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter.IFormatterCleanUpProvider
 import org.scalaide.util.eclipse.EclipseUtils.asEclipseTextEdit
 import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter

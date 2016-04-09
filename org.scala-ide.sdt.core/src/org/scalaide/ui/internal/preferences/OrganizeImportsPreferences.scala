@@ -1,35 +1,18 @@
 package org.scalaide.ui.internal.preferences
 
-import net.miginfocom.layout.AC
-import net.miginfocom.layout.CC
-import net.miginfocom.layout.LC
-import net.miginfocom.swt.MigLayout
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer
 import org.eclipse.core.runtime.preferences.DefaultScope
-import org.eclipse.core.runtime.preferences.InstanceScope
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
 import org.eclipse.jface.dialogs.IInputValidator
 import org.eclipse.jface.dialogs.InputDialog
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.ListEditor
 import org.eclipse.jface.window.Window
-import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.widgets.Button
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Display
-import org.eclipse.swt.widgets.Label
-import org.eclipse.swt.widgets.Link
-import org.eclipse.swt.SWT
-import org.eclipse.ui.dialogs.PreferencesUtil
-import org.eclipse.ui.dialogs.PropertyPage
-import org.eclipse.ui.IWorkbench
-import org.eclipse.ui.IWorkbenchPreferencePage
 import org.scalaide.core.IScalaPlugin
 import org.eclipse.jface.preference.RadioGroupFieldEditor
-import org.eclipse.jface.preference.FieldEditor
 import org.eclipse.jface.preference.BooleanFieldEditor
 import org.eclipse.core.resources.ProjectScope
 import org.scalaide.core.SdtConstants
@@ -72,9 +55,10 @@ class OrganizeImportsPreferencesPage extends FieldEditors {
 
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
       val options = Array(
-          Array("one import statement per importee", ExpandImports.toString),
-          Array("collapse into single import statement", CollapseImports.toString),
-          Array("preserve existing groups", PreserveExistingGroups.toString)
+          Array("One import statement per importee", ExpandImports.toString),
+          Array("Collapse into single import statement", CollapseImports.toString),
+          Array("Preserve existing groups", PreserveExistingGroups.toString),
+          Array("Preserve only wildcards; one import statement per importee otherwise", PreserveWildcards.toString)
       )
       new RadioGroupFieldEditor(expandCollapseKey, "Multiple imports from the same package or type:", 1, options, parent, true) {
         allEnableDisableControls += getRadioBoxControl(parent)
@@ -131,6 +115,7 @@ object OrganizeImportsPreferences extends Enumeration {
   val ExpandImports = Value("expand")
   val CollapseImports = Value("collapse")
   val PreserveExistingGroups = Value("preserve")
+  val PreserveWildcards = Value("preserveWildcards")
 
   val groupsKey         = "organizeimports.groups"
   val wildcardsKey      = "organizeimports.wildcards"
@@ -163,6 +148,7 @@ object OrganizeImportsPreferences extends Enumeration {
       case x if x == ExpandImports.toString => ExpandImports
       case x if x == CollapseImports.toString => CollapseImports
       case x if x == PreserveExistingGroups.toString => PreserveExistingGroups
+      case x if x == PreserveWildcards.toString => PreserveWildcards
     }
   }
 }

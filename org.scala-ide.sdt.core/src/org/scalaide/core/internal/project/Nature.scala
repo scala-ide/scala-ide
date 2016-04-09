@@ -1,11 +1,9 @@
 package org.scalaide.core.internal.project
 
 import scala.collection.mutable.ArrayBuffer
-import org.eclipse.core.resources.ICommand
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IProjectNature
 import org.eclipse.core.resources.IResource
-import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.launching.JavaRuntime

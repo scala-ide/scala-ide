@@ -2,12 +2,13 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin (Test)
 Bundle-SymbolicName: org.scala-ide.sdt.core.tests
-Bundle-Version: 4.2.0.qualifier
+Bundle-Version: 4.5.0.qualifier
 Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/mockito-all-1.9.5.jar
+ target/lib/mockito-all-1.9.5.jar,
+ target/lib/log4j-1.2.17.jar
 Require-Bundle: org.scala-lang.scala-library,
  org.aspectj.weaver,
  org.eclipse.equinox.weaving.aspectj,

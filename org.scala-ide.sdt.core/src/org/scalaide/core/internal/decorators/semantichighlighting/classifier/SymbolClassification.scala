@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 import scala.PartialFunction.condOpt
-import scala.collection.mutable
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
 import scala.tools.nsc.io.AbstractFile

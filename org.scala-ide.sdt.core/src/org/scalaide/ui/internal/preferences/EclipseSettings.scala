@@ -7,18 +7,15 @@ import org.eclipse.swt.widgets.Combo
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.widgets.Event
-import org.eclipse.swt.widgets.Group
 import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Listener
 import org.eclipse.swt.widgets.Text
 import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.ModifyEvent
 import org.eclipse.swt.events.ModifyListener
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.events.SelectionListener
 import org.eclipse.jface.preference.IPreferenceStore
 import org.scalaide.util.eclipse.EclipseUtils
 
@@ -274,7 +271,6 @@ trait EclipseSettings {
    *  it returns 'name', otherwise it prepends the absolute path to the workspace.
    */
   private def fileName(name: String) = {
-    import org.scalaide.core.IScalaPlugin
     import java.io.File
 
     val f = new File(name)

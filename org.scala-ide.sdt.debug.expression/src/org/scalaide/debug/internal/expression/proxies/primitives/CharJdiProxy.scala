@@ -4,8 +4,6 @@
 package org.scalaide.debug.internal.expression
 package proxies.primitives
 
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.context.JdiContext
 
 import com.sun.jdi.CharValue

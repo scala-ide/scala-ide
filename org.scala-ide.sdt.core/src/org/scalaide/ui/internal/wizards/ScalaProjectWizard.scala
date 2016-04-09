@@ -11,11 +11,9 @@ import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.wizards.JavaProjectWizard
 import org.eclipse.jdt.internal.ui.wizards.NewWizardMessages
 import org.eclipse.jdt.internal.ui.wizards.buildpaths.BuildPathsBlock
-import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.jdt.ui.wizards.JavaCapabilityConfigurationPage
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageOne
 import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.ui.ScalaImages
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.SdtConstants

@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.scala211.feature"
       label="Scala ${scala211.version}"
-      version="4.2.0.qualifier"
+      version="4.5.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-lang.scala-library">
 
@@ -73,13 +73,6 @@ SUCH DAMAGE.
 
    <plugin
          id="org.scala-lang.scala-reflect"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.scala-actors"
          download-size="0"
          install-size="0"
          version="0.0.0"

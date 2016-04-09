@@ -14,8 +14,6 @@ import org.junit.Assert
 import org.junit.Test
 import org.scalaide.util.eclipse.FileUtils
 import org.junit.Before
-import org.scalaide.core.internal.project.ScalaProject
-import org.scalaide.core.testsetup.SDTTestProject
 
 object deprecationWarningsProject extends TestProjectSetup("builder-deprecation-warnings") {
 

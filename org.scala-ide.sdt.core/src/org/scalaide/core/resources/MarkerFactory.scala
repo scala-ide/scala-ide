@@ -2,7 +2,6 @@ package org.scalaide.core.resources
 
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.runtime.IProgressMonitor
 
 object MarkerFactory {
   trait Position {

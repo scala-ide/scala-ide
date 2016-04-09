@@ -7,7 +7,6 @@ package proxies.phases
 import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.Names.Debugger
-import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 
 /**

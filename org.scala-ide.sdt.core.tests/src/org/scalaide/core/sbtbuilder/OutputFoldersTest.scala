@@ -3,7 +3,6 @@ package sbtbuilder
 
 import org.junit.Test
 import org.junit.Assert
-import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
@@ -11,7 +10,6 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.IScalaProject
 import testsetup.SDTTestUtils
-import org.scalaide.core.IScalaPlugin
 import org.junit.Before
 
 /** Test simple operations involving the source and output

@@ -64,35 +64,52 @@ abstract class DeclarationPrinter extends HasLogger {
       }
     }
 
-    /** Inspired from Symbol, but take into account the mask access modifiers.
-     *  The original would always display access modifiers, even when the mask is `0L`.
+    /* Inspired from Symbol and HasFlags, but take into account the mask access modifiers.
+     * The original would always display access modifiers, even when the mask is `0L`.
      */
-    def flagString(sym: Symbol, basis: Long): String = {
-      import sym._
+    def flagString(sym: Symbol): String = {
       import Flags._
-      val access = if ((basis & AccessFlags) != 0) accessString else ""
-      val nonAccess = flagBitsToString(basis & ~AccessFlags)
+      def showAccessor = (flagMask & AccessFlags | flagMask) != 0
+      val access = if (showAccessor) accessString(sym) else ""
+      val nonAccess = sym.flagBitsToString(sym.flags & flagMask & ~AccessFlags)
 
       if (access == "") nonAccess
       else if (nonAccess == "") access
       else nonAccess + " " + access
     }
 
-    val gsym= sym.getterIn(sym.owner)
-    def hasGetterSetter(sym:Symbol)= gsym != NoSymbol && sym.setterIn(sym.owner) != NoSymbol
+    def accessString(sym: Symbol): String = {
+      import sym._
+      import Flags._
 
-    if(hasGetterSetter(sym)){
-      compose("", "var",sym.localName.toString.trim+": "+gsym.tpe.resultType)
-    } else{
+      val pw = if (hasAccessBoundary) showSymbolName(privateWithin) else ""
 
-       val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
-       compose(
-         // TODO: Annotations
-         flagString(sym, flagMask & sym.flags),
-         if (showKind) sym.keyString else "",
-          sym.varianceString + name + infoString(seenAs) // don't force the symbol
-        )
+      if (pw == "") {
+        if (hasAllFlags(PrivateLocal)) "private[this]"
+        else if (hasAllFlags(ProtectedLocal)) "protected[this]"
+        else if (hasFlag(PRIVATE)) "private"
+        else if (hasFlag(PROTECTED)) "protected"
+        else ""
+      }
+      else if (hasFlag(PROTECTED)) "protected[" + pw + "]"
+      else "private[" + pw + "]"
     }
+
+    val gsym = sym.getterIn(sym.owner)
+
+    val hasGetterSetter = (gsym != NoSymbol) && (sym.setterIn(sym.owner) != NoSymbol)
+
+    val name = if (sym.isConstructor) sym.owner.decodedName else sym.nameString
+    val flags = flagString(if (gsym != NoSymbol) gsym else sym)
+
+    def keyword = if (hasGetterSetter) "var" else sym.keyString
+
+    compose(
+      // TODO: Annotations
+      flags,
+      if (showKind) keyword else "",
+      sym.varianceString + name + infoString(seenAs) // don't force the symbol
+    )
   }
 
   /** Print the given type

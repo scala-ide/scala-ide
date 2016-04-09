@@ -1,40 +1,24 @@
 package org.scalaide.ui.internal.preferences
 
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
-import java.util.HashMap
-import java.util.Properties
 import net.miginfocom.layout._
 import net.miginfocom.swt.MigLayout
-import org.eclipse.core.resources.IProject
 import org.eclipse.core.runtime.preferences.InstanceScope
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.internal.ui.JavaPlugin
-import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
 import org.eclipse.jdt.internal.ui.preferences.OverlayPreferenceStore
-import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
-import org.eclipse.jdt.ui.PreferenceConstants
-import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.dialogs.MessageDialog
-import org.eclipse.jface.resource.JFaceResources
 import org.eclipse.jface.text._
 import org.eclipse.jface.util._
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events._
 import org.eclipse.swt.widgets._
 import org.eclipse.ui._
-import org.eclipse.ui.dialogs.PreferencesUtil
-import org.eclipse.ui.dialogs.PropertyPage
-import org.eclipse.ui.editors.text.TextEditor
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.formatter.FormatterPreferences
 import org.scalaide.core.internal.formatter.FormatterPreferences._
 import scalariform.formatter._
 import scalariform.formatter.preferences._
 import org.scalaide.logging.HasLogger
-import org.eclipse.core.resources.ProjectScope
 import org.scalaide.core.SdtConstants
 
 class FormatterPreferencePage extends FieldEditors with HasLogger {

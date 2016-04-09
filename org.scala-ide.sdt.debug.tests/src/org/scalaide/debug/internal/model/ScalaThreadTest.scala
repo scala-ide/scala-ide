@@ -10,9 +10,6 @@ import org.eclipse.debug.core.DebugPlugin
 import com.sun.jdi.ObjectCollectedException
 import com.sun.jdi.ThreadGroupReference
 import org.junit.Ignore
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.junit.After
-import org.scalaide.debug.internal.PoisonPill
 
 object ScalaThreadTest {
   private def createThreadGroup() = {
@@ -30,11 +27,6 @@ object ScalaThreadTest {
 class ScalaThreadTest {
   import ScalaThreadTest._
 
-  /**
-   * The actor associated to the debug target currently being tested.
-   */
-  var actor: Option[BaseDebuggerActor] = None
-
   @Before
   def initializeDebugPlugin(): Unit = {
     if (DebugPlugin.getDefault == null) {
@@ -42,24 +34,15 @@ class ScalaThreadTest {
     }
   }
 
-  @After
-  def cleanupActor(): Unit = {
-    actor.foreach(_ ! PoisonPill)
-    actor = None
-  }
-
   private def anonDebugTarget: ScalaDebugTarget = {
     val debugTarget = mock(classOf[ScalaDebugTarget])
-    val debugTargetActor = mock(classOf[BaseDebuggerActor])
-    when(debugTarget.companionActor).thenReturn(debugTargetActor)
+    val debugTargetSubordinate = mock(classOf[ScalaDebugTargetSubordinate])
+    when(debugTarget.subordinate).thenReturn(debugTargetSubordinate)
     debugTarget
   }
 
-  private def createThread(jdiThread: ThreadReference): ScalaThread = {
-    val thread = ScalaThread(anonDebugTarget, jdiThread)
-    actor = Some(thread.companionActor)
-    thread
-  }
+  private def createThread(jdiThread: ThreadReference): ScalaThread =
+    ScalaThread(anonDebugTarget, jdiThread)
 
   @Test
   def getName(): Unit = {
@@ -122,7 +105,7 @@ class ScalaThreadTest {
   }
 
   /**
-   * Check that calling #getStackFrame doesn't create a freeze. It used to be making a sync call to the actor, even if it was shutdown.
+   * Check that calling #getStackFrame doesn't create a freeze. It used to be making a sync call to the subordinate, even if it was shutdown.
    * #1001308
    */
   @Test(timeout = 2000)
@@ -132,7 +115,7 @@ class ScalaThreadTest {
 
     val thread = createThread(jdiThread)
 
-    thread.companionActor ! ScalaThreadActor.TerminatedFromScala
+    thread.terminatedFromScala
     thread.getStackFrames
   }
 

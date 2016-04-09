@@ -1,20 +1,20 @@
 package org.scalaide.core.project
 
-import org.junit.Test
-import org.junit.Assert._
-import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.internal.project.ScalaInstallation
-import org.scalaide.core.IScalaPlugin
-import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.util.eclipse.OSGiUtils
-import scala.tools.nsc.settings.SpecificScalaVersion
-import org.scalaide.core.internal.project.BundledScalaInstallation
-import org.eclipse.core.runtime.Platform
-import org.scalaide.core.internal.project.MultiBundleScalaInstallation
-import org.osgi.framework.Bundle
-import org.eclipse.core.runtime.Path
+
 import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Platform
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
+import org.osgi.framework.Bundle
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.internal.project.BundledScalaInstallation
+import org.scalaide.core.internal.project.MultiBundleScalaInstallation
+import org.scalaide.core.internal.project.ScalaInstallation
+import org.scalaide.util.eclipse.OSGiUtils
 
 class ScalaInstallationTest {
 
@@ -46,7 +46,6 @@ class ScalaInstallationTest {
         val expectedAllJars = Seq(
           bundlePath.append(BundledScalaInstallation.ScalaLibraryPath),
           bundlePath.append(BundledScalaInstallation.ScalaCompilerPath),
-          bundlePath.append(BundledScalaInstallation.ScalaActorPath),
           bundlePath.append(BundledScalaInstallation.ScalaReflectPath),
           bundlePath.append(BundledScalaInstallation.ScalaSwingPath)).sortBy(_.toOSString())
 
@@ -55,7 +54,6 @@ class ScalaInstallationTest {
         val expectedAllSourceJars = Seq(
           bundlePath.append(BundledScalaInstallation.ScalaLibrarySourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaCompilerSourcesPath),
-          bundlePath.append(BundledScalaInstallation.ScalaActorSourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaReflectSourcesPath),
           bundlePath.append(BundledScalaInstallation.ScalaSwingSourcesPath)).sortBy(_.toOSString())
 
@@ -91,51 +89,63 @@ class ScalaInstallationTest {
   val pluginsLocationPattern = "(.*/)([^/]+)_([^/]+)\\.jar".r
 
   def checkMultiBundleInstallation(major: Int, minor: Int, scalaInstallation: IScalaInstallation) = {
+    val scalaBundles = IScalaPlugin().getBundle().getBundleContext().getBundles().toList
 
-    def isLibraryBundle(bundle: Bundle) = {
+    def bundleOf(bundleId: String)(bundle: Bundle) = {
       val version = bundle.getVersion()
-      bundle.getSymbolicName() == MultiBundleScalaInstallation.ScalaLibraryBundleId &&
+      bundle.getSymbolicName() == bundleId &&
         version.getMajor() == major &&
         version.getMinor() == minor
     }
-
-    val libraryBundle = IScalaPlugin().getBundle().getBundleContext().getBundles().toList.find(isLibraryBundle).get
+    def isLibraryBundle = bundleOf(MultiBundleScalaInstallation.ScalaLibraryBundleId) _
+    val libraryBundle = scalaBundles.find(isLibraryBundle).get
 
     val libraryPath = OSGiUtils.getBundlePath(libraryBundle).get
 
-    // create a path builder depending on when the library bundle jar is coming from: a plugins folder or a m2 repo
-    val bundlePathBuilder: (String) => IPath = libraryPath.toString match {
-      case pluginsLocationPattern(pluginsFolder, MultiBundleScalaInstallation.ScalaLibraryBundleId, versionString) =>
-        val pluginsPath = new Path(pluginsFolder)
-        (bundleId: String) => pluginsPath.append(s"${bundleId}_${versionString}.jar")
-      case m2RepoLocationPattern(repoFolder, MultiBundleScalaInstallation.ScalaLibraryBundleId, versionString) =>
-        val repoPath = new Path(repoFolder)
-        (bundleId: String) => repoPath.append(s"${bundleId}/${versionString}/${bundleId}-${versionString}.jar")
-      case v =>
-        fail(s"Didn't understood '$v'")
-        // never reachs here
-        null
-    }
+    def mkBundleNameString(isSource: Boolean, bundleId: String) =
+      if (isSource) bundleId + ".source" else bundleId
 
-    assertEquals("Wrong library jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId), scalaInstallation.library.classJar)
-    assertEquals("Wrong compiler jar", bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId), scalaInstallation.compiler.classJar)
+    // create a path builder depending on when the library bundle jar is coming from: a plugins folder or a m2 repo
+    val bundlePathBuilder: Boolean => String => IPath = libraryPath.toString match {
+      case pluginsLocationPattern(pluginsFolder, MultiBundleScalaInstallation.ScalaLibraryBundleId, _) => {
+        val pluginsPath = new Path(pluginsFolder)
+        (isSource: Boolean) => (bundleId: String) => {
+          val versionString = scalaBundles.find(bundleOf(bundleId)).get.getVersion.toString
+          pluginsPath.append(s"${mkBundleNameString(isSource, bundleId)}_${versionString}.jar")
+        }
+      }
+      case m2RepoLocationPattern(repoFolder, MultiBundleScalaInstallation.ScalaLibraryBundleId, _) => {
+        val repoPath = new Path(repoFolder)
+        (isSource: Boolean) => (bundleId: String) => {
+          val versionString = scalaBundles.find(bundleOf(bundleId)).get.getVersion.toString
+          repoPath.append(s"${mkBundleNameString(isSource, bundleId)}/${versionString}/${mkBundleNameString(isSource, bundleId)}-${versionString}.jar")
+        }
+      }
+      case v => {
+        fail(s"Didn't understood '$v'")
+        // never reaches here
+        null
+      }
+    }
+    val binaryPathBuilder = bundlePathBuilder(false)
+    val sourcePathBuilder = bundlePathBuilder(true)
+
+    assertEquals("Wrong library jar", binaryPathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId), scalaInstallation.library.classJar)
+    assertEquals("Wrong compiler jar", binaryPathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId), scalaInstallation.compiler.classJar)
 
     val expectedAllJars = Seq(
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
+      binaryPathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
+      binaryPathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
+      binaryPathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
 
     assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
 
     val expectedAllSourceJars = Seq(
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId + ".source"),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId + ".source"),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaActorsBundleId + ".source"),
-      bundlePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId + ".source")).sortBy(_.toOSString())
+      sourcePathBuilder(MultiBundleScalaInstallation.ScalaLibraryBundleId),
+      sourcePathBuilder(MultiBundleScalaInstallation.ScalaCompilerBundleId),
+      sourcePathBuilder(MultiBundleScalaInstallation.ScalaReflectBundleId)).sortBy(_.toOSString())
 
     assertEquals("Wrong all sources jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
-
   }
 
 }

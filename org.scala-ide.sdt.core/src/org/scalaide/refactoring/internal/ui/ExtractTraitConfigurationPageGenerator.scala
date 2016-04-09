@@ -13,7 +13,6 @@ import org.eclipse.jface.viewers.TableViewerColumn
 import org.eclipse.jface.viewers.ColumnLabelProvider
 import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.SelectionChangedEvent
-import org.eclipse.jface.viewers.IStructuredSelection
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
 /**

@@ -6,7 +6,6 @@ import org.eclipse.text.edits.MultiTextEdit
 import org.eclipse.text.edits.ReplaceEdit
 import org.junit.ComparisonFailure
 import org.junit.Test
-import org.junit.Ignore
 
 class TextSelectionTest {
 

@@ -12,7 +12,7 @@ import org.eclipse.jface.viewers._
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridLayout
-import org.eclipse.swt.widgets.{ List => SWT_List, _ }
+import org.eclipse.swt.widgets.{ List => _, _ }
 import org.eclipse.ui.IWorkbench
 import org.eclipse.ui.IWorkbenchPreferencePage
 import org.eclipse.ui.dialogs.PreferencesUtil

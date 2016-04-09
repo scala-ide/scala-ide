@@ -50,7 +50,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
               }
             case Annotated(atp, _)                                => List(atp.symbol)
             case Literal(const) if const.tag == compiler.ClazzTag => List(const.typeValue.typeSymbol)
-            case ap @ Select(qual, nme.apply)                     => List(ap.symbol, qual.symbol)
+            case ap @ Select(qual, nme.apply)                     => List(qual.symbol, ap.symbol)
             case st if st.symbol ne null                          => List(st.symbol)
             case _                                                => List()
           } map (_.filterNot{ sym => sym == NoSymbol || sym.hasPackageFlag || sym.isJavaDefined })

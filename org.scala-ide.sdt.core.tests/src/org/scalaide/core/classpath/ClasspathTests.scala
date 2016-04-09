@@ -9,27 +9,20 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Path
-import org.junit.Before
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.resources.IMarker
 import org.scalaide.core.IScalaPlugin
 import org.junit.After
-import org.junit.Ignore
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.util.eclipse.EclipseUtils.prepareJob
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.jobs.IJobChangeEvent
-import org.eclipse.core.runtime.jobs.JobChangeAdapter
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import scala.tools.nsc.Settings
 import org.scalaide.util.internal.SettingConverterUtil
-import scala.tools.nsc.settings.SpecificScalaVersion
 import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.project.ScalaProject
 
 object ClasspathTests extends TestProjectSetup("classpath") {
 
@@ -551,7 +544,7 @@ class ClasspathTests {
 
     val errors1 = projectErrors(SdtConstants.ProblemMarkerId, SdtConstants.SettingProblemMarkerId)
 
-    assertEquals("unexpected number of scala problems in project: "+errors1, 3, errors1.length)
+    assertEquals("unexpected number of scala problems in project: "+errors1, 2, errors1.length)
   }
 
   @Test
@@ -567,7 +560,7 @@ class ClasspathTests {
 
     val errors = projectErrors(SdtConstants.ProblemMarkerId, SdtConstants.SettingProblemMarkerId)
 
-    assertEquals("unexpected number of scala problems in project: "+errors, 2, errors.length)
+    assertEquals("unexpected number of scala problems in project: "+errors, 1, errors.length)
   }
 
   /**
@@ -584,7 +577,7 @@ class ClasspathTests {
     // two excepted code errors
     var markers = project.underlying.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     val errors = SDTTestUtils.markersMessages(markers.toList)
-    assertEquals("Unexpected number of scala problems in project: "+errors, 3, errors.length)
+    assertEquals("Unexpected number of scala problems in project: "+errors, 2, errors.length)
 
     // switch to an invalid classpath
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)

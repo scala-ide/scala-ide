@@ -191,7 +191,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithByNameArg(): Unit = {
+  def testWithByNameArg(): Unit = FlakyTest.retry("testWithByNameArg") {
     testWith(
       """|class ByNameArg {
          |  def method/**/(f: => Long): Long = f
@@ -415,7 +415,7 @@ class NamePrinterTest {
   }
 
   @Test
-  def testWithSimpleAnnotation(): Unit = {
+  def testWithSimpleAnnotation(): Unit = FlakyTest.retry("testWithSimpleAnnotation") {
     testWith(
       """|import scala.annotation._
          |class SimpleAnnotation extends StaticAnnotation

@@ -6,7 +6,6 @@ import org.junit.After
 import org.junit.Assert._
 import org.junit.Before
 import org.junit.Test
-import org.junit.matchers.JUnitMatchers
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.model.ScalaArrayReference
 import org.scalaide.debug.internal.model.ScalaDebugModelPresentation

@@ -2,17 +2,10 @@
  */
 package org.scalaide.core.internal.compiler
 
-import scala.tools.nsc.doc.html.HtmlPage
 import scala.tools.nsc.doc.base._
 import scala.tools.nsc.doc.base.comment._
 import scala.reflect.internal.util.SourceFile
-import org.eclipse.jface.internal.text.html.BrowserInformationControlInput
-import scala.xml.NodeSeq
-import scala.tools.nsc.interactive.Response
-import scala.reflect.api.Position
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
-import org.eclipse.jdt.core.IJavaElement
-import scala.reflect.internal.Flags
 import org.eclipse.jdt.core.IJavaProject
 import org.scalaide.core.IScalaPlugin
 import scala.concurrent.duration._

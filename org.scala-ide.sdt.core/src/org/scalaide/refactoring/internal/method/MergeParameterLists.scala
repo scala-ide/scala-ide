@@ -4,7 +4,8 @@ package method
 import scala.tools.refactoring.implementations
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.method.ui.MergeParameterListsConfigurationPageGenerator
+import org.scalaide.core.internal.statistics.Features.MergeParameterLists
+import ui.MergeParameterListsConfigurationPageGenerator
 
 /**
  * A method signature refactoring that merges selected parameter lists of a method.
@@ -15,7 +16,7 @@ class MergeParameterLists extends RefactoringExecutorWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MergeParameterListsIdeRefactoring(start, end, file)
 
   class MergeParameterListsIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureIdeRefactoring("Merge parameter lists", start, end, f) with MergeParameterListsConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring(MergeParameterLists, "Merge parameter lists", start, end, f) with MergeParameterListsConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new implementations.MergeParameterLists with IndexedMethodSignatureRefactoring {

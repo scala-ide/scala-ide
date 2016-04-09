@@ -2,13 +2,9 @@ package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
 import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
 import org.scalaide.util.eclipse.FileUtils
 import scala.tools.eclipse.contribution.weaving.jdt.jcompiler.BuildManagerStore
-import org.eclipse.jdt.internal.core.JavaModelManager
-import org.eclipse.jdt.internal.core.builder.JavaBuilder
-import org.eclipse.jdt.internal.core.builder.State
 import org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.resources.IResource
@@ -40,7 +36,11 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
       // refresh output directories, since SBT removes classfiles that the Eclipse
       // Java compiler expects to find
       for (folder <- scalaProject.outputFolders) {
-        val container = ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
+        val container =
+          if (project.getFullPath == folder)
+            project
+          else
+            ResourcesPlugin.getWorkspace().getRoot().getFolder(folder)
         container.refreshLocal(IResource.DEPTH_INFINITE, null)
       }
 

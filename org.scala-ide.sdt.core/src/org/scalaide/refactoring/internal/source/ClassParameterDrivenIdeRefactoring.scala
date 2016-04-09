@@ -1,9 +1,11 @@
 package org.scalaide.refactoring.internal.source
 
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import scala.tools.refactoring.implementations.ClassParameterDrivenSourceGeneration
+
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.Feature
+import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
 /**
  * Abstract refactoring for common functionality of refactorings that
@@ -11,8 +13,8 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
  * @see GenerateHashcodeAndEquals
  * @see IntroduceProductNTrait
  */
-abstract class ClassParameterDrivenIdeRefactoring(name: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
-  extends ScalaIdeRefactoring(name, sourcefile, start, end) {
+abstract class ClassParameterDrivenIdeRefactoring(feature: Feature, name: String, start: Int, end: Int, sourcefile: ScalaSourceFile)
+  extends ScalaIdeRefactoring(feature, name, sourcefile, start, end) {
 
   val refactoring: ClassParameterDrivenSourceGeneration
 

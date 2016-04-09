@@ -37,4 +37,11 @@ object ScalaImages {
   val DESC_SETTINGS_OBJ: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/settings.gif")
 
   val ADD_METHOD_PROPOSAL: Image = JavaPluginImages.DESC_MISC_PUBLIC.createImage()
+  val PRIVATE_VAR: ImageDescriptor = JavaPluginImages.DESC_FIELD_PRIVATE
+  val PUBLIC_VAR: ImageDescriptor = JavaPluginImages.DESC_FIELD_PUBLIC
+  val PROTECTED_VAR: ImageDescriptor = JavaPluginImages.DESC_FIELD_PROTECTED
+  val PACKAGE: ImageDescriptor = JavaPluginImages.DESC_OBJS_PACKAGE
+  val DESC_OBJS_IMPCONT: ImageDescriptor = JavaPluginImages.DESC_OBJS_IMPCONT
+  val DESC_OBJS_IMPDECL: ImageDescriptor = JavaPluginImages.DESC_OBJS_IMPDECL
+  val DESC_INNER_METHOD: ImageDescriptor = OSGiUtils.getImageDescriptorFromCoreBundle("/icons/full/obj16/methloc_obj.png")
 }

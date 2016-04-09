@@ -14,7 +14,6 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.{Refactoring => LTKRefactoring}
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
@@ -24,10 +23,8 @@ import org.scalaide.core.SdtConstants
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.common.RenameSourceFileChange
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.IPath
-import scala.reflect.io.AbstractFile
-import org.eclipse.core.resources.ResourcesPlugin
+import org.scalaide.core.internal.statistics.Features.Feature
+import org.scalaide.core.internal.ScalaPlugin
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -53,7 +50,7 @@ import org.eclipse.core.resources.ResourcesPlugin
  * @param getName The displayable name of this refactoring.
  * @param file The file this refactoring started from.
  */
-abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
+abstract class ScalaIdeRefactoring(val feature: Feature, override val getName: String, val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
   extends LTKRefactoring with UserPreferencesFormatting {
 
   /**
@@ -106,18 +103,18 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * the moment, there is only one refactoring (Move Class) that creates
    * these, which overrides this method.
    */
-  def createChange(pm: IProgressMonitor): CompositeChange = {
+  override def createChange(pm: IProgressMonitor): CompositeChange = {
     val changes = performRefactoring()
     new CompositeChange(getName) {
       scalaChangesToEclipseChanges(changes) foreach add
     }
   }
 
-  def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = new RefactoringStatus {
+  override def checkInitialConditions(pm: IProgressMonitor): RefactoringStatus = new RefactoringStatus {
     preparationResult().left.foreach(e => addFatalError(e.cause))
   }
 
-  def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus =
+  override def checkFinalConditions(pm: IProgressMonitor): RefactoringStatus =
     refactoringError map RefactoringStatus.createErrorStatus getOrElse new RefactoringStatus
 
   /**
@@ -170,6 +167,7 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
    * @return The list of changes or an empty list when an error occurred.
    */
   private [refactoring] def performRefactoring(): List[Change] = {
+    ScalaPlugin().statistics.incUsageCounter(feature)
 
     val params = refactoringParameters
     val sel = selection()
@@ -206,10 +204,10 @@ abstract class ScalaIdeRefactoring(val getName: String, val file: ScalaSourceFil
  * Should be extended by Scala IDE refactorings that mixin
  * [[import scala.tools.refactoring.ParameterlessRefactoring]].
  */
-abstract class ParameterlessScalaIdeRefactoring(getName: String, file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
-  extends ScalaIdeRefactoring(getName, file, selectionStart, selectionEnd) {
+abstract class ParameterlessScalaIdeRefactoring(override val feature: Feature, override val getName: String, override val file: ScalaSourceFile, selectionStart: Int, selectionEnd: Int)
+  extends ScalaIdeRefactoring(feature, getName, file, selectionStart, selectionEnd) {
 
   override val refactoring: MultiStageRefactoring with InteractiveScalaCompiler with ParameterlessRefactoring
 
-  def refactoringParameters = new refactoring.RefactoringParameters
+  override def refactoringParameters = new refactoring.RefactoringParameters
 }

@@ -2,24 +2,9 @@ package org.scalaide.core.internal.compiler
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.ICodeAssist
-import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.text.ITextViewer
-import org.eclipse.jface.text.hyperlink.AbstractHyperlinkDetector
-import org.eclipse.jface.text.hyperlink.IHyperlink
-import org.eclipse.jdt.internal.core.ClassFile
-import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.jdt.internal.compiler.env.ICompilationUnit
-import org.eclipse.jdt.ui.actions.SelectionDispatchAction
-import org.eclipse.jdt.internal.ui.javaeditor.EditorUtility
-import org.eclipse.jdt.internal.ui.javaeditor.JavaElementHyperlink
-import scala.tools.nsc.io.AbstractFile
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.eclipse.core.runtime.IPath
 import org.scalaide.core.extensions.SourceFileProviderRegistry

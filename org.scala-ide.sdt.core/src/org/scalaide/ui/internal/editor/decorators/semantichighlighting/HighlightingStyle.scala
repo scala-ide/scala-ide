@@ -8,7 +8,6 @@ import org.scalaide.core.internal.decorators.semantichighlighting.classifier.Sym
 import org.eclipse.jface.text.TextAttribute
 import org.eclipse.swt.SWT
 import org.eclipse.swt.custom.StyleRange
-import org.eclipse.swt.graphics.Font
 import org.scalaide.ui.syntax.ScalaSyntaxClass
 
 case class HighlightingStyle(styledTextAttribute: TextAttribute, enabled: Boolean, unstyledTextAttribute: TextAttribute, deprecation: DeprecationStyle, interpolation: StringInterpolationStyle) {

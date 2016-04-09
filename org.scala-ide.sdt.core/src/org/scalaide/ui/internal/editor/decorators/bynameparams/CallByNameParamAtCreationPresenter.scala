@@ -10,6 +10,7 @@ import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.ui.internal.editor.decorators.BaseSemanticAction
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.internal.preferences.CallByNameParamCreationPreferencePage
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.IScalaPlugin
 
 final class CallByNameParamAtCreationPresenter(sourceViewer: ISourceViewer) extends
@@ -116,7 +117,8 @@ object CallByNameParamAtCreationPresenter extends HasLogger {
     }
 
     compiler.askLoadedTyped(sourceFile, false).get match {
-      case Left(tree) => findByNameParamCreations(tree)
+      case Left(tree) =>
+        compiler.asyncExec(findByNameParamCreations(tree)).getOrElse(Map())()
       case Right(th) =>
         logger.error("Error while searching for call-by-name parameter creations.", th)
         Map()

@@ -4,7 +4,8 @@ package method
 import scala.tools.refactoring.implementations
 
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.method.ui.ChangeParameterOrderConfigurationPageGenerator
+import org.scalaide.core.internal.statistics.Features.ChangeParameterOrder
+import ui.ChangeParameterOrderConfigurationPageGenerator
 
 /**
  * A method signature refactoring that changes the order of parameters within
@@ -16,7 +17,7 @@ class ChangeParameterOrder extends RefactoringExecutorWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new ChangeParameterOrderIdeRefactoring(start, end, file)
 
   class ChangeParameterOrderIdeRefactoring(start: Int, end: Int, f: ScalaSourceFile)
-    extends MethodSignatureIdeRefactoring("Change parameter order", start, end, f) with ChangeParameterOrderConfigurationPageGenerator {
+    extends MethodSignatureIdeRefactoring(ChangeParameterOrder, "Change parameter order", start, end, f) with ChangeParameterOrderConfigurationPageGenerator {
 
     override val refactoring = withCompiler { compiler =>
       new implementations.ChangeParamOrder with IndexedMethodSignatureRefactoring {

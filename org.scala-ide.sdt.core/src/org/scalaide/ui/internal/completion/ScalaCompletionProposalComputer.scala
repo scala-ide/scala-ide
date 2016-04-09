@@ -1,26 +1,13 @@
 package org.scalaide.ui.internal.completion
 
-import scala.collection.mutable
 import org.scalaide.core.completion.ScalaCompletions
-import org.eclipse.jface.viewers.ISelectionProvider
-import org.eclipse.jface.text.TextSelection
 import org.eclipse.jface.text.contentassist.ICompletionProposal
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension
 import org.eclipse.jface.text.contentassist.IContextInformation
-import org.eclipse.jface.text.contentassist.IContextInformationExtension
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposalComputer
 import org.eclipse.jdt.ui.text.java.ContentAssistInvocationContext
 import org.eclipse.jdt.ui.text.java.JavaContentAssistInvocationContext
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal
-import org.eclipse.swt.graphics.Image
-import org.eclipse.jdt.internal.ui.JavaPluginImages
-import org.eclipse.jface.text.IDocument
-import scala.tools.nsc.symtab.Flags
-import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.ui.completion.ScalaCompletionProposal
 

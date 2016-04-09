@@ -10,6 +10,7 @@ import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
@@ -17,21 +18,15 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
-import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
-import org.scalaide.core.internal.builder.CachedAnalysisBuildManager
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.TaskManager
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
-import org.scalaide.util.internal.Suppress.DeprecatedWarning.AggressiveCompile
-import org.scalaide.util.internal.Suppress.DeprecatedWarning.aggressivelyCompile
 
-import sbt.Logger.xlog2Log
 import sbt.compiler.CompileFailed
 import sbt.compiler.IC
 import sbt.inc.Analysis
@@ -40,9 +35,9 @@ import sbt.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
-import xsbti.compile.JavaCompiler
 
-/** An Eclipse builder using the Sbt engine.
+/**
+ * An Eclipse builder using the Sbt engine.
  *
  *  The classpath is handled by delegating to the underlying project. That means
  *  a valid Scala library has to exist on the classpath, but it's not limited to
@@ -53,7 +48,7 @@ import xsbti.compile.JavaCompiler
  */
 class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
   addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
-    extends CachedAnalysisBuildManager with HasLogger {
+    extends EclipseBuildManager with HasLogger {
 
   /** Initialized in `build`, used by the SbtProgress. */
   private var monitor: SubMonitor = _
@@ -61,7 +56,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   private val sources: mutable.Set[IFile] = mutable.Set.empty
   private val cached = new AtomicReference[SoftReference[Analysis]]
 
-  def analysisStore = analysisCache.getOrElse(project.underlying.getFile(".cache"))
+  private def analysisStore = analysisCache.getOrElse(project.underlying.getFile(".cache"))
   private def cacheFile = analysisStore.getLocation.toFile
 
   // this directory is used by Sbt to store classfiles between
@@ -98,6 +93,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
     }
     hasInternalErrors = sbtReporter.hasErrors || hasInternalErrors
+    analysisStore.refreshLocal(IResource.DEPTH_ZERO, null)
   }
 
   override def clean(implicit monitor: IProgressMonitor): Unit = {
@@ -118,7 +114,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       sources --= files
   }
 
-  /** The given files have been modified by the user. Recompile
+  /**
+   * The given files have been modified by the user. Recompile
    *  them and their dependent files.
    */
   private def update(added: scala.collection.Set[IFile], removed: scala.collection.Set[IFile]): Unit = {
@@ -169,13 +166,13 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       resource <- ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(file.toURI())
       // this file might have been deleted in the meantime
       if resource.exists() && !compiledFiles(resource)
-    } createMarkers(resource, info)
+    } createMarkers(info)
   }
 
   /**
    * Create problem markers for the given source info.
    */
-  private def createMarkers(file: IFile, sourceInfo: SourceInfo) = {
+  private def createMarkers(sourceInfo: SourceInfo) = {
     for (problem <- sourceInfo.reportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }
@@ -196,6 +193,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    */
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] = None
 
+  /**
+   * Knows nothing about errors.
+   */
+  override def buildErrors: Set[IMarker] = Set.empty
+
   /** Inspired by IC.compile
    *
    *  We need to duplicate IC.compile (by inlining insde this
@@ -206,17 +208,9 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    *  need a richer (IncOptions) parameter type, here.
    */
   private def aggressiveCompile(in: SbtInputs, log: Logger): Analysis = {
-    val options = in.options; import options.{ options => scalacOptions, _ }
-    val compilers = in.compilers
-    val agg = new AggressiveCompile(cacheFile)
-    val aMap = (f: File) => SbtUtils.m2o(in.analysisMap(f))
-    val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
-
-    compilers match {
+    in.compilers match {
       case Right(comps) =>
-        import comps._
-        aggressivelyCompile(agg)(log)(scalac, javac, options.sources, classpath, output, in.cache, SbtUtils.m2o(in.progress),
-          scalacOptions, javacOptions, aMap, defClass, sbtReporter, order, /* skip = */ false, in.incOptions)
+        CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
         throw CompilerInterfaceFailed

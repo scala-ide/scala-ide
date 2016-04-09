@@ -1,14 +1,14 @@
 package org.scalaide.ui.internal.editor.autoedits
 
-import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.eclipse.jdt.ui.text.IJavaPartitions
 import org.eclipse.jface.preference.IPreferenceStore
-import org.eclipse.jface.text.DefaultIndentLineAutoEditStrategy
 import org.eclipse.jface.text.DocumentCommand
 import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.TextUtilities
+import org.scalaide.core.internal.statistics.Features
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
 
 /** An auto-edit strategy for Scaladoc and multiline comments that does the following:
  *
@@ -60,6 +60,7 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
           buf.append(" " * textIndent)
 
           if (shouldClose) {
+            Features.AutoClosingComments.incUsageCounter()
             if (restAfterCaret.nonEmpty) {
               buf.append(restAfterCaret)
               cmd.addCommand(cmd.offset, restAfterCaret.length(), "", null)
@@ -123,6 +124,7 @@ class CommentAutoIndentStrategy(prefStore: IPreferenceStore, partitioning: Strin
       val canSplitText = wordOff != textStart
 
       if (canSplitText) {
+        Features.AutoBreakComments.incUsageCounter()
         val indent = doc.get(line.getOffset(), endOfIndent-line.getOffset())
         val word = doc.get(wordOff, cmd.offset-wordOff)
 

@@ -6,17 +6,14 @@ import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import org.eclipse.core.filebuffers.FileBuffers
-import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import scala.tools.nsc.io.AbstractFile
 import org.scalaide.logging.HasLogger
-import scala.util.Try
 import org.scalaide.util.eclipse.FileUtils
 
 object EclipseResource extends HasLogger {

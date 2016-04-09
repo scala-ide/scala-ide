@@ -64,6 +64,16 @@
             sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
             type="org.eclipse.jdt.junit.launchconfig">
       </launchDelegate>
+      <launchDelegate
+            delegate="org.scalaide.debug.internal.launching.ScalaRemoteApplicationLaunchConfigurationDelegate"
+            delegateDescription="The Scala Remote Launcher supports debugging Scala applications"
+            id="scala.remote.new"
+            modes="debug"
+            name="Scala Remote"
+            sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+            sourcePathComputerId="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"
+            type="org.eclipse.jdt.launching.remoteJavaApplication">
+      </launchDelegate>
     </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

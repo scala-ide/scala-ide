@@ -3,6 +3,7 @@ package org.scalaide.refactoring.internal.extract
 import scala.tools.refactoring.common.InteractiveScalaCompiler
 import scala.tools.refactoring.common.TextChange
 import scala.tools.refactoring.implementations.extraction.ExtractionRefactoring
+
 import org.eclipse.jface.dialogs.IDialogConstants
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.ITextViewer
@@ -15,6 +16,7 @@ import org.eclipse.ltk.ui.refactoring.RefactoringWizardOpenOperation
 import org.eclipse.swt.widgets.Shell
 import org.eclipse.ui.PlatformUI
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.NotSpecified
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 import org.scalaide.util.eclipse.EditorUtils
@@ -22,7 +24,8 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
 
 trait ExtractionExecutor extends RefactoringExecutor {
   abstract class ScalaIdeExtractionRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile)
-    extends ScalaIdeRefactoring("Extract...", file, selectionStart, selectionEnd) {
+    // feature is [[NotSpecified]] because it is already categorized as quick assist
+    extends ScalaIdeRefactoring(NotSpecified, "Extract...", file, selectionStart, selectionEnd) {
     val refactoring: ExtractionRefactoring with InteractiveScalaCompiler
 
     var selectedExtraction: Option[refactoring.Extraction] = None
@@ -116,7 +119,7 @@ trait ExtractionExecutor extends RefactoringExecutor {
           val proposals = es.extractions.map { e =>
             val pos = e.extractionTarget.enclosing.pos
             new ExtractionProposal(e.displayName, pos.start, pos.end) {
-              def apply(doc: IDocument) = {
+              def applyProposal(doc: IDocument) = {
                 block(Some(e))
               }
             }

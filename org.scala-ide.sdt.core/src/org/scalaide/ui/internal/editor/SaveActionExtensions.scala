@@ -1,7 +1,6 @@
 package org.scalaide.ui.internal.editor
 
 import scala.concurrent.duration._
-import scala.reflect.internal.util.SourceFile
 import scala.tools.refactoring.common.{ TextChange => RTextChange }
 import scala.util.Failure
 import scala.util.Left
@@ -22,12 +21,14 @@ import org.scalaide.core.internal.extensions.ExtensionCompiler
 import org.scalaide.core.internal.extensions.ExtensionCreators
 import org.scalaide.core.internal.extensions.SaveActions
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.Feature
+import org.scalaide.core.internal.statistics.Groups
 import org.scalaide.core.internal.text.TextDocument
 import org.scalaide.core.text.Change
 import org.scalaide.core.text.TextChange
 import org.scalaide.extensions.CompilerSupport
-import org.scalaide.extensions.ExtensionSetting
 import org.scalaide.extensions.SaveAction
+import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.extensions.SaveActionSetting
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
@@ -160,7 +161,7 @@ trait SaveActionExtensions extends HasLogger {
 
       case (setting, ext) +: xs if isEnabled(setting.id) ⇒
         val res = FutureUtils.performWithTimeout(timeout) {
-          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'.") {
+          EclipseUtils.withSafeRunner(s"An error occurred while executing save action '${setting.id}'") {
             createExtensionWithCompilerSupport(ext) map { instance =>
               instance.global.asInstanceOf[IScalaPresentationCompiler].asyncExec {
                 instance.perform()
@@ -171,8 +172,8 @@ trait SaveActionExtensions extends HasLogger {
 
         res match {
           case Success(changes) ⇒
-            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'.") {
-              applyChanges(setting.id, changes, udoc)
+            EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '${setting.id}'") {
+              applyChanges(setting, changes, udoc)
             }
             loop(xs)
 
@@ -212,15 +213,15 @@ trait SaveActionExtensions extends HasLogger {
     val timeout = saveActionTimeout
 
     val res = FutureUtils.performWithTimeout(timeout) {
-      EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'.") {
+      EclipseUtils.withSafeRunner(s"An error occurred while executing save action '$id'") {
         ext
       }.getOrElse(Seq())
     }
 
     res match {
       case Success(changes) =>
-        EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'.") {
-          applyChanges(id, changes, udoc)
+        EclipseUtils.withSafeRunner(s"An error occurred while applying changes of save action '$id'") {
+          applyChanges(instance.setting, changes, udoc)
         }
 
       case Failure(f) =>
@@ -239,13 +240,19 @@ trait SaveActionExtensions extends HasLogger {
    * Executing this method has side effects. It applies all changes to `udoc`,
    * the underlying file and it updates `lastSelection`.
    */
-  private def applyChanges(saveActionId: String, changes: Seq[Change], udoc: IDocument): Unit = {
+  private def applyChanges(setting: SaveActionSetting, changes: Seq[Change], udoc: IDocument): Unit = {
+    if (changes.isEmpty)
+      return
+
+    val feature = Feature(setting.id)(setting.name, Groups.SaveAction)
+    feature.incUsageCounter()
+
     val sf = lastSourceFile.lastSourceMap().sourceFile
     val len = udoc.getLength()
     val edits = changes map {
       case tc @ TextChange(start, end, text) =>
         if (start < 0 || end > len || end < start || text == null)
-          throw new IllegalArgumentException(s"The text change object '$tc' of save action '$saveActionId' is invalid.")
+          throw new IllegalArgumentException(s"The text change object '$tc' of save action '${setting.id}' is invalid.")
         new RTextChange(sf, start, end, text)
     }
     TextEditUtils.applyChangesToFile(udoc, lastSelection, lastSourceFile.file, edits.toList) match {

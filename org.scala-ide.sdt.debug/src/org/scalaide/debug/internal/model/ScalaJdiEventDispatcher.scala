@@ -1,12 +1,16 @@
 package org.scalaide.debug.internal.model
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters.asScalaIteratorConverter
-
-import org.scalaide.debug.internal.BaseDebuggerActor
-import org.scalaide.debug.internal.PoisonPill
+import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.util.Success
+import org.scalaide.debug.internal.JdiEventDispatcher
+import org.scalaide.debug.internal.JdiEventReceiver
 import org.scalaide.logging.HasLogger
-import org.scalaide.util.internal.Suppress
-
 import com.sun.jdi.VMDisconnectedException
 import com.sun.jdi.VirtualMachine
 import com.sun.jdi.event.EventSet
@@ -14,159 +18,146 @@ import com.sun.jdi.event.VMDeathEvent
 import com.sun.jdi.event.VMDisconnectEvent
 import com.sun.jdi.event.VMStartEvent
 import com.sun.jdi.request.EventRequest
-
-import ScalaJdiEventDispatcherActor.SetActorFor
-import ScalaJdiEventDispatcherActor.UnsetActorFor
+import scala.util.Properties
 
 object ScalaJdiEventDispatcher {
-  def apply(virtualMachine: VirtualMachine, scalaDebugTargetActor: BaseDebuggerActor): ScalaJdiEventDispatcher = {
-    val companionActor = ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
-    new ScalaJdiEventDispatcher(virtualMachine, companionActor)
+  def apply(virtualMachine: VirtualMachine, scalaDebugTarget: JdiEventReceiver): ScalaJdiEventDispatcher = {
+    val subordinate = ScalaJdiEventDispatcherSubordinate(scalaDebugTarget)
+    new ScalaJdiEventDispatcher(virtualMachine, subordinate)
   }
 }
 
+case object Dispatch {
+  def done = Future.successful {}
+
+  def apply(runningCondition: => Boolean)(colaborator: () => Future[Unit])(implicit ec: ExecutionContext): Future[Unit] =
+    if (runningCondition) {
+      colaborator() flatMap { _ => apply(runningCondition)(colaborator) }
+    } else done
+}
+
 /**
- * Actor based system pulling event from the vm event queue, and dispatching
- * them to the registered actors.
+ * System pulling event from the vm event queue, and dispatching them to the registered subordinates.
  * This class is thread safe. Instances have be created through its companion object.
  */
+class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val subordinate: ScalaJdiEventDispatcherSubordinate)
+    extends Runnable with HasLogger with JdiEventDispatcher {
 
-class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected[debug] val companionActor: Suppress.DeprecatedWarning.Actor) extends Runnable with HasLogger {
-  @volatile
-  private var running = true
+  private val running = new AtomicBoolean(true)
 
   override def run(): Unit = {
-    // the polling loop runs until the VM is disconnected, or it is told to stop.
-    // The events which have been already read will still be processed by the actor.
     val eventQueue = virtualMachine.eventQueue
-    while (running) {
-      try {
-        // use a timeout of 1s, so it cleanly terminates on shut down
-        val eventSet = eventQueue.remove(1000)
-        if (eventSet != null) {
-          companionActor ! eventSet
-        }
-      } catch {
-        case e: VMDisconnectedException =>
-          // it is likely that we will see this exception before being able to
-          // shutdown the loop after a VMDisconnectedEvent
-          dispose()
-        case e: Exception =>
-          // it should not die from any exception. Just logging
-          logger.error("Error in jdi event loop", e)
-      }
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val colaborator = () => Future {
+      Option(eventQueue.remove(1000))
+    }.flatMap { events =>
+      if (events.nonEmpty)
+        subordinate.processEvent(events.get)
+      else
+        Dispatch.done
+    } recoverWith {
+      case e: VMDisconnectedException =>
+        // it is likely that we will see this exception before being able to
+        // shutdown the loop after a VMDisconnectedEvent
+        dispose()
+        Dispatch.done
+      case e: Exception =>
+        // it should not die from any exception. Just logging
+        logger.error("Error in jdi event loop", e)
+        Dispatch.done
     }
+    Dispatch(running.get)(colaborator)
   }
 
   /**
    * release all resources
    */
   private[model] def dispose(): Unit = {
-    running = false
-    companionActor ! PoisonPill
+    if (running.getAndSet(false))
+      subordinate.dispose()
   }
 
+  private[model] def isRunning: Boolean = running.get
+
   /**
-   * Register the actor as recipient of the call back for the given request
-   * TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
+   * Register the subordinate as recipient of the call back for the given request
+   * TODO: I think we should try to use JDI's mechanisms to associate the subordinate to the request:
    *       @see EventRequest.setProperty(k, v) and EventRequest.getProperty
    */
-  def setActorFor(actor: Suppress.DeprecatedWarning.Actor, request: EventRequest): Unit = {
-    companionActor ! ScalaJdiEventDispatcherActor.SetActorFor(actor, request)
-  }
+  override def register(eventReceiver: JdiEventReceiver, request: EventRequest): Unit =
+    subordinate.register(eventReceiver, request)
 
   /**
    * Remove the call back target for the given request
    */
-  def unsetActorFor(request: EventRequest): Unit = {
-    companionActor ! ScalaJdiEventDispatcherActor.UnsetActorFor(request)
-  }
+  override def unregister(request: EventRequest): Unit =
+    subordinate.unregister(request)
 }
 
-private[model] object ScalaJdiEventDispatcherActor {
-  case class SetActorFor(actor: Suppress.DeprecatedWarning.Actor, request: EventRequest)
-  case class UnsetActorFor(request: EventRequest)
-
-  def apply(scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor): ScalaJdiEventDispatcherActor = {
-    val actor = new ScalaJdiEventDispatcherActor(scalaDebugTargetActor)
-    actor.start()
-    actor
-  }
+private[model] object ScalaJdiEventDispatcherSubordinate {
+  def apply(scalaDebugTarget: JdiEventReceiver): ScalaJdiEventDispatcherSubordinate =
+    new ScalaJdiEventDispatcherSubordinate(scalaDebugTarget)
 }
 
 /**
- * Actor used to manage a Scala event dispatcher. It keeps track of the registered actors,
+ * Class used to manage a Scala event dispatcher. It keeps track of the registered subordinates,
  * and dispatches the JDI events.
  * This class is thread safe. Instances are not to be created outside of the ScalaJdiEventDispatcher object.
  */
-private class ScalaJdiEventDispatcherActor private (scalaDebugTargetActor: Suppress.DeprecatedWarning.Actor) extends BaseDebuggerActor {
-  import ScalaJdiEventDispatcherActor._
+private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarget: JdiEventReceiver) extends HasLogger {
+  import scala.concurrent.ExecutionContext.Implicits.global
 
-  /** event request to actor map */
-  private var eventActorMap = Map[EventRequest, Suppress.DeprecatedWarning.Actor]()
-
-  override protected def postStart(): Unit = link(scalaDebugTargetActor)
-
-  override protected def behavior = {
-    case SetActorFor(actor, request) => eventActorMap += (request -> actor)
-    case UnsetActorFor(request) => eventActorMap -= request
-    case eventSet: EventSet => processEventSet(eventSet)
+  /** event request to receiver map */
+  private val eventReceiversMap: scala.collection.mutable.Map[EventRequest, JdiEventReceiver] = {
+    import scala.collection.JavaConverters._
+    new ConcurrentHashMap[EventRequest, JdiEventReceiver].asScala
   }
+
+  private[model] def register(receiver: JdiEventReceiver, request: EventRequest): Future[Unit] =
+    Future(eventReceiversMap += (request -> receiver))
+
+  private[model] def unregister(request: EventRequest): Future[Unit] =
+    Future(eventReceiversMap -= request)
+
+  private[model] def processEvent(eventSet: EventSet): Future[Unit] =
+    Future(processEventSet(eventSet))
 
   /**
    * go through the events of the EventSet, and forward them to the registered
-   * actors.
-   * Resume or not the stopped threads depending on actor's answers
+   * subordinates.
+   * Resume or not the stopped threads depending on subordinate's answers
    */
   private def processEventSet(eventSet: EventSet): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits._
     import scala.collection.JavaConverters._
 
-    var futures = List[Future[Any]]()
-
+    var staySuspendeds = List[Future[Boolean]]()
+    logger.debug {
+      eventSet.asScala.mkString(Properties.lineSeparator)
+    }
     /* Cannot use the eventSet directly. The JDI specification says it should implement java.util.Set,
      * but the eclipse implementation doesn't.
      *
      * see eclipse bug #383625 */
-    // forward each event to the interested actor
+    // forward each event to the interested subordinate
     eventSet.eventIterator.asScala.foreach {
-      case event: VMStartEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
-      case event: VMDisconnectEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
-      case event: VMDeathEvent =>
-        futures ::= (scalaDebugTargetActor !! event)
+      case event @ (_: VMStartEvent | _: VMDisconnectEvent | _: VMDeathEvent) =>
+        staySuspendeds ::= scalaDebugTarget.handle(event)
       case event =>
-        /* TODO: I think we should try to use JDI's mechanisms to associate the actor to the request:
+        /* TODO: I think we should try to use JDI's mechanisms to associate the subordinate to the request:
          *  @see EventRequest.setProperty(k, v) and EventRequest.getProperty */
-        eventActorMap.get(event.request).foreach { interestedActor =>
-          futures ::= (interestedActor !! event)
+        eventReceiversMap.get(event.request).foreach { receiver =>
+          staySuspendeds ::= receiver.handle(event)
         }
     }
 
-    // Message sent upon completion of the `futures`. This message is used to modify `this` actor's behavior.
-    object FutureComputed
-
-    // Change the actor's behavior to wait for the `futures` to complete
-    become {
-      case FutureComputed => unbecome()
+    Future.fold(staySuspendeds)(false)(_ | _).andThen {
+      case Success(false) => eventSet.resume()
+      case _ =>
     }
+  }
 
-    var staySuspended = false
-    val it = futures.iterator
-    loopWhile(it.hasNext) {
-      val future = it.next
-      //FIXME: If any of the actor sitting behind the future dies, it could prevent the `ScalaJdiEventDispatcherActor` to
-      //       resume and effectively blocking the whole application! Unfortunately, it doesn't look like there is an easy
-      //       fix (changing the future into synchronous calls doesn't look like a good idea, as it's hard to know in advance
-      //       what would be the right timeout value to set). (ticket #1001311)
-      future.inputChannel.react {
-        case result: Boolean => staySuspended |= result
-      }
-    }.andThen {
-      try if (!staySuspended) eventSet.resume()
-      finally ScalaJdiEventDispatcherActor.this ! FutureComputed
-    }
-    // Warning: Any code inserted here is never executed (it is effectively dead/unreachable code), because the above
-    //          `loopWhile` never returns normally (i.e., it always throws an exception!).
+  private[model] def dispose(): Future[Unit] = Future {
+    eventReceiversMap.clear()
   }
 }

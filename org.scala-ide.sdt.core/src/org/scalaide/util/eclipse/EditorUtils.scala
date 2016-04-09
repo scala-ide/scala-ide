@@ -136,7 +136,8 @@ object EditorUtils {
       case t: ISourceViewerEditor => t
     }
 
-  private def file(e: ITextEditor): Option[IFile] =
+  /** Return the associated IFile in this text editor, if any */
+  def file(e: ITextEditor): Option[IFile] =
     PartialFunction.condOpt(e.getEditorInput()) {
       case f: IFileEditorInput => f.getFile
     }

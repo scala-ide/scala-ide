@@ -5,6 +5,8 @@ import scala.reflect.internal.util.RangePosition
 
 import org.eclipse.jface.text.IDocument
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.quickassist.RelevanceValues
+import org.scalaide.core.internal.statistics.Features.FixSpellingMistake
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.ui.ScalaImages
 
@@ -13,11 +15,12 @@ import org.scalaide.ui.ScalaImages
  * Eg "asdf".subString would offer to change it to .substring instead.
  */
 case class ChangeCaseProposal(originalName: String, newName: String, offset: Int, length: Int) extends BasicCompletionProposal(
+  feature = FixSpellingMistake,
   relevance = RelevanceValues.ChangeCaseProposal,
   displayString = s"Change to '${newName}'",
   image = ScalaImages.CORRECTION_RENAME.createImage()) {
 
-  override def apply(document: IDocument): Unit = {
+  override def applyProposal(document: IDocument): Unit = {
     val o = offset + length - originalName.length
     document.replace(o, originalName.length, newName)
   }

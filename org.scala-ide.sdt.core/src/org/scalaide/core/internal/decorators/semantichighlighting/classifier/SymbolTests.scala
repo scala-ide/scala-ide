@@ -1,9 +1,6 @@
 package org.scalaide.core.internal.decorators.semantichighlighting.classifier
 
 import org.scalaide.core.internal.decorators.semantichighlighting.classifier.SymbolTypes._
-import scala.reflect.internal.util.RangePosition
-import org.eclipse.jface.text.IRegion
-import scala.reflect.internal.util.SourceFile
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import scala.reflect.internal.Flags
 

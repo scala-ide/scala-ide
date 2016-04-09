@@ -3,9 +3,6 @@ package org.scalaide.core.extensions
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.ConcurrentHashMap
 import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.IConfigurationElement
-import org.eclipse.core.runtime.IExtension
-import org.eclipse.core.runtime.IExtensionPoint
 import org.eclipse.core.runtime.Platform
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.IPath

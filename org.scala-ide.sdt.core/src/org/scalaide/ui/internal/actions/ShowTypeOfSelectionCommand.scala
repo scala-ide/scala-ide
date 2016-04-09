@@ -11,7 +11,6 @@ import org.eclipse.jface.text.information.IInformationProvider
 import org.eclipse.jface.text.ITextViewer
 import org.eclipse.jface.text.Region
 import org.eclipse.jface.text.IRegion
-import org.eclipse.jface.internal.text.html.HTMLPrinter
 import org.scalaide.ui.internal.editor.hover.HtmlHover
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 
@@ -48,7 +47,9 @@ object TypeOfExpressionProvider extends IInformationProvider with HtmlHover {
           import compiler._
 
           def typeInfo(tpe: Type): String =
-            Option(tpe).map(tpe => createHtmlOutput { _ append convertContentToHtml(tpe.toString) }).orNull
+            Option(tpe).map(tpe =>
+              createHtmlOutput { _ append convertContentToHtml(compiler.declPrinter.showType(tpe)) }
+            ).orNull
 
           (for {
             t <- askTypeAt(region.toRangePos(src)).getOption()

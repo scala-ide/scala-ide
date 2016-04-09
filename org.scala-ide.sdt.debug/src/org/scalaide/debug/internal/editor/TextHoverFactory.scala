@@ -21,7 +21,6 @@ import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThisVariable
 import org.scalaide.ui.editor.extensionpoints.{ TextHoverFactory => TextHoverFactoryInterface }
 import org.scalaide.ui.internal.editor.hover.ScalaHoverImpl
-import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 class TextHoverFactory extends TextHoverFactoryInterface {
   import IScalaPresentationCompiler.Implicits._

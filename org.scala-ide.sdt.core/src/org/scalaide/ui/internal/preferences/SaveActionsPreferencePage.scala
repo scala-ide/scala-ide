@@ -18,7 +18,6 @@ import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.widgets.Label
 import org.eclipse.swt.widgets.Table
 import org.eclipse.swt.widgets.Text
 import org.eclipse.ui.IWorkbench
@@ -156,13 +155,6 @@ class SaveActionsPreferencePage extends PreferencePage with IWorkbenchPreference
       gd
     })
     t
-  }
-
-  private def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
-    val lb = new Label(parent, SWT.NONE)
-    lb.setText(text)
-    lb.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, columnSize, 1))
-    lb
   }
 
   private def isEnabled(saveAction: SaveActionSetting): Boolean =

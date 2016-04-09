@@ -3,11 +3,15 @@
  */
 package org.scalaide.debug.internal.expression.features
 
+import org.junit.AfterClass
+import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.ScalaExpressionEvaluatorPlugin
 import org.scalaide.debug.internal.expression.TestValues.FileImportsTestCase
+import org.scalaide.debug.internal.preferences.ExprEvalPreferencePage
 
 class ImportsTest extends BaseIntegrationTest(ImportsTest) {
 
@@ -32,4 +36,14 @@ class ImportsTest extends BaseIntegrationTest(ImportsTest) {
   }
 }
 
-object ImportsTest extends BaseIntegrationTestCompanion(FileImportsTestCase)
+object ImportsTest extends BaseIntegrationTestCompanion(FileImportsTestCase) {
+  @BeforeClass
+  def setupForTest(): Unit = {
+    ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, true)
+  }
+
+  @AfterClass
+  def tearDownAfterTest(): Unit = {
+    ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, false)
+  }
+}

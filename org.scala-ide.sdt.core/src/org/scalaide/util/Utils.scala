@@ -3,7 +3,6 @@ package org.scalaide.util
 import scala.reflect.ClassTag
 import scala.tools.eclipse.contribution.weaving.jdt.jdi.JdiInvocationSynchronizer
 import org.scalaide.logging.HasLogger
-import scala.concurrent.Future
 
 object Utils extends HasLogger {
 
@@ -54,24 +53,6 @@ object Utils extends HasLogger {
     }
   }
 
-  /**
-   * Scala wrapper on [[JdiInvocationSynchronizer]]. Remark: the actor thread can be killed in any moment
-   * by [[ActorSystem]] so the lock is not released then. To avoid it call [[jdiSynchronized.apply]] wrapped
-   * in [[Future]] like in example:
-   * {{{
-   *   def receive = {
-   *     case msg =>
-   *       val replyTo = sender
-   *       Future {
-   *         jdiSynchronized {
-   *           eventSet.resume()
-   *         }
-   *       } onComplete {
-   *         replyTo ! Done
-   *       }
-   *   }
-   * }}}
-   */
   object jdiSynchronized {
     import java.util.concurrent.Callable
 

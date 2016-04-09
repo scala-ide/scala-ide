@@ -1,8 +1,6 @@
 package org.scalaide.core.internal.jdt.model
 
 import java.util.{ Map => JMap }
-import scala.concurrent.SyncVar
-import org.eclipse.core.internal.filebuffers.SynchronizableDocument
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
@@ -11,42 +9,25 @@ import org.eclipse.jdt.core.CompletionRequestor
 import org.eclipse.jdt.core.IBuffer
 import org.eclipse.jdt.core.IBufferChangedListener
 import org.eclipse.jdt.core.IJavaElement
-import org.eclipse.jdt.core.IJavaModelStatusConstants
-import org.eclipse.jdt.core.IProblemRequestor
 import org.eclipse.jdt.core.ITypeRoot
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.core.IClassFile
 import org.eclipse.jdt.internal.compiler.env
 import org.eclipse.jdt.internal.core.BufferManager
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.JavaModelStatus
-import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.Openable
 import org.eclipse.jdt.internal.core.OpenableElementInfo
-import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.search.matching.MatchLocator
 import org.eclipse.jdt.internal.core.search.matching.PossibleMatch
-import org.eclipse.jdt.internal.ui.javaeditor.DocumentAdapter
-import org.eclipse.jface.text.IRegion
 import org.eclipse.jface.text.ITextSelection
 import scala.tools.nsc.io.AbstractFile
-import scala.reflect.internal.util.BatchSourceFile
-import scala.reflect.internal.util.SourceFile
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaCompilationUnit
 import org.scalaide.ui.ScalaImages
-import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.search.ScalaSourceIndexer
-import org.scalaide.util.ScalaWordFinder
 import org.scalaide.util.internal.ReflectionUtils
 import org.eclipse.jdt.core._
-import org.eclipse.jdt.internal.core.JavaElement
-import org.eclipse.jdt.internal.core.SourceRefElement
 import org.scalaide.logging.HasLogger
-import scala.tools.nsc.interactive.Response
-import org.eclipse.jface.text.source.ISourceViewer
 import org.scalaide.core.internal.hyperlink.DeclarationHyperlinkDetector
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.internal.hyperlink.BaseHyperlinkDetector
@@ -56,8 +37,6 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.internal
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.compiler.ISourceMap
-import org.eclipse.jdt.internal.corext.fix.LinkedProposalPositionGroup.PositionInformation
-import org.scalaide.core.compiler.IPositionInformation
 import org.scalaide.util.Utils
 
 object ScalaCompilationUnit extends HasLogger {

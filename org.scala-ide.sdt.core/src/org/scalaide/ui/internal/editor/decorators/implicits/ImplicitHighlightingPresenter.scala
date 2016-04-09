@@ -37,8 +37,6 @@ object ImplicitHighlightingPresenter {
   def findAllImplicitConversions(compiler: IScalaPresentationCompiler, scu: ScalaCompilationUnit, sourceFile: SourceFile) = {
     import compiler.Tree
     import compiler.Traverser
-    import compiler.Apply
-    import compiler.Select
     import compiler.ApplyImplicitView
     import compiler.ApplyToImplicitArgs
 
@@ -57,13 +55,12 @@ object ImplicitHighlightingPresenter {
       val txt = new String(sourceFile.content, t.pos.start, math.max(0, t.pos.end - t.pos.start)).trim()
       val pos = mkPosition(t.pos, txt)
       val region = new Region(pos.offset, pos.getLength)
-      val msg = compiler.asyncExec{
+      val msg = compiler.asyncExec {
         val sname = t.fun.symbol.nameString
         s"Implicit conversion found: `$txt`$DisplayStringSeparator`$sname($txt): ${t.tpe}`"
       }.getOption()
 
-      val annotation = new ImplicitConversionAnnotation(
-          () => compiler.mkHyperlink(t.symbol, name = "Open Implicit", region, scu.scalaProject.javaProject), msg.getOrElse(""))
+      val annotation = new ImplicitConversionAnnotation(t.pos, region, msg.getOrElse(""))
       (annotation, pos)
     }
 

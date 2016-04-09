@@ -9,13 +9,14 @@ import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations.MethodSignatureRefactoring
 import org.eclipse.ltk.ui.refactoring.UserInputWizardPage
 import org.eclipse.ltk.ui.refactoring.RefactoringWizardPage
+import org.scalaide.core.internal.statistics.Features.Feature
 
 /**
  * Abstract refactoring that contains common functionality of method signature
  * refactorings.
  */
-abstract class MethodSignatureIdeRefactoring(refactoringName: String, start: Int, end: Int, file: ScalaSourceFile)
-  extends IndexedIdeRefactoring(refactoringName, start, end, file) {
+abstract class MethodSignatureIdeRefactoring(feature: Feature, refactoringName: String, start: Int, end: Int, file: ScalaSourceFile)
+  extends IndexedIdeRefactoring(feature, refactoringName, start, end, file) {
 
   // Provides the wizard page
   this: MethodSignatureRefactoringConfigurationPageGenerator =>

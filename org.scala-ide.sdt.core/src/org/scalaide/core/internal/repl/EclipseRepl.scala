@@ -1,12 +1,15 @@
 package org.scalaide.core.internal.repl
 
-import scala.actors.Actor
-import scala.collection.mutable.ListBuffer
-import scala.tools.nsc.interpreter.Results.Result
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicReference
+
+import scala.concurrent.Future
 import scala.tools.nsc.Settings
+import scala.tools.nsc.interpreter.Results.Result
+
+import org.scalaide.logging.HasLogger
 
 import EclipseRepl._
-import org.scalaide.util.internal.Suppress
 
 /** An `EclipseRepl` is a simple Finite State Machine with 4 states based on
   * whether the REPL is running/not and whether the history `isEmpty`/not.
@@ -55,15 +58,14 @@ object EclipseRepl
     */
   val Drop = new Object { override def toString = "Drop" }
 
-  /** Performs `Stop` and `Drop`, then de-schedules the `Actor`, allowing
+  /** Performs `Stop` and `Drop`, then de-schedules the `Future`, allowing
     * it to be garbage collected.
     */
   val Quit = new Object { override def toString = "Quit" }
 
-  /** Almost a `Listener`. Status calls are dispatched on the `Actor`'s thread,
+  /** Almost a `Listener`. Status calls are dispatched on the `EclipseRepl` `Future`'s thread,
     * so implementors must be careful to avoid race conditions. If the `Client`
-    * is SWT-based it must use something like `SWTUtils.asyncExec`. If the
-    * `Client` is another `Actor` it could send messages to itself.
+    * is SWT-based it must use something like `SWTUtils.asyncExec`.
     */
   trait Client
   {
@@ -95,13 +97,13 @@ object EclipseRepl
     def done(exec: Exec, result: Result, output: String): Unit = {}
     // at exit from `doit` : `Init`, `Exec`
 
-    /** Called just before the `Actor` enters its `Terminated` state. */
+    /** Called just before the `Future` enters its `Terminated` state. */
     def terminating(): Unit = {} // at exit from the handler for `Quit`, in catch
 
     /** Called for any unrecognized message. */
     def unknown(request:Any): Unit = {}
 
-    /** Called when something is thrown. The `Actor` responds to any exception
+    /** Called when something is thrown. The `EclipseRepl` `Future` responds to any exception
       * by behaving as if `Quit` had been called.
       *
       * `boot` can fail if the settings are bad.
@@ -133,8 +135,8 @@ object EclipseRepl
   /** Allows plugging in alternate (i.e. test) `Interpreter`s. */
   trait Builder
   {
-    /** Called by `EclipseRepl` constructor, calls its `Actor.start`. */
-    def constructed(a: EclipseRepl): Unit = { a.start() }
+    /** Called by `EclipseRepl` constructor, calls its `Worker.start`. */
+    def constructed(a: EclipseRepl): Unit = {}
 
     /** Returns a new `Interpreter`. */
     def interpreter(i: Init): Interpreter
@@ -156,53 +158,52 @@ object EclipseRepl
   }
 }
 
-/** Wraps a Scala interpreter in an `Actor` so it can work on a background
+/** Wraps a Scala interpreter in an `Future` so it can work on a background
   * thread. Because the results from executing a line of code depend upon the
   * previous lines, each `EclipseRepl` should be used only by a single entity.
   * Typically that entity is the `Client` passed to the constructor.
   *
-  * The default `Builder` calls `Actor.start` as the last step of the
-  * `EclipseRepl` constructor.
-  *
-  * `EclipseRepl` uses `Actor.react`, allowing it to share threads with other
-  * `Actor`s. Because the interpreter might take an arbitrary amount of time to
-  * calculate results this may have a negative impact on other `Actor`s. The
-  * `Actor` API can be used to control thread sharing as needed.
-  *
   * These five convenience methods are available: `init`, `exec`, `drop`,
   * `stop`, and `quit`. All they do is send the corresponding request message.
   */
-class EclipseRepl(client: Client, builder: Builder) extends Suppress.DeprecatedWarning.Actor
+class EclipseRepl(client: Client, builder: Builder) extends HasLogger
 {
+  import scala.concurrent.ExecutionContext.Implicits.global
+
   def this(client: Client) = this(client, DefaultBuilder)
 
-  def init(settings: Init): Unit = { this ! settings }
-  def exec(line: Exec): Unit = { this ! line }
-  def drop(): Unit = { this ! Drop }
-  def stop(): Unit = { this ! Stop }
-  def quit(): Unit = { this ! Quit }
+  def init(settings: Init): Future[Unit] = safely(boot, settings)
+  def exec(line: Exec): Future[Unit] = safely(add, line)
+  def drop(): Future[Unit] = safely(zap, Drop)
+  def stop(): Future[Unit] = safely(halt, Stop)
+  def quit(): Future[Unit] = safely(term(notifyClient = true), Quit)
+  def unknown(un: Any): Future[Unit] = safely(unkn, un)
 
   import java.io.{ByteArrayOutputStream => BAOS}
 
-  private var intp: Interpreter = null
+  private val intpRef: AtomicReference[Interpreter] = new AtomicReference
+  private def intp = intpRef.get
+
+  private def unkn(un: Any, b: BAOS): Unit =
+    client.unknown(un)
 
   private def boot(i: Init, b: BAOS): Unit = {
     halt(i, b)
     client.starting(i)
-    intp = builder.interpreter(i)
+    intpRef.getAndSet(builder.interpreter(i))
     intp.getClass // throw new NullPointerException
     redo(b)
     client.started(i)
   }
 
   private def halt(r: Any, b:BAOS): Unit = {
-    if (intp != null) {
-      intp = null
+    Option(intpRef.getAndSet(null)).foreach { _ =>
       client.stopped()
     }
   }
 
-  private val hist = new ListBuffer[Exec]
+  import scala.collection.JavaConverters._
+  private val hist = (new CopyOnWriteArrayList[Exec]).asScala
 
   private def add(e:Exec, b: BAOS): Unit = {
     hist += e
@@ -226,48 +227,39 @@ class EclipseRepl(client: Client, builder: Builder) extends Suppress.DeprecatedW
   }
 
   private def doit(e: Exec, b: BAOS): Unit = {
-    if (intp != null) {
+    Option(intp).map { interpreter =>
       client.doing(e)
-      val r = intp.interpret(e)
+      val r = interpreter.interpret(e)
       val o = b.toString.trim ; b.reset()
       client.done(e, r, o)
+    }.orElse {
+      logger.debug("interpreter not found")
+      None
     }
   }
 
-  private def term(r: Any, b: BAOS): Unit = {
+  private def term(notifyClient: Boolean)(r: Any, b: BAOS): Unit = {
     halt(r, b)
     zap(r, b)
-    client.terminating()
+    if (notifyClient)
+      client.terminating()
   }
 
-  private def unkn(r: Any, b: BAOS): Unit = {
-    client.unknown(r)
-  }
-
-  private def safely[T](work: (T, BAOS) => Unit, r: T, loop: Boolean): Unit = {
+  private def safely[T](work: (T, BAOS) => Unit, r: T): Future[Unit] = Future {
     val b = new BAOS
     Console.withOut(b) { Console.withErr(b) {
-      try work(r, b)
-      catch { case t: Throwable =>
+      try {
+        work(r, b)
+      } catch { case t: Throwable =>
         try {
           val o = b.toString.trim ; b.reset()
           client.failed(r, t, o)
-          term(r, b)
+          term(notifyClient = false)(r, b)
         } finally
-          throw t // actor framework will print t
+          logger.error("error during command processing", t)
       }
     }}
-    if (loop) act() // must be outside try/catch
   }
-
-  def act(): Unit = { react {
-    case e: Exec => safely(add, e, true)
-    case i: Init => safely(boot, i, true)
-    case Stop =>    safely(halt, Stop, true)
-    case Drop =>    safely(zap, Drop, true)
-    case Quit =>    safely(term, Quit, false)
-    case u =>       safely(unkn, u, true)
-  }}
 
   builder.constructed(this)
 }

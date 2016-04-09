@@ -1,7 +1,9 @@
 package org.scalaide.refactoring.internal
 
 import scala.tools.refactoring.implementations
+
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.NotSpecified
 
 /**
  * A refactoring that expands bindings to case-classes in pattern matches with
@@ -14,7 +16,8 @@ class ExpandCaseClassBinding extends RefactoringExecutor with RefactoringExecuto
     new ExpandCaseClassBindingScalaIdeRefactoring(selectionStart, selectionEnd, file)
 
   class ExpandCaseClassBindingScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-    extends ScalaIdeRefactoring("Expand Case Class Binding", file, start, end) {
+    // feature is [[NotSpecified]] because the refactoring is already counted as quick assist
+    extends ScalaIdeRefactoring(NotSpecified, "Expand Case Class Binding", file, start, end) {
 
     val refactoring = file.withSourceFile((_, compiler) => new implementations.ExpandCaseClassBinding {
       val global = compiler

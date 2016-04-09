@@ -2,7 +2,6 @@ package org.scalaide.core.ui
 
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.formatter.{ DefaultCodeFormatterConstants => Dcfc }
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.jdt.ui.PreferenceConstants

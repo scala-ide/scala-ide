@@ -10,10 +10,16 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.ui.internal.editor.decorators.implicits.ImplicitHighlightingPresenter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
+import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 
-class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor with MarkOccurrencesEditorExtension {
+class ScalaClassFileEditor extends ClassFileEditor with ScalaCompilationUnitEditor with MarkOccurrencesEditorExtension with OutlinePageEditorExtension{
 
   private lazy val implicitHighlighter = new ImplicitHighlightingPresenter(sourceViewer)
+
+  override def dispose() = {
+    super.dispose()
+    implicitHighlighter.dispose()
+  }
 
   override def createPartControl(parent: org.eclipse.swt.widgets.Composite): Unit = {
     super.createPartControl(parent)

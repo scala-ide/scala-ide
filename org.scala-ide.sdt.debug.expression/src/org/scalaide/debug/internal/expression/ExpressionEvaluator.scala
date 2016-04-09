@@ -11,6 +11,7 @@ import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.context.VariableContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.phases._
+import org.scalaide.debug.internal.preferences.ExpressionEvaluatorPreferences.shouldAddImportsFromCurrentFile
 import org.scalaide.logging.HasLogger
 
 object ExpressionEvaluator {
@@ -55,7 +56,7 @@ object ExpressionEvaluator {
       ctx => new SearchForUnboundVariables(ctx.toolbox, ctx.context.localVariablesNames()),
       ctx => new MockAssignment,
       ctx => new MockUnboundValuesAndAddImportsFromThis(ctx.toolbox, ctx.context),
-      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage),
+      ctx => new AddImports[BeforeTypecheck](ctx.toolbox, ctx.context.thisPackage, shouldAddImportsFromCurrentFile),
       ctx => new MockThis,
       ctx => new MockSuper(ctx.toolbox),
       ctx => MockTypedLambda(ctx.toolbox))
@@ -136,7 +137,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
       case exception: Throwable =>
         val codeAfterPhases = stringifyTreesAfterPhases(transformed.history)
         val message =
-          s"Reflective compilation of: '$code' failed, full transformation history logged at 'TRACE' level"
+          s"Reflective compilation of: '$code' failed, full transformation history logged at 'DEBUG' level"
         val allHistory =
           s"""Trees transformation history:
              |$codeAfterPhases
@@ -211,13 +212,13 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
           case e: Throwable =>
             val codeAfterPhases = stringifyTreesAfterPhases(lastData.history)
             val message =
-              s"Applying phase: ${phase.phaseName} failed, full transformation history logged at 'TRACE' level"
+              s"Applying phase: ${phase.phaseName} failed, full transformation history logged at 'DEBUG' level"
             val allHistory =
               s"""Trees before current transformation:
                  |$codeAfterPhases
                  |""".stripMargin
             logger.error(message)
-            logger.trace(allHistory, e)
+            logger.debug(allHistory, e)
             throw e
         }
     }

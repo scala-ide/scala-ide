@@ -3,23 +3,12 @@ package org.scalaide.core.internal.jdt.util
 import scala.tools.nsc.settings.ScalaVersion
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.availableBundledInstallations
-import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.core.IScalaPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IClasspathContainer
 import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.core.runtime.IStatus
-import java.io.FileInputStream
 import org.scalaide.logging.HasLogger
-import java.io.FileOutputStream
-import org.eclipse.core.resources.IProject
-import java.io.IOException
-import org.eclipse.core.runtime.CoreException
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.runtime.Path
-import java.io.File
-import org.eclipse.core.runtime.Status
 import org.scalaide.core.SdtConstants
 
 trait ScalaClasspathContainerHandler extends HasLogger {

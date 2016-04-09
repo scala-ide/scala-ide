@@ -1,9 +1,6 @@
 package org.scalaide.core.internal.containers
 
-import java.util.Properties
-import java.util.zip.ZipFile
 import scala.tools.nsc.settings.ScalaVersion
-import org.eclipse.core.resources.ProjectScope
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.ClasspathContainerInitializer
@@ -15,14 +12,10 @@ import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPage
 import org.eclipse.jdt.ui.wizards.IClasspathContainerPageExtension
 import org.eclipse.jdt.ui.wizards.NewElementWizardPage
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.jface.viewers.ISelectionChangedListener
 import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.jface.viewers.LabelProvider
 import org.eclipse.jface.viewers.ListViewer
 import org.eclipse.jface.viewers.SelectionChangedEvent
 import org.eclipse.jface.viewers.StructuredSelection
-import org.eclipse.jface.viewers.Viewer
 import org.eclipse.swt.SWT
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.GridLayout
@@ -37,7 +30,6 @@ import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.project.ScalaInstallationChoiceUIProviders
 import org.scalaide.util.internal.CompilerUtils.ShortScalaVersion
-import org.scalaide.util.internal.CompilerUtils.shortString
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.util.internal.SettingConverterUtil
 import org.scalaide.core.SdtConstants

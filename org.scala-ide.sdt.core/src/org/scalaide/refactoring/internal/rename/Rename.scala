@@ -4,6 +4,7 @@ package rename
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.implementations
 
+import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.refactoring.internal.RefactoringExecutor
 import org.scalaide.refactoring.internal.RefactoringHandler
 import org.scalaide.util.eclipse.EditorUtils
@@ -39,8 +40,8 @@ class Rename extends RefactoringHandler {
     val isLocalRename = EditorUtils.withScalaFileAndSelection { (scalaFile, selected) =>
       scalaFile.withSourceFile{(source, compiler) =>
         val refactoring = new implementations.Rename with GlobalIndexes {
-          val global = compiler
-          val index = EmptyIndex
+          override val global = compiler
+          override val index = EmptyIndex
         }
 
         val selection = refactoring.askLoadedAndTypedTreeForFile(source).left.toOption map { tree =>
@@ -49,7 +50,11 @@ class Rename extends RefactoringHandler {
           new refactoring.FileSelection(source.file, tree, start, end)
         }
 
-        selection map refactoring.prepare flatMap (_.right.toOption) map {
+        val preparation = selection flatMap { selection =>
+          compiler.asyncExec(refactoring.prepare(selection)).getOption()
+        }
+
+        preparation flatMap (_.right.toOption) map {
           case refactoring.PreparationResult(_, isLocal) => isLocal
           case _ => false
         }

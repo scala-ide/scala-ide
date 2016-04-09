@@ -10,7 +10,6 @@ import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit }
 import org.eclipse.ui.ide.IDE
 import scalariform.utils.TextEdit
 import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
-import org.eclipse.jface.text.IDocumentExtension4
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.viewers.ISelection
 import org.eclipse.core.runtime.IAdaptable
@@ -28,7 +27,6 @@ import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IWorkbenchWindow
-import java.io.FileNotFoundException
 import scala.util.Try
 
 object EclipseUtils extends HasLogger {
@@ -224,4 +222,6 @@ object EclipseUtils extends HasLogger {
    */
   def workspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
+
+  def projectFromPath(project: IPath): IProject = EclipseUtils.workspaceRoot.getProject(project.toString)
 }

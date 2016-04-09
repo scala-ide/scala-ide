@@ -308,7 +308,8 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     import org.scalaide.core.testsetup.SDTTestUtils._
 
     if (state ne NOT_LAUNCHED) {
-      debugTarget.breakpointManager.waitForAllCurrentEvents()
+      val processed = debugTarget.breakpointManager.waitForAllCurrentEvents()
+      println(processed)
       waitUntil(TIMEOUT) {
         debugTarget.breakpointManager.getBreakpointRequestState(breakpoint) match {
           case Some(state) =>

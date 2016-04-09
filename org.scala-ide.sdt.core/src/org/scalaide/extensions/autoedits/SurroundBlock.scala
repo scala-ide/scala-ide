@@ -1,6 +1,7 @@
 package org.scalaide.extensions
 package autoedits
 
+import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
 import org.scalaide.core.text.Add
 import org.scalaide.core.text.Replace
@@ -37,7 +38,8 @@ object SurroundBlockSetting extends AutoEditSetting(
          |
          |Note: The opening curly brace needs to be the last character of the \
          |line (excluding whitespace), otherwise no ending curly brace is added.
-         |""".stripMargin)
+         |""".stripMargin),
+  partitions = Set(IDocument.DEFAULT_CONTENT_TYPE)
 )
 
 trait SurroundBlock extends AutoEdit {
@@ -50,13 +52,12 @@ trait SurroundBlock extends AutoEdit {
       case Add(start, "{") =>
         surroundLocation(start) map {
           case (pos, indentLen, token) =>
-            val sep = System.getProperty("line.separator")
             val indent = " " * indentLen
 
             val change = if (elseLikeTokens(token.tokenType))
               Replace(start, pos + indentLen, s"{${document.textRange(start, pos)}$indent} ")
             else
-              Replace(start, pos, s"{${document.textRange(start, pos)}$indent}$sep")
+              Replace(start, pos, s"{${document.textRange(start, pos)}$indent}${document.defaultLineDelimiter}")
             change.withCursorPos(start+1)
         }
     }

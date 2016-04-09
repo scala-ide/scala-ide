@@ -1,6 +1,7 @@
 package org.scalaide.refactoring.internal
 package move
 
+import scala.language.reflectiveCalls
 import scala.tools.refactoring.analysis.GlobalIndexes
 import scala.tools.refactoring.common.NewFileChange
 import scala.tools.refactoring.common.TextChange
@@ -15,9 +16,7 @@ import org.eclipse.ltk.core.refactoring.CompositeChange
 import org.eclipse.ltk.core.refactoring.RefactoringStatus
 import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.scalaide.refactoring.internal.FullProjectIndex
-import org.scalaide.refactoring.internal.RefactoringExecutorWithWizard
-import org.scalaide.refactoring.internal.ScalaIdeRefactoring
+import org.scalaide.core.internal.statistics.Features.MoveClass
 
 /**
  * The Move Class refactoring moves (non-nested) classes, objects and traits between different
@@ -32,7 +31,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
   def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new MoveClassScalaIdeRefactoring(start, end, file)
 
   class MoveClassScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
-      extends ScalaIdeRefactoring("Move Class/Trait/Object", file, start, end) with FullProjectIndex {
+      extends ScalaIdeRefactoring(MoveClass, "Move Class/Trait/Object", file, start, end) with FullProjectIndex {
 
     val project = file.scalaProject
 

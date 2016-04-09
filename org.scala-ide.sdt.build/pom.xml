@@ -5,13 +5,13 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>org.scala-ide.build</artifactId>
-    <version>4.2.0-SNAPSHOT</version>
+    <version>4.5.0-SNAPSHOT</version>
   </parent>
   <artifactId>org.scala-ide.sdt.build</artifactId>
   <packaging>pom</packaging>
-  <version>4.2.0-SNAPSHOT</version>
+  <version>4.5.0-SNAPSHOT</version>
 
-  <!-- scm configuration is require to extract the github hash-->
+  <!-- scm configuration is required to extract the github hash-->
   <scm>
     <connection>scm:git://github.com/scala-ide/scala-ide.git</connection>
     <url>https://github.com/scala-ide/scala-ide</url>
@@ -57,7 +57,7 @@
       <id>scala-refactoring</id>
       <name>Scala Refactoring p2 repository</name>
       <layout>p2</layout>
-      <url>${repo.scala-refactoring}</url>
+      <url>file:../org.scala-ide.refactoring/org.scala-ide.refactoring.update-site/target/site</url>
     </repository>
     <repository>
       <id>scalariform</id>

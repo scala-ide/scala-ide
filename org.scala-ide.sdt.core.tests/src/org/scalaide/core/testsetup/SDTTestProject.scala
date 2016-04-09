@@ -3,29 +3,18 @@ package testsetup
 
 import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.net.URL
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.IProjectDescription
-import org.eclipse.core.resources.IWorkspaceRoot
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.CoreException
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.eclipse.jdt.core.IClasspathEntry
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.IPackageFragment
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.core.IType
 import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.launching.JavaRuntime
-import org.osgi.framework.Bundle
 import org.scalaide.core.SdtConstants
 
 /** A test project, created from scratch.

@@ -6,7 +6,6 @@ import java.io.File
 import scala.tools.nsc.io.AbstractFile
 import scala.util.Try
 
-import org.eclipse.core.filebuffers.FileBuffers
 import org.eclipse.core.internal.resources.ResourceException
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
@@ -17,10 +16,6 @@ import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.IJavaModelMarker
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.jdt.core.compiler.IProblem
-import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.scalaide.core.resources.EclipseResource
 import org.eclipse.core.filesystem.URIUtil
 import org.eclipse.core.runtime.IPath

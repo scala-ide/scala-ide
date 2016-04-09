@@ -32,6 +32,7 @@ class ExprEvalPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefer
     addBooleanField(ShowStaticFieldsInTreeView, "Show static fields in tree view", c)
     addBooleanField(ShowSyntheticFieldsInTreeView, "Show synthetic fields in tree view", c)
     addBooleanField(RefreshVariablesViewAfterEvaluation, "Refresh variables view after evaluation", c)
+    addBooleanField(AddImportsFromCurrentFile, "Add imports from current file", c)
   }
 
   override def init(workbench: IWorkbench): Unit = {}
@@ -53,6 +54,7 @@ object ExprEvalPreferencePage {
   val ShowSyntheticFieldsInTreeView = "org.scala-ide.sdt.debug.expression.expEval.showSyntheticFieldsInTreeView"
   val ShowCollectionsLogicalStructure = "org.scala-ide.sdt.debug.expression.expEval.showCollectionsLogicalStructureInTreeView"
   val RefreshVariablesViewAfterEvaluation = "org.scala-ide.sdt.debug.expEval.refreshVariablesViewAfterEvaluation"
+  val AddImportsFromCurrentFile = "org.scala-ide.sdt.debug.expression.expEval.addImportsFromCurrentFile"
 }
 
 class ExprEvalPreferencesInitializer extends AbstractPreferenceInitializer {
@@ -69,5 +71,6 @@ class ExprEvalPreferencesInitializer extends AbstractPreferenceInitializer {
     store.setDefault(LayoutType, ExpressionEvaluatorViewLayoutType.ConsoleAndTreeHorizontally.id.toString())
     store.setDefault(ShowCollectionsLogicalStructure, true)
     store.setDefault(RefreshVariablesViewAfterEvaluation, true)
+    store.setDefault(AddImportsFromCurrentFile, false)
   }
 }

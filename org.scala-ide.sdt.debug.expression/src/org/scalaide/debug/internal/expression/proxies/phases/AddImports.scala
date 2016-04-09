@@ -24,8 +24,8 @@ import org.scalaide.debug.internal.expression.sources.Imports
  *
  * Could be run both before and after `typecheck`.
  */
-class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], thisPackage: => Option[String])
-  extends TransformationPhase[A] {
+class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], thisPackage: => Option[String], includeSourceFile: Boolean = false)
+    extends TransformationPhase[A] {
 
   import toolbox.u._
 
@@ -36,7 +36,7 @@ class AddImports[A <: TypecheckRelation](val toolbox: ToolBox[universe.type], th
 
     val debuggerImportsRoots = thisPackage.toList ++ List(contextPackageName, proxiesPackageName, primitiveProxiesPackageName)
     val debuggerImports = debuggerImportsRoots.map(root => s"import $root._")
-    val allImports = debuggerImports +: Imports.importsFromCurrentStackFrame
+    val allImports = if (includeSourceFile) debuggerImports +: Imports.importsFromCurrentStackFrame else Seq(debuggerImports)
 
     val newTree = allImports.foldRight(data.tree) {
       case (imports, tree) =>

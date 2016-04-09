@@ -1,19 +1,14 @@
 package org.scalaide.core.internal.builder
 
 import scala.collection.mutable.HashSet
-import java.{ lang => jl }
 import java.{ util => ju }
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceDelta
 import org.eclipse.core.resources.IResourceDeltaVisitor
-import org.eclipse.core.resources.IResourceVisitor
 import org.eclipse.core.runtime.IProgressMonitor
-import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.SubMonitor
-import org.eclipse.jdt.internal.core.JavaModelManager
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.jdt.internal.core.builder.State
 import org.scalaide.util.eclipse.FileUtils
@@ -21,8 +16,6 @@ import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.logging.HasLogger
 import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.core.internal.jdt.util.JDTUtils
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.ui.internal.preferences
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.IScalaPlugin
 
@@ -46,7 +39,6 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
   override def build(kind: Int, ignored: ju.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
     import IncrementalProjectBuilder._
-    import zinc.EclipseSbtBuildManager
 
     val project = IScalaPlugin().getScalaProject(this.project)
 

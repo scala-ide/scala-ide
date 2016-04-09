@@ -1,9 +1,7 @@
 package org.scalaide.core.internal.quickassist.createmethod
 
 import scala.reflect.internal.util.RangePosition
-import scala.tools.refactoring.implementations.AddMethod
 import scala.tools.refactoring.implementations.AddMethodTarget
-import org.eclipse.jface.text.Position
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.util.internal.scalariform.ScalariformParser
 import org.scalaide.util.internal.scalariform.ScalariformUtils
@@ -11,9 +9,12 @@ import org.scalaide.core.internal.quickassist.AddMethodProposal
 import org.scalaide.core.internal.quickassist.AddValOrDefProposal
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 import org.scalaide.core.compiler.InteractiveCompilationUnit
+import org.scalaide.core.internal.statistics.Features.CreateMethod
 
-case class CreateMethodProposal(fullyQualifiedEnclosingType: Option[String], override val defName: String,
-  override val target: AddMethodTarget, icu: InteractiveCompilationUnit, offset: Int, length: Int) extends AddValOrDefProposal with AddMethodProposal {
+case class CreateMethodProposal(
+  fullyQualifiedEnclosingType: Option[String], override val defName: String,
+  override val target: AddMethodTarget, icu: InteractiveCompilationUnit, offset: Int, length: Int)
+    extends AddValOrDefProposal(CreateMethod) with AddMethodProposal {
 
   private val UnaryMethodNames = "+-!~".map("unary_" + _)
 

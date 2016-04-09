@@ -1,6 +1,10 @@
 package org.scalaide.refactoring.internal
 
 import scala.tools.refactoring.Refactoring
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.core.internal.formatter.FormatterPreferences._
+import scalariform.formatter.preferences._
 
 /**
  * Enables passing the user's source formatting preferences to the refactoring library's
@@ -16,8 +20,17 @@ trait UserPreferencesFormatting {
   trait FormattingOverrides {
     this: Refactoring =>
 
-    override val spacingAroundMultipleImports: String = " "
+    override val defaultIndentationStep: String = {
+      val p = ScalaPlugin().getPreferenceStore
+      val indentWithTabs = p.getBoolean(IndentWithTabs.eclipseKey)
+      val spaces = p.getInt(IndentSpaces.eclipseKey)
 
-    // TODO: Create more overrides here and in the refactoring library.
+      if (indentWithTabs) "\t" else " "*spaces
+    }
+
+    override val spacingAroundMultipleImports: String = {
+      val addSpaces = ScalaPlugin().getPreferenceStore.getBoolean(EditorPreferencePage.SPACES_AROUND_IMPORT_BLOCKS)
+      if (addSpaces) " " else ""
+    }
   }
 }

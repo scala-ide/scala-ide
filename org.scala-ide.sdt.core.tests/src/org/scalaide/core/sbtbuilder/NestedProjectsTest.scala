@@ -17,7 +17,6 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.core.resources.IFile
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
-import junit.framework.Assert
 import org.eclipse.core.resources.IMarker
 
 /**
@@ -96,7 +95,7 @@ class NestedProjectsTest {
 
       val nestedErrors = scalaProject.underlying.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
       val errors = SDTTestUtils.markersMessages(nestedErrors.toList)
-      assertEquals("Two errors in nested project " + errors, 2, errors.length)
+      assertEquals("One error in nested project " + errors, 1, errors.length)
     } finally
       SDTTestUtils.changeContentOfFile(unitIFile, saved)
   }

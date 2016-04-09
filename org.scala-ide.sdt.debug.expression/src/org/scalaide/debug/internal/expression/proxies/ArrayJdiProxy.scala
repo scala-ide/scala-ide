@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression.proxies
 
 import org.scalaide.debug.internal.expression.context.JdiContext
-import org.scalaide.debug.internal.expression.proxies.primitives.PrimitiveJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.IntJdiProxy
 import org.scalaide.debug.internal.expression.proxies.primitives.UnitJdiProxy
 

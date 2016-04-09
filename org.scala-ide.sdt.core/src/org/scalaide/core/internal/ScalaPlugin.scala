@@ -1,9 +1,7 @@
 package org.scalaide.core.internal
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.settings.ScalaVersion
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
@@ -40,9 +38,11 @@ import org.scalaide.ui.internal.editor.ScalaDocumentProvider
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
+import org.scalaide.core.internal.statistics.Statistics
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.CompilerUtils._
 import org.scalaide.util.internal.FixedSizeCache
+import org.eclipse.jdt.internal.ui.JavaPlugin
 
 object ScalaPlugin {
 
@@ -103,7 +103,11 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     }
     ResourcesPlugin.getWorkspace.addResourceChangeListener(this, IResourceChangeEvent.PRE_CLOSE | IResourceChangeEvent.POST_CHANGE)
     JavaCore.addElementChangedListener(this)
-    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString() )
+    logger.info("Scala compiler bundle: " + platformInstallation.compiler.classJar.toOSString())
+
+    // force creation of statistics tracker
+    statistics
+    logger.info("Statistics tracker started")
   }
 
   override def stop(context: BundleContext) = {
@@ -123,8 +127,15 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   /** A LRU cache of class loaders for Scala builders */
   lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
 
+  // TODO: eventually scala plugin should have its own image description registry
+  lazy val imageDescriptorRegistry = JavaPlugin.getImageDescriptorRegistry
   // Scala project instances
   private val projects = new mutable.HashMap[IProject, ScalaProject]
+
+  private lazy val stats = new Statistics
+
+  /** Returns the statistics tracker. */
+  def statistics = stats
 
   override def scalaCompilationUnit(input: IEditorInput): Option[ScalaCompilationUnit] = {
     def unitOfSourceFile = Option(documentProvider.getWorkingCopy(input)) map (ScalaCompilationUnit.castFrom)

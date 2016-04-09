@@ -2,17 +2,10 @@ package org.scalaide.ui.internal.diagnostic
 
 import org.eclipse.jface.dialogs.Dialog
 import org.eclipse.jface.dialogs.IDialogConstants
-import org.eclipse.swt.widgets.{ List => SWTList, _ }
-import org.eclipse.swt.layout.RowLayout
+import org.eclipse.swt.widgets._
 import org.eclipse.swt.layout.GridLayout
 import org.eclipse.swt.layout.GridData
-import org.eclipse.ui.internal.layout.CellLayout
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.ModifyListener
-import org.eclipse.swt.events.ModifyEvent
-import org.eclipse.swt.events.SelectionAdapter
-import org.eclipse.swt.events.SelectionListener
-import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.core.runtime.Platform
 import org.scalaide.ui.internal.actions.OpenExternalFile
 import org.scalaide.core.internal.logging.LogManager

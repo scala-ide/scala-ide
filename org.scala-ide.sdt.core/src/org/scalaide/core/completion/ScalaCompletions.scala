@@ -1,13 +1,11 @@
 package org.scalaide.core.completion
 
-import scala.reflect.internal.util.SourceFile
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchPattern
 import org.eclipse.jdt.core.search.TypeNameRequestor
 import org.eclipse.jdt.core.IJavaElement
 import scala.collection.mutable
-import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.logging.HasLogger
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import scala.collection.mutable.MultiMap

@@ -2,7 +2,6 @@ package org.scalaide.core.lexical
 
 import org.junit.Assert._
 import org.junit.Test
-import org.junit.Before
 import org.eclipse.jface.text._
 
 class ScalaDocumentPartitionerTest {

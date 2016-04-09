@@ -2,7 +2,9 @@ package org.scalaide.refactoring.internal
 
 import java.text.Collator
 import java.util.Comparator
+
 import scala.tools.refactoring.implementations
+
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.compiler.IProblem
@@ -18,6 +20,7 @@ import org.eclipse.jface.window.Window
 import org.scalaide.core.internal.jdt.model.LazyToplevelClass
 import org.scalaide.core.internal.jdt.model.ScalaElement
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
+import org.scalaide.core.internal.statistics.Features.OrganizeImports
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.internal.eclipse.TextEditUtils
@@ -35,7 +38,7 @@ import org.scalaide.util.internal.eclipse.TextEditUtils
  */
 class OrganizeImports extends RefactoringExecutorWithoutWizard {
 
-  def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
+  override def createRefactoring(selectionStart: Int, selectionEnd: Int, file: ScalaSourceFile) =
     new OrganizeImportsScalaIdeRefactoring(file)
 
   override def perform(): Unit = {
@@ -109,10 +112,16 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
        */
       def createChanges(scalaSourceFile: ScalaSourceFile, imports: Iterable[TypeNameMatch], pm: IProgressMonitor) = {
         scalaSourceFile.withSourceFile { (sourceFile, compiler) =>
-          val refactoring = new implementations.AddImportStatement {
-            val global = compiler
-          }
-          refactoring.addImports(scalaSourceFile.file, imports map (_.getFullyQualifiedName))
+          import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+
+          val fullyQualifiedNames = imports map (_.getFullyQualifiedName)
+
+          compiler.asyncExec {
+            val refactoring = new implementations.AddImportStatement {
+              val global = compiler
+            }
+            refactoring.addImports(scalaSourceFile.file, fullyQualifiedNames)
+          }.getOrElse(Nil)()
         } getOrElse (Nil)
       }
 
@@ -212,11 +221,11 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
     }
   }
 
-  class OrganizeImportsScalaIdeRefactoring(file: ScalaSourceFile) extends ScalaIdeRefactoring("Organize Imports", file, 0, 0) {
+  class OrganizeImportsScalaIdeRefactoring(override val file: ScalaSourceFile) extends ScalaIdeRefactoring(OrganizeImports, "Organize Imports", file, 0, 0) {
 
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
 
-    val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { val global = c })
+    override val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { override val global = c })
 
     override protected def leaveDirty = true
 
@@ -228,7 +237,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
       status
     }
 
-    def refactoringParameters = {
+    override def refactoringParameters = {
       val project = file.getJavaProject.getProject
       val organizationStrategy = getOrganizeImportStrategy(project)
 
@@ -238,6 +247,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
           case ExpandImports => List(refactoring.ExpandImports)
           case CollapseImports => List(refactoring.CollapseImports, refactoring.SortImportSelectors)
           case PreserveExistingGroups => Nil // this is not passed as an option
+          case PreserveWildcards => List(refactoring.ExpandImports)
         }
 
         val wildcards = refactoring.AlwaysUseWildcards(getWildcardImportsForProject(project).toSet)
@@ -257,7 +267,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
         if(compilationUnitHasProblems) {
           // this is safer when there are problems in the compilation unit
           refactoring.Dependencies.RemoveUnneeded
-        } else if (organizationStrategy == PreserveExistingGroups) {
+        } else if (organizationStrategy == PreserveExistingGroups || organizationStrategy == PreserveWildcards) {
           // preserve the existing grouping of imports, but still remove all unneeded ones
           refactoring.Dependencies.RecomputeAndModify
         } else {
@@ -270,7 +280,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
   }
 
   private class TypeSearchComparator extends Comparator[Object] {
-    def compare(o1: Object, o2: Object): Int = o1 match {
+    override def compare(o1: Object, o2: Object): Int = o1 match {
       case o1: String if o1 == o2 => 0
       case _ =>
         List(o1, o2) map (QualifiedTypeNameHistory.getDefault.getPosition) match {

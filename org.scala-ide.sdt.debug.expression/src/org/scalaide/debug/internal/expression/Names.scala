@@ -4,14 +4,6 @@
 package org.scalaide.debug.internal.expression
 
 import scala.reflect.runtime.universe
-import scala.runtime.RichBoolean
-import scala.runtime.RichByte
-import scala.runtime.RichChar
-import scala.runtime.RichDouble
-import scala.runtime.RichFloat
-import scala.runtime.RichInt
-import scala.runtime.RichLong
-import scala.runtime.RichShort
 
 import org.scalaide.debug.internal.expression.context.JdiContext
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -309,6 +301,8 @@ object Names {
       .map(_.getSimpleName)
 
     val newClassName = "CustomFunction"
+
+    val objectProxyForFieldMethodName = "objectProxyForField"
   }
 
 }

@@ -1,7 +1,5 @@
 package org.scalaide.debug.internal.command
 
-import org.eclipse.core.commands.IHandler
-import org.eclipse.debug.core.commands.ITerminateHandler
 import org.eclipse.core.commands.AbstractHandler
 import org.eclipse.core.commands.ExecutionEvent
 import org.eclipse.debug.ui.DebugUITools

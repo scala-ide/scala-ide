@@ -5,7 +5,6 @@ import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
 import scala.collection.breakOut
 import org.eclipse.jdt.core.compiler.IProblem
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.ITextViewerExtension2

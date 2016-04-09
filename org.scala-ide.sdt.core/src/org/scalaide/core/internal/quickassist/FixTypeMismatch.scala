@@ -5,6 +5,7 @@ import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.texteditor.ITextEditor
 import org.scalaide.core.internal.quickassist.expand.ExpandingProposalBase
+import org.scalaide.core.internal.statistics.Features.FixTypeMismatch
 import org.scalaide.core.quickassist.BasicCompletionProposal
 import org.scalaide.core.quickassist.InvocationContext
 import org.scalaide.core.quickassist.QuickAssist
@@ -36,7 +37,7 @@ class FixTypeMismatch extends QuickAssist {
             // make markers message in form: "... =>replacement"
             val markersMessage = annotationString + ImplicitHighlightingPresenter.DisplayStringSeparator + replacementString
             // construct a proposal with the appropriate location
-            new ExpandingProposalBase(markersMessage, "Transform expression: ", offset, length)
+            new ExpandingProposalBase(FixTypeMismatch, markersMessage, "Transform expression: ", offset, length)
         }
       // no match found for the problem message
       case _ => Nil

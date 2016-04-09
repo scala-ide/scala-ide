@@ -7,7 +7,6 @@ import org.junit.Assert
 import org.junit.BeforeClass
 import org.junit.Test
 import org.scalaide.core.internal.quickassist.explicit.ExplicitReturnType
-import scala.util.control.Exception
 
 object ExplicitTypeAssistTest extends QuickAssistTest {
   @BeforeClass

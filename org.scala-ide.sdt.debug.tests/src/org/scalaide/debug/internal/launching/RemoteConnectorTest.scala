@@ -6,9 +6,7 @@ import java.net.Socket
 import java.net.SocketException
 import java.util.{ Map => JMap }
 import java.util.concurrent.CountDownLatch
-import org.scalaide.debug.internal.ScalaDebugRunningTest
-import org.scalaide.debug.internal.ScalaDebugTestSession
-import org.scalaide.core.testsetup.TestProjectSetup
+
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -19,30 +17,28 @@ import org.eclipse.debug.core.ILaunch
 import org.eclipse.debug.core.ILaunchManager
 import org.eclipse.debug.core.model.IProcess
 import org.eclipse.jdt.launching.JavaRuntime
-import org.junit.After
-import org.junit.Assert._
-import org.junit.Before
+import org.eclipse.jdt.launching.SocketUtil
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
-import org.junit.Test
-import org.scalaide.debug.internal.EclipseDebugEvent
 import org.junit.Ignore
+import org.junit.Rule
+import org.junit.Test
+import org.junit.rules.ExternalResource
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
+import org.scalaide.core.testsetup.TestProjectSetup
+import org.scalaide.debug.internal.EclipseDebugEvent
+import org.scalaide.debug.internal.ScalaDebugRunningTest
+import org.scalaide.debug.internal.ScalaDebugTestSession
 
 object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
   import ScalaDebugTestSession._
 
   final val VmArgsKey = "org.eclipse.jdt.launching.VM_ARGUMENTS"
   final val ConnectKey = "org.eclipse.jdt.launching.CONNECT_MAP"
-
-  /**
-   * Select a free port by letting the OS pick one and then closing it.
-   */
-  def freePort(): Int = {
-    val socket= new Socket()
-    socket.bind(new InetSocketAddress(0)) // bind on all network interface, on a port chosen by the OS
-    val port= socket.getLocalPort()
-    socket.close()
-    port
-  }
+  val singleThreadMonitor = new Object
 
   /**
    * Create a debug session for the given launch configuration, using the given port.
@@ -144,86 +140,104 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
     project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
   }
+}
 
+trait RemoteConnectorTestPortResource {
+  import RemoteConnectorTest._
+
+  @Rule
+  def resourceManager = ResourceManager
+  private val ResourceManager = new ExternalResource {
+    private def savePreferences(): Unit = {
+      debugConnectionTimeout = JavaRuntime.getPreferences().getInt(JavaRuntime.PREF_CONNECT_TIMEOUT)
+    }
+
+    private def restorePreferences(): Unit = {
+      JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, debugConnectionTimeout)
+    }
+
+    private def cleanDebugSession(): Unit = {
+      if (session ne null) {
+        session.terminate()
+        session = null
+      }
+      if (application ne null) {
+        terminateProcess(application)
+        application = null
+      }
+      if (debugEventListener ne null) {
+        DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
+        debugEventListener = null
+      }
+    }
+
+    override protected def before(): Unit = {
+      port_ = SocketUtil.findFreePort
+      savePreferences()
+    }
+
+    override protected def after(): Unit = {
+      restorePreferences()
+      cleanDebugSession()
+    }
+
+    override def apply(base: Statement, description: Description): Statement = singleThreadMonitor.synchronized {
+      super.apply(base, description)
+    }
+
+    private var port_ = -1
+    var session: ScalaDebugTestSession = null
+    var application: ILaunch = null
+    var debugEventListener: IDebugEventSetListener = null
+    private var debugConnectionTimeout: Int = -1
+
+    def port = port_
+  }
 }
 
 /**
  * Test using the Scala remote connectors to debug applications
  */
-@Ignore("Enable it once #1001464 is fixed")
-class RemoteConnectorTest {
-
+@Ignore("Tests fail on some systems. Reactivate once #1002640 is fixed.")
+class RemoteConnectorTest extends RemoteConnectorTestPortResource {
   import RemoteConnectorTest._
   import ScalaDebugTestSession._
-
-  private var session: ScalaDebugTestSession = null
-  private var application: ILaunch = null
-  private var debugEventListener: IDebugEventSetListener = null
-
-  private var debugConnectionTimeout: Int = -1
-
-  @Before
-  def savePreferences(): Unit = {
-    debugConnectionTimeout = JavaRuntime.getPreferences().getInt(JavaRuntime.PREF_CONNECT_TIMEOUT)
-  }
-
-  @After
-  def restorePreferences(): Unit = {
-    JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, debugConnectionTimeout)
-  }
-
-  @After
-  def cleanDebugSession(): Unit = {
-    if (session ne null) {
-      session.terminate()
-      session = null
-    }
-    if (application ne null) {
-      terminateProcess(application)
-      application = null
-    }
-    if (debugEventListener ne null) {
-      DebugPlugin.getDefault().removeDebugEventListener(debugEventListener)
-      debugEventListener = null
-    }
-  }
 
   /**
    * Check if it is possible to connect to a running VM.
    */
   @Test(timeout = 5000)
   def attachToRunningVM(): Unit = {
-    val port = freePort()
-    application = launchInRunMode("HelloWorld listening", port)
+    resourceManager.application = launchInRunMode("HelloWorld listening", resourceManager.port)
 
-    waitForOpenSocket(port)
+    waitForOpenSocket(resourceManager.port)
 
-    session = initDebugSession("Remote attaching", port)
+    resourceManager.session = initDebugSession("Remote attaching", resourceManager.port)
 
-    session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
+    resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
 
-    session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
+    resourceManager.session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
   }
 
   /**
    * Check if it is possible to connect to a running VM that did not suspend.
    */
-  @Test(timeout = 5000)
+  @Ignore("Debugee cannot guarantee to wait for its Debugging")
+  @Test(timeout = 10000)
   def attachToNonSuspendedRunningVM(): Unit = {
-    val port = freePort()
-    application = launchInRunMode("HelloWorld listening not suspended", port)
+    resourceManager.application = launchInRunMode("HelloWorld listening not suspended", resourceManager.port)
 
-    waitForOpenSocket(port)
+    waitForOpenSocket(resourceManager.port)
 
-    session = initDebugSession("Remote attaching", port)
-    session.launch()
-    val bp1 = session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 7)
+    resourceManager.session = initDebugSession("Remote attaching", resourceManager.port)
+    resourceManager.session.launch()
+    val bp1 = resourceManager.session.addLineBreakpoint(TYPENAME_SAYHELLOWORLD, 7)
     bp1.setEnabled(true)
 
-    application.getProcesses()(0).getStreamsProxy().write("Scala IDE\n")
+    resourceManager.application.getProcesses()(0).getStreamsProxy().write("Scala IDE\n")
 
-    session.waitUntilSuspended()
-    session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
+    resourceManager.session.waitUntilSuspended()
+    resourceManager.session.checkStackFrame(TYPENAME_SAYHELLOWORLD + "$", "main([Ljava/lang/String;)V", 7)
   }
 
   /**
@@ -235,29 +249,27 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def listenToAttachingVM(): Unit = {
-    val port = freePort()
     // tweak the timeout preference. 3s should be good enough.
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 3000)
 
-    session = initDebugSession("Remote listening", port)
+    resourceManager.session = initDebugSession("Remote listening", resourceManager.port)
 
     // this command actually launch the debugger
-    application = session.runToLine(TYPENAME_HELLOWORLD + "$", 6, () => launchInRunMode("HelloWorld attaching", port))
+    resourceManager.application = resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6, () => launchInRunMode("HelloWorld attaching", resourceManager.port))
 
-    assertEquals("The 'fake' process should have been removed after connection", session.debugTarget.getLaunch().getProcesses().length, 0)
+    assertEquals("The 'fake' process should have been removed after connection", resourceManager.session.debugTarget.getLaunch().getProcesses().length, 0)
 
-    session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
+    resourceManager.session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
   }
 
   /**
    * Check exception throw when trying to connect to a not available VM.
    */
-  @Test(expected = classOf[CoreException])
+  @Test(timeout = 5000, expected = classOf[CoreException])
   def attachToNothing(): Unit = {
-    val port = freePort()
-    session = initDebugSession("Remote attaching", port)
+    resourceManager.session = initDebugSession("Remote attaching", resourceManager.port)
 
-    session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
+    resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
   }
 
   /**
@@ -269,20 +281,19 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def listeningToNobody(): Unit = {
-    val port = freePort()
     // tweak the timeout preference. 10ms to fail fast
     JavaRuntime.getPreferences().setValue(JavaRuntime.PREF_CONNECT_TIMEOUT, 10)
 
     val latch = new CountDownLatch(1)
 
-    debugEventListener = addDebugEventListener {
+    resourceManager.debugEventListener = addDebugEventListener {
       case EclipseDebugEvent(DebugEvent.TERMINATE, p: ListenForConnectionProcess) if p.getLabel.contains("timeout") =>
         latch.countDown()
     }
 
-    session = initDebugSession("Remote listening", port)
+    resourceManager.session = initDebugSession("Remote listening", resourceManager.port)
 
-    session.launch()
+    resourceManager.session.launch()
 
     latch.await()
   }
@@ -292,30 +303,28 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def disconnectReleaseRunningVM(): Unit = {
-    val port = freePort()
+    resourceManager.application = launchInRunMode("HelloWorld listening", resourceManager.port)
 
-    application = launchInRunMode("HelloWorld listening", port)
+    waitForOpenSocket(resourceManager.port)
 
-    waitForOpenSocket(port)
+    resourceManager.session = initDebugSession("Remote attaching", resourceManager.port)
 
-    session = initDebugSession("Remote attaching", port)
+    assertFalse(getProcess(resourceManager.application).isTerminated())
 
-    assertFalse(getProcess(application).isTerminated())
+    resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
 
-    session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
-
-    session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
+    resourceManager.session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
 
     val latch = new CountDownLatch(1)
 
-    val CurrentProcess = getProcess(application)
+    val CurrentProcess = getProcess(resourceManager.application)
 
-    debugEventListener = addDebugEventListener {
+    resourceManager.debugEventListener = addDebugEventListener {
       case EclipseDebugEvent(DebugEvent.TERMINATE, CurrentProcess) =>
         latch.countDown()
     }
 
-    session.disconnect()
+    resourceManager.session.disconnect()
 
     latch.await()
 
@@ -326,23 +335,21 @@ class RemoteConnectorTest {
   /**
    * Check that canTerminate is correctly set
    */
-  @Test(timeout = 2000)
+  @Test(timeout = 5000)
   def cannotTerminate(): Unit = {
-    val port = freePort()
+    resourceManager.application = launchInRunMode("HelloWorld listening", resourceManager.port)
 
-    application = launchInRunMode("HelloWorld listening", port)
+    waitForOpenSocket(resourceManager.port)
 
-    waitForOpenSocket(port)
+    resourceManager.session = initDebugSession("Remote attaching", resourceManager.port)
 
-    session = initDebugSession("Remote attaching", port)
+    assertFalse(getProcess(resourceManager.application).isTerminated())
 
-    assertFalse(getProcess(application).isTerminated())
+    resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
 
-    session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
+    resourceManager.session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
 
-    session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
-
-    assertFalse("canTerminate flag should be false", session.debugTarget.canTerminate)
+    assertFalse("canTerminate flag should be false", resourceManager.session.debugTarget.canTerminate)
 
   }
 
@@ -351,32 +358,30 @@ class RemoteConnectorTest {
    */
   @Test(timeout = 5000)
   def terminateKillsRunningVM(): Unit = {
-    val port = freePort()
+    resourceManager.application = launchInRunMode("HelloWorld listening", resourceManager.port)
 
-    application = launchInRunMode("HelloWorld listening", port)
+    waitForOpenSocket(resourceManager.port)
 
-    waitForOpenSocket(port)
+    resourceManager.session = initDebugSession("Remote attaching termination", resourceManager.port)
 
-    session = initDebugSession("Remote attaching termination", port)
+    assertFalse(getProcess(resourceManager.application).isTerminated())
 
-    assertFalse(getProcess(application).isTerminated())
+    resourceManager.session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
 
-    session.runToLine(TYPENAME_HELLOWORLD + "$", 6)
+    resourceManager.session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
 
-    session.checkStackFrame(TYPENAME_HELLOWORLD + "$", "main([Ljava/lang/String;)V", 6)
-
-    assertTrue("canTerminate flag should be true", session.debugTarget.canTerminate)
+    assertTrue("canTerminate flag should be true", resourceManager.session.debugTarget.canTerminate)
 
     val latch = new CountDownLatch(1)
 
-    val CurrentProcess = getProcess(application)
+    val CurrentProcess = getProcess(resourceManager.application)
 
-    debugEventListener = addDebugEventListener {
+    resourceManager.debugEventListener = addDebugEventListener {
       case EclipseDebugEvent(DebugEvent.TERMINATE, CurrentProcess) =>
         latch.countDown()
     }
 
-    session.terminate()
+    resourceManager.session.terminate()
 
     latch.await()
 

@@ -12,7 +12,6 @@ import org.eclipse.swt.layout._
 import org.eclipse.swt.widgets._
 import org.eclipse.ui.PlatformUI
 import org.eclipse.ui.IWorkbenchWindow
-import org.scalaide.util.ui.DisplayThread
 import org.eclipse.ui.dialogs.PreferencesUtil
 
 // TODO move out implicit conversions to a separate module?
@@ -45,7 +44,7 @@ object SWTUtils {
   }
 
   implicit def noArgFnToModifyListener(f: () => Unit): ModifyListener = new ModifyListener {
-    def modifyText(e: ModifyEvent) = f()
+    override def modifyText(e: ModifyEvent) = f()
   }
 
   /** Returns an adapter class that provides default implementations for the
@@ -176,7 +175,7 @@ object SWTUtils {
   }
 
   /**
-   * Creates a label, whose layout data interops with the grid layout.
+   * Creates a label on a given `parent` whose layout is `GridLayout`.
    */
   def mkLabel(parent: Composite, text: String, columnSize: Int = 1): Label = {
     val lb = new Label(parent, SWT.NONE)

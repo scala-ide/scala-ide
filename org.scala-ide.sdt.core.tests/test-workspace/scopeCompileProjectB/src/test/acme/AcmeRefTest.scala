@@ -1,5 +1,5 @@
 package acme
 
 class AcmeRefTest {
-  def baz = "3"
+  def baz = (new AcmeMainRef).bar
 }
