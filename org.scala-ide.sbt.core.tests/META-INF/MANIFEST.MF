@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SBT Integration (Test)
 Bundle-SymbolicName: org.scala-ide.sbt.core.tests
-Bundle-Version: 0.1.0.qualifier
+Bundle-Version: 4.5.0.qualifier
 Bundle-Vendor: Scala IDE
 Fragment-Host: org.scala-ide.sbt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
