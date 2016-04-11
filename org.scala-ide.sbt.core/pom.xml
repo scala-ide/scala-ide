@@ -10,6 +10,58 @@
   <artifactId>org.scala-ide.sbt.core</artifactId>
   <packaging>eclipse-plugin</packaging>
 
+  <properties>
+    <sbtrc.version>0.3.5</sbtrc.version>
+    <pickling.version>0.10.0</pickling.version>
+    <akka.version>2.4.2</akka.version>
+    <reactive.stream.version>1.0.0</reactive.stream.version>
+    <config.version>1.2.1</config.version>
+    <parser.combinators.version>1.0.2</parser.combinators.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.typesafe.sbt</groupId>
+      <artifactId>client-all-2-11</artifactId>
+      <version>${sbtrc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-pickling_2.11</artifactId>
+      <version>${pickling.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-stream_2.11</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.11</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-osgi_2.11</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.reactivestreams</groupId>
+      <artifactId>reactive-streams</artifactId>
+      <version>${reactive.stream.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>${config.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-parser-combinators_2.11</artifactId>
+      <version>${parser.combinators.version}</version>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -105,4 +157,25 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>typesafe releases</id>
+      <name>typesafe releases</name>
+      <url>http://repo.typesafe.com/typesafe/releases</url>
+      <releases>
+        <updatePolicy>always</updatePolicy>
+      </releases>
+    </repository>
+    <repository>
+      <id>typesafe maven releases</id>
+      <name>typesafe maven releases</name>
+      <url>http://private-repo.typesafe.com/typesafe/maven-releases</url>
+    </repository>
+    <repository>
+      <id>sonatype releases</id>
+      <name>sonatype releases</name>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
+  </repositories>
 </project>
