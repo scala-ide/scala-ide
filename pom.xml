@@ -642,6 +642,8 @@
               <dir>org.scala-ide.sdt.debug/src</dir>
               <dir>org.scala-ide.sdt.core.tests/src</dir>
               <dir>org.scala-ide.sdt.core.tests/test-workspace</dir>
+              <dir>org.scala-ide.sbt.core/src</dir>
+              <dir>org.scala-ide.sbt.core.tests/src</dir>
               <dir>org.scala-ide.sdt.debug.tests/src</dir>
               <dir>org.scala-ide.sdt.debug.tests/test-workspace</dir>
               <dir>org.scala-ide.sdt.debug.expression/src</dir>
