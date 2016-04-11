@@ -23,11 +23,21 @@ import org.scalaide.util.internal.Commons
 class ScalaCompletions extends HasLogger {
   import org.eclipse.jface.text.IRegion
 
-  /** Returns the list of possible completions, at the given position in the compilation unit,
-   *  with the given region as completion prefix.
-   */
+  @deprecated("Use getCompletions, which correctly handles units with a different presentation compiler", since = "4.1.0")
   def findCompletions(region: IRegion, position: Int, icu: InteractiveCompilationUnit): List[CompletionProposal] =
     icu.scalaProject.presentationCompiler { compiler =>
+      findCompletion(region, position, icu, compiler)
+    }.getOrElse(Nil)
+
+
+  /** Returns the list of possible completions, at the given position in the compilation unit,
+   *  with the given region as completion prefix.
+   *
+   *  @note This supports compilation units that have a different presentation compiler than the default
+   *        per-project compiler
+   */
+  def getCompletions(region: IRegion, position: Int, icu: InteractiveCompilationUnit): List[CompletionProposal] =
+    icu.presentationCompiler { compiler =>
       findCompletion(region, position, icu, compiler)
     }.getOrElse(Nil)
 

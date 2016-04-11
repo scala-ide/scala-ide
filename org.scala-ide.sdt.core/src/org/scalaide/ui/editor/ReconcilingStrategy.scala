@@ -8,9 +8,15 @@ import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.scalaide.logging.HasLogger
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
 import org.eclipse.core.runtime.IProgressMonitor
+import org.scalaide.util.internal.Suppress.DeprecatedWarning
 
-class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDocumentListener) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
+class ReconcilingStrategy(sourceEditor: InteractiveCompilationUnitEditor with DecoratedInteractiveEditor,
+    documentListener: IDocumentListener) extends IReconcilingStrategy with IReconcilingStrategyExtension with HasLogger {
   private var document: Option[IDocument] = None
+
+  def this(sourceEditor: DeprecatedWarning.SourceCodeEditor, documentListener: IDocumentListener) {
+    this(sourceEditor: InteractiveCompilationUnitEditor with DecoratedInteractiveEditor, documentListener)
+  }
 
   override def setDocument(doc: IDocument): Unit = {
     document.foreach(_.removeDocumentListener(documentListener))
@@ -25,7 +31,7 @@ class ReconcilingStrategy(sourceEditor: SourceCodeEditor, documentListener: IDoc
   override def reconcile(partition: IRegion): Unit = {
     for (doc <- document) {
       val errors = sourceEditor.getInteractiveCompilationUnit.forceReconcile()
-      sourceEditor.updateErrorAnnotations(errors)
+      sourceEditor.updateErrorAnnotations(errors, null)
     }
   }
 
