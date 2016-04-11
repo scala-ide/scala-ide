@@ -2,7 +2,6 @@ package org.scalaide.ui.internal.editor.sbt
 
 import scala.reflect.internal.util.BatchSourceFile
 import scala.reflect.io.AbstractFile
-import scala.util.control.Exception
 
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.ResourcesPlugin
@@ -19,10 +18,8 @@ import org.scalaide.core.resources.EclipseResource
 
 class SbtSourceFileProvider extends SourceFileProvider {
   override def createFrom(path: IPath): Option[InteractiveCompilationUnit] = {
-    val file = Exception.handling(classOf[Exception]).by(_ => None).apply {
-      val root = ResourcesPlugin.getWorkspace().getRoot()
-      Option(root.getFile(path))
-    }
+    val root = ResourcesPlugin.getWorkspace().getRoot()
+    val file = Option(root.getFile(path))
 
     file map (new SbtCompilationUnit(_))
   }
@@ -31,11 +28,10 @@ class SbtSourceFileProvider extends SourceFileProvider {
 object SbtCompilationUnit {
   def fromEditor(scriptEditor: SbtEditor): SbtCompilationUnit = {
     val input = scriptEditor.getEditorInput
-    if (input == null) throw new NullPointerException("No edito input for editor " + scriptEditor + ". Hint: Maybe the editor isn't yet fully initialized?")
+    if (input == null) throw new NullPointerException(s"No editor input for editor $scriptEditor. Hint: Maybe the editor isn't yet fully initialized?")
     else {
-      val unit = fromEditorInput(input)
-      unit.document = Some(scriptEditor.getDocumentProvider().getDocument(input))
-      unit
+      val doc = scriptEditor.getDocumentProvider().getDocument(input)
+      fromEditorInput(input, doc)
     }
   }
 
@@ -43,11 +39,12 @@ object SbtCompilationUnit {
     editorInput match {
       case fileEditorInput: FileEditorInput if fileEditorInput.getName.endsWith("sbt") =>
         fileEditorInput.getFile
-      case _ => null
+      case _ =>
+        throw new IllegalArgumentException(s"Editor input of file `${editorInput.getName}` is not a sbt file.")
     }
 
-  private def fromEditorInput(editorInput: IEditorInput): SbtCompilationUnit =
-    new SbtCompilationUnit(getFile(editorInput))
+  private def fromEditorInput(editorInput: IEditorInput, doc: IDocument): SbtCompilationUnit =
+    new SbtCompilationUnit(getFile(editorInput), Some(doc))
 }
 
 class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]) extends ISourceMap {
@@ -72,43 +69,44 @@ class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]
 
   object ScalaPosition extends IPositionInformation {
     /** Map the given offset to the target offset. */
-    def apply(offset: Int): Int = {
+    override def apply(offset: Int): Int = {
       offset + prefix.length() + "\n".length
     }
 
     /** Return the line number corresponding to this offset. */
-    def offsetToLine(offset: Int): Int = sourceFile.offsetToLine(offset)
+    override def offsetToLine(offset: Int): Int = sourceFile.offsetToLine(offset)
 
     /** Return the offset corresponding to this line number. */
-    def lineToOffset(line: Int): Int = sourceFile.lineToOffset(line)
+    override def lineToOffset(line: Int): Int = sourceFile.lineToOffset(line)
   }
 
   object OriginalPosition extends IPositionInformation {
     /** Map the given offset to the target offset. */
-    def apply(offset: Int): Int = {
+    override def apply(offset: Int): Int = {
       offset - prefix.length() - "\n".length
     }
 
     /** Return the line number corresponding to this offset. */
-    def offsetToLine(offset: Int): Int = sourceFile.offsetToLine(offset)
+    override def offsetToLine(offset: Int): Int = sourceFile.offsetToLine(offset)
 
     /** Return the offset corresponding to this line number. */
-    def lineToOffset(line: Int): Int = sourceFile.lineToOffset(line)
+    override def lineToOffset(line: Int): Int = sourceFile.lineToOffset(line)
   }
 }
 
-case class SbtCompilationUnit(val workspaceFile: IFile) extends InteractiveCompilationUnit {
-  var document: Option[IDocument] = None
+case class SbtCompilationUnit(
+    override val workspaceFile: IFile,
+    document: Option[IDocument] = None) extends InteractiveCompilationUnit {
 
   /** Return the source info for the given contents. */
-  def sourceMap(contents: Array[Char]): ISourceMap = {
+  override def sourceMap(contents: Array[Char]): ISourceMap = {
     new SbtSourceInfo(file, contents)
   }
 
   @volatile private var lastInfo: ISourceMap = _
 
   /** Return the most recent available source map for the current contents. */
-  def lastSourceMap(): ISourceMap = {
+  override def lastSourceMap(): ISourceMap = {
     if (lastInfo eq null)
       lastInfo = sourceMap(getContents())
     lastInfo
@@ -120,7 +118,7 @@ case class SbtCompilationUnit(val workspaceFile: IFile) extends InteractiveCompi
    *  If we take Play templates as an example, this method would return HTML interspersed with Scala snippets. If
    *  one wanted the translated Scala source, he'd have to call `lastSourceMap().scalaSource`
    */
-  def getContents(): Array[Char] =
+  override def getContents(): Array[Char] =
     document.map(_.get.toCharArray).getOrElse(file.toCharArray)
 
   /** The `AbstractFile` that the Scala compiler uses to read this compilation unit. It should not change through the lifetime of this unit. */
@@ -131,5 +129,5 @@ case class SbtCompilationUnit(val workspaceFile: IFile) extends InteractiveCompi
   override def presentationCompiler = SbtPresentationCompiler.compiler
 
   /** Does this unit exist in the workspace? */
-  def exists(): Boolean = workspaceFile.exists()
+  override def exists(): Boolean = workspaceFile.exists()
 }
