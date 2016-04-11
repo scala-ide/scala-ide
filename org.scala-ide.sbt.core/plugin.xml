@@ -66,5 +66,30 @@
          </description>
       </wizard>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.scalaide.ui.internal.editor.sbt.SbtEditor"
+            default="false"
+            filenames="*.sbt"
+            id="org.scalaide.sbt.core.editor.SbtEditor"
+            name="Sbt file editor"
+            symbolicFontName="org.eclipse.jdt.ui.editors.textfont">
+      </editor>
+   </extension>
+   <extension
+         point="org.scala-ide.sdt.core.sourcefileprovider">
+      <provider
+            class="org.scalaide.ui.internal.editor.sbt.SbtSourceFileProvider"
+            file_extension="sbt">
+      </provider>
+   </extension>
+   <extension
+         point="org.eclipse.core.filebuffers.documentSetup">
+      <participant
+            class="org.scalaide.ui.internal.editor.sbt.SbtDocumentSetupParticipant"
+            extensions="sbt">
+      </participant>
+   </extension>
 
 </plugin>

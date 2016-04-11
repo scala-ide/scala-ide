@@ -29,7 +29,6 @@ class ScalaCompletions extends HasLogger {
       findCompletion(region, position, icu, compiler)
     }.getOrElse(Nil)
 
-
   /** Returns the list of possible completions, at the given position in the compilation unit,
    *  with the given region as completion prefix.
    *
