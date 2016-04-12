@@ -21,7 +21,7 @@ object SbtPresentationCompiler {
       "main", "main-settings", "persist", "process", "relation", "run", "sbt", "tasks")
 
     // TODO Fix hard-coded paths
-    val jars = for (p <- projects) yield s"/Users/dragos/.ivy2/cache/org.scala-sbt/$p/jars/$p-0.13.7.jar"
+    val jars = for (p <- projects) yield s"/home/antoras/.ivy2/cache/org.scala-sbt/$p/jars/$p-0.13.9.jar"
     settings.classpath.value = jars.mkString(File.pathSeparator)
 
     settings.usejavacp.value = true

@@ -30,7 +30,7 @@ object SbtBuild extends AnyRef with HasLogger {
   /**
    * Caches connections to already running sbt server instances.
    */
-  private var builds = Map[File, SbtBuild]()
+  private var builds = Map[File, Future[SbtBuild]]()
   private val buildsLock = new Object
 
   /**
@@ -39,28 +39,31 @@ object SbtBuild extends AnyRef with HasLogger {
    * The passed build root is only considered as a valid sbt project when it
    * contains the `project/build.properties` file.
    */
-  def buildFor(buildRoot: File)(implicit system: ActorSystem): Option[SbtBuild] = {
+  def buildFor(buildRoot: File)(implicit system: ActorSystem): Future[SbtBuild] = {
     def checkIfValid: Boolean = {
       val properties = new File(s"${buildRoot.getAbsolutePath}/project/build.properties")
       properties.exists() && properties.isFile()
     }
 
-    if (!checkIfValid) None
+    if (!checkIfValid)
+      Future.failed(new SbtClientConnectionFailure(s"The directory `$buildRoot` doesn't represent a sbt build."))
     else buildsLock.synchronized {
-      builds.get(buildRoot) orElse {
+      builds.getOrElse(buildRoot, {
         val build = SbtBuild(buildRoot)
         builds += buildRoot -> build
-        Some(build)
-      }
+        build
+      })
     }
   }
 
-  /** Create and initialize a SbtBuild instance for the given path.
+  /**
+   * Creates and initializes a SbtBuild instance for the given path.
    */
-  private def apply(buildRoot: File)(implicit system: ActorSystem): SbtBuild = {
+  private def apply(buildRoot: File)(implicit system: ActorSystem): Future[SbtBuild] = {
+    import system.dispatcher
     val connector = SbtConnector("scala-ide-sbt-integration", "Scala IDE sbt integration", buildRoot)
     val client = sbtClientWatcher(connector)
-    new SbtBuild(buildRoot, client, ConsoleProvider(buildRoot))
+    client map (new SbtBuild(buildRoot, _, ConsoleProvider(buildRoot)))
   }
 
   private def sbtClientWatcher(connector: SbtConnector)(implicit system: ActorSystem): Future[RichSbtClient] = {
@@ -109,7 +112,7 @@ object SbtBuild extends AnyRef with HasLogger {
  * Represents a connection to a running sbt server instance, which is connected
  * to the build root.
  */
-class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
+class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: MessageConsole)(implicit val system: ActorSystem) extends HasLogger {
 
   import system.dispatcher
   import SourceUtils._
@@ -119,33 +122,31 @@ class SbtBuild private (val buildRoot: File, sbtClient: Future[RichSbtClient], c
    * Triggers the compilation of the given project.
    */
   def compile(project: IProject): Future[Long] =
-    sbtClient flatMap (_.requestExecution(s"${project.getName}/compile"))
+    sbtClient.requestExecution(s"${project.getName}/compile")
 
   /**
    * Returns the list of projects defined in this build.
    */
   def projects(): Future[Seq[ProjectReference]] =
-    sbtClient flatMap { _.watchBuild().firstFuture.map(_.projects.map(_.id)) }
+    sbtClient.watchBuild().firstFuture.map(_.projects.map(_.id))
 
   /**
    * Returns a Future for the value of the given setting key. An Unpickler is
    * required to deserialize the value from the wire.
    */
-  def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
-    sbtClient flatMap { c ⇒
-      implicit val kp = KeyProvider.SettingKeyKP(c.client)
-      c.keyValue(projectName, keyName, config)
-    }
+  def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
+    implicit val kp = KeyProvider.SettingKeyKP(sbtClient.client)
+    sbtClient.keyValue(projectName, keyName, config)
+  }
 
   /**
    * Returns a Future for the value of the given task key. An Unpickler is
    * required to deserialize the value from the wire.
    */
-  def task[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] =
-    sbtClient flatMap { c ⇒
-      implicit val kp = KeyProvider.TaskKeyKP(c.client)
-      c.keyValue(projectName, keyName, config)
-    }
+  def task[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
+    implicit val kp = KeyProvider.TaskKeyKP(sbtClient.client)
+    sbtClient.keyValue(projectName, keyName, config)
+  }
 }
 
 final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)

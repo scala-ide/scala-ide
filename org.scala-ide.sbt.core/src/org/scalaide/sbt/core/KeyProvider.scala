@@ -15,7 +15,7 @@ object KeyProvider {
   import scala.language.higherKinds
 
   /**
-   * Allows to abstract at least over [[sbt.client.TaskKey]] and [[sbt.cleint.SettingKey]].
+   * Allows to abstract at least over [[sbt.client.TaskKey]] and [[sbt.client.SettingKey]].
    */
   trait KeyProvider[M[_]] {
     def key[A](key: ScopedKey): M[A]
@@ -23,14 +23,14 @@ object KeyProvider {
   }
 
   implicit def TaskKeyKP(implicit client: SbtClient) = new KeyProvider[TaskKey] {
-    def key[A](key: ScopedKey) = TaskKey(key)
-    def watch[A : Unpickler](key: TaskKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
+    override def key[A](key: ScopedKey) = TaskKey(key)
+    override def watch[A : Unpickler](key: TaskKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
       client.watch(key)(listener)
   }
 
   implicit def SettingKeyKP(implicit client: SbtClient) = new KeyProvider[SettingKey] {
-    def key[A](key: ScopedKey) = SettingKey(key)
-    def watch[A : Unpickler](key: SettingKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
+    override def key[A](key: ScopedKey) = SettingKey(key)
+    override def watch[A : Unpickler](key: SettingKey[A])(listener: ValueListener[A])(implicit ex: ExecutionContext): Subscription =
       client.watch(key)(listener)
   }
 

@@ -15,15 +15,17 @@ import org.scalaide.sbt.core.SbtRemotePlugin
 class RemoteBuilder extends IncrementalProjectBuilder with HasLogger {
 
   override def build(kind: Int, args: JMap[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    val project = getProject()
-    val build = SbtBuild.buildFor(project.getLocation().toFile())(SbtRemotePlugin.system)
+    implicit val system = SbtRemotePlugin.system
+    import system.dispatcher
 
-    build.map { build ⇒
-      val res = build.compile(project)
-      val id = Await.result(res, Duration.Inf)
-      logger.debug(s"build of project ${getProject.getName} with remote builder triggered (id: $id)")
-      getProject.getReferencedProjects
-    }.orNull
+    val project = getProject()
+    val build = SbtBuild.buildFor(project.getLocation().toFile())
+    val res = build.flatMap { _.compile(project) }
+    val id = Await.result(res, Duration.Inf)
+
+    logger.debug(s"build of project ${getProject.getName} with remote builder triggered (id: $id)")
+
+    getProject.getReferencedProjects
 
     // TODO: get the compilation result (errors, ...)
     // TODO: refresh the output folders
