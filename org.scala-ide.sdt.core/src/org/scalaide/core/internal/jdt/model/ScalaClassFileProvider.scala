@@ -11,10 +11,19 @@ import org.eclipse.jdt.internal.core.ClassFile
 import org.eclipse.jdt.internal.core.PackageFragment
 import org.scalaide.core.internal.project.ScalaProject
 
+/**
+ * Provides a `ScalaClassFile` implementation for classfiles that belong to
+ * Scala sources.
+ *
+ * This class caches the result of the association between package fragments
+ * (usually a jar) and classfiles. The cache is based on a heuristic because
+ * scanning the entire classpath may be expensive.
+ */
 class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
 
-  /** @return a ScalaClassFile implementation if bytes represent a Scala classfile, or `null`
-   *          if the default JDT implementation should be used.
+  /**
+   * Returns a `ScalaClassFile` implementation if `contents` represent a Scala
+   * classfile or `null` if the default JDT implementation should be used.
    */
   override def create(contents: Array[Byte], parent: PackageFragment, name: String): ClassFile = {
     def updateCache(isScalaClassfile: Boolean): Unit = {
@@ -22,8 +31,16 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
       if (pfr ne null)
         scalaPackageFragments.synchronized {
           if (!scalaPackageFragments.isDefinedAt(pfr)) {
-            logger.debug(s"Setting ${pfr.getElementName} (because of class $name) to be ${if (isScalaClassfile) "Scala" else "Java"}")
-            scalaPackageFragments += pfr -> isScalaClassfile
+            val jarName = pfr.getElementName
+            val isProbablyScalaArtifact = jarName matches """.*_2\.\d+.*"""
+            val ignoreClassfile = !isScalaClassfile && isProbablyScalaArtifact
+
+            if (ignoreClassfile)
+              logger.debug(s"Do not set $jarName (because of class $name) to be Java because it seems to be a Scala library.")
+            else {
+              logger.debug(s"Setting $jarName (because of class $name) to be ${if (isScalaClassfile) "Scala" else "Java"}.")
+              scalaPackageFragments += pfr -> isScalaClassfile
+            }
           }
         }
     }
@@ -36,11 +53,8 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
     scalaCF
   }
 
-  /** Return `true` if the classfile could be a Scala classfile.
-   *
-   *  @note This method caches the result of the first classfile read from a package fragment (usually a jar).
-   *        This heuristic might fail if a single jar mixes Java and Scala classfiles, and if the first classfile
-   *        is comes from Java, a plain Java classfile editor and icon would be used for all classfiles in that jar.
+  /**
+   * Returns `true` if the classfile could be a Scala classfile.
    */
   override def isInteresting(classFile: IClassFile): Boolean = {
     if (ScalaProject.isScalaProject(classFile.getJavaProject)) {
