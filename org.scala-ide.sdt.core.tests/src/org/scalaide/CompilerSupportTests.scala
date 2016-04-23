@@ -9,10 +9,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.IScalaProject
-import java.util.UUID
 import scala.tools.refactoring.util.UniqueNames
-import org.scalaide.core.testsetup.BlockingProgressMonitor
-import org.eclipse.core.resources.IResource
 
 /**
  * Common functionality to be used in tests that need to interop with the

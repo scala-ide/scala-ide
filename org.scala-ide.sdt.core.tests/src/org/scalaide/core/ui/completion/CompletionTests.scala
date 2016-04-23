@@ -6,14 +6,9 @@ import org.scalaide.core.ui.CompilerSupport
 import org.scalaide.core.ui.TextEditTests
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.completion.CompletionProposal
-import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.search.ScalaIndexBuilder
-import org.scalaide.core.testsetup.BlockingProgressMonitor
-import org.eclipse.core.resources.IResource
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.reflect.internal.util.SourceFile
-import org.eclipse.core.resources.IncrementalProjectBuilder
 
 /**
  * This provides a test suite for the code completion functionality.
