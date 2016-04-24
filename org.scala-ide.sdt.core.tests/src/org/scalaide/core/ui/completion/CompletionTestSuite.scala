@@ -10,6 +10,7 @@ import org.junit.runners.Suite
     classOf[StandardCompletionTests],
     classOf[ParameterCompletionTests],
     classOf[TypeCompletionTests],
-    classOf[CompletionOrderTests]
+    classOf[CompletionOrderTests],
+    classOf[ProposalRelevanceCalculatorTest]
 ))
 class CompletionTestSuite

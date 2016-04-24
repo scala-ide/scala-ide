@@ -1,8 +1,9 @@
 package org.scalaide.core.completion
 
 import scala.tools.nsc.interactive.Global
+import org.scalaide.logging.HasLogger
 
-class ProposalRelevanceCalculator {
+class ProposalRelevanceCalculator extends HasLogger {
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
     var relevance = 100
@@ -33,6 +34,34 @@ class ProposalRelevanceCalculator {
   }
 
   def forJdtType(prefix: String, name: String): Int = {
-    50
+    val maxRelevance = 100
+
+    val boni = {
+        if (prefix.contains(".scala")) 1
+        else 0
+      } :: {
+        if (prefix.contains("akka.")) 1
+        else 0
+      } :: {
+        if (prefix.startsWith("java.")) 1
+        else if (prefix.startsWith("scala.")) 2
+        else 0
+      } :: Nil
+
+    val penalties = {
+        if (prefix.contains(".javadsl")) 1
+        else 0
+      } :: {
+        name.length
+      } :: {
+        if (prefix == "") 0
+        else prefix.count(_ == '.') + 1
+      } :: Nil
+
+
+    val bonus = boni.sum
+    val penalty = penalties.sum
+
+    math.max(math.min(maxRelevance, maxRelevance + bonus - penalty), 0)
   }
 }
