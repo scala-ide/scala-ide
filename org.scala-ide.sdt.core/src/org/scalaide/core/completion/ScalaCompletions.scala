@@ -137,6 +137,9 @@ class ScalaCompletions extends HasLogger {
             logger.info(s"Found type: $fullyQualifiedName")
 
             if (simpleName.indexOf("$") < 0 && !isAlreadyListed(fullyQualifiedName, simpleName)) {
+              val relevanceCalc = new ProposalRelevanceCalculator
+              val relevance = relevanceCalc.forJdtType(packageWithEnclosing, simpleName)
+
               logger.info(s"Adding type: $fullyQualifiedName")
               listedTypes.addBinding(fullyQualifiedName, CompletionProposal(
                 MemberKind.Object,
@@ -145,7 +148,7 @@ class ScalaCompletions extends HasLogger {
                 simpleName,
                 simpleName,
                 packageWithEnclosing,
-                50,
+                relevance,
                 true,
                 () => List(),
                 List(),

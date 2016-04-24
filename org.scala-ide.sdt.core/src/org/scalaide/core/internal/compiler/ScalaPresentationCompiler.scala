@@ -48,6 +48,7 @@ import org.scalaide.util.eclipse.RegionUtils.RichRegion
 
 import scalariform.lexer.ScalaLexer
 import scalariform.lexer.ScalaLexerException
+import org.scalaide.core.completion.ProposalRelevanceCalculator
 
 class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
   /*
@@ -398,30 +399,9 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
       } else name
     val container = sym.owner.enclClass.fullName
 
-    // rudimentary relevance, place own members before inherited ones, and before view-provided ones
-    var relevance = 100
-    if (!sym.isLocalToBlock) relevance -= 10 // non-local symbols are less relevant than local ones
-    if (!sym.hasGetter) relevance -= 5 // fields are more relevant than non-fields
-    if (inherited) relevance -= 10
-    if (viaView != NoSymbol) relevance -= 20
-    if (sym.hasPackageFlag) relevance -= 30
-    // theoretically we'd need an 'ask' around this code, but given that
-    // Any and AnyRef are definitely loaded, we call directly to definitions.
-    if (sym.owner == definitions.AnyClass
-      || sym.owner == definitions.AnyRefClass
-      || sym.owner == definitions.ObjectClass) {
-      relevance -= 40
-    }
 
-    // global symbols are less relevant than local symbols
-    sym.owner.enclosingPackage.fullName match {
-      case "java"  => relevance -= 15
-      case "scala" => relevance -= 10
-      case _ =>
-    }
-
-    val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
-    relevance -= casePenalty
+    val relevancCalc = new ProposalRelevanceCalculator
+    val relevance = relevancCalc.forScala(this)(prefix, name, sym, viaView, Some(inherited))
 
     val namesAndTypes = for {
       section <- tpe.paramss
