@@ -17,7 +17,25 @@ import org.scalaide.core.internal.project.ScalaProject
  *
  * This class caches the result of the association between package fragments
  * (usually a jar) and classfiles. The cache is based on a heuristic because
- * scanning the entire classpath may be expensive.
+ * scanning the entire classpath may be expensive. The heuristic that finds out
+ * if a library contains Scala classifles works as follows:
+ *
+ * 1. Look at the first classfile of a JAR.
+ * 2. Check if the classfile was created by scalac.
+ * 3. If 2. succeeds, mark the classfile and the library as Scala.
+ * 4  If 2. fails, check if the name of the JAR file contains a Scala version
+ *    (except for the stdlib, this should always be true for Scala libraries).
+ * 5. If 4. fails, all classfiles in the JAR and the JAR itself are determined
+ *    to be Java.
+ * 6. If 4. succeeds, the current classfile is marked as Java and we continue at
+ *    2. by selecting the next classfile.
+ *
+ * The goal of the above heuristic is to avoid to scan all classfiles of JARs
+ * that are created by javac. For Scala libraries we have to scan the entire JAR
+ * file anyway, since we need to create a `ScalaClassFile` for each classfile.
+ * Since mixed Scala/Java libraries produce mixed classfiles, we can not simply
+ * mark a library as Java if we find a Java classfile in a JAR whose name
+ * contains a Scala version.
  */
 class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
 
@@ -54,7 +72,9 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
   }
 
   /**
-   * Returns `true` if the classfile could be a Scala classfile.
+   * Returns `true` if the classfile could be a Scala classfile. See Scaladoc
+   * for [[ScalaClassFileProvider]] for an explanation about how we find out if
+   * classfiles could be Scala classfiles.
    */
   override def isInteresting(classFile: IClassFile): Boolean = {
     if (ScalaProject.isScalaProject(classFile.getJavaProject)) {
