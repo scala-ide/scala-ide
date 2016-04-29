@@ -6,7 +6,7 @@ import org.scalaide.logging.HasLogger
 class ProposalRelevanceCalculator extends HasLogger {
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
-    var relevance = 100
+    var relevance = 1000
     if (!sym.isLocalToBlock) relevance -= 10 // non-local symbols are less relevant than local ones
     if (!sym.hasGetter) relevance -= 5 // fields are more relevant than non-fields
     if (inherited.exists(_ == true)) relevance -= 10
@@ -34,7 +34,7 @@ class ProposalRelevanceCalculator extends HasLogger {
   }
 
   def forJdtType(prefix: String, name: String): Int = {
-    val maxRelevance = 100
+    val maxRelevance = 500
 
     val boni = {
         if (prefix.contains(".scala")) 1
