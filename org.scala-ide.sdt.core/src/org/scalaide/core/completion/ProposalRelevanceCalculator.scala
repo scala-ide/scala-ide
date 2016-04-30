@@ -2,8 +2,9 @@ package org.scalaide.core.completion
 
 import scala.tools.nsc.interactive.Global
 import org.scalaide.logging.HasLogger
+import scala.util.matching.Regex
 
-class ProposalRelevanceCalculator extends HasLogger {
+class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRelevanceCfg) extends HasLogger {
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
     var relevance = 1000
@@ -36,31 +37,34 @@ class ProposalRelevanceCalculator extends HasLogger {
   def forJdtType(prefix: String, name: String): Int = {
     val maxRelevance = 500
 
-    val boni = {
-        if (prefix.contains(".scala")) 1
-        else 0
-      } :: {
-        if (prefix.contains("akka.")) 1
-        else 0
-      } :: {
-        if (prefix.startsWith("java.")) 1
-        else if (prefix.startsWith("scala.")) 2
-        else 0
-      } :: Nil
+    def deltaForPrefix(deltaIfMatch: Int, regexes: Seq[Regex]): Int = {
+      regexes.foldLeft(0) { (acc, rx) =>
+        prefix match {
+          case `rx`() => acc + deltaIfMatch
+          case _ => acc
+        }
+      }
+    }
 
-    val penalties = {
-        if (prefix.contains(".javadsl")) 1
-        else 0
-      } :: {
-        name.length
-      } :: {
-        if (prefix == "") 0
-        else prefix.count(_ == '.') + 1
-      } :: Nil
+    val nestingLevel = {
+      if (prefix == "") {
+        0
+      } else {
+        // Note that `backtick` identifiers are passed to this method
+        // in encoded form, so the naive approach below is actually OK.
+        1 + prefix.count(_ == '.')
+      }
+    }
 
+    val bonus =
+       deltaForPrefix(3, cfg.favoritePackages) +
+       deltaForPrefix(1, cfg.preferedPackages)
 
-    val bonus = boni.sum
-    val penalty = penalties.sum
+    val penalty =
+      deltaForPrefix(3, cfg.shunnedPackages) +
+      deltaForPrefix(1, cfg.unpopularPackages) +
+      name.length*3 +
+      nestingLevel
 
     math.max(math.min(maxRelevance, maxRelevance + bonus - penalty), 0)
   }
