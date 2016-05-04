@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class DivisionTest extends BaseIntegrationTest(DivisionTest) {
@@ -112,4 +113,4 @@ class DivisionTest extends BaseIntegrationTest(DivisionTest) {
   }
 }
 
-object DivisionTest extends BaseIntegrationTestCompanion
+object DivisionTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

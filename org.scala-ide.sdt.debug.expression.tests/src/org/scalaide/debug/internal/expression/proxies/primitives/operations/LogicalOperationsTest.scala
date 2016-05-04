@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) {
@@ -32,4 +33,4 @@ class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) {
   def `boolean ^ boolean`(): Unit = eval("boolean ^ boolean2", boolean ^ boolean2, Java.primitives.boolean)
 }
 
-object LogicalOperationsTest extends BaseIntegrationTestCompanion
+object LogicalOperationsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

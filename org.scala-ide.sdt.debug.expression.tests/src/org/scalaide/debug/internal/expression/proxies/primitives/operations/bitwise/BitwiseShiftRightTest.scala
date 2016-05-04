@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class BitwiseShiftRightTest extends BaseIntegrationTest(BitwiseShiftRightTest) {
@@ -99,4 +100,4 @@ class BitwiseShiftRightTest extends BaseIntegrationTest(BitwiseShiftRightTest) {
   def `1 >> 2L`(): Unit = eval("1 >> 2L", 1 >> 2L, Java.primitives.long)
 }
 
-object BitwiseShiftRightTest extends BaseIntegrationTestCompanion
+object BitwiseShiftRightTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

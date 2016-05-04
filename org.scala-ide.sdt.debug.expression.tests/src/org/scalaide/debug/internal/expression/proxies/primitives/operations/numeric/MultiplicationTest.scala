@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class MultiplicationTest extends BaseIntegrationTest(MultiplicationTest) {
@@ -91,4 +92,4 @@ class MultiplicationTest extends BaseIntegrationTest(MultiplicationTest) {
   }
 }
 
-object MultiplicationTest extends BaseIntegrationTestCompanion
+object MultiplicationTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

@@ -8,6 +8,7 @@ import org.junit.Assert._
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues.CodeCompletionTestCase
 
 class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(SimpleContentProposalProviderIntegrationTest) {
@@ -50,4 +51,4 @@ class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(S
   }
 }
 
-object SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTestCompanion(CodeCompletionTestCase)
+object SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTestCompanion(CodeCompletionTestCase) with DefaultBeforeAfterAll

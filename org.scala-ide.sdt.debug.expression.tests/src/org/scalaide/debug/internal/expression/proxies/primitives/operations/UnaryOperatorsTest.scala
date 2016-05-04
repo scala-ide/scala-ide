@@ -7,6 +7,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class UnaryOperatorsTest extends BaseIntegrationTest(UnaryOperatorsTest) {
@@ -47,4 +48,4 @@ class UnaryOperatorsTest extends BaseIntegrationTest(UnaryOperatorsTest) {
   }
 }
 
-object UnaryOperatorsTest extends BaseIntegrationTestCompanion
+object UnaryOperatorsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.proxies.primitives
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
 
@@ -91,4 +92,4 @@ class TypeConversionsTest extends BaseIntegrationTest(TypeConversionsTest) {
   }
 }
 
-object TypeConversionsTest extends BaseIntegrationTestCompanion
+object TypeConversionsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll
