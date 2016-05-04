@@ -84,7 +84,7 @@
     <version.tag>local</version.tag>
     <sbt.version>0.13.8</sbt.version>
     <json-io.version>4.1.6</json-io.version>
-    <scala-refactoring.version>0.10.0-SNAPSHOT</scala-refactoring.version>
+    <scala-refactoring.version>0.10.0</scala-refactoring.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
