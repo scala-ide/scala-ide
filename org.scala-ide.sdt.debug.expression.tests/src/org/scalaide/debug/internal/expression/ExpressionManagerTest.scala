@@ -140,4 +140,4 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
 
 }
 
-object ExpressionManagerTest extends BaseIntegrationTestCompanion
+object ExpressionManagerTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

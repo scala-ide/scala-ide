@@ -11,10 +11,10 @@ import org.scalaide.debug.internal.expression.features.FeaturesTestSuite
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(Array(
-  /*classOf[ExpressionManagerTest],*/
-  classOf[FeaturesTestSuite]/*,
-  classOf[PrimitivesOperationsTestSuite],
-  classOf[DifferentStackFramesTest],
+  classOf[ExpressionManagerTest],
+  classOf[FeaturesTestSuite],/*
+  classOf[PrimitivesOperationsTestSuite],*/
+  classOf[DifferentStackFramesTest]/*,
   classOf[PhasesTestSuite],
   classOf[ConditionalBreakpointsTest],
   classOf[SimpleContentProposalProviderTest],

@@ -9,7 +9,6 @@ import scala.util.Success
 
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.junit.Assert._
-//import org.junit.BeforeClass
 import org.scalaide.debug.internal.expression.TestValues.ValuesTestCase
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.logging.HasLogger
@@ -108,7 +107,6 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
     expressionEvaluator = initializeEvaluator(session)
   }
 
-  //@BeforeClass
   def prepareTestDebugSession(): Unit = {
     refreshBinaryFiles()
 
