@@ -5,7 +5,8 @@ package org.scalaide.debug.internal.expression.features
 
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues.MethodsAsFunctions.MethodsAsFunctionsInnerObjectTestCase
 
 class MethodsAsFunctionsInnerObjectTest extends BaseIntegrationTest(MethodsAsFunctionsInnerObjectTest) with MethodsAsFunctionsTest
-object MethodsAsFunctionsInnerObjectTest extends BaseIntegrationTestCompanion(MethodsAsFunctionsInnerObjectTestCase)
+object MethodsAsFunctionsInnerObjectTest extends BaseIntegrationTestCompanion(MethodsAsFunctionsInnerObjectTestCase) with DefaultBeforeAfterAll

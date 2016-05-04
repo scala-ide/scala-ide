@@ -11,7 +11,6 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.Names.Debugger
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
-import org.scalaide.debug.internal.expression.TestValues
 
 class LambdasTest extends BaseIntegrationTest(LambdasTest) {
 
@@ -139,4 +138,4 @@ class LambdasTest extends BaseIntegrationTest(LambdasTest) {
     eval("list.map(i => i + scala.collection.immutable.List().size)", List(1, 2, 3), Scala.::)
 }
 
-object LambdasTest extends BaseIntegrationTestCompanion
+object LambdasTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.MethodInvocationException
 import org.scalaide.debug.internal.expression.TestValues.ExceptionsTestCase
 
@@ -16,4 +17,4 @@ class ExceptionsTest extends BaseIntegrationTest(ExceptionsTest) {
 
 }
 
-object ExceptionsTest extends BaseIntegrationTestCompanion(ExceptionsTestCase)
+object ExceptionsTest extends BaseIntegrationTestCompanion(ExceptionsTestCase) with DefaultBeforeAfterAll

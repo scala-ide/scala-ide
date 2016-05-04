@@ -3,6 +3,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedLambdaInObjectTestCase
 
@@ -14,6 +15,6 @@ class NestedLambdaInObjectTest extends BaseIntegrationTest(NestedLambdaInObjectT
 
 }
 
-object NestedLambdaInObjectTest extends BaseIntegrationTestCompanion(NestedLambdaInObjectTestCase) {
+object NestedLambdaInObjectTest extends BaseIntegrationTestCompanion(NestedLambdaInObjectTestCase) with DefaultBeforeAfterAll {
   override protected def typeName: String = "debug.A$Inner1$Inner$"
 }

@@ -33,4 +33,4 @@ class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
 
 }
 
-object AsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase)
+object AsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase) with DefaultBeforeAfterAll

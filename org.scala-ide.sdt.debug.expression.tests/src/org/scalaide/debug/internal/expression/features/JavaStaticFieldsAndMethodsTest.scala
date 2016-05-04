@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
@@ -163,4 +164,4 @@ class JavaStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaStaticField
   }
 }
 
-object JavaStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase)
+object JavaStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase) with DefaultBeforeAfterAll

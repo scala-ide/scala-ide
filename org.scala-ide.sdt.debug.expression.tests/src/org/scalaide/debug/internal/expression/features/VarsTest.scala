@@ -89,4 +89,4 @@ class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
     eval("var a = 1; a = 2; a", 2, Java.primitives.int)
 }
 
-object VarsTest extends BaseIntegrationTestCompanion(VariablesTestCase)
+object VarsTest extends BaseIntegrationTestCompanion(VariablesTestCase) with DefaultBeforeAfterAll

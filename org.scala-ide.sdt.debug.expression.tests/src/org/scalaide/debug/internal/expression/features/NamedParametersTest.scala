@@ -33,4 +33,4 @@ class NamedParametersTest extends BaseIntegrationTest(NamedParametersTest) {
 
 }
 
-object NamedParametersTest extends BaseIntegrationTestCompanion(TestValues.NamedParametersTestCase)
+object NamedParametersTest extends BaseIntegrationTestCompanion(TestValues.NamedParametersTestCase) with DefaultBeforeAfterAll

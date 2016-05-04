@@ -226,4 +226,4 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
 
 }
 
-object ArrayTest extends BaseIntegrationTestCompanion(ArraysTestCase)
+object ArrayTest extends BaseIntegrationTestCompanion(ArraysTestCase) with DefaultBeforeAfterAll

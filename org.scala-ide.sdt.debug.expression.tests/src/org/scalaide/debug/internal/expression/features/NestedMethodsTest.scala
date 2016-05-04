@@ -3,15 +3,16 @@
  */
 package org.scalaide.debug.internal.expression.features
 
-import org.junit.Test
 import org.junit.Assert._
 
+import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
+import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedMethodsTestCase
 import org.scalaide.debug.internal.expression.UnsupportedFeature
-import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
 
 class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
 
@@ -71,4 +72,4 @@ class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
   def testNestedWithExistentialType(): Unit = eval("nestedWithExistentialType(Nil)", "nestedWithExistentialType", Java.String)
 }
 
-object NestedMethodsTest extends BaseIntegrationTestCompanion(NestedMethodsTestCase)
+object NestedMethodsTest extends BaseIntegrationTestCompanion(NestedMethodsTestCase) with DefaultBeforeAfterAll

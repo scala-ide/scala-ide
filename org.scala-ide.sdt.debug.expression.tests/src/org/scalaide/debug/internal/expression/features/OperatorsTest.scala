@@ -130,4 +130,4 @@ class OperatorsTest
 
 }
 
-object OperatorsTest extends BaseIntegrationTestCompanion(TestValues.OperatorsTestCase)
+object OperatorsTest extends BaseIntegrationTestCompanion(TestValues.OperatorsTestCase) with DefaultBeforeAfterAll

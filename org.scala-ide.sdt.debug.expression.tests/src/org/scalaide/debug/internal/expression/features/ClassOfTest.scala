@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 
 class ClassOfTest extends BaseIntegrationTest(ClassOfTest) {
 
@@ -54,4 +55,4 @@ class ClassOfTest extends BaseIntegrationTest(ClassOfTest) {
     eval("classOf[scala.Array[scala.Array[String]]]", "class [[Ljava.lang.String;", "java.lang.Class")
 }
 
-object ClassOfTest extends BaseIntegrationTestCompanion
+object ClassOfTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

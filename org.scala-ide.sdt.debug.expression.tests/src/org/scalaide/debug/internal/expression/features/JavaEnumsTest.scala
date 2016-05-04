@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
 
@@ -26,4 +27,4 @@ class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
   }
 }
 
-object JavaEnumsTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)
+object JavaEnumsTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase) with DefaultBeforeAfterAll

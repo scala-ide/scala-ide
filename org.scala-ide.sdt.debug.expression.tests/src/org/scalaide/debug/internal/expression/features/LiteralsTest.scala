@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 
@@ -122,4 +123,4 @@ class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
   def testSymbols(): Unit = eval("'ala", "'ala", "scala.Symbol")
 }
 
-object LiteralsTest extends BaseIntegrationTestCompanion
+object LiteralsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

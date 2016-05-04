@@ -7,6 +7,7 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
 
 class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) {
@@ -58,4 +59,4 @@ class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(Instantiatin
 
 }
 
-object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)
+object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase) with DefaultBeforeAfterAll

@@ -14,4 +14,4 @@ class ToolBoxBugsTest extends BaseIntegrationTest(ToolBoxBugsTest) {
   def methodAsGetOrElseParam(): Unit = eval("None.getOrElse(zero)", "0", Java.boxed.Integer)
 }
 
-object ToolBoxBugsTest extends BaseIntegrationTestCompanion(ToolBoxBugsTestCase)
+object ToolBoxBugsTest extends BaseIntegrationTestCompanion(ToolBoxBugsTestCase) with DefaultBeforeAfterAll

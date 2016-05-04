@@ -96,4 +96,4 @@ class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
 
 }
 
-object ControlStructuresTest extends BaseIntegrationTestCompanion
+object ControlStructuresTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

@@ -63,4 +63,4 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
     eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", 4, Java.primitives.int)
 }
 
-object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase)
+object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase) with DefaultBeforeAfterAll

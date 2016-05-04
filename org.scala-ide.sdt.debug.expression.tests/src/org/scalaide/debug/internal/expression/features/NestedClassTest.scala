@@ -6,6 +6,7 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.TestValues
 
@@ -37,4 +38,4 @@ class NestedClassTest extends BaseIntegrationTest(NestedClassTest) {
 
 }
 
-object NestedClassTest extends BaseIntegrationTestCompanion(TestValues.NestedClassesTestCase)
+object NestedClassTest extends BaseIntegrationTestCompanion(TestValues.NestedClassesTestCase) with DefaultBeforeAfterAll

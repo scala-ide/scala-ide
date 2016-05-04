@@ -39,11 +39,14 @@ class ImportsTest extends BaseIntegrationTest(ImportsTest) {
 object ImportsTest extends BaseIntegrationTestCompanion(FileImportsTestCase) {
   @BeforeClass
   def setupForTest(): Unit = {
+    setup()
     ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, true)
+    prepareTestDebugSession()
   }
 
   @AfterClass
   def tearDownAfterTest(): Unit = {
     ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, false)
+    doCleanup()
   }
 }

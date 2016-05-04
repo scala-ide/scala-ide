@@ -116,4 +116,4 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
   }
 }
 
-object IsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase)
+object IsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase) with DefaultBeforeAfterAll

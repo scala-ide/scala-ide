@@ -4,9 +4,10 @@
 package org.scalaide.debug.internal.expression.features
 
 import org.junit.Test
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
+import org.scalaide.debug.internal.expression.Names.Java
 
 class PrimitivesIntegrationTest extends BaseIntegrationTest(PrimitivesIntegrationTest) {
 
@@ -30,4 +31,4 @@ class PrimitivesIntegrationTest extends BaseIntegrationTest(PrimitivesIntegratio
 
 }
 
-object PrimitivesIntegrationTest extends BaseIntegrationTestCompanion
+object PrimitivesIntegrationTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll
