@@ -16,6 +16,7 @@ import org.eclipse.core.resources.IMarker
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.SdtConstants
+import org.eclipse.core.runtime.NullProgressMonitor
 
 class MultiScalaVersionTest {
   // this was deprecated in 2.10, and invalid in 2.11
@@ -25,8 +26,7 @@ class MultiScalaVersionTest {
 
   @Test // Build using the previous version of the Scala library
   def previousVersionBuildSucceeds(): Unit = {
-    val Seq(proj) = internalCreateProjects("prev-version-build")
-    val p = proj
+    val Seq(p) = internalCreateProjects("prev-version-build")(new NullProgressMonitor)
     val projectSpecificStorage = p.projectSpecificStorage
 
     projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)

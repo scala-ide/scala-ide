@@ -33,7 +33,9 @@ import org.scalaide.core.internal.project.ScalaProject
  *
  */
 class TestProjectSetup(projectName: String, srcRoot: String = "/%s/src/", val bundleName: String = "org.scala-ide.sdt.core.tests") extends ProjectBuilder {
-  private[core] lazy val internalProject: ScalaProject = SDTTestUtils.internalSetupProject(projectName, bundleName)
+  private[core] lazy val internalProject: ScalaProject = BlockingProgressMonitor.waitUntilDone {
+    SDTTestUtils.internalSetupProject(projectName, bundleName)(_)
+  }
 
   /** The ScalaProject corresponding to projectName, after copying to the test workspace. */
   override lazy val project: IScalaProject = internalProject

@@ -23,6 +23,7 @@ import org.scalaide.util.eclipse.EclipseUtils
 
 import ScalaProjectDependedOnJavaProjectTest.projectJ
 import ScalaProjectDependedOnJavaProjectTest.projectS
+import org.eclipse.core.runtime.IProgressMonitor
 
 object ScalaProjectDependedOnJavaProjectTest extends IProjectOperations {
   import org.scalaide.core.testsetup.SDTTestUtils._
@@ -32,7 +33,7 @@ object ScalaProjectDependedOnJavaProjectTest extends IProjectOperations {
   private var projectS: IScalaProject = _
   private val bundleName = "org.scala-ide.sdt.core.tests"
 
-  private def withSrcOutputStructure(project: IProject, jProject: IJavaProject): Seq[IClasspathEntry] = {
+  private def withSrcOutputStructure(project: IProject, jProject: IJavaProject, ignoreMonitor: IProgressMonitor): Seq[IClasspathEntry] = {
     val mainSourceFolder = project.getFolder("/src/main")
     val mainOutputFolder = project.getFolder("/target/main")
     Seq(JavaCore.newSourceEntry(

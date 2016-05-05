@@ -13,6 +13,7 @@ import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.logging.HasLogger
+import org.scalaide.core.testsetup.BlockingProgressMonitor
 
 class CommonIntegrationTestCompanion(projectName: String)
   extends TestProjectSetup(projectName, bundleName = "org.scala-ide.sdt.debug.expression.tests")
@@ -57,7 +58,7 @@ class CommonIntegrationTestCompanion(projectName: String)
 
   private def deleteProject(): Unit = {
     try {
-      SDTTestUtils.deleteProjects(project)
+      BlockingProgressMonitor.waitUntilDone(SDTTestUtils.deleteProjects(project)(_))
     } catch {
       case e: ResourceException => // could not delete resource, but don't you worry ;)
     }
