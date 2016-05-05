@@ -3,13 +3,16 @@
  */
 package org.scalaide.debug.internal.expression.features
 
-import org.scalaide.debug.internal.expression.Names
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
-import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.junit.Test
-import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 
-class TraitsTest extends BaseIntegrationTest(TraitsTest) {
+import org.scalaide.debug.internal.expression.Names
+import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
+
+class TraitsTest extends BaseIntegrationTest(TraitsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testThis(): Unit =
@@ -32,7 +35,7 @@ class TraitsTest extends BaseIntegrationTest(TraitsTest) {
     eval("defInClass()", "defInClass", Names.Java.String)
 }
 
-object TraitsTest extends BaseIntegrationTestCompanion(TestValues.TraitsTestCase) {
+object TraitsTest extends BaseIntegrationTestCompanion(TestValues.TraitsTestCase) with DefaultBeforeAfterAll {
 
   override def typeName = "debug.T"
 }

@@ -7,9 +7,11 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class BitwiseXorTest extends BaseIntegrationTest(BitwiseXorTest) {
+class BitwiseXorTest extends BaseIntegrationTest(BitwiseXorTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 
@@ -91,4 +93,4 @@ class BitwiseXorTest extends BaseIntegrationTest(BitwiseXorTest) {
   }
 }
 
-object BitwiseXorTest extends BaseIntegrationTestCompanion
+object BitwiseXorTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

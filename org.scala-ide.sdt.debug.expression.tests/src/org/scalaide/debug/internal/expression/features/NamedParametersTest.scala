@@ -7,7 +7,7 @@ package features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 
-class NamedParametersTest extends BaseIntegrationTest(NamedParametersTest) {
+class NamedParametersTest extends BaseIntegrationTest(NamedParametersTest) with DefaultBeforeAfterEach {
 
   @Test
   def standardMethod(): Unit = {
@@ -33,4 +33,4 @@ class NamedParametersTest extends BaseIntegrationTest(NamedParametersTest) {
 
 }
 
-object NamedParametersTest extends BaseIntegrationTestCompanion(TestValues.NamedParametersTestCase)
+object NamedParametersTest extends BaseIntegrationTestCompanion(TestValues.NamedParametersTestCase) with DefaultBeforeAfterAll

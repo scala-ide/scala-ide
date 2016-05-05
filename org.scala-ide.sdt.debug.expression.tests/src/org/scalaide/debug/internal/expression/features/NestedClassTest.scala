@@ -6,10 +6,12 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedClassTest extends BaseIntegrationTest(NestedClassTest) {
+class NestedClassTest extends BaseIntegrationTest(NestedClassTest) with DefaultBeforeAfterEach {
 
   @Test
   def testParentObjectField(): Unit =
@@ -37,4 +39,4 @@ class NestedClassTest extends BaseIntegrationTest(NestedClassTest) {
 
 }
 
-object NestedClassTest extends BaseIntegrationTestCompanion(TestValues.NestedClassesTestCase)
+object NestedClassTest extends BaseIntegrationTestCompanion(TestValues.NestedClassesTestCase) with DefaultBeforeAfterAll

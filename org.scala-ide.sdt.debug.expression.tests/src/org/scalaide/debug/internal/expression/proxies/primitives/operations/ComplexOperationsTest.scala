@@ -7,9 +7,11 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class ComplexOperationsTest extends BaseIntegrationTest(ComplexOperationsTest) {
+class ComplexOperationsTest extends BaseIntegrationTest(ComplexOperationsTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 
@@ -83,4 +85,4 @@ class ComplexOperationsTest extends BaseIntegrationTest(ComplexOperationsTest) {
     eval("new java.lang.Integer(1) / 4.0 + new java.lang.Double(0.1)", 0.35, Java.primitives.double)
 }
 
-object ComplexOperationsTest extends BaseIntegrationTestCompanion
+object ComplexOperationsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

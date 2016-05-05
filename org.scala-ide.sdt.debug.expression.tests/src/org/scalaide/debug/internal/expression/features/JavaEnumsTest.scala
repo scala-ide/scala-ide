@@ -6,10 +6,12 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
+class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) with DefaultBeforeAfterEach {
 
   @Test
   def accessingEnumValues(): Unit = {
@@ -26,4 +28,4 @@ class JavaEnumsTest extends BaseIntegrationTest(JavaEnumsTest) {
   }
 }
 
-object JavaEnumsTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)
+object JavaEnumsTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase) with DefaultBeforeAfterAll

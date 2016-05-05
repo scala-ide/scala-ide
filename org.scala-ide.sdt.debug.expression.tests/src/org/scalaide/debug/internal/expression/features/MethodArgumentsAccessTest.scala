@@ -6,14 +6,16 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.ArgumentsTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
 /**
  * Tests if method arguments could be accessed in method's body.
  */
-class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAccessTest) {
+class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAccessTest) with DefaultBeforeAfterEach {
 
   @Test
   def testIntArgument(): Unit = eval("int", 123, Java.primitives.int)
@@ -26,4 +28,4 @@ class MethodArgumentsAccessTest extends BaseIntegrationTest(MethodArgumentsAcces
 
 }
 
-object MethodArgumentsAccessTest extends BaseIntegrationTestCompanion(ArgumentsTestCase)
+object MethodArgumentsAccessTest extends BaseIntegrationTestCompanion(ArgumentsTestCase) with DefaultBeforeAfterAll

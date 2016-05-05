@@ -6,10 +6,12 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class GenericsTest extends BaseIntegrationTest(GenericsTest) {
+class GenericsTest extends BaseIntegrationTest(GenericsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testFieldOfGenericTypeFromClass(): Unit =
@@ -24,6 +26,6 @@ class GenericsTest extends BaseIntegrationTest(GenericsTest) {
     eval("b.filter('a' ==)", "aa", Java.String)
 }
 
-object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) {
+object GenericsTest extends BaseIntegrationTestCompanion(TestValues.GenericsTestCase) with DefaultBeforeAfterAll {
   override def typeName = "debug.GenericClass"
 }

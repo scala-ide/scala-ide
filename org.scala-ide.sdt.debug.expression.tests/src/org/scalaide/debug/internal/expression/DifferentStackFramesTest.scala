@@ -12,7 +12,7 @@ import org.scalaide.debug.internal.expression.TestValues.DifferentStackFramesTes
 import org.scalaide.debug.internal.model.ScalaStackFrame
 import org.scalaide.debug.internal.model.ScalaThread
 
-class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesTest) {
+class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesTest) with DefaultBeforeAfterEach {
 
   private def changeThread(name: String): Unit = {
     val newThread = ScalaDebugger.currentThread.getDebugTarget.getThreads
@@ -66,7 +66,6 @@ class DifferentStackFramesTest extends BaseIntegrationTest(DifferentStackFramesT
   }
 }
 
-object DifferentStackFramesTest extends BaseIntegrationTestCompanion(DifferentStackFramesTestCase) {
-
+object DifferentStackFramesTest extends BaseIntegrationTestCompanion(DifferentStackFramesTestCase) with DefaultBeforeAfterAll {
   override protected val suspensionPolicy: Int = IJavaBreakpoint.SUSPEND_VM
 }

@@ -4,13 +4,14 @@
 package org.scalaide.debug.internal.expression.features
 
 import org.junit.Test
-
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class ObjectsTest extends BaseIntegrationTest(ObjectsTest) {
+class ObjectsTest extends BaseIntegrationTest(ObjectsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testListApply(): Unit = eval("List(1,2)", List(1, 2), Scala.::)
@@ -29,4 +30,4 @@ class ObjectsTest extends BaseIntegrationTest(ObjectsTest) {
 
 }
 
-object ObjectsTest extends BaseIntegrationTestCompanion
+object ObjectsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

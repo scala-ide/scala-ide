@@ -7,9 +7,11 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) {
+class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(InstantiatingJavaInnerClassesTest) with DefaultBeforeAfterEach {
 
   @Ignore("TODO O-7235 there's toolbox error (SI-8956) -it throws exception when creating an instance of inner non-static Java class")
   @Test
@@ -58,4 +60,4 @@ class InstantiatingJavaInnerClassesTest extends BaseIntegrationTest(Instantiatin
 
 }
 
-object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase)
+object InstantiatingJavaInnerClassesTest extends BaseIntegrationTestCompanion(TestValues.JavaTestCase) with DefaultBeforeAfterAll

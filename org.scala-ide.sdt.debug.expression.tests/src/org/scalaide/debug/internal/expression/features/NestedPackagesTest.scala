@@ -3,13 +3,15 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.TestValues.NestedPackagesTestCase
 import org.scalaide.debug.internal.expression.ReflectiveCompilationFailure
 import org.scalaide.debug.internal.expression.ScalaExpressionEvaluatorPlugin
+import org.scalaide.debug.internal.expression.TestValues.NestedPackagesTestCase
 import org.scalaide.debug.internal.preferences.ExprEvalPreferencePage
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedPackagesTest extends BaseIntegrationTest(NestedPackagesTest) {
+class NestedPackagesTest extends BaseIntegrationTest(NestedPackagesTest) with DefaultBeforeAfterEach {
   private def toggleAddImportsFromCurrentFile(addImports: Boolean): Unit = {
     val store = ScalaExpressionEvaluatorPlugin().getPreferenceStore
     store.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, addImports)
@@ -30,4 +32,4 @@ class NestedPackagesTest extends BaseIntegrationTest(NestedPackagesTest) {
   }
 }
 
-object NestedPackagesTest extends BaseIntegrationTestCompanion(NestedPackagesTestCase)
+object NestedPackagesTest extends BaseIntegrationTestCompanion(NestedPackagesTestCase) with DefaultBeforeAfterAll

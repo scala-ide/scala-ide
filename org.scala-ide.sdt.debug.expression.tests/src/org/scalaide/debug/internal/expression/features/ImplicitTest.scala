@@ -111,11 +111,14 @@ class ImplicitTest extends BaseIntegrationTest(ImplicitTest) {
 object ImplicitTest extends BaseIntegrationTestCompanion(ImplicitsTestCase) {
   @BeforeClass
   def setupForTest(): Unit = {
+    setup()
     ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, true)
+    prepareTestDebugSession()
   }
 
   @AfterClass
   def tearDownAfterTest(): Unit = {
     ScalaExpressionEvaluatorPlugin().getPreferenceStore.setValue(ExprEvalPreferencePage.AddImportsFromCurrentFile, false)
+    doCleanup()
   }
 }

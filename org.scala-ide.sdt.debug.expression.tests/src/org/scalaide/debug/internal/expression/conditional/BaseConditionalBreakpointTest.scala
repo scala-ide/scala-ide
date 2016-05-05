@@ -13,6 +13,7 @@ import org.scalaide.debug.internal.expression.JdiExpressionEvaluator
 import org.scalaide.debug.internal.expression.CommonIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.logging.HasLogger
+import org.junit.AfterClass
 
 /**
  * Represents expected expression evaluation result at breakpoint
@@ -69,7 +70,13 @@ class BaseConditionalBreakpointTestCompanion(workspace: String = "conditional-br
 
   @BeforeClass
   def prepareTestDebugSession(): Unit = {
+    setup()
     refreshBinaryFiles()
+  }
+
+  @AfterClass
+  def tearDownResources(): Unit = {
+    doCleanup()
   }
 
   private def doCreateEvaluatorWithBreakpoint(conditionContext: Option[ConditionContext]): Option[JdiExpressionEvaluator] = {

@@ -8,7 +8,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NewInstancesTestCase
 
-class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
+class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) with DefaultBeforeAfterEach {
 
   @Test
   def nestedConstructor(): Unit =
@@ -63,4 +63,4 @@ class NewKeywordTest extends BaseIntegrationTest(NewKeywordTest) {
     eval("(new LibObject.LibNestedClass).LibMoreNestedObject.id", 4, Java.primitives.int)
 }
 
-object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase)
+object NewKeywordTest extends BaseIntegrationTestCompanion(NewInstancesTestCase) with DefaultBeforeAfterAll

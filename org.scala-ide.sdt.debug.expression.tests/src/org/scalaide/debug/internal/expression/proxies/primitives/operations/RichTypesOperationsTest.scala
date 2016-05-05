@@ -8,9 +8,11 @@ import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTest) {
+class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 
@@ -135,4 +137,4 @@ class RichTypesOperationsTest extends BaseIntegrationTest(RichTypesOperationsTes
   }
 }
 
-object RichTypesOperationsTest extends BaseIntegrationTestCompanion
+object RichTypesOperationsTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

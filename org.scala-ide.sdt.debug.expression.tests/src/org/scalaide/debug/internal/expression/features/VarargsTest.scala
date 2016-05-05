@@ -6,15 +6,17 @@ package org.scalaide.debug.internal.expression.features
 
 import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
+import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.VarargsTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
 /**
  * Test uses a class with many overloaded methods containing both constant list of arguments and varargs
  */
-class VarargsTest extends BaseIntegrationTest(VarargsTest) {
+class VarargsTest extends BaseIntegrationTest(VarargsTest) with DefaultBeforeAfterEach {
 
   @Test
   def simpleVararg(): Unit = {
@@ -75,4 +77,4 @@ class VarargsTest extends BaseIntegrationTest(VarargsTest) {
   }
 }
 
-object VarargsTest extends BaseIntegrationTestCompanion(VarargsTestCase)
+object VarargsTest extends BaseIntegrationTestCompanion(VarargsTestCase) with DefaultBeforeAfterAll

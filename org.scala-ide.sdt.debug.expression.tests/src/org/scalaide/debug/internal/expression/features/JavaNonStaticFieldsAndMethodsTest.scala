@@ -7,12 +7,14 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
-import JavaTestCase._
+import org.scalaide.debug.internal.expression.TestValues.JavaTestCase._
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStaticFieldsAndMethodsTest) {
+class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStaticFieldsAndMethodsTest) with DefaultBeforeAfterEach {
 
   @Test
   def getValuesOfFields(): Unit = {
@@ -65,4 +67,4 @@ class JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTest(JavaNonStati
     eval("""javaLibClass.varArgGenericMethod[String]("1.0", "2.0", "3.0")""", Array(1.0, 2.0, 3.0), Scala.Array(Java.Object))
 }
 
-object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase)
+object JavaNonStaticFieldsAndMethodsTest extends BaseIntegrationTestCompanion(JavaTestCase) with DefaultBeforeAfterAll

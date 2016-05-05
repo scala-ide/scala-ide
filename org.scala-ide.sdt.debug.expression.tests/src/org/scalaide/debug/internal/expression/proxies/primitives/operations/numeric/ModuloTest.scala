@@ -7,9 +7,11 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class ModuloTest extends BaseIntegrationTest(ModuloTest) {
+class ModuloTest extends BaseIntegrationTest(ModuloTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 
@@ -91,4 +93,4 @@ class ModuloTest extends BaseIntegrationTest(ModuloTest) {
   }
 }
 
-object ModuloTest extends BaseIntegrationTestCompanion
+object ModuloTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

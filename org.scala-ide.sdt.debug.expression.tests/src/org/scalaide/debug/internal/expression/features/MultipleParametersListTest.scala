@@ -7,10 +7,12 @@ import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersListTest) {
+class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersListTest) with DefaultBeforeAfterEach {
 
   @Test
   def testMultipleParametersClassMethod(): Unit =
@@ -58,4 +60,4 @@ class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersL
     eval("(new LibVarargs.LibVarargs).sum(6)(Nat3)(1, 4, 2)", 16, Java.primitives.int)
 }
 
-object MultipleParametersListTest extends BaseIntegrationTestCompanion
+object MultipleParametersListTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

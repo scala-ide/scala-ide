@@ -4,11 +4,13 @@
 package org.scalaide.debug.internal.expression.features
 
 import org.junit.Test
-import org.scalaide.debug.internal.expression.Names.Java
-import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
+import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
+import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class AnyValTest extends BaseIntegrationTest(AnyValTest) {
+class AnyValTest extends BaseIntegrationTest(AnyValTest) with DefaultBeforeAfterEach {
 
   @Test
   def testTupleArrowCreation(): Unit = {
@@ -36,4 +38,4 @@ class AnyValTest extends BaseIntegrationTest(AnyValTest) {
 
 }
 
-object AnyValTest extends BaseIntegrationTestCompanion
+object AnyValTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

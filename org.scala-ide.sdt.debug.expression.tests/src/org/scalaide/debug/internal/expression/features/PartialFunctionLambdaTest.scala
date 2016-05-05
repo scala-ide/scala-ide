@@ -6,9 +6,11 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambdaTest) {
+class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambdaTest) with DefaultBeforeAfterEach {
 
   @Test
   def testPartialFunctionAndPrimitives(): Unit =
@@ -23,4 +25,4 @@ class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambd
     eval("list.zip(list).map { case (a: Int, b: Int) => a + b }", List(2, 4, 6), Scala.::)
 }
 
-object PartialFunctionLambdaTest extends BaseIntegrationTestCompanion
+object PartialFunctionLambdaTest extends BaseIntegrationTestCompanion with DefaultBeforeAfterAll

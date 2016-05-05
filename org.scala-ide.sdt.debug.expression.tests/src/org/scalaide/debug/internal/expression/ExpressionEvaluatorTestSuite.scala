@@ -5,7 +5,7 @@ import org.junit.runners.Suite
 import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderTest
 import org.scalaide.debug.internal.ui.completion.SimpleContentProposalProviderIntegrationTest
 import org.scalaide.debug.internal.expression.proxies.primitives.PrimitivesOperationsTestSuite
-import org.scalaide.debug.internal.expression.conditional.ConditionalBreakpointsTest
+//import org.scalaide.debug.internal.expression.conditional.ConditionalBreakpointsTest
 import org.scalaide.debug.internal.expression.features.FeaturesTestSuite
 import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
 
@@ -15,8 +15,8 @@ import org.scalaide.debug.internal.expression.proxies.phases.PhasesTestSuite
   classOf[FeaturesTestSuite],
   classOf[PrimitivesOperationsTestSuite],
   classOf[DifferentStackFramesTest],
-  classOf[PhasesTestSuite],
-  classOf[ConditionalBreakpointsTest],
+  classOf[PhasesTestSuite],/*
+  classOf[ConditionalBreakpointsTest],*/
   classOf[SimpleContentProposalProviderTest],
   classOf[SimpleContentProposalProviderIntegrationTest]
 ))

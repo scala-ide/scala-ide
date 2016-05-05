@@ -3,10 +3,12 @@ package org.scalaide.debug.internal.expression.features
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedLambdaTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedLambdaTest extends BaseIntegrationTest(NestedLambdaTest) {
+class NestedLambdaTest extends BaseIntegrationTest(NestedLambdaTest) with DefaultBeforeAfterEach {
 
   @Test
   def shouldEvaluateWhateverEvenIfExecutedInNestedLambda(): Unit =
@@ -14,6 +16,6 @@ class NestedLambdaTest extends BaseIntegrationTest(NestedLambdaTest) {
 
 }
 
-object NestedLambdaTest extends BaseIntegrationTestCompanion(NestedLambdaTestCase) {
+object NestedLambdaTest extends BaseIntegrationTestCompanion(NestedLambdaTestCase) with DefaultBeforeAfterAll {
   override protected def typeName: String = "debug.A$Inner1$Inner"
 }

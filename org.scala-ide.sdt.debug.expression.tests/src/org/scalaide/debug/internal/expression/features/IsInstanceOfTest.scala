@@ -10,7 +10,7 @@ import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.InstanceOfTestCase
 
-class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
+class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) with DefaultBeforeAfterEach {
 
   import TestValues.InstanceOfTestCase._
 
@@ -116,4 +116,4 @@ class IsInstanceOfTest extends BaseIntegrationTest(IsInstanceOfTest) {
   }
 }
 
-object IsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase)
+object IsInstanceOfTest extends BaseIntegrationTestCompanion(InstanceOfTestCase) with DefaultBeforeAfterAll
