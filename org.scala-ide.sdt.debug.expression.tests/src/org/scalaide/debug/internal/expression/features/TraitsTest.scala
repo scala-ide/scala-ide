@@ -10,8 +10,9 @@ import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 
 import org.scalaide.debug.internal.expression.Names
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class TraitsTest extends BaseIntegrationTest(TraitsTest) {
+class TraitsTest extends BaseIntegrationTest(TraitsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testThis(): Unit =

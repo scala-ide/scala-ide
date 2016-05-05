@@ -10,7 +10,8 @@ import org.scalaide.debug.internal.expression.Names.Scala
 
 class OperatorsTest
     extends BaseIntegrationTest(OperatorsTest)
-    with AssignmentTest {
+    with AssignmentTest
+     with DefaultBeforeAfterEach {
 
   // in scope
 

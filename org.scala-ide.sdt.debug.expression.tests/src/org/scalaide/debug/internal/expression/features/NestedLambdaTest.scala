@@ -6,8 +6,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedLambdaTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedLambdaTest extends BaseIntegrationTest(NestedLambdaTest) {
+class NestedLambdaTest extends BaseIntegrationTest(NestedLambdaTest) with DefaultBeforeAfterEach {
 
   @Test
   def shouldEvaluateWhateverEvenIfExecutedInNestedLambda(): Unit =

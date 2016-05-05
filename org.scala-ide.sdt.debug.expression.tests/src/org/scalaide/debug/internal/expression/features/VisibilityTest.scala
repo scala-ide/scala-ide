@@ -10,8 +10,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.VisibilityTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class VisibilityTest extends BaseIntegrationTest(VisibilityTest) {
+class VisibilityTest extends BaseIntegrationTest(VisibilityTest) with DefaultBeforeAfterEach {
 
   import VisibilityTestCase._
 

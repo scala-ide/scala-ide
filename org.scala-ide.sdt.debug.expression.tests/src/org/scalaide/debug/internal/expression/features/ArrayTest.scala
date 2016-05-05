@@ -12,7 +12,7 @@ import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.ArraysTestCase
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 
-class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
+class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest with DefaultBeforeAfterEach {
 
   import ArraysTestCase._
 

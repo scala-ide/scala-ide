@@ -9,9 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) {
-
+class BitwiseOrTest extends BaseIntegrationTest(BitwiseOrTest) with DefaultBeforeAfterEach {
   import TestValues.ValuesTestCase._
 
   @Test

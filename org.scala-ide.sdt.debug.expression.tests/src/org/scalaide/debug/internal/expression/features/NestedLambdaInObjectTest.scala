@@ -6,8 +6,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedLambdaInObjectTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedLambdaInObjectTest extends BaseIntegrationTest(NestedLambdaInObjectTest) {
+class NestedLambdaInObjectTest extends BaseIntegrationTest(NestedLambdaInObjectTest) with DefaultBeforeAfterEach {
 
   @Test(expected = classOf[RuntimeException]) // object A is not a package
   def shouldThrowExceptionBecauseLambdaInObjectIsNotImplemented(): Unit =

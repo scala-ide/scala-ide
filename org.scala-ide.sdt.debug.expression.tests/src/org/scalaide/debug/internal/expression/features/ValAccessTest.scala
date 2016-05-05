@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class ValAccessTest extends BaseIntegrationTest(ValAccessTest) {
+class ValAccessTest extends BaseIntegrationTest(ValAccessTest) with DefaultBeforeAfterEach {
 
   @Test
   def testInt(): Unit = eval("int", 1, Java.primitives.int)

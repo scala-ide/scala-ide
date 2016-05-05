@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.SuperTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class SuperTest extends BaseIntegrationTest(SuperTest) {
+class SuperTest extends BaseIntegrationTest(SuperTest) with DefaultBeforeAfterEach {
 
   @Test
   def normalSuperCall(): Unit = {

@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) {
+class NumericComparisonTest extends BaseIntegrationTest(NumericComparisonTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 

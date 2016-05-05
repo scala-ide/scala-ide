@@ -10,8 +10,9 @@ import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.ReflectiveCompilationFailure
 import org.scalaide.debug.internal.expression.TestValues.NestedTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedScopeTest extends BaseIntegrationTest(NestedScopeTest) {
+class NestedScopeTest extends BaseIntegrationTest(NestedScopeTest) with DefaultBeforeAfterEach {
 
   import NestedTestCase._
 

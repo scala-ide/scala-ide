@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class LiteralsTest extends BaseIntegrationTest(LiteralsTest) {
+class LiteralsTest extends BaseIntegrationTest(LiteralsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testNullLiteral(): Unit = eval("null", null, Scala.nullType)

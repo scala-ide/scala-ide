@@ -28,7 +28,7 @@ trait AssignmentTest {
   }
 }
 
-class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest {
+class VarsTest extends BaseIntegrationTest(VarsTest) with AssignmentTest with DefaultBeforeAfterEach {
 
   @Test
   def testVariableAssignment(): Unit =

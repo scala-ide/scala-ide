@@ -10,8 +10,9 @@ import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.JavaTestCase
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(ModificationOfJavaStaticFieldsTest) {
+class ModificationOfJavaStaticFieldsTest extends BaseIntegrationTest(ModificationOfJavaStaticFieldsTest) with DefaultBeforeAfterEach {
 
   @Test
   def changeStaticFieldsOfClass(): Unit = {

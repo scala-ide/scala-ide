@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) {
+class LogicalOperationsTest extends BaseIntegrationTest(LogicalOperationsTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 

@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class GenericsTest extends BaseIntegrationTest(GenericsTest) {
+class GenericsTest extends BaseIntegrationTest(GenericsTest) with DefaultBeforeAfterEach {
 
   @Test
   def testFieldOfGenericTypeFromClass(): Unit =

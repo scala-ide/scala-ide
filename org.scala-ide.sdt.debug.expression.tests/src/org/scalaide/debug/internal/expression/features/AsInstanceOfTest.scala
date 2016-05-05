@@ -9,7 +9,7 @@ import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.TestValues.InstanceOfTestCase
 
-class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) {
+class AsInstanceOfTest extends BaseIntegrationTest(AsInstanceOfTest) with DefaultBeforeAfterEach {
 
   import TestValues.InstanceOfTestCase._
 

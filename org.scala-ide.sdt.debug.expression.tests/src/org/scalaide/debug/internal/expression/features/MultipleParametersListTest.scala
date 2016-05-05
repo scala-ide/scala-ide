@@ -10,8 +10,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersListTest) {
+class MultipleParametersListTest extends BaseIntegrationTest(MultipleParametersListTest) with DefaultBeforeAfterEach {
 
   @Test
   def testMultipleParametersClassMethod(): Unit =

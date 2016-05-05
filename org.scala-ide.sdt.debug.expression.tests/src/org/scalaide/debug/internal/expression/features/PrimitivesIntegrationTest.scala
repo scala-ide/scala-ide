@@ -8,8 +8,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class PrimitivesIntegrationTest extends BaseIntegrationTest(PrimitivesIntegrationTest) {
+class PrimitivesIntegrationTest extends BaseIntegrationTest(PrimitivesIntegrationTest) with DefaultBeforeAfterEach {
 
   @Test
   def testIntMethodAccess(): Unit = eval("list(int)", 2, Java.primitives.int)

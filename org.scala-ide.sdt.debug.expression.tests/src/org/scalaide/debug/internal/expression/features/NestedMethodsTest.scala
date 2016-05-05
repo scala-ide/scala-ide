@@ -13,8 +13,9 @@ import org.scalaide.debug.internal.expression.MultipleMethodsMatchNestedOne
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.TestValues.NestedMethodsTestCase
 import org.scalaide.debug.internal.expression.UnsupportedFeature
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) {
+class NestedMethodsTest extends BaseIntegrationTest(NestedMethodsTest) with DefaultBeforeAfterEach {
 
   private def withUnsuportedFeature(feature: String)(code: String) = {
     try {

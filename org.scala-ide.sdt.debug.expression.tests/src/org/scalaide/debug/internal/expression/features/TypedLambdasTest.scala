@@ -9,8 +9,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) {
+class TypedLambdasTest extends BaseIntegrationTest(TypedLambdasTest) with DefaultBeforeAfterEach {
 
   // TODO - this test fails with assertion from toolbox compiler when `TypedLambdasTest` is run separately
   // Grzegorz Kossakowski said it's a bug in Scala and we could investigate it further and file a ticket

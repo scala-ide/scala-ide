@@ -8,8 +8,9 @@ import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
 import org.scalaide.debug.internal.expression.DefaultBeforeAfterAll
 import org.scalaide.debug.internal.expression.Names.Scala
+import org.scalaide.debug.internal.expression.DefaultBeforeAfterEach
 
-class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambdaTest) {
+class PartialFunctionLambdaTest extends BaseIntegrationTest(PartialFunctionLambdaTest) with DefaultBeforeAfterEach {
 
   @Test
   def testPartialFunctionAndPrimitives(): Unit =

@@ -30,8 +30,6 @@ class CommonIntegrationTestCompanion(projectName: String)
 
   def doCleanup(): Unit = {
     logger.info(s"Test $testName finished")
-    cleanDebugSession()
-    deleteProject()
   }
 
   protected def refreshBinaryFiles(): Unit = {
@@ -44,14 +42,14 @@ class CommonIntegrationTestCompanion(projectName: String)
     new JdiExpressionEvaluator(target.classPath)
   }
 
-  private def cleanDebugSession(): Unit = {
+  def cleanDebugSession(): Unit = {
     if (session ne null) {
       session.terminate()
       session = null
     }
   }
 
-  private def deleteProject(): Unit = {
+  def deleteProject(): Unit = {
     try {
       SDTTestUtils.deleteProjects(project)
     } catch {

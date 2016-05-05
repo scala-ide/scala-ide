@@ -8,7 +8,7 @@ import org.junit.Test
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
 
-class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) {
+class ControlStructuresTest extends BaseIntegrationTest(ControlStructuresTest) with DefaultBeforeAfterEach {
 
   import TestValues.ValuesTestCase._
 

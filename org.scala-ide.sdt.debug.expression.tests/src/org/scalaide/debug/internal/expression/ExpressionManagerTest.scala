@@ -10,7 +10,7 @@ import org.junit.Assert._
 import org.junit.Test
 import Names.Scala
 
-class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
+class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) with DefaultBeforeAfterEach {
 
   /**
    * Executes code using [[org.scalaide.debug.internal.expression.ExpressionManager]] and checks result.
