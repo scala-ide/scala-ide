@@ -34,6 +34,8 @@ import org.eclipse.jdt.launching.JavaRuntime
 import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.project.ScalaProject
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.preferences.ConfigurationScope
+import org.eclipse.jdt.debug.core.JDIDebugModel
 
 /**
  * Utility functions for setting up test projects.
@@ -50,6 +52,13 @@ object SDTTestUtils extends HasLogger {
   def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName)
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
+  }
+
+  def setJdiRequestTimeout(timeout: Int): Int = {
+    val debugSettings = ConfigurationScope.INSTANCE.getNode(JDIDebugModel.getPluginIdentifier())
+    val previousRequestTimeout = debugSettings.getInt(JDIDebugModel.PREF_REQUEST_TIMEOUT, JDIDebugModel.DEF_REQUEST_TIMEOUT)
+    debugSettings.putInt(JDIDebugModel.PREF_REQUEST_TIMEOUT, timeout)
+    previousRequestTimeout
   }
 
   /** Enable workspace auto-building */
