@@ -1,41 +1,43 @@
 package org.scalaide.core
 package testsetup
 
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.runtime.Platform
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.TimeoutException
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.preferences.InstanceScope
-import org.scalaide.util.eclipse.OSGiUtils
-import org.scalaide.util.eclipse.EclipseUtils
-import scala.collection.mutable
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.resources.IMarker
-import org.eclipse.jdt.core.IPackageFragment
-import org.eclipse.jdt.core.IClasspathEntry
-import org.scalaide.core.IScalaProject
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.internal.ScalaPlugin
-import org.eclipse.core.runtime.NullProgressMonitor
-import scala.collection.mutable.ArrayBuffer
-import org.eclipse.jdt.launching.JavaRuntime
-import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.scalaide.core.internal.project.ScalaProject
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.NullProgressMonitor
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.preferences.ConfigurationScope
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.debug.core.JDIDebugModel
+import org.eclipse.jdt.launching.JavaRuntime
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.OSGiUtils
 
 /**
  * Utility functions for setting up test projects.
@@ -168,20 +170,20 @@ object SDTTestUtils extends HasLogger {
    *
    *  The file must not exist.
    */
-  def addFileToProject(project: IProject, path: String, content: String)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): IFile =
-    addFileToProject(project, path, content.getBytes(project.getDefaultCharset()), progressMonitor)
+  def addFileToProject(project: IProject, path: String, content: String): IFile =
+    addFileToProject(project, path, content.getBytes(project.getDefaultCharset()))
 
-  def addFileToProject(project: IProject, path: String, content: Array[Byte], progressMonitor: IProgressMonitor): IFile = {
+  def addFileToProject(project: IProject, path: String, content: Array[Byte]): IFile = {
     val filePath = new Path(path)
     val dirNames = filePath.segments.init // last segment is the file
     dirNames.foldLeft(project: IContainer) { (container, segment) =>
       val folder = container.getFolder(new Path(segment))
       if (!folder.exists())
-        folder.create(false, true, progressMonitor)
+        folder.create(false, true, null)
       folder
     }
     val file = project.getFile(filePath);
-    file.create(new ByteArrayInputStream(content), true, progressMonitor)
+    file.create(new ByteArrayInputStream(content), true, null)
     file
   }
 
@@ -202,29 +204,29 @@ object SDTTestUtils extends HasLogger {
   def getErrorMessages(units: ICompilationUnit*): List[String] =
     for (p <- getProblemMarkers(units: _*)) yield p.getAttribute(IMarker.MESSAGE).toString
 
-  def buildWith(resource: IResource, contents: String, unitsToWatch: Seq[ICompilationUnit])(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): List[String] = {
+  def buildWith(resource: IResource, contents: String, unitsToWatch: Seq[ICompilationUnit]): List[String] = {
     SDTTestUtils.changeContentOfFile(resource.asInstanceOf[IFile], contents)
 
     logger.debug("=== Rebuilding workspace === ")
-    SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, progressMonitor)
+    SDTTestUtils.workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, null)
 
     val problems = getProblemMarkers(unitsToWatch: _*)
 
     for (p <- problems) yield p.getAttribute(IMarker.MESSAGE).toString
   }
 
-  def createProjectInLocalFileSystem(parentFile: File, projectName: String)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): IProject = {
+  def createProjectInLocalFileSystem(parentFile: File, projectName: String): IProject = {
     val project = workspace.getRoot.getProject(projectName)
     if (project.exists)
-      project.delete(true, progressMonitor)
+      project.delete(true, null)
     val testFile = new File(parentFile, projectName)
     if (testFile.exists)
       deleteRecursive(testFile)
 
     val desc = workspace.newProjectDescription(projectName)
     desc.setLocation(new Path(new File(parentFile, projectName).getPath))
-    project.create(desc, progressMonitor)
-    project.open(progressMonitor)
+    project.create(desc, null)
+    project.open(null)
     project
   }
 
@@ -249,24 +251,24 @@ object SDTTestUtils extends HasLogger {
     }
   }
 
-  def createSourcePackage(name: String)(project: IScalaProject)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): IPackageFragment =
-    project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, progressMonitor)
+  def createSourcePackage(name: String)(project: IScalaProject): IPackageFragment =
+    project.javaProject.getPackageFragmentRoot(project.underlying.getFolder("/src")).createPackageFragment(name, true, null)
 
   def createCompilationUnit(pack: IPackageFragment, name: String, sourceCode: String, force: Boolean = false): ICompilationUnit = {
     BlockingProgressMonitor.waitUntilDone(pack.createCompilationUnit(name, sourceCode, force, _))
   }
 
-  def addToClasspath(prj: IScalaProject, entries: IClasspathEntry*)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Unit = {
+  def addToClasspath(prj: IScalaProject, entries: IClasspathEntry*): Unit = {
     val existing = prj.javaProject.getRawClasspath
-    prj.javaProject.setRawClasspath(existing ++ entries, progressMonitor)
+    prj.javaProject.setRawClasspath(existing ++ entries, null)
   }
 
   /** Create Scala projects, equiped with the Scala nature, Scala library container and a '/src' folder. */
   def createProjects(names: String*): Seq[IScalaProject] =
     names map (n => createProjectInWorkspace(n, true))
 
-  private[core] def internalCreateProjects(names: String*)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Seq[ScalaProject] =
-    names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly)(progressMonitor))
+  private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
+    names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
 
   def deleteProjects(projects: IScalaProject*)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
@@ -321,26 +323,26 @@ object SDTTestUtils extends HasLogger {
    *  it creates a source folder called `src`.
    */
   def createProjectInWorkspace(projectName: String, withSourceRoot: Boolean = true): IScalaProject =
-    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)(null)
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
 
   def createProjectInWorkspace(projectName: String, withSrcOutputStructure: SrcPathOutputEntry): IScalaProject =
-    internalCreateProjectInWorkspace(projectName, withSrcOutputStructure)(null)
+    internalCreateProjectInWorkspace(projectName, withSrcOutputStructure)
 
-  type SrcPathOutputEntry = (IProject, IJavaProject, IProgressMonitor) => Seq[IClasspathEntry]
+  type SrcPathOutputEntry = (IProject, IJavaProject) => Seq[IClasspathEntry]
 
-  private def withNoSourceRoot: SrcPathOutputEntry = (_, _, _) => Seq.empty[IClasspathEntry]
+  private def withNoSourceRoot: SrcPathOutputEntry = (_, _) => Seq.empty[IClasspathEntry]
 
-  private def withSourceRootOnly: SrcPathOutputEntry = (thisProject, correspondingJavaProject, progressMonitor) => {
+  private def withSourceRootOnly: SrcPathOutputEntry = (thisProject, correspondingJavaProject) => {
     val sourceFolder = thisProject.getFolder("/src")
-    sourceFolder.create( /* force = */ false, /* local = */ true, progressMonitor)
+    sourceFolder.create( /* force = */ false, /* local = */ true, /* monitor = */ null)
     val root = correspondingJavaProject.getPackageFragmentRoot(sourceFolder)
     Seq(JavaCore.newSourceEntry(root.getPath()))
   }
 
-  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean, progressMonitor: IProgressMonitor): ScalaProject =
-    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)(progressMonitor)
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceRoot: Boolean): ScalaProject =
+    internalCreateProjectInWorkspace(projectName, if (withSourceRoot) withSourceRootOnly else withNoSourceRoot)
 
-  final def createJavaProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): IJavaProject = {
+  final def createJavaProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): IJavaProject = {
     val workspaceRoot = workspace.getRoot()
     val project = workspaceRoot.getProject(projectName)
     project.create(null)
@@ -356,23 +358,23 @@ object SDTTestUtils extends HasLogger {
     val entries = new ArrayBuffer[IClasspathEntry]()
     entries += JavaRuntime.getDefaultJREContainerEntry()
 
-    entries ++= withSourceFolders(project, javaProject, progressMonitor)
+    entries ++= withSourceFolders(project, javaProject)
 
     javaProject.setRawClasspath(entries.toArray[IClasspathEntry], null)
     javaProject
   }
 
-  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry)(implicit progressMonitor: IProgressMonitor): ScalaProject = {
-    def withScalaFolders(project: IProject, jProject: IJavaProject, progressMonitor: IProgressMonitor) =
-      withSourceFolders(project, jProject, progressMonitor) ++ Seq(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
+  private[core] def internalCreateProjectInWorkspace(projectName: String, withSourceFolders: SrcPathOutputEntry): ScalaProject = {
+    def withScalaFolders(project: IProject, jProject: IJavaProject) =
+      withSourceFolders(project, jProject) ++ Seq(JavaCore.newContainerEntry(Path.fromPortableString(SdtConstants.ScalaLibContId)))
     def addScalaNature(project: IProject) = {
       val description = project.getDescription
       description.setNatureIds(SdtConstants.NatureId +: description.getNatureIds)
-      project.setDescription(description, progressMonitor)
+      project.setDescription(description, null)
       project
     }
 
-    ScalaPlugin().getScalaProject(addScalaNature(createJavaProjectInWorkspace(projectName, withScalaFolders)(progressMonitor).getProject))
+    ScalaPlugin().getScalaProject(addScalaNature(createJavaProjectInWorkspace(projectName, withScalaFolders).getProject))
   }
 
   def withWorkspacePreference[A](name: String, value: Boolean)(thunk: => A): A = {
@@ -385,6 +387,6 @@ object SDTTestUtils extends HasLogger {
       store.setValue(name, old)
   }
 
-  def buildWorkspace()(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Unit =
-    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, progressMonitor)
+  def buildWorkspace(): Unit =
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 }

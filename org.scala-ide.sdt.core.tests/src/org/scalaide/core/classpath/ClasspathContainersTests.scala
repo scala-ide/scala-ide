@@ -17,7 +17,6 @@ import org.junit.AfterClass
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.internal.project.ScalaProject
-import org.eclipse.core.runtime.NullProgressMonitor
 
 object ClasspathContainersTests {
   private var projects: List[IScalaProject] = List()
@@ -35,7 +34,7 @@ class ClasspathContainersTests {
   def getLibraryContainer(project: IScalaProject) = JavaCore.getClasspathContainer(new Path(libraryId), project.javaProject)
 
   def createProject(): ScalaProject = {
-    val project = SDTTestUtils.internalCreateProjectInWorkspace(s"compiler-settings${projects.size}", true, new NullProgressMonitor)
+    val project = SDTTestUtils.internalCreateProjectInWorkspace(s"compiler-settings${projects.size}", true)
     projects = project :: projects
     project
   }

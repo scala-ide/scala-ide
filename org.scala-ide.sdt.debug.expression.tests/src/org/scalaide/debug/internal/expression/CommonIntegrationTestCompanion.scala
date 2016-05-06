@@ -8,12 +8,12 @@ import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.{NullProgressMonitor => NPM}
 import org.junit.AfterClass
 import org.junit.BeforeClass
+import org.scalaide.core.testsetup.BlockingProgressMonitor
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.ScalaDebugRunningTest
 import org.scalaide.debug.internal.ScalaDebugTestSession
 import org.scalaide.logging.HasLogger
-import org.scalaide.core.testsetup.BlockingProgressMonitor
 
 class CommonIntegrationTestCompanion(projectName: String)
   extends TestProjectSetup(projectName, bundleName = "org.scala-ide.sdt.debug.expression.tests")

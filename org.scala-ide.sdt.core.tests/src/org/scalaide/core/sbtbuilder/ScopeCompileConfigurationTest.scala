@@ -23,7 +23,7 @@ object ScopeCompileConfigurationTest extends IProjectOperations {
   private val bundleName = "org.scala-ide.sdt.core.tests"
   private val errorTypes = Array(SdtConstants.ProblemMarkerId, IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER)
 
-  private val withSrcOutputStructure: SrcPathOutputEntry = (project, jProject, _) => {
+  private val withSrcOutputStructure: SrcPathOutputEntry = (project, jProject) => {
     val macrosSourceFolder = project.getFolder("/src/macros")
     val macrosAsMainSourceFolder = project.getFolder("/src/macros-as-main")
     val mainSourceFolder = project.getFolder("/src/main")

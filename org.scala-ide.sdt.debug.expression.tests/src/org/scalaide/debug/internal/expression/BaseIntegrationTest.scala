@@ -10,10 +10,10 @@ import scala.util.Success
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.junit.Assert._
 import org.junit.BeforeClass
+import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.debug.internal.expression.TestValues.ValuesTestCase
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.logging.HasLogger
-import org.scalaide.core.testsetup.SDTTestUtils
 
 class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion) extends HasLogger {
 
