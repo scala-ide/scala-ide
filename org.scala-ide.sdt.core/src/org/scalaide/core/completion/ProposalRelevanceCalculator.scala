@@ -4,10 +4,24 @@ import scala.tools.nsc.interactive.Global
 import org.scalaide.logging.HasLogger
 import scala.util.matching.Regex
 
+object ProposalRelevanceCalculator {
+  private final val MaxInternalRelevance = 1000
+  private final val MaxExternalRelevance = 100
+  private final val IntToExtRatio = MaxInternalRelevance.toDouble / MaxExternalRelevance
+
+  private def internalToExternalRelevance(relevance: Int): Int = {
+    if (relevance <= 0) 0
+    else if (relevance >= MaxInternalRelevance) MaxExternalRelevance
+    else (relevance * IntToExtRatio).round.toInt
+  }
+}
+
 class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRelevanceCfg) extends HasLogger {
+  import ProposalRelevanceCalculator._
+
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {
     // rudimentary relevance, place own members before inherited ones, and before view-provided ones
-    var relevance = 1000
+    var relevance = MaxInternalRelevance
     if (!sym.isLocalToBlock) relevance -= 10 // non-local symbols are less relevant than local ones
     if (!sym.hasGetter) relevance -= 5 // fields are more relevant than non-fields
     if (inherited.exists(_ == true)) relevance -= 10
@@ -31,11 +45,11 @@ class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRel
     val casePenalty = if (name.substring(0, prefix.length) != prefix) 50 else 0
     relevance -= casePenalty
 
-    relevance
+    internalToExternalRelevance(relevance)
   }
 
   def forJdtType(prefix: String, name: String): Int = {
-    val maxRelevance = 500
+    val maxRelevance = MaxExternalRelevance / 4 * 3
 
     def deltaForPrefix(deltaIfMatch: Int, regexes: Seq[Regex]): Int = {
       regexes.foldLeft(0) { (acc, rx) =>
@@ -66,6 +80,6 @@ class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRel
       name.length*3 +
       nestingLevel
 
-    math.max(math.min(maxRelevance, maxRelevance + bonus - penalty), 0)
+    internalToExternalRelevance(maxRelevance + bonus - penalty)
   }
 }
