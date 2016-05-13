@@ -25,8 +25,7 @@ class MultiScalaVersionTest {
 
   @Test // Build using the previous version of the Scala library
   def previousVersionBuildSucceeds(): Unit = {
-    val Seq(proj) = internalCreateProjects("prev-version-build")
-    val p = proj
+    val Seq(p) = internalCreateProjects("prev-version-build")
     val projectSpecificStorage = p.projectSpecificStorage
 
     projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)

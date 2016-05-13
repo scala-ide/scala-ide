@@ -1,38 +1,43 @@
 package org.scalaide.core
 package testsetup
 
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jdt.core.JavaCore
-import org.eclipse.core.runtime.Platform
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.TimeoutException
+
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
-import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.runtime.IPath
-import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.preferences.InstanceScope
-import org.scalaide.util.eclipse.OSGiUtils
-import org.scalaide.util.eclipse.EclipseUtils
-import scala.collection.mutable
-import org.eclipse.jdt.core.ICompilationUnit
-import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder
-import org.eclipse.core.resources.IMarker
-import org.eclipse.jdt.core.IPackageFragment
-import org.eclipse.jdt.core.IClasspathEntry
-import org.scalaide.core.IScalaProject
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.internal.ScalaPlugin
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.collection.mutable.ArrayBuffer
+import org.eclipse.core.runtime.Path
+import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.preferences.ConfigurationScope
+import org.eclipse.core.runtime.preferences.InstanceScope
+import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.IJavaModelMarker
+import org.eclipse.jdt.core.IJavaProject
+import org.eclipse.jdt.core.IPackageFragment
+import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.debug.core.JDIDebugModel
 import org.eclipse.jdt.launching.JavaRuntime
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.logging.HasLogger
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.eclipse.OSGiUtils
 
 /**
  * Utility functions for setting up test projects.
@@ -49,6 +54,13 @@ object SDTTestUtils extends HasLogger {
   def sourceWorkspaceLoc(bundleName: String): IPath = {
     val bundle = Platform.getBundle(bundleName)
     OSGiUtils.pathInBundle(bundle, File.separatorChar + "test-workspace").get
+  }
+
+  def setJdiRequestTimeout(timeout: Int): Int = {
+    val debugSettings = ConfigurationScope.INSTANCE.getNode(JDIDebugModel.getPluginIdentifier())
+    val previousRequestTimeout = debugSettings.getInt(JDIDebugModel.PREF_REQUEST_TIMEOUT, JDIDebugModel.DEF_REQUEST_TIMEOUT)
+    debugSettings.putInt(JDIDebugModel.PREF_REQUEST_TIMEOUT, timeout)
+    previousRequestTimeout
   }
 
   /** Enable workspace auto-building */
@@ -79,7 +91,7 @@ object SDTTestUtils extends HasLogger {
   def setupProject(name: String, bundleName: String): IScalaProject =
     internalSetupProject(name, bundleName)
 
-  private[core] def internalSetupProject(name: String, bundleName: String): ScalaProject = {
+  private[core] def internalSetupProject(name: String, bundleName: String)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): ScalaProject = {
     EclipseUtils.workspaceRunnableIn(workspace) { monitor =>
       val wspaceLoc = workspace.getRoot.getLocation
       val src = new File(sourceWorkspaceLoc(bundleName).toFile().getAbsolutePath + File.separatorChar + name)
@@ -87,9 +99,9 @@ object SDTTestUtils extends HasLogger {
       logger.debug("copying %s to %s".format(src, dst))
       FileUtils.copyDirectory(src, dst)
       val project = workspace.getRoot.getProject(name)
-      project.create(null)
-      project.open(null)
-      project.setDefaultCharset("UTF-8", /*progressMonitor =*/ null)
+      project.create(progressMonitor)
+      project.open(progressMonitor)
+      project.setDefaultCharset("UTF-8", progressMonitor)
       JavaCore.create(project)
     }
     ScalaPlugin().getScalaProject(workspace.getRoot.getProject(name))
@@ -258,9 +270,9 @@ object SDTTestUtils extends HasLogger {
   private[core] def internalCreateProjects(names: String*): Seq[ScalaProject] =
     names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
 
-  def deleteProjects(projects: IScalaProject*): Unit = {
+  def deleteProjects(projects: IScalaProject*)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Unit = {
     EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
-      projects foreach (_.underlying.delete(true, null))
+      projects foreach (_.underlying.delete(true, progressMonitor))
     }
   }
 
@@ -376,5 +388,5 @@ object SDTTestUtils extends HasLogger {
   }
 
   def buildWorkspace(): Unit =
-    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor())
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
 }
