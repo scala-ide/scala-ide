@@ -128,7 +128,7 @@ case class SbtCompilationUnit(
     document: Option[IDocument] = None)
       extends InteractiveCompilationUnit with HasLogger {
 
-  @volatile private var lastInfo: ISourceMap = _
+  @volatile private var cachedSourceMap: ISourceMap = _
 
   private lazy val pc = {
     logger.debug(s"About to create presentation compiler for sbt project `$scalaProject`.")
@@ -140,14 +140,16 @@ case class SbtCompilationUnit(
 
   /** Return the source info for the given contents. */
   override def sourceMap(contents: Array[Char]): ISourceMap = {
-    new SbtSourceInfo(file, contents, pc.sbtFileImports)
+    cachedSourceMap = new SbtSourceInfo(file, contents, pc.sbtFileImports)
+    cachedSourceMap
   }
 
   /** Return the most recent available source map for the current contents. */
   override def lastSourceMap(): ISourceMap = {
-    if (lastInfo eq null)
-      lastInfo = sourceMap(getContents())
-    lastInfo
+    if (cachedSourceMap == null)
+      sourceMap(getContents())
+    else
+      cachedSourceMap
   }
 
   /** Return the current contents of this compilation unit. This is the 'original' contents, that may be
