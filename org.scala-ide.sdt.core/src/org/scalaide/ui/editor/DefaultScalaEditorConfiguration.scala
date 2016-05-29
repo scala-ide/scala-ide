@@ -35,7 +35,7 @@ import org.eclipse.ui.texteditor.ChainedPreferenceStore
  *  @note Standard content assist is missing from this configuration, but should be easy to add
  *        in a subsequent release
  *
- *  @since 4.3.0
+ *  @since 4.5.0
  */
 trait DefaultScalaEditorConfiguration extends SourceViewerConfiguration {
   val javaPreferenceStore: IPreferenceStore
