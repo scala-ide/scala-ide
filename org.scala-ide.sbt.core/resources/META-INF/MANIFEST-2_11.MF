@@ -29,7 +29,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.filesystem
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/client-all.jar,
+ target/lib/client-all-2-11.jar,
  target/lib/akka-actor_2.11.jar,
  target/lib/reactive-streams.jar,
  target/lib/akka-osgi_2.11.jar,

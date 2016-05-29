@@ -21,9 +21,10 @@
   </properties>
 
   <dependencies>
+    <!-- TODO do not hardcode 2-11 (or any other Scala version) here. -->
     <dependency>
       <groupId>com.typesafe.sbt</groupId>
-      <artifactId>client-all</artifactId>
+      <artifactId>client-all-2-11</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
@@ -79,11 +80,11 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>com.typesafe.sbt</groupId>
-                  <artifactId>client-all</artifactId>
+                  <artifactId>client-all-2-11</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.sbt</groupId>
-                  <artifactId>client-all</artifactId>
+                  <artifactId>client-all-2-11</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>

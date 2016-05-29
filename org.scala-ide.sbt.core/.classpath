@@ -10,6 +10,6 @@
 	<classpathentry kind="src" output="target/classes" path="src"/>
 	<classpathentry kind="lib" path="target/lib/akka-osgi_2.11.jar" sourcepath="target/lib/akka-osgi_2.11-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/akka-stream_2.11.jar" sourcepath="target/lib/akka-stream_2.11-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/client-all.jar" sourcepath="target/lib/client-all-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/client-all-2-11.jar" sourcepath="target/lib/client-all-2-11-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
