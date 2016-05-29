@@ -15,23 +15,54 @@ import org.scalaide.core.compiler.ISourceMap
 import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.core.extensions.SourceFileProvider
 import org.scalaide.core.resources.EclipseResource
+import org.scalaide.sbt.core.SbtBuild
+import org.scalaide.sbt.core.SbtRemotePlugin
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import org.scalaide.logging.HasLogger
 
-class SbtSourceFileProvider extends SourceFileProvider {
+class SbtSourceFileProvider extends SourceFileProvider with HasLogger {
   override def createFrom(path: IPath): Option[InteractiveCompilationUnit] = {
     val root = ResourcesPlugin.getWorkspace().getRoot()
     val file = Option(root.getFile(path))
 
-    file map (new SbtCompilationUnit(_))
+    file map SbtCompilationUnit.fromFile
   }
 }
 
-object SbtCompilationUnit {
+object SbtCompilationUnit extends HasLogger {
+  private var units = Map[String, SbtCompilationUnit]()
+
   def fromEditor(scriptEditor: SbtEditor): SbtCompilationUnit = {
     val input = scriptEditor.getEditorInput
-    if (input == null) throw new NullPointerException(s"No editor input for editor $scriptEditor. Hint: Maybe the editor isn't yet fully initialized?")
+    if (input == null)
+      throw new NullPointerException(s"No editor input for editor $scriptEditor. Hint: Maybe the editor isn't yet fully initialized?")
     else {
-      val doc = scriptEditor.getDocumentProvider().getDocument(input)
-      fromEditorInput(input, doc)
+      val file = getFile(input)
+      val path = file.getFullPath.toOSString()
+      units.get(path) match {
+        case None ⇒
+          val doc = scriptEditor.getDocumentProvider().getDocument(input)
+          val unit = new SbtCompilationUnit(file, Some(doc))
+          units += path → unit
+          logger.debug(s"Successfully created a new sbt compilation unit for file `$path`.")
+          unit
+        case Some(unit) ⇒
+          unit
+      }
+    }
+  }
+
+  def fromFile(file: IFile): SbtCompilationUnit = {
+    val path = file.getFullPath.toOSString()
+    units.get(path) match {
+      case None ⇒
+        val unit = new SbtCompilationUnit(file)
+        units += path → unit
+        logger.debug(s"Successfully created a new sbt compilation unit for file `$path`.")
+        unit
+      case Some(unit) ⇒
+        unit
     }
   }
 
@@ -42,9 +73,6 @@ object SbtCompilationUnit {
       case _ =>
         throw new IllegalArgumentException(s"Editor input of file `${editorInput.getName}` is not a sbt file.")
     }
-
-  private def fromEditorInput(editorInput: IEditorInput, doc: IDocument): SbtCompilationUnit =
-    new SbtCompilationUnit(getFile(editorInput), Some(doc))
 }
 
 class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]) extends ISourceMap {
@@ -97,14 +125,23 @@ class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]
 
 case class SbtCompilationUnit(
     override val workspaceFile: IFile,
-    document: Option[IDocument] = None) extends InteractiveCompilationUnit {
+    document: Option[IDocument] = None)
+      extends InteractiveCompilationUnit with HasLogger {
+
+  @volatile private var lastInfo: ISourceMap = _
+
+  private lazy val pc = {
+    logger.debug(s"About to create presentation compiler for sbt project `$scalaProject`.")
+    val build = Await.result(SbtBuild.buildFor(scalaProject.underlying.getLocation.toFile)(SbtRemotePlugin.system), Duration.Inf)
+    val c = new SbtPresentationCompiler(scalaProject, build).compiler
+    logger.debug(s"Presentation compiler for sbt project `$scalaProject` successfully created.")
+    c
+  }
 
   /** Return the source info for the given contents. */
   override def sourceMap(contents: Array[Char]): ISourceMap = {
     new SbtSourceInfo(file, contents)
   }
-
-  @volatile private var lastInfo: ISourceMap = _
 
   /** Return the most recent available source map for the current contents. */
   override def lastSourceMap(): ISourceMap = {
@@ -127,7 +164,7 @@ case class SbtCompilationUnit(
 
   override lazy val scalaProject = IScalaPlugin().asScalaProject(workspaceFile.getProject).get
 
-  override def presentationCompiler = SbtPresentationCompiler.compiler
+  override def presentationCompiler = pc
 
   /** Does this unit exist in the workspace? */
   override def exists(): Boolean = workspaceFile.exists()

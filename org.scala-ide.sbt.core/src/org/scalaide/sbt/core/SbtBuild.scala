@@ -24,6 +24,9 @@ import sbt.protocol.LogStdOut
 import sbt.protocol.LogSuccess
 import sbt.protocol.LogTrace
 import sbt.protocol.ProjectReference
+import akka.stream.scaladsl.Source
+import akka.NotUsed
+import sbt.protocol.MinimalBuildStructure
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -117,6 +120,9 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
   import system.dispatcher
   import SourceUtils._
   implicit val materializer = ActorMaterializer()
+
+  def watchBuild(): Source[MinimalBuildStructure, NotUsed] =
+    sbtClient.watchBuild()
 
   /**
    * Triggers the compilation of the given project.
