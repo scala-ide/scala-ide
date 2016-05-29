@@ -50,10 +50,11 @@ object SbtCompilationUnit {
 class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]) extends ISourceMap {
   def baseImports = "import sbt._, Keys._, dsl._"
 
-  val prefix = s"""|$baseImports
-                   |object $$container {
-                   |  def $$meth {
-                   |""".stripMargin
+  private val prefix = s"""|$baseImports
+                           |object $$container {
+                           |  def $$meth {
+                           |""".stripMargin
+  private val prefixLen = prefix.count(_ == '\n')
 
   override val scalaSource =
     s"""|$prefix
@@ -64,8 +65,8 @@ class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]
   override val scalaPos = ScalaPosition
   override val originalPos = OriginalPosition
 
-  override def scalaLine(line: Int): Int = line + 3
-  override def originalLine(line: Int): Int = math.max(1, line - 3)
+  override def scalaLine(line: Int): Int = line + prefixLen
+  override def originalLine(line: Int): Int = math.max(1, line - prefixLen)
 
   object ScalaPosition extends IPositionInformation {
     /** Map the given offset to the target offset. */
