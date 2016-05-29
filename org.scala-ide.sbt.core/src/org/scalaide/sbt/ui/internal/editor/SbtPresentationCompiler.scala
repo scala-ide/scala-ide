@@ -20,12 +20,18 @@ class SbtPresentationCompiler(project: IScalaProject, sbtBuild: SbtBuild) {
 
   val compiler = new PresentationCompilerProxy("Sbt compiler", mkSettings _)
 
-  private def mkSettings: Settings = {
+  lazy val structure = {
     import sbtBuild.system
     import SourceUtils._
     implicit val m = ActorMaterializer()
 
-    val structure = Await.result(sbtBuild.watchBuild().firstFuture, Duration.Inf)
+    Await.result(sbtBuild.watchBuild().firstFuture, Duration.Inf)
+  }
+
+  def sbtFileImports: Seq[String] =
+    structure.buildsData.head.imports
+
+  private def mkSettings: Settings = {
     val cp = structure.buildsData.head.classpath
 
     val s = new Settings

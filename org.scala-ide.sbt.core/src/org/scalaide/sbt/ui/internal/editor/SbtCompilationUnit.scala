@@ -75,18 +75,18 @@ object SbtCompilationUnit extends HasLogger {
     }
 }
 
-class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]) extends ISourceMap {
-  def baseImports = "import sbt._, Keys._, dsl._"
-
-  private val prefix = s"""|$baseImports
-                           |object $$container {
-                           |  def $$meth {
-                           |""".stripMargin
+class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char], imports: Seq[String]) extends ISourceMap {
+  private val prefix = s"""
+    |${imports.mkString("\n")}
+    |object $$container {
+    |  def $$meth {
+    |""".stripMargin
   private val prefixLen = prefix.count(_ == '\n')
 
-  override val scalaSource =
-    s"""|$prefix
-        |${originalSource.mkString("")} }}""".stripMargin.toCharArray()
+  override val scalaSource = s"""
+    |$prefix
+    |${originalSource.mkString("")}
+    |}}""".stripMargin.toCharArray()
 
   override lazy val sourceFile = new BatchSourceFile(file, scalaSource)
 
@@ -133,14 +133,14 @@ case class SbtCompilationUnit(
   private lazy val pc = {
     logger.debug(s"About to create presentation compiler for sbt project `$scalaProject`.")
     val build = Await.result(SbtBuild.buildFor(scalaProject.underlying.getLocation.toFile)(SbtRemotePlugin.system), Duration.Inf)
-    val c = new SbtPresentationCompiler(scalaProject, build).compiler
+    val c = new SbtPresentationCompiler(scalaProject, build)
     logger.debug(s"Presentation compiler for sbt project `$scalaProject` successfully created.")
     c
   }
 
   /** Return the source info for the given contents. */
   override def sourceMap(contents: Array[Char]): ISourceMap = {
-    new SbtSourceInfo(file, contents)
+    new SbtSourceInfo(file, contents, pc.sbtFileImports)
   }
 
   /** Return the most recent available source map for the current contents. */
@@ -164,7 +164,7 @@ case class SbtCompilationUnit(
 
   override lazy val scalaProject = IScalaPlugin().asScalaProject(workspaceFile.getProject).get
 
-  override def presentationCompiler = pc
+  override def presentationCompiler = pc.compiler
 
   /** Does this unit exist in the workspace? */
   override def exists(): Boolean = workspaceFile.exists()
