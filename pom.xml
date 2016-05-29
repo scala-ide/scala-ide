@@ -250,6 +250,7 @@
         <scala212.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.feature</scala212.feature.dir>
         <scala212.source.feature.dir>org.scala-ide.scala212.build/org.scala-ide.scala212.source.feature</scala212.source.feature.dir>
         <sdt.core.dir>org.scala-ide.sdt.core</sdt.core.dir>
+        <sbt.core.dir>org.scala-ide.sbt.core</sbt.core.dir>
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
         <sdt.debug.expression.dir>org.scala-ide.sdt.debug.expression</sdt.debug.expression.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
@@ -409,6 +410,13 @@
                   <target>
                     <copy file="${sdt.core.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
                         tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
+                        overwrite="true">
+                        <filterset>
+                          <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                        </filterset>
+                    </copy>
+                    <copy file="${sbt.core.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
+                        tofile="${sbt.core.dir}/META-INF/MANIFEST.MF"
                         overwrite="true">
                         <filterset>
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>

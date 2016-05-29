@@ -23,27 +23,27 @@
   <dependencies>
     <dependency>
       <groupId>com.typesafe.sbt</groupId>
-      <artifactId>client-all-2-11</artifactId>
+      <artifactId>client-all</artifactId>
       <version>${sbtrc.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-pickling_2.11</artifactId>
+      <artifactId>scala-pickling_${scala.minor.version}</artifactId>
       <version>${pickling.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-stream_2.11</artifactId>
+      <artifactId>akka-stream_${scala.minor.version}</artifactId>
       <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_2.11</artifactId>
+      <artifactId>akka-actor_${scala.minor.version}</artifactId>
       <version>${akka.version}</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-osgi_2.11</artifactId>
+      <artifactId>akka-osgi_${scala.minor.version}</artifactId>
       <version>${akka.version}</version>
     </dependency>
     <dependency>
@@ -58,7 +58,7 @@
     </dependency>
     <dependency>
       <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-parser-combinators_2.11</artifactId>
+      <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
       <version>${parser.combinators.version}</version>
     </dependency>
   </dependencies>
@@ -79,47 +79,47 @@
               <artifactItems>
                 <artifactItem>
                   <groupId>com.typesafe.sbt</groupId>
-                  <artifactId>client-all-2-11</artifactId>
+                  <artifactId>client-all</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.sbt</groupId>
-                  <artifactId>client-all-2-11</artifactId>
+                  <artifactId>client-all</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-pickling_2.11</artifactId>
+                  <artifactId>scala-pickling_${scala.minor.version}</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-pickling_2.11</artifactId>
+                  <artifactId>scala-pickling_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-actor_2.11</artifactId>
+                  <artifactId>akka-actor_${scala.minor.version}</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-actor_2.11</artifactId>
+                  <artifactId>akka-actor_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-osgi_2.11</artifactId>
+                  <artifactId>akka-osgi_${scala.minor.version}</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-osgi_2.11</artifactId>
+                  <artifactId>akka-osgi_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-stream_2.11</artifactId>
+                  <artifactId>akka-stream_${scala.minor.version}</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-stream_2.11</artifactId>
+                  <artifactId>akka-stream_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
@@ -142,11 +142,11 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-parser-combinators_2.11</artifactId>
+                  <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-lang.modules</groupId>
-                  <artifactId>scala-parser-combinators_2.11</artifactId>
+                  <artifactId>scala-parser-combinators_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
               </artifactItems>
