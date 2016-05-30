@@ -80,13 +80,13 @@ class SbtSourceInfo(file: AbstractFile, override val originalSource: Array[Char]
     |${imports.mkString("\n")}
     |object $$container {
     |  def $$meth {
-    |""".stripMargin
+    |""".stripMargin.trim
   private val prefixLen = prefix.count(_ == '\n')
 
   override val scalaSource = s"""
     |$prefix
     |${originalSource.mkString("")}
-    |}}""".stripMargin.toCharArray()
+    |}}""".stripMargin.trim.toCharArray()
 
   override lazy val sourceFile = new BatchSourceFile(file, scalaSource)
 
