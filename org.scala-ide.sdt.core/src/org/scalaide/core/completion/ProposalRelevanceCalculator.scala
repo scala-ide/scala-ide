@@ -49,7 +49,7 @@ class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRel
   }
 
   def forJdtType(prefix: String, name: String): Int = {
-    val maxRelevance = MaxExternalRelevance / 4 * 3
+    val baseRelevance = MaxExternalRelevance / 4 * 3
 
     def deltaForPrefix(deltaIfMatch: Int, regexes: Seq[Regex]): Int = {
       regexes.foldLeft(0) { (acc, rx) =>
@@ -80,6 +80,6 @@ class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRel
       name.length*3 +
       nestingLevel
 
-    internalToExternalRelevance(maxRelevance + bonus - penalty)
+    internalToExternalRelevance(baseRelevance + bonus - penalty)
   }
 }
