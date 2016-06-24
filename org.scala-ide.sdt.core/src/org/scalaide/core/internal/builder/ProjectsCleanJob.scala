@@ -7,8 +7,8 @@ import org.eclipse.core.resources.WorkspaceJob
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.ui.progress.IProgressConstants2
+import org.eclipse.core.runtime.SubMonitor
 
 /** Job for asynchronously cleaning the passed `projects`.*/
 class ProjectsCleanJob private (projects: Seq[IProject]) {
@@ -26,7 +26,7 @@ class ProjectsCleanJob private (projects: Seq[IProject]) {
         for {
           project <- projects
           if project != null
-        } project.build(IncrementalProjectBuilder.CLEAN_BUILD, new SubProgressMonitor(monitor, 1))
+        } project.build(IncrementalProjectBuilder.CLEAN_BUILD, SubMonitor.convert(monitor, 1))
       }
       finally monitor.done()
     }
