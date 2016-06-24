@@ -17,6 +17,7 @@ import org.scalaide.core.compiler.InteractiveCompilationUnit
 import org.scalaide.util.ScalaWordFinder
 import org.scalaide.core.internal.jdt.model.ScalaLocalVariableElement
 import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+import java.{util => ju}
 
 class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: ScalaSelectionRequestor, settings: ju.Map[_, _]) extends Engine(settings) with ISearchRequestor with HasLogger {
 
