@@ -95,7 +95,7 @@ class StructureBuilderTest {
   @Test def junit4TestRunnerSearch(): Unit = {
     val root = compilationUnit("annots/ScalaTestSuite.scala").getJavaProject()
     val finder = new JUnit4TestFinder
-    val set = new java.util.HashSet[Object]()
+    val set = new java.util.HashSet[IType]()
 
     finder.findTestsInContainer(root, set, null)
     Assert.assertEquals("Should find tests using the JUnit 4 test finder", 1, set.size())

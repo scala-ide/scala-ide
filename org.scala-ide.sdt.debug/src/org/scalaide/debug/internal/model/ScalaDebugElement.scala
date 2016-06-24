@@ -26,10 +26,10 @@ abstract class ScalaDebugElement(debugTarget: ScalaDebugTarget) extends DebugEle
 
   // Members declared in org.eclipse.core.runtime.IAdaptable
 
-  override def getAdapter[T](adapter: Class[T]): T = {
+  override def getAdapter[A](adapter: Class[A]): A = {
     adapter match {
       case ScalaDebugger.classIDebugModelProvider =>
-        modelProvider.asInstanceOf[T]
+        modelProvider.asInstanceOf[A]
       case _ =>
         super.getAdapter(adapter)
     }

@@ -10,6 +10,7 @@ import scala.util.Success
 import org.eclipse.jdt.debug.core.IJavaBreakpoint
 import org.junit.Assert._
 import org.junit.BeforeClass
+import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.debug.internal.expression.TestValues.ValuesTestCase
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.logging.HasLogger
@@ -110,6 +111,7 @@ class BaseIntegrationTestCompanion(projectName: String, fileName: String, lineNu
 
   @BeforeClass
   def prepareTestDebugSession(): Unit = {
+    SDTTestUtils.setJdiRequestTimeout(20000)
     refreshBinaryFiles()
 
     session = initDebugSession(fileName)

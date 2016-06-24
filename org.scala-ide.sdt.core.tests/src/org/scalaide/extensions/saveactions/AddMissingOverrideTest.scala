@@ -5,6 +5,7 @@ import scala.reflect.internal.util.SourceFile
 import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.core.compiler.IScalaPresentationCompiler
+import scala.tools.refactoring.util.UniqueNames
 
 object AddMissingOverrideTest extends CompilerSaveActionTests {
   override def saveAction(spc: IScalaPresentationCompiler, tree: IScalaPresentationCompiler#Tree, sf: SourceFile, selectionStart: Int, selectionEnd: Int) =
@@ -274,8 +275,8 @@ class AddMissingOverrideTest {
 
   @Test
   def add_override_to_def_that_overrides_java_method() = {
-    val jPkg = uniquePkgName()
-    val sPkg = uniquePkgName()
+    val jPkg = UniqueNames.scalaPackage()
+    val sPkg = UniqueNames.scalaPackage()
     mkJavaCompilationUnit(s"""
       package $jPkg;
       public class T {
@@ -300,8 +301,8 @@ class AddMissingOverrideTest {
 
   @Test
   def add_no_override_to_val_that_overrides_java_field() = {
-    val jPkg = uniquePkgName()
-    val sPkg = uniquePkgName()
+    val jPkg = UniqueNames.scalaPackage()
+    val sPkg = UniqueNames.scalaPackage()
     mkJavaCompilationUnit(s"""
       package $jPkg;
       public class T {
@@ -326,8 +327,8 @@ class AddMissingOverrideTest {
 
   @Test
   def add_no_override_to_def_that_overrides_java_field() = {
-    val jPkg = uniquePkgName()
-    val sPkg = uniquePkgName()
+    val jPkg = UniqueNames.scalaPackage()
+    val sPkg = UniqueNames.scalaPackage()
     mkJavaCompilationUnit(s"""
       package $jPkg;
       public class T {

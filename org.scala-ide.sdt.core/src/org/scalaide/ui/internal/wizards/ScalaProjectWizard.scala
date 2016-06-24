@@ -5,7 +5,6 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.OperationCanceledException
 import org.eclipse.core.runtime.Path
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.internal.ui.wizards.JavaProjectWizard
@@ -17,6 +16,7 @@ import org.eclipse.jdt.ui.wizards.NewJavaProjectWizardPageTwo
 import org.scalaide.ui.ScalaImages
 import org.scalaide.util.internal.ReflectionUtils
 import org.scalaide.core.SdtConstants
+import org.eclipse.core.runtime.SubMonitor
 
 class ScalaProjectWizard extends {
     val pageOne = new NewScalaProjectWizardPageOne
@@ -45,8 +45,8 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
     monitor.beginTask(NewWizardMessages.JavaCapabilityConfigurationPage_op_desc_java, nSteps)
 
     try {
-      addScalaNatures(new SubProgressMonitor(monitor, 1))
-      getBuildPathsBlock(this).configureJavaProject(newProjectCompliance, new SubProgressMonitor(monitor, 5))
+      addScalaNatures(SubMonitor.convert(monitor, 1))
+      getBuildPathsBlock(this).configureJavaProject(newProjectCompliance, SubMonitor.convert(monitor, 5))
     } catch {
       case ex : OperationCanceledException => throw new InterruptedException
     } finally {

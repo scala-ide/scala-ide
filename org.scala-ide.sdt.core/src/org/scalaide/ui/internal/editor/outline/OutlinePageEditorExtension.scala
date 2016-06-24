@@ -7,12 +7,12 @@ trait OutlinePageEditorExtension extends ScalaCompilationUnitEditor {
 
   private var outlinePage: ScalaOutlinePage = null
   def getOutlinePage = outlinePage
-  override def getAdapter(required: Class[_]): AnyRef = {
+  override def getAdapter[A](required: Class[A]): A = {
     required match {
       case OutlinePageEditorExtension.IContentOutlinePage ⇒ {
         if (outlinePage == null)
           outlinePage = createScalaOutlinePage
-        outlinePage
+        outlinePage.asInstanceOf[A]
       }
       case _ => super.getAdapter(required)
     }

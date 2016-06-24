@@ -51,8 +51,8 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
 class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
   import JUnit4TestFinder._
 
-  override def findTestsInContainer(element: IJavaElement, result: JSet[_], pm: IProgressMonitor): Unit =
-    findTestsInContainer(element, result.asInstanceOf[JSet[IType]].asScala, pm)
+  override def findTestsInContainer(element: IJavaElement, result: JSet[IType], pm: IProgressMonitor): Unit =
+    findTestsInContainer(element, result.asScala, pm)
 
   override def isTest(tpe: IType): Boolean = {
     ScalaLaunchShortcut.getJunitTestClasses(tpe).nonEmpty
@@ -78,8 +78,6 @@ class JUnit4TestFinder extends ITestFinder with ISearchMethods with HasLogger {
   }
 
   override def getTestMethods(javaProject: IJavaProject, tpe: IType): java.util.Set[String] = {
-    import collection.JavaConverters._
-
     val emptySet = immutable.Set[String]()
 
     val res = IScalaPlugin().asScalaProject(javaProject.getProject()) map { scalaProject =>

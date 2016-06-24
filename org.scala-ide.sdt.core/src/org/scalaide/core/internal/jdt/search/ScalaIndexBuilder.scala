@@ -22,6 +22,17 @@ import org.scalaide.logging.HasLogger
  */
 trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
 
+  private var _lastIndexBuilderTraversals = List[String]()
+  private val _lastIndexBuilderTraversalsMonitor = new Object()
+
+  def lastIndexBuilderTraversals: Seq[String] = _lastIndexBuilderTraversalsMonitor.synchronized {
+    _lastIndexBuilderTraversals
+  }
+
+  private def rememberTraversalOf(path: String): Unit = _lastIndexBuilderTraversalsMonitor.synchronized {
+    _lastIndexBuilderTraversals = (path +: _lastIndexBuilderTraversals).take(25)
+  }
+
   class IndexBuilderTraverser(indexer : ScalaSourceIndexer) extends Traverser {
     var packageName = new StringBuilder
 
@@ -154,7 +165,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
         mapModifiers(td.mods),
         packageName.toString.toCharArray,
         td.name.toChars,
-        Array.empty,
+        enclClassNames.reverse.toArray,
         Array.empty,
         Array.empty,
         Array.empty,
@@ -164,67 +175,82 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
 
     var enclClassNames = List[Array[Char]]()
 
+    private var traversalLevel = 0
+
     override def traverse(tree: Tree): Unit = {
-      def inClass(c : Array[Char])(block : => Unit): Unit = {
-        val old = enclClassNames
-        enclClassNames = c::enclClassNames
-        block
-        enclClassNames = old
-      }
+      traversalLevel = traversalLevel + 1
 
-      /** Add several method reference in the indexer for the passed [[RefTree]].
-       *
-       * Adding method references in the indexer is tricky for methods that have default arguments.
-       * The problem is that method entries are encoded as selector '/' Arity, i.e., foo/0 for `foo()`.
-       *
-       * Hence, `addApproximateMethodReferences` adds {{{22 - minArgsNumber}} method reference entries in
-       * the indexer, for the passed [[RefTree]].
-       */
-      def addApproximateMethodReferences(tree: RefTree, minArgsNumber: Int = 0): Unit = {
-        val maxArgs = 22  // just arbitrary choice.
-        for (i <- minArgsNumber to maxArgs)
-          indexer.addMethodReference(tree.name.toChars, i)
-      }
+      try {
 
-      tree match {
-        case pd : PackageDef => addPackage(pd)
-        case cd : ClassDef => addClass(cd)
-        case md : ModuleDef => addModule(md)
-        case vd : ValDef => addVal(vd)
-        case td : TypeDef => addType(td)
-        case dd : DefDef if dd.name != nme.MIXIN_CONSTRUCTOR => addDef(dd)
+        def inClass(c : Array[Char])(block : => Unit): Unit = {
+          val old = enclClassNames
+          enclClassNames = c::enclClassNames
+          block
+          enclClassNames = old
+        }
 
-        case _ =>
-      }
+        /** Add several method reference in the indexer for the passed [[RefTree]].
+         *
+         * Adding method references in the indexer is tricky for methods that have default arguments.
+         * The problem is that method entries are encoded as selector '/' Arity, i.e., foo/0 for `foo()`.
+         *
+         * Hence, `addApproximateMethodReferences` adds {{{22 - minArgsNumber}} method reference entries in
+         * the indexer, for the passed [[RefTree]].
+         */
+        def addApproximateMethodReferences(tree: RefTree, minArgsNumber: Int = 0): Unit = {
+          val maxArgs = 22  // just arbitrary choice.
+          for (i <- minArgsNumber to maxArgs)
+            indexer.addMethodReference(tree.name.toChars, i)
+        }
 
-      tree match {
-        case cd : ClassDef => inClass(cd.name.toChars) { super.traverse(tree) }
-        case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
+        tree match {
+          case pd : PackageDef => addPackage(pd)
+          case cd : ClassDef => addClass(cd)
+          case md : ModuleDef => addModule(md)
+          case vd : ValDef => addVal(vd)
+          case td : TypeDef => addType(td)
+          case dd : DefDef if dd.name != nme.MIXIN_CONSTRUCTOR => addDef(dd)
 
-        case Apply(rt : RefTree, args) =>
-          addApproximateMethodReferences(rt, args.size)
-          super.traverse(tree)
+          case _ =>
+        }
 
-        // Partial apply.
-        case Typed(ttree, Function(_, _)) =>
-          ttree match {
-            case rt : RefTree =>
-              addApproximateMethodReferences(rt)
-            case Apply(rt : RefTree, args) =>
-              addApproximateMethodReferences(rt, args.size)
-            case _ =>
-          }
-          super.traverse(tree)
+        tree match {
+          case cd : ClassDef => inClass(cd.name.toChars) { super.traverse(tree) }
+          case md : ModuleDef => inClass(md.name.append("$").toChars) { super.traverse(tree) }
 
-        case rt : RefTree =>
-          val name = rt.name.toChars
-          indexer.addTypeReference(name)
-          indexer.addMethodReference(name, 0)
-          if(nme.isSetterName(rt.name)) indexer.addFieldReference(rt.getterName.toChars)
-          else indexer.addFieldReference(name)
-          super.traverse(tree)
+          case Apply(rt : RefTree, args) =>
+            addApproximateMethodReferences(rt, args.size)
+            super.traverse(tree)
 
-        case _ => super.traverse(tree)
+          // Partial apply.
+          case Typed(ttree, Function(_, _)) =>
+            ttree match {
+              case rt : RefTree =>
+                addApproximateMethodReferences(rt)
+              case Apply(rt : RefTree, args) =>
+                addApproximateMethodReferences(rt, args.size)
+              case _ =>
+            }
+            super.traverse(tree)
+
+          case rt : RefTree =>
+            val name = rt.name.toChars
+            indexer.addTypeReference(name)
+            indexer.addMethodReference(name, 0)
+            if(nme.isSetterName(rt.name)) indexer.addFieldReference(rt.getterName.toChars)
+            else indexer.addFieldReference(name)
+            super.traverse(tree)
+
+          case _ => super.traverse(tree)
+        }
+      } finally {
+        traversalLevel = traversalLevel - 1
+
+        if (traversalLevel == 0) {
+          val traversedPath = tree.pos.source.file.canonicalPath
+          logger.info(s"Traversal of $traversedPath finished")
+          rememberTraversalOf(traversedPath)
+        }
       }
     }
   }

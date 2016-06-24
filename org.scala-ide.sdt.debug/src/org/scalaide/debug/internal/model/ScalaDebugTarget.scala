@@ -1,8 +1,8 @@
 package org.scalaide.debug.internal.model
 
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
@@ -116,9 +116,9 @@ abstract class ScalaDebugTarget private (
 
   override def getProcess: org.eclipse.debug.core.model.IProcess = process
 
-  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = threads.get.toArray
+  override def getThreads: Array[org.eclipse.debug.core.model.IThread] = threads.toArray
 
-  override def hasThreads: Boolean = !threads.get.isEmpty
+  override def hasThreads: Boolean = threads.nonEmpty
 
   override def supportsBreakpoint(breakpoint: IBreakpoint): Boolean = ???
 
@@ -174,7 +174,7 @@ abstract class ScalaDebugTarget private (
   // ---
 
   private val running: AtomicBoolean = new AtomicBoolean(true)
-  private val threads: AtomicReference[List[ScalaThread]] = new AtomicReference(Nil)
+  private val threads: ListBuffer[ScalaThread] = ListBuffer.empty
 
   private[internal] val isPerformingHotCodeReplace: AtomicBoolean = new AtomicBoolean
 
@@ -411,25 +411,21 @@ abstract class ScalaDebugTarget private (
     }
   }
 
-  private def disposeThreads(): Unit = {
-    val previousThreads = threads.getAndSet(Nil)
-    previousThreads.foreach {
+  private def disposeThreads(): Unit = threads.synchronized {
+    threads.foreach {
       _.dispose()
     }
+    threads.clear()
   }
 
   /**
    * Add a thread to the list of threads.
    * FOR THE SUBORDINATE ONLY.
    */
-  private[model] def addThread(thread: ThreadReference): ScalaThread = {
-    // TODO: replace with getAndUpdate when java 1.8
-    var prev, next: List[ScalaThread] = Nil
+  private[model] def addThread(thread: ThreadReference): ScalaThread = threads.synchronized {
     val threadToAdd = ScalaThread(this, thread)
-    do {
-      prev = threads.get
-      next = if (prev.exists(_.threadRef eq thread)) prev else prev :+ threadToAdd
-    } while (!threads.compareAndSet(prev, next))
+    if (!threads.exists { _.threadRef eq thread })
+      threads += threadToAdd
     threadToAdd
   }
 
@@ -437,23 +433,16 @@ abstract class ScalaDebugTarget private (
    * Remove a thread from the list of threads
    * FOR THE SUBORDINATE ONLY.
    */
-  private[model] def removeThread(thread: ThreadReference): Unit = {
-    // TODO: replace with getAndUpdate when java 1.8
-    var prev: List[ScalaThread] = Nil
-    var next: (List[ScalaThread], List[ScalaThread]) = (Nil, Nil)
-    do {
-      prev = threads.get
-      next = prev.partition(_.threadRef eq thread)
-    } while (!threads.compareAndSet(prev, next._2))
-    next._1.foreach(_.terminatedFromScala())
+  private[model] def removeThread(thread: ThreadReference): Unit = threads.synchronized {
+    threads.filter { _.threadRef ne thread }
   }
 
   /**
    * Set the initial list of threads.
    * FOR THE SUBORDINATE ONLY.
    */
-  private[model] def initializeThreads(t: List[ThreadReference]): Unit = {
-    threads.getAndSet(t.map(ScalaThread(this, _)))
+  private[model] def initializeThreads(t: List[ThreadReference]): Unit = threads.synchronized {
+    threads ++= t.map(ScalaThread(this, _))
   }
 
   /**
@@ -465,10 +454,10 @@ abstract class ScalaDebugTarget private (
   /**
    * Return the current list of threads
    */
-  private[model] def getScalaThreads: List[ScalaThread] = threads.get
+  private[model] def getScalaThreads: List[ScalaThread] = threads.toList
 
   def getScalaThread(threadRef: ThreadReference) =
-    threads.get.find(_.threadRef == threadRef)
+    threads.find(_.threadRef == threadRef)
 
   private[model] def canPopFrames: Boolean = running.get && virtualMachine.canPopFrames()
 }

@@ -9,7 +9,7 @@ import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.IScalaProject
-import java.util.UUID
+import scala.tools.refactoring.util.UniqueNames
 
 /**
  * Common functionality to be used in tests that need to interop with the
@@ -25,12 +25,13 @@ trait CompilerSupportTests {
   /** Can be overwritten in a subclass if desired. */
   val projectName: String = getClass().getSimpleName()
 
-  private val project: IScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
+  protected final val project: IScalaProject = SDTTestUtils.createProjectInWorkspace(projectName)
 
-  final def withCompiler(f: IScalaPresentationCompiler => Unit): Unit =
+  final def withCompiler[T](f: IScalaPresentationCompiler => T): Option[T] = {
     project.presentationCompiler { compiler =>
       f(compiler)
     }
+  }
 
   /**
    * Creates a Scala compilation unit whose underlying source file physically
@@ -53,10 +54,10 @@ trait CompilerSupportTests {
     val PkgFinder = """(?s).*?package ([\w\.]+).*?""".r
     val pkgName = source match {
       case PkgFinder(name) ⇒ name
-      case _ ⇒ uniquePkgName()
+      case _ ⇒ UniqueNames.scalaPackage()
     }
     val p = SDTTestUtils.createSourcePackage(pkgName)(project)
-    SDTTestUtils.createCompilationUnit(p, "testfile.scala", source, force).asInstanceOf[ScalaCompilationUnit]
+    SDTTestUtils.createCompilationUnit(p, UniqueNames.scalaFile(), source, force).asInstanceOf[ScalaCompilationUnit]
   }
 
   /**
@@ -110,21 +111,9 @@ trait CompilerSupportTests {
     SDTTestUtils.deleteProjects(project)
 
   /**
-   * Generates a package name that is guaranteed to be unique.
-   */
-  final def uniquePkgName(): String = {
-    def longToName(l: Long) = {
-      java.lang.Long.toString(l, Character.MAX_RADIX).replace("-", "_")
-    }
-
-    val uid = UUID.randomUUID()
-    "uniquepkg" + longToName(uid.getLeastSignificantBits) + longToName(uid.getMostSignificantBits)
-  }
-
-  /**
    * Adds a unique package declaration at the beginning of the given source.
    */
   final def addUniquePkgDecl(src: String): String = {
-    s"package ${uniquePkgName()}\n\n$src"
+    s"package ${UniqueNames.scalaPackage()}\n\n$src"
   }
 }

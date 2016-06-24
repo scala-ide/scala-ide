@@ -85,7 +85,9 @@ abstract class TextEditTests {
 
   final implicit class StringAsTest(input: String) {
     def becomes(expectedOutput: String) = input -> expectedOutput
+    def isNotModified = input -> input
   }
+
   final implicit class TestExecutor(testData: (String, String)) {
     def after(operation: Operation, marker: Char = '$') = test(testData._1, testData._2, operation, marker)
   }
