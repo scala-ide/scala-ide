@@ -26,4 +26,6 @@ class SyntaxColoringTreeContentAndLabelProvider(categories: List[Category]) exte
     case Category(name, _) => name
     case ScalaSyntaxClass(displayName, _, _, _) => displayName
   }
+  
+  override def dispose() = ()
 }
