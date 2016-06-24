@@ -21,11 +21,7 @@
     <encoding>UTF-8</encoding>
     <retryFlakyTests>true</retryFlakyTests>
     <!-- p2 repositories location -->
-    <repo.eclipse.luna>http://download.eclipse.org/releases/luna</repo.eclipse.luna>
-    <repo.eclipse.mars>http://download.eclipse.org/releases/mars</repo.eclipse.mars>
     <repo.eclipse.neon>http://download.eclipse.org/releases/neon</repo.eclipse.neon>
-    <repo.ajdt.luna>http://download.eclipse.org/tools/ajdt/44/dev/update</repo.ajdt.luna>
-    <repo.ajdt.mars>http://download.eclipse.org/tools/ajdt/45/dev/update</repo.ajdt.mars>
     <repo.ajdt.neon>http://download.eclipse.org/tools/ajdt/46/dev/update</repo.ajdt.neon>
     <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
@@ -138,31 +134,6 @@
       </properties>
     </profile>
 
-    <profile>
-      <!-- Eclipse Luna -->
-      <id>eclipse-luna</id>
-      <properties>
-        <eclipse.codename>luna</eclipse.codename>
-        <repo.eclipse>${repo.eclipse.luna}</repo.eclipse>
-        <repo.ajdt>${repo.ajdt.luna}</repo.ajdt>
-        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
-        <weaving.hook.plugin.version>1.1.100.weaving-hook-20140821</weaving.hook.plugin.version>
-      </properties>
-    </profile>
-
-    <!-- Eclipse Mars -->
-    <profile>
-      <id>eclipse-mars</id>
-      <properties>
-        <eclipse.codename>mars</eclipse.codename>
-        <repo.eclipse>${repo.eclipse.mars}</repo.eclipse>
-        <repo.ajdt>${repo.ajdt.mars}</repo.ajdt>
-        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
-        <weaving.hook.plugin.version>1.1.100.v20140821-1915</weaving.hook.plugin.version>
-      </properties>
-    </profile>
-
-    <!-- Eclipse Neon -->
     <profile>
       <id>eclipse-neon</id>
       <properties>
