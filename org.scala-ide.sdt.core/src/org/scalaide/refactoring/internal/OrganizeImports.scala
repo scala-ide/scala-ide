@@ -283,7 +283,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
     override def compare(o1: Object, o2: Object): Int = o1 match {
       case o1: String if o1 == o2 => 0
       case _ =>
-        List(o1, o2) map (QualifiedTypeNameHistory.getDefault.getPosition) match {
+        List(o1, o2) map (o => QualifiedTypeNameHistory.getDefault.getPosition(o.toString)) match {
           case x :: y :: Nil if x == y => Collator.getInstance.compare(o1, o2)
           case x :: y :: Nil => y - x
           case _ => 0

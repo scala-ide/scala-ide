@@ -174,7 +174,7 @@ class ScalaSourceViewerConfiguration(
       }
     }
 
-    override def formatMultipleMessages(msgs: java.util.List[_]) = {
+    override def formatMultipleMessages(msgs: java.util.List[String]) = {
       createHtmlOutput { sb =>
         import HTMLPrinter._
         import collection.JavaConverters._

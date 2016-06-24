@@ -9,7 +9,6 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.core.runtime.Status
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.jdt.core.IJavaModelStatusConstants
 import org.eclipse.jdt.core.JavaModelException
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider
@@ -18,6 +17,7 @@ import org.eclipse.jdt.ui.JavaUI
 import org.eclipse.jface.text.IDocument
 import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
 import org.scalaide.logging.HasLogger
+import org.eclipse.core.runtime.SubMonitor
 
 class ScalaDocumentProvider
     extends CompilationUnitDocumentProvider
@@ -121,7 +121,7 @@ class ScalaDocumentProvider
 
   private def getSubProgressMonitor(monitor: IProgressMonitor, ticks: Int): IProgressMonitor = monitor match {
     case m: NullProgressMonitor ⇒ m
-    case _                      ⇒ new SubProgressMonitor(monitor, ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK)
+    case _                      ⇒ SubMonitor.convert(monitor, ticks)
   }
 
 }

@@ -1,7 +1,6 @@
 package org.scalaide.core.internal.launching
 
 import scala.collection.mutable
-import org.eclipse.core.runtime.SubProgressMonitor
 import org.eclipse.jdt.core.search._
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IProgressMonitor
@@ -11,6 +10,7 @@ import org.eclipse.jdt.core.dom.IAnnotationBinding
 import org.eclipse.jdt.core.dom.ITypeBinding
 import scala.annotation.tailrec
 import org.scalaide.logging.HasLogger
+import org.eclipse.core.runtime.SubMonitor
 
 /** This class re-implements the logic of {{{org.eclipse.jdt.internal.junit.launcher.JUnit4TestFinder}}}, with one
  *  limitation:
@@ -28,7 +28,7 @@ class JavaJUnit4TestFinder extends HasLogger {
     val region = JavaCore.newRegion()
     sources.foreach(res => Option(JavaCore.create(res)).map(region.add))
 
-    val hierarchy = JavaCore.newTypeHierarchy(region, null, new SubProgressMonitor(pm, 1))
+    val hierarchy = JavaCore.newTypeHierarchy(region, null, SubMonitor.convert(pm, 1))
     val allClasses = hierarchy.getAllClasses()
 
     // search for all types with references to RunWith and Test and all subclasses
@@ -43,7 +43,7 @@ class JavaJUnit4TestFinder extends HasLogger {
 
     val annotationsPattern = SearchPattern.createOrPattern(runWithPattern, testPattern)
     val searchParticipants = Array(SearchEngine.getDefaultSearchParticipant())
-    new SearchEngine().search(annotationsPattern, searchParticipants, scope, requestor, new SubProgressMonitor(pm, 2))
+    new SearchEngine().search(annotationsPattern, searchParticipants, scope, requestor, SubMonitor.convert(pm, 2))
 
     // find all classes in the region
     for (curr <- candidates) {

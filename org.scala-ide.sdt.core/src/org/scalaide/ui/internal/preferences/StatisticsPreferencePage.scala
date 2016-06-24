@@ -10,7 +10,6 @@ import org.eclipse.jface.viewers.IStructuredContentProvider
 import org.eclipse.jface.viewers.TableViewer
 import org.eclipse.jface.viewers.TableViewerColumn
 import org.eclipse.jface.viewers.Viewer
-import org.eclipse.jface.viewers.ViewerSorter
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.GridData
@@ -25,6 +24,7 @@ import org.scalaide.core.internal.statistics.FeatureData
 import org.scalaide.core.internal.statistics.Features.CharactersSaved
 import org.scalaide.core.internal.statistics.Features.NotSpecified
 import org.scalaide.util.eclipse.SWTUtils._
+import org.eclipse.jface.viewers.ViewerComparator
 
 class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferencePage {
 
@@ -57,13 +57,13 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
     val viewer = new TableViewer(table)
     viewer.setContentProvider(ContentProvider)
-    viewer.setSorter(ColumnSorter)
+    viewer.setComparator(ColumnComparator)
 
     val columnFeature = new TableViewerColumn(viewer, SWT.NONE)
     columnFeature.getColumn.setText("Feature")
     columnFeature.onLabelUpdate(_.asInstanceOf[FeatureData].feature.description)
     columnFeature.getColumn.addSelectionListener { e: SelectionEvent ⇒
-      ColumnSorter.doSort(ColumnSorter.Column.Feature)
+      ColumnComparator.doSort(ColumnComparator.Column.Feature)
       viewer.refresh()
     }
     tcl.setColumnData(columnFeature.getColumn, new ColumnWeightData(3, true))
@@ -72,7 +72,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     columnGroup.getColumn.setText("Group")
     columnGroup.onLabelUpdate(_.asInstanceOf[FeatureData].feature.group.description)
     columnGroup.getColumn.addSelectionListener { e: SelectionEvent ⇒
-      ColumnSorter.doSort(ColumnSorter.Column.Group)
+      ColumnComparator.doSort(ColumnComparator.Column.Group)
       viewer.refresh()
     }
     tcl.setColumnData(columnGroup.getColumn, new ColumnWeightData(2, true))
@@ -86,7 +86,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
       case n ⇒ s"$n times"
     })
     columnUsed.getColumn.addSelectionListener { e: SelectionEvent ⇒
-      ColumnSorter.doSort(ColumnSorter.Column.NrOfUses)
+      ColumnComparator.doSort(ColumnComparator.Column.NrOfUses)
       viewer.refresh()
     }
     tcl.setColumnData(columnUsed.getColumn, new ColumnWeightData(1, true))
@@ -95,7 +95,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
     columnLastUsed.getColumn.setText("Last used")
     columnLastUsed.onLabelUpdate(d ⇒ timeAgo(d.asInstanceOf[FeatureData].lastUsed))
     columnLastUsed.getColumn.addSelectionListener { e: SelectionEvent ⇒
-      ColumnSorter.doSort(ColumnSorter.Column.LastUsed)
+      ColumnComparator.doSort(ColumnComparator.Column.LastUsed)
       viewer.refresh()
     }
     tcl.setColumnData(columnLastUsed.getColumn, new ColumnWeightData(1, true))
@@ -126,7 +126,7 @@ class StatisticsPreferencePage extends PreferencePage with IWorkbenchPreferenceP
 
   override def init(workbench: IWorkbench): Unit = ()
 
-  private object ColumnSorter extends ViewerSorter {
+  private object ColumnComparator extends ViewerComparator {
 
     object Column extends Enumeration {
       type Column = Value
