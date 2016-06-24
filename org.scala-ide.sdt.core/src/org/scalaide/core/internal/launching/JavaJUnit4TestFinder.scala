@@ -28,7 +28,6 @@ class JavaJUnit4TestFinder extends HasLogger {
     val region = JavaCore.newRegion()
     sources.foreach(res => Option(JavaCore.create(res)).map(region.add))
 
-    
     val hierarchy = JavaCore.newTypeHierarchy(region, null, SubMonitor.convert(pm, 1))
     val allClasses = hierarchy.getAllClasses()
 
