@@ -1,0 +1,75 @@
+package pack1
+import java.util.Scanner;
+case class TreeNode[Int](value:Int,left:TreeNode[Int],right:TreeNode[Int])
+class Convert
+{
+  def ToTree(li:List[Int]):TreeNode[Int]=
+  {
+    var (l1,l2)=li.splitAt(mid(li));
+    var c=mid(li)
+    var l3=l1.take(c-1)++l1.drop(c);
+    if(li.length==3)
+    {
+      TreeNode(li(mid(li)-1),TreeNode(l3(0),null,null),TreeNode(l2(0),null,null))
+      
+    }
+    else if(li.length==2)
+    {
+      TreeNode(li(mid(li)-1),null,TreeNode(l2(0),null,null))
+    }
+     else if(li.length==1)
+     {
+      TreeNode(li(mid(li)-1),null,null);
+     
+     }
+     else
+     {
+       TreeNode(li(mid(li)-1),ToTree(l3),ToTree(l2))
+     }
+
+    
+  }
+  def mid(li:List[Int]):Int=
+  {
+       var b=li.length;
+       var c=0;
+       if(b%2==0)
+       {
+       c=b/2;
+       }
+       else
+       {
+       c=b/2+1;
+       }
+       c
+  }
+   def Disp(node:TreeNode[Int])
+    {
+    if(node!=null)
+    {
+      println(node.value)
+      Disp(node.left);
+      Disp(node.right);
+    }
+    }
+}
+object L2T 
+{
+  def main(args:Array[String])
+  {
+  var li:List[Int]=Nil; 
+  println(li);
+  var sc=new Scanner(System.in);
+  println("enter the number of elements");
+  var b=sc.nextInt();
+  for(i<- 1 to b)
+  {
+  println("enter element");
+  var a=sc.nextInt();
+  li=li:::List(a)
+  }
+  
+  var c=new Convert
+  c.Disp(c.ToTree(li));
+  }
+}
