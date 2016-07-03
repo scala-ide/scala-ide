@@ -50,7 +50,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
           val (from, to) = (region.getOffset, region.getOffset + region.getLength)
           val (selectedTree, occurrences) = occurrencesIndex.occurrencesOf(sourceFile.file, from, to)
 
-          Option(selectedTree.symbol) filter (!_.name.isOperatorName) map { sym =>
+          Option(selectedTree.symbol).map { sym =>
             val locations = occurrences map { pos =>
               new Region(pos.start, pos.end - pos.start)
             }
