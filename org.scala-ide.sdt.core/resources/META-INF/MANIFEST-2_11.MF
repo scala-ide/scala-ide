@@ -42,8 +42,6 @@ Require-Bundle: org.eclipse.core.expressions,
  org.scala-lang.scala-compiler;bundle-version="[2.11,2.12)",
  org.scala-refactoring.library,
  org.scala-lang.modules.scala-xml;bundle-version="[1.0.2,1.0.10]",
- org.scala-ide.sbt.full.library;bundle-version="[0.13,0.14)",
- org.scala-ide.sbt.compiler.interface;bundle-version="[0.13,0.14)",
  org.scala-ide.scala210.jars,
  scalariform,
  org.eclipse.ui.browser,
@@ -178,5 +176,13 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
  target/lib/log4j-1.2.17.jar,
- target/lib/json-io-4.1.6.jar
+ target/lib/json-io-4.1.6.jar,
+ target/lib/zinc_2.11-@ZINC_VERSION@.jar,
+ target/lib/zinc-core_2.11-@ZINC_VERSION@.jar,
+ target/lib/zinc-classpath_2.11-@ZINC_VERSION@.jar,
+ target/lib/compiler-interface-@ZINC_VERSION@.jar,
+ target/lib/zinc-compile-core_2.11-@ZINC_VERSION@.jar,
+ target/lib/zinc-persist_2.11-@ZINC_VERSION@.jar,
+ target/lib/util-interface-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-logging_2.11-@SBT_UTIL_VERSION@.jar
 

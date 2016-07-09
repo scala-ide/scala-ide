@@ -3,7 +3,6 @@ package org.scalaide.core.internal.builder.zinc
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.scalaide.core.IScalaInstallation
-import sbt.compiler.IC
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.util.eclipse.OSGiUtils
 import xsbti.Logger
@@ -15,6 +14,9 @@ import org.scalaide.util.eclipse.EclipseUtils.RichPath
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.core.SdtConstants
+import sbt.internal.inc.RawCompiler
+import sbt.internal.inc.ClasspathOptionsUtil
+import sbt.internal.inc.AnalyzingCompiler
 
 /** This class manages a store of compiler-interface jars (as consumed by Sbt). Each specific
  *  version of Scala needs a compiler-interface jar compiled against that version.
@@ -98,12 +100,9 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
         val targetJar = interfaceJar(installation)
         monitor.worked(1)
 
-        IC.compileInterfaceJar(installation.version.unparse,
-          compilerInterface.toFile,
-          targetJar.toFile,
-          sbtInterface.toFile,
-          scalaInstanceForInstallation(installation),
-          log)
+        val label = installation.version.unparse
+        val raw = new RawCompiler(scalaInstanceForInstallation(installation), ClasspathOptionsUtil.auto, log)
+        AnalyzingCompiler.compileSources(List(compilerInterface.toFile), targetJar.toFile, List(sbtInterface.toFile), label, raw, log)
 
         monitor.worked(1)
 

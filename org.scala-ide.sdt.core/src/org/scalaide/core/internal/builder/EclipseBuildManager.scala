@@ -3,8 +3,8 @@ package org.scalaide.core.internal.builder
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
-import sbt.inc.IncOptions
-import sbt.inc.Analysis
+import xsbti.compile.IncOptions
+import sbt.internal.inc.Analysis
 import java.io.File
 import org.eclipse.core.resources.IMarker
 

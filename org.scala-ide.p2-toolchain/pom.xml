@@ -38,10 +38,6 @@
     </profile>
   </profiles>
 
-  <modules>
-    <module>../org.scala-ide.sbt.build</module>
-  </modules>
-
   <build>
     <plugins>
       <plugin>

@@ -32,6 +32,8 @@
     <log4j.version>1.2.17</log4j.version>
     <mockito.version>1.9.5</mockito.version>
     <diffutils.version>1.2.1</diffutils.version>
+    <zinc.version>1.0.0-M5</zinc.version>
+    <sbt-util.version>0.1.0-M13</sbt-util.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -397,6 +399,8 @@
                         overwrite="true">
                         <filterset>
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                          <filter token="ZINC_VERSION" value="${zinc.version}"/>
+                          <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>
                         </filterset>
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"

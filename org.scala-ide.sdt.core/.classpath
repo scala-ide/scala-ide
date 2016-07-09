@@ -6,5 +6,13 @@
 	<classpathentry kind="src" output="target/classes" path="src"/>
 	<classpathentry kind="lib" path="target/lib/miglayout-3.7.4.jar"/>
 	<classpathentry kind="lib" path="target/lib/log4j-1.2.17.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc_2.11-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-core_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-core_2.11-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-interface-0.1.0-M13.jar" sourcepath="target/lib/util-interface-0.1.0-M13-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-classpath_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-classpath_2.11-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/compiler-interface-1.0.0-M5.jar" sourcepath="target/lib/compiler-interface-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-compile-core_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-compile-core_2.11-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-persist_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-persist_2.11-1.0.0-M5-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-logging_2.11-0.1.0-M13.jar" sourcepath="target/lib/util-logging_2.11-0.1.0-M13-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

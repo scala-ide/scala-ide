@@ -13,18 +13,21 @@ import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInst
 import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
-import sbt.ClasspathOptions
-import sbt.Logger.xlog2Log
-import sbt.classpath.ClasspathUtilities
-import sbt.compiler.AnalyzingCompiler
-import sbt.compiler.CompilerCache
-import sbt.compiler.IC
-import sbt.inc.Analysis
-import sbt.inc.ClassfileManager
-import sbt.inc.Locate
+import xsbti.compile.ClasspathOptions
+import sbt.internal.inc.classpath.ClasspathUtilities
+import sbt.internal.inc.CompilerCache
+import sbt.internal.inc.Analysis
+import sbt.internal.inc.Locate
 import xsbti.Logger
 import xsbti.Maybe
-import xsbti.compile._
+import xsbti.compile.CompileProgress
+import xsbti.compile.CompileOrder
+import xsbti.compile.IncOptions
+import xsbti.compile.IncOptionsUtil
+import xsbti.compile.DefinesClass
+import xsbti.compile.MultipleOutput
+import sbt.internal.inc.AnalyzingCompiler
+import sbt.internal.inc.CompilerInterfaceProvider
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -58,93 +61,93 @@ class SbtInputs(installation: IScalaInstallation,
 
   def progress = Maybe.just(scalaProgress)
 
-  def incOptions: sbt.inc.IncOptions = {
-    sbt.inc.IncOptions.Default.
-      withApiDebug(apiDebug = project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
+  def incOptions: IncOptions = {
+    // TODO figure out what to do with ClassfileManager
+//    import sbt.internal.inc.ClassfileManager
+    IncOptionsUtil.defaultIncOptions().
+      withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
-      withApiDumpDirectory(None).
-      withRecompileOnMacroDef(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))).
+//      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
+      withApiDumpDirectory(Maybe.nothing()).
+      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
       withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
   }
 
-  def options = new Options {
-    def outputFolders = srcOutputs.map {
-      case (_, out) => out.getRawLocation
-    }
+  def outputFolders = srcOutputs.map {
+    case (_, out) => out.getRawLocation
+  }
 
-    override def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
-      .distinct
-      .map { cp ⇒
-        val location = Option(cp.toFile).flatMap(f ⇒ Option(f.getAbsoluteFile))
-        location getOrElse (throw new IllegalStateException(s"The classpath location `$cp` is invalid."))
-      }.toArray
+  def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+    .distinct
+    .map { cp ⇒
+      val location = Option(cp.toFile).flatMap(f ⇒ Option(f.getAbsoluteFile))
+      location getOrElse (throw new IllegalStateException(s"The classpath location `$cp` is invalid."))
+    }.toArray
 
-    override def sources = sourceFiles.toArray
+  def sources = sourceFiles.toArray
 
-    override def output = new MultipleOutput {
-      private def sourceOutputFolders =
-        if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
+  def output = new MultipleOutput {
+    private def sourceOutputFolders =
+      if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
 
-      override def outputGroups = sourceOutputFolders.map {
-        case (src, out) => new MultipleOutput.OutputGroup {
-          override def sourceDirectory = {
-            val loc = src.getLocation
-            if (loc != null)
-              loc.toFile()
-            else
-              throw new IllegalStateException(s"The source folder location `$src` is invalid.")
-          }
-          override def outputDirectory = {
-            val loc = out.getLocation
-            if (loc != null)
-              loc.toFile()
-            else
-              throw new IllegalStateException(s"The output folder location `$out` is invalid.")
-          }
+    override def outputGroups = sourceOutputFolders.map {
+      case (src, out) => new MultipleOutput.OutputGroup {
+        override def sourceDirectory = {
+          val loc = src.getLocation
+          if (loc != null)
+            loc.toFile()
+          else
+            throw new IllegalStateException(s"The source folder location `$src` is invalid.")
         }
-      }.toArray
-    }
+        override def outputDirectory = {
+          val loc = out.getLocation
+          if (loc != null)
+            loc.toFile()
+          else
+            throw new IllegalStateException(s"The output folder location `$out` is invalid.")
+        }
+      }
+    }.toArray
+  }
 
-    // remove arguments not understood by build compiler
-    override def options =
-      if (project.isUsingCompatibilityMode())
-        project.scalacArguments.filter(buildCompilerOption).toArray
-      else
-        project.scalacArguments.toArray
+  // remove arguments not understood by build compiler
+  def scalacOptions =
+    if (project.isUsingCompatibilityMode())
+      project.scalacArguments.filter(buildCompilerOption).toArray
+    else
+      project.scalacArguments.toArray
 
-    /** Remove the source-level related arguments */
-    private def buildCompilerOption(arg: String): Boolean =
-      !arg.startsWith("-Xsource") && !(arg == "-Ymacro-expand:none")
+  /** Remove the source-level related arguments */
+  private def buildCompilerOption(arg: String): Boolean =
+    !arg.startsWith("-Xsource") && !(arg == "-Ymacro-expand:none")
 
-    override def javacOptions = Array() // Not used.
+  def javacOptions: Seq[String] = Nil // Not used.
 
-    import CompileOrder._
-    import SettingConverterUtil.convertNameToProperty
-    import preferences.ScalaPluginSettings.compileOrder
+  import CompileOrder._
+  import SettingConverterUtil.convertNameToProperty
+  import preferences.ScalaPluginSettings.compileOrder
 
-    override def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
-      case "JavaThenScala" => JavaThenScala
-      case "ScalaThenJava" => ScalaThenJava
-      case _ => Mixed
-    }
+  def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
+    case "JavaThenScala" => JavaThenScala
+    case "ScalaThenJava" => ScalaThenJava
+    case _ => Mixed
   }
 
   /**
    * @return Right-biased instance of Either (error message in Left, value in Right)
    */
-  def compilers: Either[String, Compilers[sbt.compiler.AnalyzingCompiler]] = {
+  def compilers: Either[String, Compilers] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
     val store = ScalaPlugin().compilerInterfaceStore
 
     store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerInterface =>
         // prevent Sbt from adding things to the (boot)classpath
-        val cpOptions = new ClasspathOptions(false, false, false, autoBoot = false, filterLibrary = false)
-        new Compilers[AnalyzingCompiler] {
-          override def javac = new JavaEclipseCompiler(project.underlying, javaMonitor)
-          override def scalac = IC.newScalaCompiler(scalaInstance, compilerInterface.toFile, cpOptions)
-        }
+        val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
+        Compilers(
+          new AnalyzingCompiler(scalaInstance, CompilerInterfaceProvider.constant(compilerInterface.toFile), cpOptions),
+          new JavaEclipseCompiler(project.underlying, javaMonitor)
+        )
     }
   }
 }

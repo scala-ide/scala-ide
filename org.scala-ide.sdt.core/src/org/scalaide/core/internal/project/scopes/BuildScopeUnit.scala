@@ -21,8 +21,8 @@ import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.ui.internal.preferences.ScopesSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
-import sbt.inc.Analysis
-import sbt.inc.IncOptions
+import sbt.internal.inc.Analysis
+import xsbti.compile.IncOptions
 
 /**
  * Manages compilation of sources for given scope.
@@ -121,4 +121,3 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
       .filter { _.getLocation.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) })
   }
 }
-
