@@ -183,6 +183,10 @@ Bundle-ClassPath: .,
  target/lib/compiler-interface-@ZINC_VERSION@.jar,
  target/lib/zinc-compile-core_2.11-@ZINC_VERSION@.jar,
  target/lib/zinc-persist_2.11-@ZINC_VERSION@.jar,
+ target/lib/zinc-apiinfo_2.11-@ZINC_VERSION@.jar,
  target/lib/util-interface-@SBT_UTIL_VERSION@.jar,
- target/lib/util-logging_2.11-@SBT_UTIL_VERSION@.jar
+ target/lib/util-logging_2.11-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-control_2.11-@SBT_UTIL_VERSION@.jar,
+ target/lib/io_2.11-1.0.0-M6.jar,
+ target/lib/sbinary_2.11-0.4.3.jar
 

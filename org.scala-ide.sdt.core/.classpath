@@ -14,5 +14,9 @@
 	<classpathentry kind="lib" path="target/lib/zinc-compile-core_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-compile-core_2.11-1.0.0-M5-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/zinc-persist_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-persist_2.11-1.0.0-M5-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/util-logging_2.11-0.1.0-M13.jar" sourcepath="target/lib/util-logging_2.11-0.1.0-M13-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-control_2.11-0.1.0-M13.jar" sourcepath="target/lib/util-control_2.11-0.1.0-M13-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/io_2.11-1.0.0-M6.jar" sourcepath="target/lib/io_2.11-1.0.0-M6-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/sbinary_2.11-0.4.3.jar" sourcepath="target/lib/sbinary_2.11-0.4.3-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-apiinfo_2.11-1.0.0-M5.jar" sourcepath="target/lib/zinc-apiinfo_2.11-1.0.0-M5-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

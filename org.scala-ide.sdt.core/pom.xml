@@ -88,6 +88,11 @@
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
+      <artifactId>zinc-apiinfo_${scala.minor.version}</artifactId>
+      <version>${zinc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>util-interface</artifactId>
       <version>${sbt-util.version}</version>
     </dependency>
@@ -95,6 +100,21 @@
       <groupId>org.scala-sbt</groupId>
       <artifactId>util-logging_${scala.minor.version}</artifactId>
       <version>${sbt-util.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>util-control_${scala.minor.version}</artifactId>
+      <version>${sbt-util.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>io_${scala.minor.version}</artifactId>
+      <version>1.0.0-M6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>sbinary_${scala.minor.version}</artifactId>
+      <version>0.4.3</version>
     </dependency>
   </dependencies>
 
@@ -195,6 +215,15 @@
                 </artifactItem>
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
+                  <artifactId>zinc-apiinfo_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>zinc-apiinfo_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
                   <artifactId>util-interface</artifactId>
                 </artifactItem>
                 <artifactItem>
@@ -209,6 +238,33 @@
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
                   <artifactId>util-logging_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>util-control_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>util-control_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>io_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>io_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>sbinary_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>sbinary_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
               </artifactItems>
