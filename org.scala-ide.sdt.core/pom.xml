@@ -108,6 +108,11 @@
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
+      <artifactId>util-relation_${scala.minor.version}</artifactId>
+      <version>${sbt-util.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>io_${scala.minor.version}</artifactId>
       <version>1.0.0-M6</version>
     </dependency>
@@ -247,6 +252,15 @@
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
                   <artifactId>util-control_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>util-relation_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>util-relation_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>

@@ -187,6 +187,7 @@ Bundle-ClassPath: .,
  target/lib/util-interface-@SBT_UTIL_VERSION@.jar,
  target/lib/util-logging_2.11-@SBT_UTIL_VERSION@.jar,
  target/lib/util-control_2.11-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-relation_2.11-@SBT_UTIL_VERSION@.jar,
  target/lib/io_2.11-1.0.0-M6.jar,
  target/lib/sbinary_2.11-0.4.3.jar
 
