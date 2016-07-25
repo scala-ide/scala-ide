@@ -16,6 +16,7 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.builder.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.scopes.BuildScopeUnit
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
@@ -28,7 +29,7 @@ import sbt.inc.IncOptions
  *  Refer to [[CompileScope]]
  */
 class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: Settings)
-    extends EclipseBuildManager {
+    extends EclipseSbtBuildManager {
   val DefaultScopesOrder: Seq[CompileScope] = Seq(CompileMacrosScope, CompileMainScope, CompileTestsScope)
 
   private val buildScopeUnits = DefaultScopesOrder.foldLeft(List.empty[BuildScopeUnit]) { (acc, scope) =>

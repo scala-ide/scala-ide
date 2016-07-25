@@ -30,7 +30,7 @@ import sbt.inc.IncOptions
  */
 class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, settings: Settings,
   val dependentUnitInstances: Seq[BuildScopeUnit] = Seq.empty)
-    extends EclipseBuildManager {
+    extends org.scalaide.core.internal.builder.EclipseSbtBuildManager {
 
   private val delegate =
     new EclipseSbtBuildManager(owningProject, settings, Some(owningProject.underlying.getFile(".cache-" + scope.name)),

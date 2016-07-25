@@ -48,7 +48,7 @@ import xsbti.compile.CompileProgress
  */
 class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
   addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
-    extends EclipseBuildManager with HasLogger {
+    extends org.scalaide.core.internal.builder.EclipseSbtBuildManager with HasLogger {
 
   /** Initialized in `build`, used by the SbtProgress. */
   private var monitor: SubMonitor = _

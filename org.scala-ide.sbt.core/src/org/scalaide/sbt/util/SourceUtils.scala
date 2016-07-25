@@ -1,15 +1,15 @@
 package org.scalaide.sbt.util
 
 import scala.concurrent.Future
-import scala.concurrent.Promise
 
 import org.reactivestreams.Publisher
 import org.reactivestreams.Subscriber
 import org.reactivestreams.Subscription
 
-import akka.stream.Materializer
-import akka.stream.scaladsl.Source
 import akka.NotUsed
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.Source
 
 object SourceUtils {
 
@@ -19,13 +19,8 @@ object SourceUtils {
      * Returns the first element of the source and cancels the source
      * afterwards.
      */
-    def firstFuture(implicit materializer: Materializer): Future[A] = {
-      val p = Promise[A]
-      src.take(1).runForeach { elem ⇒
-        p.success(elem)
-      }
-      p.future
-    }
+    def firstFuture(implicit materializer: Materializer): Future[A] =
+      src.runWith(Sink.head)
   }
 
   /**

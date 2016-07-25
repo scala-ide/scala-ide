@@ -2,6 +2,8 @@ package org.scalaide.sbt.core
 
 import java.io.File
 
+import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.pickling.Unpickler
@@ -9,24 +11,30 @@ import scala.pickling.Unpickler
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
 import org.scalaide.logging.HasLogger
+import org.scalaide.sbt.core.builder.RemoteBuildReporter
 import org.scalaide.sbt.ui.console.ConsoleProvider
 import org.scalaide.sbt.util.SbtUtils
 import org.scalaide.sbt.util.SourceUtils
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.Source
 import sbt.client.SbtClient
 import sbt.client.SbtConnector
+import sbt.protocol.CompilationFailure
+import sbt.protocol.ExecutionFailure
+import sbt.protocol.ExecutionSuccess
 import sbt.protocol.LogEvent
 import sbt.protocol.LogMessage
 import sbt.protocol.LogStdErr
 import sbt.protocol.LogStdOut
 import sbt.protocol.LogSuccess
 import sbt.protocol.LogTrace
-import sbt.protocol.ProjectReference
-import akka.stream.scaladsl.Source
-import akka.NotUsed
 import sbt.protocol.MinimalBuildStructure
+import sbt.protocol.ProjectReference
+import xsbti.Severity
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -56,6 +64,22 @@ object SbtBuild extends AnyRef with HasLogger {
         builds += buildRoot -> build
         build
       })
+    }
+  }
+
+  def shutdown(implicit system: ExecutionContext): Future[Boolean] = Future.sequence {
+    builds.values
+  }.flatMap { builds =>
+    buildsLock.synchronized {
+      builds.foreach { _.shutdown() }
+    }
+    @tailrec def areClosed: Boolean = if (builds.forall { _.isClosed })
+      true
+    else
+      areClosed
+
+    Future {
+      areClosed
     }
   }
 
@@ -121,6 +145,12 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
   import SourceUtils._
   implicit val materializer = ActorMaterializer()
 
+  private[core] def shutdown(): Unit =
+    sbtClient.client.requestSelfDestruct()
+
+  private[core] def isClosed: Boolean =
+    sbtClient.client.isClosed
+
   def watchBuild(): Source[MinimalBuildStructure, NotUsed] =
     sbtClient.watchBuild()
 
@@ -153,6 +183,16 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
     implicit val kp = KeyProvider.TaskKeyKP(sbtClient.client)
     sbtClient.keyValue(projectName, keyName, config)
   }
+
+  def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) =
+    sbtClient.handleEvents().collect {
+      case CompilationFailure(id, failure) if compileId == id =>
+        buildReporter.createMarker(Option(failure.position), failure.message, failure.severity)
+      case ExecutionFailure(id) if id == compileId =>
+        buildReporter.createMarker(None, s"compile execution $compileId failed with no CompilationFailure", Severity.Error)
+      case ExecutionSuccess(id) if id == compileId =>
+        buildReporter.createMarker(None, s"compile execution $compileId succeeded", Severity.Info)
+    }.runWith(Sink.head)
 }
 
 final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)

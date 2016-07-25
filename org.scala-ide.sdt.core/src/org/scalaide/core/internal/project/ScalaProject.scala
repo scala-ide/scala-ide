@@ -1,10 +1,13 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
+import java.io.IOException
+
 import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable.Publisher
 import scala.tools.nsc.Settings
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -13,50 +16,50 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceProxy
 import org.eclipse.core.resources.IResourceProxyVisitor
 import org.eclipse.core.resources.ProjectScope
+import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.IScalaProjectEvent
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.compiler.IScalaPresentationCompiler
+import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.editor.ScalaEditor
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.scalaide.util.internal.SettingConverterUtil
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.IPersistentPreferenceStore
-import org.eclipse.core.runtime.CoreException
-import org.scalaide.core.SdtConstants
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.SearchableEnvironment
-import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
-import org.scalaide.ui.internal.editor.ScalaEditor
-import java.io.IOException
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -585,7 +588,8 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
         val useScopeCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useScopesCompiler.name)
         if (storage.getBoolean(useScopeCompilerProperty))
           new SbtScopesBuildManager(this, settings)
-        else new ProjectsDependentSbtBuildManager(this, settings)
+        else
+          ScalaPlugin().buildManager(this)
       }
     }
     buildManager0

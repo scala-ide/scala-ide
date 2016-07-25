@@ -16,6 +16,7 @@ import sbt.client.SbtClient
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ScopedKey
 import akka.NotUsed
+import sbt.protocol.Event
 
 /**
  * Wrapper around [[sbt.client.SbtClient]] to provide more functionality.
@@ -82,4 +83,11 @@ class RichSbtClient(private[core] val client: SbtClient) {
   private def mkCommand(projectName: String, keyName: String, config: Option[String]): String =
     s"$projectName/${config.map(c ⇒ s"$c:").mkString}$keyName"
 
+  def handleEvents()(implicit ec: ExecutionContext): Source[Event, NotUsed] =
+    SourceUtils.fromEventStream[Event] { subs =>
+      val c = client.handleEvents { e =>
+        subs.onNext(e)
+      }
+      () => c.cancel()
+    }
 }

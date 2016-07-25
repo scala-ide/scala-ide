@@ -2,6 +2,7 @@ package org.scalaide.core.internal
 
 import scala.collection.mutable
 import scala.tools.nsc.settings.ScalaVersion
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
@@ -19,18 +20,24 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.PlatformUI
 import org.osgi.framework.BundleContext
+import org.osgi.util.tracker.ServiceTracker
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.builder.BuildManagerFactory
+import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.project._
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.internal.statistics.Statistics
 import org.scalaide.logging.HasLogger
 import org.scalaide.logging.PluginLogConfigurator
 import org.scalaide.ui.internal.diagnostic
@@ -38,11 +45,9 @@ import org.scalaide.ui.internal.editor.ScalaDocumentProvider
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
-import org.scalaide.core.internal.statistics.Statistics
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.CompilerUtils._
 import org.scalaide.util.internal.FixedSizeCache
-import org.eclipse.jdt.internal.ui.JavaPlugin
 
 object ScalaPlugin {
 
@@ -53,6 +58,10 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
+  @volatile private var buildManagerFactoryTracker: ServiceTracker[_, _] = _
+
+  def buildManager(project: IScalaProject): EclipseBuildManager =
+    buildManagerFactoryTracker.getService.asInstanceOf[BuildManagerFactory].buildManager(project)
 
  /**
   * Check if the given version is compatible with the current plug-in version.
@@ -95,6 +104,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ScalaPlugin.plugin = this
     super.start(context)
 
+    buildManagerFactoryTracker = new ServiceTracker(context, classOf[BuildManagerFactory], null)
+    buildManagerFactoryTracker.open()
+
     if (!headlessMode) {
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", SdtConstants.EditorId)
       diagnostic.StartupDiagnostics.run
@@ -117,8 +129,10 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
       if iProject.isOpen
       scalaProject <- asScalaProject(iProject)
     } scalaProject.projectSpecificStorage.save()
+    buildManagerFactoryTracker.close()
     super.stop(context)
     ScalaPlugin.plugin = null
+    buildManagerFactoryTracker = null
   }
 
   /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
@@ -220,9 +234,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   }
 
   override def elementChanged(event: ElementChangedEvent): Unit = {
-    import scala.collection.mutable.ListBuffer
     import IJavaElement._
     import IJavaElementDelta._
+    import scala.collection.mutable.ListBuffer
 
     // check if the changes are linked with the build path
     val modelDelta = event.getDelta()

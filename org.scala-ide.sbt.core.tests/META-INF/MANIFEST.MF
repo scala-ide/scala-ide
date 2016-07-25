@@ -3,11 +3,18 @@ Bundle-ManifestVersion: 2
 Bundle-Name: SBT Integration (Test)
 Bundle-SymbolicName: org.scala-ide.sbt.core.tests
 Bundle-Version: 4.5.0.qualifier
-Bundle-Vendor: Scala IDE
+Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sbt.core
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.scala-lang.scala-library,
  org.eclipse.equinox.weaving.aspectj,
+ org.eclipse.jdt.junit4.runtime,
+ org.eclipse.jdt.junit.core,
+ org.eclipse.jdt.junit.runtime,
+ org.scala-ide.sdt.core,
  org.junit,
- org.aspectj.weaver
+ org.eclipse.jdt.junit4.runtime,
+ org.eclipse.jdt.junit.core,
+ org.eclipse.jdt.junit.runtime
+Import-Package: org.scalaide.core.testsetup
 Bundle-ClassPath: .

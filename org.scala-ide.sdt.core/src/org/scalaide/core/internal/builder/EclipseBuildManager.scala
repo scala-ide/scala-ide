@@ -1,12 +1,11 @@
 package org.scalaide.core.internal.builder
 
+import java.io.File
+
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
-import sbt.inc.IncOptions
-import sbt.inc.Analysis
-import java.io.File
-import org.eclipse.core.resources.IMarker
 
 /**
  * Abstraction which exposes sbt compiler to eclipse.
@@ -28,9 +27,6 @@ trait EclipseBuildManager {
 
   /** Says if underlying compiler is able to find out and add dependencies to build path. */
   def canTrackDependencies: Boolean
-
-  /** Gives back the latest dependencies analysis done by underlying compiler. */
-  def latestAnalysis(incOptions: => IncOptions): Analysis
 
   /**
    * Finds build manager which built given file
