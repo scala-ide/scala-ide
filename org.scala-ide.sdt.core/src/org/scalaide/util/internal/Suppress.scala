@@ -30,6 +30,7 @@ object Suppress {
     type ICodeCompletionRequestor = org.eclipse.jdt.core.ICodeCompletionRequestor
     type ICompletionRequestor = org.eclipse.jdt.core.ICompletionRequestor
     type Lock = scala.concurrent.Lock
+    type SourceCodeEditor = org.scalaide.ui.editor.SourceCodeEditor
 
     /** Refers to deprecated Eclipse/JDT API */
     def getBufferFactory(o: Openable): IBufferFactory =

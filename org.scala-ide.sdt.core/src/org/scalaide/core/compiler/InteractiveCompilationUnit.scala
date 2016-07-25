@@ -121,8 +121,20 @@ trait InteractiveCompilationUnit {
   /** Does this unit exist in the workspace? */
   def exists(): Boolean
 
-  /** The Scala project to which this compilation unit belongs. */
+  /** The Scala project to which this compilation unit belongs.
+   *
+   *  @note Do NOT assume `scalaProject.presentationCompiler` is always the right one for this unit
+   */
   def scalaProject: IScalaProject
+
+  /** A presentation compiler that can handle this compilation unit.
+   *
+   * @note This is not always the `scalaProject.presentationCompiler`. For instance, an Sbt
+   *       file editor would use a different instance, since the classpath and source-level
+   *       for Sbt is usually different from the one in the enclosing project.
+   */
+  def presentationCompiler: IPresentationCompilerProxy =
+    scalaProject.presentationCompiler
 
   /** Schedule this unit for reconciliation with the new contents. This by itself won't start
    *  a new type-checking round, instead marks the current unit as *dirty*. At the next reconciliation
@@ -133,7 +145,7 @@ trait InteractiveCompilationUnit {
    *                     may not be Scala. This method takes care of translating the contents to Scala
    */
   def scheduleReconcile(newContents: Array[Char]): Unit = {
-    scalaProject.presentationCompiler { pc =>
+    presentationCompiler { pc =>
       pc.scheduleReload(this, sourceMap(newContents).sourceFile)
     }
   }
@@ -147,7 +159,7 @@ trait InteractiveCompilationUnit {
    *        reconciliation strategy.
    */
   def forceReconcile(): List[ScalaCompilationProblem] = {
-    scalaProject.presentationCompiler(_.flushScheduledReloads())
+    presentationCompiler(_.flushScheduledReloads())
     currentProblems()
   }
 
@@ -160,7 +172,7 @@ trait InteractiveCompilationUnit {
    *  This method should not block.
    */
   def initialReconcile(): Response[Unit] = {
-    val reloaded = scalaProject.presentationCompiler { compiler =>
+    val reloaded = presentationCompiler { compiler =>
       compiler.askReload(this, sourceMap(getContents).sourceFile)
     } getOrElse {
       val dummy = new Response[Unit]
@@ -180,7 +192,7 @@ trait InteractiveCompilationUnit {
   def currentProblems(): List[ScalaCompilationProblem] = {
     import scala.util.control.Exception.failAsValue
 
-    scalaProject.presentationCompiler { pc =>
+    presentationCompiler { pc =>
       val info = lastSourceMap()
       import info._
 
@@ -198,6 +210,6 @@ trait InteractiveCompilationUnit {
    *  @param op The operation to be performed
    */
   def withSourceFile[T](op: (SourceFile, IScalaPresentationCompiler) => T): Option[T] = {
-    scalaProject.presentationCompiler(op(lastSourceMap().sourceFile, _))
+    presentationCompiler(op(lastSourceMap().sourceFile, _))
   }
 }
