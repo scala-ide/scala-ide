@@ -7,7 +7,6 @@ import org.eclipse.ui.console.IConsole
 import org.eclipse.ui.console.IConsoleConstants
 import org.eclipse.ui.console.IConsoleView
 import org.eclipse.ui.console.MessageConsole
-import scala.util.Try
 
 object ConsoleProvider {
 
@@ -31,7 +30,7 @@ object ConsoleProvider {
 
   private def showConsole(console: MessageConsole): Unit = {
     for {
-      window <- Try(PlatformUI.getWorkbench).map(_.getActiveWorkbenchWindow).toOption
+      window <- Option(PlatformUI.getWorkbench).flatMap { wb => Option(wb.getActiveWorkbenchWindow) }
       page <- Option(window.getActivePage)
       id = IConsoleConstants.ID_CONSOLE_VIEW
       view <- Option(page.showView(id))
