@@ -10,12 +10,14 @@ import scala.pickling.Unpickler
 
 import org.eclipse.core.resources.IProject
 import org.eclipse.ui.console.MessageConsole
+import org.scalaide.core.IScalaProject
 import org.scalaide.logging.HasLogger
 import org.scalaide.sbt.core.builder.RemoteBuildReporter
 import org.scalaide.sbt.ui.console.ConsoleProvider
 import org.scalaide.sbt.util.SbtUtils
 import org.scalaide.sbt.util.SourceUtils
 
+import akka.Done
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -35,7 +37,6 @@ import sbt.protocol.LogTrace
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
 import xsbti.Severity
-import org.scalaide.core.IScalaProject
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -188,20 +189,26 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
     sbtClient.keyValue(projectName, keyName, config)
   }
 
-  def compileWithResult(project: IScalaProject, buildReporter: RemoteBuildReporter): Future[Option[Unit]] =
+  def compileWithResult(project: IScalaProject, buildReporter: RemoteBuildReporter): Future[Done] =
     compile(project.underlying).flatMap { compilationId =>
       compilationResult(compilationId, buildReporter)
     }
 
-  private def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) =
+  private def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) = {
+    val Continue = true
+    val Terminate = false
     sbtClient.handleEvents().collect {
-      case CompilationFailure(id, failure) if compileId == id =>
+      case CompilationFailure(_, failure) =>
         buildReporter.createMarker(Option(failure.position), failure.message, failure.severity)
+        Continue
       case ExecutionFailure(id) if id == compileId =>
-        buildReporter.createMarker(None, s"compile execution $compileId failed with no CompilationFailure", Severity.Error)
+        buildReporter.createMarker(None, s"compile execution $compileId failed", Severity.Error)
+        Terminate
       case ExecutionSuccess(id) if id == compileId =>
         buildReporter.createMarker(None, s"compile execution $compileId succeeded", Severity.Info)
-    }.runWith(Sink.head)
+        Terminate
+    }.takeWhile { _ == Continue }.runWith(Sink.ignore)
+  }
 }
 
 final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)
