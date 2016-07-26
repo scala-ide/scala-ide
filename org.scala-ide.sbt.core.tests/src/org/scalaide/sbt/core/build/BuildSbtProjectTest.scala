@@ -65,8 +65,8 @@ class BuildSbtProjectTest extends IProjectOperations with IProjectHelpers with H
     givenCleanWorkspaceForProjects(project)
     resetClasspathEntries()
     toggleStopOnErrorsProperty(project, on = true)
-    val useScopeCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useScopesCompiler.name)
-    project.storage.setValue(useScopeCompilerProperty, false)
+    val useSbtCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useSbtCompiler.name)
+    project.storage.setValue(useSbtCompilerProperty, true)
 
     whenFileInScopeIsDamaged(project, "/src/main/scala", "acme", "Main.scala", changedToNonCompiling) {
       val expectedTwoErrors =

@@ -585,8 +585,8 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
       logger.info("BM: SBT enhanced Build Manager for " + IScalaPlugin().scalaVersion + " Scala library")
 
       buildManager0 = {
-        val useScopeCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useScopesCompiler.name)
-        if (storage.getBoolean(useScopeCompilerProperty))
+        val useSbtCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useSbtCompiler.name)
+        if (!storage.getBoolean(useSbtCompilerProperty))
           new SbtScopesBuildManager(this, settings)
         else
           ScalaPlugin().buildManager(this)
