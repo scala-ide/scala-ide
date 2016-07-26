@@ -35,6 +35,7 @@ import sbt.protocol.LogTrace
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
 import xsbti.Severity
+import org.scalaide.core.IScalaProject
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -67,16 +68,19 @@ object SbtBuild extends AnyRef with HasLogger {
     }
   }
 
-  def shutdown(implicit system: ExecutionContext): Future[Boolean] = Future.sequence {
+  def shutdown()(implicit system: ExecutionContext): Future[Unit] = Future.sequence {
     builds.values
   }.flatMap { builds =>
     buildsLock.synchronized {
       builds.foreach { _.shutdown() }
     }
+    val FortyWinks = 100
     @tailrec def areClosed: Boolean = if (builds.forall { _.isClosed })
       true
-    else
+    else {
+      Thread.sleep(FortyWinks)
       areClosed
+    }
 
     Future {
       areClosed
@@ -101,7 +105,7 @@ object SbtBuild extends AnyRef with HasLogger {
       implicit val materializer = ActorMaterializer()
 
       val src = SbtUtils.protocolEventWatcher[LogEvent](client)
-      src.runForeach (_.entry match {
+      src.runForeach(_.entry match {
         // TODO remove all cases but the LogMessage ones - we don't really need to watch them
         case LogSuccess(msg) ⇒
           Console.out.println(s"stdout message from sbt-server retrieved: $msg")
@@ -158,7 +162,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
    * Triggers the compilation of the given project.
    */
   def compile(project: IProject): Future[Long] =
-    sbtClient.requestExecution(s"${project.getName}/compile")
+    sbtClient.requestExecution(s"${project.getName.toLowerCase}/compile")
 
   /**
    * Returns the list of projects defined in this build.
@@ -170,7 +174,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
    * Returns a Future for the value of the given setting key. An Unpickler is
    * required to deserialize the value from the wire.
    */
-  def setting[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
+  def setting[A: Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
     implicit val kp = KeyProvider.SettingKeyKP(sbtClient.client)
     sbtClient.keyValue(projectName, keyName, config)
   }
@@ -179,12 +183,17 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
    * Returns a Future for the value of the given task key. An Unpickler is
    * required to deserialize the value from the wire.
    */
-  def task[A : Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
+  def task[A: Unpickler](projectName: String, keyName: String, config: Option[String] = None): Future[A] = {
     implicit val kp = KeyProvider.TaskKeyKP(sbtClient.client)
     sbtClient.keyValue(projectName, keyName, config)
   }
 
-  def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) =
+  def compileWithResult(project: IScalaProject, buildReporter: RemoteBuildReporter): Future[Option[Unit]] =
+    compile(project.underlying).flatMap { compilationId =>
+      compilationResult(compilationId, buildReporter)
+    }
+
+  private def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) =
     sbtClient.handleEvents().collect {
       case CompilationFailure(id, failure) if compileId == id =>
         buildReporter.createMarker(Option(failure.position), failure.message, failure.severity)

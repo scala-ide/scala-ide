@@ -72,6 +72,7 @@ class BuildSbtProjectTest extends IProjectOperations with IProjectHelpers with H
       val expectedOneError =
         markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
 
+      logger.info(expectedOneError.mkString(", "))
       Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
     }
   }

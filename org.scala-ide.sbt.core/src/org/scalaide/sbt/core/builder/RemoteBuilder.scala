@@ -28,9 +28,7 @@ class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shu
 
     val build = SbtBuild.buildFor(project.underlying.getLocation().toFile())
     val res = build.flatMap { sbtBuild =>
-      sbtBuild.compile(project.underlying).flatMap { compilationId =>
-        sbtBuild.compilationResult(compilationId, buildReporter)
-      }
+      sbtBuild.compileWithResult(project, buildReporter)
     }
     val id = Await.result(res, Duration.Inf)
 
@@ -44,7 +42,7 @@ class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shu
   def shutdown(): Unit = {
     implicit val system = SbtRemotePlugin.system
     import system.dispatcher
-    Await.result(SbtBuild.shutdown, Duration.Inf)
+    Await.result(SbtBuild.shutdown(), Duration.Inf)
   }
 
   def canTrackDependencies: Boolean = false
