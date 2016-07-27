@@ -41,8 +41,10 @@ class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shu
       val res = build.flatMap { sbtBuild =>
         sbtBuild.compileWithResult(project, buildReporter)
       }
-      val id = Await.result(res, Duration.Inf)
-      logger.debug(s"build of project ${project.underlying.getName} with remote builder triggered (id: $id)")
+      val compilationResult = Await.result(res, Duration.Inf)
+      compilationResult.foreach { compilationResult =>
+        logger.debug(s"build of project ${project.underlying.getName} with $compilationResult")
+      }
     } else
       putMarkersForTransitives(dependentProjectsWithErrors)
   }

@@ -59,9 +59,10 @@ object ScalaPlugin {
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
   @volatile private var buildManagerFactoryTracker: ServiceTracker[_, _] = _
+  private val BuildManagerFactoryTimeout = 60000
 
   def buildManager(project: IScalaProject): EclipseBuildManager =
-    buildManagerFactoryTracker.getService.asInstanceOf[BuildManagerFactory].buildManager(project)
+    buildManagerFactoryTracker.waitForService(BuildManagerFactoryTimeout).asInstanceOf[BuildManagerFactory].buildManager(project)
 
  /**
   * Check if the given version is compatible with the current plug-in version.

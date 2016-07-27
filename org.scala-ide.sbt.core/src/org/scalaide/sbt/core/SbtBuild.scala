@@ -17,7 +17,6 @@ import org.scalaide.sbt.ui.console.ConsoleProvider
 import org.scalaide.sbt.util.SbtUtils
 import org.scalaide.sbt.util.SourceUtils
 
-import akka.Done
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -107,15 +106,14 @@ object SbtBuild extends AnyRef with HasLogger {
 
       val src = SbtUtils.protocolEventWatcher[LogEvent](client)
       src.runForeach(_.entry match {
-        // TODO remove all cases but the LogMessage ones - we don't really need to watch them
         case LogSuccess(msg) ⇒
-          Console.out.println(s"stdout message from sbt-server retrieved: $msg")
+          logger.debug(s"stdout message from sbt-server retrieved: $msg")
         case LogStdOut(msg) ⇒
-          Console.out.println(s"stdout message from sbt-server retrieved: $msg")
+          logger.debug(s"stdout message from sbt-server retrieved: $msg")
         case LogStdErr(msg) ⇒
-          Console.err.println(s"stderr message from sbt-server retrieved: $msg")
+          logger.debug(s"stderr message from sbt-server retrieved: $msg")
         case LogTrace(exceptionClassName, msg) ⇒
-          Console.err.println(s"stderr message of type $exceptionClassName from sbt-server retrieved: $msg")
+          logger.debug(s"stderr message of type $exceptionClassName from sbt-server retrieved: $msg")
         case LogMessage(LogMessage.INFO, msg) ⇒
           logger.info(msg)
         case LogMessage(LogMessage.DEBUG, msg) ⇒
@@ -163,7 +161,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
    * Triggers the compilation of the given project.
    */
   def compile(project: IProject): Future[Long] =
-    sbtClient.requestExecution(s"${project.getName.toLowerCase}/compile")
+    sbtClient.requestExecution(s"${project.getName.toLowerCase}/compileIncremental")
 
   /**
    * Returns the list of projects defined in this build.
@@ -189,26 +187,29 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
     sbtClient.keyValue(projectName, keyName, config)
   }
 
-  def compileWithResult(project: IScalaProject, buildReporter: RemoteBuildReporter): Future[Done] =
+  def compileWithResult(project: IScalaProject, buildReporter: RemoteBuildReporter): Future[Option[CompilationResult]] =
     compile(project.underlying).flatMap { compilationId =>
       compilationResult(compilationId, buildReporter)
     }
 
   private def compilationResult(compileId: Long, buildReporter: RemoteBuildReporter) = {
-    val Continue = true
-    val Terminate = false
     sbtClient.handleEvents().collect {
       case CompilationFailure(_, failure) =>
         buildReporter.createMarker(Option(failure.position), failure.message, failure.severity)
         Continue
       case ExecutionFailure(id) if id == compileId =>
         buildReporter.createMarker(None, s"compile execution $compileId failed", Severity.Error)
-        Terminate
+        Failure
       case ExecutionSuccess(id) if id == compileId =>
-        buildReporter.createMarker(None, s"compile execution $compileId succeeded", Severity.Info)
-        Terminate
-    }.takeWhile { _ == Continue }.runWith(Sink.ignore)
+        logger.debug(s"compile execution $compileId succeeded")
+        Success
+    }.takeWhile { _ == Continue }.runWith(Sink.lastOption)
   }
 }
 
 final class SbtClientConnectionFailure(msg: String) extends RuntimeException(msg)
+
+sealed trait CompilationResult
+case object Continue extends CompilationResult
+case object Success extends CompilationResult
+case object Failure extends CompilationResult
