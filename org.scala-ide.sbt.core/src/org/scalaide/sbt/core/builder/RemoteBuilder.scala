@@ -30,7 +30,7 @@ trait Shutdownable {
 class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shutdownable with HasLogger {
   private lazy val buildReporter = new RemoteBuildReporter(project)
 
-  override def build(ingnoreAddedOrUpdated: Set[IFile], ignoreRemoved: Set[IFile], monitor: SubMonitor): Unit = {
+  override def build(ignoreAddedOrUpdated: Set[IFile], ignoreRemoved: Set[IFile], monitor: SubMonitor): Unit = {
     implicit val system = SbtRemotePlugin.system
     import system.dispatcher
 
