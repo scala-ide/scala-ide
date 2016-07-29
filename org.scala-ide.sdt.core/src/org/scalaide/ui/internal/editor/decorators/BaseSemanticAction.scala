@@ -142,10 +142,14 @@ abstract class BaseSemanticAction(
         val sourceFile = scu.lastSourceMap().sourceFile
         val response = compiler.askLoadedTyped(sourceFile, false)
         response.get(200) match {
-          case Some(Left(_)) => findAll(compiler, scu, sourceFile)
+          case Some(Left(_)) =>
+            findAll(compiler, scu, sourceFile)
           case Some(Right(exc)) =>
-            logger.error(exc); Map.empty
-          case None => logger.warn("Timeout while waiting for `askLoadedTyped` during semantic highlighting."); Map.empty
+            logger.error("An exception was thrown while waiting for `askLoadedTyped` during semantic highlighting.", exc)
+            Map.empty
+          case None =>
+            logger.warn("Timeout while waiting for `askLoadedTyped` during semantic highlighting.")
+            Map.empty
         }
       }
 
