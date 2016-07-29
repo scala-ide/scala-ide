@@ -24,13 +24,9 @@ import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.PlatformUI
 import org.osgi.framework.BundleContext
-import org.osgi.util.tracker.ServiceTracker
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.builder.BuildManagerFactory
-import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
@@ -58,11 +54,6 @@ object ScalaPlugin {
 }
 
 class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResourceChangeListener with IElementChangedListener with HasLogger {
-  @volatile private var buildManagerFactoryTracker: ServiceTracker[_, _] = _
-  private val BuildManagerFactoryTimeout = 60000
-
-  def buildManager(project: IScalaProject): EclipseBuildManager =
-    buildManagerFactoryTracker.waitForService(BuildManagerFactoryTimeout).asInstanceOf[BuildManagerFactory].buildManager(project)
 
  /**
   * Check if the given version is compatible with the current plug-in version.
@@ -105,9 +96,6 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ScalaPlugin.plugin = this
     super.start(context)
 
-    buildManagerFactoryTracker = new ServiceTracker(context, classOf[BuildManagerFactory], null)
-    buildManagerFactoryTracker.open()
-
     if (!headlessMode) {
       PlatformUI.getWorkbench.getEditorRegistry.setDefaultEditor("*.scala", SdtConstants.EditorId)
       diagnostic.StartupDiagnostics.run
@@ -130,10 +118,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
       if iProject.isOpen
       scalaProject <- asScalaProject(iProject)
     } scalaProject.projectSpecificStorage.save()
-    buildManagerFactoryTracker.close()
     super.stop(context)
     ScalaPlugin.plugin = null
-    buildManagerFactoryTracker = null
   }
 
   /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */

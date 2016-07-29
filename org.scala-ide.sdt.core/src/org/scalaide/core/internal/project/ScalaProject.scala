@@ -42,7 +42,7 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.builder.BuildManagerFactoryMapping
 import org.scalaide.core.internal.builder.EclipseBuildManager
 import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
@@ -117,7 +117,7 @@ object ScalaProject {
       project != null && project.isOpen && project.hasNature(SdtConstants.NatureId)
     } catch {
       case _:
-      CoreException => false
+        CoreException => false
     }
 
   private def dependenciesForProject(project: IProject): Set[IPath] = {
@@ -147,7 +147,7 @@ object ScalaProject {
   }
 }
 
-class ScalaProject private(val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
+class ScalaProject private (val underlying: IProject) extends ClasspathManagement with InstallationManagement with Publisher[IScalaProjectEvent] with HasLogger with IScalaProject {
 
   private var buildManager0: EclipseBuildManager = null
   private var hasBeenBuilt = false
@@ -283,7 +283,7 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
       else {
         val prefixPath = entry.getPath().removeTrailingSeparator();
         for (pattern <- patterns)
-        yield prefixPath.append(pattern).toString().toCharArray();
+          yield prefixPath.append(pattern).toString().toCharArray();
       }
     }
 
@@ -589,7 +589,11 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
         if (!storage.getBoolean(useSbtCompilerProperty))
           new SbtScopesBuildManager(this, settings)
         else
-          ScalaPlugin().buildManager(this)
+          BuildManagerFactoryMapping.mappings.find {
+            _.name == "remoteBuildManagerFactory"
+          }.flatMap {
+            _.withInstance { _.buildManager(this) }
+          }.get
       }
     }
     buildManager0

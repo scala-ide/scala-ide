@@ -6,8 +6,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin
 import org.osgi.framework.BundleContext
 import org.osgi.framework.BundleEvent
 import org.osgi.framework.BundleListener
-import org.scalaide.core.internal.builder.BuildManagerFactory
-import org.scalaide.sbt.core.builder.RemoteBuildManagerFactory
 
 import akka.actor.ActorSystem
 import akka.osgi
@@ -46,8 +44,6 @@ class SbtRemotePlugin extends AbstractUIPlugin {
       }
     }
     context.addBundleListener(listener)
-    import java.util.Hashtable
-    context.registerService(classOf[BuildManagerFactory], new RemoteBuildManagerFactory, new Hashtable[String, String])
   }
 
   override def stop(context: BundleContext): Unit = {
