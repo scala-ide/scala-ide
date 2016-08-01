@@ -586,14 +586,15 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
 
       buildManager0 = {
         val useSbtCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useSbtCompiler.name)
-        if (!storage.getBoolean(useSbtCompilerProperty))
-          new SbtScopesBuildManager(this)
+        val buildManagerFactoryName = if (storage.getBoolean(useSbtCompilerProperty))
+          "remoteBuildManagerFactory"
         else
-          BuildManagerFactoryMapping.mappings.find {
-            _.name == "remoteBuildManagerFactory"
-          }.flatMap {
-            _.withInstance { _.buildManager(this) }
-          }.get
+          "sbtScopesBuildMangerFactory"
+        BuildManagerFactoryMapping.mappings.find {
+          _.name == buildManagerFactoryName
+        }.flatMap {
+          _.withInstance { _.buildManager(this) }
+        }.get
       }
     }
     buildManager0

@@ -1905,4 +1905,11 @@
           class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
     </participant>
  </extension>
+ <extension
+       point="org.scala-ide.sdt.core.buildManagerFactory">
+    <buildManagerFactory
+          class="org.scalaide.core.internal.project.SbtScopesBuildManagerFactory"
+          name="sbtScopesBuildMangerFactory">
+    </buildManagerFactory>
+ </extension>
 </plugin>
