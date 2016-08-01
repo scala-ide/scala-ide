@@ -582,7 +582,6 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
       // when using the build manager.
       settings.sourcepath.value = ""
 
-      logger.info("BM: SBT enhanced Build Manager for " + IScalaPlugin().scalaVersion + " Scala library")
 
       buildManager0 = {
         val useSbtCompilerProperty = SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.useSbtCompiler.name)
@@ -590,6 +589,11 @@ class ScalaProject private (val underlying: IProject) extends ClasspathManagemen
           "remoteBuildManagerFactory"
         else
           "sbtScopesBuildMangerFactory"
+        val buildManagerType = if (buildManagerFactoryName == "remoteBuildManagerFactory")
+          "SBT remote"
+        else
+          "SBT scopes"
+        logger.info(s"Build Manager for ${IScalaPlugin().scalaVersion} Scala library of type $buildManagerType")
         BuildManagerFactoryMapping.mappings.find {
           _.name == buildManagerFactoryName
         }.flatMap {

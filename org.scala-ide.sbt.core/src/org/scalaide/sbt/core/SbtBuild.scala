@@ -35,7 +35,6 @@ import sbt.protocol.LogSuccess
 import sbt.protocol.LogTrace
 import sbt.protocol.MinimalBuildStructure
 import sbt.protocol.ProjectReference
-import xsbti.Severity
 
 object SbtBuild extends AnyRef with HasLogger {
 
@@ -198,7 +197,7 @@ class SbtBuild private (val buildRoot: File, sbtClient: RichSbtClient, console: 
         buildReporter.createMarker(Option(failure.position), failure.message, failure.severity)
         Continue
       case ExecutionFailure(id) if id == compileId =>
-        buildReporter.createMarker(None, s"compile execution $compileId failed", Severity.Error)
+        logger.info(s"compile execution $compileId failed")
         Failure
       case ExecutionSuccess(id) if id == compileId =>
         logger.debug(s"compile execution $compileId succeeded")

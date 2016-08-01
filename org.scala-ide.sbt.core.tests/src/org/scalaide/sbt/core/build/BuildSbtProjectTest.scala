@@ -69,11 +69,11 @@ class BuildSbtProjectTest extends IProjectOperations with IProjectHelpers with H
     project.storage.setValue(useSbtCompilerProperty, true)
 
     whenFileInScopeIsDamaged(project, "/src/main/scala", "acme", "Main.scala", changedToNonCompiling) {
-      val expectedTwoErrors =
+      val expectedOneError =
         markersMessages(findProjectProblemMarkers(project, errorTypes: _*).toList)
 
-      logger.info(expectedTwoErrors.mkString(", "))
-      Assert.assertTrue("See what's wrong: " + expectedTwoErrors.mkString(", "), 2 == expectedTwoErrors.length)
+      logger.info(expectedOneError.mkString(", "))
+      Assert.assertTrue("See what's wrong: " + expectedOneError.mkString(", "), 1 == expectedOneError.length)
     }
   }
 
