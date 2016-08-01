@@ -405,7 +405,7 @@ class ProjectsImportPage(currentSelection: IStructuredSelection) extends WizardD
     else {
       monitor.subTask(NLS.bind(DataTransferMessages.WizardProjectsImportPage_CheckingMessage, directory.getPath()))
 
-      val projectRecords = SbtBuild.buildFor(directory)(SbtRemotePlugin.system) flatMap { build ⇒
+      val projectRecords = SbtBuild.buildFor(directory)(SbtRemotePlugin().system) flatMap { build ⇒
         build.projects().map { _.map(new ProjectRecord(build, _)) }
       }
       Await.result(projectRecords, Duration.Inf)

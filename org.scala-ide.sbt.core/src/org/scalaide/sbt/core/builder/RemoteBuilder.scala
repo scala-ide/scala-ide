@@ -31,7 +31,7 @@ class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shu
   private lazy val buildReporter = new RemoteBuildReporter(project)
 
   override def build(ignoreAddedOrUpdated: Set[IFile], ignoreRemoved: Set[IFile], monitor: SubMonitor): Unit = {
-    implicit val system = SbtRemotePlugin.system
+    implicit val system = SbtRemotePlugin().system
     import system.dispatcher
 
     project.underlying.deleteMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
@@ -54,7 +54,7 @@ class RemoteBuilder(project: IScalaProject) extends EclipseBuildManager with Shu
   def clean(implicit monitor: IProgressMonitor): Unit = {}
 
   def shutdown(): Unit = {
-    implicit val system = SbtRemotePlugin.system
+    implicit val system = SbtRemotePlugin().system
     import system.dispatcher
     Await.result(SbtBuild.shutdown(), Duration.Inf)
   }
