@@ -6,7 +6,6 @@ import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
 
 import scala.collection.mutable
-import scala.tools.nsc.Settings
 
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
@@ -46,7 +45,7 @@ import xsbti.compile.CompileProgress
  *
  *  It uses the configured ScalaInstallation, meaning it can build with different versions of Scala.
  */
-class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, analysisCache: Option[IFile] = None,
+class EclipseSbtBuildManager(val project: IScalaProject, analysisCache: Option[IFile] = None,
   addToClasspath: Seq[IPath] = Seq.empty, srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty)
     extends org.scalaide.core.internal.builder.EclipseSbtBuildManager with HasLogger {
 
