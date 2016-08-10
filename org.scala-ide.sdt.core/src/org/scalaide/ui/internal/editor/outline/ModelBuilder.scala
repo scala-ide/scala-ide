@@ -89,7 +89,7 @@ object ModelBuilder extends HasLogger {
 
               case _ => sb.append(showName(name, t))
             }
-          case _ => logger.error("renderATT. Unknown Tree type " + t.getClass)
+          case _ =>
         }
       }
 
@@ -116,7 +116,7 @@ object ModelBuilder extends HasLogger {
 
           case This(qual: TypeName) =>
 
-          case _ => logger.error("renderType. Unknown Tree type " + tt.getClass)
+          case _ =>
         }
       }
 
@@ -167,7 +167,7 @@ object ModelBuilder extends HasLogger {
             renderQualifier(sb, qualifier)
             sb.append(".")
             sb.append(name)
-          case _ => logger.error("Unknown Qualifier tree " + t.getClass)
+          case _ =>
         }
       }
 
