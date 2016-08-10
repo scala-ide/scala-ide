@@ -91,5 +91,12 @@
             extensions="sbt">
       </participant>
    </extension>
+   <extension
+         point="org.scala-ide.sdt.core.buildManagerFactory">
+      <buildManagerFactory
+            class="org.scalaide.sbt.core.builder.RemoteBuildManagerFactory"
+            name="remoteBuildManagerFactory">
+      </buildManagerFactory>
+   </extension>
 
 </plugin>

@@ -7,10 +7,8 @@ Bundle-Version: 4.5.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
-Bundle-Activator: 
- org.scalaide.core.internal.ScalaPlugin
-Require-Bundle: 
- org.eclipse.core.expressions,
+Bundle-Activator: org.scalaide.core.internal.ScalaPlugin
+Require-Bundle: org.eclipse.core.expressions,
  org.eclipse.core.filesystem,
  org.eclipse.core.resources,
  org.eclipse.debug.core,
@@ -54,8 +52,7 @@ Require-Bundle:
  org.eclipse.e4.core.commands,
  org.eclipse.e4.core.contexts,
  org.eclipse.e4.ui.services
-Import-Package: 
- org.eclipse.osgi.service.datalocation,
+Import-Package: org.eclipse.osgi.service.datalocation,
  org.eclipse.core.runtime,
  org.eclipse.core.runtime.content,
  org.eclipse.core.runtime.dynamichelpers;version="[3.4.0,3.5.0)",
@@ -63,6 +60,7 @@ Import-Package:
  org.eclipse.core.runtime.preferences,
  org.eclipse.core.internal.runtime,
  org.osgi.framework,
+ org.osgi.util.tracker,
  com.ibm.icu.text;apply-aspects:=false;org.eclipse.swt.graphics;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.builderoptions;apply-aspects:=false,
@@ -81,8 +79,7 @@ Import-Package:
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.ui.javaeditor.formatter;apply-aspects:=false,
  scala.tools.eclipse.contribution.weaving.jdt.jdi;apply-aspects:=false
-Export-Package: 
- org.scalaide.core,
+Export-Package: org.scalaide.core,
  org.scalaide.core.compiler,
  org.scalaide.core.completion,
  org.scalaide.core.extensions,
@@ -182,7 +179,4 @@ Bundle-ClassPath: .,
  target/lib/miglayout-3.7.4.jar,
  target/lib/log4j-1.2.17.jar,
  target/lib/json-io-4.1.6.jar
-Eclipse-ExtensibleAPI: 
- true
-
 

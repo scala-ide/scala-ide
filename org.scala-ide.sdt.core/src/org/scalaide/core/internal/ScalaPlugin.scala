@@ -2,6 +2,7 @@ package org.scalaide.core.internal
 
 import scala.collection.mutable
 import scala.tools.nsc.settings.ScalaVersion
+
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceChangeEvent
@@ -19,6 +20,7 @@ import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IJavaElementDelta
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
+import org.eclipse.jdt.internal.ui.JavaPlugin
 import org.eclipse.ui.IEditorInput
 import org.eclipse.ui.PlatformUI
 import org.osgi.framework.BundleContext
@@ -31,6 +33,7 @@ import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.project._
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
+import org.scalaide.core.internal.statistics.Statistics
 import org.scalaide.logging.HasLogger
 import org.scalaide.logging.PluginLogConfigurator
 import org.scalaide.ui.internal.diagnostic
@@ -38,11 +41,9 @@ import org.scalaide.ui.internal.editor.ScalaDocumentProvider
 import org.scalaide.ui.internal.migration.RegistryExtender
 import org.scalaide.ui.internal.templates.ScalaTemplateManager
 import org.scalaide.util.Utils.WithAsInstanceOfOpt
-import org.scalaide.core.internal.statistics.Statistics
 import org.scalaide.util.eclipse.OSGiUtils
 import org.scalaide.util.internal.CompilerUtils._
 import org.scalaide.util.internal.FixedSizeCache
-import org.eclipse.jdt.internal.ui.JavaPlugin
 
 object ScalaPlugin {
 
@@ -220,9 +221,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
   }
 
   override def elementChanged(event: ElementChangedEvent): Unit = {
-    import scala.collection.mutable.ListBuffer
     import IJavaElement._
     import IJavaElementDelta._
+    import scala.collection.mutable.ListBuffer
 
     // check if the changes are linked with the build path
     val modelDelta = event.getDelta()

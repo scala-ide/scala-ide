@@ -1,10 +1,11 @@
 package org.scalaide.sbt.core
 
-import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Suite
+import org.scalaide.sbt.core.build.BuildSbtProjectTest
 
-class TestSuite {
-
-  @Test
-  def dummy() = ()
-
-}
+@RunWith(classOf[Suite])
+@Suite.SuiteClasses(
+  Array(classOf[BuildSbtProjectTest])
+)
+class TestSuite

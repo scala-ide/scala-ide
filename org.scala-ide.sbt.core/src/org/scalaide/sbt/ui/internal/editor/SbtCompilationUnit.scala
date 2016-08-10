@@ -132,7 +132,7 @@ case class SbtCompilationUnit(
 
   private lazy val pc = {
     logger.debug(s"About to create presentation compiler for sbt project `$scalaProject`.")
-    val build = Await.result(SbtBuild.buildFor(scalaProject.underlying.getLocation.toFile)(SbtRemotePlugin.system), Duration.Inf)
+    val build = Await.result(SbtBuild.buildFor(scalaProject.underlying.getLocation.toFile)(SbtRemotePlugin().system), Duration.Inf)
     val c = new SbtPresentationCompiler(scalaProject, build)
     logger.debug(s"Presentation compiler for sbt project `$scalaProject` successfully created.")
     c

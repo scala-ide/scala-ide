@@ -43,11 +43,6 @@
       <version>${akka.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-osgi_${scala.minor.version}</artifactId>
-      <version>${akka.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <version>${reactive.stream.version}</version>
@@ -103,15 +98,6 @@
                 <artifactItem>
                   <groupId>com.typesafe.akka</groupId>
                   <artifactId>akka-actor_${scala.minor.version}</artifactId>
-                  <classifier>sources</classifier>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-osgi_${scala.minor.version}</artifactId>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>com.typesafe.akka</groupId>
-                  <artifactId>akka-osgi_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
