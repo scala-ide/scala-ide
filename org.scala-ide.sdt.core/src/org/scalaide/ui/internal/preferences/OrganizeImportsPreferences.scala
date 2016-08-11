@@ -74,6 +74,12 @@ class OrganizeImportsPreferencesPage extends FieldEditors {
       }
     }
 
+    fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { parent =>
+      new BooleanFieldEditor(organizeImportsKey, "Organize imports in packages, classes, objects, traits and methods (new)", parent) {
+        allEnableDisableControls += getChangeControl(parent)
+      }
+    }
+
     fieldEditors += addNewFieldEditorWrappedInComposite(parent = control) { (parent =>
       new ListEditor(wildcardsKey, "Always use wilcard imports when importing from these packages and objects:", parent) {
 
@@ -129,6 +135,7 @@ object OrganizeImportsPreferences extends Enumeration {
   val wildcardsKey      = "organizeimports.wildcards"
   val expandCollapseKey = "organizeimports.expandcollapse"
   val organizeLocalImportsKey = "organizeImports.local"
+  val organizeImportsKey = "organizeImports.organizeimports"
 
   val omitScalaPackage = "organizeimports.scalapackage"
 
@@ -152,6 +159,10 @@ object OrganizeImportsPreferences extends Enumeration {
     getPreferenceStore(project).getBoolean(organizeLocalImportsKey)
   }
 
+  def shouldOrganizeImports(project: IProject) = {
+    getPreferenceStore(project).getBoolean(organizeImportsKey)
+  }
+
   def getWildcardImportsForProject(project: IProject) = {
     getPreferenceStore(project).getString(wildcardsKey).split("\\$")
   }
@@ -173,6 +184,7 @@ class OrganizeImportsPreferencesInitializer extends AbstractPreferenceInitialize
     val node = DefaultScope.INSTANCE.getNode(SdtConstants.PluginId)
     node.put(OrganizeImportsPreferences.omitScalaPackage, "false")
     node.put(OrganizeImportsPreferences.organizeLocalImportsKey, "true")
+    node.put(OrganizeImportsPreferences.organizeImportsKey, "true")
     node.put(OrganizeImportsPreferences.groupsKey, "java$scala$org$com")
     node.put(OrganizeImportsPreferences.wildcardsKey, "scalaz$scalaz.Scalaz")
     node.put(OrganizeImportsPreferences.expandCollapseKey, OrganizeImportsPreferences.ExpandImports.toString)
