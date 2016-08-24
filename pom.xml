@@ -34,6 +34,8 @@
     <diffutils.version>1.2.1</diffutils.version>
     <zinc.version>1.0.0-M5</zinc.version>
     <sbt-util.version>0.1.0-M13</sbt-util.version>
+    <sbt-io.version>1.0.0-M6</sbt-io.version>
+    <sbinary.version>0.4.3</sbinary.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -395,6 +397,8 @@
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
                           <filter token="ZINC_VERSION" value="${zinc.version}"/>
                           <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>
+                          <filter token="SBT_IO_VERSION" value="${sbt-io.version}"/>
+                          <filter token="SBINARY_VERSION" value="${sbinary.version}"/>
                         </filterset>
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
