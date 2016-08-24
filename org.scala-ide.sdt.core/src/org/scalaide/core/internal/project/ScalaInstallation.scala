@@ -213,9 +213,9 @@ object BundledScalaInstallation {
  *
  *  TODO: We SHOULD reuse the current class loader if this installation is the platform installation.
  *
- *  @note We don't reuse it because of weird interactions between the OSGi classloader and the compiler-interface.jar,
+ *  @note We don't reuse it because of weird interactions between the OSGi classloader and the compiler-bridge.jar,
  *        resulting in AbstractMethodErrors. The `Reporter` interface is defined in scala-reflect, but implemented in
- *        compiler-interface.jar (which is NOT a bundle), and `info0` is not seen.
+ *        compiler-bridge.jar (which is NOT a bundle), and `info0` is not seen.
  *
  *        See ticket #1002175
  */

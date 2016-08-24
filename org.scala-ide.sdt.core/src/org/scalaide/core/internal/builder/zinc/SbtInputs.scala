@@ -138,14 +138,14 @@ class SbtInputs(installation: IScalaInstallation,
    */
   def compilers: Either[String, Compilers] = {
     val scalaInstance = scalaInstanceForInstallation(installation)
-    val store = ScalaPlugin().compilerInterfaceStore
+    val store = ScalaPlugin().compilerBridgeStore
 
-    store.compilerInterfaceFor(installation)(javaMonitor.newChild(10)).right.map {
-      compilerInterface =>
-        // prevent Sbt from adding things to the (boot)classpath
+    store.compilerBridgeFor(installation)(javaMonitor.newChild(10)).right.map {
+      compilerBridge =>
+        // prevent zinc from adding things to the (boot)classpath
         val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
-          new AnalyzingCompiler(scalaInstance, CompilerInterfaceProvider.constant(compilerInterface.toFile), cpOptions),
+          new AnalyzingCompiler(scalaInstance, CompilerInterfaceProvider.constant(compilerBridge.toFile), cpOptions),
           new JavaEclipseCompiler(project.underlying, javaMonitor)
         )
     }

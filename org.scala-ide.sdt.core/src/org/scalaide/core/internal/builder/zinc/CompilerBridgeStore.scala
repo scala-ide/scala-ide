@@ -18,39 +18,39 @@ import sbt.internal.inc.RawCompiler
 import sbt.internal.inc.ClasspathOptionsUtil
 import sbt.internal.inc.AnalyzingCompiler
 
-/** This class manages a store of compiler-interface jars (as consumed by Sbt). Each specific
- *  version of Scala needs a compiler-interface jar compiled against that version.
+/** This class manages a store of compiler-bridge jars (as consumed by zinc). Each specific
+ *  version of Scala needs a compiler-bridge jar compiled against that version.
  *
- *  `base` is used to store compiler interfaces on disk. The cache is based on the
- *  Scala version for a given installation. The first time a client requests a compiler-interface,
+ *  `base` is used to store compiler-bridges on disk. The cache is based on the
+ *  Scala version for a given installation. The first time a client requests a compiler-bridge,
  *  the store will instantiate a raw compiler and compile it from the source. This may take some time,
  *  in the order of seconds.
  *
  *  This class is thread safe.
  */
-class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
-  private val compilerInterfaceName = "compiler-interface.jar"
-  private val compilerInterfacesDir = base / "compiler-interfaces"
+class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
+  private val compilerBridgeName = "compiler-bridge.jar"
+  private val compilerBridgesDir = base / "compiler-bridges"
 
   private val lockObject = new Object
 
   // raw stats
   private var hits, misses = 0
 
-  private lazy val compilerInterfaceSrc =
-    OSGiUtils.getBundlePath(plugin.sbtCompilerInterfaceBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.SbtCompilerInterfacePluginId, _))
+  private lazy val compilerBridgeSrc =
+    OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _))
 
-  private lazy val sbtFullJar = OSGiUtils.getBundlePath(plugin.sbtCompilerBundle)
+  private lazy val zincFullJar = OSGiUtils.getBundlePath(plugin.zincCompilerBundle)
 
-  /** Return the location of a compiler-interface.jar
+  /** Return the location of a compiler-bridge.jar
    *
-   *  This method will attempt to reuse interfaces for a given Scala version. It
-   *  may be long running the first time for a given version (it needs to compile the interface)
+   *  This method will attempt to reuse bridges for a given Scala version. It
+   *  may be long running the first time for a given version (it needs to compile the bridge)
    *
    *  @retur An instance of Right(path) if successful, an error message inside `Left` otherwise.
    */
-  def compilerInterfaceFor(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
-    val targetJar = interfaceJar(installation)
+  def compilerBridgeFor(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
+    val targetJar = bridgeJar(installation)
 
     lockObject synchronized {
       if (targetJar.toFile.exists()) {
@@ -63,13 +63,13 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
     }
   }
 
-  /** Delete all cached compiler interfaces and reset the stats.
+  /** Delete all cached compiler bridges and reset the stats.
    */
   def purgeCache(): Unit = {
     lockObject synchronized {
       hits = 0
       misses = 0
-      FileUtils.deleteDir(compilerInterfacesDir.toFile)
+      FileUtils.deleteDir(compilerBridgesDir.toFile)
     }
   }
 
@@ -77,43 +77,43 @@ class CompilerInterfaceStore(base: IPath, plugin: ScalaPlugin) extends HasLogger
   def getStats: (Int, Int) = (hits, misses)
 
   private def cacheDir(installation: IScalaInstallation): IPath =
-    compilerInterfacesDir / installation.version.unparse
+    compilerBridgesDir / installation.version.unparse
 
-  private def interfaceJar(installation: IScalaInstallation): IPath = {
-    cacheDir(installation) / compilerInterfaceName
+  private def bridgeJar(installation: IScalaInstallation): IPath = {
+    cacheDir(installation) / compilerBridgeName
   }
 
-  /** Build the compiler-interface for the given Scala installation
+  /** Build the compiler-bridge for the given Scala installation
    *
-   *  @return a right-biased `Either`, carrying either the path to the resulting compiler-interface jar, or
+   *  @return a right-biased `Either`, carrying either the path to the resulting compiler-bridge jar, or
    *          a String with the error message.
    */
   private def buildInterface(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
-    val name = s"Compiling compiler-interface for ${installation.version.unparse}"
+    val name = s"Compiling compiler-bridge for ${installation.version.unparse}"
     val monitor = SubMonitor.convert(pm, name, 2)
     monitor.subTask(name)
 
-    (compilerInterfaceSrc, sbtFullJar) match {
-      case (Some(compilerInterface), Some(sbtInterface)) =>
+    (compilerBridgeSrc, zincFullJar) match {
+      case (Some(compilerBridge), Some(zincInterface)) =>
         val log = new SbtLogger
         cacheDir(installation).toFile.mkdirs()
-        val targetJar = interfaceJar(installation)
+        val targetJar = bridgeJar(installation)
         monitor.worked(1)
 
         val label = installation.version.unparse
         val raw = new RawCompiler(scalaInstanceForInstallation(installation), ClasspathOptionsUtil.auto, log)
-        AnalyzingCompiler.compileSources(List(compilerInterface.toFile), targetJar.toFile, List(sbtInterface.toFile), label, raw, log)
+        AnalyzingCompiler.compileSources(List(compilerBridge.toFile), targetJar.toFile, List(zincInterface.toFile), label, raw, log)
 
         monitor.worked(1)
 
         log.errorMessages match {
           case Seq() => Right(targetJar)
-          case errs  => Left(s"Error building compiler-interface.jar for ${installation.version.unparse}: ${errs.mkString("\n")}")
+          case errs  => Left(s"Error building compiler-bridge.jar for ${installation.version.unparse}: ${errs.mkString("\n")}")
         }
 
       case _ =>
         monitor.worked(2)
-        Left("Could not find compiler-interface/sbt bundle")
+        Left("Could not find compiler-bridge bundle")
     }
   }
 
