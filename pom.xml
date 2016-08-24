@@ -108,7 +108,6 @@
         <scala.short.version>210</scala.short.version>
         <scala.minor.version>2.10</scala.minor.version>
         <version.suffix>2_10</version.suffix>
-
       </properties>
     </profile>
 
@@ -119,7 +118,6 @@
         <scala.short.version>211</scala.short.version>
         <scala.minor.version>2.11</scala.minor.version>
         <version.suffix>2_11</version.suffix>
-
       </properties>
     </profile>
 
@@ -130,9 +128,6 @@
         <scala.short.version>212</scala.short.version>
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
-        <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
-        <sbt.version>0.13.8-SNAPSHOT</sbt.version>
-
       </properties>
     </profile>
 
@@ -453,22 +448,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- toolchain, sbt -->
-<!--      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>sbt-interface</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>compiler-interface-precompiled</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>incremental-compiler</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency> -->
       <!-- sdt.core dependencies -->
       <dependency>
         <groupId>com.miglayout</groupId>
