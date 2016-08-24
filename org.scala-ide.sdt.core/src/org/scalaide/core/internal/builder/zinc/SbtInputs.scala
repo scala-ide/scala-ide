@@ -70,7 +70,8 @@ class SbtInputs(installation: IScalaInstallation,
 //      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
       withApiDumpDirectory(Maybe.nothing()).
       withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
-      withNameHashing(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.nameHashing.name)))
+      // Turning off name hashing is not supported in class-based dependency tracking
+      withNameHashing(true)
   }
 
   def outputFolders = srcOutputs.map {
