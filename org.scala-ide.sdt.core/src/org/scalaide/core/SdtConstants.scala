@@ -15,7 +15,7 @@ object SdtConstants {
   final val ScalaRefactoringPluginId = "org.scala-refactoring.library"
   final val LibraryPluginId = "org.scala-lang.scala-library"
   final val SbtPluginId = "org.scala-ide.sbt.full.library"
-  final val SbtCompilerInterfacePluginId = "org.scala-ide.sbt.compiler.interface"
+  final val SbtCompilerInterfacePluginId = "org.scala-ide.sbt.compiler.bridge"
   final val EditorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   final val ScalaPerspectiveId = "org.scala-ide.sdt.core.perspective"
 

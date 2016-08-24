@@ -28,12 +28,12 @@
     </dependency>
     <dependency>
       <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler.interface</artifactId>
+      <artifactId>org.scala-ide.sbt.compiler.bridge</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
+      <artifactId>org.scala-ide.sbt.compiler.bridge.source</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
