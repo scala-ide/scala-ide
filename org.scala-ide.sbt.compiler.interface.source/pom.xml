@@ -13,9 +13,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>compiler-interface-precompiled</artifactId>
-      <version>${sbt.ide.version}</version>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-bridge_${scala.minor.version}</artifactId>
+      <version>${zinc.version}</version>
       <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>

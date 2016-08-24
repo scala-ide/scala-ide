@@ -13,16 +13,30 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>sbt-interface</artifactId>
-      <version>${sbt.ide.version}</version>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>io_${scala.minor.version}</artifactId>
+      <version>1.0.0-M6</version>
       <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>incremental-compiler</artifactId>
-      <version>${sbt.ide.version}</version>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>util-logging_${scala.minor.version}</artifactId>
+      <version>${sbt-util.version}</version>
+      <classifier>sources</classifier>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>util-interface</artifactId>
+      <version>${sbt-util.version}</version>
+      <classifier>sources</classifier>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-interface</artifactId>
+      <version>${zinc.version}</version>
       <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>
