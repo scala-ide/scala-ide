@@ -30,12 +30,13 @@
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
     <log4j.version>1.2.17</log4j.version>
+    <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <diffutils.version>1.2.1</diffutils.version>
     <zinc.version>1.0.0-M5</zinc.version>
     <sbt-util.version>0.1.0-M13</sbt-util.version>
     <sbt-io.version>1.0.0-M6</sbt-io.version>
     <sbinary.version>0.4.3</sbinary.version>
+    <scala-refactoring.version>0.11.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -84,8 +85,6 @@
     <version.suffix>Select a Scala profile</version.suffix>
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <json-io.version>4.1.6</json-io.version>
-    <scala-refactoring.version>0.11.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
@@ -394,6 +393,9 @@
                         tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
                         overwrite="true">
                         <filterset>
+                          <filter token="MIGLAYOUT_VERSION" value="${miglayout.version}"/>
+                          <filter token="LOG4J_VERSION" value="${log4j.version}"/>
+                          <filter token="JSON_IO_VERSION" value="${json-io.version}"/>
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
                           <filter token="ZINC_VERSION" value="${zinc.version}"/>
                           <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>

@@ -174,9 +174,9 @@ Export-Package: org.scalaide.core,
  org.scalaide.util.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/miglayout-3.7.4.jar,
- target/lib/log4j-1.2.17.jar,
- target/lib/json-io-4.1.6.jar,
+ target/lib/miglayout-@MIGLAYOUT_VERSION@.jar,
+ target/lib/log4j-@LOG4J_VERSION@.jar,
+ target/lib/json-io-@JSON_IO_VERSION@.jar,
  target/lib/zinc_2.11-@ZINC_VERSION@.jar,
  target/lib/zinc-core_2.11-@ZINC_VERSION@.jar,
  target/lib/zinc-classpath_2.11-@ZINC_VERSION@.jar,
