@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>org.scala-ide.zinc</artifactId>
-  <description>local sbt p2 repo for Scala IDE</description>
+  <description>local zinc p2 repo for Scala IDE</description>
   <packaging>pom</packaging>
   <version>4.5.0-SNAPSHOT</version>
 

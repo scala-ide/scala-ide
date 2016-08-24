@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="org.scala-ide.zinc.source.feature"
-      label="sbt ${sbt.version} sources"
+      label="zinc ${zinc.version} sources"
       version="4.5.0.qualifier"
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Sources for sbt ${sbt.version} incremental compiler jars
+     Sources for zinc ${zinc.version} incremental compiler jars
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">

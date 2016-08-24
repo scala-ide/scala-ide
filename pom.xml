@@ -82,7 +82,6 @@
     <version.suffix>Select a Scala profile</version.suffix>
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <sbt.version>0.13.8</sbt.version>
     <json-io.version>4.1.6</json-io.version>
     <scala-refactoring.version>0.11.0-SNAPSHOT</scala-refactoring.version>
 
@@ -223,8 +222,8 @@
     <profile>
       <id>set-version-specific-files</id>
       <properties>
-        <sbt.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.feature</sbt.feature.dir>
-        <sbt.source.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.source.feature</sbt.source.feature.dir>
+        <zinc.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.feature</zinc.feature.dir>
+        <zinc.source.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.source.feature</zinc.source.feature.dir>
         <scala210.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.feature</scala210.feature.dir>
         <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
         <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>
@@ -243,16 +242,16 @@
             <version>2.6</version>
             <executions>
               <execution>
-                <id>copy-resources-sbt-feature</id>
+                <id>copy-resources-zinc-feature</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <outputDirectory>${sbt.feature.dir}</outputDirectory>
+                  <outputDirectory>${zinc.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${sbt.feature.dir}/resources</directory>
+                      <directory>${zinc.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -260,16 +259,16 @@
                 </configuration>
               </execution>
               <execution>
-                <id>copy-resources-sbt-source-feature</id>
+                <id>copy-resources-zinc-source-feature</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <outputDirectory>${sbt.source.feature.dir}</outputDirectory>
+                  <outputDirectory>${zinc.source.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${sbt.source.feature.dir}/resources</directory>
+                      <directory>${zinc.source.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>

@@ -33,7 +33,6 @@
     <module>../org.scala-ide.sdt.update-site</module>
   </modules>
 
-
   <repositories>
     <repository>
       <id>eclipse.${eclipse.codename}</id>
@@ -72,8 +71,8 @@
       <url>${repo.equinox.launcher}</url>
     </repository>
     <repository>
-      <id>sbt</id>
-      <name>sbt</name>
+      <id>zinc</id>
+      <name>local zinc update site</name>
       <layout>p2</layout>
       <url>file:../org.scala-ide.zinc/org.scala-ide.zinc.update-site/target/site</url>
     </repository>
