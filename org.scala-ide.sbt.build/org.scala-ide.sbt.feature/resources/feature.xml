@@ -4,7 +4,7 @@
       label="sbt ${sbt.version}"
       version="4.5.0.qualifier"
       provider-name="scala-ide.org"
-      plugin="org.scala-ide.sbt.full.library">
+      plugin="org.scala-ide.zinc.library">
 
    <description url="http://scala-ide.org">
      sbt ${sbt.version} incremental compiler jars
@@ -47,7 +47,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    </url>
 
    <plugin
-         id="org.scala-ide.sbt.full.library"
+         id="org.scala-ide.zinc.library"
          download-size="0"
          install-size="0"
          version="0.0.0"

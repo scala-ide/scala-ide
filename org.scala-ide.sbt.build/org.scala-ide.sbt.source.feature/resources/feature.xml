@@ -46,7 +46,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    </url>
 
    <plugin
-         id="org.scala-ide.sbt.full.library.source"
+         id="org.scala-ide.zinc.library.source"
          download-size="0"
          install-size="0"
          version="0.0.0"

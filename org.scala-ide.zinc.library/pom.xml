@@ -8,7 +8,7 @@
     <version>4.5.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.full.library</artifactId>
+  <artifactId>org.scala-ide.zinc.library</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
@@ -47,7 +47,7 @@
         <configuration>
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
-            <Bundle-SymbolicName>org.scala-ide.sbt.full.library</Bundle-SymbolicName>
+            <Bundle-SymbolicName>org.scala-ide.zinc.library</Bundle-SymbolicName>
             <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
             <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>

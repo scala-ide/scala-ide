@@ -72,8 +72,8 @@
   </profiles>
 
   <modules>
-    <module>../org.scala-ide.sbt.full.library</module>
-    <module>../org.scala-ide.sbt.full.library.source</module>
+    <module>../org.scala-ide.zinc.library</module>
+    <module>../org.scala-ide.zinc.library.source</module>
     <module>../org.scala-ide.sbt.compiler.bridge</module>
     <module>../org.scala-ide.sbt.compiler.bridge.source</module>
   </modules>

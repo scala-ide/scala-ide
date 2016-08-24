@@ -18,12 +18,12 @@
     <!-- toolchain, Scala library -->
     <dependency>
       <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.full.library</artifactId>
+      <artifactId>org.scala-ide.zinc.library</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-ide</groupId>
-      <artifactId>org.scala-ide.sbt.full.library.source</artifactId>
+      <artifactId>org.scala-ide.zinc.library.source</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

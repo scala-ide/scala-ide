@@ -16,7 +16,7 @@ object SdtConstants {
   final val LibraryPluginId = "org.scala-lang.scala-library"
   @deprecated("Use ZincPluginId instead", "4.5.0")
   final val SbtPluginId = ZincPluginId
-  final val ZincPluginId = "org.scala-ide.sbt.full.library"
+  final val ZincPluginId = "org.scala-ide.zinc.library"
   @deprecated("Use ZincCompilerBridgePluginId instead", "4.5.0")
   final val SbtCompilerInterfacePluginId = ZincCompilerBridgePluginId
   final val ZincCompilerBridgePluginId = "org.scala-ide.sbt.compiler.bridge"
