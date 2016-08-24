@@ -19,7 +19,7 @@ object SdtConstants {
   final val ZincPluginId = "org.scala-ide.zinc.library"
   @deprecated("Use ZincCompilerBridgePluginId instead", "4.5.0")
   final val SbtCompilerInterfacePluginId = ZincCompilerBridgePluginId
-  final val ZincCompilerBridgePluginId = "org.scala-ide.sbt.compiler.bridge"
+  final val ZincCompilerBridgePluginId = "org.scala-ide.zinc.compiler.bridge"
   final val EditorId = "scala.tools.eclipse.ScalaSourceFileEditor"
   final val ScalaPerspectiveId = "org.scala-ide.sdt.core.perspective"
 
