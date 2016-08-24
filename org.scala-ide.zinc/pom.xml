@@ -9,7 +9,7 @@
     <relativePath>../org.scala-ide.p2-toolchain/pom.xml</relativePath>
   </parent>
 
-  <artifactId>org.scala-ide.sbt.build</artifactId>
+  <artifactId>org.scala-ide.zinc</artifactId>
   <description>local sbt p2 repo for Scala IDE</description>
   <packaging>pom</packaging>
   <version>4.5.0-SNAPSHOT</version>
@@ -39,9 +39,9 @@
   </dependencies>
 
   <modules>
-    <module>org.scala-ide.sbt.feature</module>
-    <module>org.scala-ide.sbt.source.feature</module>
-    <module>org.scala-ide.sbt.update-site</module>
+    <module>org.scala-ide.zinc.feature</module>
+    <module>org.scala-ide.zinc.source.feature</module>
+    <module>org.scala-ide.zinc.update-site</module>
   </modules>
 
 </project>

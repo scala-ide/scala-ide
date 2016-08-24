@@ -223,8 +223,8 @@
     <profile>
       <id>set-version-specific-files</id>
       <properties>
-        <sbt.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.feature</sbt.feature.dir>
-        <sbt.source.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.source.feature</sbt.source.feature.dir>
+        <sbt.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.feature</sbt.feature.dir>
+        <sbt.source.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.source.feature</sbt.source.feature.dir>
         <scala210.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.feature</scala210.feature.dir>
         <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
         <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>

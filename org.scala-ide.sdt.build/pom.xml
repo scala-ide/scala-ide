@@ -75,7 +75,7 @@
       <id>sbt</id>
       <name>sbt</name>
       <layout>p2</layout>
-      <url>file:../org.scala-ide.sbt.build/org.scala-ide.sbt.update-site/target/site</url>
+      <url>file:../org.scala-ide.zinc/org.scala-ide.zinc.update-site/target/site</url>
     </repository>
     <repository>
       <id>scala${scala.short.version}</id>

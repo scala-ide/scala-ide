@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.sbt.feature"
+      id="org.scala-ide.zinc.feature"
       label="sbt ${sbt.version}"
       version="4.5.0.qualifier"
       provider-name="scala-ide.org"
