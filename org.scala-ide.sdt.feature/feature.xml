@@ -62,7 +62,7 @@ SUCH DAMAGE.
          version="0.0.0"/>
 
    <includes
-         id="org.scala-ide.sbt.feature"
+         id="org.scala-ide.zinc.feature"
          version="0.0.0"/>
 
    <includes

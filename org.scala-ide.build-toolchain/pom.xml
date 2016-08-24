@@ -20,9 +20,8 @@
   </scm>
 
   <properties>
-    <sbt.ide.version>${zinc.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
-    <sbt.osgi.version>${zinc.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}-${buildNumber}</sbt.osgi.version>
-    <sbt.osgi.light.version>${zinc.version}.${version.tag}-${maven.build.timestamp}-${buildNumber}</sbt.osgi.light.version>
+    <zinc.osgi.version>${zinc.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}-${buildNumber}</zinc.osgi.version>
+    <zinc.osgi.light.version>${zinc.version}.${version.tag}-${maven.build.timestamp}-${buildNumber}</zinc.osgi.light.version>
     <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
   </properties>
 

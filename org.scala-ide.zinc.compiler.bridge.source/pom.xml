@@ -30,11 +30,11 @@
         <configuration>
           <outputDirectory>${project.build.directory}/src</outputDirectory>
           <instructions>
-            <Bundle-Name>Sbt Compiler Interface Sources for Eclipse</Bundle-Name>
+            <Bundle-Name>Zinc Compiler Bridge Sources for Eclipse</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${sbt.osgi.light.version}</Bundle-Version>
+            <Bundle-Version>${zinc.osgi.light.version}</Bundle-Version>
             <!-- This defines the bundle we provide the source for -->
-            <Eclipse-SourceBundle>org.scala-ide.zinc.compiler.bridge;version="${sbt.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
+            <Eclipse-SourceBundle>org.scala-ide.zinc.compiler.bridge;version="${zinc.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
             <!-- Extract all sources into this bundle -->
             <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>

@@ -48,10 +48,10 @@
           <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
             <Bundle-SymbolicName>org.scala-ide.zinc.library</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Library for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <Bundle-Name>Zinc Library for Eclipse</Bundle-Name>
+            <Bundle-Version>${zinc.osgi.version}</Bundle-Version>
             <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
-            <_exportcontents>sbt.*;version=${sbt.osgi.version},xsbt.*;version=${sbt.osgi.version},xsbti.*;version=${sbt.osgi.version}</_exportcontents>
+            <_exportcontents>sbt.*;version=${zinc.osgi.version},xsbt.*;version=${zinc.osgi.version},xsbti.*;version=${zinc.osgi.version}</_exportcontents>
             <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>
