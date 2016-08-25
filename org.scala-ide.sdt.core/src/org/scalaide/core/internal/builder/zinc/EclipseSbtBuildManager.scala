@@ -143,7 +143,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       try
         Some(aggressiveCompile(inputs, sbtLogger))
       catch {
-        case _: CompileFailed | CompilerInterfaceFailed => None
+        case _: CompileFailed | CompilerBridgeFailed => None
       }
     analysis foreach setCached
     createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)), progress.actualCompiledFiles)
@@ -212,11 +212,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
-        throw CompilerInterfaceFailed
+        throw CompilerBridgeFailed
     }
   }
 
-  private object CompilerInterfaceFailed extends RuntimeException
+  private object CompilerBridgeFailed extends RuntimeException
 
   private class SbtProgress extends CompileProgress {
     private var lastWorked = 0
