@@ -63,6 +63,7 @@ import org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAt
 import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
+import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -127,6 +128,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
     classOf[JavaDependsOnScalaBothAreOkTest],
     classOf[ScopeCompileConfigurationTest],
     classOf[OutlineModelTest],
-    classOf[NonScalaSourceErrorMarkersTest]
+    classOf[NonScalaSourceErrorMarkersTest],
+    classOf[CompilerBridgeStoreTest]
 ))
 class TestsSuite
