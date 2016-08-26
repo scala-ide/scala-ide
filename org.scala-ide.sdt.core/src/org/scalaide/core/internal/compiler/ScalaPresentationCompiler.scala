@@ -60,7 +60,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
    */
   private val nameLock = new Object
 
-} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, name)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
@@ -399,7 +399,6 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
       } else name
     val container = sym.owner.enclClass.fullName
 
-
     val relevancCalc = new ProposalRelevanceCalculator
     val relevance = relevancCalc.forScala(this)(prefix, name, sym, viaView, Some(inherited))
 
@@ -467,7 +466,7 @@ object ScalaPresentationCompiler {
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
-  class PresentationReporter extends InteractiveReporter with HasLogger {
+  class PresentationReporter(spcName: String) extends InteractiveReporter with HasLogger {
     var compiler: ScalaPresentationCompiler = null
 
     def nscSeverityToEclipse(severityLevel: Int) =
@@ -525,7 +524,7 @@ object ScalaPresentationCompiler {
     }
 
     override def echo(msg: String): Unit =
-      logger.debug(s"[${compiler.name}]: $msg")
+      logger.debug(s"[$spcName]: $msg")
 
   }
 }
