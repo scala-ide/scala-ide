@@ -45,13 +45,11 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
         forceReconciling()
       }
     }
-
-    override def partDeactivated(part: IWorkbenchPart): Unit = {}
   }
 
   /** Listen for presentation-compiler restart events. */
   object compilerListener extends Subscriber[PresentationCompilerActivity, PresentationCompilerProxy] {
-    def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
+    override def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
       case Restart =>
         if (pub == compilerProxy) {
           logger.debug(s"Reconciling ${editor.getTitle} due to restart")
@@ -77,8 +75,6 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
         forceReconciling()
       }
     }
-
-    override def shellDeactivated(event: ShellEvent): Unit = {}
   }
 
   override def install(textViewer: ITextViewer): Unit = {

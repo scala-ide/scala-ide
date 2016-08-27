@@ -62,7 +62,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
           val removed0 = new HashSet[IFile]
 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-            def visit(delta: IResourceDelta) = {
+            override def visit(delta: IResourceDelta) = {
               delta.getResource match {
                 case file: IFile if FileUtils.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
@@ -86,7 +86,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
             if (project.directDependencies.exists(hasChanges)) {
               // reset presentation compilers if a dependency has been rebuilt
-              logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
+              logger.debug(s"Restart presentation compiler for ${project.underlying.getName} due to dependent project change.")
               project.presentationCompiler.askRestart()
 
               // in theory need to be able to identify the exact dependencies
@@ -111,10 +111,10 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     val depends = project.transitiveDependencies
 
-    /** The Java builder has to be run for copying resources (non-source files) to the output directory.
+    /* The Java builder has to be run for copying resources (non-source files) to the output directory.
      *
-     *  We need to run it when no Java sources have been modified
-     *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
+     * We need to run it when no Java sources have been modified
+     * (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {
       (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(SdtConstants.JavaFileExtn)))

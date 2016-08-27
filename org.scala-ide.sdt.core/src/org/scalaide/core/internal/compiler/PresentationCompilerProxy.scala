@@ -17,7 +17,7 @@ import scala.collection.mutable.Publisher
 final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy
     with Publisher[PresentationCompilerActivity] with HasLogger {
 
-  type Pub = PresentationCompilerProxy
+  override type Pub = PresentationCompilerProxy
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -133,7 +133,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     *
     * @note If you need the presentation compiler to be re-initialized (because, for instance, you have changed the project's classpath), use `askRestart`.
     */
-  def shutdown(): Unit = {
+  override def shutdown(): Unit = {
     publish(Shutdown)
     val oldPc = pcLock.synchronized {
       val temp = pc
@@ -187,4 +187,3 @@ case object Start    extends PresentationCompilerActivity
  *  once the PC has really started.
  */
 case object Restart  extends PresentationCompilerActivity
-

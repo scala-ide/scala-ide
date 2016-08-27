@@ -1,10 +1,14 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
+import java.io.IOException
+
 import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable.Publisher
 import scala.tools.nsc.Settings
+import scala.util.control.NonFatal
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -13,51 +17,49 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceProxy
 import org.eclipse.core.resources.IResourceProxyVisitor
 import org.eclipse.core.resources.ProjectScope
+import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.IScalaProjectEvent
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.editor.ScalaEditor
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.scalaide.util.internal.SettingConverterUtil
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.IPersistentPreferenceStore
-import org.eclipse.core.runtime.CoreException
-import org.scalaide.core.SdtConstants
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.SearchableEnvironment
-import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
-import org.scalaide.ui.internal.editor.ScalaEditor
-import java.io.IOException
-import scala.util.control.NonFatal
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -76,14 +78,14 @@ object ScalaProject {
     }
 
     override def partOpened(part: IWorkbenchPart): Unit = {
-      doWithCompilerAndFile(part) { (compiler, ssf) =>
+      doWithCompilerAndFile(part) { (_, ssf) =>
         logger.debug("open " + part.getTitle)
         ssf.forceReload()
       }
     }
 
     override def partClosed(part: IWorkbenchPart): Unit = {
-      doWithCompilerAndFile(part) { (compiler, ssf) =>
+      doWithCompilerAndFile(part) { (_, ssf) =>
         logger.debug("close " + part.getTitle)
         ssf.discard()
       }
@@ -274,13 +276,13 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   def allFilesInSourceDirs(): Set[IFile] = {
-    /** Cache it for the duration of this call */
+    /* Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
 
-    /** Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
-     *  by the JDT.
+    /* Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
+     * by the JDT.
      *
-     *  @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
+     * @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
      */
     def fullPatternChars(entry: IClasspathEntry, patterns: Array[IPath]): Array[Array[Char]] = {
       if (patterns.isEmpty)
@@ -292,9 +294,9 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
       }
     }
 
-    /** Logic is copied from existing code ('isExcludedFromProject'). Code is trying to
-     *  see if the given path is a source or output folder for any source entry in the
-     *  classpath of this project.
+    /* Logic is copied from existing code ('isExcludedFromProject'). Code is trying to
+     * see if the given path is a source or output folder for any source entry in the
+     * classpath of this project.
      */
     def sourceOrBinaryFolder(path: IPath): Boolean = {
       if (path.segmentCount() > 2) return false // is a subfolder of a package
@@ -419,7 +421,7 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   def scalacArguments: Seq[String] = {
-    import ScalaPresentationCompiler.defaultScalaSettings
+    import org.scalaide.core.internal.compiler.ScalaPresentationCompiler.defaultScalaSettings
     val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
 
     val shownArgs = {
