@@ -47,9 +47,11 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
   @volatile private var restartNextTime = false
 
   /** Ask to restart the presentation compiler before processing the next request. */
-  def askRestart(): Unit = {
-    restartNextTime = true
-    publish(Restart)
+  override def askRestart(): Unit = {
+    if (!restartNextTime) {
+      restartNextTime = true
+      publish(Restart)
+    }
   }
 
   override def apply[U](op: IScalaPresentationCompiler => U): Option[U] =
