@@ -93,6 +93,11 @@
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
+      <artifactId>zinc-classfile_${scala.minor.version}</artifactId>
+      <version>${zinc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-sbt</groupId>
       <artifactId>util-interface</artifactId>
       <version>${sbt-util.version}</version>
     </dependency>
@@ -225,6 +230,15 @@
                 <artifactItem>
                   <groupId>org.scala-sbt</groupId>
                   <artifactId>zinc-apiinfo_${scala.minor.version}</artifactId>
+                  <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>zinc-classfile_${scala.minor.version}</artifactId>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-sbt</groupId>
+                  <artifactId>zinc-classfile_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
