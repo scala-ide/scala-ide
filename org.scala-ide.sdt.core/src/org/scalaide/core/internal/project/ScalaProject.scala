@@ -57,6 +57,7 @@ import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
 import org.scalaide.ui.internal.editor.ScalaEditor
 import java.io.IOException
+import scala.util.control.NonFatal
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -463,11 +464,9 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String): Unit = {
-    try {
-      setting.tryToSetFromPropertyValue(propValue)
-      logger.debug("[%s] initializing %s to %s (%s)".format(underlying.getName(), setting.name, setting.value.toString, storage.getString(SettingConverterUtil.convertNameToProperty(setting.name))))
-    } catch {
-      case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + propValue + "'", t)
+    try setting.tryToSetFromPropertyValue(propValue)
+    catch {
+      case NonFatal(t) => eclipseLog.error(s"Unable to set setting '${setting.name}' to '$propValue'", t)
     }
   }
 
@@ -475,10 +474,8 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
     if (underlying.exists())
-      for ((src, dst) <- sourceOutputFolders) {
-        logger.debug("Added output folder: " + src + ": " + dst)
+      for ((src, dst) <- sourceOutputFolders)
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
-      }
 
     for (enc <- encoding)
       settings.encoding.value = enc
@@ -492,7 +489,6 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
 
     // handle additional parameters
     val additional = storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
-    logger.info("setting additional parameters: " + additional)
     settings.processArgumentString(additional)
   }
 
@@ -507,11 +503,6 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
     settings.javaextdirs.value = " "
     settings.classpath.value = (scalaCp.userCp ++ scalaCp.scalaLibrary.toSeq).map(_.toOSString).mkString(pathSeparator)
     scalaCp.scalaLibrary.foreach(scalaLib => settings.bootclasspath.value = scalaLib.toOSString)
-
-    logger.debug("javabootclasspath: " + settings.javabootclasspath.value)
-    logger.debug("javaextdirs: " + settings.javaextdirs.value)
-    logger.debug("scalabootclasspath: " + settings.bootclasspath.value)
-    logger.debug("user classpath: " + settings.classpath.value)
   }
 
   /** Return a the project-specific preference store. This does not take into account the
@@ -527,7 +518,7 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
           super.save()
         } catch {
           case e: IOException =>
-            logger.error(s"An Exception occured saving the project-specific preferences for ${underlying.getName()} ! Your settings will not be persisted. Please report !")
+            logger.error(s"An Exception occurred saving the project-specific preferences for ${underlying.getName()}! Your settings will not be persisted. Please report!")
             throw e
         }
       }

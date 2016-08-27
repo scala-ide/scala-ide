@@ -150,7 +150,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     pcLock.synchronized {
       try {
         val pc = new ScalaPresentationCompiler(name, initializeSettings())
-        logger.debug("Presentation compiler classpath: " + pc.classPath)
+        logger.debug(pc.settings.userSetSettings.toSeq.sortBy(_.name.toLowerCase).mkString(s"Presentation compiler settings for $name:\n  ", "\n  ", ""))
         publish(Start)
         pc
       } catch {

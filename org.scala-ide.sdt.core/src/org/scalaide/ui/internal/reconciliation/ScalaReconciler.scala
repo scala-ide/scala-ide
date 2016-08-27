@@ -52,7 +52,7 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
     def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
       case Restart =>
         if (pub == compilerProxy) {
-          logger.debug("Reconciling due to restart")
+          logger.debug(s"Reconciling ${editor.getTitle} due to restart")
           forceReconciling()
         }
       case _ =>

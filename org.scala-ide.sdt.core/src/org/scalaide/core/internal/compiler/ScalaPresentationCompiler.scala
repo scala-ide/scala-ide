@@ -203,8 +203,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
         askLoadedTyped(unit.source, false).get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None =>
-        logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
-        logger.info(unitOfFile.toString)
+        logger.info(s"Missing unit for file $file when retrieving errors. Errors will not be shown in this file. Loaded units are: $unitOfFile")
         Nil
     }
   }
