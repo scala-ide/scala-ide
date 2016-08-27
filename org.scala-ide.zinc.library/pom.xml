@@ -13,28 +13,28 @@
 
   <dependencies>
     <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>io_${scala.minor.version}</artifactId>
-        <version>${sbt-io.version}</version>
-        <optional>true</optional>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>io_${scala.minor.version}</artifactId>
+      <version>${sbt-io.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>util-logging_${scala.minor.version}</artifactId>
-        <version>${sbt-util.version}</version>
-        <optional>true</optional>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>util-logging_${scala.minor.version}</artifactId>
+      <version>${sbt-util.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>util-interface</artifactId>
-        <version>${sbt-util.version}</version>
-        <optional>true</optional>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>util-interface</artifactId>
+      <version>${sbt-util.version}</version>
+      <optional>true</optional>
     </dependency>
     <dependency>
-        <groupId>org.scala-sbt</groupId>
-        <artifactId>compiler-interface</artifactId>
-        <version>${zinc.version}</version>
-        <optional>true</optional>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-interface</artifactId>
+      <version>${zinc.version}</version>
+      <optional>true</optional>
     </dependency>
   </dependencies>
 
