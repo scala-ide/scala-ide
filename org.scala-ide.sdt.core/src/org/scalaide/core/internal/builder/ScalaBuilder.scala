@@ -121,14 +121,19 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     }
 
     // SBT build manager already calls java builder internally
-    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
-      depends.toArray
-    else {
-      ensureProject()
-      val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
-      refresh()
-      (Set.empty ++ depends ++ javaDepends).toArray
-    }
+    val ret =
+      if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
+        depends.toArray
+      else {
+        ensureProject()
+        val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
+        refresh()
+        (Set.empty ++ depends ++ javaDepends).toArray
+      }
+
+    logger.debug(s"Restarting presentation compiler of ${project.underlying.getName} due to finished build.")
+    project.presentationCompiler.askRestart()
+    ret
   }
 }
 

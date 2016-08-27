@@ -19,6 +19,8 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.swt.events.ShellEvent
 import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.core.internal.compiler.Restart
+import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.core.IScalaPlugin
 
 /** A Scala reconciler that forces reconciliation on various events:
  *   - the editor is shown through tab navigation
@@ -61,8 +63,17 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
 
   /** Listen for events regarding Eclipse getting focus. */
   class ActivationListener(control: Control) extends ShellAdapter {
+    def restartPc() = {
+      EditorUtils.resourceOfActiveEditor.foreach { r ⇒
+        logger.debug(s"Restarting presentation compiler for ${r.getProject.getName} because Eclipse gained focus.")
+        val scalaProject = IScalaPlugin().asScalaProject(r.getProject)
+        scalaProject foreach (_.presentationCompiler.askRestart())
+      }
+    }
+
     override def shellActivated(event: ShellEvent): Unit = {
       if (!control.isDisposed() && control.isVisible()) {
+        restartPc()
         forceReconciling()
       }
     }
