@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Control
 import org.eclipse.ui.IPartService
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.texteditor.ITextEditor
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.compiler.IPresentationCompilerProxy
 import org.scalaide.core.internal.compiler.PresentationCompilerActivity
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
@@ -18,6 +19,7 @@ import org.scalaide.core.internal.compiler.Restart
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import org.scalaide.util.Utils._
 import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.eclipse.SWTUtils
@@ -73,7 +75,10 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
 
     override def shellActivated(event: ShellEvent): Unit = {
       if (!control.isDisposed() && control.isVisible()) {
-        restartPc()
+        val isPcAutoRestartEnabled = IScalaPlugin().getPreferenceStore.getBoolean(ResourcesPreferences.PRES_COMP_AUTO_RESTART)
+        if (isPcAutoRestartEnabled) {
+          restartPc()
+        }
         forceReconciling()
       }
     }

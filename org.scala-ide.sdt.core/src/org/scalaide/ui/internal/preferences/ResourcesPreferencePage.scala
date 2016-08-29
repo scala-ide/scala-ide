@@ -30,6 +30,7 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
   // these ones are disposed by parent class
   private var closingEnabledEditor: BooleanFieldEditor = null
   private var maxIdlenessLengthEditor: IntegerFieldEditor = null
+  private var autoRestart: BooleanFieldEditor = null
 
   override def init(wb: IWorkbench): Unit = {}
 
@@ -59,6 +60,9 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
     }
     maxIdlenessLengthEditor.setValidRange(10, Integer.MAX_VALUE)
     addField(maxIdlenessLengthEditor)
+
+    autoRestart = new BooleanFieldEditor(PRES_COMP_AUTO_RESTART, "Automatically restart PC on builds and editor focus changes if editor contains errors or warnings.\n This helps to prevent false positive errors shown in the editor.", presCompGroup)
+    addField(autoRestart)
   }
 
   override def initialize(): Unit = {
@@ -76,6 +80,7 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
   override def dispose(): Unit = {
     if (presCompGroup != null) presCompGroup.dispose()
     if (presCompInnerGroup != null) presCompInnerGroup.dispose()
+    if (autoRestart != null) autoRestart.dispose()
     super.dispose()
   }
 
@@ -110,6 +115,7 @@ object ResourcesPreferences {
 
   val PRES_COMP_CLOSE_UNUSED = "org.scala-ide.sdt.core.resources.presentationCompiler.closeUnused"
   val PRES_COMP_MAX_IDLENESS_LENGTH = "org.scala-ide.sdt.core.resources.presentationCompiler.maxIdlenessLength"
+  val PRES_COMP_AUTO_RESTART = "org.scala-ide.sdt.core.resources.presentationCompiler.autoRestart"
 
   /**
    * Changes in preferences related to closing presentation compilers should be always taken into account together.
@@ -128,5 +134,6 @@ class ResourcesPreferencePageInitializer extends AbstractPreferenceInitializer {
     store.setDefault(PRES_COMP_CLOSE_UNUSED, true)
     store.setDefault(PRES_COMP_MAX_IDLENESS_LENGTH, 120)
     store.setDefault(PRES_COMP_PREFERENCES_CHANGE_MARKER, true)
+    store.setDefault(PRES_COMP_AUTO_RESTART, true)
   }
 }
