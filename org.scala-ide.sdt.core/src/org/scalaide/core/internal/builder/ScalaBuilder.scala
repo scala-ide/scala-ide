@@ -18,8 +18,6 @@ import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.scalaide.logging.HasLogger
-import org.scalaide.ui.internal.preferences.ResourcesPreferences
-import org.scalaide.util.eclipse.EditorUtils
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.ReflectionUtils
 
@@ -125,27 +123,14 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
     }
 
     // SBT build manager already calls java builder internally
-    val ret =
-      if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
-        depends.toArray
-      else {
-        ensureProject()
-        val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
-        refresh()
-        (Set.empty ++ depends ++ javaDepends).toArray
-      }
-
-    val isPcAutoRestartEnabled = IScalaPlugin().getPreferenceStore.getBoolean(ResourcesPreferences.PRES_COMP_AUTO_RESTART)
-    if (isPcAutoRestartEnabled) {
-      EditorUtils.withCurrentScalaSourceFile { ssf ⇒
-        if (Option(ssf.getProblems()).exists(_.nonEmpty)) {
-          logger.debug(s"Restarting presentation compiler of ${project.underlying.getName} due to finished build.")
-          project.presentationCompiler.askRestart()
-        }
-      }
+    if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)) || !shouldRunJavaBuilder)
+      depends.toArray
+    else {
+      ensureProject()
+      val javaDepends = scalaJavaBuilder.build(kind, ignored, subMonitor)
+      refresh()
+      (Set.empty ++ depends ++ javaDepends).toArray
     }
-
-    ret
   }
 }
 

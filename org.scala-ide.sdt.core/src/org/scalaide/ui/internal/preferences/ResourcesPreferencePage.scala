@@ -61,7 +61,7 @@ class ResourcesPreferencePage extends FieldEditorPreferencePage(FieldEditorPrefe
     maxIdlenessLengthEditor.setValidRange(10, Integer.MAX_VALUE)
     addField(maxIdlenessLengthEditor)
 
-    autoRestart = new BooleanFieldEditor(PRES_COMP_AUTO_RESTART, "Automatically restart PC on builds and editor focus changes if editor contains errors or warnings.\n This helps to prevent false positive errors shown in the editor.", presCompGroup)
+    autoRestart = new BooleanFieldEditor(PRES_COMP_AUTO_RESTART, "Automatically restart PC on editor focus changes if editor contains errors or warnings.\n This helps to prevent false positive errors shown in the editor.", presCompGroup)
     addField(autoRestart)
   }
 
