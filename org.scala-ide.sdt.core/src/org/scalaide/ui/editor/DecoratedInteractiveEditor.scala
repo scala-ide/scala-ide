@@ -26,7 +26,7 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
   def removeAnnotationsInRegion(start: Int, end: Int): Unit = annotationModel foreach { model ⇒
     val annsToRemove = model.getAnnotationIterator.asScala.filter { ann ⇒
       val pos = model.getPosition(ann)
-      pos.offset >= start && pos.offset+pos.length <= end
+      pos.offset >= start && pos.offset + pos.length <= end
     }
     model.deleteAnnotations(annsToRemove.toSeq)
   }
@@ -35,7 +35,7 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
    * Update annotations on the editor from a list of IProblems
    */
   def updateErrorAnnotations(errors: List[IProblem], cu: ICompilationUnit): Unit = annotationModel foreach { model ⇒
-    val newAnnotations: Map[Annotation, Position] = (for (e <- errors) yield {
+    val newAnnotations: Map[Annotation, Position] = (for (e ← errors) yield {
       val annotation = new ProblemAnnotation(e, cu) // no compilation unit
       val position = new Position(e.getSourceStart, e.getSourceEnd - e.getSourceStart + 1)
       (annotation, position)
@@ -48,15 +48,19 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
     // http://stackoverflow.com/questions/12507620/race-conditions-in-annotationmodel-error-annotations-lost-in-reconciler
     val presViewer = getViewer
     if (presViewer.isInstanceOf[ITextViewerExtension2]) {
-        // TODO: This should be replaced by a better modularization of semantic highlighting PositionsChange
-        val newPositions = newAnnotations.values
-        def end (x:Position) = x.offset + x.length - 1
-        val taintedBounds : (Int, Int) = ((Int.MaxValue, 0) /: newPositions) {(acc, p1) => (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1)))}
-        val taintedLength = (taintedBounds._2 - taintedBounds._1 +1)
+      // TODO: This should be replaced by a better modularization of semantic highlighting PositionsChange
+      val newPositions = newAnnotations.values
+      def end(x: Position) = x.offset + x.length - 1
+      val taintedBounds = (newPositions foldLeft (Int.MaxValue, 0)) { (acc, p1) ⇒ (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1))) }
+      val taintedLength = (taintedBounds._2 - taintedBounds._1 + 1)
 
-        DisplayThread.asyncExec { presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength) }
+      DisplayThread.asyncExec {
+        presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength)
+      }
     } else {
-        DisplayThread.asyncExec { getViewer.invalidateTextPresentation() }
+      DisplayThread.asyncExec {
+        getViewer.invalidateTextPresentation()
+      }
     }
   }
 
