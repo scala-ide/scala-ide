@@ -2,13 +2,13 @@ package org.scalaide.ui.internal.reconciliation
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.scalaide.logging.HasLogger
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
 import org.eclipse.jface.text._
+import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jface.text.reconciler.IReconcilingStrategy
 import org.eclipse.jface.text.reconciler.IReconcilingStrategyExtension
-import org.eclipse.jface.text.reconciler.DirtyRegion
-import org.eclipse.jdt.internal.ui.text.java.IJavaReconcilingListener
-import org.eclipse.jdt.core.ICompilationUnit
+import org.scalaide.logging.HasLogger
 import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
 import org.scalaide.util.Utils._
 
@@ -35,7 +35,16 @@ class ScalaReconcilingStrategy(icuEditor: InteractiveCompilationUnitEditor) exte
   override def setProgressMonitor(pMonitor: IProgressMonitor): Unit = {}
 
   override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
-    logger.debug("Incremental reconciliation not implemented.")
+    dirtyRegion.getType match {
+      case DirtyRegion.INSERT ⇒
+      case DirtyRegion.REMOVE ⇒
+        import org.scalaide.util.eclipse.RegionUtils._
+        // when Eclipse gains focus, two regions are created. The first one
+        // removes the entire file content, the second one adds it. We don't
+        // want to catch this remove region here.
+        if (!(dirtyRegion.start == 0 && dirtyRegion.length == icUnit.getContents().length))
+          icuEditor.removeAnnotationsInRegion(dirtyRegion.start, dirtyRegion.end)
+    }
   }
 
   override def reconcile(partition: IRegion): Unit = {

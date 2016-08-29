@@ -1,14 +1,16 @@
 package org.scalaide.ui.editor
 
+import scala.collection.JavaConverters._
+import scala.collection.breakOut
+
+import org.eclipse.jdt.core.ICompilationUnit
+import org.eclipse.jdt.core.compiler.IProblem
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
+import org.eclipse.jface.text.ITextViewerExtension2
+import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
 import org.eclipse.jface.text.source.IAnnotationModel
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.ProblemAnnotation
-import scala.collection.breakOut
-import org.eclipse.jdt.core.compiler.IProblem
-import org.scalaide.util.internal.eclipse.AnnotationUtils.RichModel
-import org.eclipse.jface.text.Position
-import org.eclipse.jface.text.ITextViewerExtension2
-import org.eclipse.jdt.core.ICompilationUnit
+import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.ui.DisplayThread
 
 trait DecoratedInteractiveEditor extends ISourceViewerEditor {
@@ -17,6 +19,17 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
   private def annotationModel = Option(getDocumentProvider).map(_.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModel])
 
   private var previousAnnotations = List[Annotation]()
+
+  /**
+   * This removes all annotations in the region between `start` and `end`.
+   */
+  def removeAnnotationsInRegion(start: Int, end: Int): Unit = annotationModel foreach { model ⇒
+    val annsToRemove = model.getAnnotationIterator.asScala.filter { ann ⇒
+      val pos = model.getPosition(ann)
+      pos.offset >= start && pos.offset+pos.length <= end
+    }
+    model.deleteAnnotations(annsToRemove.toSeq)
+  }
 
   /**
    * Update annotations on the editor from a list of IProblems
