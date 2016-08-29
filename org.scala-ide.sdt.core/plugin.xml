@@ -159,6 +159,12 @@
             id="org.scalaide.ui.preferences.editor.autoedits"
             name="Auto Edits">
       </page>
+      <page
+            category="org.scalaide.ui.preferences.editor"
+            class="org.scalaide.ui.internal.preferences.CompletionPreferencePage"
+            id="org.scalaide.ui.preferences.editor.completions"
+            name="Completions">
+      </page>
    </extension>
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
@@ -896,6 +902,9 @@
      </initializer>
      <initializer
            class="org.scalaide.ui.internal.preferences.AutoEditsPreferenceInitializer">
+     </initializer>
+     <initializer
+           class="org.scalaide.ui.internal.preferences.ComplitionPreferenceInitializer">
      </initializer>
   </extension>
 

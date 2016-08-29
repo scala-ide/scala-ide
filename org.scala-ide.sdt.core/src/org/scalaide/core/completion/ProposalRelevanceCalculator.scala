@@ -16,7 +16,7 @@ object ProposalRelevanceCalculator {
   }
 }
 
-class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRelevanceCfg) extends HasLogger {
+class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = PrefsBasedProposalRelevanceCfg) extends HasLogger {
   import ProposalRelevanceCalculator._
 
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {
@@ -72,7 +72,7 @@ class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = DefaultProposalRel
 
     val bonus =
        deltaForPrefix(3, cfg.favoritePackages) +
-       deltaForPrefix(1, cfg.preferedPackages)
+       deltaForPrefix(1, cfg.preferredPackages)
 
     val penalty =
       deltaForPrefix(3, cfg.shunnedPackages) +
