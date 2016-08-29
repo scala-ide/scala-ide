@@ -2,6 +2,9 @@ package org.scalaide.ui.internal.preferences
 
 import scala.annotation.tailrec
 
+/**
+ * Simple utility for serializing/deserializing lists of arbitrary strings.
+ */
 object StringListSerializer {
   private final val StopChar = '|'
 
