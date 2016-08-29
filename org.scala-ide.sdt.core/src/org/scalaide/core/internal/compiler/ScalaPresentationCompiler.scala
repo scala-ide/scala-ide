@@ -355,8 +355,8 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
   def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
     inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
-    /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
-     *  source. This function adds the back-ticks to a given identifier, if necessary.
+    /* Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
+     * source. This function adds the back-ticks to a given identifier, if necessary.
      */
     def addBackTicksIfNecessary(identifier: String): String = {
       def needsBackTicks(identifier: String) = {
