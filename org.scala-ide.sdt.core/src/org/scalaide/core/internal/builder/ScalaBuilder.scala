@@ -18,6 +18,7 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.scalaide.core.internal.jdt.util.JDTUtils
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.util.eclipse.EditorUtils
 
 class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
@@ -131,8 +132,13 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
         (Set.empty ++ depends ++ javaDepends).toArray
       }
 
-    logger.debug(s"Restarting presentation compiler of ${project.underlying.getName} due to finished build.")
-    project.presentationCompiler.askRestart()
+    EditorUtils.withCurrentScalaSourceFile { ssf ⇒
+      if (Option(ssf.getProblems()).exists(_.nonEmpty)) {
+        logger.debug(s"Restarting presentation compiler of ${project.underlying.getName} due to finished build.")
+        project.presentationCompiler.askRestart()
+      }
+    }
+
     ret
   }
 }

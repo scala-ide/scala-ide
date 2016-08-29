@@ -71,9 +71,11 @@ object ScalaProject {
   /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
   private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
     override def partActivated(part: IWorkbenchPart): Unit = {
-      doWithCompilerAndFile(part) { (_, _) =>
-        logger.debug(s"Restarting presentation compiler for ${project.underlying.getName} because ${part.getTitle} gained focus.")
-        project.presentationCompiler.askRestart()
+      doWithCompilerAndFile(part) { (_, ssf) =>
+        if (Option(ssf.getProblems()).exists(_.nonEmpty)) {
+          logger.debug(s"Restarting presentation compiler for ${project.underlying.getName} because ${part.getTitle} gained focus.")
+          project.presentationCompiler.askRestart()
+        }
       }
     }
 
