@@ -15,13 +15,30 @@ import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PFavoritePack
 import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PPreferredPackages
 import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PShunnedPackages
 import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PUnpopularPackages
+import org.eclipse.swt.events.SelectionListener
+import org.eclipse.swt.events.SelectionEvent
 
 object CompletionPreferencePage {
   private class PackageGroupListEditor(name: String, groupTitle: String, dialogTitle: String, parent: Composite)
       extends ListEditor(name, groupTitle, parent) {
 
+    private object EditListItemOnDoubleClickListener extends SelectionListener {
+      override def widgetDefaultSelected(evt: SelectionEvent): Unit = {
+        val listCtrl = evt.getSource.asInstanceOf[org.eclipse.swt.widgets.List]
+        val selectionInd = listCtrl.getSelectionIndex
+        val newValue = getNewInputObject(listCtrl.getItem(selectionInd))
+
+        if (newValue != null) {
+          listCtrl.setItem(selectionInd, newValue)
+        }
+      }
+
+      override def widgetSelected(evt: SelectionEvent) = ()
+    }
+
     getUpButton.setVisible(false)
     getDownButton.setVisible(false)
+    getList().addSelectionListener(EditListItemOnDoubleClickListener)
 
     protected def createList(arr: Array[String]): String = {
       StringListSerializer.serialize(arr)
@@ -32,7 +49,11 @@ object CompletionPreferencePage {
     }
 
     def getNewInputObject(): String = {
-      val dialog = new InputDialog(getShell, dialogTitle, "Enter a regular expression", null, PackageRxValidator)
+      getNewInputObject("")
+    }
+
+    def getNewInputObject(initalValue: String): String = {
+      val dialog = new InputDialog(getShell, dialogTitle, "Enter a regular expression", initalValue, PackageRxValidator)
 
       if (dialog.open() != Window.OK) {
         null
@@ -41,18 +62,6 @@ object CompletionPreferencePage {
       }
     }
   }
-
-  private class FavoritePackagesListEditor(parent: Composite)
-      extends PackageGroupListEditor(PFavoritePackages, "Favorite Packages", "Favorite package", parent)
-
-  private class PreferedPackagesListEditor(parent: Composite)
-      extends PackageGroupListEditor(PPreferredPackages, "Preferred Packages", "Preferred package", parent)
-
-  private class UnpopularPackagesListEditor(parent: Composite)
-      extends PackageGroupListEditor(PUnpopularPackages, "Unpopular Packages", "Unpopular package", parent)
-
-  private class ShunnedPackagesListEditor(parent: Composite)
-      extends PackageGroupListEditor(PShunnedPackages, "Shunned Packages", "Shunned package", parent)
 
   private object PackageRxValidator extends IInputValidator {
     def isValid(str: String): String = {
@@ -69,6 +78,18 @@ object CompletionPreferencePage {
       }
     }
   }
+
+  private class FavoritePackagesListEditor(parent: Composite)
+      extends PackageGroupListEditor(PFavoritePackages, "Favorite Packages", "Favorite package", parent)
+
+  private class PreferedPackagesListEditor(parent: Composite)
+      extends PackageGroupListEditor(PPreferredPackages, "Preferred Packages", "Preferred package", parent)
+
+  private class UnpopularPackagesListEditor(parent: Composite)
+      extends PackageGroupListEditor(PUnpopularPackages, "Unpopular Packages", "Unpopular package", parent)
+
+  private class ShunnedPackagesListEditor(parent: Composite)
+      extends PackageGroupListEditor(PShunnedPackages, "Shunned Packages", "Shunned package", parent)
 }
 
 class CompletionPreferencePage extends BasicFieldEditorPreferencePage("Configure Scala Code Completion") {
