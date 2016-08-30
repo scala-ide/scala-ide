@@ -7,7 +7,7 @@ class StringListSerializerTest {
   private def testWith(strs: String*): Unit = {
     val serialized = StringListSerializer.serialize(strs)
     val deserialized = StringListSerializer.deserialize(serialized)
-    assertEquals(s"Error related to sererialized representation '$serialized'", strs, deserialized)
+    assertEquals(s"Error related to serialized representation '$serialized'", strs, deserialized)
   }
 
   private def expectExceptionOnDeserialize(str: String): Unit = {

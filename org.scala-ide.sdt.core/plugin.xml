@@ -904,7 +904,7 @@
            class="org.scalaide.ui.internal.preferences.AutoEditsPreferenceInitializer">
      </initializer>
      <initializer
-           class="org.scalaide.ui.internal.preferences.ComplitionPreferenceInitializer">
+           class="org.scalaide.ui.internal.preferences.CompletionPreferenceInitializer">
      </initializer>
   </extension>
 

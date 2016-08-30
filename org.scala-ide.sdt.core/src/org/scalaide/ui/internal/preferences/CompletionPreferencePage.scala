@@ -103,7 +103,7 @@ class CompletionPreferencePage extends BasicFieldEditorPreferencePage("Configure
   }
 }
 
-class ComplitionPreferenceInitializer extends AbstractPreferenceInitializer {
+class CompletionPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     def setDefault(key: String, regexes: Seq[Regex]): Unit = {
