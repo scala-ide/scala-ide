@@ -17,7 +17,7 @@ import scala.collection.mutable.Publisher
 final class PresentationCompilerProxy(name: String, initializeSettings: () => Settings) extends IPresentationCompilerProxy
     with Publisher[PresentationCompilerActivity] with HasLogger {
 
-  type Pub = PresentationCompilerProxy
+  override type Pub = PresentationCompilerProxy
 
   /** Current 'live' instance of the presentation compiler.
     *
@@ -47,9 +47,11 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
   @volatile private var restartNextTime = false
 
   /** Ask to restart the presentation compiler before processing the next request. */
-  def askRestart(): Unit = {
-    restartNextTime = true
-    publish(Restart)
+  override def askRestart(): Unit = {
+    if (!restartNextTime) {
+      restartNextTime = true
+      publish(Restart)
+    }
   }
 
   override def apply[U](op: IScalaPresentationCompiler => U): Option[U] =
@@ -131,7 +133,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     *
     * @note If you need the presentation compiler to be re-initialized (because, for instance, you have changed the project's classpath), use `askRestart`.
     */
-  def shutdown(): Unit = {
+  override def shutdown(): Unit = {
     publish(Shutdown)
     val oldPc = pcLock.synchronized {
       val temp = pc
@@ -150,7 +152,7 @@ final class PresentationCompilerProxy(name: String, initializeSettings: () => Se
     pcLock.synchronized {
       try {
         val pc = new ScalaPresentationCompiler(name, initializeSettings())
-        logger.debug("Presentation compiler classpath: " + pc.classPath)
+        logger.debug(pc.settings.userSetSettings.toSeq.sortBy(_.name.toLowerCase).mkString(s"Presentation compiler settings for $name:\n  ", "\n  ", ""))
         publish(Start)
         pc
       } catch {
@@ -185,4 +187,3 @@ case object Start    extends PresentationCompilerActivity
  *  once the PC has really started.
  */
 case object Restart  extends PresentationCompilerActivity
-

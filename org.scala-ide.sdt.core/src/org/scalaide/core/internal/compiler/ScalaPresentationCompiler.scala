@@ -203,8 +203,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
         askLoadedTyped(unit.source, false).get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None =>
-        logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
-        logger.info(unitOfFile.toString)
+        logger.info(s"Missing unit for file $file when retrieving errors. Errors will not be shown in this file. Loaded units are: $unitOfFile")
         Nil
     }
   }
@@ -356,8 +355,8 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
   def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
     inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
-    /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
-     *  source. This function adds the back-ticks to a given identifier, if necessary.
+    /* Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
+     * source. This function adds the back-ticks to a given identifier, if necessary.
      */
     def addBackTicksIfNecessary(identifier: String): String = {
       def needsBackTicks(identifier: String) = {
