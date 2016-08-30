@@ -47,6 +47,14 @@ class StringListSerializerTest {
   }
 
   @Test
+  def withListOfSerializedLists(): Unit = {
+    testWith(
+        StringListSerializer.serialize(Seq()),
+        StringListSerializer.serialize(Seq("")),
+        StringListSerializer.serialize(Seq("", "1", "22")))
+  }
+
+  @Test
   def noStackOverflow(): Unit = {
     testWith(Seq.fill(10000)(""): _*)
   }
