@@ -3,6 +3,7 @@ package org.scalaide.core.completion
 import scala.tools.nsc.interactive.Global
 import org.scalaide.logging.HasLogger
 import scala.util.matching.Regex
+import org.scalaide.ui.internal.preferences.CompletionPreferencePage
 
 object ProposalRelevanceCalculator {
   private final val MaxInternalRelevance = 1000
@@ -16,7 +17,7 @@ object ProposalRelevanceCalculator {
   }
 }
 
-class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = PrefsBasedProposalRelevanceCfg) extends HasLogger {
+class ProposalRelevanceCalculator(cfg: ProposalRelevanceCfg = CompletionPreferencePage.ProposalRelevanceCfg) extends HasLogger {
   import ProposalRelevanceCalculator._
 
   def forScala[CompilerT <: Global](pc: CompilerT)(prefix: String, name: String, sym: pc.Symbol, viaView: pc.Symbol, inherited: Option[Boolean]): Int = {

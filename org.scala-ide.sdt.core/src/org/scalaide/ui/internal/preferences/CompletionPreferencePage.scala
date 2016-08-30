@@ -11,14 +11,30 @@ import org.eclipse.jface.window.Window
 import org.eclipse.swt.widgets.Composite
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.completion.DefaultProposalRelevanceCfg
-import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PFavoritePackages
-import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PPreferredPackages
-import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PShunnedPackages
-import org.scalaide.core.completion.PrefsBasedProposalRelevanceCfg.PUnpopularPackages
 import org.eclipse.swt.events.SelectionListener
 import org.eclipse.swt.events.SelectionEvent
+import org.scalaide.core.completion.ProposalRelevanceCfg
 
 object CompletionPreferencePage {
+  final val PFavoritePackages = "scala.tools.eclipse.ui.preferences.completions.favoritePackages"
+  final val PPreferredPackages = "scala.tools.eclipse.ui.preferences.completions.preferredPackages"
+  final val PUnpopularPackages = "scala.tools.eclipse.ui.preferences.completions.unpopularPackages"
+  final val PShunnedPackages = "scala.tools.eclipse.ui.preferences.completions.shunnedPackages"
+
+  object ProposalRelevanceCfg extends ProposalRelevanceCfg {
+    private def prefStore = IScalaPlugin().getPreferenceStore
+    private def strFromPrefStore(key: String) = prefStore.getString(key)
+
+    private def rxSeqFromPrefStore(key: String) = {
+      StringListSerializer.deserialize(strFromPrefStore(key)).map(_.r)
+    }
+
+    def favoritePackages = rxSeqFromPrefStore(PFavoritePackages)
+    def preferredPackages = rxSeqFromPrefStore(PPreferredPackages)
+    def unpopularPackages = rxSeqFromPrefStore(PUnpopularPackages)
+    def shunnedPackages = rxSeqFromPrefStore(PShunnedPackages)
+  }
+
   private class PackageGroupListEditor(name: String, groupTitle: String, dialogTitle: String, parent: Composite)
       extends ListEditor(name, groupTitle, parent) {
 
@@ -110,6 +126,7 @@ class CompletionPreferenceInitializer extends AbstractPreferenceInitializer {
       store.setDefault(key, StringListSerializer.serialize(regexes.map(_.regex)))
     }
 
+    import CompletionPreferencePage._
     setDefault(PFavoritePackages, DefaultProposalRelevanceCfg.favoritePackages)
     setDefault(PPreferredPackages, DefaultProposalRelevanceCfg.preferredPackages)
     setDefault(PUnpopularPackages, DefaultProposalRelevanceCfg.unpopularPackages)
