@@ -9,14 +9,14 @@ import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitDocumentProvider.Pr
 import org.eclipse.jface.text.ITextViewerExtension2
 import org.eclipse.jface.text.Position
 import org.eclipse.jface.text.source.Annotation
-import org.eclipse.jface.text.source.IAnnotationModel
+import org.eclipse.jface.text.source.IAnnotationModelExtension2
 import org.scalaide.util.internal.eclipse.AnnotationUtils._
 import org.scalaide.util.ui.DisplayThread
 
 trait DecoratedInteractiveEditor extends ISourceViewerEditor {
 
   /** Return the annotation model associated with the current document. */
-  private def annotationModel = Option(getDocumentProvider).map(_.getAnnotationModel(getEditorInput).asInstanceOf[IAnnotationModel])
+  private def annotationModel = Option(getDocumentProvider).map(_.getAnnotationModel(getEditorInput))
 
   private var previousAnnotations = List[Annotation]()
 
@@ -24,9 +24,14 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
    * This removes all annotations in the region between `start` and `end`.
    */
   def removeAnnotationsInRegion(start: Int, end: Int): Unit = annotationModel foreach { model ⇒
-    val annsToRemove = model.getAnnotationIterator.asScala.filter { ann ⇒
-      val pos = model.getPosition(ann)
-      pos.offset >= start && pos.offset + pos.length <= end
+    val annsToRemove = model match {
+      case model: IAnnotationModelExtension2 ⇒
+        model.getAnnotationIterator(start, end - start, /*canStartBefore*/ false, /*canEndAfter*/ false).asScala
+      case _ ⇒
+        model.getAnnotationIterator.asScala.filter { ann ⇒
+          val pos = model.getPosition(ann)
+          pos.offset >= start && pos.offset + pos.length <= end
+        }
     }
     model.deleteAnnotations(annsToRemove.toSeq)
   }
@@ -46,21 +51,21 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
 
     // This shouldn't be necessary in @dragos' opinion. But see #84 and
     // http://stackoverflow.com/questions/12507620/race-conditions-in-annotationmodel-error-annotations-lost-in-reconciler
-    val presViewer = getViewer
-    if (presViewer.isInstanceOf[ITextViewerExtension2]) {
-      // TODO: This should be replaced by a better modularization of semantic highlighting PositionsChange
-      val newPositions = newAnnotations.values
-      def end(x: Position) = x.offset + x.length - 1
-      val taintedBounds = (newPositions foldLeft (Int.MaxValue, 0)) { (acc, p1) ⇒ (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1))) }
-      val taintedLength = (taintedBounds._2 - taintedBounds._1 + 1)
+    getViewer match {
+      case viewer: ITextViewerExtension2 ⇒
+        // TODO: This should be replaced by a better modularization of semantic highlighting PositionsChange
+        val newPositions = newAnnotations.values
+        def end(x: Position) = x.offset + x.length - 1
+        val taintedBounds = (newPositions foldLeft (Int.MaxValue, 0)) { (acc, p1) ⇒ (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1))) }
+        val taintedLength = (taintedBounds._2 - taintedBounds._1 + 1)
 
-      DisplayThread.asyncExec {
-        presViewer.asInstanceOf[ITextViewerExtension2].invalidateTextPresentation(taintedBounds._1, taintedLength)
-      }
-    } else {
-      DisplayThread.asyncExec {
-        getViewer.invalidateTextPresentation()
-      }
+        DisplayThread.asyncExec {
+          viewer.invalidateTextPresentation(taintedBounds._1, taintedLength)
+        }
+      case viewer ⇒
+        DisplayThread.asyncExec {
+          viewer.invalidateTextPresentation()
+        }
     }
   }
 
