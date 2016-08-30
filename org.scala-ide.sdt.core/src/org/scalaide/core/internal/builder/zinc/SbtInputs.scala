@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.SubMonitor
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.builder.Analyzable
 import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
 import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
@@ -47,13 +48,15 @@ class SbtInputs(installation: IScalaInstallation,
 
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
-      Maybe.just(Analysis.Empty)
+      Maybe.nothing[Analysis]
     else {
-      val analysis = allProjects.collectFirst {
-        case project if project.buildManager.buildManagerOf(f).nonEmpty =>
-          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
+      val analysis = allProjects.iterator.map {
+        _.buildManager.buildManagerOf(f)
+      }.collectFirst {
+        case Some(manager: Analyzable) =>
+          manager.latestAnalysis(incOptions)
       }
-      Maybe.just(analysis.getOrElse(Analysis.Empty))
+      analysis.map { Maybe.just[Analysis] }.getOrElse(Maybe.nothing[Analysis])
     }
 
   def progress = Maybe.just(scalaProgress)
@@ -119,9 +122,9 @@ class SbtInputs(installation: IScalaInstallation,
 
     override def javacOptions = Array() // Not used.
 
-    import CompileOrder._
-    import SettingConverterUtil.convertNameToProperty
     import preferences.ScalaPluginSettings.compileOrder
+    import SettingConverterUtil.convertNameToProperty
+    import CompileOrder._
 
     override def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
       case "JavaThenScala" => JavaThenScala

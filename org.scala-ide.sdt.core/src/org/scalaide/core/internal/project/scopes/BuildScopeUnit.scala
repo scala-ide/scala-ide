@@ -2,8 +2,6 @@ package org.scalaide.core.internal.project.scopes
 
 import java.io.File
 
-import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -28,12 +26,12 @@ import sbt.inc.IncOptions
  * Manages compilation of sources for given scope.
  * @see CompileScope scopes
  */
-class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, settings: Settings,
+class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject,
   val dependentUnitInstances: Seq[BuildScopeUnit] = Seq.empty)
-    extends EclipseBuildManager {
+    extends org.scalaide.core.internal.builder.EclipseSbtBuildManager {
 
   private val delegate =
-    new EclipseSbtBuildManager(owningProject, settings, Some(owningProject.underlying.getFile(".cache-" + scope.name)),
+    new EclipseSbtBuildManager(owningProject, Some(owningProject.underlying.getFile(".cache-" + scope.name)),
       addThemToClasspath, srcOutputs)
   private val scopeFilesToCompile = ScopeFilesToCompile(toCompile, owningProject)
 

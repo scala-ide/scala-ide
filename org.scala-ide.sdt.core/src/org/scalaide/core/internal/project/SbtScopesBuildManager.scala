@@ -2,8 +2,6 @@ package org.scalaide.core.internal.project
 
 import java.io.File
 
-import scala.tools.nsc.Settings
-
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
@@ -16,6 +14,7 @@ import org.scalaide.core.IScalaProject
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.builder.EclipseSbtBuildManager
 import org.scalaide.core.internal.project.scopes.BuildScopeUnit
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
@@ -27,12 +26,12 @@ import sbt.inc.IncOptions
  * Manages of source compilation for all scopes.
  *  Refer to [[CompileScope]]
  */
-class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: Settings)
-    extends EclipseBuildManager {
+class SbtScopesBuildManager(val owningProject: IScalaProject)
+    extends EclipseSbtBuildManager {
   val DefaultScopesOrder: Seq[CompileScope] = Seq(CompileMacrosScope, CompileMainScope, CompileTestsScope)
 
   private val buildScopeUnits = DefaultScopesOrder.foldLeft(List.empty[BuildScopeUnit]) { (acc, scope) =>
-    new BuildScopeUnit(scope, owningProject, managerSettings, acc.toSeq) :: acc
+    new BuildScopeUnit(scope, owningProject, acc.toSeq) :: acc
   }.reverse
 
   /** Says about errors in specific scope. */

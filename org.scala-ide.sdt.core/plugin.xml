@@ -6,6 +6,7 @@
    <extension-point id="fileCreator" name="File Creator" schema="schema/fileCreator.exsd"/>
    <extension-point id="semanticHighlightingParticipants" name="Semantic Highlighting Participants" schema="schema/semanticHighlightingParticipants.exsd"/>
    <extension-point id="quickAssists" name="Quick Assists" schema="schema/quickAssists.exsd"/>
+   <extension-point id="buildManagerFactory" name="Build Manager Factory" schema="schema/buildManagerFactory.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -1903,5 +1904,12 @@
     <participant
           class="org.scalaide.ui.internal.editor.decorators.bynameparams.CallByNameParamAtCreationHighlightingParticipant">
     </participant>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.buildManagerFactory">
+    <buildManagerFactory
+          class="org.scalaide.core.internal.project.SbtScopesBuildManagerFactory"
+          name="sbtScopesBuildMangerFactory">
+    </buildManagerFactory>
  </extension>
 </plugin>
