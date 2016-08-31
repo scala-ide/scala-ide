@@ -3,16 +3,16 @@ package org.scalaide.ui.internal.preferences
 import org.junit.Assert._
 import org.junit.Test
 
-class StringListSerializerTest {
+class StringListMapperTest {
   private def testWith(strs: String*): Unit = {
-    val serialized = StringListSerializer.serialize(strs)
-    val deserialized = StringListSerializer.deserialize(serialized)
-    assertEquals(s"Error related to serialized representation '$serialized'", strs, deserialized)
+    val encoded = StringListMapper.encode(strs)
+    val decoded = StringListMapper.decode(encoded)
+    assertEquals(s"Error related to encoded representation '$encoded'", strs, decoded)
   }
 
-  private def expectExceptionOnDeserialize(str: String): Unit = {
+  private def expectExceptionOnDecode(str: String): Unit = {
     try {
-      StringListSerializer.deserialize(str)
+      StringListMapper.decode(str)
       throw new AssertionError(s"Expected IllegalArgumentException for input $str")
     } catch {
       case _: IllegalArgumentException => ()
@@ -47,11 +47,11 @@ class StringListSerializerTest {
   }
 
   @Test
-  def withListOfSerializedLists(): Unit = {
+  def withListOfEncodedLists(): Unit = {
     testWith(
-        StringListSerializer.serialize(Seq()),
-        StringListSerializer.serialize(Seq("")),
-        StringListSerializer.serialize(Seq("", "1", "22")))
+        StringListMapper.encode(Seq()),
+        StringListMapper.encode(Seq("")),
+        StringListMapper.encode(Seq("", "1", "22")))
   }
 
   @Test
@@ -61,10 +61,10 @@ class StringListSerializerTest {
 
   @Test
   def testWithIllegalInput(): Unit = {
-    expectExceptionOnDeserialize("1")
-    expectExceptionOnDeserialize("2|a")
-    expectExceptionOnDeserialize("1|1|2|1")
-    expectExceptionOnDeserialize("asdf3|||")
-    expectExceptionOnDeserialize("9|8|")
+    expectExceptionOnDecode("1")
+    expectExceptionOnDecode("2|a")
+    expectExceptionOnDecode("1|1|2|1")
+    expectExceptionOnDecode("asdf3|||")
+    expectExceptionOnDecode("9|8|")
   }
 }

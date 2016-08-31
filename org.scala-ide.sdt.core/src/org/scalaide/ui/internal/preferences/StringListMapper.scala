@@ -3,16 +3,26 @@ package org.scalaide.ui.internal.preferences
 import scala.annotation.tailrec
 
 /**
- * Simple utility for serializing/deserializing lists of arbitrary strings.
+ * Simple utility for encoding/decoding lists of arbitrary strings.
  */
-object StringListSerializer {
+object StringListMapper {
   private final val StopChar = '|'
 
-  def serialize(strs: Seq[String]): String = {
+  /**
+   * Encodes a list of strings into a single string in a bijective manner
+   *
+   * Only use this method in connection with `decode`. The used encoding,
+   * that should be regarded as implementation detail, does not impose any
+   * restrictions on the input strings.
+   */
+  def encode(strs: Seq[String]): String = {
     strs.map(s => s.length() + (StopChar + s)).mkString("")
   }
 
-  def deserialize(str: String): Seq[String] = {
+  /**
+   * Inverse operation to `encode`
+   */
+  def decode(str: String): Seq[String] = {
     @tailrec
     def go(str: String = str, acc: List[String] = Nil): List[String] = {
       if (str.isEmpty()) {

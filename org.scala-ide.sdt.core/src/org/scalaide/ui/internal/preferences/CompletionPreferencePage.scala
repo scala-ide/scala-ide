@@ -26,7 +26,7 @@ object CompletionPreferencePage {
     private def strFromPrefStore(key: String) = prefStore.getString(key)
 
     private def rxSeqFromPrefStore(key: String) = {
-      StringListSerializer.deserialize(strFromPrefStore(key)).map(_.r)
+      StringListMapper.decode(strFromPrefStore(key)).map(_.r)
     }
 
     def favoritePackages = rxSeqFromPrefStore(PFavoritePackages)
@@ -57,11 +57,11 @@ object CompletionPreferencePage {
     getList().addSelectionListener(EditListItemOnDoubleClickListener)
 
     protected def createList(arr: Array[String]): String = {
-      StringListSerializer.serialize(arr)
+      StringListMapper.encode(arr)
     }
 
     protected def parseString(str: String): Array[String] = {
-      StringListSerializer.deserialize(str).toArray
+      StringListMapper.decode(str).toArray
     }
 
     def getNewInputObject(): String = {
@@ -123,7 +123,7 @@ class CompletionPreferenceInitializer extends AbstractPreferenceInitializer {
   def initializeDefaultPreferences(): Unit = {
     val store = IScalaPlugin().getPreferenceStore
     def setDefault(key: String, regexes: Seq[Regex]): Unit = {
-      store.setDefault(key, StringListSerializer.serialize(regexes.map(_.regex)))
+      store.setDefault(key, StringListMapper.encode(regexes.map(_.regex)))
     }
 
     import CompletionPreferencePage._
