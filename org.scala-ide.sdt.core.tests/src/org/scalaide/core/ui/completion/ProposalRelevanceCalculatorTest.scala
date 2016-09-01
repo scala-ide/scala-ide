@@ -59,8 +59,8 @@ class ProposalRelevanceCalculatorTest {
       def favoritePackages =
         """.*favorite.*""".r :: Nil
 
-      def preferedPackages =
-        """.*prefered.*""".r :: Nil
+      def preferredPackages =
+        """.*preferred.*""".r :: Nil
 
       def unpopularPackages =
         """.*unpopular.*""".r :: Nil
@@ -71,11 +71,11 @@ class ProposalRelevanceCalculatorTest {
 
     makeSureThatJdtProposalsAreOrderedLike(cfg)(
         "z.favorite" -> "A",
-        "y.prefered" -> "A",
+        "y.preferred" -> "A",
         "x.unpopular" -> "A",
         "w.shunned" -> "A",
         "z.favorite" -> "Aaaa",
-        "y.prefered" -> "Aaaa",
+        "y.preferred" -> "Aaaa",
         "x.unpopular" -> "Aaaa",
         "w.shunned" -> "Aaaa")
   }
