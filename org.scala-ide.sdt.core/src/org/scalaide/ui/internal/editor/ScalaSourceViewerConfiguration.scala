@@ -254,7 +254,7 @@ class ScalaSourceViewerConfiguration(
         else
           baseReconcilers)
 
-      val reconciler = new ScalaReconciler(editor, s, isIncremental = false)
+      val reconciler = new ScalaReconciler(editor, s, isIncremental = true)
       reconciler.setDelay(IScalaPlugin().getPreferenceStore.getInt(ScalaPreferences.ReconcilerDelayId))
       reconciler.setProgressMonitor(new NullProgressMonitor())
       reconciler
