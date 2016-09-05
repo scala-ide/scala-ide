@@ -4,6 +4,8 @@ import java.text.Collator
 import java.util.Comparator
 
 import scala.tools.refactoring.implementations
+import scala.tools.refactoring.implementations.OrganizeImports.ImportsStrategy
+import scala.tools.refactoring.implementations.OrganizeImports.OrganizeImportsConfig
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
@@ -275,7 +277,16 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
         }
       }
 
-      new refactoring.RefactoringParameters(options = options, deps = deps, organizeLocalImports = shouldOrganizeLocalImports(project))
+      val organizeImportsConfig = Option(OrganizeImportsConfig(
+          importsStrategy = ImportsStrategy(organizationStrategy.toString),
+          wildcards = getWildcardImportsForProject(project).toSet,
+          groups = getGroupsForProject(project).toList,
+          scalaPackageStrategy = shouldOmitScalaPackage(project)))
+
+      new refactoring.RefactoringParameters(options = options, deps = deps,
+          organizeLocalImports = shouldOrganizeLocalImports(project),
+          organizeImports = shouldOrganizeImports(project),
+          config = organizeImportsConfig)
     }
   }
 

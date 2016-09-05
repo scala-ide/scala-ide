@@ -1,23 +1,25 @@
 package org.scalaide.core.internal.builder
 
-import scala.collection.mutable.HashSet
 import java.{ util => ju }
+
+import scala.collection.mutable.HashSet
+
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResourceDelta
 import org.eclipse.core.resources.IResourceDeltaVisitor
+import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
+import org.eclipse.core.runtime.jobs.ISchedulingRule
 import org.eclipse.jdt.internal.core.builder.JavaBuilder
 import org.eclipse.jdt.internal.core.builder.State
+import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.jdt.util.JDTUtils
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.ReflectionUtils
-import org.scalaide.logging.HasLogger
-import org.eclipse.core.runtime.jobs.ISchedulingRule
-import org.scalaide.core.internal.jdt.util.JDTUtils
-import org.scalaide.core.SdtConstants
-import org.scalaide.core.IScalaPlugin
 
 class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with HasLogger {
 
@@ -38,7 +40,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
   }
 
   override def build(kind: Int, ignored: ju.Map[String, String], monitor: IProgressMonitor): Array[IProject] = {
-    import IncrementalProjectBuilder._
+    import org.eclipse.core.resources.IncrementalProjectBuilder._
 
     val project = IScalaPlugin().getScalaProject(this.project)
 
@@ -62,7 +64,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
           val removed0 = new HashSet[IFile]
 
           getDelta(project.underlying).accept(new IResourceDeltaVisitor {
-            def visit(delta: IResourceDelta) = {
+            override def visit(delta: IResourceDelta) = {
               delta.getResource match {
                 case file: IFile if FileUtils.isBuildable(file) && project.sourceFolders.exists(_.isPrefixOf(file.getLocation)) =>
                   delta.getKind match {
@@ -86,7 +88,7 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
             if (project.directDependencies.exists(hasChanges)) {
               // reset presentation compilers if a dependency has been rebuilt
-              logger.debug("Resetting presentation compiler for %s due to dependent project change".format(project.underlying.getName()))
+              logger.debug(s"Restart presentation compiler for ${project.underlying.getName} due to dependent project change.")
               project.presentationCompiler.askRestart()
 
               // in theory need to be able to identify the exact dependencies
@@ -111,10 +113,10 @@ class ScalaBuilder extends IncrementalProjectBuilder with JDTBuilderFacade with 
 
     val depends = project.transitiveDependencies
 
-    /** The Java builder has to be run for copying resources (non-source files) to the output directory.
+    /* The Java builder has to be run for copying resources (non-source files) to the output directory.
      *
-     *  We need to run it when no Java sources have been modified
-     *  (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
+     * We need to run it when no Java sources have been modified
+     * (since the SBT builder automatically calls the JDT builder internally if there are modified Java sources).
      */
     def shouldRunJavaBuilder: Boolean = {
       (needToCopyResources && !addedOrUpdated.exists(_.getName().endsWith(SdtConstants.JavaFileExtn)))

@@ -97,7 +97,6 @@ class ScalaSourceViewerConfiguration(
     }
 
   override def getOutlinePresenter(sourceViewer: ISourceViewer, doCodeResolve: Boolean): IInformationPresenter = {
-
     val presenter = new InformationPresenter(getOutlinePresenterControlCreator(sourceViewer, IJavaEditorActionDefinitionIds.SHOW_OUTLINE))
     presenter.setDocumentPartitioning(getConfiguredDocumentPartitioning(sourceViewer))
     presenter.setAnchor(AbstractInformationControlManager.ANCHOR_GLOBAL)
@@ -106,6 +105,7 @@ class ScalaSourceViewerConfiguration(
     presenter.setSizeConstraints(50, 20, true, false)
     presenter
   }
+
   override def getTabWidth(sourceViewer: ISourceViewer): Int =
     combinedPrefStore.getInt(IndentSpaces.eclipseKey)
 
@@ -222,7 +222,8 @@ class ScalaSourceViewerConfiguration(
   override def getAnnotationHover(sourceViewer: ISourceViewer) = annotationHover
 
   /**
-   * Creates a reconciler with a delay of 500ms.
+   * Creates a reconciler with a configurable delay. The delay can be set in the
+   * user preferences.
    */
   override def getReconciler(sourceViewer: ISourceViewer): IReconciler =
     reconciler

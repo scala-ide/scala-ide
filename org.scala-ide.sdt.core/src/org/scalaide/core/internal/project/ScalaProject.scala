@@ -1,10 +1,14 @@
 package org.scalaide.core.internal.project
 
 import java.io.File.pathSeparator
+import java.io.IOException
+
 import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable.Publisher
 import scala.tools.nsc.Settings
+import scala.util.control.NonFatal
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IMarker
@@ -13,50 +17,50 @@ import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IResourceProxy
 import org.eclipse.core.resources.IResourceProxyVisitor
 import org.eclipse.core.resources.ProjectScope
+import org.eclipse.core.runtime.CoreException
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IClasspathEntry
+import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.JavaCore
 import org.eclipse.jdt.core.JavaModelException
+import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
+import org.eclipse.jdt.internal.core.JavaProject
+import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.util.Util
+import org.eclipse.jface.preference.IPersistentPreferenceStore
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.ui.IEditorPart
 import org.eclipse.ui.IPartListener
 import org.eclipse.ui.IWorkbenchPart
 import org.eclipse.ui.part.FileEditorInput
-import org.scalaide.core.IScalaProject
-import org.scalaide.core.IScalaProjectEvent
 import org.scalaide.core.BuildSuccess
 import org.scalaide.core.IScalaPlugin
-import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
-import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.IScalaProject
+import org.scalaide.core.IScalaProjectEvent
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.builder.EclipseBuildManager
+import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
+import org.scalaide.core.internal.compiler.PresentationCompilerProxy
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.resources.EclipseResource
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.ui.internal.editor.ScalaEditor
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
+import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
-import org.scalaide.util.internal.SettingConverterUtil
-import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.jface.preference.IPersistentPreferenceStore
-import org.eclipse.core.runtime.CoreException
-import org.scalaide.core.SdtConstants
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.core.compiler.IScalaPresentationCompiler
-import org.eclipse.jdt.core.WorkingCopyOwner
-import org.eclipse.jdt.internal.core.DefaultWorkingCopyOwner
-import org.eclipse.jdt.internal.core.SearchableEnvironment
-import org.eclipse.jdt.internal.core.JavaProject
-import org.scalaide.core.internal.compiler.PresentationCompilerActivityListener
-import org.scalaide.ui.internal.editor.ScalaEditor
-import java.io.IOException
+import org.scalaide.util.eclipse.SWTUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 object ScalaProject {
   def apply(underlying: IProject): ScalaProject = {
@@ -67,15 +71,27 @@ object ScalaProject {
 
   /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
   private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
+    override def partActivated(part: IWorkbenchPart): Unit = {
+      val isPcAutoRestartEnabled = IScalaPlugin().getPreferenceStore.getBoolean(ResourcesPreferences.PRES_COMP_AUTO_RESTART)
+      if (isPcAutoRestartEnabled) {
+        doWithCompilerAndFile(part) { (_, ssf) =>
+          if (Option(ssf.getProblems()).exists(_.nonEmpty)) {
+            logger.debug(s"Restarting presentation compiler for ${project.underlying.getName} because ${part.getTitle} gained focus.")
+            project.presentationCompiler.askRestart()
+          }
+        }
+      }
+    }
+
     override def partOpened(part: IWorkbenchPart): Unit = {
-      doWithCompilerAndFile(part) { (compiler, ssf) =>
+      doWithCompilerAndFile(part) { (_, ssf) =>
         logger.debug("open " + part.getTitle)
         ssf.forceReload()
       }
     }
 
     override def partClosed(part: IWorkbenchPart): Unit = {
-      doWithCompilerAndFile(part) { (compiler, ssf) =>
+      doWithCompilerAndFile(part) { (_, ssf) =>
         logger.debug("close " + part.getTitle)
         ssf.discard()
       }
@@ -266,13 +282,13 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   def allFilesInSourceDirs(): Set[IFile] = {
-    /** Cache it for the duration of this call */
+    /* Cache it for the duration of this call */
     lazy val currentSourceOutputFolders = sourceOutputFolders
 
-    /** Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
-     *  by the JDT.
+    /* Return the inclusion patterns of `entry` as an Array[Array[Char]], ready for consumption
+     * by the JDT.
      *
-     *  @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
+     * @see org.eclipse.jdt.internal.core.ClassPathEntry.fullInclusionPatternChars()
      */
     def fullPatternChars(entry: IClasspathEntry, patterns: Array[IPath]): Array[Array[Char]] = {
       if (patterns.isEmpty)
@@ -284,9 +300,9 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
       }
     }
 
-    /** Logic is copied from existing code ('isExcludedFromProject'). Code is trying to
-     *  see if the given path is a source or output folder for any source entry in the
-     *  classpath of this project.
+    /* Logic is copied from existing code ('isExcludedFromProject'). Code is trying to
+     * see if the given path is a source or output folder for any source entry in the
+     * classpath of this project.
      */
     def sourceOrBinaryFolder(path: IPath): Boolean = {
       if (path.segmentCount() > 2) return false // is a subfolder of a package
@@ -411,7 +427,7 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   def scalacArguments: Seq[String] = {
-    import ScalaPresentationCompiler.defaultScalaSettings
+    import org.scalaide.core.internal.compiler.ScalaPresentationCompiler.defaultScalaSettings
     val encArgs = encoding.toSeq flatMap (Seq("-encoding", _))
 
     val shownArgs = {
@@ -463,11 +479,9 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
   }
 
   private def initializeSetting(setting: Settings#Setting, propValue: String): Unit = {
-    try {
-      setting.tryToSetFromPropertyValue(propValue)
-      logger.debug("[%s] initializing %s to %s (%s)".format(underlying.getName(), setting.name, setting.value.toString, storage.getString(SettingConverterUtil.convertNameToProperty(setting.name))))
-    } catch {
-      case t: Throwable => eclipseLog.error("Unable to set setting '" + setting.name + "' to '" + propValue + "'", t)
+    try setting.tryToSetFromPropertyValue(propValue)
+    catch {
+      case NonFatal(t) => eclipseLog.error(s"Unable to set setting '${setting.name}' to '$propValue'", t)
     }
   }
 
@@ -475,10 +489,8 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
     // if the workspace project doesn't exist, it is a virtual project used by Eclipse.
     // As such the source folders don't exist.
     if (underlying.exists())
-      for ((src, dst) <- sourceOutputFolders) {
-        logger.debug("Added output folder: " + src + ": " + dst)
+      for ((src, dst) <- sourceOutputFolders)
         settings.outputDirs.add(EclipseResource(src), EclipseResource(dst))
-      }
 
     for (enc <- encoding)
       settings.encoding.value = enc
@@ -492,7 +504,6 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
 
     // handle additional parameters
     val additional = storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
-    logger.info("setting additional parameters: " + additional)
     settings.processArgumentString(additional)
   }
 
@@ -507,11 +518,6 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
     settings.javaextdirs.value = " "
     settings.classpath.value = (scalaCp.userCp ++ scalaCp.scalaLibrary.toSeq).map(_.toOSString).mkString(pathSeparator)
     scalaCp.scalaLibrary.foreach(scalaLib => settings.bootclasspath.value = scalaLib.toOSString)
-
-    logger.debug("javabootclasspath: " + settings.javabootclasspath.value)
-    logger.debug("javaextdirs: " + settings.javaextdirs.value)
-    logger.debug("scalabootclasspath: " + settings.bootclasspath.value)
-    logger.debug("user classpath: " + settings.classpath.value)
   }
 
   /** Return a the project-specific preference store. This does not take into account the
@@ -527,7 +533,7 @@ class ScalaProject private(val underlying: IProject) extends ClasspathManagement
           super.save()
         } catch {
           case e: IOException =>
-            logger.error(s"An Exception occured saving the project-specific preferences for ${underlying.getName()} ! Your settings will not be persisted. Please report !")
+            logger.error(s"An Exception occurred saving the project-specific preferences for ${underlying.getName()}! Your settings will not be persisted. Please report!")
             throw e
         }
       }
