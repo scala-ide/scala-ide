@@ -55,7 +55,6 @@ import org.scalaide.ui.internal.editor.ScalaEditor
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.ui.internal.preferences.IDESettings
 import org.scalaide.ui.internal.preferences.PropertyStore
-import org.scalaide.ui.internal.preferences.ResourcesPreferences
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.FileUtils
@@ -71,18 +70,6 @@ object ScalaProject {
 
   /** Listen for [[IWorkbenchPart]] event and takes care of loading/discarding scala compilation units.*/
   private class ProjectPartListener(project: ScalaProject) extends PartAdapter with HasLogger {
-    override def partActivated(part: IWorkbenchPart): Unit = {
-      val isPcAutoRestartEnabled = IScalaPlugin().getPreferenceStore.getBoolean(ResourcesPreferences.PRES_COMP_AUTO_RESTART)
-      if (isPcAutoRestartEnabled) {
-        doWithCompilerAndFile(part) { (_, ssf) =>
-          if (Option(ssf.getProblems()).exists(_.nonEmpty)) {
-            logger.debug(s"Restarting presentation compiler for ${project.underlying.getName} because ${part.getTitle} gained focus.")
-            project.presentationCompiler.askRestart()
-          }
-        }
-      }
-    }
-
     override def partOpened(part: IWorkbenchPart): Unit = {
       doWithCompilerAndFile(part) { (_, ssf) =>
         logger.debug("open " + part.getTitle)
