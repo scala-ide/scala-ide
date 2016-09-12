@@ -40,6 +40,7 @@ import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
 import org.scalaide.core.sbtbuilder.SbtBuilderTest
 import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
+import org.scalaide.core.sbtbuilder.ScalacNotUnderstandJavaTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
@@ -130,6 +131,7 @@ import org.scalaide.ui.internal.preferences.StringListMapperTest
     classOf[ScopeCompileConfigurationTest],
     classOf[OutlineModelTest],
     classOf[StringListMapperTest],
-    classOf[NonScalaSourceErrorMarkersTest]
+    classOf[NonScalaSourceErrorMarkersTest],
+    classOf[ScalacNotUnderstandJavaTest]
 ))
 class TestsSuite

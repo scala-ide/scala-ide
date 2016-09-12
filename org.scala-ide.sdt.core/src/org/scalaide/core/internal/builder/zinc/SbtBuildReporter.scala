@@ -13,7 +13,7 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
 private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
-  extends xsbti.Problem {
+    extends xsbti.Problem {
 
   import SbtUtils.m2o
 
@@ -54,25 +54,46 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   override def problems: Array[xsbti.Problem] = probs.toArray
   override def comment(pos: xsbti.Position, msg: String): Unit = {}
 
+  private def riseErrorOrWarning(sev: xsbti.Severity): Unit = {
+    import xsbti.Severity._
+    sev match {
+      case Warn => seenWarnings = true
+      case Error => seenErrors = true
+      case _ =>
+    }
+  }
+
+  private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
+    SbtUtils.m2o(pos.sourceFile).flatMap { file =>
+      FileUtils.resourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
+    }.map { resource =>
+      if (resource.getFileExtension != "java")
+        riseErrorOrWarning(_)
+      else
+        (sev: xsbti.Severity) => ()
+    }.orElse {
+      Option(riseErrorOrWarning(_))
+    }.foreach(_(sev))
+
   override def log(pos: xsbti.Position, msg: String, sev: xsbti.Severity): Unit = {
     val problem = SbtProblem(sev, msg, pos, "compile")
     if (!probs.contains(problem)) {
       createMarker(pos, msg, sev)
       probs += problem
     }
-
-    import xsbti.Severity._
-    sev match {
-      case Warn  => seenWarnings = true
-      case Error => seenErrors = true
-      case _     =>
-    }
+    riseNonJavaErrorOrWarning(pos, sev)
   }
 
   def eclipseSeverity(severity: xsbti.Severity): Int = severity match {
-    case xsbti.Severity.Info  => IMarker.SEVERITY_INFO
+    case xsbti.Severity.Info => IMarker.SEVERITY_INFO
     case xsbti.Severity.Error => IMarker.SEVERITY_ERROR
-    case xsbti.Severity.Warn  => IMarker.SEVERITY_WARNING
+    case xsbti.Severity.Warn => IMarker.SEVERITY_WARNING
+  }
+
+  def riseJavaErrorOrWarning(severity: Int) = severity match {
+    case IMarker.SEVERITY_WARNING => riseErrorOrWarning(xsbti.Severity.Warn)
+    case IMarker.SEVERITY_ERROR => riseErrorOrWarning(xsbti.Severity.Error)
+    case _ =>
   }
 
   def createMarker(pos: xsbti.Position, msg: String, sev: xsbti.Severity) = {
@@ -88,7 +109,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
-      logger.error(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
+      logger.warn(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
 
     // if we couldn't determine what file/offset to put this marker on, create one on the project
     if (!marker.isDefined) {
