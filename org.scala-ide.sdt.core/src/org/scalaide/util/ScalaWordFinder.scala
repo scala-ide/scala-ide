@@ -79,17 +79,20 @@ object ScalaWordFinder {
   /**
    * Find the point after which a completion should be inserted in the document.
    */
-  def findCompletionPoint(document: IndexedSeq[Char], offset0: Int): IRegion = {
+  def findCompletionPoint(document: IndexedSeq[Char], offset: Int): IRegion = {
     def isWordPart(ch: Char) = isIdentifierPart(ch) || isOperatorPart(ch)
 
-    val offset = if (offset0 >= document.length) (document.length - 1) else offset0
-    val ch = document(offset)
-    if (isWordPart(ch))
-      findWord(document, offset)
-    else if (offset > 0 && isWordPart(document(offset - 1)))
-      findWord(document, offset - 1)
-    else
+    if (offset >= document.length)
       new Region(offset, 0)
+    else {
+      val ch = document(offset)
+      if (isWordPart(ch))
+        findWord(document, offset)
+      else if (offset > 0 && isWordPart(document(offset - 1)))
+        findWord(document, offset - 1)
+      else
+        new Region(offset, 0)
+    }
   }
 
   /** Returns the length of the identifier which is located at the offset position. */

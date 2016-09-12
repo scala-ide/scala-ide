@@ -156,7 +156,7 @@ class ScalaSourceFile(fragment: PackageFragment, elementName: String, workingCop
   }
 
   /** Makes sure {{{this}}} source is not in the ignore buffer of the compiler and ask the compiler to reload it. */
-  final def forceReload(): Unit = scalaProject.presentationCompiler { compiler ⇒
+  final def forceReload(): Unit = scalaProject.presentationCompiler { compiler =>
     compiler.askToDoFirst(this)
     reload()
   }

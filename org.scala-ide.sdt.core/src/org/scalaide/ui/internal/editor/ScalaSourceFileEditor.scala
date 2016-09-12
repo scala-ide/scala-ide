@@ -220,7 +220,7 @@ class ScalaSourceFileEditor
         case _ => false
       }
 
-      menu.getItems.toList.foreach { item =>
+      menu.getItems foreach { item =>
         if (isBroken(item)) {
           menu.remove(item)
         }

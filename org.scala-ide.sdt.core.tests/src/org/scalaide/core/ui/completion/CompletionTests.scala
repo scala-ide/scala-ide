@@ -86,7 +86,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
       }
 
       val completions = new ScalaCompletions()
-        .findCompletions(ScalaWordFinder.findWord(doc, caretOffset), caretOffset, unit)
+        .getCompletions(ScalaWordFinder.findWord(doc, caretOffset), caretOffset, unit)
         .sorted(CompletionProposalOrdering).to[IndexedSeq]
 
       def completionList = completions.map(_.display).mkString("\n")
@@ -176,7 +176,7 @@ abstract class CompletionTests extends TextEditTests with CompilerSupport {
  */
 private object CompletionProposalOrdering extends Ordering[CompletionProposal] {
 
-  def compare(a: CompletionProposal, b: CompletionProposal) =
+  override def compare(a: CompletionProposal, b: CompletionProposal) =
     b.relevance - a.relevance match {
       case 0 => a.display.compareToIgnoreCase(b.display)
       case diff => diff
