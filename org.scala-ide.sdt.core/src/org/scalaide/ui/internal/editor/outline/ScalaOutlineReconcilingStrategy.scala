@@ -16,11 +16,19 @@ class ScalaOutlineReconcilingStrategy(icuEditor: OutlinePageEditorExtension) ext
   override def setProgressMonitor(pMonitor: IProgressMonitor): Unit = {}
 
   override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
-    logger.debug("Incremental reconciliation not implemented.")
+    updateOutlineView()
   }
 
   override def reconcile(partition: IRegion): Unit = {
-    val sop = Option(icuEditor.getOutlinePage)
+    logger.debug("Non incremental reconciliation not implemented.")
+  }
+
+  override def initialReconcile(): Unit = {
+    updateOutlineView()
+  }
+
+  private def updateOutlineView(): Unit = {
+     val sop = Option(icuEditor.getOutlinePage)
     if (!sop.isEmpty) {
       val oldRoot = sop.get.getInput
       icUnit.scalaProject.presentationCompiler.apply(comp => {
@@ -34,9 +42,4 @@ class ScalaOutlineReconcilingStrategy(icuEditor: OutlinePageEditorExtension) ext
       })
     }
   }
-
-  override def initialReconcile(): Unit = {
-    reconcile(null)
-  }
-
 }
