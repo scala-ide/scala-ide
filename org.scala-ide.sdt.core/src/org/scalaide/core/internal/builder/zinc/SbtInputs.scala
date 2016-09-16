@@ -47,13 +47,15 @@ class SbtInputs(installation: IScalaInstallation,
 
   def analysisMap(f: File): Maybe[Analysis] =
     if (f.isFile)
-      Maybe.just(Analysis.Empty)
+      Maybe.nothing[Analysis]
     else {
       val analysis = allProjects.collectFirst {
         case project if project.buildManager.buildManagerOf(f).nonEmpty =>
           project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
       }
-      Maybe.just(analysis.getOrElse(Analysis.Empty))
+      analysis.map { analysis =>
+        Maybe.just(analysis)
+      }.getOrElse(Maybe.nothing[Analysis])
     }
 
   def progress = Maybe.just(scalaProgress)
