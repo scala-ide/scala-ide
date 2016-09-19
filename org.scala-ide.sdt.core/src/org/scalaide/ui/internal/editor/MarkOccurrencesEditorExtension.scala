@@ -41,7 +41,8 @@ trait MarkOccurrencesEditorExtension extends ScalaCompilationUnitEditor {
   }
 
   override def updateOccurrenceAnnotations(selection: ITextSelection, astRoot: CompilationUnit): Unit = {
-    requireOccurrencesUpdate(selection)
+    if (isMarkingOccurrences)
+      requireOccurrencesUpdate(selection)
   }
 
   override def installOccurrencesFinder(forceUpdate: Boolean): Unit = {

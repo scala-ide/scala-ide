@@ -344,9 +344,6 @@ class ScalaSourceFileEditor
     }
   }
 
-  override def isMarkingOccurrences =
-    scalaPrefStore.getBoolean(EditorPreferencePage.P_ENABLE_MARK_OCCURRENCES)
-
   override def createSemanticHighlighter: TextPresentationHighlighter =
     TextPresentationEditorHighlighter(this, semanticHighlightingPreferences, addReconcilingListener _, removeReconcilingListener _)
 
