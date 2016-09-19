@@ -60,7 +60,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
    */
   private val nameLock = new Object
 
-} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter, name)
+} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
@@ -203,8 +203,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
         askLoadedTyped(unit.source, false).get
         unit.problems.toList flatMap presentationReporter.eclipseProblem
       case None =>
-        logger.info("Missing unit for file %s when retrieving errors. Errors will not be shown in this file".format(file))
-        logger.info(unitOfFile.toString)
+        logger.info(s"Missing unit for file $file when retrieving errors. Errors will not be shown in this file. Loaded units are: $unitOfFile")
         Nil
     }
   }
@@ -356,8 +355,8 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
   def mkCompletionProposal(prefix: String, start: Int, sym: Symbol, tpe: Type,
     inherited: Boolean, viaView: Symbol, context: CompletionContext.ContextType, project: IScalaProject): CompletionProposal = {
 
-    /** Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
-     *  source. This function adds the back-ticks to a given identifier, if necessary.
+    /* Some strings need to be enclosed in back-ticks to be usable as identifiers in scala
+     * source. This function adds the back-ticks to a given identifier, if necessary.
      */
     def addBackTicksIfNecessary(identifier: String): String = {
       def needsBackTicks(identifier: String) = {
@@ -398,7 +397,6 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
         declPrinter.defString(sym, flagMask = 0L, showKind = false)(tpe)
       } else name
     val container = sym.owner.enclClass.fullName
-
 
     val relevancCalc = new ProposalRelevanceCalculator
     val relevance = relevancCalc.forScala(this)(prefix, name, sym, viaView, Some(inherited))
@@ -467,7 +465,7 @@ object ScalaPresentationCompiler {
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
 
-  class PresentationReporter extends InteractiveReporter with HasLogger {
+  class PresentationReporter(spcName: String) extends InteractiveReporter with HasLogger {
     var compiler: ScalaPresentationCompiler = null
 
     def nscSeverityToEclipse(severityLevel: Int) =
@@ -525,7 +523,7 @@ object ScalaPresentationCompiler {
     }
 
     override def echo(msg: String): Unit =
-      logger.debug(s"[${compiler.name}]: $msg")
+      logger.debug(s"[$spcName]: $msg")
 
   }
 }

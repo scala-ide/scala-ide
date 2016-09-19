@@ -1,24 +1,25 @@
 package org.scalaide.ui.internal.reconciliation
 
-import org.eclipse.jface.text.reconciler.MonoReconciler
-import org.scalaide.ui.internal.actions.PartAdapter
-import org.eclipse.ui.IWorkbenchPart
-import org.eclipse.jface.text.reconciler.IReconcilingStrategy
-import org.eclipse.jface.text.ITextViewer
-import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
-import org.eclipse.ui.IPartService
-import org.eclipse.ui.texteditor.ITextEditor
 import scala.collection.mutable.Subscriber
+
+import org.eclipse.jface.text.ITextViewer
+import org.eclipse.jface.text.reconciler.IReconcilingStrategy
+import org.eclipse.jface.text.reconciler.MonoReconciler
+import org.eclipse.swt.events.ShellAdapter
+import org.eclipse.swt.events.ShellEvent
+import org.eclipse.swt.widgets.Control
+import org.eclipse.ui.IPartService
+import org.eclipse.ui.IWorkbenchPart
+import org.eclipse.ui.texteditor.ITextEditor
+import org.scalaide.core.compiler.IPresentationCompilerProxy
 import org.scalaide.core.internal.compiler.PresentationCompilerActivity
 import org.scalaide.core.internal.compiler.PresentationCompilerProxy
-import org.scalaide.logging.HasLogger
-import org.scalaide.core.compiler.IPresentationCompilerProxy
-import org.scalaide.util.Utils._
-import org.eclipse.swt.events.ShellAdapter
-import org.eclipse.swt.widgets.Control
-import org.eclipse.swt.events.ShellEvent
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.core.internal.compiler.Restart
+import org.scalaide.logging.HasLogger
+import org.scalaide.ui.editor.InteractiveCompilationUnitEditor
+import org.scalaide.ui.internal.actions.PartAdapter
+import org.scalaide.util.Utils._
+import org.scalaide.util.eclipse.SWTUtils
 
 /** A Scala reconciler that forces reconciliation on various events:
  *   - the editor is shown through tab navigation
@@ -43,16 +44,14 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
         forceReconciling()
       }
     }
-
-    override def partDeactivated(part: IWorkbenchPart): Unit = {}
   }
 
   /** Listen for presentation-compiler restart events. */
   object compilerListener extends Subscriber[PresentationCompilerActivity, PresentationCompilerProxy] {
-    def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
+    override def notify(pub: PresentationCompilerProxy, event: PresentationCompilerActivity): Unit = event match {
       case Restart =>
         if (pub == compilerProxy) {
-          logger.debug("Reconciling due to restart")
+          logger.debug(s"Reconciling ${editor.getTitle} due to restart")
           forceReconciling()
         }
       case _ =>
@@ -66,8 +65,6 @@ class ScalaReconciler(editor: InteractiveCompilationUnitEditor,
         forceReconciling()
       }
     }
-
-    override def shellDeactivated(event: ShellEvent): Unit = {}
   }
 
   override def install(textViewer: ITextViewer): Unit = {

@@ -40,6 +40,7 @@ import org.scalaide.core.sbtbuilder.OutputFoldersTest
 import org.scalaide.core.sbtbuilder.ProjectDependenciesTest
 import org.scalaide.core.sbtbuilder.SbtBuilderTest
 import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
+import org.scalaide.core.sbtbuilder.ScalacNotUnderstandJavaTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
@@ -64,6 +65,7 @@ import org.scalaide.ui.wizards.WizardTests
 import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
+import org.scalaide.ui.internal.preferences.StringListMapperTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -128,7 +130,9 @@ import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
     classOf[JavaDependsOnScalaBothAreOkTest],
     classOf[ScopeCompileConfigurationTest],
     classOf[OutlineModelTest],
+    classOf[StringListMapperTest],
     classOf[NonScalaSourceErrorMarkersTest],
-    classOf[CompilerBridgeStoreTest]
+    classOf[CompilerBridgeStoreTest],
+    classOf[ScalacNotUnderstandJavaTest]
 ))
 class TestsSuite

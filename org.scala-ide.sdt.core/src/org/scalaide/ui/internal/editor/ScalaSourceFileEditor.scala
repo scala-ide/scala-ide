@@ -1,7 +1,9 @@
 package org.scalaide.ui.internal.editor
 
 import java.util.ResourceBundle
+
 import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.jdt.core.dom.AST
 import org.eclipse.jdt.core.dom.CompilationUnit
 import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor
 import org.eclipse.jdt.internal.ui.javaeditor.JavaSourceViewer
@@ -33,13 +35,14 @@ import org.eclipse.swt.events.VerifyEvent
 import org.eclipse.swt.widgets.Composite
 import org.eclipse.ui.IWorkbenchCommandConstants
 import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.part.WorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
-import org.eclipse.ui.part.WorkbenchPart
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
+import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.logging.HasLogger
 import org.scalaide.refactoring.internal.OrganizeImports
 import org.scalaide.refactoring.internal.RefactoringHandler
@@ -51,13 +54,11 @@ import org.scalaide.ui.internal.actions
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationEditorHighlighter
 import org.scalaide.ui.internal.editor.decorators.semantichighlighting.TextPresentationHighlighter
 import org.scalaide.ui.internal.editor.hover.FocusedControlCreator
+import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
+import org.scalaide.util.Utils
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.ui.DisplayThread
-import org.scalaide.core.internal.jdt.model.ScalaSourceFile
-import org.eclipse.jdt.core.dom.AST
-import org.scalaide.util.Utils
-import org.scalaide.ui.internal.editor.outline.OutlinePageEditorExtension
 
 class ScalaSourceFileEditor
     extends CompilationUnitEditor

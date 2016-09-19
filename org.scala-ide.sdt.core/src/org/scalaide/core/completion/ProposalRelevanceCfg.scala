@@ -4,10 +4,14 @@ import scala.util.matching.Regex
 
 trait ProposalRelevanceCfg {
   def favoritePackages: Seq[Regex]
-  def preferedPackages: Seq[Regex]
+  def preferredPackages: Seq[Regex]
 
   def unpopularPackages: Seq[Regex]
   def shunnedPackages: Seq[Regex]
+
+  override def toString = {
+    s"ProposalRelevanceCfg[favoritePackages=$favoritePackages, preferredPackages=$preferredPackages,unpopularPackages=$unpopularPackages,shunnedPackages=$shunnedPackages]"
+  }
 }
 
 object DefaultProposalRelevanceCfg extends ProposalRelevanceCfg {
@@ -15,7 +19,7 @@ object DefaultProposalRelevanceCfg extends ProposalRelevanceCfg {
     """scala\..*""".r ::
     Nil
 
-  val preferedPackages =
+  val preferredPackages =
     """java\..*""".r ::
     """.*\.scala.*""".r ::
     """akka\..*""".r ::

@@ -13,7 +13,7 @@ abstract class BasicFieldEditorPreferencePage(description: String) extends Field
   setPreferenceStore(IScalaPlugin().getPreferenceStore)
   setDescription(description)
 
-  override def init(workbench: IWorkbench) = Unit
+  override def init(workbench: IWorkbench) = ()
 
   protected def addBooleanFieldEditors(editors: (String, String)*): Unit = {
     for ((name, label) <- editors) {

@@ -7,13 +7,14 @@ import org.eclipse.jdt.internal.ui.text.spelling.JavaSpellingProblem
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.text.IDocument
 import org.eclipse.jface.text.IRegion
+import org.eclipse.jface.text.reconciler.DirtyRegion
 import org.eclipse.jface.text.source.IAnnotationModel
 import org.eclipse.jface.text.source.ISourceViewer
 import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.texteditor.spelling.ISpellingProblemCollector
 import org.eclipse.ui.texteditor.spelling.SpellingProblem
-import org.eclipse.ui.texteditor.spelling.{SpellingReconcileStrategy => ESpellingReconcileStrategy}
-import org.eclipse.ui.texteditor.spelling.{SpellingService => ESpellingService}
+import org.eclipse.ui.texteditor.spelling.{ SpellingReconcileStrategy => ESpellingReconcileStrategy }
+import org.eclipse.ui.texteditor.spelling.{ SpellingService => ESpellingService }
 
 /**
  * Reconcile strategy for spell checking. It checks whether spell checking is
@@ -22,7 +23,7 @@ import org.eclipse.ui.texteditor.spelling.{SpellingService => ESpellingService}
  * The implementation of this class is adopted from
  * [[JavaSpellingReconcileStrategy]], which couldn't be used because it sets the
  * spelling service in its constructor. The spelling service is the only thing
- * we had to modify to enable a Scala spelling engine, for a more detailful
+ * we had to modify to enable a Scala spelling engine, for a more detailed
  * description see [[ScalaSpellingService]].
  *
  * @param editor
@@ -55,10 +56,10 @@ final class SpellingReconcileStrategy(
     super.setDocument(document)
   }
 
-  override def reconcile(region: IRegion): Unit = {
+  override def reconcile(dirtyRegion: DirtyRegion, subRegion: IRegion): Unit = {
     val isSpellingEnabled = store.getBoolean(ESpellingService.PREFERENCE_SPELLING_ENABLED)
     if (requestor.isDefined && isSpellingEnabled)
-      super.reconcile(region)
+      super.reconcile(dirtyRegion, subRegion)
   }
 
   override def getAnnotationModel(): IAnnotationModel =
