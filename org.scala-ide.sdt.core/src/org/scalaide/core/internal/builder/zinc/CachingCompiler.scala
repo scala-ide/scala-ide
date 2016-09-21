@@ -13,7 +13,6 @@ import xsbti.compile.JavaCompiler
 import sbt.internal.inc.IncrementalCompilerImpl
 import xsbti.compile.PerClasspathEntryLookup
 import xsbti.compile.DefinesClass
-import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileResult
 
 /**
@@ -37,7 +36,7 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
   def compile(in: SbtInputs, comps: Compilers): Analysis = {
     val lookup = new PerClasspathEntryLookup {
       override def analysis(classpathEntry: File) =
-        in.analysisMap(classpathEntry).asInstanceOf[xsbti.Maybe[CompileAnalysis]]
+        in.analysisMap(classpathEntry)
 
       override def definesClass(classpathEntry: File) = {
         val dc = Locator(classpathEntry)
@@ -60,8 +59,10 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
   private def cacheAndReturnLastAnalysis(compilationResult: CompileResult): Analysis = {
     if (compilationResult.hasModified)
       MixedAnalyzingCompiler.staticCachedStore(cacheFile).set(compilationResult.analysis, compilationResult.setup)
-    // TODO is this cast safe here?
-    compilationResult.analysis.asInstanceOf[Analysis]
+    compilationResult.analysis match {
+      case a: Analysis => a
+      case a => throw new IllegalStateException(s"object of type `Analysis` was expected but got `${a.getClass}`.")
+    }
   }
 }
 

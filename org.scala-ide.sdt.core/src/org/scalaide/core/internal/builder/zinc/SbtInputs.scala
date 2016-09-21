@@ -13,21 +13,20 @@ import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInst
 import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
-import xsbti.compile.ClasspathOptions
-import sbt.internal.inc.classpath.ClasspathUtilities
+import sbt.internal.inc.AnalyzingCompiler
 import sbt.internal.inc.CompilerCache
-import sbt.internal.inc.Analysis
+import sbt.internal.inc.CompilerInterfaceProvider
 import sbt.internal.inc.Locate
+import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
 import xsbti.Maybe
+import xsbti.compile.ClasspathOptions
+import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileProgress
-import xsbti.compile.CompileOrder
+import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
 import xsbti.compile.IncOptionsUtil
-import xsbti.compile.DefinesClass
 import xsbti.compile.MultipleOutput
-import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.CompilerInterfaceProvider
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -48,9 +47,9 @@ class SbtInputs(installation: IScalaInstallation,
 
   private val allProjects = project +: project.transitiveDependencies.flatMap(ScalaPlugin().asScalaProject)
 
-  def analysisMap(f: File): Maybe[Analysis] =
+  def analysisMap(f: File): Maybe[CompileAnalysis] =
     if (f.isFile)
-      Maybe.nothing[Analysis]
+      Maybe.nothing[CompileAnalysis]
     else {
       val analysis = allProjects.collectFirst {
         case project if project.buildManager.buildManagerOf(f).nonEmpty =>
@@ -58,7 +57,7 @@ class SbtInputs(installation: IScalaInstallation,
       }
       analysis.map { analysis =>
         Maybe.just(analysis)
-      }.getOrElse(Maybe.nothing[Analysis])
+      }.getOrElse(Maybe.nothing[CompileAnalysis])
     }
 
   def progress = Maybe.just(scalaProgress)
@@ -126,9 +125,9 @@ class SbtInputs(installation: IScalaInstallation,
 
   def javacOptions: Seq[String] = Nil // Not used.
 
-  import CompileOrder._
-  import SettingConverterUtil.convertNameToProperty
-  import preferences.ScalaPluginSettings.compileOrder
+  import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
+  import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty
+  import xsbti.compile.CompileOrder._
 
   def order = project.storage.getString(convertNameToProperty(compileOrder.name)) match {
     case "JavaThenScala" => JavaThenScala
