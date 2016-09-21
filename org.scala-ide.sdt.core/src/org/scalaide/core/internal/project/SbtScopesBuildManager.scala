@@ -21,7 +21,6 @@ import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.Analysis
-import xsbti.compile.IncOptions
 
 /**
  * Manages of source compilation for all scopes.
@@ -107,7 +106,7 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     }
   }
 
-  override def latestAnalysis(incOptions: => IncOptions): Analysis = Analysis.Empty
+  override def latestAnalysis: Analysis = Analysis.Empty
 
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
     buildScopeUnits.find { _.buildManagerOf(outputFile).nonEmpty }

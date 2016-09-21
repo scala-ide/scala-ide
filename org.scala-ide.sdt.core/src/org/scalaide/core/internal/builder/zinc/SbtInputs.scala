@@ -53,7 +53,7 @@ class SbtInputs(installation: IScalaInstallation,
     else {
       val analysis = allProjects.collectFirst {
         case project if project.buildManager.buildManagerOf(f).nonEmpty =>
-          project.buildManager.buildManagerOf(f).get.latestAnalysis(incOptions)
+          project.buildManager.buildManagerOf(f).get.latestAnalysis
       }
       analysis.map { analysis =>
         Maybe.just(analysis)

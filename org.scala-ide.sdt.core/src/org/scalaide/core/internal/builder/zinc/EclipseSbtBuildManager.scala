@@ -29,7 +29,6 @@ import org.scalaide.util.internal.SbtUtils
 
 import xsbti.CompileFailed
 import sbt.internal.inc.Analysis
-import xsbti.compile.IncOptions
 import sbt.internal.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
@@ -146,7 +145,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         case _: CompileFailed | CompilerBridgeFailed => None
       }
     analysis foreach setCached
-    createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)), progress.actualCompiledFiles)
+    createAdditionalMarkers(analysis.getOrElse(latestAnalysis), progress.actualCompiledFiles)
   }
 
   /**
@@ -183,9 +182,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     Option(cached.get) foreach (ref => ref.clear)
   }
 
-  // take by-name argument because we need incOptions only when we have a cache miss
-  override def latestAnalysis(incOptions: => IncOptions): Analysis =
-    Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(SbtUtils.readAnalysis(cacheFile, incOptions))
+  override def latestAnalysis: Analysis =
+    Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(SbtUtils.readAnalysis(cacheFile))
 
   /**
    * Knows nothing about output files.

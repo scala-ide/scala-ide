@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
 
 import xsbti.compile.CompileAnalysis
-import xsbti.compile.IncOptions
 
 /**
  * Abstraction which exposes sbt compiler to eclipse.
@@ -32,7 +31,7 @@ trait EclipseBuildManager {
   def canTrackDependencies: Boolean
 
   /** Gives back the latest dependencies analysis done by underlying compiler. */
-  def latestAnalysis(incOptions: => IncOptions): CompileAnalysis
+  def latestAnalysis: CompileAnalysis
 
   /**
    * Finds build manager which built given file
