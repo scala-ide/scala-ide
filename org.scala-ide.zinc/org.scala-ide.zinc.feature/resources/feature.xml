@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.sbt.feature"
-      label="sbt ${sbt.version}"
+      id="org.scala-ide.zinc.feature"
+      label="zinc ${zinc.version}"
       version="4.5.0.qualifier"
       provider-name="scala-ide.org"
-      plugin="org.scala-ide.sbt.full.library">
+      plugin="org.scala-ide.zinc.library">
 
    <description url="http://scala-ide.org">
-     sbt ${sbt.version} incremental compiler jars
+     zinc ${zinc.version} incremental compiler jars
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -47,21 +47,21 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    </url>
 
    <plugin
-         id="org.scala-ide.sbt.full.library"
+         id="org.scala-ide.zinc.library"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-ide.sbt.compiler.interface"
+         id="org.scala-ide.zinc.compiler.bridge"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="org.scala-ide.sbt.compiler.interface.source"
+         id="org.scala-ide.zinc.compiler.bridge.source"
          download-size="0"
          install-size="0"
          version="0.0.0"

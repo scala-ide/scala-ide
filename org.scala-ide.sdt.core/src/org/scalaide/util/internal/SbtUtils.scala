@@ -1,10 +1,24 @@
 package org.scalaide.util.internal
 
-import xsbti._
 import java.io.File
+
+import sbt.internal.inc.Analysis
+import sbt.internal.inc.FileBasedStore
+import xsbti._
+import xsbti.compile.MiniSetup
 
 object SbtUtils {
   def m2o[S](opt: Maybe[S]): Option[S] = if (opt.isEmpty) None else Some(opt.get)
+
+  def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
+    FileBasedStore(cacheFile).get().map(_ match {
+      case (a: Analysis, i) => (a, i)
+      case (a, _) => throw new RuntimeException(s"Expected that sbt analysis for $cacheFile is of type ${classOf[Analysis]} but was ${a.getClass}.")
+    })
+
+  def readAnalysis(cacheFile: File): Analysis =
+    // zinc requires name hashing to be enabled
+    readCache(cacheFile).map(_._1).getOrElse(Analysis.empty(nameHashing = true))
 
   object NoPosition extends xsbti.Position {
     def line(): Maybe[Integer] = Maybe.nothing()

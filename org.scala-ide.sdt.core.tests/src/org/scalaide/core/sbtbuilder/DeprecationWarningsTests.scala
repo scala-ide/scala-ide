@@ -100,7 +100,7 @@ class DeprecationWarningsTests {
   /**
    * This tests the second scenario in https://github.com/sbt/sbt/issues/1372:
    *
-   * - project succesfully built
+   * - project successfully built
    * - introduce an error
    * - undo change
    * - Expected: no errors left behind

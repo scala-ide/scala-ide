@@ -30,8 +30,13 @@
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
     <log4j.version>1.2.17</log4j.version>
+    <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <diffutils.version>1.2.1</diffutils.version>
+    <zinc.version>1.0.0-X3</zinc.version>
+    <sbt-util.version>0.1.0-M13</sbt-util.version>
+    <sbt-io.version>1.0.0-M6</sbt-io.version>
+    <sbinary.version>0.4.3</sbinary.version>
+    <scala-refactoring.version>0.11.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -80,9 +85,6 @@
     <version.suffix>Select a Scala profile</version.suffix>
     <jdt.core.version.range>Select an Eclipse profile</jdt.core.version.range>
     <version.tag>local</version.tag>
-    <sbt.version>0.13.8</sbt.version>
-    <json-io.version>4.1.6</json-io.version>
-    <scala-refactoring.version>0.11.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
@@ -106,7 +108,6 @@
         <scala.short.version>210</scala.short.version>
         <scala.minor.version>2.10</scala.minor.version>
         <version.suffix>2_10</version.suffix>
-
       </properties>
     </profile>
 
@@ -117,7 +118,6 @@
         <scala.short.version>211</scala.short.version>
         <scala.minor.version>2.11</scala.minor.version>
         <version.suffix>2_11</version.suffix>
-
       </properties>
     </profile>
 
@@ -128,9 +128,6 @@
         <scala.short.version>212</scala.short.version>
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
-        <!-- TODO: remove snapshot version when a tag compatible with Scala 2.12 is available -->
-        <sbt.version>0.13.8-SNAPSHOT</sbt.version>
-
       </properties>
     </profile>
 
@@ -226,8 +223,8 @@
     <profile>
       <id>set-version-specific-files</id>
       <properties>
-        <sbt.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.feature</sbt.feature.dir>
-        <sbt.source.feature.dir>org.scala-ide.sbt.build/org.scala-ide.sbt.source.feature</sbt.source.feature.dir>
+        <zinc.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.feature</zinc.feature.dir>
+        <zinc.source.feature.dir>org.scala-ide.zinc/org.scala-ide.zinc.source.feature</zinc.source.feature.dir>
         <scala210.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.feature</scala210.feature.dir>
         <scala210.source.feature.dir>org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature</scala210.source.feature.dir>
         <scala211.feature.dir>org.scala-ide.scala211.build/org.scala-ide.scala211.feature</scala211.feature.dir>
@@ -246,16 +243,16 @@
             <version>2.6</version>
             <executions>
               <execution>
-                <id>copy-resources-sbt-feature</id>
+                <id>copy-resources-zinc-feature</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <outputDirectory>${sbt.feature.dir}</outputDirectory>
+                  <outputDirectory>${zinc.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${sbt.feature.dir}/resources</directory>
+                      <directory>${zinc.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -263,16 +260,16 @@
                 </configuration>
               </execution>
               <execution>
-                <id>copy-resources-sbt-source-feature</id>
+                <id>copy-resources-zinc-source-feature</id>
                 <phase>validate</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <outputDirectory>${sbt.source.feature.dir}</outputDirectory>
+                  <outputDirectory>${zinc.source.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${sbt.source.feature.dir}/resources</directory>
+                      <directory>${zinc.source.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -396,7 +393,14 @@
                         tofile="${sdt.core.dir}/META-INF/MANIFEST.MF"
                         overwrite="true">
                         <filterset>
+                          <filter token="MIGLAYOUT_VERSION" value="${miglayout.version}"/>
+                          <filter token="LOG4J_VERSION" value="${log4j.version}"/>
+                          <filter token="JSON_IO_VERSION" value="${json-io.version}"/>
                           <filter token="JDTCORE_RANGE" value="${jdt.core.version.range}"/>
+                          <filter token="ZINC_VERSION" value="${zinc.version}"/>
+                          <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>
+                          <filter token="SBT_IO_VERSION" value="${sbt-io.version}"/>
+                          <filter token="SBINARY_VERSION" value="${sbinary.version}"/>
                         </filterset>
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
@@ -449,22 +453,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <!-- toolchain, sbt -->
-<!--      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>sbt-interface</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>compiler-interface-precompiled</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.sbt</groupId>
-        <artifactId>incremental-compiler</artifactId>
-        <version>${sbt.ide.version}</version>
-      </dependency> -->
       <!-- sdt.core dependencies -->
       <dependency>
         <groupId>com.miglayout</groupId>

@@ -8,21 +8,14 @@
     <version>4.5.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.full.library.source</artifactId>
+  <artifactId>org.scala-ide.zinc.compiler.bridge.source</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>sbt-interface</artifactId>
-      <version>${sbt.ide.version}</version>
-      <classifier>sources</classifier>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>incremental-compiler</artifactId>
-      <version>${sbt.ide.version}</version>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-bridge_${scala.minor.version}</artifactId>
+      <version>${zinc.version}</version>
       <classifier>sources</classifier>
       <optional>true</optional>
     </dependency>
@@ -31,16 +24,17 @@
   <build>
     <plugins>
       <plugin>
+        <!-- generate the MANIFEST.MF file, and create the bundle -->
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
           <outputDirectory>${project.build.directory}/src</outputDirectory>
           <instructions>
+            <Bundle-Name>Zinc Compiler Bridge Sources for Eclipse</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Name>Sbt Library Sources for Eclipse</Bundle-Name>
-            <Bundle-Version>${sbt.osgi.version}</Bundle-Version>
+            <Bundle-Version>${zinc.osgi.light.version}</Bundle-Version>
             <!-- This defines the bundle we provide the source for -->
-            <Eclipse-SourceBundle>org.scala-ide.sbt.full.library;version="${sbt.osgi.version}";roots:="."</Eclipse-SourceBundle>
+            <Eclipse-SourceBundle>org.scala-ide.zinc.compiler.bridge;version="${zinc.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
             <!-- Extract all sources into this bundle -->
             <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
           </instructions>

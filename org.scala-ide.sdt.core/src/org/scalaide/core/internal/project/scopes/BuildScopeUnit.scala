@@ -21,8 +21,7 @@ import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.ui.internal.preferences.ScopesSettings
 import org.scalaide.util.internal.SettingConverterUtil
 
-import sbt.inc.Analysis
-import sbt.inc.IncOptions
+import sbt.internal.inc.Analysis
 
 /**
  * Manages compilation of sources for given scope.
@@ -92,8 +91,8 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
 
   override def canTrackDependencies: Boolean = delegate.canTrackDependencies
   override def invalidateAfterLoad: Boolean = delegate.invalidateAfterLoad
-  override def latestAnalysis(incOptions: => IncOptions): Analysis =
-    delegate.latestAnalysis(incOptions)
+  override def latestAnalysis: Analysis =
+    delegate.latestAnalysis
 
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
     owningProject.sourceOutputFolders collectFirst {
@@ -121,4 +120,3 @@ private case class ScopeFilesToCompile(toCompile: Set[IFile] => Set[IFile], owni
       .filter { _.getLocation.getFileExtension == SdtConstants.JavaFileExtn.drop(Dot) })
   }
 }
-

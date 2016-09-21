@@ -27,11 +27,9 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
-import sbt.compiler.CompileFailed
-import sbt.compiler.IC
-import sbt.inc.Analysis
-import sbt.inc.IncOptions
-import sbt.inc.SourceInfo
+import xsbti.CompileFailed
+import sbt.internal.inc.Analysis
+import sbt.internal.inc.SourceInfo
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
@@ -144,10 +142,10 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       try
         Some(aggressiveCompile(inputs, sbtLogger))
       catch {
-        case _: CompileFailed | CompilerInterfaceFailed => None
+        case _: CompileFailed | CompilerBridgeFailed => None
       }
     analysis foreach setCached
-    createAdditionalMarkers(analysis.getOrElse(latestAnalysis(inputs.incOptions)), progress.actualCompiledFiles)
+    createAdditionalMarkers(analysis.getOrElse(latestAnalysis), progress.actualCompiledFiles)
   }
 
   /**
@@ -184,9 +182,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     Option(cached.get) foreach (ref => ref.clear)
   }
 
-  // take by-name argument because we need incOptions only when we have a cache miss
-  override def latestAnalysis(incOptions: => IncOptions): Analysis =
-    Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(IC.readAnalysis(cacheFile, incOptions))
+  override def latestAnalysis: Analysis =
+    Option(cached.get) flatMap (ref => Option(ref.get)) getOrElse setCached(SbtUtils.readAnalysis(cacheFile))
 
   /**
    * Knows nothing about output files.
@@ -213,11 +210,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
         sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
-        throw CompilerInterfaceFailed
+        throw CompilerBridgeFailed
     }
   }
 
-  private object CompilerInterfaceFailed extends RuntimeException
+  private object CompilerBridgeFailed extends RuntimeException
 
   private class SbtProgress extends CompileProgress {
     private var lastWorked = 0

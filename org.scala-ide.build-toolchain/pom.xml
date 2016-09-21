@@ -20,18 +20,17 @@
   </scm>
 
   <properties>
-    <sbt.ide.version>${sbt.version}-on-${scala.version}-for-IDE-SNAPSHOT</sbt.ide.version>
-    <sbt.osgi.version>${sbt.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}-${buildNumber}</sbt.osgi.version>
-    <sbt.osgi.light.version>${sbt.version}.${version.tag}-${maven.build.timestamp}-${buildNumber}</sbt.osgi.light.version>
+    <zinc.osgi.version>${zinc.version}.${version.tag}-${version.suffix}-${maven.build.timestamp}-${buildNumber}</zinc.osgi.version>
+    <zinc.osgi.light.version>${zinc.version}.${version.tag}-${maven.build.timestamp}-${buildNumber}</zinc.osgi.light.version>
     <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
   </properties>
 
   <!-- repository containing the sbt packages -->
   <repositories>
     <repository>
-      <id>typesafe-ide-${scala.short.version}</id>
-      <name>Typesafe IDE repository ${scala.short.version}</name>
-      <url>${repo.typesafe}</url>
+      <id>bintray.com</id>
+      <name>bintray repo</name>
+      <url>https://dl.bintray.com/sbt/maven-releases/</url>
     </repository>
   </repositories>
 
@@ -72,9 +71,9 @@
   </profiles>
 
   <modules>
-    <module>../org.scala-ide.sbt.full.library</module>
-    <module>../org.scala-ide.sbt.full.library.source</module>
-    <module>../org.scala-ide.sbt.compiler.interface</module>
-    <module>../org.scala-ide.sbt.compiler.interface.source</module>
+    <module>../org.scala-ide.zinc.library</module>
+    <module>../org.scala-ide.zinc.library.source</module>
+    <module>../org.scala-ide.zinc.compiler.bridge</module>
+    <module>../org.scala-ide.zinc.compiler.bridge.source</module>
   </modules>
 </project>

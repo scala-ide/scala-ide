@@ -9,6 +9,10 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD
 import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.resources.IResource
+import xsbti.compile.JavaCompiler
+import xsbti.Logger
+import org.scalaide.core.internal.builder.JDTBuilderFacade
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaPlugin
@@ -18,18 +22,17 @@ import org.scalaide.util.eclipse.FileUtils
 import xsbti.Logger
 import xsbti.Reporter
 import xsbti.compile.JavaCompiler
-import xsbti.compile.Output
 
 /**
  * Eclipse Java compiler interface, used by the SBT builder.
- *  This class forwards to the internal Eclipse Java compiler, using
- *  reflection to circumvent private/protected modifiers.
+ * This class forwards to the internal Eclipse Java compiler, using
+ * reflection to circumvent private/protected modifiers.
  */
 class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler with JDTBuilderFacade {
 
   override def project = p
 
-  override def compile(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], log: Logger): Unit = {
+  override def run(sources: Array[File], unusedOptions: Array[String], reporter: Reporter, unusedLog: Logger): Boolean = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
 
     val allSourceFiles = scalaProject.allSourceFiles()
@@ -58,10 +61,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
       refresh()
     }
-  }
 
-  override def compileWithReporter(sources: Array[File], classpath: Array[File], output: Output, options: Array[String], reporter: Reporter, log: Logger): Unit = {
-    compile(sources, classpath, output, options, log)
     Option(reporter).collect {
       case reporter: SbtBuildReporter =>
         val javaProblems: Seq[IMarker] = project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
@@ -69,5 +69,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
           reporter.riseJavaErrorOrWarning(marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO))
         }
     }
+
+    true
   }
 }

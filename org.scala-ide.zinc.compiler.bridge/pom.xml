@@ -8,15 +8,14 @@
     <version>4.5.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
-  <artifactId>org.scala-ide.sbt.compiler.interface.source</artifactId>
+  <artifactId>org.scala-ide.zinc.compiler.bridge</artifactId>
   <packaging>bundle</packaging>
 
   <dependencies>
     <dependency>
-      <groupId>com.typesafe.sbt</groupId>
-      <artifactId>compiler-interface-precompiled</artifactId>
-      <version>${sbt.ide.version}</version>
-      <classifier>sources</classifier>
+      <groupId>org.scala-sbt</groupId>
+      <artifactId>compiler-bridge_${scala.minor.version}</artifactId>
+      <version>${zinc.version}</version>
       <optional>true</optional>
     </dependency>
   </dependencies>
@@ -28,15 +27,14 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <configuration>
-          <outputDirectory>${project.build.directory}/src</outputDirectory>
+          <outputDirectory>${project.build.directory}/lib</outputDirectory>
           <instructions>
-            <Bundle-Name>Sbt Compiler Interface Sources for Eclipse</Bundle-Name>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <Bundle-Version>${sbt.osgi.light.version}</Bundle-Version>
-            <!-- This defines the bundle we provide the source for -->
-            <Eclipse-SourceBundle>org.scala-ide.sbt.compiler.interface;version="${sbt.osgi.light.version}";roots:="."</Eclipse-SourceBundle>
-            <!-- Extract all sources into this bundle -->
-            <Embed-Dependency>classifier=sources;inline=true</Embed-Dependency>
+            <Bundle-Name>Zinc Compiler Interface for Eclipse</Bundle-Name>
+            <Bundle-Version>${zinc.osgi.light.version}</Bundle-Version>
+            <Embed-Dependency>*;scope=compile|runtime;inline=true</Embed-Dependency>
+            <_exportcontents>xsbt.*;version=${zinc.osgi.light.version}</_exportcontents>
+            <Embed-StripVersion>true</Embed-StripVersion>
           </instructions>
         </configuration>
       </plugin>

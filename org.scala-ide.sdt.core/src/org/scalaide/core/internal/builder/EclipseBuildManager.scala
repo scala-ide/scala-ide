@@ -1,12 +1,13 @@
 package org.scalaide.core.internal.builder
 
+import java.io.File
+
 import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.SubMonitor
-import sbt.inc.IncOptions
-import sbt.inc.Analysis
-import java.io.File
-import org.eclipse.core.resources.IMarker
+
+import xsbti.compile.CompileAnalysis
 
 /**
  * Abstraction which exposes sbt compiler to eclipse.
@@ -17,7 +18,7 @@ trait EclipseBuildManager {
   /** Has build errors? Only valid if the project has been built before. */
   @volatile protected var hasInternalErrors: Boolean = false
 
-  /** <code>true</code> says that compiler requires a sources reload. */
+  /** `true` says that compiler requires a sources reload. */
   def invalidateAfterLoad: Boolean
 
   /** Can be used to clean an compiler's internal state. */
@@ -30,7 +31,7 @@ trait EclipseBuildManager {
   def canTrackDependencies: Boolean
 
   /** Gives back the latest dependencies analysis done by underlying compiler. */
-  def latestAnalysis(incOptions: => IncOptions): Analysis
+  def latestAnalysis: CompileAnalysis
 
   /**
    * Finds build manager which built given file

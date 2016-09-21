@@ -25,7 +25,7 @@ import org.osgi.framework.BundleContext
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.SdtConstants
-import org.scalaide.core.internal.builder.zinc.CompilerInterfaceStore
+import org.scalaide.core.internal.builder.zinc.CompilerBridgeStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
@@ -72,9 +72,9 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
 
   private lazy val sdtCoreBundle = getBundle()
 
-  lazy val sbtCompilerBundle = Platform.getBundle(SdtConstants.SbtPluginId)
-  lazy val sbtCompilerInterfaceBundle = Platform.getBundle(SdtConstants.SbtCompilerInterfacePluginId)
-  lazy val sbtCompilerInterface = OSGiUtils.pathInBundle(sbtCompilerInterfaceBundle, "/")
+  lazy val zincCompilerBundle = Platform.getBundle(SdtConstants.ZincPluginId)
+  lazy val zincCompilerBridgeBundle = Platform.getBundle(SdtConstants.ZincCompilerBridgePluginId)
+  lazy val zincCompilerBridge = OSGiUtils.pathInBundle(zincCompilerBridgeBundle, "/")
 
   lazy val templateManager = new ScalaTemplateManager()
 
@@ -121,8 +121,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ScalaPlugin.plugin = null
   }
 
-  /** The compiler-interface store, located in this plugin configuration area (usually inside the metadata directory */
-  lazy val compilerInterfaceStore: CompilerInterfaceStore = new CompilerInterfaceStore(Platform.getStateLocation(sdtCoreBundle), this)
+  /** The compiler-bridge store, located in this plugin configuration area (usually inside the metadata directory */
+  lazy val compilerBridgeStore: CompilerBridgeStore = new CompilerBridgeStore(Platform.getStateLocation(sdtCoreBundle), this)
 
   /** A LRU cache of class loaders for Scala builders */
   lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
