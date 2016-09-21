@@ -32,7 +32,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def project = p
 
-  override def run(sources: Array[File], options: Array[String], reporter: Reporter, log: Logger): Boolean = {
+  override def run(sources: Array[File], unusedOptions: Array[String], reporter: Reporter, unusedLog: Logger): Boolean = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
 
     val allSourceFiles = scalaProject.allSourceFiles()

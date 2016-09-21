@@ -47,7 +47,7 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
    *  This method will attempt to reuse bridges for a given Scala version. It
    *  may be long running the first time for a given version (it needs to compile the bridge)
    *
-   *  @retur An instance of Right(path) if successful, an error message inside `Left` otherwise.
+   *  @return An instance of Right(path) if successful, an error message inside `Left` otherwise.
    */
   def compilerBridgeFor(installation: IScalaInstallation)(implicit pm: IProgressMonitor): Either[String, IPath] = {
     val targetJar = bridgeJar(installation)

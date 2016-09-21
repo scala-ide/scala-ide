@@ -18,7 +18,7 @@ trait EclipseBuildManager {
   /** Has build errors? Only valid if the project has been built before. */
   @volatile protected var hasInternalErrors: Boolean = false
 
-  /** <code>true</code> says that compiler requires a sources reload. */
+  /** `true` says that compiler requires a sources reload. */
   def invalidateAfterLoad: Boolean
 
   /** Can be used to clean an compiler's internal state. */

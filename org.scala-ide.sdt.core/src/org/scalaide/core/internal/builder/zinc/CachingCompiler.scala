@@ -45,8 +45,6 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
         }
       }
     }
-//    val aMap = (f: File) => SbtUtils.m2o(in.analysisMap(f))
-//    val defClass = (f: File) => { val dc = Locator(f); (name: String) => dc.apply(name) }
     val (previousAnalysis, previousSetup) = SbtUtils.readCache(cacheFile)
       .map {
         case (a, s) => (Option(a), Option(s))
