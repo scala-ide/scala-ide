@@ -33,7 +33,6 @@ import org.scalaide.core.sbtbuilder.JavaDependsOnScalaBothAreOkTest
 import org.scalaide.core.sbtbuilder.JavaDependsOnScalaTest
 import org.scalaide.core.sbtbuilder.MultiScalaVersionTest
 import org.scalaide.core.sbtbuilder.MultipleErrorsTest
-import org.scalaide.core.sbtbuilder.NameHashingVulnerabilityTest
 import org.scalaide.core.sbtbuilder.NestedProjectsTest
 import org.scalaide.core.sbtbuilder.NonScalaSourceErrorMarkersTest
 import org.scalaide.core.sbtbuilder.OutputFoldersTest
@@ -125,7 +124,6 @@ import org.scalaide.ui.internal.preferences.StringListMapperTest
     classOf[ScalaJavaDepWhenJavaIsWrongTest],
     classOf[ScopeCompileTest],
     classOf[ScalaProjectDependedOnJavaProjectTest],
-    classOf[NameHashingVulnerabilityTest],
     classOf[JavaDependsOnScalaTest],
     classOf[JavaDependsOnScalaBothAreOkTest],
     classOf[ScopeCompileConfigurationTest],
