@@ -27,6 +27,7 @@ import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
 import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
+import xsbti.compile.TransactionalManagerType
 
 /** Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
@@ -63,12 +64,10 @@ class SbtInputs(installation: IScalaInstallation,
   def progress = Maybe.just(scalaProgress)
 
   def incOptions: IncOptions = {
-    // TODO figure out what to do with ClassfileManager
-//    import sbt.internal.inc.ClassfileManager
     IncOptionsUtil.defaultIncOptions().
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-//      withNewClassfileManager(ClassfileManager.transactional(tempDir, logger)).
+      withClassfileManagerType(Maybe.just(new TransactionalManagerType(tempDir, logger))).
       withApiDumpDirectory(Maybe.nothing()).
       withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
       // Turning off name hashing is not supported in class-based dependency tracking
