@@ -32,7 +32,7 @@
     <log4j.version>1.2.17</log4j.version>
     <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <zinc.version>1.0.0-X3</zinc.version>
+    <zinc.version>1.0.0-X4</zinc.version>
     <sbt-util.version>0.1.0-M13</sbt-util.version>
     <sbt-io.version>1.0.0-M6</sbt-io.version>
     <sbinary.version>0.4.3</sbinary.version>
