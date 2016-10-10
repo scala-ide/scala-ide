@@ -4,16 +4,16 @@ import java.io.File
 
 import org.scalaide.util.internal.SbtUtils
 
-import sbt.internal.inc.MixedAnalyzingCompiler
 import sbt.internal.inc.Analysis
+import sbt.internal.inc.IncrementalCompilerImpl
+import sbt.internal.inc.MixedAnalyzingCompiler
 import xsbti.Logger
 import xsbti.Reporter
-import xsbti.compile.ScalaCompiler
-import xsbti.compile.JavaCompiler
-import sbt.internal.inc.IncrementalCompilerImpl
-import xsbti.compile.PerClasspathEntryLookup
-import xsbti.compile.DefinesClass
 import xsbti.compile.CompileResult
+import xsbti.compile.DefinesClass
+import xsbti.compile.JavaCompiler
+import xsbti.compile.PerClasspathEntryLookup
+import xsbti.compile.ScalaCompiler
 
 /**
  * Contains a Scala and a Java compiler. Should be used instead of
@@ -56,7 +56,7 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
 
   private def cacheAndReturnLastAnalysis(compilationResult: CompileResult): Analysis = {
     if (compilationResult.hasModified)
-      MixedAnalyzingCompiler.staticCachedStore(cacheFile).set(compilationResult.analysis, compilationResult.setup)
+      AnalysisStore.materializeLazy(MixedAnalyzingCompiler.staticCachedStore(cacheFile)).set(compilationResult.analysis, compilationResult.setup)
     compilationResult.analysis match {
       case a: Analysis => a
       case a => throw new IllegalStateException(s"object of type `Analysis` was expected but got `${a.getClass}`.")
