@@ -20,7 +20,6 @@ class ScalacNotUnderstandJavaTest {
   import testsetup.SDTTestUtils._
 
   @Test def shouldContinueJavaCompilationEvenWhenScalacDoesNotUnderstandJavaFile(): Unit = {
-    val NoErrors = 0
     val JavaCannotConvertFromStringToInt = 1
     cleanProject()
 
@@ -30,7 +29,7 @@ class ScalacNotUnderstandJavaTest {
 
     rebuild()
     val problems0 = findProblems()
-    assertTrue("One build error expected, got: " + markersMessages(problems0), problems0.length == NoErrors)
+    assertTrue("No build error expected, got: " + markersMessages(problems0), problems0.isEmpty)
 
     val originalSScala = slurpAndClose(project.underlying.getFile("src/test/S.scala").getContents)
     changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], changedSScala)
@@ -41,7 +40,7 @@ class ScalacNotUnderstandJavaTest {
     changeContentOfFile(SScalaCU.getResource().getAdapter(classOf[IFile]).asInstanceOf[IFile], originalSScala)
     rebuild()
     val problems2 = findProblems()
-    assertTrue("Build errors found: " + markersMessages(problems2), problems2.isEmpty)
+    assertTrue("No build error expected, got: " + markersMessages(problems2), problems2.isEmpty)
   }
 
   private def rebuild(): Unit = {
