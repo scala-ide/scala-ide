@@ -49,6 +49,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
       BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(sources, project)
       try {
+        ProductExposer.showJavaCompilationProducts(project)
         scalaJavaBuilder.build(INCREMENTAL_BUILD, new java.util.HashMap(), monitor)
       } finally {
         BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, project)
