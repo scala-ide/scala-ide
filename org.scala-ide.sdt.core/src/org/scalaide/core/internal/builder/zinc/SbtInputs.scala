@@ -29,7 +29,8 @@ import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
 import xsbti.compile.TransactionalManagerType
 
-/** Inputs-like class, but not implementing xsbti.compile.Inputs.
+/**
+ * Inputs-like class, but not implementing xsbti.compile.Inputs.
  *
  *  We return a real IncOptions instance, instead of relying on the Java interface,
  *  based on String maps. This allows us to use the transactional classfile writer.
@@ -78,7 +79,7 @@ class SbtInputs(installation: IScalaInstallation,
     case (_, out) => out.getRawLocation
   }
 
-  def classpath = (project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
+  def classpath = (project.scalaClasspath.jdkPaths ++ project.scalaClasspath.userCp ++ addToClasspath ++ outputFolders)
     .distinct
     .map { cp ⇒
       val location = Option(cp.toFile).flatMap(f ⇒ Option(f.getAbsoluteFile))
@@ -147,8 +148,7 @@ class SbtInputs(installation: IScalaInstallation,
         val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
           new AnalyzingCompiler(scalaInstance, CompilerInterfaceProvider.constant(compilerBridge.toFile), cpOptions),
-          new JavaEclipseCompiler(project.underlying, javaMonitor)
-        )
+          new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
 }
@@ -175,11 +175,22 @@ private[zinc] object Locator {
       val zipFile = new ZipFile(jar, ZipFile.OPEN_READ)
       try {
         import scala.collection.JavaConverters._
-        zipFile.entries.asScala.filterNot(_.isDirectory).map(_.getName).toSet
+        zipFile.entries.asScala.filterNot(_.isDirectory).map { entry =>
+          toClassNameFromJarFileName(entry.getName)
+        }.toSet
       } finally
         zipFile.close()
     }
 
-    override def apply(className: String): Boolean = entries.contains(className)
+    private def toClassNameFromJarFileName(jarFileName: String): String = {
+      val noClassAtEnd = if (jarFileName.endsWith(".class"))
+        jarFileName.substring(0, jarFileName.lastIndexOf(".class"))
+      else
+        jarFileName
+      noClassAtEnd.replaceAll("/", ".")
+    }
+
+    override def apply(className: String): Boolean =
+      entries.contains(className)
   }
 }

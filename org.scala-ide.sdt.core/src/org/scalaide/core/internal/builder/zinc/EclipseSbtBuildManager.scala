@@ -27,9 +27,9 @@ import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
-import xsbti.CompileFailed
 import sbt.internal.inc.Analysis
 import sbt.internal.inc.SourceInfo
+import xsbti.CompileFailed
 import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
@@ -80,6 +80,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
     monitor = pm
     hasInternalErrors = false
     try {
+      ProductExposer.hideJavaCompilationProductsIfCompilationFailed(project.underlying)
       update(toBuild, removed)
     } catch {
       case oce: OperationCanceledException =>
@@ -89,6 +90,8 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
         sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
+    } finally {
+      ProductExposer.showJavaCompilationProducts(project.underlying)
     }
     hasInternalErrors = sbtReporter.hasErrors || hasInternalErrors
     analysisStore.refreshLocal(IResource.DEPTH_ZERO, null)

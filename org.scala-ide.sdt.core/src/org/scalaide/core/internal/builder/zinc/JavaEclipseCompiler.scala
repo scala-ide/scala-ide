@@ -9,10 +9,6 @@ import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IncrementalProjectBuilder.INCREMENTAL_BUILD
 import org.eclipse.core.resources.ResourcesPlugin
-import org.eclipse.core.resources.IResource
-import xsbti.compile.JavaCompiler
-import xsbti.Logger
-import org.scalaide.core.internal.builder.JDTBuilderFacade
 import org.eclipse.core.runtime.SubMonitor
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaPlugin
@@ -34,14 +30,12 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def run(sources: Array[File], unusedOptions: Array[String], reporter: Reporter, unusedLog: Logger): Boolean = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
-
     val allSourceFiles = scalaProject.allSourceFiles()
     val depends = scalaProject.directDependencies
     if (allSourceFiles.exists(FileUtils.hasBuildErrors(_)))
       depends.toArray
     else {
       ensureProject
-
       // refresh output directories, since SBT removes classfiles that the Eclipse
       // Java compiler expects to find
       for (folder <- scalaProject.outputFolders) {
@@ -54,22 +48,24 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
       }
 
       BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(sources, project)
-      try
+      try {
+        ProductExposer.showJavaCompilationProducts(project)
         scalaJavaBuilder.build(INCREMENTAL_BUILD, new java.util.HashMap(), monitor)
-      finally
+      } finally {
         BuildManagerStore.INSTANCE.setJavaSourceFilesToCompile(null, project)
+        ProductExposer.hideJavaCompilationProductsIfCompilationFailed(project)
+      }
 
       refresh()
     }
-
+    val javaProblems: Seq[IMarker] = project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
     Option(reporter).collect {
       case reporter: SbtBuildReporter =>
-        val javaProblems: Seq[IMarker] = project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
         javaProblems.foreach { marker =>
           reporter.riseJavaErrorOrWarning(marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO))
         }
     }
-
-    true
+    javaProblems.isEmpty
   }
+
 }
