@@ -8,14 +8,17 @@ import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.StandardCopyOption
 
+import scala.util.Try
+
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.SdtConstants
+import org.scalaide.logging.HasLogger
 
-private[zinc] object ProductExposer {
+private[zinc] object ProductExposer extends HasLogger {
   private val ProductExtension = ".failed"
   private val RootProject = 1
 
@@ -54,7 +57,12 @@ private[zinc] object ProductExposer {
               packagePath.listFiles(product(productPrefix))
           }.flatten.foreach { p =>
             val path = p.toPath
-            Files.move(path, path.resolveSibling(p.getName + ProductExtension), StandardCopyOption.REPLACE_EXISTING)
+            Try[Unit] {
+              Files.move(path, path.resolveSibling(p.getName + ProductExtension), StandardCopyOption.REPLACE_EXISTING)
+            }.recover {
+              case e =>
+                logger.debug(s"Nothing serious on hide, maybe try to define better output folder structure in project (resource: $path). Root cause ${e.getMessage}")
+            }
           }
       }
     }
@@ -73,7 +81,12 @@ private[zinc] object ProductExposer {
       finder.collected
     }.foreach { path =>
       val fname = path.toFile.getName
-      Files.move(path, path.resolveSibling(fname.substring(0, fname.lastIndexOf(ProductExtension))), StandardCopyOption.REPLACE_EXISTING)
+      Try[Unit] {
+        Files.move(path, path.resolveSibling(fname.substring(0, fname.lastIndexOf(ProductExtension))), StandardCopyOption.REPLACE_EXISTING)
+      }.recover {
+        case e =>
+          logger.debug(s"Nothing serious on show, maybe try to define better output folder structure in project (resource: $path). Root cause ${e.getMessage}")
+      }
     }
   }
 
