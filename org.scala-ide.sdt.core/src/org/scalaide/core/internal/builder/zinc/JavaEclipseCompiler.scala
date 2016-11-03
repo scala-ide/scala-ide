@@ -17,6 +17,7 @@ import org.scalaide.util.eclipse.FileUtils
 
 import xsbti.Logger
 import xsbti.Reporter
+import xsbti.compile.IncToolOptions
 import xsbti.compile.JavaCompiler
 
 /**
@@ -28,7 +29,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
 
   override def project = p
 
-  override def run(sources: Array[File], unusedOptions: Array[String], reporter: Reporter, unusedLog: Logger): Boolean = {
+  override def run(sources: Array[File], unusedOptions: Array[String], unusedIncToolOptions: IncToolOptions, reporter: Reporter, unusedLog: Logger): Boolean = {
     val scalaProject = IScalaPlugin().getScalaProject(project)
     val allSourceFiles = scalaProject.allSourceFiles()
     val depends = scalaProject.directDependencies
