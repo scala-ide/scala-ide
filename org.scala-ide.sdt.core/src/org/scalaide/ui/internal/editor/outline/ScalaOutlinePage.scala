@@ -163,7 +163,9 @@ class ScalaOutlinePage(val fEditor: OutlinePageEditorExtension) extends ContentO
 
   def update(delta: (Iterable[Node], Iterable[Node])) = {
     val viewer = getTreeViewer()
-    delta._1.foreach(n => viewer.refresh(n, false))
-    delta._2.foreach(n => viewer.update(n, null))
+    if (!viewer.getControl.isDisposed()) {
+      delta._1.foreach(n => viewer.refresh(n, false))
+      delta._2.foreach(n => viewer.update(n, null))
+    }
   }
 }
