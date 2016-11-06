@@ -147,6 +147,12 @@ class ScalaVarElement(parent : JavaElement, name: String, display : String)
 }
 
 class ScalaTypeElement(parent : JavaElement, name : String, display : String)
+  extends ScalaSourceTypeElement(parent, name) {
+  override def getLabelText(flags : Long) = display
+  override def getImageDescriptor = ScalaImages.SCALA_TYPE
+}
+
+class ScalaTypeFieldElement(parent : JavaElement, name : String, display : String)
   extends SourceField(parent, name) with ScalaFieldElement {
   override def getLabelText(flags : Long) = display
   override def getImageDescriptor = ScalaImages.SCALA_TYPE

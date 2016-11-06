@@ -44,7 +44,9 @@ C1.scala [in traits [in src [in simple-structure-builder]]]
       int x
       int x()
       InnerC(traits.C<T>, int)
+    class T
     java.lang.Object T
+    class U
     java.lang.Object U
     scala.runtime.Null. map(scala.Function1<scala.collection.immutable.List<java.lang.Object>,U>)
     scala.runtime.Null. takeArray(scala.collection.immutable.List<java.lang.String>[])
@@ -69,8 +71,11 @@ T1.scala [in traits [in src [in simple-structure-builder]]]
     scala.collection.immutable.List<java.lang.Object> xs()
     scala.Nothing m(int, int)
     scala.Nothing n(int, int, int)
+    class T
     java.lang.Object T
+    class U
     java.lang.Object U
+    class Z
     java.lang.Object Z
     class Inner
       Inner()
