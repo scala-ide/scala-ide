@@ -94,7 +94,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
       def addClass(c : ClassDef) : Owner = this
       def addModule(m : ModuleDef) : Owner = this
       def addVal(v : ValDef) : Owner = this
-      def addType(t : TypeDef) : Owner = this
+
+      def addType(t : TypeDef, asField: Boolean) : Owner = this
 
       // TODO: need to rewrite everything to use symbols rather than trees, only DefDef for now.
       def addDef(sym: Symbol) : Owner = this
@@ -606,16 +607,34 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
     }
 
     trait TypeOwner extends Owner { self =>
-      override def addType(t : TypeDef) : Owner = {
+      override def addType(t : TypeDef, asField : Boolean) : Owner = {
 
         val sym = t.symbol
         val name = t.name.toString
 
-        val typeElem = new ScalaTypeElement(element, name, name)
+        val (typeElem, typeElemInfo) = {
+          if (!asField) {
+            new ScalaTypeElement(element, name, name) -> new ScalaElementInfo
+          } else {
+            new ScalaTypeFieldElement(element, name, name) -> {
+              val info = new ScalaSourceFieldElementInfo
+
+              if(t.rhs.symbol == NoSymbol) {
+                val tn = "java.lang.Object".toArray
+                info.setTypeName(tn)
+              } else {
+                val tn = javaTypeName(t.rhs.symbol).toArray
+                info.setTypeName(tn)
+              }
+
+              info
+            }
+          }
+        }
+
         resolveDuplicates(typeElem)
         addChild(typeElem)
 
-        val typeElemInfo = new ScalaSourceFieldElementInfo
         typeElemInfo.setFlags0(mapModifiers(sym))
 
         val annotsPos = addAnnotations(sym, typeElemInfo, typeElem)
@@ -627,14 +646,6 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         typeElemInfo.setNameSourceEnd0(end)
         setSourceRange(typeElemInfo, sym, annotsPos)
         newElements0.put(typeElem, typeElemInfo)
-
-        if(t.rhs.symbol == NoSymbol) {
-          val tn = "java.lang.Object".toArray
-          typeElemInfo.setTypeName(tn)
-        } else {
-          val tn = javaTypeName(t.rhs.symbol).toArray
-          typeElemInfo.setTypeName(tn)
-        }
 
         new Builder {
           val parent = self
@@ -751,7 +762,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
           override def isCtor = isCtor0
           override def addVal(v : ValDef) = this
-          override def addType(t : TypeDef) = this
+          override def addType(t : TypeDef, asField : Boolean) = this
         }
       }
     }
@@ -918,14 +929,15 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
             case md : ModuleDef => (builder.addModule(md), List(md.impl))
             case vd : ValDef =>  (builder.addVal(vd), List(vd.rhs))
             case td : TypeDef =>
-              /* Entities nested in a Type Member definition are *not* traversed, because the Eclipse Java
-               * Outline that we currently use does not handle members defined in a
-               * {{{ org.eclipse.jdt.internal.core.SourceField }}} (which is the data structure we use to
-               * expose type members definition to JDT).
-               * For instance, the following is not correctly handled by the Outline when you click on the nested
-               * member `a`: {{{type AkkaConfig = a.type forSome { val a: AnyRef }. Hence, for safety, currently
-               * it is better to skip all children altogether. */
-              (builder.addType(td), Nil)
+              /*
+               * Type defs are added twice, because semantically, they are both an
+               * org.eclipse.jdt.internal.core.SourceField and an org.eclipse.jdt.internal.core.SourceType.
+               * To work around this, we add them once as `Field` and once as `SourceType`.
+               * Also, note that we are currently skipping children altogether, as they would be found for
+               * example in `type AkkaConfig = a.type forSome { val a: AnyRef }`.
+               */
+              builder.addType(td, asField = false)
+              (builder.addType(td, asField = true), Nil)
             case dd : DefDef =>
               if(dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol))
                 (builder.addDef(dd), List(dd.tpt, dd.rhs))

@@ -112,14 +112,15 @@ class FindReferencesTests extends FindReferencesTester with HasLogger {
 
   private def jdtElement2testElement(e: JavaElement): Element = {
     val testElement: String => Element = e match {
-      case e: ScalaDefElement      => Method.apply _
-      case e: ScalaAccessorElement => Method.apply _
-      case e: ScalaVarElement      => FieldVar.apply _
-      case e: ScalaValElement      => FieldVal.apply _
-      case e: ScalaClassElement    => Clazz.apply _
-      case e: ScalaTypeElement     => TypeAlias.apply _
-      case e: ScalaModuleElement   => Module.apply _
-      case e: SourceType           => Clazz.apply _
+      case e: ScalaDefElement       => Method.apply _
+      case e: ScalaAccessorElement  => Method.apply _
+      case e: ScalaVarElement       => FieldVar.apply _
+      case e: ScalaValElement       => FieldVal.apply _
+      case e: ScalaClassElement     => Clazz.apply _
+      case e: ScalaTypeElement      => TypeAlias.apply _
+      case e: ScalaTypeFieldElement => TypeAlias.apply _
+      case e: ScalaModuleElement    => Module.apply _
+      case e: SourceType            => Clazz.apply _
       case _ =>
         val msg = "Don't know how to convert element `%s` of type `%s`".format(e.getElementName, e.getClass)
         throw new IllegalArgumentException(msg)
