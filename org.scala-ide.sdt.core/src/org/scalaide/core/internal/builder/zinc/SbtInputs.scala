@@ -15,7 +15,7 @@ import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.AnalyzingCompiler
 import sbt.internal.inc.CompilerCache
-import sbt.internal.inc.CompilerInterfaceProvider
+import sbt.internal.inc.CompilerBridgeProvider
 import sbt.internal.inc.Locate
 import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
@@ -147,7 +147,7 @@ class SbtInputs(installation: IScalaInstallation,
         // prevent zinc from adding things to the (boot)classpath
         val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
-          new AnalyzingCompiler(scalaInstance, CompilerInterfaceProvider.constant(compilerBridge.toFile), cpOptions),
+          new AnalyzingCompiler(scalaInstance, CompilerBridgeProvider.constant(compilerBridge.toFile), cpOptions, _ ⇒ (), None),
           new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
