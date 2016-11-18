@@ -139,7 +139,7 @@ class EditorPreferenceInitializer extends AbstractPreferenceInitializer {
     store.setDefault(P_ENABLE_AUTO_BREAKING_COMMENTS, false)
 
     store.setDefault(P_ENABLE_MARK_OCCURRENCES, false)
-    store.setDefault(P_ENABLE_HOF_COMPLETION, true)
+    store.setDefault(P_ENABLE_HOF_COMPLETION, false)
 
     // TODO This preference is added in 4.0. Delete the former preference once support for the former release is dropped.
     store.setDefault(P_SHOW_INFERRED_SEMICOLONS, store.getBoolean("actions.showInferredSemicolons"))

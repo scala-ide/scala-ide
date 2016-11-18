@@ -298,34 +298,46 @@ class StandardCompletionTests {
       expectedNumberOfCompletions = 1)
 
   @Test
-  def completeParameterInHigherOrderFunction() = """
-    object Test {
-      def withResource[T](f: T => Unit): Unit = ???
-      this.withR^
+  def completeParameterInHigherOrderFunction() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, true) {
+      """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withR^
+      }
+    """ becomes """
+      object Test {
+        def withResource[T](f: T => Unit): Unit = ???
+        this.withResource { [[x]] => [[???]] }^
+      }
+    """ after Completion(
+        "withResource[T](f: T => Unit): Unit",
+        expectedNumberOfCompletions = 1)
     }
-  """ becomes """
-    object Test {
-      def withResource[T](f: T => Unit): Unit = ???
-      this.withResource { [[x]] => [[???]] }^
-    }
-  """ after Completion(
-      "withResource[T](f: T => Unit): Unit",
-      expectedNumberOfCompletions = 1)
+  }
 
   @Test
-  def completeParameterInHOFWithEmptyParens() = """
-    object Test {
-      def lzyEval(f: () => Any): Unit = ???
-      this.lzy^
+  def completeParameterInHOFWithEmptyParens() = {
+    import SDTTestUtils._
+
+    withWorkspacePreference(EditorPreferencePage.P_ENABLE_HOF_COMPLETION, true) {
+      """
+      object Test {
+        def lzyEval(f: () => Any): Unit = ???
+        this.lzy^
+      }
+    """ becomes """
+      object Test {
+        def lzyEval(f: () => Any): Unit = ???
+        this.lzyEval { () => [[???]] }^
+      }
+    """ after Completion(
+        "lzyEval(f: () => Any): Unit",
+        expectedNumberOfCompletions = 1)
     }
-  """ becomes """
-    object Test {
-      def lzyEval(f: () => Any): Unit = ???
-      this.lzyEval { () => [[???]] }^
-    }
-  """ after Completion(
-      "lzyEval(f: () => Any): Unit",
-      expectedNumberOfCompletions = 1)
+  }
 
   @Test
   def completeCallByNameParam() = """
