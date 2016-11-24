@@ -231,7 +231,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           } else {
             val className = m.nameString
 
-            val classElem = new ScalaClassElement(element, className, true)
+            val classElem = new ScalaClassElement(element, className, true, c.tpe)
             resolveDuplicates(classElem)
             addChild(classElem)
 
@@ -404,12 +404,12 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
         val classElem =
           if(sym hasFlag Flags.TRAIT)
-            new ScalaTraitElement(element, name)
+            new ScalaTraitElement(element, name, sym.tpe)
           else if (isAnon) {
-          new ScalaAnonymousClassElement(element, superName)
+          new ScalaAnonymousClassElement(element, superName, sym.tpe)
           }
           else
-            new ScalaClassElement(element, name, false)
+            new ScalaClassElement(element, name, false, sym.tpe)
 
         resolveDuplicates(classElem)
         addChild(classElem)
@@ -488,8 +488,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         sym.initialize
 
       val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
-        val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic)
-                   else new ScalaModuleElement(element, m.name.toString, isSynthetic)
+        val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic, sym.tpe)
+                   else new ScalaModuleElement(element, m.name.toString, isSynthetic, sym.tpe)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
 
