@@ -10,6 +10,7 @@ import java.nio.file.StandardCopyOption
 
 import scala.util.Try
 
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.runtime.IPath
@@ -38,7 +39,9 @@ private[zinc] object ProductExposer extends HasLogger {
 
   def hideJavaCompilationProductsIfCompilationFailed(project: IProject) = {
     val Dot = 1
-    val shouldHide = project.findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE).nonEmpty
+    val shouldHide = project
+      .findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
+      .filter(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR).nonEmpty
     if (shouldHide) {
       val scalaProject = IScalaPlugin().getScalaProject(project)
       scalaProject.allSourceFiles.filter {
