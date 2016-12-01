@@ -41,7 +41,7 @@ private[zinc] object ProductExposer extends HasLogger {
     val Dot = 1
     val shouldHide = project
       .findMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, false, IResource.DEPTH_INFINITE)
-      .filter(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR).nonEmpty
+      .exists(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR)
     if (shouldHide) {
       val scalaProject = IScalaPlugin().getScalaProject(project)
       scalaProject.allSourceFiles.filter {

@@ -88,12 +88,12 @@ class ScalaJavaDepTwoScopesTest extends IProjectOperations with IProjectHelpers 
 
     def getProblemMarkers = getProblemMarkersFor(mainJavaCU, testScalaCU)
 
-    when("initialize project") therefore "is no java problem" in {
+    when("initialize project") `then` "is no java problem" in {
       val problems = getProblemMarkers
       assertTrue("No build problem expected, found: " + markersMessages(problems), problems.isEmpty)
     }
 
-    when("change java") therefore "expect one java problem of warning severity" in {
+    when("change java") `then` "expect one java problem of warning severity" in {
       SDTTestUtils.changeContentOfFile(mainJavaCU.getResource().getAdapter(classOf[IFile]), changedWarningJava)
       rebuild(project)
       val problems = getProblemMarkers
@@ -102,7 +102,7 @@ class ScalaJavaDepTwoScopesTest extends IProjectOperations with IProjectHelpers 
           problems.filter(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_WARNING).length == 1)
     }
 
-    when("revert java change") therefore "expect no problem" in {
+    when("revert java change") `then` "expect no problem" in {
       SDTTestUtils.changeContentOfFile(mainJavaCU.getResource().getAdapter(classOf[IFile]), originalJava)
       rebuild(project)
       val problems = getProblemMarkers
@@ -120,12 +120,12 @@ class ScalaJavaDepTwoScopesTest extends IProjectOperations with IProjectHelpers 
 
     def getProblemMarkers = getProblemMarkersFor(mainJavaCU, testScalaCU)
 
-    when("initialize project") therefore "is no java problem" in {
+    when("initialize project") `then` "is no java problem" in {
       val problems = getProblemMarkers
       assertTrue("No build problem expected, found: " + markersMessages(problems), problems.isEmpty)
     }
 
-    when("change java") therefore "expect one java problem of error severity" in {
+    when("change java") `then` "expect one java problem of error severity" in {
       SDTTestUtils.changeContentOfFile(mainJavaCU.getResource().getAdapter(classOf[IFile]), changeErrorJava)
       rebuild(project)
       val problems = getProblemMarkers
@@ -134,7 +134,7 @@ class ScalaJavaDepTwoScopesTest extends IProjectOperations with IProjectHelpers 
           problems.filter(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR).length == 1)
     }
 
-    when("revert java change") therefore "expect no problem" in {
+    when("revert java change") `then` "expect no problem" in {
       SDTTestUtils.changeContentOfFile(mainJavaCU.getResource().getAdapter(classOf[IFile]), originalJava)
       rebuild(project)
       val problems = getProblemMarkers
