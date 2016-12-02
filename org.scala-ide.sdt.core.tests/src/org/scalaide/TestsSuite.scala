@@ -41,6 +41,7 @@ import org.scalaide.core.sbtbuilder.SbtBuilderTest
 import org.scalaide.core.sbtbuilder.ScalaCompilerClasspathTest
 import org.scalaide.core.sbtbuilder.ScalacNotUnderstandJavaTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTest
+import org.scalaide.core.sbtbuilder.ScalaJavaDepTwoScopesTest
 import org.scalaide.core.sbtbuilder.ScalaJavaDepTicket_1000607Test
 import org.scalaide.core.sbtbuilder.ScalaJavaDepWhenJavaIsWrongTest
 import org.scalaide.core.sbtbuilder.ScalaProjectDependedOnJavaProjectTest
@@ -131,6 +132,7 @@ import org.scalaide.ui.internal.preferences.StringListMapperTest
     classOf[StringListMapperTest],
     classOf[NonScalaSourceErrorMarkersTest],
     classOf[CompilerBridgeStoreTest],
-    classOf[ScalacNotUnderstandJavaTest]
+    classOf[ScalacNotUnderstandJavaTest],
+    classOf[ScalaJavaDepTwoScopesTest]
 ))
 class TestsSuite

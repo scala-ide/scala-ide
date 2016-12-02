@@ -66,7 +66,7 @@ class JavaEclipseCompiler(p: IProject, monitor: SubMonitor) extends JavaCompiler
           reporter.riseJavaErrorOrWarning(marker.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO))
         }
     }
-    javaProblems.isEmpty
+    !javaProblems.exists(_.getAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO) == IMarker.SEVERITY_ERROR)
   }
 
 }
