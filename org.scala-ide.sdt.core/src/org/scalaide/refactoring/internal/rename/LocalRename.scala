@@ -7,6 +7,7 @@ import scala.tools.refactoring.implementations
 import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.statistics.Features.LocalRename
 import org.scalaide.util.eclipse.EditorUtils
+import scala.tools.refactoring.common.TextChange
 
 /**
  * Supports renaming of identifiers inside a single file using Eclipse's
@@ -37,27 +38,9 @@ class LocalRename extends RefactoringExecutor {
 
     def runInlineRename(r: RenameScalaIdeRefactoring): Unit = {
       import r.refactoring._
-      val selectedSymbolTree = r.selection().selectedSymbolTree
 
-      val positions = for {
-        // there's always a selected tree, otherwise
-        // the refactoring won't be called.
-        selected <- selectedSymbolTree.toList
-        t <- global.ask(() => index.occurences(selected.symbol))
-      } yield {
-        val pos = t match {
-          case ImportSelectorTree(name, global.EmptyTree) =>
-            name.pos
-          case ImportSelectorTree(_, rename) =>
-            rename.pos
-          case t =>
-            t.namePosition
-        }
-        if(pos.source.content(pos.start) == '`') {
-          (pos.start + 1, pos.end - pos.start - 2)
-        } else {
-          (pos.start, pos.end - pos.start)
-        }
+      val positions = global.ask(() => r.performRefactoring()).collect { case change: TextChange =>
+        (change.from, change.to - change.from)
       }
 
       EditorUtils.enterLinkedModeUi(positions, selectFirst = false)
