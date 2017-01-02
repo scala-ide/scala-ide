@@ -244,25 +244,19 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
       val organizationStrategy = getOrganizeImportStrategy(project)
 
       val options = {
-
+        import refactoring.oiWorker.participants._
         val expandOrCollapse = organizationStrategy match {
-          case ExpandImports => List(refactoring.ExpandImports)
-          case CollapseImports => List(refactoring.CollapseImports, refactoring.SortImportSelectors)
+          case CollapseImports => List(SortImportSelectors)
           case PreserveExistingGroups => Nil // this is not passed as an option
-          case PreserveWildcards => List(refactoring.ExpandImports)
         }
-
-        val wildcards = refactoring.AlwaysUseWildcards(getWildcardImportsForProject(project).toSet)
-
-        val groups = getGroupsForProject(project).toList
 
         val scalaPackageStrategy = if (shouldOmitScalaPackage(project)){
-          refactoring.DropScalaPackage
+          DropScalaPackage
         } else {
-          refactoring.PrependScalaPackage
+          PrependScalaPackage
         }
 
-        expandOrCollapse ::: List(scalaPackageStrategy, wildcards, refactoring.SortImports, refactoring.GroupImports(groups))
+        expandOrCollapse ::: List(scalaPackageStrategy)
       }
 
       val deps = {
@@ -284,8 +278,6 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
           scalaPackageStrategy = shouldOmitScalaPackage(project)))
 
       new refactoring.RefactoringParameters(options = options, deps = deps,
-          organizeLocalImports = shouldOrganizeLocalImports(project),
-          organizeImports = shouldOrganizeImports(project),
           config = organizeImportsConfig)
     }
   }
