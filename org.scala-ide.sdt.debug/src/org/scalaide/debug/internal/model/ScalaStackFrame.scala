@@ -193,7 +193,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile private var st
           NameTransformer.decode(method.name),
           getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame0.location.method) }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
   }
 
   /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need

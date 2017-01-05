@@ -33,6 +33,10 @@ import com.sun.jdi.VMCannotBeModifiedException
 import com.sun.jdi.Value
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+//import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+//import org.scalaide.core.IScalaPlugin
+//import org.eclipse.core.resources.ResourcesPlugin
+//import xsbti.compile.CompileAnalysis
 
 class ThreadNotSuspendedException extends Exception
 
@@ -250,6 +254,18 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * FOR THE SUBORDINATE ONLY.
    */
   private[model] def suspend(eventDetail: Int) = {
+//    Option(target.getLaunch.getLaunchConfiguration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, null.asInstanceOf[String]))
+//      .map { ResourcesPlugin.getWorkspace.getRoot.getProject }
+//      .map { IScalaPlugin().getScalaProject }
+//      .map { p =>
+//        (p.exportedDependencies ++ p.directDependencies).map {
+//          IScalaPlugin().getScalaProject
+//        }.map {
+//          _.buildManager.latestAnalysis
+//        }.collectFirst {
+//          case a: Analysis =>
+//        }
+//      }
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
       stackFrames.getAndSet(threadRef.frames.asScala.zipWithIndex.map {

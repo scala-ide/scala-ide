@@ -29,7 +29,7 @@ import org.scalaide.core.internal.jdt.util.SourceRefElementInfoUtils
 import org.scalaide.core.internal.jdt.util.ImportContainerInfoUtils
 
 trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentationCompiler =>
-
+  private implicit def toOption(tpe: Type) = if (tpe != NoType) Option(tpe) else None
   object Throws {
     def unapply(sym: Symbol): Option[Array[Array[Char]]] = {
       val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
@@ -231,7 +231,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
           } else {
             val className = m.nameString
 
-            val classElem = new ScalaClassElement(element, className, true, c.tpe)
+            val classElem = new ScalaClassElement(element, className, true, m.tpe)
             resolveDuplicates(classElem)
             addChild(classElem)
 
@@ -487,7 +487,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
         // make sure classes are completed
         sym.initialize
 
-      val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
+        val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem = if(sym.isPackageObject)  new ScalaPackageModuleElement(element, m.name.toString, isSynthetic, sym.tpe)
                    else new ScalaModuleElement(element, m.name.toString, isSynthetic, sym.tpe)
         resolveDuplicates(moduleElem)
@@ -614,7 +614,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc : ScalaPresentati
 
         val (typeElem, typeElemInfo) = {
           if (!asField) {
-            new ScalaTypeElement(element, name, name) -> new ScalaElementInfo
+            new ScalaTypeElement(element, name, name, None) -> new ScalaElementInfo
           } else {
             new ScalaTypeFieldElement(element, name, name) -> {
               val info = new ScalaSourceFieldElementInfo
