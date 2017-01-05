@@ -5,26 +5,31 @@ import org.scalaide.core.IScalaPlugin
 import sbt.internal.inc.Analysis
 
 trait SourcePathFinder {
+  private def sourceFolders(project: IScalaProject): Seq[String] = project.sourceFolders.map {
+    _.makeAbsolute.toFile.getAbsolutePath
+  }
+
   def apply(project: IScalaProject, className: String): Option[String] = {
-    val analyses = project.buildManager.latestAnalysis ::
+    val analyses = (project.buildManager.latestAnalysis, sourceFolders(project)) ::
       project.transitiveDependencies.toList.collect {
         case project if IScalaPlugin().asScalaProject(project).isDefined =>
-          IScalaPlugin().getScalaProject(project).buildManager.latestAnalysis
+          val sproject = IScalaPlugin().getScalaProject(project)
+          (sproject.buildManager.latestAnalysis, sourceFolders(sproject))
       }
     analyses.collect {
-      case a: Analysis =>
-        val c = a.relations.definesClass(className)
-        c
+      case (a: Analysis, sourceFolders) =>
+        a.relations.definesClass(className)
+          .flatMap { foundRelativeSrc =>
+            val path = foundRelativeSrc.getPath
+            sourceFolders.collect {
+              case sf if path.startsWith(path) =>
+                path.substring(sf.length)
+            }
+          }
     }.collectFirst {
       case files if files.nonEmpty =>
-        val a = files
-        a
-    }.flatMap { source =>
-      source.headOption.map { f =>
-        val a = f.getPath
-        a
-      }
-    }
+        files
+    }.flatMap { _.headOption }
   }
 }
 
