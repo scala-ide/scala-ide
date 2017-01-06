@@ -52,6 +52,27 @@ trait IProjectOperations {
   }
 
   /**
+   *  Runs incremental build on given projects. Can be used in any moment of test execution. Example:
+   *  {{{
+   *  class SomeTest extends IProjectOperations {
+   *    import SomeTest._
+   *
+   *    @Test def shouldShowHowToUseGivenCleanMethod(): Unit = {
+   *      // when
+   *      buildIncrementalWorkspaceForProjects(myProject.underlying)
+   *      // then
+   *    }
+   *  }
+   *  }}}
+   */
+  def buildIncrementalWorkspaceForProjects(projects: IProject*): Unit = {
+    workspace.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    projects.foreach { project =>
+      Assert.assertTrue(getErrorMessages(project).isEmpty)
+    }
+  }
+
+  /**
    *  Prepares workspace with projects resources. Usually used in test companion object in setup method
    *  annotated with `@BeforeClass`. Example:
    *  {{{

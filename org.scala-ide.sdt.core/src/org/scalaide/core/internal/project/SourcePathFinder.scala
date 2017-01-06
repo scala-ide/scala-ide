@@ -22,7 +22,7 @@ trait SourcePathFinder {
           .flatMap { foundRelativeSrc =>
             val path = foundRelativeSrc.getPath
             sourceFolders.collect {
-              case sf if path.startsWith(path) =>
+              case sf if path.startsWith(sf) =>
                 path.substring(sf.length)
             }
           }
