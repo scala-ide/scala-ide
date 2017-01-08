@@ -22,6 +22,8 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.internal.resources.ResourceException
 import java.io.File
 import org.scalaide.core.SdtConstants
+import scala.util.control.NonFatal
+import org.scalaide.core.internal.logging.EclipseLogger
 
 object FileUtils {
 
@@ -35,6 +37,21 @@ object FileUtils {
     case abstractFile =>
       val path = Path.fromOSString(abstractFile.path)
       fileResourceForPath(path)
+  }
+
+  def toIFolder(path: String, create: Boolean = true): Option[IFolder] = {
+    try {
+      containerResourceForPath(path).collect { case folder: IFolder =>
+        if (create && !folder.exists()) {
+          createWithParents(folder)
+        }
+        folder
+      }
+    } catch {
+      case NonFatal(e) =>
+        EclipseLogger.warn("Could not convert to IFolder", e)
+        None
+    }
   }
 
   /**
@@ -104,6 +121,14 @@ object FileUtils {
     resources.find(prefix isPrefixOf _.getFullPath)
   }
 
+  private def containerResourceForPath(location: String, prefix: IPath = Path.EMPTY): Option[IContainer] = {
+    containerResourceForPath(Path.fromOSString(location), prefix)
+  }
+
+  private def containerResourceForPath(location: IPath, prefix: IPath): Option[IContainer] = {
+    val resources = Try(workspaceRoot.findContainersForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
+    resources.find(r => prefix.isPrefixOf(r.getFullPath))
+  }
 
   private def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
