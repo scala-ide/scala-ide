@@ -34,7 +34,7 @@ object FileUtils {
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
       val path = Path.fromOSString(abstractFile.path)
-      resourceForPath(path)
+      fileResourceForPath(path)
   }
 
   /**
@@ -75,6 +75,14 @@ object FileUtils {
     }
   }
 
+  private def createWithParents(c: IContainer): Unit = c match {
+    case f: IFolder if !f.exists() =>
+      createWithParents(f.getParent())
+      f.create(/* force */ true, /* local */ true, null)
+    case _ =>
+      ()
+  }
+
   /** Creates a file of a given `IFile` and all of its parent folders if needed.
    *  Resource listeners are also notified about the changes.
    *
@@ -82,14 +90,7 @@ object FileUtils {
    *  exception.
    */
   def createFile(file: IFile): Try[Unit] = Try {
-    def createParentFolders(c: IContainer): Unit = c match {
-      case f: IFolder if !f.exists() =>
-        createParentFolders(f.getParent())
-        f.create(/* force */ true, /* local */ true, null)
-      case _ =>
-    }
-
-    createParentFolders(file.getParent())
+    createWithParents(file.getParent())
     file.create(new ByteArrayInputStream(Array()), /* force */ true, null)
   }
 
@@ -98,10 +99,13 @@ object FileUtils {
    * file might "mounted" under multiple locations in the Eclipse file system, the `prefix`
    * path is used disambiguate.
    */
-  def resourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
-    val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
+  def fileResourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
+    val resources = Try(workspaceRoot.findFilesForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
     resources.find(prefix isPrefixOf _.getFullPath)
   }
+
+
+  private def workspaceRoot = ResourcesPlugin.getWorkspace.getRoot
 
   /** Is the file buildable by the Scala plugin? In other words, is it a
    *  Java or Scala source file?
