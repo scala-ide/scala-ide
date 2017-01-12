@@ -41,10 +41,10 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
   // raw stats
   private var hits, misses = 0
 
-  private lazy val compilerBridgeSrc = new Function[ScalaVersion, Option[IPath]] {
-    private[this] lazy val defaultPath = OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _))
-    @volatile private[this] var path_2_10: Option[IPath] = None
-    override def apply(scalaVersion: ScalaVersion) = synchronized {
+  private lazy val compilerBridgeSrc = {
+    lazy val defaultPath = OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _))
+    @volatile var path_2_10: Option[IPath] = None
+    (scalaVersion: ScalaVersion) => synchronized {
       scalaVersion match {
         case SpecificScalaVersion(2, 10, _, _) =>
           if (path_2_10.isEmpty)
@@ -54,7 +54,7 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
           defaultPath
       }
     }
-  }.apply(_)
+  }
 
   private lazy val zincFullJar = OSGiUtils.getBundlePath(plugin.zincCompilerBundle)
 
