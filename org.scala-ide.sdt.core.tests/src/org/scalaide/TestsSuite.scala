@@ -66,6 +66,7 @@ import org.scalaide.util.eclipse.RegionUtilsTest
 import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
 import org.scalaide.ui.internal.preferences.StringListMapperTest
+import org.scalaide.core.sbtbuilder.Scala210Compilation
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -133,6 +134,7 @@ import org.scalaide.ui.internal.preferences.StringListMapperTest
     classOf[NonScalaSourceErrorMarkersTest],
     classOf[CompilerBridgeStoreTest],
     classOf[ScalacNotUnderstandJavaTest],
-    classOf[ScalaJavaDepTwoScopesTest]
+    classOf[ScalaJavaDepTwoScopesTest],
+    classOf[Scala210Compilation]
 ))
 class TestsSuite

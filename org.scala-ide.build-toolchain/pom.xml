@@ -75,5 +75,6 @@
     <module>../org.scala-ide.zinc.library.source</module>
     <module>../org.scala-ide.zinc.compiler.bridge</module>
     <module>../org.scala-ide.zinc.compiler.bridge.source</module>
+    <module>../org.scala-ide.zinc.compiler.bridge.source_2.10</module>
   </modules>
 </project>

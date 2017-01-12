@@ -1,33 +1,42 @@
 package org.scalaide.util.eclipse
 
-import scala.collection.JavaConversions._
-import org.eclipse.core.resources._
-import org.eclipse.core.runtime._
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.viewers.IStructuredSelection
-import org.eclipse.text.edits.ReplaceEdit
-import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit }
-import org.eclipse.ui.ide.IDE
-import scalariform.utils.TextEdit
-import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit, _ }
-import org.eclipse.jface.text.IDocument
-import org.eclipse.jface.viewers.ISelection
-import org.eclipse.core.runtime.IAdaptable
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.tools.nsc.settings.NoScalaVersion
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.util.Try
+
+import org.eclipse.core.resources.IProject
+import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IWorkspace
-import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.resources.IWorkspaceRoot
 import org.eclipse.core.resources.IWorkspaceRunnable
-import scalariform.utils.TextEdit
-import org.eclipse.jface.viewers.IStructuredSelection
+import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.IAdaptable
+import org.eclipse.core.runtime.IConfigurationElement
+import org.eclipse.core.runtime.IPath
+import org.eclipse.core.runtime.IProgressMonitor
+import org.eclipse.core.runtime.ISafeRunnable
+import org.eclipse.core.runtime.IStatus
+import org.eclipse.core.runtime.Platform
+import org.eclipse.core.runtime.SafeRunner
+import org.eclipse.core.runtime.jobs.ISchedulingRule
+import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.jface.preference.IPreferenceStore
 import org.eclipse.jface.preference.PreferenceConverter
+import org.eclipse.jface.text.IDocument
+import org.eclipse.jface.viewers.ISelection
+import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.swt.graphics.RGB
+import org.eclipse.text.edits.ReplaceEdit
+import org.eclipse.text.edits.{ TextEdit => EclipseTextEdit }
 import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.PlatformUI
-import org.eclipse.core.runtime.jobs.Job
-import org.eclipse.core.runtime.jobs.ISchedulingRule
-import org.scalaide.logging.HasLogger
 import org.eclipse.ui.IWorkbenchWindow
-import scala.util.Try
+import org.eclipse.ui.PlatformUI
+import org.eclipse.ui.ide.IDE
+import org.scalaide.logging.HasLogger
+
+import scalariform.utils.TextEdit
 
 object EclipseUtils extends HasLogger {
 
@@ -150,16 +159,22 @@ object EclipseUtils extends HasLogger {
       page <- window.getPages
     } yield page
 
+  private def specificSourceVersion(scalaVersion: ScalaVersion) = scalaVersion match {
+      case SpecificScalaVersion(2, 10, _, _) =>
+        "_2.10"
+      case _ => ""
+    }
+
   /** Returns the location of the source bundle for the bundle.
    *
    *  @param bundleId the bundle id
    *  @param bundelPath the bundle location
    */
-  def computeSourcePath(bundleId: String, bundlePath: IPath): Option[IPath] = {
+  def computeSourcePath(bundleId: String, bundlePath: IPath, scalaVersion: ScalaVersion = NoScalaVersion): Option[IPath] = {
     val jarFile = bundlePath.lastSegment()
     val parentFolder = bundlePath.removeLastSegments(1)
 
-    val sourceBundleId = bundleId + ".source"
+    val sourceBundleId = bundleId + ".source" + specificSourceVersion(scalaVersion)
     // the expected filename for the source jar
     val sourceJarFile = jarFile.replace(bundleId, sourceBundleId)
 

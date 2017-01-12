@@ -1,22 +1,26 @@
 package org.scalaide.core.internal.builder.zinc
 
+import scala.collection.mutable.ListBuffer
+import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
+
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
-import org.scalaide.core.IScalaInstallation
-import org.scalaide.core.internal.ScalaPlugin
-import org.scalaide.util.eclipse.OSGiUtils
-import xsbti.Logger
-import org.scalaide.logging.HasLogger
-import scala.collection.mutable.ListBuffer
 import org.eclipse.core.runtime.SubMonitor
+import org.scalaide.core.IScalaInstallation
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.ScalaPlugin
+import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
+import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.eclipse.EclipseUtils.RichPath
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.core.internal.project.ScalaInstallation.scalaInstanceForInstallation
-import org.scalaide.core.SdtConstants
-import sbt.internal.inc.RawCompiler
-import sbt.internal.inc.ClasspathOptionsUtil
+import org.scalaide.util.eclipse.OSGiUtils
+
 import sbt.internal.inc.AnalyzingCompiler
+import sbt.internal.inc.ClasspathOptionsUtil
+import sbt.internal.inc.RawCompiler
+import xsbti.Logger
 
 /** This class manages a store of compiler-bridge jars (as consumed by zinc). Each specific
  *  version of Scala needs a compiler-bridge jar compiled against that version.
@@ -37,8 +41,20 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
   // raw stats
   private var hits, misses = 0
 
-  private lazy val compilerBridgeSrc =
-    OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _))
+  private lazy val compilerBridgeSrc = new Function[ScalaVersion, Option[IPath]] {
+    private[this] lazy val defaultPath = OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _))
+    @volatile private[this] var path_2_10: Option[IPath] = None
+    override def apply(scalaVersion: ScalaVersion) = synchronized {
+      scalaVersion match {
+        case SpecificScalaVersion(2, 10, _, _) =>
+          if (path_2_10.isEmpty)
+            path_2_10 = OSGiUtils.getBundlePath(plugin.zincCompilerBridgeBundle).flatMap(EclipseUtils.computeSourcePath(SdtConstants.ZincCompilerBridgePluginId, _, scalaVersion))
+          path_2_10
+        case _ =>
+          defaultPath
+      }
+    }
+  }.apply(_)
 
   private lazy val zincFullJar = OSGiUtils.getBundlePath(plugin.zincCompilerBundle)
 
@@ -93,7 +109,7 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
     val monitor = SubMonitor.convert(pm, name, 2)
     monitor.subTask(name)
 
-    (compilerBridgeSrc, zincFullJar) match {
+    (compilerBridgeSrc(installation.version), zincFullJar) match {
       case (Some(compilerBridge), Some(zincInterface)) =>
         val log = new SbtLogger
         cacheDir(installation).toFile.mkdirs()
