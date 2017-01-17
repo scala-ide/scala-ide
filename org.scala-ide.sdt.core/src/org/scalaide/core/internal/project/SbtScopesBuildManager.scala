@@ -106,7 +106,9 @@ class SbtScopesBuildManager(val owningProject: IScalaProject, managerSettings: S
     }
   }
 
-  override def latestAnalysis: Analysis = Analysis.Empty
+  override def latestAnalysis: Analysis = buildScopeUnits.foldLeft(Analysis.Empty) { (analysis, unit) =>
+    analysis ++ unit.latestAnalysis
+  }
 
   override def buildManagerOf(outputFile: File): Option[EclipseBuildManager] =
     buildScopeUnits.find { _.buildManagerOf(outputFile).nonEmpty }

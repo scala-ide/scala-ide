@@ -1,24 +1,26 @@
 package org.scalaide.debug.internal.model
 
-import com.sun.jdi.AbsentInformationException
-import com.sun.jdi.InvalidStackFrameException
-import com.sun.jdi.Method
-import com.sun.jdi.NativeMethodException
-import com.sun.jdi.StackFrame
+import java.util.concurrent.atomic.AtomicReference
+
+import scala.reflect.NameTransformer
+
 import org.eclipse.debug.core.model.IDropToFrame
 import org.eclipse.debug.core.model.IRegisterGroup
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
 import org.eclipse.debug.core.model.IVariable
 import org.scalaide.util.Utils.jdiSynchronized
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.reflect.NameTransformer
-import java.util.concurrent.atomic.AtomicReference
+
+import com.sun.jdi.AbsentInformationException
+import com.sun.jdi.InvalidStackFrameException
+import com.sun.jdi.Method
+import com.sun.jdi.NativeMethodException
+import com.sun.jdi.StackFrame
 
 object ScalaStackFrame {
 
-  def apply(thread: ScalaThread, stackFrame: StackFrame, index: Int = /*top frame*/ 0 ): ScalaStackFrame = {
-    new ScalaStackFrame(thread, stackFrame, index)
+  def apply(thread: ScalaThread, stackFrame: StackFrame, index: Int = /*top frame*/ 0, sourcePath: String => Option[String] = _ => None): ScalaStackFrame = {
+    new ScalaStackFrame(thread, stackFrame, index, sourcePath)
   }
 
   // regexp for JNI signature
@@ -55,7 +57,7 @@ object ScalaStackFrame {
   def getArgumentSimpleNames(methodSignature: String): List[String] = {
     val argumentsInMethodSignature(argString) = methodSignature
 
-    def parseArguments(args: String) : List[String] = {
+    def parseArguments(args: String): List[String] = {
       if (args.isEmpty) {
         Nil
       } else {
@@ -81,8 +83,8 @@ object ScalaStackFrame {
  * This class is NOT thread safe. 'stackFrame' variable can be 're-bound' at any time.
  * Instances have be created through its companion object.
  */
-class ScalaStackFrame private (val thread: ScalaThread, @volatile private var stackFrame0: StackFrame, val index: Int)
-  extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
+class ScalaStackFrame private (val thread: ScalaThread, @volatile private var stackFrame0: StackFrame, val index: Int, val sourcePath: String => Option[String])
+    extends ScalaDebugElement(thread.getDebugTarget) with IStackFrame with IDropToFrame {
   import ScalaStackFrame._
   private val stackFrameRef: AtomicReference[StackFrame] = new AtomicReference(stackFrame0)
 
@@ -140,7 +142,7 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile private var st
 
   import org.scalaide.debug.internal.JDIUtil._
   import scala.util.control.Exception
-  import Exception.Catch
+  import scala.util.control.Exception.Catch
 
   private lazy val variables: Seq[ScalaVariable] = jdiSynchronized {
     (safeStackFrameCalls(Nil) or wrapJDIException("Exception while retrieving stack frame's visible variables")) {
@@ -173,11 +175,14 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile private var st
   def getSourcePath(): String = {
     wrapJDIException("Exception while retrieving source path") {
       // we shoudn't use location#sourcePath, as it is platform dependent
-      stackFrame.location.declaringType.name.split('.').init match {
-        case Array() =>
-          getSourceName
-        case packageSegments =>
-          packageSegments.mkString("", "/", "/") + getSourceName
+      val className = stackFrame.location.declaringType.name
+      sourcePath(className).getOrElse {
+        className.split('.').init match {
+          case Array() =>
+            getSourceName
+          case packageSegments =>
+            packageSegments.mkString("", "/", "/") + getSourceName
+        }
       }
     }
   }
@@ -193,14 +198,15 @@ class ScalaStackFrame private (val thread: ScalaThread, @volatile private var st
           NameTransformer.decode(method.name),
           getArgumentSimpleNames(method.signature).mkString(", "))
     }
-    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame0.location.method) }
+    safeStackFrameCalls("Error retrieving full name") { getFullName(stackFrame.location.method) }
   }
 
-  /** Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need
-    *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest
-    *  stack frame to compute its value, as it can be checked by looking at the implementation of
-    *  `ScalaLocalVariable.getValue`
-    */
+  /**
+   * Set the current stack frame to `newStackFrame`. The `ScalaStackFrame.variables` don't need
+   *  to be recomputed because a variable (i.e., a `ScalaLocalVariable`) always uses the latest
+   *  stack frame to compute its value, as it can be checked by looking at the implementation of
+   *  `ScalaLocalVariable.getValue`
+   */
   def rebind(newStackFrame: StackFrame): Unit = {
     stackFrameRef.getAndSet(newStackFrame)
   }

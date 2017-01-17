@@ -13,9 +13,10 @@ import org.eclipse.debug.core.DebugEvent
 import org.eclipse.debug.core.model.IBreakpoint
 import org.eclipse.debug.core.model.IStackFrame
 import org.eclipse.debug.core.model.IThread
-import org.scalaide.debug.internal.JDIUtil._
-import org.scalaide.debug.internal.async.StepMessageOut
+import org.eclipse.jdt.launching.IJavaLaunchConfigurationConstants
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.debug.internal.JDIUtil.safeVmCalls
+import org.scalaide.debug.internal.async.StepMessageOut
 import org.scalaide.debug.internal.command.ScalaStep
 import org.scalaide.debug.internal.command.ScalaStepInto
 import org.scalaide.debug.internal.command.ScalaStepOver
@@ -23,6 +24,7 @@ import org.scalaide.debug.internal.command.ScalaStepReturn
 import org.scalaide.debug.internal.preferences.HotCodeReplacePreferences
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.Utils.jdiSynchronized
+import org.scalaide.util.eclipse.EclipseUtils
 
 import com.sun.jdi.ClassType
 import com.sun.jdi.IncompatibleThreadStateException
@@ -31,8 +33,6 @@ import com.sun.jdi.ObjectReference
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.VMCannotBeModifiedException
 import com.sun.jdi.Value
-
-import scala.collection.JavaConverters.asScalaBufferConverter
 
 class ThreadNotSuspendedException extends Exception
 
@@ -50,7 +50,7 @@ object ScalaThread {
  * A thread in the Scala debug model.
  * This class is thread safe. Instances have be created through its companion object.
  */
-abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: ThreadReference)
+abstract class ScalaThread private (target: ScalaDebugTarget, val threadRef: ThreadReference)
     extends ScalaDebugElement(target) with IThread with HasLogger {
 
   // Members declared in org.eclipse.debug.core.model.IStep
@@ -250,11 +250,22 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
    * FOR THE SUBORDINATE ONLY.
    */
   private[model] def suspend(eventDetail: Int) = {
+    val currentProject = Option(target.getLaunch.getLaunchConfiguration.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROJECT_NAME, null.asInstanceOf[String]))
+      .map { EclipseUtils.workspaceRoot.getProject }
+      .flatMap { IScalaPlugin().asScalaProject }
+    val sourcePath: String => Option[String] = className => {
+      import org.scalaide.core.internal.project.SourcePathFinder._
+      @inline def `trim$FromClassName`(className: String): String = Option(className.indexOf("$")).map {
+        case -1 => className
+        case i => className.substring(0, i)
+      }.get
+      currentProject.flatMap { _.sourcePath(`trim$FromClassName`(className)) }
+    }
     (safeThreadCalls(()) or wrapJDIException("Exception while suspending thread")) {
       // FIXME: `threadRef.frames` should handle checked exception `IncompatibleThreadStateException`
       stackFrames.getAndSet(threadRef.frames.asScala.zipWithIndex.map {
         case (frame, index) =>
-          ScalaStackFrame(this, frame, index)
+          ScalaStackFrame(this, frame, index, sourcePath)
       }(collection.breakOut))
       suspended.getAndSet(true)
       fireSuspendEvent(eventDetail)
@@ -310,7 +321,7 @@ abstract class ScalaThread private(target: ScalaDebugTarget, val threadRef: Thre
     }
 
   import scala.util.control.Exception
-  import Exception.Catch
+  import scala.util.control.Exception.Catch
 
   /** Wrap calls to the underlying VM thread reference to handle exceptions gracefully. */
   private def safeThreadCalls[A](defaultValue: A): Catch[A] =

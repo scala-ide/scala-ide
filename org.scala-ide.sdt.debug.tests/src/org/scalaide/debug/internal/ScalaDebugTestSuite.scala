@@ -45,6 +45,7 @@ import org.scalaide.debug.internal.model.ScalaJdiEventDispatcherTest
     classOf[StackFrameVariableOfTreeFinderTest],
     classOf[ScalaApplicationLaunchConfigurationDelegateTest],
     classOf[ScalaJUnitLaunchConfigurationDelegateTest],
-    classOf[ScalaJdiEventDispatcherTest]
+    classOf[ScalaJdiEventDispatcherTest],
+    classOf[SourcePathInStackFrameTest]
     ))
 class ScalaDebugTestSuite
