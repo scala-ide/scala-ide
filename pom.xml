@@ -234,6 +234,7 @@
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
         <sdt.debug.expression.dir>org.scala-ide.sdt.debug.expression</sdt.debug.expression.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
+        <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
       </properties>
       <build>
         <plugins>
@@ -241,6 +242,23 @@
             <artifactId>maven-resources-plugin</artifactId>
             <version>2.6</version>
             <executions>
+              <execution>
+                <id>copy-resources-sdt-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${sdt.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${sdt.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
               <execution>
                 <id>copy-resources-zinc-feature</id>
                 <phase>validate</phase>
