@@ -32,10 +32,10 @@
     <log4j.version>1.2.17</log4j.version>
     <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <zinc.version>1.0.0-X6</zinc.version>
-    <sbt-util.version>0.1.0-M14</sbt-util.version>
-    <sbt-io.version>1.0.0-M7</sbt-io.version>
-    <sbinary.version>0.4.3</sbinary.version>
+    <zinc.version>1.0.0-X8</zinc.version>
+    <sbt-util.version>1.0.0-M18</sbt-util.version>
+    <sbt-io.version>1.0.0-M9</sbt-io.version>
+    <sbinary.version>0.4.4</sbinary.version>
     <scala-refactoring.version>0.12.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- plugin versions -->
@@ -43,7 +43,7 @@
     <scala.plugin.version>3.2.0</scala.plugin.version>
     <aspectj.plugin.version>1.8</aspectj.plugin.version>
     <aspectj.version>1.8.7</aspectj.version>
-    <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
+    <maven-bundle.plugin.version>3.2.0</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
@@ -67,11 +67,10 @@
     <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
     <!-- Scala 2.12.x -->
-    <scala212.version>2.12.0-SNAPSHOT</scala212.version>
-    <scala212.binary.version>2.11</scala212.binary.version>
-    <scala212.scala-xml.version>1.0.3</scala212.scala-xml.version>
-    <scala212.scala-parser-combinators.version>1.0.3</scala212.scala-parser-combinators.version>
-    <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
+    <scala212.version>2.12.1</scala212.version>
+    <scala212.binary.version>2.12</scala212.binary.version>
+    <scala212.scala-xml.version>1.0.6</scala212.scala-xml.version>
+    <scala212.scala-parser-combinators.version>1.0.4</scala212.scala-parser-combinators.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>Select an Eclipse profile</eclipse.codename>
