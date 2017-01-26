@@ -44,11 +44,6 @@
       <version>${scala212.scala-parser-combinators.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-swing_${scala212.binary.version}</artifactId>
-      <version>${scala212.scala-swing.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala212.version}</version>
@@ -76,12 +71,6 @@
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-parser-combinators_${scala212.binary.version}</artifactId>
       <version>${scala212.scala-parser-combinators.version}</version>
-      <classifier>sources</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-swing_${scala212.binary.version}</artifactId>
-      <version>${scala212.scala-swing.version}</version>
       <classifier>sources</classifier>
     </dependency>
   </dependencies>
