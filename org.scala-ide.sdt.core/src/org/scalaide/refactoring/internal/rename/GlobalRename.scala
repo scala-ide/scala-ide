@@ -22,25 +22,28 @@ import org.scalaide.refactoring.internal.ui.NewNameWizardPage
  */
 class GlobalRename extends RefactoringExecutorWithWizard {
 
-  def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
+  override def createRefactoring(start: Int, end: Int, file: ScalaSourceFile) = new RenameScalaIdeRefactoring(start, end, file)
 
-  class RenameScalaIdeRefactoring(start: Int, end: Int, file: ScalaSourceFile)
+  class RenameScalaIdeRefactoring(start: Int, end: Int, override val file: ScalaSourceFile)
     extends ScalaIdeRefactoring(GlobalRename, "Rename", file, start, end) with FullProjectIndex {
 
-    val project = file.scalaProject
+    override val project = file.scalaProject
 
     var name = ""
 
-    def refactoringParameters = name
+    override def refactoringParameters = name
 
-    val refactoring = withCompiler { compiler =>
+    override val refactoring: implementations.Rename with GlobalIndexes with NameValidation {
+        var index: IndexLookup
+        val global: org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+      } = withCompiler { (compiler =>
       new implementations.Rename with GlobalIndexes with NameValidation {
-        val global = compiler
+        override val global = compiler
 
         /* The initial index is empty, it will be filled during the initialization
          * where we can show a progress bar and let the user cancel the operation.*/
         var index = EmptyIndex
-      }
+      })
     }
 
     /**
