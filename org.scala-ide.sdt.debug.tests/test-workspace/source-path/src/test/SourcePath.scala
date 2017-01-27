@@ -1,7 +1,18 @@
 package test {
   package b {
     class B {
-      def foo = 5
+      object OB {
+        def obFoo(i: Int)(f: Int => Int) =
+          f(i)
+      }
+      class BB {
+        def bbFoo =
+          OB.obFoo(5) { x =>
+            x + 42
+          }
+      }
+      def foo =
+        (new BB).bbFoo
     }
     package c {
       trait C {
