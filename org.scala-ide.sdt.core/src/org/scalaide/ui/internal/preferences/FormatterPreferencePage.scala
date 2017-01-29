@@ -56,7 +56,6 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
 
     protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor): Unit = {
       import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
-      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
 
       val checkBox = new Button(parent, SWT.CHECK | SWT.WRAP)
       checkBox.setText(text)
@@ -77,7 +76,6 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     }
 
     protected def addNumericField(parent: Composite, text: String, preference: PreferenceDescriptor[Int]): Unit = {
-      import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
       import org.scalaide.util.eclipse.SWTUtils.RichControl
 
       val IntegerPreference(min, max) = preference.preferenceType

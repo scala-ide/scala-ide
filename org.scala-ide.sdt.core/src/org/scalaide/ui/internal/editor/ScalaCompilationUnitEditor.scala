@@ -15,7 +15,6 @@ import org.scalaide.ui.internal.editor.decorators.semantichighlighting
 import org.scalaide.ui.internal.editor.decorators.semicolon.InferredSemicolonPainter
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
 import org.scalaide.ui.syntax.ScalaSyntaxClasses
-import org.scalaide.util.eclipse.SWTUtils._
 import org.scalaide.util.ui.DisplayThread
 
 /** Trait containing common logic used by both the `ScalaSourceFileEditor` and `ScalaClassFileEditor`.*/

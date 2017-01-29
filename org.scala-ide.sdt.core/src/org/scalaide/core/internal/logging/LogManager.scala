@@ -4,7 +4,6 @@ import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.logging.log4j.Log4JFacade
 import org.scalaide.core.internal.logging.LoggingPreferenceConstants._
-import org.scalaide.util.eclipse.SWTUtils
 import org.scalaide.logging.HasLogger
 import org.scalaide.logging.Level
 
@@ -42,8 +41,6 @@ object LogManager extends Log4JFacade with HasLogger {
   override protected def logFileName = "scala-ide.log"
 
   override def configure(logOutputLocation: String, preferredLogLevel: Level.Value): Unit = {
-    import SWTUtils.fnToPropertyChangeListener
-
     super.configure(logOutputLocation, preferredLogLevel)
 
     val prefStore = ScalaPlugin().getPreferenceStore

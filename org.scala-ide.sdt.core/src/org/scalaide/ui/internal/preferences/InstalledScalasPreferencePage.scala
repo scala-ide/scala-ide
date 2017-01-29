@@ -54,7 +54,6 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
 
   def createContents(parent: Composite): Control = {
     import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
-    import org.scalaide.util.eclipse.SWTUtils.fnToSelectionChangedEvent
     val composite = new Composite(parent, SWT.NONE)
 
     composite.setLayout(new GridLayout(2, false))

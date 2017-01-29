@@ -165,8 +165,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   var dslWidget: Option[DesiredInstallationWidget] = None
 
   def save(): Unit = {
-    import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
-
     val project = getConcernedProject()
     val scalaProject = project flatMap (ScalaPlugin().asScalaProject(_))
     scalaProject foreach (p => preferenceStore0.removePropertyChangeListener(p.compilerSettingsListener))
@@ -495,7 +493,6 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   // LUC_B: it would be nice to have this widget behave like the other 'EclipseSettings', to avoid unnecessary custom code
   class AdditionalParametersWidget(parent: Composite) extends StringFieldEditor(CompilerSettings.ADDITIONAL_PARAMS, "Additional command line parameters:", StringFieldEditor.UNLIMITED, parent)
       with Subscriber[IScalaProjectEvent, Publisher[IScalaProjectEvent]] {
-    import org.scalaide.util.eclipse.SWTUtils.fnToModifyListener
     setPreferenceStore(preferenceStore0)
     load()
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach { _.subscribe(this) }
