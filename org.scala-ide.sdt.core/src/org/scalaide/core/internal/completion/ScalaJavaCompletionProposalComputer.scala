@@ -126,9 +126,9 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
       }.getOrElse(Nil)()
     } getOrElse (Nil)
 
-    import scala.collection.JavaConversions._
+    import scala.collection.JavaConverters._
 
-    completionProposals: java.util.List[ICompletionProposal]
+    completionProposals.asJava
   }
 
 }
@@ -385,8 +385,8 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
     // going through the list of comments contained in the compilation unit
     // and remove the ones contained in the piece of code
     var shiftedStartOffset = startOffset
-    import scala.collection.JavaConversions._
-    for (c <- getCompilationUnit(enclosingNode).getCommentList()) {
+    import scala.collection.JavaConverters._
+    for (c <- getCompilationUnit(enclosingNode).getCommentList().asScala) {
       val comment = c.asInstanceOf[Comment]
       val commentStartPosition = comment.getStartPosition()
       if (startOffset <= commentStartPosition && commentStartPosition < endOffset) {
