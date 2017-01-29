@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 import org.scalaide.debug.internal.JdiEventDispatcher
