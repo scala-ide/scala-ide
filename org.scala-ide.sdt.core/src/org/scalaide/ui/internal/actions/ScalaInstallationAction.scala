@@ -85,7 +85,7 @@ class ScalaInstallationAction extends IObjectActionDelegate {
       if (res != null && !res.isEmpty) res(0).asInstanceOfOpt[ScalaInstallationChoice]
       else None
     }
-    val dynamicVersions:List[ScalaInstallationChoice] = List("2.10", "2.11").map((s) => ScalaInstallationChoice(ScalaVersion(s)))
+    val dynamicVersions:List[ScalaInstallationChoice] = List("2.10", "2.11", "2.12").map((s) => ScalaInstallationChoice(ScalaVersion(s)))
     val fixedVersions: List[ScalaInstallationChoice] = ScalaInstallation.availableInstallations.map((si) => ScalaInstallationChoice(si))
     dialog.setElements((fixedVersions ++ dynamicVersions).toArray)
     dialog.setTitle("Scala Installation Choice")
