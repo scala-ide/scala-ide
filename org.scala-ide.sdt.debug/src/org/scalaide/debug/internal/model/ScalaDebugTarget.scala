@@ -507,7 +507,7 @@ private[model] class ScalaDebugTargetSubordinate private (threadStartRequest: Th
     logger.debug("scala debug target update stack frame")
     val nonSystemThreads = debugTarget.getScalaThreads.filterNot(_.isSystemThread)
     val updatedNonSystemThreads = nonSystemThreads.map(_.updateStackFramesAfterHcr(dropAffectedFrames))
-    Future.reduce { updatedNonSystemThreads }((_, _) => ())
+    Future.reduceLeft { updatedNonSystemThreads }((_, _) => ())
   }
 
   private def threadEventsHandle: PartialFunction[Event, StaySuspended] = {

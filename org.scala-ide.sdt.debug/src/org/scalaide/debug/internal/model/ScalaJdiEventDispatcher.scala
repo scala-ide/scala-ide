@@ -150,7 +150,7 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
         }
     }
 
-    Future.fold(staySuspendeds)(false)(_ | _).andThen {
+    Future.foldLeft(staySuspendeds)(false)(_ | _).andThen {
       case Success(false) => eventSet.resume()
       case _ =>
     }
