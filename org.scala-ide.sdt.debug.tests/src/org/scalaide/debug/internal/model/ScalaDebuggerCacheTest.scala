@@ -239,7 +239,7 @@ class ScalaDebugCacheTest {
 
     val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += debugCache.dispose
+    toShutdown += (() ⇒ debugCache.dispose)
 
     (debugCache, classPrepareRequest1, classPrepareRequest2)
   }
@@ -268,7 +268,7 @@ class ScalaDebugCacheTest {
 
     val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += debugCache.dispose
+    toShutdown += (() ⇒ debugCache.dispose)
 
     val refType = createReferenceType(typeName)
     import scala.collection.JavaConverters._
@@ -292,7 +292,7 @@ class ScalaDebugCacheTest {
 
     val debugCache = ScalaDebugCache(debugTarget)
 
-    toShutdown += debugCache.dispose
+    toShutdown += (() ⇒ debugCache.dispose)
 
     val location = mock(classOf[Location])
     val method = createMethod(methodName)

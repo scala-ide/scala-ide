@@ -50,7 +50,7 @@ trait LaunchUtils {
 
   def whenApplicationWasLaunchedFor(project: IProject, inMode: String)(inThatCase: => Unit): Unit = {
     val latch = new CountDownLatch(1)
-    DebugPlugin.getDefault.getLaunchManager.addLaunchListener(onLaunchTerminates(latch.countDown))
+    DebugPlugin.getDefault.getLaunchManager.addLaunchListener(onLaunchTerminates(() ⇒ latch.countDown))
     val lc = launchConfiguration(project)
     val launch = lc.launch(inMode, DefaultMonitor)
     val timeout = if (launch.canTerminate) 10 else 60
