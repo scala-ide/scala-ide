@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.NameTransformer
 
 import org.scalaide.debug.internal.expression.Names.Java
@@ -60,7 +60,7 @@ trait Seeker {
 
   final def tryByName[Type <: com.sun.jdi.ReferenceType : scala.reflect.ClassTag](name: String): Option[Type] = {
     val className = handleArray(name)
-    def getType() = jvm.classesByName(className).collectFirst {
+    def getType() = jvm.classesByName(className).asScala.collectFirst {
       case tpe: Type => tpe
     }
 
@@ -72,7 +72,7 @@ trait Seeker {
 
   /** Looks up an interface for given name and returns jdi reference to it. */
   final def interfaceByName(interfaceName: String, onNotFound: String => InterfaceType): InterfaceType = {
-    jvm.classesByName(interfaceName).collectFirst {
+    jvm.classesByName(interfaceName).asScala.collectFirst {
       case interfaceType: InterfaceType => interfaceType
     } getOrElse onNotFound(interfaceName)
   }
@@ -107,7 +107,7 @@ trait Seeker {
    * @throws NoSuchMethodError when method is not found
    */
   final def methodOn(className: String, methodName: String, arity: Int): Method = {
-    val classRef = jvm.classesByName(className).headOption.getOrElse(
+    val classRef = jvm.classesByName(className).asScala.headOption.getOrElse(
       throw new ClassNotFoundException(s"Class with name $className not found."))
     methodOn(classRef, methodName, arity)
   }
@@ -122,7 +122,7 @@ trait Seeker {
    * @throws NoSuchMethodError when method is not found
    */
   final def methodOn(tpe: ReferenceType, methodName: String, arity: Int): Method = {
-    tpe.methodsByName(NameTransformer.encode(methodName)).find(_.arity == arity).getOrElse(
+    tpe.methodsByName(NameTransformer.encode(methodName)).asScala.find(_.arity == arity).getOrElse(
       throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${tpe.name}"))
   }
 
@@ -136,7 +136,7 @@ trait Seeker {
    */
   final def methodOn(obj: ObjectReference, methodName: String, arity: Int): Method = {
     val methods = obj.referenceType().methodsByName(NameTransformer.encode(methodName))
-    methods.find(_.arity == arity).getOrElse(
+    methods.asScala.find(_.arity == arity).getOrElse(
       throw new NoSuchMethodError(s"Method: $methodName with arity: $arity not found on ${obj.`type`}"))
   }
 

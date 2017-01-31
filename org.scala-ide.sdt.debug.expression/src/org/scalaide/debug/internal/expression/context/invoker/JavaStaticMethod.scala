@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.scalaide.debug.internal.expression.Arity
 import org.scalaide.debug.internal.expression.SimpleInvokeOnClassType
@@ -41,7 +41,7 @@ class JavaStaticVarArgMethod(val referenceType: ClassType, val methodName: Strin
     def invoke(method: Method): Value = {
       val normalSize = method.arity - 1
       val standardArgs = generateArguments(method).take(normalSize)
-      val varArgs = packToJavaVarArg(method.argumentTypes.last.asInstanceOf[ArrayType], args.drop(normalSize))
+      val varArgs = packToJavaVarArg(method.argumentTypes.asScala.last.asInstanceOf[ArrayType], args.drop(normalSize))
       referenceType.invokeMethod(context.currentThread(), method, standardArgs :+ varArgs)
     }
 

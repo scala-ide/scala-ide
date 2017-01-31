@@ -3,7 +3,7 @@
  */
 package org.scalaide.debug.internal.expression
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import com.sun.jdi.Method
 import com.sun.jdi.ClassType
@@ -31,14 +31,14 @@ object JdiHelpers {
 
   final class SimpleInvokeOnClassType(private val ref: ClassType) extends AnyVal {
     def invokeMethod(threadRef: ThreadReference, method: Method, args: Seq[Value]): Value =
-      ref.invokeMethod(threadRef, method, args, methodInvocationFlags(method))
+      ref.invokeMethod(threadRef, method, args.asJava, methodInvocationFlags(method))
     def newInstance(threadRef: ThreadReference, method: Method, args: Seq[Value]): ObjectReference =
-      ref.newInstance(threadRef, method, args, methodInvocationFlags(method))
+      ref.newInstance(threadRef, method, args.asJava, methodInvocationFlags(method))
   }
 
   final class SimpleInvokeOnObjectRef(private val ref: ObjectReference) extends AnyVal {
     def invokeMethod(threadRef: ThreadReference, method: Method, args: Seq[Value]): Value =
-      ref.invokeMethod(threadRef, method, args, methodInvocationFlags(method))
+      ref.invokeMethod(threadRef, method, args.asJava, methodInvocationFlags(method))
   }
 }
 
@@ -65,11 +65,11 @@ trait JdiHelpers {
 
     val name = err(method.name)
     val args = err {
-      method.arguments.map(arg => arg.name + ": " + arg.typeName).mkString(",")
+      method.arguments.asScala.map(arg => arg.name + ": " + arg.typeName).mkString(",")
     }
     val returnType = err(method.returnType)
     val declaringType = err(method.declaringType)
-    val lineLocations = err(method.allLineLocations.map(_.lineNumber).mkString(","))
+    val lineLocations = err(method.allLineLocations.asScala.map(_.lineNumber).mkString(","))
 
     s"$params def $name($args): $returnType (defined in: $declaringType, line(s): [$lineLocations])"
   }

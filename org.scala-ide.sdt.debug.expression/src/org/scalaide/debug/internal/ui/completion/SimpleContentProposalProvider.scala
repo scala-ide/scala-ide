@@ -3,7 +3,7 @@
  */
 package org.scalaide.debug.internal.ui.completion
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
+import scala.collection.JavaConverters._
 import scala.reflect.NameTransformer
 import scala.reflect.runtime.{universe => ru}
 
@@ -130,7 +130,7 @@ object SimpleContentProposalProvider extends HasLogger {
   }
 
   private def getAccessibleVariablesProposals(stackFrame: StackFrame): Seq[IContentProposal] =
-    stackFrame.visibleVariables().map { variable =>
+    stackFrame.visibleVariables().asScala.map { variable =>
       val typeName = variable.typeName()
       (variable.name(), s"${variable.name()}: ${javaNameToScalaName(typeName)}")
     }.groupBy { case (content, label) => content }
@@ -141,7 +141,7 @@ object SimpleContentProposalProvider extends HasLogger {
       }(collection.breakOut) // we get only the latest variable with given name (shadowing)
 
   private def getMembersNamesViaJdi(thisReference: ReferenceType): Seq[(String, String)] =
-    thisReference.allMethods()
+    thisReference.allMethods().asScala
       .flatMap { m =>
         val name = NameTransformer.decode(m.name())
         if (shouldBeProposal(name)) {

@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
 import org.scalaide.debug.internal.expression.proxies.ObjectJdiProxy
@@ -52,8 +52,8 @@ abstract class ScalaMethod(val realThisType: Option[String], proxy: ObjectJdiPro
     val methodsWithClassType = for {
       tpe <- realThisType.toList
       classLoader <- Option(referenceType.classLoader).toList
-      associatedClass <- getAssociatedClasses(tpe)(classLoader.visibleClasses.toList)
-      method <- associatedClass.methods if isDeclaredOnThisType(method) && method.name == methodName
+      associatedClass <- getAssociatedClasses(tpe)(classLoader.visibleClasses.asScala.toList)
+      method <- associatedClass.methods.asScala if isDeclaredOnThisType(method) && method.name == methodName
     } yield (method, associatedClass)
 
     methodsWithClassType.toMap

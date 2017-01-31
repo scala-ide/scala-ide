@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import com.sun.jdi.ClassObjectReference
 
@@ -42,7 +42,7 @@ trait JdiClassLoader {
 
     // obtain class loader from this class for top stackframe
     val classLoaderRef = currentFrame.thisObject.referenceType.classLoader
-    val defineClassMethod = classLoaderRef.referenceType.methodsByName(methodName, methodSignature).head
+    val defineClassMethod = classLoaderRef.referenceType.methodsByName(methodName, methodSignature).asScala.head
 
     // encode with base64
     val localByteString = DatatypeConverter.printBase64Binary(code)

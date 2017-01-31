@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.collection.JavaConversions._
 import scala.util.Try
 
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -57,9 +56,10 @@ class JavaVarArgConstructorMethod(className: String, val args: Seq[JdiProxy], pr
 
   override def apply(): Option[Value] = {
     def invoke(method: Method): Value = {
+      import scala.collection.JavaConverters._
       val normalSize = method.arity - 1
       val standardArgs = generateArguments(method).take(normalSize)
-      val varArgs = packToJavaVarArg(method.argumentTypes.last.asInstanceOf[ArrayType], args.drop(normalSize))
+      val varArgs = packToJavaVarArg(method.argumentTypes.asScala.last.asInstanceOf[ArrayType], args.drop(normalSize))
       referenceType.newInstance(context.currentThread(), method, standardArgs :+ varArgs)
     }
 

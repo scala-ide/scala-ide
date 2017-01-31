@@ -5,7 +5,7 @@ package org.scalaide.debug.internal.expression
 package context
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.scalaide.debug.internal.expression.Names.Scala
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -66,11 +66,11 @@ private[context] trait InstanceOf {
       // TODO add support for variance - this needs some integration with `MethodInvoker.conformsTo`
       typeName == Scala.Array(scalaComponentType)
     case interface: InterfaceType =>
-      val parents: Set[String] = (interface +: interface.subinterfaces)
+      val parents: Set[String] = (interface +: interface.subinterfaces.asScala)
         .map(_.name)(collection.breakOut)
       parents.contains(typeName)
     case clazz: ClassType =>
-      val parents: Set[String] = ((clazz +: clazz.allInterfaces) ++ superclasses(clazz))
+      val parents: Set[String] = ((clazz +: clazz.allInterfaces.asScala) ++ superclasses(clazz))
         .map(_.name)(collection.breakOut)
       parents.contains(typeName)
   }

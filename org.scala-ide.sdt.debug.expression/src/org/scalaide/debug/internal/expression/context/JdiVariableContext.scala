@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe.TermName
 import scala.util.Try
 
@@ -38,7 +38,7 @@ private[context] trait JdiVariableContext
   override def implementValue(name: TermName): Option[String] = transformationContext.implementValue(name)
 
   override final def localVariablesNames(): Set[String] =
-    currentFrame().visibleVariables.map(_.name)(collection.breakOut)
+    currentFrame().visibleVariables.asScala.map(_.name)(collection.breakOut)
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
   override def thisPackage: Option[String] = thisObject.flatMap { obj =>

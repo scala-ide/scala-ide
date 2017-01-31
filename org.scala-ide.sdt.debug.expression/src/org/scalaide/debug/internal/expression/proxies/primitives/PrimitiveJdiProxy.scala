@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package proxies.primitives
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.Names.Scala
@@ -37,8 +37,8 @@ abstract class PrimitiveJdiProxy[Primitive, ProxyType <: PrimitiveJdiProxy[Primi
     val boxedClass: ClassType = __context.classByName(companion.name.javaBoxed)
 
     val boxingMethod: Method = boxedClass
-      .methodsByName("valueOf")
-      .filter(_.argumentTypeNames.toSeq == Seq(companion.name.java))
+      .methodsByName("valueOf").asScala
+      .filter(_.argumentTypeNames.asScala.toSeq == Seq(companion.name.java))
       .head
 
     boxedClass.invokeMethod(__context.currentThread(), boxingMethod, List(__value)).asInstanceOf[ObjectReference]

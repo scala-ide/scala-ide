@@ -4,7 +4,7 @@
 package org.scalaide.debug.internal.expression
 package context.invoker
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -63,7 +63,7 @@ trait MethodInvoker extends HasLogger {
    */
   protected final def argumentTypesLoaded(method: Method, context: => JdiContext): Seq[Type] = {
     Try(method.argumentTypes()) match {
-      case Success(types) => types
+      case Success(types) => types.asScala
       case Failure(cnl: ClassNotLoadedException) =>
         context.loadClass(cnl.className)
         argumentTypesLoaded(method, context)
@@ -118,15 +118,15 @@ trait BaseMethodInvoker extends MethodInvoker {
    * Generates arguments for given call - transform boxed primitives to unboxed ones if needed
    */
   protected final def generateArguments(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes, methodArgs(method))
+    generateArguments(method.argumentTypes.asScala, methodArgs(method))
 
   protected final def generateArgumentsRight(method: Method): Seq[Value] =
-    generateArguments(method.argumentTypes.reverse, methodArgs(method).reverse).reverse
+    generateArguments(method.argumentTypes.asScala.reverse, methodArgs(method).reverse).reverse
 
   // search for all visible methods
   protected def allMethods: Seq[Method] =
     // both visibleMethods and allMethods calls are required to maintain proper order of methods
-    (referenceType.visibleMethods ++ referenceType.allMethods).filter(_.name == methodName)
+    (referenceType.visibleMethods.asScala ++ referenceType.allMethods.asScala).filter(_.name == methodName)
 
   // found methods
   protected def matching: Seq[Method] = allMethods.filter(matchesSignature)
