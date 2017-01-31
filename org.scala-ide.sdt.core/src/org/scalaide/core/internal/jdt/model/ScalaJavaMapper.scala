@@ -227,7 +227,7 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
    */
   private def javaDescriptor(bt: BType): String = {
     import Signature._
-    bt match {
+    (bt: @unchecked) match {
       case BOOL             => C_BOOLEAN.toString
       case BYTE             => C_BYTE.toString
       case SHORT            => C_SHORT.toString

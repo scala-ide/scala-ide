@@ -44,6 +44,7 @@ class A {
       case (60, 63) => "Char" //'c'
       case (65, 75) => "String" //a.toString
       case (77, 78) => "Any" //c
+      case r        => throw new IllegalStateException("Unexpected range: " + r)
     }
     val parameterList = ScalariformUtils.getParameters(ast, offsetOf("method"), typeAtRange)
     val expected = List(List("a" -> "ClassA", "arg" -> "Int"), List("arg" -> "String", "named" -> "Char"), List("arg" -> "String", "c" -> "Any"))
@@ -91,7 +92,6 @@ class A {
     assertFalse(ScalariformUtils.isEqualsCallWithoutParameterList(ast, offsetOf("unknown3")))
     assertFalse(ScalariformUtils.isEqualsCallWithoutParameterList(ast, offsetOf("unknown4")))
   }
-
 
   private def callingInfo(beginningOfCall: String, source: String) = {
     val offsetOf = offsetFinder(source) _
