@@ -32,7 +32,7 @@
     <profile>
       <id>scala-2.12.x</id>
       <modules>
-        <module>../org.scala-ide.scala211.build</module>
+        <!--module>../org.scala-ide.scala211.build</module-->
         <module>../org.scala-ide.scala212.build</module>
         <module>../org.scala-ide.refactoring</module>
       </modules>
