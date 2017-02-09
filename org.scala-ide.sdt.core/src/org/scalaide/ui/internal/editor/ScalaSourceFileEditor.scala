@@ -39,6 +39,8 @@ import org.eclipse.ui.part.WorkbenchPart
 import org.eclipse.ui.texteditor.IAbstractTextEditorHelpContextIds
 import org.eclipse.ui.texteditor.ITextEditorActionConstants
 import org.eclipse.ui.texteditor.TextOperationAction
+import org.eclipse.ui.part.WorkbenchPart
+
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.core.internal.extensions.SemanticHighlightingParticipants
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
