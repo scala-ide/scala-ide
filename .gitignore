@@ -7,4 +7,3 @@ org.scala-ide.sdt.update-site/site.xml
 .idea
 .metadata
 *~
-org.scala-ide.sbt.build
