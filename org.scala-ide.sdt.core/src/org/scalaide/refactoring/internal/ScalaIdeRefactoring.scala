@@ -25,6 +25,8 @@ import scala.tools.refactoring.common.RenameSourceFileChange
 import org.eclipse.ltk.core.refactoring.resource.RenameResourceChange
 import org.scalaide.core.internal.statistics.Features.Feature
 import org.scalaide.core.internal.ScalaPlugin
+import scala.tools.refactoring.common.MoveToDirChange
+import org.eclipse.ltk.core.refactoring.resource.MoveResourceChange
 
 /**
  * This is the abstract base class for all the concrete refactoring instances.
@@ -141,6 +143,7 @@ abstract class ScalaIdeRefactoring(val feature: Feature, override val getName: S
   private [refactoring] def scalaChangesToEclipseChanges(changes: List[Change]) = {
     val textChanges = changes.collect { case tc: TextChange => tc }
     val renameChanges = changes.collect { case r: RenameSourceFileChange => r }
+    val moveToDirChanges = changes.collect { case m: MoveToDirChange => m }
 
     textChanges.groupBy(_.sourceFile.file).map {
       case (file, fileChanges) =>
@@ -152,6 +155,13 @@ abstract class ScalaIdeRefactoring(val feature: Feature, override val getName: S
         }
     } ++ renameChanges.flatMap { r =>
       FileUtils.toIPath(r.sourceFile).map(path => new RenameResourceChange(path, r.to))
+    } ++ moveToDirChanges.flatMap { r =>
+      for {
+        sourceFile <- FileUtils.toIFile(r.sourceFile)
+        destDir <- FileUtils.toIFolder(r.to)
+      } yield {
+        new MoveResourceChange(sourceFile, destDir)
+      }
     }
   }
 

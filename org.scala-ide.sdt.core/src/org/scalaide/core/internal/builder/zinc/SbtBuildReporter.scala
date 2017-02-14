@@ -65,7 +65,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
 
   private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
     SbtUtils.m2o(pos.sourceFile).flatMap { file =>
-      FileUtils.resourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
+      FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
     }.map { resource =>
       if (resource.getFileExtension != "java")
         riseErrorOrWarning(_)
@@ -102,7 +102,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
 
     val marker: Option[Unit] = for {
       file <- m2o(pos.sourceFile)
-      resource <- FileUtils.resourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
+      resource <- FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
       offset <- m2o(pos.offset)
       line <- m2o(pos.line)
     } yield if (resource.getFileExtension != "java") {
