@@ -69,7 +69,7 @@ class ScalaJavaMapperTest {
       val targets = compiler.askLoadedTyped(srcFile, keepLoaded = false).get match {
         case Left(loadedType) =>
           loadedType.collect {
-            case t: compiler.DefDef if t.name.toString startsWith "target" => t
+            case t: compiler.ValDef if t.name.toString startsWith "target" => t
           }
         case Right(e) =>
           throw e
