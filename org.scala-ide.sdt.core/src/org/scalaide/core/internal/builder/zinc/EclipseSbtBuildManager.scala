@@ -237,7 +237,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
 
       // dirty-hack for ticket #1001595 until Sbt provides a better API for tracking sources recompiled by the incremental compiler
       if (phaseName == "parser") {
-        val file = FileUtils.resourceForPath(unitIPath, project.underlying.getFullPath)
+        val file = FileUtils.fileResourceForPath(unitIPath, project.underlying.getFullPath)
         file.foreach { f =>
           TaskManager.clearTasks(f)
           compiledFiles += f

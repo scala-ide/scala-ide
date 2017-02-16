@@ -80,21 +80,15 @@ class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: O
     getCorrespondingElement(method).getOrElse(method).asInstanceOf[IMethod]
   }
 
-  private val turnTypeSuffixToModuleName: String => String = typ =>
-    if (typ.endsWith(".type"))
-      typ.replace(".type", "$")
-    else
-      typ
-
-  private val trimTypeParamsToPureClassName: String => String = typ =>
-    Option(typ.indexOf("[")).map {
-      case -1 => typ
-      case typeParamStartsIndex => typ.substring(0, typeParamStartsIndex)
-    }.get
-
   override def getFullyQualifiedName: String =
     declaringType.map { declaringType =>
-      (trimTypeParamsToPureClassName andThen turnTypeSuffixToModuleName)(declaringType.safeToString)
+      val pkgSym = declaringType.typeSymbol.enclosingPackage
+      if (pkgSym.isEmptyPackage)
+        super.getFullyQualifiedName
+      else {
+        val pkg = pkgSym.javaClassName
+        pkg + "." + getTypeQualifiedName('$', /*showParameters =*/ false)
+      }
     }.getOrElse(super.getFullyQualifiedName)
 }
 

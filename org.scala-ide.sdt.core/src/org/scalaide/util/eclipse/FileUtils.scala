@@ -12,7 +12,6 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IFolder
 import org.eclipse.core.resources.IMarker
 import org.eclipse.core.resources.IResource
-import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.Path
@@ -22,8 +21,12 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.internal.resources.ResourceException
 import java.io.File
 import org.scalaide.core.SdtConstants
+import scala.util.control.NonFatal
+import org.scalaide.core.internal.logging.EclipseLogger
+import java.net.URI
 
 object FileUtils {
+  import EclipseUtils.workspaceRoot
 
   /**
    * Tries to obtain the most accurate [[IFile]] embedded in an [[AbstractFile]],
@@ -34,7 +37,22 @@ object FileUtils {
     case EclipseResource(file: IFile) => Some(file)
     case abstractFile =>
       val path = Path.fromOSString(abstractFile.path)
-      resourceForPath(path)
+      fileResourceForPath(path)
+  }
+
+  def toIFolder(path: String, create: Boolean = true): Option[IFolder] = {
+    try {
+      containerResourceForPath(path).collect { case folder: IFolder =>
+        if (create && !folder.exists()) {
+          createWithParents(folder)
+        }
+        folder
+      }
+    } catch {
+      case NonFatal(e) =>
+        EclipseLogger.warn("Could not convert to IFolder", e)
+        None
+    }
   }
 
   /**
@@ -75,6 +93,14 @@ object FileUtils {
     }
   }
 
+  private def createWithParents(c: IContainer): Unit = c match {
+    case f: IFolder if !f.exists() =>
+      createWithParents(f.getParent())
+      f.create(/* force */ true, /* local */ true, null)
+    case _ =>
+      ()
+  }
+
   /** Creates a file of a given `IFile` and all of its parent folders if needed.
    *  Resource listeners are also notified about the changes.
    *
@@ -82,14 +108,7 @@ object FileUtils {
    *  exception.
    */
   def createFile(file: IFile): Try[Unit] = Try {
-    def createParentFolders(c: IContainer): Unit = c match {
-      case f: IFolder if !f.exists() =>
-        createParentFolders(f.getParent())
-        f.create(/* force */ true, /* local */ true, null)
-      case _ =>
-    }
-
-    createParentFolders(file.getParent())
+    createWithParents(file.getParent())
     file.create(new ByteArrayInputStream(Array()), /* force */ true, null)
   }
 
@@ -98,9 +117,27 @@ object FileUtils {
    * file might "mounted" under multiple locations in the Eclipse file system, the `prefix`
    * path is used disambiguate.
    */
-  def resourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
-    val resources = Try(ResourcesPlugin.getWorkspace.getRoot.findFilesForLocationURI(URIUtil.toURI(location))).getOrElse(Array())
-    resources.find(prefix isPrefixOf _.getFullPath)
+  def fileResourceForPath(location: IPath, prefix: IPath = Path.EMPTY): Option[IFile] = {
+    lookupPathWithPrefix(location, prefix)(workspaceRoot.findFilesForLocationURI)
+  }
+
+  private def containerResourceForPath(location: String, prefix: IPath = Path.EMPTY): Option[IContainer] = {
+    containerResourceForPath(Path.fromOSString(location), prefix)
+  }
+
+  private def containerResourceForPath(location: IPath, prefix: IPath): Option[IContainer] = {
+    lookupPathWithPrefix(location, prefix)(workspaceRoot.findContainersForLocationURI)
+  }
+
+  private def lookupPathWithPrefix[ResourceT <: IResource](location: IPath, prefix: IPath)(findForURI: URI => Array[ResourceT]): Option[ResourceT] = {
+    try {
+      val resources = findForURI(URIUtil.toURI(location))
+      resources.find(r => prefix.isPrefixOf(r.getFullPath))
+    } catch {
+      case NonFatal(e) =>
+        EclipseLogger.error(s"Error looking up $location for $prefix", e)
+        None
+    }
   }
 
   /** Is the file buildable by the Scala plugin? In other words, is it a

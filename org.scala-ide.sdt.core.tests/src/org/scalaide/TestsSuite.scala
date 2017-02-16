@@ -68,6 +68,7 @@ import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
 import org.scalaide.ui.internal.preferences.StringListMapperTest
 import org.scalaide.core.sbtbuilder.Scala210Compilation
 import org.scalaide.core.sbtbuilder.SourcePathFinderTest
+import org.scalaide.core.scalaelements.ScalaElementsNameTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -137,6 +138,7 @@ import org.scalaide.core.sbtbuilder.SourcePathFinderTest
     classOf[ScalacNotUnderstandJavaTest],
     classOf[ScalaJavaDepTwoScopesTest],
     classOf[Scala210Compilation],
-    classOf[SourcePathFinderTest]
+    classOf[SourcePathFinderTest],
+    classOf[ScalaElementsNameTest]
 ))
 class TestsSuite

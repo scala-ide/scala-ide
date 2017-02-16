@@ -48,7 +48,7 @@ class SourcePathInStackFrameTest {
     }
   }
 
-  private val mainBreakpoint = 16
+  private val mainBreakpoint = 27
   private val expectedSourcePath = File.separator + "test" + File.separator + "SourcePath.scala"
   @Test
   def simpleCheckForSourcePathInTopMostStackFrameForClassesWithPkgsWhichDontReflectSourceFoldersStruct(): Unit = {
@@ -56,10 +56,18 @@ class SourcePathInStackFrameTest {
     session.runToLine(BP_TYPENAME, mainBreakpoint)
     Assert.assertTrue(session.currentStackFrame.getSourcePath == expectedSourcePath)
 
-    val bp4 = session.addLineBreakpoint("test.b.B", 4)
-    val bp8 = session.addLineBreakpoint("test.b.c.C", 8)
+    val inTopMostClass = session.addLineBreakpoint("test.b.B", 15)
+    val inInheritedTrait = session.addLineBreakpoint("test.b.c.C", 19)
+    val inInnerClassAnonFunc = session.addLineBreakpoint("test.b.B$BB", 11)
+    val inInnerObject = session.addLineBreakpoint("test.b.B$OB", 6)
     try {
-      session.waitForBreakpointsToBeEnabled(bp4, bp8)
+      session.waitForBreakpointsToBeEnabled(inTopMostClass, inInheritedTrait, inInnerClassAnonFunc, inInnerObject)
+
+      session.resumeToSuspension()
+      Assert.assertTrue(session.currentStackFrame.getSourcePath == expectedSourcePath)
+
+      session.resumeToSuspension()
+      Assert.assertTrue(session.currentStackFrame.getSourcePath == expectedSourcePath)
 
       session.resumeToSuspension()
       Assert.assertTrue(session.currentStackFrame.getSourcePath == expectedSourcePath)
@@ -69,8 +77,10 @@ class SourcePathInStackFrameTest {
 
       session.resumeToCompletion()
     } finally {
-      bp4.delete()
-      bp8.delete()
+      inTopMostClass.delete()
+      inInheritedTrait.delete()
+      inInnerClassAnonFunc.delete()
+      inInnerObject.delete()
     }
   }
 }
