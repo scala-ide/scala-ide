@@ -6,6 +6,7 @@ import java.util.Comparator
 import scala.tools.refactoring.implementations
 import scala.tools.refactoring.implementations.OrganizeImports.ImportsStrategy
 import scala.tools.refactoring.implementations.OrganizeImports.OrganizeImportsConfig
+import scala.util.Properties
 
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.jdt.core.IJavaElement
@@ -18,6 +19,7 @@ import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog
 import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider
+import org.eclipse.jface.text.TextUtilities
 import org.eclipse.jface.window.Window
 import org.scalaide.core.internal.jdt.model.LazyToplevelClass
 import org.scalaide.core.internal.jdt.model.ScalaElement
@@ -227,7 +229,14 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
 
     lazy val compilationUnitHasProblems = file.getProblems != null && file.getProblems.exists(_.isError)
 
-    override val refactoring = withCompiler( c => new implementations.OrganizeImports with FormattingOverrides { override val global = c })
+    override val refactoring = withCompiler( c =>
+      new implementations.OrganizeImports with FormattingOverrides {
+        override val global = c
+        override val lineDelimiter = EditorUtils.withCurrentEditor { editor =>
+          val document = editor.getDocumentProvider.getDocument(editor.getEditorInput)
+          Option(TextUtilities.getDefaultLineDelimiter(document))
+        }.getOrElse(Properties.lineSeparator)
+      })
 
     override protected def leaveDirty = true
 
@@ -241,6 +250,7 @@ class OrganizeImports extends RefactoringExecutorWithoutWizard {
 
     override def refactoringParameters = {
       val project = file.getJavaProject.getProject
+
       val organizationStrategy = getOrganizeImportStrategy(project)
 
       val deps = {
