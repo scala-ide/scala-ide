@@ -337,7 +337,7 @@
                   <outputDirectory>${scala211.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${scala211.feature.dir}/resources/${scala.short.version}</directory>
+                      <directory>${scala211.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
