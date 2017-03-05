@@ -6,7 +6,7 @@
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Sources for Scala ${scala211.version} library, compiler and associated jars.
+     Sources for Scala ${scala212.version} library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
