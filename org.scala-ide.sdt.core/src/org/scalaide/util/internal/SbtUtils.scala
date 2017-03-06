@@ -9,6 +9,7 @@ import xsbti.compile.MiniSetup
 
 object SbtUtils {
   def m2o[S](opt: Maybe[S]): Option[S] = if (opt.isEmpty) None else Some(opt.get)
+  def o2m[S](opt: Option[S]): Maybe[S] = if (opt.isEmpty) Maybe.nothing() else Maybe.just(opt.get)
 
   def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
     FileBasedStore(cacheFile).get().map(_ match {
