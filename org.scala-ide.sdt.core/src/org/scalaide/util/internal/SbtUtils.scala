@@ -17,8 +17,7 @@ object SbtUtils {
     })
 
   def readAnalysis(cacheFile: File): Analysis =
-    // zinc requires name hashing to be enabled
-    readCache(cacheFile).map(_._1).getOrElse(Analysis.empty(nameHashing = true))
+    readCache(cacheFile).map(_._1).getOrElse(Analysis.empty)
 
   object NoPosition extends xsbti.Position {
     def line(): Maybe[Integer] = Maybe.nothing()
