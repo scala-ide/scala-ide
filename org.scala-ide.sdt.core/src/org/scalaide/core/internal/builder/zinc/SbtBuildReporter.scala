@@ -15,15 +15,13 @@ import org.scalaide.util.internal.SbtUtils
 private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
     extends xsbti.Problem {
 
-  import SbtUtils.m2o
-
   override def equals(other: Any): Boolean = other match {
     case otherProblem: xsbti.Problem =>
       ((message == otherProblem.message)
         && (severity == otherProblem.severity)
-        && m2o(position.offset) == m2o(otherProblem.position.offset)
-        && m2o(position.line) == m2o(otherProblem.position.line)
-        && m2o(position.sourceFile) == m2o(otherProblem.position.sourceFile))
+        && position.offset == otherProblem.position.offset
+        && position.line == otherProblem.position.line
+        && position.sourceFile == otherProblem.position.sourceFile)
     case _ => false
   }
 
@@ -64,7 +62,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
-    SbtUtils.m2o(pos.sourceFile).flatMap { file =>
+    SbtUtils.jo2o(pos.sourceFile).flatMap { file =>
       FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
     }.map { resource =>
       if (resource.getFileExtension != "java")
@@ -101,12 +99,12 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
     val severity = eclipseSeverity(sev)
 
     val marker: Option[Unit] = for {
-      file <- m2o(pos.sourceFile)
+      file <- jo2o(pos.sourceFile)
       resource <- FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
-      offset <- m2o(pos.offset)
-      line <- m2o(pos.line)
+      offset <- jo2o(pos.offset)
+      line <- jo2o(pos.line)
     } yield if (resource.getFileExtension != "java") {
-      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
+      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, jo2m(pos.pointer)), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
       logger.info(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
