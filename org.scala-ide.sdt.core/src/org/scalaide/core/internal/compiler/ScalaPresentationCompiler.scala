@@ -50,17 +50,8 @@ import scalariform.lexer.ScalaLexer
 import scalariform.lexer.ScalaLexerException
 import org.scalaide.core.completion.ProposalRelevanceCalculator
 
-class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
-  /*
-   * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
-   * and concurrent access may lead to overwritten names.
-   *
-   * @note This field is EARLY because `newTermName` is hit during construction of the superclass `Global`,
-   *       and the lock object has to be constructed already.
-   */
-  private val nameLock = new Object
-
-} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
+class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings)
+  extends Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
