@@ -217,34 +217,37 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       javaDescriptor(tpe).replace('/', '.')
   }
 
-  import genBCode.bTypes._
-
   /** Return the descriptor of the given type. A typed descriptor is defined
    *  by the JVM Specification Section 4.3 (http://docs.oracle.com/javase/specs/vms/se7/html/jvms-4.html#jvms-4.3)
    *
    *  Example:
-   *   javaDescriptor(Array[List[Int]]) == "[Lscala/collection/immutable/List;"
+   *   toJavaDescriptor(Array[List[Int]]) == "[Lscala/collection/immutable/List;"
    */
-  private def javaDescriptor(bt: BType): String = {
-    import Signature._
-    (bt: @unchecked) match {
-      case BOOL             => C_BOOLEAN.toString
-      case BYTE             => C_BYTE.toString
-      case SHORT            => C_SHORT.toString
-      case CHAR             => C_CHAR.toString
-      case INT              => C_INT.toString
-      case UNIT             => C_VOID.toString
-      case LONG             => C_LONG.toString
-      case FLOAT            => C_FLOAT.toString
-      case DOUBLE           => C_DOUBLE.toString
-      case ClassBType(cls)  => s"L$cls;"
-      case ArrayBType(elem) => s"[${javaDescriptor(elem)}"
+  private def toJavaDescriptor(tpe: Type): String = {
+    import scala.reflect.internal.ClassfileConstants._
+    val TypeRef(_, sym, args) = tpe
+    sym match {
+      case definitions.UnitClass => VOID_TAG.toString
+      case definitions.BooleanClass => BOOL_TAG.toString
+      case definitions.CharClass => CHAR_TAG.toString
+      case definitions.ByteClass => BYTE_TAG.toString
+      case definitions.ShortClass => SHORT_TAG.toString
+      case definitions.IntClass => INT_TAG.toString
+      case definitions.FloatClass => FLOAT_TAG.toString
+      case definitions.LongClass => LONG_TAG.toString
+      case definitions.DoubleClass => DOUBLE_TAG.toString
+      case sym if sym == definitions.NullClass => "Lscala/Null;"
+      case sym if sym == definitions.NothingClass => "Lscala/Nothing;"
+      case sym if sym.isTypeParameterOrSkolem => "Ljava/lang/Object;"
+      case definitions.ArrayClass => ARRAY_TAG + toJavaDescriptor(args.head)
+      case _ => OBJECT_TAG + sym.javaClassName.replace('.', '/')+";"
     }
   }
 
-  override def javaDescriptor(tpe: Type): String =
+  override def javaDescriptor(tpe: Type): String = {
     if (tpe.isErroneous) "Ljava/lang/Object;"
-    else javaDescriptor(typeToBType(tpe))
+    else toJavaDescriptor(tpe)
+  }
 
   override def enclosingTypeName(s : Symbol): String =
     if (s == NoSymbol || s.hasFlag(Flags.PACKAGE)) ""
