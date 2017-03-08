@@ -236,11 +236,12 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       case definitions.FloatClass => FLOAT_TAG.toString
       case definitions.LongClass => LONG_TAG.toString
       case definitions.DoubleClass => DOUBLE_TAG.toString
-      case sym if sym == definitions.NullClass => "Lscala/Null;"
-      case sym if sym == definitions.NothingClass => "Lscala/Nothing;"
+      case sym if sym == definitions.NullClass => "Lscala/runtime/Null;"
+      case sym if sym == definitions.NothingClass => "Lscala/runtime/Nothing;"
+      case sym if sym.isAliasType => toJavaDescriptor(sym.info.resultType)
       case sym if sym.isTypeParameterOrSkolem => "Ljava/lang/Object;"
       case definitions.ArrayClass => ARRAY_TAG + toJavaDescriptor(args.head)
-      case _ => OBJECT_TAG + sym.javaClassName.replace('.', '/')+";"
+      case _ => OBJECT_TAG + sym.javaBinaryNameString + ";"
     }
   }
 
