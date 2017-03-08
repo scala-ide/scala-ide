@@ -225,7 +225,10 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
    */
   private def toJavaDescriptor(tpe: Type): String = {
     import scala.reflect.internal.ClassfileConstants._
-    val TypeRef(_, sym, args) = tpe
+    val (sym, args) = tpe match {
+      case TypeRef(_, sym, args) => (sym, args)
+      case rt @ RefinedType(_, _) => (rt.typeSymbol, rt.typeArgs)
+    }
     sym match {
       case definitions.UnitClass => VOID_TAG.toString
       case definitions.BooleanClass => BOOL_TAG.toString
