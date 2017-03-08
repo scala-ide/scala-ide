@@ -82,10 +82,10 @@ class DeclarationPrinterTest {
     runTest(
       """val target4: (Int, Int) => Option[String]
          val target5: (java.io.File) => String => String => java.io.File
-         val target5: (java.io.File => String) => String => java.io.File""",
+         val target6: (java.io.File => String) => String => java.io.File""",
       List("val target4: (Int, Int) => Option[String]",
         "val target5: File => (String => (String => File))",
-        "val target5: (File => String) => (String => File)"))
+        "val target6: (File => String) => (String => File)"))
 
   }
 
