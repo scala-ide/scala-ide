@@ -49,18 +49,10 @@ import org.scalaide.util.eclipse.RegionUtils.RichRegion
 import scalariform.lexer.ScalaLexer
 import scalariform.lexer.ScalaLexerException
 import org.scalaide.core.completion.ProposalRelevanceCalculator
+import java.util.concurrent.atomic.AtomicLong
 
-class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings) extends {
-  /*
-   * Lock object for protecting compiler names. Names are cached in a global `Array[Char]`
-   * and concurrent access may lead to overwritten names.
-   *
-   * @note This field is EARLY because `newTermName` is hit during construction of the superclass `Global`,
-   *       and the lock object has to be constructed already.
-   */
-  private val nameLock = new Object
-
-} with Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
+class ScalaPresentationCompiler(private[compiler] val name: String, _settings: Settings)
+  extends Global(_settings, new ScalaPresentationCompiler.PresentationReporter(name), name)
   with ScaladocGlobalCompatibilityTrait
   with ScalaStructureBuilder
   with ScalaIndexBuilder
@@ -458,9 +450,26 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
   }
 
   private [core] def defaultHyperlinkLabel(sym: Symbol): String = s"${sym.kindString} ${sym.fullName}"
+
+  import ScalaPresentationCompiler.RefTimeStamp
+  import ScalaPresentationCompiler.Ids
+
+  /*
+   * Meant to ease debugging. These fields allow to easily distinguish different presentation compilers,
+   * for example when examining heap dumps.
+   */
+  val timeStamp = (System.currentTimeMillis() - RefTimeStamp)
+  val id = Ids.getAndIncrement
+
+  override def toString = {
+    s"ScalaPresentationCompiler[$id@$timeStamp]"
+  }
 }
 
 object ScalaPresentationCompiler {
+  private val RefTimeStamp = System.currentTimeMillis()
+  private val Ids = new AtomicLong()
+
   case class InvalidThread(msg: String) extends RuntimeException(msg)
 
   def defaultScalaSettings(errorFn: String => Unit = Console.println): Settings = new Settings(errorFn)
