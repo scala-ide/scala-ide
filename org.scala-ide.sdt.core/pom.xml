@@ -119,12 +119,12 @@
     <dependency>
       <groupId>org.scala-sbt</groupId>
       <artifactId>io_${scala.minor.version}</artifactId>
-      <version>1.0.0-M6</version>
+      <version>${sbt-io.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-sbt</groupId>
       <artifactId>sbinary_${scala.minor.version}</artifactId>
-      <version>0.4.3</version>
+      <version>${sbinary.version}</version>
     </dependency>
   </dependencies>
 

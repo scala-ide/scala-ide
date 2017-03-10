@@ -11,19 +11,20 @@ import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
+import java.util.Optional
 
 private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
     extends xsbti.Problem {
 
-  import SbtUtils.m2o
+  import SbtUtils.toOption
 
   override def equals(other: Any): Boolean = other match {
     case otherProblem: xsbti.Problem =>
       ((message == otherProblem.message)
         && (severity == otherProblem.severity)
-        && m2o(position.offset) == m2o(otherProblem.position.offset)
-        && m2o(position.line) == m2o(otherProblem.position.line)
-        && m2o(position.sourceFile) == m2o(otherProblem.position.sourceFile))
+        && toOption(position.offset) == toOption(otherProblem.position.offset)
+        && toOption(position.line) == toOption(otherProblem.position.line)
+        && toOption(position.sourceFile) == toOption(otherProblem.position.sourceFile))
     case _ => false
   }
 
@@ -64,7 +65,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
-    SbtUtils.m2o(pos.sourceFile).flatMap { file =>
+    SbtUtils.toOption(pos.sourceFile).flatMap { file =>
       FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
     }.map { resource =>
       if (resource.getFileExtension != "java")
@@ -101,10 +102,10 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
     val severity = eclipseSeverity(sev)
 
     val marker: Option[Unit] = for {
-      file <- m2o(pos.sourceFile)
+      file <- toOption(pos.sourceFile)
       resource <- FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
-      offset <- m2o(pos.offset)
-      line <- m2o(pos.line)
+      offset <- toOption(pos.offset)
+      line <- toOption(pos.line)
     } yield if (resource.getFileExtension != "java") {
       val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
@@ -118,9 +119,9 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   /** Return the identifier starting at `start` inside `content`. */
-  private def identifierLength(content: String, start: xsbti.Maybe[Integer]): Int = {
+  private def identifierLength(content: String, start: Optional[Integer]): Int = {
     def isOK(c: Char) = Chars.isIdentifierPart(c) || Chars.isOperatorPart(c)
-    if (start.isDefined)
+    if (start.isPresent())
       (content drop start.get takeWhile isOK).size
     else
       0
