@@ -34,9 +34,12 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
       packName.flatMap { pn =>
         val pfs = new SearchableEnvironment(javaProject.asInstanceOf[JavaProject], null: WorkingCopyOwner).nameLookup.findPackageFragments(pn, false)
         name.flatMap { nm =>
-          if (pfs eq null) None else pfs.toStream map
-            { pf => logger.debug("Trying out to get " + nm); pf.getClassFile(nm) } collectFirst
-            {
+          if (pfs eq null)
+            None
+          else
+            pfs.toStream map { pf =>
+              logger.debug("Trying out to get " + nm); pf.getClassFile(nm)
+            } collectFirst {
               case classFile: ScalaClassFile =>
                 logger.debug("Found Scala class file: " + classFile.getElementName)
                 classFile

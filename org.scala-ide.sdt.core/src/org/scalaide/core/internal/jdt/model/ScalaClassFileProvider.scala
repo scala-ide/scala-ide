@@ -1,15 +1,15 @@
 package org.scalaide.core.internal.jdt.model
 
-import java.io.ByteArrayInputStream
 import scala.collection.mutable.WeakHashMap
 import scala.tools.eclipse.contribution.weaving.jdt.cfprovider.IClassFileProvider
-import org.scalaide.logging.HasLogger
+
 import org.eclipse.jdt.core.IClassFile
 import org.eclipse.jdt.core.IJavaElement
 import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.jdt.internal.core.ClassFile
 import org.eclipse.jdt.internal.core.PackageFragment
 import org.scalaide.core.internal.project.ScalaProject
+import org.scalaide.logging.HasLogger
 
 /**
  * Provides a `ScalaClassFile` implementation for classfiles that belong to
@@ -63,7 +63,7 @@ class ScalaClassFileProvider extends IClassFileProvider with HasLogger {
         }
     }
 
-    val scalaCF = ScalaClassFileDescriber.isScala(new ByteArrayInputStream(contents)) match {
+    val scalaCF = ScalaClassFileDescriber.isScala(contents) match {
       case Some(sourcePath) => new ScalaClassFile(parent, name, sourcePath)
       case None                => null
     }
