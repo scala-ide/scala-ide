@@ -6,9 +6,17 @@ import sbt.internal.inc.Analysis
 import sbt.internal.inc.FileBasedStore
 import xsbti._
 import xsbti.compile.MiniSetup
+import java.util.Optional
 
 object SbtUtils {
-  def m2o[S](opt: Maybe[S]): Option[S] = if (opt.isEmpty) None else Some(opt.get)
+  def toOption[S](opt: Maybe[S]): Option[S] = {
+    if (opt.isEmpty) None else Some(opt.get)
+  }
+
+  def toOption[T](optional: Optional[T]): Option[T] = {
+    if (optional.isPresent()) Some(optional.get)
+    else None
+  }
 
   def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
     FileBasedStore(cacheFile).get().map(_ match {
@@ -21,13 +29,12 @@ object SbtUtils {
     readCache(cacheFile).map(_._1).getOrElse(Analysis.empty(nameHashing = true))
 
   object NoPosition extends xsbti.Position {
-    def line(): Maybe[Integer] = Maybe.nothing()
+    def line(): Optional[Integer] = Optional.empty()
     def lineContent(): String = ""
-    def offset(): Maybe[Integer] = Maybe.nothing[Integer]
-    def pointer(): Maybe[Integer] = Maybe.nothing[Integer]
-    def pointerSpace(): Maybe[String] = Maybe.nothing[String]
-    def sourceFile(): Maybe[File] = Maybe.nothing[File]
-    def sourcePath(): Maybe[String] = Maybe.nothing[String]
-
+    def offset(): Optional[Integer] = Optional.empty()
+    def pointer(): Optional[Integer] = Optional.empty()
+    def pointerSpace(): Optional[String] = Optional.empty()
+    def sourceFile(): Optional[File] = Optional.empty()
+    def sourcePath(): Optional[String] = Optional.empty()
   }
 }

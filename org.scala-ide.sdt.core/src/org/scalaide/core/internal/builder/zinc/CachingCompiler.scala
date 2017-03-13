@@ -50,7 +50,7 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
         case (a, s) => (Option(a), Option(s))
       }.getOrElse((Option(SbtUtils.readAnalysis(cacheFile)), None))
     cacheAndReturnLastAnalysis(new IncrementalCompilerImpl().incrementalCompile(comps.scalac, comps.javac, in.sources, in.classpath, in.output, in.cache,
-      SbtUtils.m2o(in.progress), in.scalacOptions, in.javacOptions, previousAnalysis, previousSetup, lookup,
+      SbtUtils.toOption(in.progress), in.scalacOptions, in.javacOptions, previousAnalysis, previousSetup, lookup,
       sbtReporter, in.order, skip = false, in.incOptions, extra = Nil)(log))
   }
 
