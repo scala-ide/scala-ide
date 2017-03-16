@@ -20,18 +20,19 @@ class StepFilters {
   }
 
   def fors(): Unit = {
-    val lst = List("one", "two", "three")
+    val lst = List("one", "two")
 
     for (n <- lst) {      // line 25
       debug.Helper.noop(immutableVal)
-      println(n)
+      identity(n)
     }
+    identity(1)
   }
 
   def bridges(): Unit = {
     val c: Base[Int] = new Concrete
 
-    c.base(10)  // line 34
+    c.base(10)  // line 35
     println(c.base(10))
 
     2 + c.base(10)
@@ -46,7 +47,7 @@ class Base[T] {
 
 class Concrete extends Base[Int] {
   override def base(x: Int): Int = {
-    println(x) // line 49
+    println(x) // line 50
     x
   }
 }
