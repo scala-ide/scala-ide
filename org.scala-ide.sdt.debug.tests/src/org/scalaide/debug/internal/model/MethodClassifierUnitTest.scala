@@ -5,24 +5,24 @@ import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.Path
 import org.junit.Assert
 import org.junit.BeforeClass
+import org.junit.Ignore
 import org.junit.Test
 import org.mockito.Matchers.anyString
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.when
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-
-import com.sun.jdi.Field
-import com.sun.jdi.Method
-import com.sun.jdi.ReferenceType
-
+import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.testsetup.TestProjectSetup
 import org.scalaide.debug.internal.classfile.ClassfileParser
 import org.scalaide.debug.internal.classfile.ConstantPool
 import org.scalaide.debug.internal.model.MethodClassifier.DefaultGetter
 import org.scalaide.debug.internal.model.MethodClassifier.Getter
 import org.scalaide.debug.internal.model.MethodClassifier.Setter
-import org.scalaide.core.testsetup.SDTTestUtils
-import org.scalaide.core.testsetup.TestProjectSetup
+
+import com.sun.jdi.Field
+import com.sun.jdi.Method
+import com.sun.jdi.ReferenceType
 
 object MethodClassifierUnitTest extends TestProjectSetup("constant-pool", bundleName = "org.scala-ide.sdt.debug.tests") {
   @BeforeClass
@@ -60,7 +60,7 @@ class MethodClassifierUnitTest {
 
   @Test
   def cp_testImplClass(): Unit = {
-    val resource = SDTTestUtils.workspace.getRoot().getFile("/constant-pool/bin/stepping/BaseTrait$class.class")
+    val resource = SDTTestUtils.workspace.getRoot().getFile("/constant-pool/bin/stepping/BaseTrait.class")
     ConstantPool.fromFile(resource.getLocation().toFile())
   }
 
@@ -73,26 +73,31 @@ class MethodClassifierUnitTest {
   lazy val resource = SDTTestUtils.workspace.getRoot().getFile("/constant-pool/bin/stepping/ConcreteClass.class")
   lazy val parser = new ClassfileParser(resource.getLocation().toFile())
 
+  @Ignore("There is no more forwarder class in Java 8. Probably to remove or refactoring.")
   @Test
   def testForwarder_pos_1(): Unit = {
     assertForwarder("concreteTraitMethod1", true)
   }
 
+  @Ignore("There is no more forwarder class in Java 8. Probably to remove or refactoring.")
   @Test
   def testForwarder_pos_2(): Unit = {
     assertForwarder("concreteTraitMethod2", true)
   }
 
+  @Ignore("There is no more forwarder class in Java 8. Probably to remove or refactoring.")
   @Test
   def testForwarder_pos_3(): Unit = {
     assertForwarder("concreteTraitMethod3", true)
   }
 
+  @Ignore("There is no more forwarder class in Java 8. Probably to remove or refactoring.")
   @Test
   def testForwarder_pos_4(): Unit = {
     assertForwarder("concreteTraitMethod4", true)
   }
 
+  @Ignore("There is no more forwarder class in Java 8. Probably to remove or refactoring.")
   @Test
   def testForwarder_pos_withDefault(): Unit = {
     assertForwarder("concreteTraitMethodWithDefault", true)

@@ -79,8 +79,8 @@ class ScalaDebuggerDisconnectTests {
   def BreakpointHitAndTerminateWorks(): Unit = {
     session = initDebugSession("StepFilters")
 
-    session.runToLine(TYPENAME_STEP_FILTERS, 37)
-    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 37)
+    session.runToLine(TYPENAME_STEP_FILTERS, 35)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 35)
 
     session.terminate()
 
@@ -93,8 +93,8 @@ class ScalaDebuggerDisconnectTests {
   def NormalTerminationCleansup(): Unit = {
     session = initDebugSession("StepFilters")
 
-    session.runToLine(TYPENAME_STEP_FILTERS, 37)
-    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 37)
+    session.runToLine(TYPENAME_STEP_FILTERS, 35)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 35)
     session.resumeToCompletion()
 
     processListener.waitForProcessTermination()
