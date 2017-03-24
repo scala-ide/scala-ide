@@ -3,6 +3,7 @@
 */
 package org.scalaide.debug.internal.expression.features
 
+import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.Names.Java
@@ -16,15 +17,18 @@ trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
     eval("List(-1, 1).filter(_ > ObjectMethods.zero)", List(1), Scala.::)
   }
 
+  @Ignore("Potential bug in Toolbox.")
   @Test
   def methodAsMapParam(): Unit = eval("nat.map(inc)", Array(3, 4, 5), Scala.Array(Scala.primitives.Int))
 
   @Test
   def methodCall(): Unit = eval("zero", 0, Java.primitives.int)
 
+  @Ignore("Potential bug in Toolbox.")
   @Test
   def methodAsFilterParam(): Unit = eval("nat.filter(_ > inc(inc(zero)))", Array(3, 4), Scala.Array(Scala.primitives.Int))
 
+  @Ignore("Potential bug in Toolbox.")
   @Test
   def methodsAsFoldParam(): Unit = eval("nat.foldLeft(zero)(sum)", 9, Java.primitives.int)
 
@@ -34,6 +38,7 @@ trait MethodsAsFunctionsTest { self: BaseIntegrationTest =>
   @Test
   def andThenMethods(): Unit = eval("(inc _ andThen inc _)(zero)", 2, Java.primitives.int)
 
+  @Ignore("Needs investigation.")
   @Test
   def composeMethods(): Unit = eval("(inc _ compose dec)(zero)", 0, Java.primitives.int)
 }
