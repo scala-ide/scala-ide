@@ -114,7 +114,7 @@ case class ExtendedContext(currentFrame: StackFrame)
    * none for java static methods
    */
   private def createInitialTransformationContext: Option[ThisTransformation] = {
-    Option(currentFrame.thisObject()).map(_.referenceType()) match {
+    JdiHelpers.thisObject(currentFrame).map(_.referenceType()) match {
       case ScalaTrait(dollarThis) =>
         logger.info("Applying transformation for Traits")
 

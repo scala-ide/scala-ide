@@ -90,13 +90,11 @@ class BitwiseShiftRightTest extends BaseIntegrationTest(BitwiseShiftRightTest) {
     expectReflectiveCompilationError("double >> double2")
   }
 
-  // TODO - SI-8462 - Scala returns incorrect types there
   @Test
-  def `'c' >> 2L`(): Unit = eval("'c' >> 2L", 'c' >> 2L, Java.primitives.long)
+  def `'c' >> 2L`(): Unit = eval("'c' >> 2L", 'c' >> 2L, Java.primitives.int)
 
-  // TODO - SI-8462 - Scala returns incorrect types there
   @Test
-  def `1 >> 2L`(): Unit = eval("1 >> 2L", 1 >> 2L, Java.primitives.long)
+  def `1 >> 2L`(): Unit = eval("1 >> 2L", 1 >> 2L, Java.primitives.int)
 }
 
 object BitwiseShiftRightTest extends BaseIntegrationTestCompanion

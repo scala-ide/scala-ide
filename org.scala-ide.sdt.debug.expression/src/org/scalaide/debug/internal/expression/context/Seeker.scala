@@ -58,7 +58,7 @@ trait Seeker {
     tryByName[ClassType](name)
       .getOrElse(throw new ClassNotFoundException("Class or object not found: " + handleArray(name)))
 
-  final def tryByName[Type <: com.sun.jdi.ReferenceType : scala.reflect.ClassTag](name: String): Option[Type] = {
+  final def tryByName[Type <: com.sun.jdi.ReferenceType: scala.reflect.ClassTag](name: String): Option[Type] = {
     val className = handleArray(name)
     def getType() = jvm.classesByName(className).asScala.collectFirst {
       case tpe: Type => tpe
@@ -152,10 +152,9 @@ trait Seeker {
     }
 
     def fieldsFromThisScope = for {
-      thisObject <- Option(frame.thisObject)
-      referenceType <- Option(thisObject.referenceType)
-      field <- Option(referenceType.fieldByName(name))
-    } yield thisObject.getValue(field)
+      obj <- JdiHelpers.thisObject(frame)
+      field <- Option(obj.referenceType.fieldByName(name))
+    } yield obj.getValue(field)
 
     fieldsFromFrame orElse fieldsFromThisScope
   }

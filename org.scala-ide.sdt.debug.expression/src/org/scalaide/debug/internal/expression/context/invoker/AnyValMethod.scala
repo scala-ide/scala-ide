@@ -21,7 +21,7 @@ class AnyValMethod(proxy: JdiProxy, methodName: String, args: Seq[JdiProxy], rea
   private def companionObject = for {
     companionObjectName <- realThisType
     objectReference <- context.tryObjectByName(companionObjectName)
-  } yield new ObjectJdiProxy(context, objectReference)
+  } yield ObjectJdiProxy(context, objectReference)
 
   private def invokeDelegate: Option[Value] = for {
     companionObject <- companionObject

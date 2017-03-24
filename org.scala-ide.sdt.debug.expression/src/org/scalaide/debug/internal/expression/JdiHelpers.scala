@@ -8,8 +8,11 @@ import scala.collection.JavaConverters._
 import com.sun.jdi.Method
 import com.sun.jdi.ClassType
 import com.sun.jdi.ObjectReference
+import com.sun.jdi.StackFrame
 import com.sun.jdi.ThreadReference
 import com.sun.jdi.Value
+
+import org.eclipse.jdi.internal.LocalVariableImpl
 
 /**
  * Contains some helpers to ease work with JDI from Scala.
@@ -39,6 +42,26 @@ object JdiHelpers {
   final class SimpleInvokeOnObjectRef(private val ref: ObjectReference) extends AnyVal {
     def invokeMethod(threadRef: ThreadReference, method: Method, args: Seq[Value]): Value =
       ref.invokeMethod(threadRef, method, args.asJava, methodInvocationFlags(method))
+  }
+
+  /**
+   * Gets this object reference from current stack frame. If `thisObject()` returns `null`
+   * for given frame it tries to find out `thisObject` of method reference type in underlying
+   * frames.
+   */
+  def thisObject(current: StackFrame): Option[ObjectReference] = {
+    Option(current.thisObject).orElse {
+      import scala.collection.JavaConverters._
+      current.visibleVariables.asScala.collectFirst {
+        case lambda: LocalVariableImpl =>
+          lambda.method.referenceTypeImpl
+      }.flatMap { refType =>
+        current.thread.frames.asScala.collectFirst {
+          case f if (f.thisObject ne null) && (f.thisObject.referenceType == refType) =>
+            f.thisObject
+        }
+      }
+    }
   }
 }
 
