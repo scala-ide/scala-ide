@@ -151,7 +151,7 @@ class SbtBuilderTest {
       comp.askReload(fooClientCU, sf).get // synchronize with the good compiler
     }
 
-    val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems()
+    val pcProblems = fooClientCU.asInstanceOf[ScalaSourceFile].getProblems().map(_.getMessage).toSet
     Assert.assertEquals("Presentation compiler errors.", 2, pcProblems.size)
   }
 

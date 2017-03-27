@@ -244,7 +244,8 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       case sym if sym.isAliasType => toJavaDescriptor(sym.info.resultType)
       case sym if sym.isTypeParameterOrSkolem => "Ljava/lang/Object;"
       case definitions.ArrayClass => ARRAY_TAG + toJavaDescriptor(args.head)
-      case _ => OBJECT_TAG + sym.javaBinaryNameString + ";"
+      case sym if sym != NoSymbol => OBJECT_TAG + sym.javaBinaryNameString + ";"
+      case _ => "Ljava/lang/Object;"
     }
   }
 

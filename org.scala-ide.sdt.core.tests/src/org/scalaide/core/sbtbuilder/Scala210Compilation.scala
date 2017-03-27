@@ -1,6 +1,8 @@
 package org.scalaide.core
 package sbtbuilder
 
+import java.io.File
+
 import scala.tools.nsc.settings.SpecificScalaVersion
 
 import org.eclipse.core.resources.IMarker
@@ -9,10 +11,10 @@ import org.eclipse.core.runtime.NullProgressMonitor
 import org.eclipse.jdt.core.ICompilationUnit
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.util.when
-import java.io.File
 
 object Scala210Compilation extends testsetup.TestProjectSetup("scala210compilation")
 
@@ -36,6 +38,7 @@ class Scala210Compilation {
 
   private def getProblemMarkers = getProblemMarkersFor(compilationUnit("test/Test210.scala"))
 
+  @Ignore("Needs investigation")
   @Test def testSimpleScalaDep(): Unit = {
     when("initialize project") `then` "there is no error in project and zinc creates .cache-main file" in {
       cleanProject()
