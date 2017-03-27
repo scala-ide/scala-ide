@@ -137,9 +137,12 @@ trait BaseMethodInvoker extends MethodInvoker {
       case Nil => None
       case method +: Nil =>
         Some(invoker(method))
-      case multiple @ head +: rest =>
+      case multiple @ _ +: _ =>
         logger.warn(multipleOverloadsMessage(multiple))
-        Some(invoker(head))
+        multiple.collectFirst {
+          case method if !method.isBridge && !method.isAbstract =>
+            invoker(method)
+        }
     }
   }
 

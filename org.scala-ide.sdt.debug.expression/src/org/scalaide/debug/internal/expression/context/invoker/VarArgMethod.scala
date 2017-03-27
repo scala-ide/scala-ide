@@ -28,7 +28,7 @@ trait VarArgSupport {
   }
 
   protected def packToVarArg(proxies: Seq[JdiProxy]): ObjectReference = {
-    def addMethod = context.methodOn(Names.Scala.seq, "+:", arity = 2)
+    def addMethod(that: ObjectReference) = context.methodOn(that.referenceType.name, "+:", arity = 2)
     def canBuildFromMethod = context.methodOn(seqObjectRef, "canBuildFrom", arity = 0)
     def canBuildFrom = seqObjectRef.invokeMethod(context.currentThread(), canBuildFromMethod, List[Value]())
 
@@ -40,7 +40,7 @@ trait VarArgSupport {
           case other => other.__value
         }
         val args = List(value, canBuildFrom)
-        current.invokeMethod(context.currentThread(), addMethod, args).asInstanceOf[ObjectReference]
+        current.invokeMethod(context.currentThread(), addMethod(current), args).asInstanceOf[ObjectReference]
     }
   }
 }

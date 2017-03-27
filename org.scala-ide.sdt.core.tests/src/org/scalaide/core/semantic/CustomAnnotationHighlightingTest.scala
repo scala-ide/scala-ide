@@ -67,7 +67,7 @@ class CustomAnnotationHighlightingTest
   def customValInConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsValConstructor.scala") { (src, compiler) =>
 
-      val expected = List("'annotations.foo' annotation found [284, 10]")
+      val expected = List("'annotations.foo' annotation found [204, 3]")
       val actual = fooAnnotations(List(fooAnnotationTraverser("valConstructor")))(src, compiler)
 
       assertSameLists(expected, actual)
@@ -89,7 +89,7 @@ class CustomAnnotationHighlightingTest
   def customValInCaseConstructorAnnotationHighlighting(): Unit = {
     withCompilationUnitAndCompiler("custom/AnnotationsValCaseConstructor.scala") { (src, compiler) =>
 
-      val expected = List("'annotations.foo' annotation found [293, 10]")
+      val expected = List("'annotations.foo' annotation found [213, 3]")
       val actual = fooAnnotations(List(fooAnnotationTraverser("valCaseConstructor")))(src, compiler)
 
       assertSameLists(expected, actual)

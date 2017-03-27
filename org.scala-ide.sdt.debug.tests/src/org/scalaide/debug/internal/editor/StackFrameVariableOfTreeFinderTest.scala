@@ -5,10 +5,12 @@ import scala.util.Try
 
 import org.eclipse.core.resources.IncrementalProjectBuilder
 import org.eclipse.core.runtime.NullProgressMonitor
-import org.junit.Assert._
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
-import org.scalaide.core.compiler.IScalaPresentationCompiler
 import org.scalaide.core.internal.jdt.model.ScalaCompilationUnit
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.TestProjectSetup
@@ -53,7 +55,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   def assertFoundValue(atMarker: String, when: String = null, is: Option[String])(implicit cu: ScalaCompilationUnit): Unit = {
-    import IScalaPresentationCompiler.Implicits._
+    import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
     cu.withSourceFile {(src, compiler) =>
       import compiler.{Try => _, _}
 
@@ -228,6 +230,7 @@ class StackFrameVariableOfTreeFinderTest {
   }
 
   @Test
+  @Ignore("FIXME: There is a problem of fetching variables belonging to different scopes. Refactoring needed.")
   def testClosureSupport(): Unit = {
     withDebugSession {session =>
       implicit val cu = scalaCu(ClosuresFile)

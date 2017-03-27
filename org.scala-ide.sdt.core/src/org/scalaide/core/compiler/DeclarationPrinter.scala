@@ -173,10 +173,13 @@ abstract class DeclarationPrinter extends HasLogger {
   }
 
   def showPrefix(tpe: TypeRef): String = {
-    if (tpe.termSymbol.hasPackageFlag) ""
+    if (tpe.termSymbol.hasPackageFlag)
+      ""
     else {
       val prefix = showType(tpe.pre)
-      if (prefix != "") prefix + "." + tpe.sym.nameString
+      import rootMirror.getPackageIfDefined
+      val isNotScalaPkg = getPackageIfDefined(TermName(prefix)) != definitions.ScalaPackage
+      if (prefix != "" && isNotScalaPkg) prefix + "." + tpe.sym.nameString
       else tpe.sym.nameString
     }
   }

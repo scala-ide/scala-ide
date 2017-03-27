@@ -126,6 +126,11 @@
       <artifactId>sbinary_${scala.minor.version}</artifactId>
       <version>${sbinary.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scalap</artifactId>
+      <version>${scala212.scalap.version}</version>
+    </dependency>
   </dependencies>
 
   <repositories>
@@ -294,6 +299,10 @@
                   <groupId>org.scala-sbt</groupId>
                   <artifactId>sbinary_${scala.minor.version}</artifactId>
                   <classifier>sources</classifier>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>org.scala-lang</groupId>
+                  <artifactId>scalap</artifactId>
                 </artifactItem>
               </artifactItems>
             </configuration>
