@@ -22,7 +22,7 @@ class ScalaInstallationTest {
   /**
    * check the installations of Scala based on a bundle of jars
    */
-	@Ignore("Needs investigation")
+  @Ignore("Needs investigation")
   @Test
   def bundledInstallationsTest(): Unit = {
     val bundledInstallations = ScalaInstallation.bundledInstallations
@@ -68,7 +68,7 @@ class ScalaInstallationTest {
     }
   }
 
-	@Ignore("Needs investigation")
+  @Ignore("Needs investigation")
   @Test
   def multiBundleInstallationsTest(): Unit = {
     val multiBundleInstallations = ScalaInstallation.multiBundleInstallations
