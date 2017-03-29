@@ -4,10 +4,12 @@ import org.junit.Test
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.ScalaPlugin
 import org.junit.Assert
+import org.junit.Ignore
 
 class CompilerBridgeStoreTest {
 
   @Test
+  @Ignore
   def platformCompilerBridgeWorks(): Unit = {
     val store = ScalaPlugin().compilerBridgeStore
     store.purgeCache()
@@ -17,6 +19,7 @@ class CompilerBridgeStoreTest {
   }
 
   @Test
+  @Ignore
   def platformCompilerBridgeCachesCompilers(): Unit = {
     val store = ScalaPlugin().compilerBridgeStore
     store.purgeCache()

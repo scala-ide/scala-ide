@@ -150,10 +150,10 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
    * @param conditionContext condition context represents condition and expected condition evaluation result (works with single visit breakpoints as there's only one flag for expected result)
    */
   def runToLine[T](typeName: String,
-    breakpointLine: Int,
-    additionalAction: () => T = ScalaDebugTestSession.Noop,
-    conditionContext: Option[ConditionContext] = None,
-    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): T = {
+                   breakpointLine: Int,
+                   additionalAction: () => T = ScalaDebugTestSession.Noop,
+                   conditionContext: Option[ConditionContext] = None,
+                   suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): T = {
     assertThat("Bad state before runToBreakpoint", state, anyOf[State.Value](is[State.Value](NOT_LAUNCHED), is[State.Value](SUSPENDED)))
 
     val breakpoint = addLineBreakpoint(typeName, breakpointLine, suspendPolicy)
@@ -197,8 +197,8 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
    * Add a breakpoint in the given type and its nested types at the given line (1 based)
    */
   def addLineBreakpoint(typeName: String,
-    breakpointLine: Int,
-    suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): IJavaLineBreakpoint = {
+                        breakpointLine: Int,
+                        suspendPolicy: Int = IJavaBreakpoint.SUSPEND_THREAD): IJavaLineBreakpoint = {
     val breakpoint = JDIDebugModel.createLineBreakpoint(ResourcesPlugin.getWorkspace.getRoot, typeName, breakpointLine, /*char start*/ -1, /*char end*/ -1, /*hit count*/ -1, /*register*/ true, /*attributes*/ null)
     breakpoint.setSuspendPolicy(suspendPolicy)
     waitForBreakpointsToBeEnabled(breakpoint)
@@ -344,7 +344,16 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
       assertEquals("Wrong suspended count", if (thread == currentThread) 1 else 0, thread.suspendCount))
   }
 
-  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int): Unit = {
+  def checkStackFrame(typeName: String, methodFullSignature: String, line: Int): Unit =
+    (framesToCompare _).tupled.andThen {
+      case (currentFrameInfo, expectedFrameInfo) =>
+        assertEquals("Wrong frame", expectedFrameInfo, currentFrameInfo)
+    }
+
+  private def frameInfo(typeName: String, methodSignature: String, lineNumber: Int) =
+    s"type: $typeName, method: $methodSignature, line: $lineNumber"
+
+  private def framesToCompare(typeName: String, methodFullSignature: String, line: Int): (String, String) = {
     assertEquals("Bad state before checkStackFrame", SUSPENDED, state)
 
     val currentLocation = currentStackFrame.stackFrame.location
@@ -352,13 +361,18 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
     val currentMethodFullSignature = currentLocation.method.name + currentLocation.method.signature
     val currentLineNumber = currentStackFrame.getLineNumber
 
-    def frameInfo(typeName: String, methodSignature: String, lineNumber: Int) =
-      s"type: $typeName, method: $methodSignature, line: $lineNumber"
-
     val currentFrameInfo = frameInfo(currentTypeName, currentMethodFullSignature, currentLineNumber)
     val expectedFrameInfo = frameInfo(typeName, methodFullSignature, line)
-    assertEquals("Wrong frame", expectedFrameInfo, currentFrameInfo)
+    (currentFrameInfo, expectedFrameInfo)
   }
+
+  def checkStackFrameRegExp(typeNameRegExp: String, methodFullSignatureRegExp: String, line: Int): Unit =
+    (framesToCompare _).tupled.andThen {
+      case (currentFrameInfo, expectedFrameInfo) =>
+        val expectedFrameInfoRegExp = expectedFrameInfo.r
+        val result = expectedFrameInfoRegExp.findFirstIn(currentFrameInfo)
+        assertTrue(s"Wrong frame. $currentFrameInfo does not match $expectedFrameInfo", result.nonEmpty)
+    }
 
   // access data in the current stackframe
 

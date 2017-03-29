@@ -69,7 +69,7 @@
     <!-- Scala 2.12.x -->
     <scala212.version>2.12.1</scala212.version>
     <scala212.binary.version>2.12</scala212.binary.version>
-    <scala212.scala-xml.version>1.0.6</scala212.scala-xml.version>
+    <scala212.scala-xml.version>1.0.5</scala212.scala-xml.version>
     <scala212.scalap.version>2.12.1</scala212.scalap.version>
     <scala212.scala-parser-combinators.version>1.0.5</scala212.scala-parser-combinators.version>
 
