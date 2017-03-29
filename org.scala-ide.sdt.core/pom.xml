@@ -130,6 +130,12 @@
       <groupId>org.scala-ide</groupId>
       <artifactId>scalap</artifactId>
       <version>${scala212.scalap.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-compiler</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
