@@ -225,9 +225,12 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
    */
   private def toJavaDescriptor(tpe: Type): String = {
     import scala.reflect.internal.ClassfileConstants._
+    val objectSig = "Ljava.lang.Object;"
     val (sym, args) = tpe match {
       case TypeRef(_, sym, args) => (sym, args)
       case rt @ RefinedType(_, _) => (rt.typeSymbol, rt.typeArgs)
+      case ExistentialType(_, typ) => (typ.typeSymbol, Nil)
+      case _ => (NoSymbol, Nil)
     }
     sym match {
       case definitions.UnitClass => VOID_TAG.toString
@@ -239,13 +242,13 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       case definitions.FloatClass => FLOAT_TAG.toString
       case definitions.LongClass => LONG_TAG.toString
       case definitions.DoubleClass => DOUBLE_TAG.toString
-      case sym if sym == definitions.NullClass => "Lscala/runtime/Null;"
-      case sym if sym == definitions.NothingClass => "Lscala/runtime/Nothing;"
+      case sym if sym == definitions.NullClass => OBJECT_TAG + SCALA_NULL + ";"
+      case sym if sym == definitions.NothingClass => OBJECT_TAG + SCALA_NOTHING + ";"
       case sym if sym.isAliasType => toJavaDescriptor(sym.info.resultType)
-      case sym if sym.isTypeParameterOrSkolem => "Ljava/lang/Object;"
-      case definitions.ArrayClass => ARRAY_TAG + toJavaDescriptor(args.head)
+      case sym if sym.isTypeParameterOrSkolem => objectSig
+      case definitions.ArrayClass => ARRAY_TAG + args.headOption.map(toJavaDescriptor).getOrElse(objectSig)
       case sym if sym != NoSymbol => OBJECT_TAG + sym.javaBinaryNameString + ";"
-      case _ => "Ljava/lang/Object;"
+      case _ => objectSig
     }
   }
 
