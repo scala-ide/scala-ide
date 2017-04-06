@@ -225,7 +225,7 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
    */
   private def toJavaDescriptor(tpe: Type): String = {
     import scala.reflect.internal.ClassfileConstants._
-    val objectSig = "Ljava.lang.Object;"
+    val objectDesc = "Ljava/lang/Object;"
     val (sym, args) = tpe match {
       case TypeRef(_, sym, args) => (sym, args)
       case rt @ RefinedType(_, _) => (rt.typeSymbol, rt.typeArgs)
@@ -245,10 +245,10 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       case sym if sym == definitions.NullClass => OBJECT_TAG + SCALA_NULL + ";"
       case sym if sym == definitions.NothingClass => OBJECT_TAG + SCALA_NOTHING + ";"
       case sym if sym.isAliasType => toJavaDescriptor(sym.info.resultType)
-      case sym if sym.isTypeParameterOrSkolem => objectSig
-      case definitions.ArrayClass => ARRAY_TAG + args.headOption.map(toJavaDescriptor).getOrElse(objectSig)
+      case sym if sym.isTypeParameterOrSkolem => objectDesc
+      case definitions.ArrayClass => ARRAY_TAG + args.headOption.map(toJavaDescriptor).getOrElse(objectDesc)
       case sym if sym != NoSymbol => OBJECT_TAG + sym.javaBinaryNameString + ";"
-      case _ => objectSig
+      case _ => objectDesc
     }
   }
 
