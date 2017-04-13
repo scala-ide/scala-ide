@@ -81,6 +81,7 @@ class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: O
 
   override def getFullyQualifiedName: String =
     declaringType.flatMap { typ =>
+      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
       pc.asyncExec {
         val pkgSym = typ.typeSymbol.enclosingPackage
         if (pkgSym.isEmptyPackage)
@@ -89,7 +90,7 @@ class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: O
           val pkg = pkgSym.javaClassName
           pkg + "." + getTypeQualifiedName('$', /*showParameters =*/ false)
         }
-      }.get.left.toOption
+      }.getOption()
     }.getOrElse(super.getFullyQualifiedName)
 }
 
