@@ -92,6 +92,34 @@ class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: O
         }
       }.getOption()
     }.getOrElse(super.getFullyQualifiedName)
+
+  override def getTypeQualifiedName(enclosingTypeSeparator: Char, showParameters: Boolean): String =
+    this.parent.getElementType match {
+      case IJavaElement.CLASS_FILE =>
+        val typeName = this.name
+        if (showParameters)
+          typeName + appendTypeParameters
+        else
+          typeName
+      case _ => super.getTypeQualifiedName(enclosingTypeSeparator, showParameters)
+    }
+
+  /** Needs rewriting because private in parent. */
+  private def appendTypeParameters = {
+    val typeParameters = getTypeParameters.map { typeParameter =>
+      (typeParameter.getElementName, typeParameter.getBounds.mkString(" & "))
+    }.collect {
+      case (typeName, bounds) =>
+        if (bounds.nonEmpty)
+          typeName + " extends " + bounds
+        else
+          typeName
+    }.mkString(", ")
+    if (typeParameters.nonEmpty)
+      s"<$typeParameters>"
+    else
+      typeParameters
+  }
 }
 
 class ScalaClassElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)

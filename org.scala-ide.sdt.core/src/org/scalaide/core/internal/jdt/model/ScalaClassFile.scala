@@ -1,6 +1,6 @@
 package org.scalaide.core.internal.jdt.model
 
-import java.util.{HashMap => JHashMap}
+import java.util.{ HashMap => JHashMap }
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile
 import scala.tools.nsc.io.AbstractFile
@@ -15,17 +15,19 @@ import org.eclipse.jdt.core.WorkingCopyOwner
 import org.eclipse.jdt.core.compiler.CharOperation
 import org.eclipse.jdt.internal.core.BinaryType
 import org.eclipse.jdt.internal.core.ClassFile
+import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.JavaModelStatus
 import org.eclipse.jdt.internal.core.PackageFragment
+import org.eclipse.jdt.internal.core.util.MementoTokenizer
 import org.eclipse.jdt.internal.core.util.Util
 import org.scalaide.core.compiler.ScalaCompilationProblem
 import org.scalaide.ui.ScalaImages
 
-class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : String)
-  extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {
+class ScalaClassFile(parent: PackageFragment, name: String, sourceFile: String)
+    extends ClassFile(parent, name) with ScalaCompilationUnit with IScalaClassFile {
   override def getImageDescriptor = ScalaImages.SCALA_CLASS_FILE
 
-  override def getElementAt(position : Int) : IJavaElement = {
+  override def getElementAt(position: Int): IJavaElement = {
     val e = getSourceElementAt(position)
     if (e == this) null else e
   }
@@ -71,13 +73,13 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     }
   }
 
-  override def codeSelect(offset : Int, length : Int, owner : WorkingCopyOwner) : Array[IJavaElement] =
+  override def codeSelect(offset: Int, length: Int, owner: WorkingCopyOwner): Array[IJavaElement] =
     codeSelect(this, offset, length, owner)
 
   def getContents() = Option(getSourceMapper) flatMap
-    {mapper => Option(mapper.findSource(getType, getSourceFileName))} getOrElse Array.empty
+    { mapper => Option(mapper.findSource(getType, getSourceFileName)) } getOrElse Array.empty
 
-  override lazy val file : AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
+  override lazy val file: AbstractFile = new VirtualFile(getSourceFileName, getSourceFilePath)
 
   def getSourceFileName() = sourceFile
 
@@ -89,7 +91,7 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
 
   def getPackage(): PackageFragment = parent
 
-  def getPackageName() : Array[Array[Char]] = {
+  def getPackageName(): Array[Array[Char]] = {
     if (getPackage == null) CharOperation.NO_CHAR_CHAR
     else Util.toCharArrays(getPackage.names)
   }
@@ -105,14 +107,22 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     }
   }
 
-  class ScalaBinaryType(name: String) extends BinaryType(this, name) {
+  class ScalaBinaryType(parent: JavaElement, name: String) extends BinaryType(parent, name) {
+    def this(name: String) = this(ScalaClassFile.this, name)
     lazy val mirror = {
       allTypes.find(t => t.getElementName == name)
     }
     override def exists = mirror.isDefined
+    override def getType(typeName: String): IType = {
+      if (name == typeName)
+        this
+      else
+        new ScalaBinaryType(typeName)
+    }
   }
 
-  override def getType(): IType = new ScalaBinaryType(getTypeName)
+  override def getType(): IType =
+    new ScalaBinaryType(getTypeName)
 
   def getMainTypeName(): Array[Char] =
     Util.getNameWithoutJavaLikeExtension(getElementName).toCharArray
@@ -127,26 +137,40 @@ class ScalaClassFile(parent : PackageFragment, name : String, sourceFile : Strin
     }
   }
 
-  def getFileName() : Array[Char] = getPath.toString.toCharArray
+  def getFileName(): Array[Char] = getPath.toString.toCharArray
 
-  override def validateExistence(underlyingResource : IResource) : IStatus = {
-  if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
+  override def validateExistence(underlyingResource: IResource): IStatus = {
+    if ((underlyingResource ne null) && !underlyingResource.isAccessible) newDoesNotExistStatus() else JavaModelStatus.VERIFIED_OK
   }
 
   override def currentProblems: List[ScalaCompilationProblem] = Nil
 
   def closeBuffer0() = super.closeBuffer()
-  def closing0(info : AnyRef) = super.closing(info)
+  def closing0(info: AnyRef) = super.closing(info)
   def createElementInfo0() = super.createElementInfo()
-  def generateInfos0(info : AnyRef, newElements : JHashMap[_, _], monitor : IProgressMonitor) =
+  def generateInfos0(info: AnyRef, newElements: JHashMap[_, _], monitor: IProgressMonitor) =
     super.generateInfos(info, newElements, monitor)
   def getBufferManager0() = super.getBufferManager()
-  def validateExistence0(underlying : IResource) : IStatus = validateExistence(underlying)
-  def hasBuffer0() : Boolean = super.hasBuffer()
-  def openBuffer0(pm : IProgressMonitor, info : Object) = super.openBuffer(pm, info)
-  def resourceExists0(underlyingResource : IResource) = super.resourceExists(underlyingResource)
-  def openAncestors0(newElements : JHashMap[_, _], monitor : IProgressMonitor): Unit = { super.openAncestors(newElements, monitor) }
+  def validateExistence0(underlying: IResource): IStatus = validateExistence(underlying)
+  def hasBuffer0(): Boolean = super.hasBuffer()
+  def openBuffer0(pm: IProgressMonitor, info: Object) = super.openBuffer(pm, info)
+  def resourceExists0(underlyingResource: IResource) = super.resourceExists(underlyingResource)
+  def openAncestors0(newElements: JHashMap[_, _], monitor: IProgressMonitor): Unit = { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
-  def isSourceElement0() : Boolean = super.isSourceElement()
-  def ignoreOptionalProblems() :  Boolean = false
+  def isSourceElement0(): Boolean = super.isSourceElement()
+  def ignoreOptionalProblems(): Boolean = false
+
+  override def getHandleFromMemento(token: String, memento: MementoTokenizer, owner: WorkingCopyOwner): IJavaElement = {
+    token.charAt(0) match {
+      case JavaElement.JEM_TYPE =>
+        if (!memento.hasMoreTokens)
+          this
+        else {
+          val typeName = memento.nextToken
+          val typ = new ScalaBinaryType(typeName)
+          typ.getHandleFromMemento(memento, owner)
+        }
+      case _ => null
+    }
+  }
 }

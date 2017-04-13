@@ -6,6 +6,7 @@
 package scala.tools.eclipse.contribution.weaving.jdt.cfprovider;
 
 import java.util.HashSet;
+import java.util.List;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
@@ -23,6 +24,7 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.search.TypeNameMatch;
+import org.eclipse.jdt.debug.core.IJavaBreakpoint;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
 import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -57,12 +59,14 @@ import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
 import org.eclipse.jdt.internal.core.hierarchy.HierarchyType;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.corext.util.OpenTypeHistory;
+import org.eclipse.jdt.internal.debug.ui.BreakpointUtils;
 import org.eclipse.jdt.internal.ui.filters.InnerClassFilesFilter;
 import org.eclipse.jdt.ui.SharedASTProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaClassFile;
 import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement;
+
 
 @SuppressWarnings("restriction")
 public privileged aspect ClassFileProviderAspect {
@@ -134,6 +138,19 @@ public privileged aspect ClassFileProviderAspect {
     execution(boolean OpenTypeHistory.isContainerDirty(TypeNameMatch)) &&
     args(match);
   
+  pointcut getTypeForBreakpoint(IJavaBreakpoint breakpoint) :
+    execution(public IType BreakpointUtils.getType(IJavaBreakpoint)) &&
+    args(breakpoint);
+
+  IType around(IJavaBreakpoint breakpoint) :
+    getTypeForBreakpoint(breakpoint) {
+    IType iType = proceed(breakpoint);
+    List<ILineNumberCheck> checks = LineNumberCheckRegistry.getInstance().getProviders();
+    if (checks.size() != 1)
+      throw new IllegalStateException("There should be only one LineNumberCheck. Found " + checks.size());
+    return checks.get(0).realClassFile(iType, breakpoint);
+  }
+
   ClassFile around(PackageFragment parent, String name) : 
     classFileCreations(parent, name) {
 

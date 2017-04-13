@@ -19,6 +19,6 @@
 	<classpathentry kind="lib" path="target/lib/sbinary_2.12-0.4.4.jar" sourcepath="target/lib/sbinary_2.12-0.4.4-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/zinc-apiinfo_2.12-1.0.0-X10.jar" sourcepath="target/lib/zinc-apiinfo_2.12-1.0.0-X10-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/util-relation_2.12-1.0.0-M19.jar" sourcepath="target/lib/util-relation_2.12-1.0.0-M19-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/scalap-2.12.1.jar"/>
+	<classpathentry kind="lib" path="target/lib/scalap-2.12.1.jar" sourcepath="/media/wpopielarski/0bdab96b-2e8f-4cd1-82ac-212f16fd303a/non-uber-build/scala/src/scalap"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
