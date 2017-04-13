@@ -1,6 +1,8 @@
 package org.scalaide.core.internal.jdt.model
 
-import scala.collection.immutable.Seq
+import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
+import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
+import scala.tools.nsc.Global
 
 import org.eclipse.jdt.core.IField
 import org.eclipse.jdt.core.IJavaElement
@@ -11,6 +13,7 @@ import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.JavaElement
 import org.eclipse.jdt.internal.core.JavaElementInfo
 import org.eclipse.jdt.internal.core.LocalVariable
+import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.core.SourceConstructorInfo
 import org.eclipse.jdt.internal.core.SourceField
 import org.eclipse.jdt.internal.core.SourceFieldElementInfo
@@ -19,15 +22,11 @@ import org.eclipse.jdt.internal.core.SourceMethodElementInfo
 import org.eclipse.jdt.internal.core.SourceMethodInfo
 import org.eclipse.jdt.internal.core.SourceType
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo
-import org.eclipse.jdt.internal.core.OpenableElementInfo
 import org.eclipse.jdt.internal.core.TypeParameterElementInfo
 import org.eclipse.jface.resource.ImageDescriptor
-
+import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
 import org.scalaide.ui.ScalaImages
-import scala.tools.eclipse.contribution.weaving.jdt.IScalaElement
-import scala.tools.eclipse.contribution.weaving.jdt.ui.IMethodOverrideInfo
 import org.scalaide.util.internal.ReflectionUtils
-import scala.tools.nsc.Global
 
 trait ScalaElement extends JavaElement with IScalaElement {
   def getElementInfo: AnyRef
@@ -56,7 +55,7 @@ trait ScalaElement extends JavaElement with IScalaElement {
 
 trait ScalaFieldElement extends ScalaElement
 
-class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])
+class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends SourceType(parent, name) with ScalaElement {
 
   def getCorrespondingElement(element: IJavaElement): Option[IJavaElement] = {
@@ -81,34 +80,37 @@ class ScalaSourceTypeElement(parent: JavaElement, name: String, declaringType: O
   }
 
   override def getFullyQualifiedName: String =
-    declaringType.map { declaringType =>
-      val pkgSym = declaringType.typeSymbol.enclosingPackage
-      if (pkgSym.isEmptyPackage)
-        super.getFullyQualifiedName
-      else {
-        val pkg = pkgSym.javaClassName
-        pkg + "." + getTypeQualifiedName('$', /*showParameters =*/ false)
-      }
+    declaringType.flatMap { typ =>
+      import org.scalaide.core.compiler.IScalaPresentationCompiler.Implicits._
+      pc.asyncExec {
+        val pkgSym = typ.typeSymbol.enclosingPackage
+        if (pkgSym.isEmptyPackage)
+          super.getFullyQualifiedName
+        else {
+          val pkg = pkgSym.javaClassName
+          pkg + "." + getTypeQualifiedName('$', /*showParameters =*/ false)
+        }
+      }.getOption()
     }.getOrElse(super.getFullyQualifiedName)
 }
 
-class ScalaClassElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])
+class ScalaClassElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaSourceTypeElement(parent, name, declaringType) {
   override def getImageDescriptor = ScalaImages.SCALA_CLASS
   override def isVisible = !synthetic
 }
 
-class ScalaAnonymousClassElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])
+class ScalaAnonymousClassElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaClassElement(parent, name, false, declaringType) {
   override def getLabelText(flags: Long) = if (name != null) "new " + name + " {...}" else "new {...}"
 }
 
-class ScalaTraitElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])
+class ScalaTraitElement(parent: JavaElement, name: String, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaSourceTypeElement(parent, name, declaringType) {
   override def getImageDescriptor = ScalaImages.SCALA_TRAIT
 }
 
-class ScalaModuleElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])
+class ScalaModuleElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaSourceTypeElement(parent, name + "$", declaringType) {
   override def scalaName = name
   override def getLabelText(flags: Long) = name
@@ -116,7 +118,7 @@ class ScalaModuleElement(parent: JavaElement, name: String, synthetic: Boolean, 
   override def isVisible = !synthetic
 }
 
-class ScalaPackageModuleElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])
+class ScalaPackageModuleElement(parent: JavaElement, name: String, synthetic: Boolean, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaModuleElement(parent, name, synthetic, declaringType) {
   override def getImageDescriptor = ScalaImages.SCALA_PACKAGE_OBJECT
 }
@@ -158,7 +160,7 @@ class ScalaVarElement(parent: JavaElement, name: String, display: String)
   override def getLabelText(flags: Long) = display
 }
 
-class ScalaTypeElement(parent: JavaElement, name: String, display: String, declaringType: Option[Global#Type])
+class ScalaTypeElement(parent: JavaElement, name: String, display: String, declaringType: Option[Global#Type])(implicit pc: ScalaPresentationCompiler)
     extends ScalaSourceTypeElement(parent, name, declaringType) {
   override def getLabelText(flags: Long) = display
   override def getImageDescriptor = ScalaImages.SCALA_TYPE
