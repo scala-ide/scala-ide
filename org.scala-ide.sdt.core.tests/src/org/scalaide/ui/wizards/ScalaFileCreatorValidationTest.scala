@@ -73,6 +73,67 @@ class ScalaFileCreatorValidationTest extends ScalaFileCreator {
     validateFailure("a.trait")
     validateFailure("=>")
     validateFailure("a.>:")
+
+    validateFailure(" trait . File ")
+    validateFailure(" a . trait ")
+    validateFailure(" => ")
+    validateFailure(" a . >: ")
+  }
+
+  @Test
+  def various_literals_are_invalid_as_Scala_indentifier() = {
+    validateFailure("\"\"")
+    validateFailure(" \"\" ")
+    validateFailure("\"ab\"")
+    validateFailure(" \"ab\" ")
+    // Multi-line string literals.
+    validateFailure("\"\"\"\"\"\"")
+    validateFailure(" \"\"\"\"\"\" ")
+
+    validateFailure("'a'")
+    validateFailure("'0'")
+    validateFailure("'\u0050'")
+    validateFailure("'\u0060'")
+
+    validateFailure(" 1234 ")
+    validateFailure("a. 1234 ")
+    validateFailure("0")
+    validateFailure("-0")
+
+    validateFailure("123.45")
+    validateFailure("-123.45")
+    validateFailure("0.0")
+
+    validateFailure("true")
+    validateFailure("false")
+  }
+
+  @Test
+  def valid_back_quote_usage_for_Scala_identifiers_succeeds() = {
+    validateSuccess("`a b`")
+    validateSuccess("a.`a b`")
+    validateSuccess("a.b.`a b`")
+    validateSuccess("`\u0055`")
+    validateSuccess("`a\\nb`")
+    validateSuccess("` `")
+    validateSuccess("`yield`")
+    validateSuccess("`def`")
+    validateSuccess("`object`")
+    validateSuccess("` \u0060")
+    validateSuccess("\u0060 `")
+    validateSuccess("\u0060 \u0060")
+  }
+
+  @Test
+  def invalid_back_quote_usage_for_Scala_identifiers_fails() = {
+    validateFailure("``")
+    validateFailure("`\u0060")
+    validateFailure("```")
+    validateFailure("````")
+    validateFailure("`a`b`")
+    validateFailure("`a``")
+    validateFailure(" `a``b` ")
+    validateFailure("```ab `")
   }
 
   @Test

@@ -48,17 +48,17 @@ import org.scalaide.util.internal.ui.Dialogs
  */
 trait NewFileWizard extends AnyRef with HasLogger {
 
-  private var btProject: Button = _
-  private var cmTemplate: TableCombo = _
-  private var tName: Text = _
+  private[this] var btProject: Button = _
+  private[this] var cmTemplate: TableCombo = _
+  private[this] var tName: Text = _
 
-  private var disposables = Seq[{def dispose(): Unit}]()
+  private[this] var disposables = Seq[{ def dispose(): Unit }]()
   /** See [[pathOfCreatedFile]] for the purpose of this variable. */
-  private var file: IFile = _
-  private var selectedFolder: IContainer = _
-  private val fileCreatorMappings = FileCreatorMapping.mappings
+  private[this] var file: IFile = _
+  private[this] var selectedFolder: IContainer = _
+  private[this] val fileCreatorMappings = FileCreatorMapping.mappings
   /** Code completion component for the text field. */
-  private var completionOverlay: AutoCompletionOverlay = _
+  private[this] var completionOverlay: AutoCompletionOverlay = _
 
   /** The `Shell` to be used by this wizard. */
   def shell: Shell
@@ -75,8 +75,8 @@ trait NewFileWizard extends AnyRef with HasLogger {
   def defaultTypeName: String
 
   /**
-   * The ok button is not controlled by this wizard, therefore this method
-   * allows to set the state of the ok button.
+   * The OK-button is not controlled by this wizard, therefore this method
+   * allows to set the state of the OK-button.
    */
   def enableOkButton(b: Boolean): Unit
 
@@ -171,7 +171,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
     c
   }
 
-  private def initComponents() = {
+  private[this] def initComponents() = {
     for {
       r <- ProjectUtils.resourceOfSelection()
       creator <- fileCreatorMappings.find(_.id == fileCreatorId)
@@ -259,9 +259,9 @@ trait NewFileWizard extends AnyRef with HasLogger {
       }
 
       val cursorPos = vars
-          .find(_.getType() == GlobalTemplateVariables.Cursor.NAME)
-          .map(_.getOffsets().head)
-          .getOrElse(tb.getString().length())
+        .find(_.getType() == GlobalTemplateVariables.Cursor.NAME)
+        .map(_.getOffsets().head)
+        .getOrElse(tb.getString().length())
 
       cursorPos
     }
@@ -301,13 +301,13 @@ trait NewFileWizard extends AnyRef with HasLogger {
   }
 
   /** Stores `folder` and shows it in the wizard. */
-  private def setFolderName(folder: IContainer): Unit = {
+  private[this] def setFolderName(folder: IContainer): Unit = {
     selectedFolder = folder
     btProject.setText(selectedFolder.getFullPath().makeRelative().toString())
   }
 
   /** The file name the user has inserted. */
-  private def chosenName: String =
+  private[this] def chosenName: String =
     tName.getText()
 
   /**
@@ -315,16 +315,16 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * can safely be accessed because the combo box ensures that there is always a
    * selection.
    */
-  private def selectedFileCreatorMapping: FileCreatorMapping = {
+  private[this] def selectedFileCreatorMapping: FileCreatorMapping = {
     val text = cmTemplate.getItem(cmTemplate.getSelectionIndex())
     fileCreatorMappings.find(_.name == text).get
   }
 
   /**
    * Validates the user inserted input and when the validation was invalid an
-   * error message is shown and the ok-button is disbled.
+   * error message is shown and the OK-button is disabled.
    */
-  private def validateInput(): Unit = {
+  private[this] def validateInput(): Unit = {
     def handleError(msg: String) = {
       enableOkButton(msg.isEmpty())
       showErrorMessage(msg)
@@ -342,7 +342,7 @@ trait NewFileWizard extends AnyRef with HasLogger {
         case Valid =>
           handleError("")
           val completions = selectedFileCreatorMapping.withInstance(
-              _.completionEntries(selectedFolder, chosenName))
+            _.completionEntries(selectedFolder, chosenName))
 
           completions foreach completionOverlay.setProposals
         case Invalid(errorMsg) =>
@@ -356,15 +356,15 @@ trait NewFileWizard extends AnyRef with HasLogger {
    * `f` needs to return the position where the cursor should point to after the
    * file is opened.
    */
-  private def openEditor(file: IFile)(f: IDocument => Int): Unit = {
+  private[this] def openEditor(file: IFile)(f: IDocument => Int): Unit = {
 
     def openFileInSrcDir(): Unit = {
       val doc = new Document()
       val cursorPos = f(doc)
       file.setContents(
-          new java.io.ByteArrayInputStream(doc.get().getBytes()),
-          /* force */ true, /* keepHistory */ false,
-          new NullProgressMonitor)
+        new java.io.ByteArrayInputStream(doc.get().getBytes()),
+        /* force */ true, /* keepHistory */ false,
+        new NullProgressMonitor)
 
       val window = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
       val e = IDE.openEditor(window.getActivePage(), file, /* activate */ true)
@@ -379,6 +379,6 @@ trait NewFileWizard extends AnyRef with HasLogger {
     }
   }
 
-  private def findTemplateById(id: String): Option[Template] =
+  private[this] def findTemplateById(id: String): Option[Template] =
     Option(ScalaPlugin().templateManager.templateStore.findTemplateById(id))
 }

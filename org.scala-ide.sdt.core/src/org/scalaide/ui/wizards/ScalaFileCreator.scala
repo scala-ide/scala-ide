@@ -1,5 +1,7 @@
 package org.scalaide.ui.wizards
 
+import scala.util.{ Try, Success, Failure }
+
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
@@ -36,9 +38,9 @@ trait ScalaFileCreator extends FileCreator {
   override def initialPath(res: IResource): String = {
     val srcDirs = sourceDirs(res.getProject())
     generateInitialPath(
-        path = res.getFullPath(),
-        srcDirs = srcDirs,
-        isDirectory = res.getType() == IResource.FOLDER)
+      path = res.getFullPath(),
+      srcDirs = srcDirs,
+      isDirectory = res.getType() == IResource.FOLDER)
   }
 
   override def validateName(folder: IContainer, name: String): Validation = {
@@ -91,26 +93,49 @@ trait ScalaFileCreator extends FileCreator {
   }
 
   private[wizards] def validateFullyQualifiedType(fullyQualifiedType: String): Either[Invalid, FileExistenceCheck] = {
-    def isValidScalaTypeIdent(str: String) = {
-      val conformsToIdentToken = ScalaLexer.tokenise(str, forgiveErrors = true).size == 2
+    def isValidScalaTypeIdent(inputStr: String) = {
 
-      conformsToIdentToken && !ScalaKeywords.contains(str)
+      val str = inputStr.trim()
+
+      val tokenizeResult = Try(ScalaLexer.tokenise(str, forgiveErrors = false))
+
+      tokenizeResult match {
+        case Success(tokens) => {
+
+          val conformsToIdentToken = tokens.size == 2 && tokens(0).tokenType.isId
+
+          conformsToIdentToken && !ScalaKeywords.contains(str)
+        }
+        case Failure(exception) => {
+          exception match {
+            case e: scalariform.lexer.ScalaLexerException => false
+            case e => throw e
+          }
+        }
+      }
     }
 
-    val parts = Commons.split(fullyQualifiedType, '.')
+    val dotsAfterBackQuote = fullyQualifiedType.dropWhile(_ != '`').contains('.')
 
-    if (parts.last.isEmpty)
-      Left(Invalid("No type name specified"))
-    else {
-      def packageIdentCheck =
-        parts.init.find(!isValidScalaPackageIdent(_)) map (e => s"'$e' is not a valid package name")
+    if (dotsAfterBackQuote) {
+      Left(Invalid("Dots after a back-quote is not supported for Scala types in the file wizard"))
+    } else {
 
-      def typeIdentCheck =
-        Seq(parts.last).find(!isValidScalaTypeIdent(_)) map (e => s"'$e' is not a valid type name")
+      val parts = Commons.split(fullyQualifiedType, '.')
 
-      packageIdentCheck orElse typeIdentCheck match {
-        case Some(e) => Left(Invalid(e))
-        case _       => Right(checkTypeExists(_, fullyQualifiedType))
+      if (parts.last.isEmpty)
+        Left(Invalid("No type name specified"))
+      else {
+        def packageIdentCheck =
+          parts.init.find(!isValidScalaPackageIdent(_)) map (e => s"'$e' is not a valid package name")
+
+        def typeIdentCheck =
+          Seq(parts.last).find(!isValidScalaTypeIdent(_)) map (e => s"'$e' is not a valid type name")
+
+        packageIdentCheck orElse typeIdentCheck match {
+          case Some(e) => Left(Invalid(e))
+          case _ => Right(checkTypeExists(_, fullyQualifiedType))
+        }
       }
     }
   }
@@ -118,8 +143,8 @@ trait ScalaFileCreator extends FileCreator {
   private[wizards] def isValidScalaPackageIdent(str: String): Boolean = {
     val validIdent =
       str.nonEmpty &&
-      Character.isJavaIdentifierStart(str.head) &&
-      str.tail.forall(Character.isJavaIdentifierPart)
+        Character.isJavaIdentifierStart(str.head) &&
+        str.tail.forall(Character.isJavaIdentifierPart)
 
     validIdent && !ScalaKeywords.contains(str) && !JavaKeywords.contains(str)
   }
@@ -152,6 +177,6 @@ trait ScalaFileCreator extends FileCreator {
     else
       Map(
         VariablePackageName -> pkg.substring(0, splitPos),
-        VariableTypeName -> pkg.substring(splitPos+1))
+        VariableTypeName -> pkg.substring(splitPos + 1))
   }
 }
