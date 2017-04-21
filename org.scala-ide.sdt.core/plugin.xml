@@ -1052,10 +1052,6 @@
     <provider class="org.scalaide.core.internal.jdt.model.ScalaClassFileProvider" />
   </extension>
 
-  <extension point="org.scala-ide.sdt.aspects.lncheck">
-    <provider class="org.scalaide.core.internal.jdt.model.ScalaLineNumberCheck" />
-  </extension>
-
   <extension point="org.scala-ide.sdt.aspects.indexerprovider">
     <provider class="org.scalaide.core.internal.jdt.search.ScalaSourceIndexerFactory" />
   </extension>

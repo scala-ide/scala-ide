@@ -8,5 +8,4 @@
    <extension-point id="cuprovider" name="Compilation Unit Provider" schema="cuprovider.exsd"/>
    <extension-point id="imagedescriptorselector" name="Image Descriptor Selector" schema="imagedescriptorselector.exsd"/>
    <extension-point id="openactionprovider" name="Open Action Provider" schema="openactionprovider.exsd"/>
-   <extension-point id="lncheck" name="Line Number Check" schema="lncheck.exsd"/>
 </plugin>

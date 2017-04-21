@@ -6,7 +6,6 @@
 package scala.tools.eclipse.contribution.weaving.jdt.cfprovider;
 
 import java.util.HashSet;
-import java.util.List;
 
 import org.eclipse.core.filebuffers.FileBuffers;
 import org.eclipse.core.filebuffers.ITextFileBuffer;
@@ -18,19 +17,15 @@ import org.eclipse.jdt.core.IBuffer;
 import org.eclipse.jdt.core.IClassFile;
 import org.eclipse.jdt.core.IImportDeclaration;
 import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IOpenable;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.search.TypeNameMatch;
-import org.eclipse.jdt.debug.core.IJavaBreakpoint;
 import org.eclipse.jdt.internal.compiler.CompilationResult;
-import org.eclipse.jdt.internal.compiler.ast.ASTNode;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
 import org.eclipse.jdt.internal.compiler.ast.ImportReference;
 import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.TypeReference;
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants;
 import org.eclipse.jdt.internal.compiler.env.IBinaryType;
 import org.eclipse.jdt.internal.compiler.env.ICompilationUnit;
@@ -38,16 +33,14 @@ import org.eclipse.jdt.internal.compiler.env.IGenericType;
 import org.eclipse.jdt.internal.compiler.env.ISourceImport;
 import org.eclipse.jdt.internal.compiler.env.ISourceType;
 import org.eclipse.jdt.internal.compiler.env.NameEnvironmentAnswer;
-import org.eclipse.jdt.internal.compiler.lookup.ReferenceBinding;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
 import org.eclipse.jdt.internal.compiler.parser.Parser;
 import org.eclipse.jdt.internal.compiler.parser.SourceTypeConverter;
 import org.eclipse.jdt.internal.core.BinaryType;
+import org.eclipse.jdt.internal.core.BufferManager;
 import org.eclipse.jdt.internal.core.ClassFile;
 import org.eclipse.jdt.internal.core.CompilationUnitElementInfo;
 import org.eclipse.jdt.internal.core.ImportDeclaration;
 import org.eclipse.jdt.internal.core.JavaElement;
-import org.eclipse.jdt.internal.core.BufferManager;
 import org.eclipse.jdt.internal.core.NameLookup;
 import org.eclipse.jdt.internal.core.Openable;
 import org.eclipse.jdt.internal.core.PackageFragment;
@@ -56,10 +49,8 @@ import org.eclipse.jdt.internal.core.SourceMapper;
 import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jdt.internal.core.SourceTypeElementInfo;
 import org.eclipse.jdt.internal.core.hierarchy.HierarchyResolver;
-import org.eclipse.jdt.internal.core.hierarchy.HierarchyType;
 import org.eclipse.jdt.internal.core.util.Util;
 import org.eclipse.jdt.internal.corext.util.OpenTypeHistory;
-import org.eclipse.jdt.internal.debug.ui.BreakpointUtils;
 import org.eclipse.jdt.internal.ui.filters.InnerClassFilesFilter;
 import org.eclipse.jdt.ui.SharedASTProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -138,19 +129,6 @@ public privileged aspect ClassFileProviderAspect {
     execution(boolean OpenTypeHistory.isContainerDirty(TypeNameMatch)) &&
     args(match);
   
-  pointcut getTypeForBreakpoint(IJavaBreakpoint breakpoint) :
-    execution(public IType BreakpointUtils.getType(IJavaBreakpoint)) &&
-    args(breakpoint);
-
-  IType around(IJavaBreakpoint breakpoint) :
-    getTypeForBreakpoint(breakpoint) {
-    IType iType = proceed(breakpoint);
-    List<ILineNumberCheck> checks = LineNumberCheckRegistry.getInstance().getProviders();
-    if (checks.size() != 1)
-      throw new IllegalStateException("There should be only one LineNumberCheck. Found " + checks.size());
-    return checks.get(0).realClassFile(iType, breakpoint);
-  }
-
   ClassFile around(PackageFragment parent, String name) : 
     classFileCreations(parent, name) {
 
