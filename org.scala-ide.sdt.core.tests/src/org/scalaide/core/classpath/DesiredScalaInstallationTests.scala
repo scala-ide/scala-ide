@@ -7,7 +7,6 @@ import org.eclipse.jdt.core.JavaCore
 import org.junit.After
 import org.junit.AfterClass
 import org.junit.Assert.assertTrue
-import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.IScalaProject
@@ -162,7 +161,6 @@ class DesiredScalaInstallationTests {
     assertTrue(s"Switching to a former bundle should show that bundle's version on the library classpath Container. Found ${newVersion map {_.unparse}}. Expected ${otherInstallation.map(_.version)}", newVersion == otherInstallation.map{_.version})
   }
 
-  @Ignore("Needs investigation")
   @Test
   def change_to_legacy_registers_on_compiler_classpath(): Unit ={
     val project = createProject()

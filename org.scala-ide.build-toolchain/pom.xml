@@ -73,6 +73,7 @@
       <modules>
         <!-- TODO remove back when multiple bundles of Scala are supported -->
         <module>../org.scala-ide.scala210.jars</module>
+        <module>../org.scala-ide.scala211.jars</module>
       </modules>
     </profile>
   </profiles>

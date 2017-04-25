@@ -13,7 +13,6 @@ import org.eclipse.jdt.core.IClasspathEntry
 import org.eclipse.core.resources.IMarker
 import org.scalaide.core.IScalaPlugin
 import org.junit.After
-import org.junit.Ignore
 import org.scalaide.core.IScalaProject
 import org.scalaide.ui.internal.preferences.CompilerSettings
 import org.scalaide.core.testsetup.SDTTestUtils
@@ -185,7 +184,6 @@ class ClasspathTests {
     setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
   }
 
-  @Ignore("Needs investigation")
   @Test
   def subsequentLibraryWithXsource(): Unit = {
     val majorMinor = testShortSubsequentScalaVersion
@@ -226,10 +224,9 @@ class ClasspathTests {
     val majorMinor = getIncompatibleScalaVersion
     val newRawClasspath = cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
   }
 
-  @Ignore("Needs investigation")
   @Test
   def subsequentLibraryWithXsourceAndBadBinary(): Unit = {
     enableProjectSpecificSettings()

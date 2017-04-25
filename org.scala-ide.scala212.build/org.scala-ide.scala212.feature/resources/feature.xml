@@ -99,4 +99,11 @@ SUCH DAMAGE.
          version="0.0.0"
          unpack="true"/>
 
+   <plugin
+         id="org.scala-ide.scala211.jars"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="true"/>
+
 </feature>
