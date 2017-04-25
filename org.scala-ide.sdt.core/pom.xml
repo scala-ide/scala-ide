@@ -127,9 +127,9 @@
       <version>${sbinary.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.scala-ide</groupId>
+      <groupId>org.scala-lang</groupId>
       <artifactId>scalap</artifactId>
-      <version>${scala212.scalap.version}</version>
+      <version>${scala212.version}</version>
       <exclusions>
         <exclusion>
           <groupId>org.scala-lang</groupId>
@@ -307,7 +307,7 @@
                   <classifier>sources</classifier>
                 </artifactItem>
                 <artifactItem>
-                  <groupId>org.scala-ide</groupId>
+                  <groupId>org.scala-lang</groupId>
                   <artifactId>scalap</artifactId>
                 </artifactItem>
               </artifactItems>
