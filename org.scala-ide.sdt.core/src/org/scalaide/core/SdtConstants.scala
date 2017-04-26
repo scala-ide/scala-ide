@@ -27,7 +27,9 @@ object SdtConstants {
 
   // containers
   final val ScalaLibContId = "org.scala-ide.sdt.launching.SCALA_CONTAINER"
+  final val ScalaLibContName = "Scala Library container"
   final val ScalaCompilerContId = "org.scala-ide.sdt.launching.SCALA_COMPILER_CONTAINER"
+  final val ScalaCompilerContName = "Scala Compiler container"
 
   // project nature
   final val NatureId = "org.scala-ide.sdt.core.scalanature"
