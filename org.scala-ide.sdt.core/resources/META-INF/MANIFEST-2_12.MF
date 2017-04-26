@@ -193,5 +193,5 @@ Bundle-ClassPath: .,
  target/lib/util-relation_2.12-@SBT_UTIL_VERSION@.jar,
  target/lib/io_2.12-@SBT_IO_VERSION@.jar,
  target/lib/sbinary_2.12-@SBINARY_VERSION@.jar,
- target/lib/scalap-2.12.1.jar
+ target/lib/scalap-2.12.2.jar
 
