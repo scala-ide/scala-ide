@@ -17,12 +17,12 @@ object CompilerUtils {
   }
 
   def isBinaryPrevious: (ScalaVersion, ScalaVersion) => Boolean = {
-    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor + 1
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor > thatMinor
     case _ => false
   }
 
   def isBinarySubsequent: (ScalaVersion, ScalaVersion) => Boolean = {
-    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor == thatMinor - 1
+    case (ShortScalaVersion(major, minor), ShortScalaVersion(thatMajor, thatMinor)) => major == thatMajor && minor < thatMinor
     case _ => false
   }
 

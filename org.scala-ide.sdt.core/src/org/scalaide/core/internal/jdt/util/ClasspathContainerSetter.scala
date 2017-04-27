@@ -44,8 +44,8 @@ trait ScalaClasspathContainerHandler extends HasLogger {
 class ClasspathContainerSetter(val javaProject: IJavaProject) extends ScalaClasspathContainerHandler {
 
   def descOfScalaPath(path: IPath) =
-    if (path.toPortableString() == SdtConstants.ScalaLibContId) "Scala Library container"
-    else if (path.toPortableString() == SdtConstants.ScalaCompilerContId) "Scala Compiler container"
+    if (path.toPortableString() == SdtConstants.ScalaLibContId) SdtConstants.ScalaLibContName
+    else if (path.toPortableString() == SdtConstants.ScalaCompilerContId) SdtConstants.ScalaCompilerContName
     else "Scala Container"
 
   def bestScalaBundleForVersion(scalaVersion: ScalaVersion): Option[IScalaInstallation] = {
