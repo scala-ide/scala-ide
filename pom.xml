@@ -23,6 +23,8 @@
     <!-- p2 repositories location -->
     <repo.eclipse.neon>http://download.eclipse.org/releases/neon</repo.eclipse.neon>
     <repo.ajdt.neon>http://download.eclipse.org/tools/ajdt/46/dev/update</repo.ajdt.neon>
+    <repo.eclipse.oxygen>http://download.eclipse.org/releases/oxygen</repo.eclipse.oxygen>
+    <repo.ajdt.oxygen>http://download.eclipse.org/tools/ajdt/47/dev/update</repo.ajdt.oxygen>
     <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
     <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
@@ -138,6 +140,17 @@
         <repo.ajdt>${repo.ajdt.neon}</repo.ajdt>
         <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
         <weaving.hook.plugin.version>1.1.200.v20150730-1648</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>eclipse-oxygen</id>
+      <properties>
+        <eclipse.codename>oxygen</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.oxygen}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.oxygen}</repo.ajdt>
+        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
+        <weaving.hook.plugin.version>1.2.0.v20160929-1449</weaving.hook.plugin.version>
       </properties>
     </profile>
 
