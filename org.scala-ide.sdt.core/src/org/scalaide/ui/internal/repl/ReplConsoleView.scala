@@ -301,7 +301,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
       project <- ResourcesPlugin.getWorkspace().getRoot().getProjects()
       if project.isOpen && project.hasNature(org.eclipse.jdt.core.JavaCore.NATURE_ID)
     } yield project.getName()
-    projectList.setItems(scalaProjectNames)
+    projectList.setItems(scalaProjectNames: _*)
   }
 
   /**
