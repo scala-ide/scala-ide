@@ -418,6 +418,7 @@
                           <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>
                           <filter token="SBT_IO_VERSION" value="${sbt-io.version}"/>
                           <filter token="SBINARY_VERSION" value="${sbinary.version}"/>
+                          <filter token="SCALA_VERSION" value="${scala.version}"/>
                         </filterset>
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
