@@ -5,6 +5,7 @@ package org.scalaide.debug.internal.ui.completion
 
 import org.eclipse.jface.fieldassist.IContentProposal
 import org.junit.Assert._
+import org.junit.Ignore
 import org.junit.Test
 import org.scalaide.debug.internal.expression.BaseIntegrationTest
 import org.scalaide.debug.internal.expression.BaseIntegrationTestCompanion
@@ -12,6 +13,7 @@ import org.scalaide.debug.internal.expression.TestValues.CodeCompletionTestCase
 
 class SimpleContentProposalProviderIntegrationTest extends BaseIntegrationTest(SimpleContentProposalProviderIntegrationTest) {
 
+  @Ignore("Needs investigation.")
   @Test
   def testGetProposals(): Unit = {
     // GIVEN proposal provider and debug context

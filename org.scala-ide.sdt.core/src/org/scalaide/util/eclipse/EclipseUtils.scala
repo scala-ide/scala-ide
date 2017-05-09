@@ -1,6 +1,5 @@
 package org.scalaide.util.eclipse
 
-import scala.collection.JavaConversions.asScalaBuffer
 import scala.tools.nsc.settings.NoScalaVersion
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
@@ -146,8 +145,10 @@ object EclipseUtils extends HasLogger {
    *
    *  @see `org.eclipse.ui.ide.IDE.computeSelectedResources`
    */
-  def computeSelectedResources(selection: IStructuredSelection): List[IResource] =
-    IDE.computeSelectedResources(selection).toList.asInstanceOf[List[IResource]]
+  def computeSelectedResources(selection: IStructuredSelection): List[IResource] = {
+    import collection.JavaConverters._
+    IDE.computeSelectedResources(selection).asScala.toList.asInstanceOf[List[IResource]]
+  }
 
   /** Returns a list of pages in all the open main windows associated with this workbench.
    *
@@ -236,7 +237,6 @@ object EclipseUtils extends HasLogger {
    *  @see `org.eclipse.core.resources.IWorkspace.getRoot`
    */
   def workspaceRoot: IWorkspaceRoot = ResourcesPlugin.getWorkspace.getRoot
-
 
   def projectFromPath(project: IPath): IProject = EclipseUtils.workspaceRoot.getProject(project.toString)
 }

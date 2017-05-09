@@ -217,34 +217,45 @@ trait ScalaJavaMapper extends InternalCompilerServices with ScalaAnnotationHelpe
       javaDescriptor(tpe).replace('/', '.')
   }
 
-  import icodes._
-
   /** Return the descriptor of the given type. A typed descriptor is defined
    *  by the JVM Specification Section 4.3 (http://docs.oracle.com/javase/specs/vms/se7/html/jvms-4.html#jvms-4.3)
    *
    *  Example:
-   *   javaDescriptor(Array[List[Int]]) == "[Lscala/collection/immutable/List;"
+   *   toJavaDescriptor(Array[List[Int]]) == "[Lscala/collection/immutable/List;"
    */
-  private def javaDescriptor(tk: TypeKind): String = {
-    import Signature._
-    (tk: @unchecked) match {
-      case BOOL           => C_BOOLEAN.toString
-      case BYTE           => C_BYTE.toString
-      case SHORT          => C_SHORT.toString
-      case CHAR           => C_CHAR.toString
-      case INT            => C_INT.toString
-      case UNIT           => C_VOID.toString
-      case LONG           => C_LONG.toString
-      case FLOAT          => C_FLOAT.toString
-      case DOUBLE         => C_DOUBLE.toString
-      case REFERENCE(cls) => s"L${cls.javaBinaryName};"
-      case ARRAY(elem)    => s"[${javaDescriptor(elem)}"
+  private def toJavaDescriptor(tpe: Type): String = {
+    import scala.reflect.internal.ClassfileConstants._
+    val objectDesc = "Ljava/lang/Object;"
+    val (sym, args) = tpe match {
+      case TypeRef(_, sym, args) => (sym, args)
+      case rt @ RefinedType(_, _) => (rt.typeSymbol, rt.typeArgs)
+      case ExistentialType(_, typ) => (typ.typeSymbol, Nil)
+      case _ => (NoSymbol, Nil)
+    }
+    sym match {
+      case definitions.UnitClass => VOID_TAG.toString
+      case definitions.BooleanClass => BOOL_TAG.toString
+      case definitions.CharClass => CHAR_TAG.toString
+      case definitions.ByteClass => BYTE_TAG.toString
+      case definitions.ShortClass => SHORT_TAG.toString
+      case definitions.IntClass => INT_TAG.toString
+      case definitions.FloatClass => FLOAT_TAG.toString
+      case definitions.LongClass => LONG_TAG.toString
+      case definitions.DoubleClass => DOUBLE_TAG.toString
+      case sym if sym == definitions.NullClass => OBJECT_TAG + SCALA_NULL + ";"
+      case sym if sym == definitions.NothingClass => OBJECT_TAG + SCALA_NOTHING + ";"
+      case sym if sym.isAliasType => toJavaDescriptor(sym.info.resultType)
+      case sym if sym.isTypeParameterOrSkolem => objectDesc
+      case definitions.ArrayClass => ARRAY_TAG + args.headOption.map(toJavaDescriptor).getOrElse(objectDesc)
+      case sym if sym != NoSymbol => OBJECT_TAG + sym.javaBinaryNameString + ";"
+      case _ => objectDesc
     }
   }
 
-  override def javaDescriptor(tpe: Type): String =
+  override def javaDescriptor(tpe: Type): String = {
     if (tpe.isErroneous) "Ljava/lang/Object;"
-    else javaDescriptor(toTypeKind(tpe.erasure)) // `toTypeKind` only handles erased types
+    else toJavaDescriptor(tpe)
+  }
 
   override def enclosingTypeName(s : Symbol): String =
     if (s == NoSymbol || s.hasFlag(Flags.PACKAGE)) ""

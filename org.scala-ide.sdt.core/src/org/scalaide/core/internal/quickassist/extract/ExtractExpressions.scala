@@ -40,6 +40,7 @@ class ExtractExpressions extends QuickAssist {
                   TextEditUtils.applyRefactoringChangeToEditor(change, editor)
                   LocalNameOccurrences(extraction.abstractionName).performInlineRenaming()
                 }
+              case e ⇒ throw new IllegalStateException("Unexpected result: " + e)
             }
           }
         }

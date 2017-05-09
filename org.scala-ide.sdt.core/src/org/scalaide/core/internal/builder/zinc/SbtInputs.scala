@@ -70,9 +70,7 @@ class SbtInputs(installation: IScalaInstallation,
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
       withClassfileManagerType(Maybe.just(new TransactionalManagerType(tempDir, logger))).
       withApiDumpDirectory(Maybe.nothing()).
-      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
-      // Turning off name hashing is not supported in class-based dependency tracking
-      withNameHashing(true)
+      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
   }
 
   def outputFolders = srcOutputs.map {
@@ -123,7 +121,7 @@ class SbtInputs(installation: IScalaInstallation,
   private def buildCompilerOption(arg: String): Boolean =
     !arg.startsWith("-Xsource") && !(arg == "-Ymacro-expand:none")
 
-  def javacOptions: Seq[String] = Nil // Not used.
+  def javacOptions: Array[String] = Array() // Not used.
 
   import org.scalaide.ui.internal.preferences.ScalaPluginSettings.compileOrder
   import org.scalaide.util.internal.SettingConverterUtil.convertNameToProperty

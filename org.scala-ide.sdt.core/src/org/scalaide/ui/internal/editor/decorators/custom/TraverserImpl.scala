@@ -166,14 +166,30 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
     }.getOrElse(false)()
   }
 
-  override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
-    import compiler.Select
-    tree match {
-      case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor =>
-        Some((select.pos, createMessage(select)))
-      case _ => None
-    }
+  import compiler._
+  private val annotation: PartialFunction[SPC#Tree, Option[(SPC#Position, String)]] = {
+    case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor =>
+      Some((select.pos, createMessage(select)))
   }
+
+  private val annotationInConstructor: PartialFunction[SPC#Tree, Option[(SPC#Position, String)]] = {
+    case constructor @ DefDef(_, _, _, vparamss, _, _) if constructor.symbol.isConstructor =>
+      val found = for {
+        vparams <- vparamss
+        vparam <- vparams if vparam.symbol.annotations.nonEmpty
+        annotation <- vparam.symbol.annotations
+      } yield (annotation.pos, traverserDef.message(TraverserDef.Select(annotation.atp.toString, "")))
+      found.headOption
+  }
+
+  private val default: PartialFunction[SPC#Tree, Option[(SPC#Position, String)]] = {
+    case _ => None
+  }
+
+  override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] =
+    annotation
+      .orElse(annotationInConstructor)
+      .orElse(default)(tree)
 }
 
 

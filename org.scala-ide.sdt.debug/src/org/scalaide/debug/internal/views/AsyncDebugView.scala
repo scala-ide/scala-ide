@@ -43,9 +43,6 @@ import org.scalaide.debug.internal.model.ScalaThread
 import org.scalaide.debug.internal.preferences.AsyncDebuggerPreferencePage
 import org.scalaide.logging.HasLogger
 
-import Utils.fnToSelectionChangedListener
-import Utils.fnToSelectionListener
-
 class AsyncDebugView extends AbstractDebugView with IDebugContextListener with HasLogger {
 
   private var viewer: TableViewer = _
@@ -56,7 +53,6 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
   override protected def createActions(): Unit = {}
 
   override protected def createViewer(parent: Composite): Viewer = {
-    import Utils._
     viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.VIRTUAL)
     viewer.setContentProvider(StackFrameContentProvider)
     viewer.setLabelProvider(StackFrameLabelProvider)
@@ -66,7 +62,6 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
   }
 
   override def init(site: IViewSite): Unit = {
-    import Utils._
     super.init(site)
 
     val service = debugService

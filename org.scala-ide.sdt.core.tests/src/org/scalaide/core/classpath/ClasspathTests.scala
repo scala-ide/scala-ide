@@ -224,7 +224,7 @@ class ClasspathTests {
     val majorMinor = getIncompatibleScalaVersion
     val newRawClasspath = cleanRawClasspath :+ createPreviousScalaLibraryEntry()
 
-    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 1)
+    setRawClasspathAndCheckMarkers(newRawClasspath :+ newLibraryEntry("specs2_%s.2-0.12.3.jar".format(majorMinor)), expectedWarnings = 0, expectedErrors = 0)
   }
 
   @Test

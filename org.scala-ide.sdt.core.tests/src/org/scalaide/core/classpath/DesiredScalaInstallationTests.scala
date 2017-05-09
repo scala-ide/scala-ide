@@ -1,28 +1,25 @@
 package org.scalaide.core.classpath
 
+import java.io.File
+
 import org.eclipse.core.runtime.Path
 import org.eclipse.jdt.core.JavaCore
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.scalaide.core.IScalaPlugin
-import java.io.File
-import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.IScalaProject
-import org.scalaide.util.eclipse.EclipseUtils
-import org.eclipse.jdt.core.JavaCore
-import org.junit.After
-import org.eclipse.core.runtime.Path
-import org.junit.Test
-import org.junit.AfterClass
+import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation.extractVersion
 import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.core.internal.project.LabeledScalaInstallation
-import org.scalaide.core.SdtConstants
+import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 object DesiredScalaInstallationTests {
   private var projects: List[IScalaProject] = List()

@@ -2,14 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Expression Evaluator Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.debug.expression;singleton:=true
-Bundle-Version: 4.5.1.qualifier
+Bundle-Version: 4.6.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
-Bundle-Activator: 
- org.scalaide.debug.internal.expression.ScalaExpressionEvaluatorPlugin
-Export-Package: 
- org.scalaide.debug.internal.expression,
+Bundle-Activator: org.scalaide.debug.internal.expression.ScalaExpressionEvaluatorPlugin
+Export-Package: org.scalaide.debug.internal.expression,
  org.scalaide.debug.internal.expression.context,
  org.scalaide.debug.internal.expression.context.extensions,
  org.scalaide.debug.internal.expression.proxies,
@@ -32,9 +30,9 @@ Require-Bundle: org.eclipse.ui,
  org.scala-ide.sdt.core,
  org.scala-ide.sdt.debug,
  org.eclipse.jface.text,
- org.scala-lang.scala-library;bundle-version="[2.11.0,2.12.0)",
- org.scala-lang.scala-reflect;bundle-version="[2.11.0,2.12.0)",
- org.scala-lang.scala-compiler;bundle-version="[2.11.0,2.12.0)"
+ org.scala-lang.scala-library;bundle-version="[2.12.0,2.13.0)",
+ org.scala-lang.scala-reflect;bundle-version="[2.12.0,2.13.0)",
+ org.scala-lang.scala-compiler;bundle-version="[2.12.0,2.13.0)"
 Import-Package: org.osgi.framework,
  org.scalaide.util,
  scala.tools.eclipse.contribution.weaving.jdt

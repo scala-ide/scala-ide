@@ -7,7 +7,6 @@ import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.Seq
 import scala.collection.concurrent
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.Promise
 
@@ -45,7 +44,8 @@ class ScalaDebugBreakpointManager private ( /*public field only for testing purp
    */
   private val waitForAllCurrentFutures: AtomicReference[Future[Unit]] = new AtomicReference(Future.successful {})
 
-  private def entangleFutures[T](b: => Future[T])(implicit ec: ExecutionContext): Unit = {
+  private def entangleFutures[T](b: => Future[T]): Unit = {
+    import scala.concurrent.ExecutionContext.Implicits.global
     val p = Promise[Unit]
     b.onComplete { t => p.success {}; }
     waitForAllCurrentFutures.getAndSet(waitForAllCurrentFutures.get.flatMap { _ => p.future })

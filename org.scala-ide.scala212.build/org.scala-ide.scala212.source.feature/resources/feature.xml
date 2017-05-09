@@ -2,11 +2,11 @@
 <feature
       id="org.scala-ide.scala212.source.feature"
       label="Scala ${scala212.version} sources"
-      version="4.5.1.qualifier"
+      version="4.6.0.qualifier"
       provider-name="scala-ide.org">
 
    <description url="http://scala-ide.org">
-     Sources for Scala ${scala211.version} library, compiler and associated jars.
+     Sources for Scala ${scala212.version} library, compiler and associated jars.
    </description>
 
    <copyright url="http://scala-lang.org/downloads/">
@@ -79,13 +79,6 @@ SUCH DAMAGE.
 
    <plugin
          id="org.scala-lang.modules.scala-xml.source"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.scala-lang.modules.scala-swing.source"
          download-size="0"
          install-size="0"
          version="0.0.0"

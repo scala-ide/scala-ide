@@ -67,6 +67,7 @@ import org.scalaide.util.internal.eclipse.TextSelectionTest
 import org.scalaide.core.sbtbuilder.CompilerBridgeStoreTest
 import org.scalaide.ui.internal.preferences.StringListMapperTest
 import org.scalaide.core.sbtbuilder.Scala210Compilation
+import org.scalaide.core.sbtbuilder.Scala211Compilation
 import org.scalaide.core.sbtbuilder.SourcePathFinderTest
 import org.scalaide.core.scalaelements.ScalaElementsNameTest
 
@@ -139,6 +140,7 @@ import org.scalaide.core.scalaelements.ScalaElementsNameTest
     classOf[ScalaJavaDepTwoScopesTest],
     classOf[Scala210Compilation],
     classOf[SourcePathFinderTest],
-    classOf[ScalaElementsNameTest]
+    classOf[ScalaElementsNameTest],
+    classOf[Scala211Compilation]
 ))
 class TestsSuite

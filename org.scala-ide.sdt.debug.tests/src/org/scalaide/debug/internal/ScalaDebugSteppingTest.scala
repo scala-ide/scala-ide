@@ -9,6 +9,7 @@ import org.junit.Before
 import org.junit.Test
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.testsetup.TestProjectSetup
+import org.junit.Ignore
 
 object ScalaDebugSteppingTest extends TestProjectSetup("debug", bundleName = "org.scala-ide.sdt.debug.tests") with ScalaDebugRunningTest {
 
@@ -60,7 +61,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 13)
 
     session.checkThreadsState
   }
@@ -76,7 +77,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$foo$1", "apply(Ljava/lang/String;)I", 20)
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   @Test
@@ -90,7 +91,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$1", "apply(Ljava/lang/String;)I", 30)
+    session.checkStackFrame(TYPENAME_FC_LS, "<init>(Lscala/collection/immutable/List;)V", 27)
   }
 
   @Test
@@ -104,7 +105,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$bar$1", "apply(Ljava/lang/String;)I", 36)
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   /*
@@ -118,11 +119,15 @@ class ScalaDebugSteppingTest {
 
     session.runToLine(TYPENAME_FC_LS + "$", 10)
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "$anonfun$main$1(Ljava/lang/String;)I", 10)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    session.checkStackFrameRegExp(TYPENAME_FC_LS + "\\$\\$\\$Lambda\\$6.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
+
+    session.stepOver()
+
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "main([Ljava/lang/String;)V", 13)
   }
 
   /*
@@ -136,7 +141,11 @@ class ScalaDebugSteppingTest {
 
     session.runToLine(TYPENAME_FC_LS2 + "$", 12)
 
-    session.checkStackFrame(TYPENAME_FC_LS2 + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 12)
+    session.checkStackFrame(TYPENAME_FC_LS2 + "$", "$anonfun$main$1(Ljava/lang/String;)I", 12)
+
+    session.stepOver()
+
+    session.checkStackFrameRegExp(TYPENAME_FC_LS2 + "\\$\\$\\$Lambda\\$6\\.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
 
     session.stepOver()
 
@@ -158,7 +167,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LO + "$$anonfun$main$1", "apply(Ljava/lang/Object;)Ljava/lang/Object;", 10)
+    session.checkStackFrame(TYPENAME_FC_LO + "$", "main([Ljava/lang/String;)V", 13)
   }
 
   @Test
@@ -172,7 +181,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LO + "$$anonfun$foo$1", "apply(Ljava/lang/Object;)Ljava/lang/Object;", 20)
+    session.checkStackFrame(TYPENAME_FC_LO + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   @Test
@@ -186,7 +195,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LO + "$$anonfun$1", "apply(Ljava/lang/Object;)Ljava/lang/Object;", 30)
+    session.checkStackFrame(TYPENAME_FC_LO, "<init>(Lscala/collection/immutable/List;)V", 27)
   }
 
   @Test
@@ -200,7 +209,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LO + "$$anonfun$bar$1", "apply(Ljava/lang/Object;)Ljava/lang/Object;", 36)
+    session.checkStackFrame(TYPENAME_FC_LO + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   /*
@@ -219,7 +228,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
+    session.checkStackFrame(TYPENAME_FC_LI + "$", "main([Ljava/lang/String;)V", 16)
   }
 
   @Test
@@ -233,7 +242,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 23)
+    session.checkStackFrame(TYPENAME_FC_LI + "$", "main([Ljava/lang/String;)V", 17)
   }
 
   @Test
@@ -247,7 +256,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$1", "apply$mcVI$sp(I)V", 34)
+    session.checkStackFrame(TYPENAME_FC_LI, "<init>(Lscala/collection/immutable/List;)V", 31)
   }
 
   @Test
@@ -261,7 +270,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LI + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 41)
+    session.checkStackFrame(TYPENAME_FC_LI + "$", "main([Ljava/lang/String;)V", 17)
   }
 
   @Test
@@ -275,7 +284,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$main$1", "apply$mcVI$sp(I)V", 12)
+    session.checkStackFrame(TYPENAME_FC_LIO + "$", "main([Ljava/lang/String;)V", 15)
   }
 
   @Test
@@ -289,7 +298,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$foo$1", "apply$mcVI$sp(I)V", 22)
+    session.checkStackFrame(TYPENAME_FC_LIO + "$", "main([Ljava/lang/String;)V", 16)
   }
 
   @Test
@@ -303,7 +312,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$1", "apply$mcVI$sp(I)V", 32)
+    session.checkStackFrame(TYPENAME_FC_LIO, "<init>(Lscala/collection/immutable/List;)V", 29)
   }
 
   @Test
@@ -317,7 +326,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_FC_LIO + "$$anonfun$bar$1", "apply$mcVI$sp(I)V", 38)
+    session.checkStackFrame(TYPENAME_FC_LIO + "$", "main([Ljava/lang/String;)V", 16)
   }
 
   /*
@@ -335,7 +344,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$a$1", "apply(Ljava/lang/String;)V", 19)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 12)
   }
 
   @Test
@@ -349,7 +358,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$b$1", "apply(Ljava/lang/String;)Z", 25)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 13)
   }
 
   @Test
@@ -363,7 +372,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$c$1", "apply(Ljava/lang/String;)I", 31)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   @Test
@@ -377,7 +386,7 @@ class ScalaDebugSteppingTest {
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LS + "$$anonfun$d$1", "apply(ILjava/lang/String;)I", 37)
+    session.checkStackFrame(TYPENAME_AF_LS + "$", "main([Ljava/lang/String;)V", 14)
   }
 
   // Simple stepping into/over/out tests
@@ -433,7 +442,7 @@ class ScalaDebugSteppingTest {
 
     session.stepInto()
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    session.checkStackFrameRegExp("java.lang.invoke.LambdaForm\\$MH\\.\\d+", "linkToTargetMethod\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
   }
 
   // stepping out of anonymous functions
@@ -444,7 +453,11 @@ class ScalaDebugSteppingTest {
 
     session.runToLine(TYPENAME_FC_LS + "$", 10)
 
-    session.checkStackFrame(TYPENAME_FC_LS + "$$anonfun$main$1", "apply(Ljava/lang/String;)I", 10)
+    session.checkStackFrame(TYPENAME_FC_LS + "$", "$anonfun$main$1(Ljava/lang/String;)I", 10)
+
+    session.stepReturn()
+
+    session.checkStackFrameRegExp(TYPENAME_FC_LS + "\\$\\$\\$Lambda\\$6\\.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
 
     session.stepReturn()
 
@@ -460,21 +473,17 @@ class ScalaDebugSteppingTest {
 
     session.runToLine(TYPENAME_AF_LI + "$", 20)
 
-    session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply$mcVI$sp(I)V", 20)
+    session.checkStackFrame(TYPENAME_AF_LI + "$", "$anonfun$main$5(I)V", 20)
 
     val breakpoint = session.addLineBreakpoint(TYPENAME_AF_LI + "$", 19)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply(I)V", 19)
+    session.checkStackFrameRegExp(TYPENAME_AF_LI + "\\$\\$\\$Lambda\\$10\\.\\d+", "apply\\$mcVI\\$sp\\(I\\)V", -1)
 
     session.stepOver()
 
-    session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply$mcVI$sp(I)V", 20)
-
-    session.stepOver()
-
-    session.checkStackFrame(TYPENAME_AF_LI + "$$anonfun$main$5", "apply(I)V", 19)
+    session.checkStackFrame(TYPENAME_AF_LI + "$", "main([Ljava/lang/String;)V", 19)
 
     session.removeBreakpoint(breakpoint)
   }
@@ -527,6 +536,7 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_STEP_FILTERS, "foo(Ljava/lang/String;Ljava/lang/String;)V", 8)
   }
 
+  @Ignore("Needs investigation. Maven gives different frames.")
   @Test
   def StepIntoSkipsGetterInsideFors(): Unit = {
 
@@ -536,13 +546,34 @@ class ScalaDebugSteppingTest {
     session.checkStackFrame(TYPENAME_STEP_FILTERS, "fors()V", 25)
 
     session.stepInto()
-    session.checkStackFrame(TYPENAME_STEP_FILTERS + "$$anonfun$fors$1", "apply(Ljava/lang/String;)V", 26)
+    session.checkStackFrameRegExp("java.lang.invoke.LambdaForm\\$MH\\.\\d+", "linkToTargetMethod\\(Ljava/lang/Object;Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "fors()V", 25)
+
+    session.stepInto()
+    session.checkStackFrameRegExp(TYPENAME_STEP_FILTERS + "\\$\\$Lambda\\$6\\.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
 
     session.stepInto()
     session.checkStackFrame("debug.Helper$", "noop(Ljava/lang/Object;)V", 5)
 
     session.stepInto()
-    session.checkStackFrame(TYPENAME_STEP_FILTERS + "$$anonfun$fors$1", "apply(Ljava/lang/String;)V", 27) // back inside for
+    session.checkStackFrame("scala.Predef$", "identity(Ljava/lang/Object;)Ljava/lang/Object;", 185)
+
+    session.stepInto()
+    session.checkStackFrameRegExp(TYPENAME_STEP_FILTERS + "\\$\\$Lambda\\$6\\.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
+
+    session.stepInto()
+    session.checkStackFrame("debug.Helper$", "noop(Ljava/lang/Object;)V", 5)
+
+    session.stepInto()
+    session.checkStackFrame("scala.Predef$", "identity(Ljava/lang/Object;)Ljava/lang/Object;", 185)
+
+    session.stepInto()
+    session.checkStackFrameRegExp(TYPENAME_STEP_FILTERS + "\\$\\$Lambda\\$6\\.\\d+", "apply\\(Ljava/lang/Object;\\)Ljava/lang/Object;", -1)
+
+    session.stepInto()
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "fors()V", 29) // back to fors()
   }
 
   @Test
@@ -550,11 +581,11 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("StepFilters")
 
-    session.runToLine(TYPENAME_STEP_FILTERS, 34)
-    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 34)
+    session.runToLine(TYPENAME_STEP_FILTERS, 35)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 35)
 
     session.stepInto()
-    session.checkStackFrame("stepping.Concrete", "base(I)I", 49)
+    session.checkStackFrame("stepping.Concrete", "base(I)I", 50)
   }
 
   @Test
@@ -562,11 +593,11 @@ class ScalaDebugSteppingTest {
 
     session = initDebugSession("StepFilters")
 
-    session.runToLine(TYPENAME_STEP_FILTERS, 37)
-    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 37)
+    session.runToLine(TYPENAME_STEP_FILTERS, 35)
+    session.checkStackFrame(TYPENAME_STEP_FILTERS, "bridges()V", 35)
 
     session.stepInto()
-    session.checkStackFrame("stepping.Concrete", "base(I)I", 49)
+    session.checkStackFrame("stepping.Concrete", "base(I)I", 50)
 
     session.stepReturn()
   }
@@ -581,27 +612,33 @@ class ScalaDebugSteppingTest {
   }
 
   @Test
-  def StepIntoSkipsForwarder(): Unit = {
+  def StepIntoDoesNotSkipForwarder(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 64)
     session.stepInto
-    session.checkStackFrame("stepping.BaseTrait$class", "concreteTraitMethod1(Lstepping/BaseTrait;I)I", 12)
+    session.checkStackFrame("stepping.ConcreteClass", "concreteTraitMethod1(I)I", 36)
+    session.stepInto
+    session.checkStackFrame("stepping.BaseTrait", "concreteTraitMethod1(I)I", 12)
   }
 
   @Test
-  def StepIntoSkipsForwarderWithParams(): Unit = {
+  def StepIntoDoesNotSkipForwarderWithParams(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 67)
     session.stepInto
-    session.checkStackFrame("stepping.BaseTrait$class", "concreteTraitMethod4(Lstepping/BaseTrait;IDLjava/lang/String;Ljava/lang/Object;)V", 15)
+    session.checkStackFrame("stepping.ConcreteClass", "concreteTraitMethod4(IDLjava/lang/String;Ljava/lang/Object;)V", 36)
+    session.stepInto
+    session.checkStackFrame("stepping.BaseTrait", "concreteTraitMethod4(IDLjava/lang/String;Ljava/lang/Object;)V", 15)
   }
 
   @Test
-  def StepIntoSkipsForwarderWith22Params(): Unit = {
+  def StepIntoDoesNotSkipForwarderWith22Params(): Unit = {
     session = initDebugSession("MethodClassifiers")
     session.runToLine("stepping.MethodClassifiers", 69)
     session.stepInto
-    session.checkStackFrame("stepping.MaxArgs$class", "manyArgs(Lstepping/MaxArgs;DDDDDDDDDDDDDDDDDDDDDD)D", 105)
+    session.checkStackFrame("stepping.MaxArgsC", "manyArgs(DDDDDDDDDDDDDDDDDDDDDD)D", 108)
+    session.stepInto
+    session.checkStackFrame("stepping.MaxArgs", "manyArgs(DDDDDDDDDDDDDDDDDDDDDD)D", 105)
   }
 
   @Test

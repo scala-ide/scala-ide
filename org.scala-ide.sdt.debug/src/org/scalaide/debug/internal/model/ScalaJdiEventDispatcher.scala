@@ -5,7 +5,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Success
 import org.scalaide.debug.internal.JdiEventDispatcher
@@ -151,7 +150,7 @@ private[model] class ScalaJdiEventDispatcherSubordinate private (scalaDebugTarge
         }
     }
 
-    Future.fold(staySuspendeds)(false)(_ | _).andThen {
+    Future.foldLeft(staySuspendeds)(false)(_ | _).andThen {
       case Success(false) => eventSet.resume()
       case _ =>
     }

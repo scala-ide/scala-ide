@@ -232,7 +232,6 @@ trait InstallationManagement { this: ScalaProject =>
   def usesProjectSettings: Boolean =
     projectSpecificStorage.getBoolean(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE)
 
-  import org.scalaide.util.eclipse.SWTUtils.fnToPropertyChangeListener
   val compilerSettingsListener: IPropertyChangeListener = { (event: PropertyChangeEvent) =>
     import org.scalaide.util.Utils.WithAsInstanceOfOpt
 

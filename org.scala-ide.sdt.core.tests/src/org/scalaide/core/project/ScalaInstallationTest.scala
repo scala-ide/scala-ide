@@ -1,5 +1,6 @@
 package org.scalaide.core.project
 
+import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
 
 import org.eclipse.core.runtime.IPath
@@ -12,6 +13,7 @@ import org.osgi.framework.Bundle
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.project.BundledScalaInstallation
+import org.scalaide.core.internal.project.LabeledScalaInstallation
 import org.scalaide.core.internal.project.MultiBundleScalaInstallation
 import org.scalaide.core.internal.project.ScalaInstallation
 import org.scalaide.util.eclipse.OSGiUtils
@@ -29,37 +31,43 @@ class ScalaInstallationTest {
       case SpecificScalaVersion(2, 10, _, _) =>
         assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case SpecificScalaVersion(2, 11, _, _) =>
-        assertEquals("Wrong number of Scala bundles", 1, bundledInstallations.length)
-        val scalaInstallation = bundledInstallations(0)
-
-        scalaInstallation.version match {
-          case SpecificScalaVersion(2, 10, _, _) =>
-          case _ =>
-            fail(s"Unexpected bundled Scala version: ${scalaInstallation.version}")
-        }
-
-        val bundlePath = OSGiUtils.pathInBundle(Platform.getBundle("org.scala-ide.scala210.jars"), "target").get.removeLastSegments(1)
-
-        assertEquals("Wrong library jar", bundlePath.append(BundledScalaInstallation.ScalaLibraryPath), scalaInstallation.library.classJar)
-        assertEquals("Wrong compiler jar", bundlePath.append(BundledScalaInstallation.ScalaCompilerPath), scalaInstallation.compiler.classJar)
-
-        val expectedAllJars = Seq(
-          bundlePath.append(BundledScalaInstallation.ScalaLibraryPath),
-          bundlePath.append(BundledScalaInstallation.ScalaCompilerPath),
-          bundlePath.append(BundledScalaInstallation.ScalaReflectPath),
-          bundlePath.append(BundledScalaInstallation.ScalaSwingPath)).sortBy(_.toOSString())
-
-        assertEquals("Wrong all jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
-
-        val expectedAllSourceJars = Seq(
-          bundlePath.append(BundledScalaInstallation.ScalaLibrarySourcesPath),
-          bundlePath.append(BundledScalaInstallation.ScalaCompilerSourcesPath),
-          bundlePath.append(BundledScalaInstallation.ScalaReflectSourcesPath),
-          bundlePath.append(BundledScalaInstallation.ScalaSwingSourcesPath)).sortBy(_.toOSString())
-
-        assertEquals("Wrong all source jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
-
+        assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case SpecificScalaVersion(2, 12, _, _) =>
+        assertEquals("Wrong number of Scala bundles", 2, bundledInstallations.length)
+        def version(f: PartialFunction[ScalaVersion, Boolean]) = (installation: LabeledScalaInstallation) =>
+          f.lift(installation.version).getOrElse(false)
+
+        def assertBundle(bundleName: String, f: PartialFunction[ScalaVersion, Boolean], versionShort: String, libs: Seq[String], sources: Seq[String]) = {
+          val scalaInstallationOpt = bundledInstallations.find { version(f) }
+          if (scalaInstallationOpt.isEmpty)
+            fail(s"Not found bundle $bundleName")
+          val scalaInstallation = scalaInstallationOpt.get
+
+          val bundlePath = OSGiUtils.pathInBundle(Platform.getBundle(bundleName), "target").get.removeLastSegments(1)
+
+          assertEquals(s"Wrong $versionShort library jar", bundlePath.append(BundledScalaInstallation.ScalaLibraryPath), scalaInstallation.library.classJar)
+          assertEquals(s"Wrong $versionShort compiler jar", bundlePath.append(BundledScalaInstallation.ScalaCompilerPath), scalaInstallation.compiler.classJar)
+
+          val expectedAllJars = libs.map { lib =>
+            bundlePath.append(lib)
+          }.sortBy(_.toOSString())
+
+          assertEquals(s"Wrong all $versionShort jars", expectedAllJars, scalaInstallation.allJars.map(_.classJar).sortBy(_.toOSString()))
+
+          val expectedAllSourceJars = sources.map { source =>
+            bundlePath.append(source)
+          }.sortBy(_.toOSString())
+
+          assertEquals(s"Wrong all $versionShort source jars", expectedAllSourceJars, scalaInstallation.allJars.flatMap(_.sourceJar).sortBy(_.toOSString()))
+        }
+        assertBundle("org.scala-ide.scala210.jars", { case SpecificScalaVersion(2, 10, _, _) => true }, "2.10",
+          Seq(BundledScalaInstallation.ScalaLibraryPath, BundledScalaInstallation.ScalaCompilerPath, BundledScalaInstallation.ScalaReflectPath, BundledScalaInstallation.ScalaSwingPath),
+          Seq(BundledScalaInstallation.ScalaLibrarySourcesPath, BundledScalaInstallation.ScalaCompilerSourcesPath, BundledScalaInstallation.ScalaReflectSourcesPath, BundledScalaInstallation.ScalaSwingSourcesPath))
+        assertBundle("org.scala-ide.scala211.jars", { case SpecificScalaVersion(2, 11, _, _) => true }, "2.11",
+          Seq(BundledScalaInstallation.ScalaLibraryPath, BundledScalaInstallation.ScalaCompilerPath, BundledScalaInstallation.ScalaReflectPath),
+          Seq(BundledScalaInstallation.ScalaLibrarySourcesPath, BundledScalaInstallation.ScalaCompilerSourcesPath, BundledScalaInstallation.ScalaReflectSourcesPath))
+
+      case SpecificScalaVersion(2, 13, _, _) =>
         assertEquals("Unexpected Scala bundle", 0, bundledInstallations.length)
       case v =>
         fail(s"Unsupported Scala version: $v")
@@ -80,6 +88,9 @@ class ScalaInstallationTest {
       case SpecificScalaVersion(2, 12, _, _) =>
         assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
         checkMultiBundleInstallation(2, 12, multiBundleInstallations.head)
+      case SpecificScalaVersion(2, 13, _, _) =>
+        assertEquals("Wrong number of Scala bundles", 1, multiBundleInstallations.length)
+        checkMultiBundleInstallation(2, 13, multiBundleInstallations.head)
       case v =>
         fail(s"Unsupported Scala version: $v")
     }

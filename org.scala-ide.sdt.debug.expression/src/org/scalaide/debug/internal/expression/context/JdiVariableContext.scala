@@ -4,15 +4,16 @@
 package org.scalaide.debug.internal.expression
 package context
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.reflect.runtime.universe.TermName
 import scala.util.Try
 
+import org.eclipse.jdi.internal.LocalVariableImpl
 import org.scalaide.debug.internal.expression.TypeNames
 import org.scalaide.debug.internal.expression.Variable
 
-import com.sun.jdi.ObjectReference
 import com.sun.jdi.ReferenceType
+import com.sun.jdi.StackFrame
 import com.sun.jdi.Type
 import com.sun.jdi.Value
 
@@ -38,14 +39,27 @@ private[context] trait JdiVariableContext
   override def implementValue(name: TermName): Option[String] = transformationContext.implementValue(name)
 
   override final def localVariablesNames(): Set[String] =
-    currentFrame().visibleVariables.map(_.name)(collection.breakOut)
+    currentFrame().visibleVariables.asScala.map(_.name)(collection.breakOut)
+
+  private def tryFindObjectReferenceSignatureForLambda(current: StackFrame) = {
+    current.visibleVariables.asScala.collectFirst {
+      case lambdaLocal: LocalVariableImpl =>
+        lambdaLocal.method.declaringType.signature
+    }
+  }
 
   /** See [[org.scalaide.debug.internal.expression.context.VariableContext]] */
-  override def thisPackage: Option[String] = thisObject.flatMap { obj =>
-    val signature = obj.`type`.signature
-    signature.head match {
-      case 'L' => Some(signature.tail.split("/").init.mkString(".")).filterNot(_.isEmpty)
-      case _ => None
+  override def thisPackage: Option[String] = {
+    val current = currentFrame
+    Option(current.thisObject).map {
+      _.`type`.signature
+    }.orElse {
+      tryFindObjectReferenceSignatureForLambda(current)
+    }.flatMap { signature =>
+      signature.head match {
+        case 'L' => Some(signature.tail.split("/").init.mkString(".")).filterNot(_.isEmpty)
+        case _ => None
+      }
     }
   }
 
@@ -98,9 +112,6 @@ private[context] trait JdiVariableContext
     if (name.endsWith("$")) escape(name)
     else name
   }
-
-  /** Reference to object referenced by `this` */
-  private def thisObject: Option[ObjectReference] = Option(currentFrame.thisObject)
 
   /**
    * Checks if type exists on classpath.

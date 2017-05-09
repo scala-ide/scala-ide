@@ -50,7 +50,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
       }
     }
 
-    val refactoring = withCompiler { compiler =>
+    val refactoring: implementations.MoveClass with GlobalIndexes { var index: IndexLookup } = withCompiler { compiler =>
       new implementations.MoveClass with GlobalIndexes {
         val global = compiler
 

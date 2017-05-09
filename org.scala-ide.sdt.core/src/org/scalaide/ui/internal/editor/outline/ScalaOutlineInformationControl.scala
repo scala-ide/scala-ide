@@ -17,7 +17,6 @@ import org.eclipse.ui.texteditor.AbstractTextEditor
 
 import org.scalaide.core.internal.ScalaPlugin
 import org.scalaide.ui.internal.preferences.EditorPreferencePage
-import org.scalaide.util.eclipse.SWTUtils._
 
 /**
  * ScalaOutlineInformationControl is based on AbstractInformationControl and JavaOutlineInformationControl.

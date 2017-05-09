@@ -5,14 +5,14 @@
   <parent>
     <groupId>org.scala-ide</groupId>
     <artifactId>org.scala-ide.p2-toolchain</artifactId>
-    <version>4.5.1-SNAPSHOT</version>
+    <version>4.6.0-SNAPSHOT</version>
     <relativePath>../org.scala-ide.p2-toolchain/pom.xml</relativePath>
   </parent>
 
   <artifactId>org.scala-ide.scala212.build</artifactId>
   <description>The local p2 repo for Scala 2.12.x</description>
   <packaging>pom</packaging>
-  <version>4.5.1-SNAPSHOT</version>
+  <version>4.6.0-SNAPSHOT</version>
 
   <dependencies>
     <!-- toolchain, Scala library -->
@@ -43,10 +43,17 @@
       <artifactId>scala-parser-combinators_${scala212.binary.version}</artifactId>
       <version>${scala212.scala-parser-combinators.version}</version>
     </dependency>
+    <!-- scala 210 -->
     <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-swing_${scala212.binary.version}</artifactId>
-      <version>${scala212.scala-swing.version}</version>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala210.jars</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- scala 211 -->
+    <dependency>
+      <groupId>org.scala-ide</groupId>
+      <artifactId>org.scala-ide.scala211.jars</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -76,12 +83,6 @@
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-parser-combinators_${scala212.binary.version}</artifactId>
       <version>${scala212.scala-parser-combinators.version}</version>
-      <classifier>sources</classifier>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang.modules</groupId>
-      <artifactId>scala-swing_${scala212.binary.version}</artifactId>
-      <version>${scala212.scala-swing.version}</version>
       <classifier>sources</classifier>
     </dependency>
   </dependencies>

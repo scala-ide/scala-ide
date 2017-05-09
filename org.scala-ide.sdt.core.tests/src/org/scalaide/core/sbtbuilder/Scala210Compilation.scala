@@ -1,6 +1,8 @@
 package org.scalaide.core
 package sbtbuilder
 
+import java.io.File
+
 import scala.tools.nsc.settings.SpecificScalaVersion
 
 import org.eclipse.core.resources.IMarker
@@ -12,7 +14,6 @@ import org.junit.Before
 import org.junit.Test
 import org.scalaide.core.testsetup.SDTTestUtils
 import org.scalaide.core.util.when
-import java.io.File
 
 object Scala210Compilation extends testsetup.TestProjectSetup("scala210compilation")
 

@@ -90,12 +90,11 @@ class BitwiseShiftLeftWithZerosTest extends BaseIntegrationTest(BitwiseShiftLeft
     expectReflectiveCompilationError("double << double2")
   }
 
-  // these result types below are Scala bug - not ours (see SI-8462)
   @Test
-  def `'c' << 2L`(): Unit = eval("'c' << 2L", 'c' << 2L, Java.primitives.long)
+  def `'c' << 2L`(): Unit = eval("'c' << 2L", 'c' << 2L, Java.primitives.int)
 
   @Test
-  def `1 << 2L`(): Unit = eval("1 << 2L", 1 << 2L, Java.primitives.long)
+  def `1 << 2L`(): Unit = eval("1 << 2L", 1 << 2L, Java.primitives.int)
 }
 
 object BitwiseShiftLeftWithZerosTest extends BaseIntegrationTestCompanion

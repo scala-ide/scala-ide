@@ -3,7 +3,7 @@ Eclipse-ExtensibleAPI: true
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Plugin
 Bundle-SymbolicName: org.scala-ide.sdt.core;singleton:=true
-Bundle-Version: 4.5.1.qualifier
+Bundle-Version: 4.6.0.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
@@ -44,6 +44,8 @@ Require-Bundle: org.eclipse.core.expressions,
  org.scala-lang.modules.scala-xml;bundle-version="[1.0.2,1.0.10]",
  org.scala-ide.zinc.library,
  org.scala-ide.zinc.compiler.bridge,
+ org.scala-ide.scala210.jars,
+ org.scala-ide.scala211.jars,
  scalariform,
  org.eclipse.ui.browser,
  org.eclipse.nebula.widgets.tablecombo,
@@ -175,7 +177,22 @@ Export-Package: org.scalaide.core,
  org.scalaide.util.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
- target/lib/miglayout-3.7.4.jar,
- target/lib/log4j-1.2.17.jar,
- target/lib/json-io-4.1.6.jar
+ target/lib/miglayout-@MIGLAYOUT_VERSION@.jar,
+ target/lib/log4j-@LOG4J_VERSION@.jar,
+ target/lib/json-io-@JSON_IO_VERSION@.jar,
+ target/lib/zinc_2.12-@ZINC_VERSION@.jar,
+ target/lib/zinc-core_2.12-@ZINC_VERSION@.jar,
+ target/lib/zinc-classpath_2.12-@ZINC_VERSION@.jar,
+ target/lib/compiler-interface-@ZINC_VERSION@.jar,
+ target/lib/zinc-compile-core_2.12-@ZINC_VERSION@.jar,
+ target/lib/zinc-persist_2.12-@ZINC_VERSION@.jar,
+ target/lib/zinc-apiinfo_2.12-@ZINC_VERSION@.jar,
+ target/lib/zinc-classfile_2.12-@ZINC_VERSION@.jar,
+ target/lib/util-interface-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-logging_2.12-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-control_2.12-@SBT_UTIL_VERSION@.jar,
+ target/lib/util-relation_2.12-@SBT_UTIL_VERSION@.jar,
+ target/lib/io_2.12-@SBT_IO_VERSION@.jar,
+ target/lib/sbinary_2.12-@SBINARY_VERSION@.jar,
+ target/lib/scalap-@SCALA_VERSION@.jar
 

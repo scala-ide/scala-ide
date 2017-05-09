@@ -157,7 +157,7 @@ private[context] trait Proxyfier {
    * If you change its name, package or behavior, make sure to change it also.
    */
   final def thisObjectProxy(): ObjectJdiProxy =
-    ObjectJdiProxy(this, currentFrame().thisObject())
+    ObjectJdiProxy(this, JdiHelpers.thisObject(currentFrame).getOrElse(null))
 
   /**
    * Creates a proxy for given value (typed by user, not `com.sun.jdi.Value`).

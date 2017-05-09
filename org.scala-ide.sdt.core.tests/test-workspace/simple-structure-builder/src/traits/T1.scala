@@ -2,7 +2,7 @@ package traits
 
 /** A simple test for the structure builder */
 trait T1 {
-  def notImplemented = error("not implemented")
+  def notImplemented = ???
 
   val x: Int
   val y: Long

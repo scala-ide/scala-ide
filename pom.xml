@@ -13,7 +13,7 @@
 
   <groupId>org.scala-ide</groupId>
   <artifactId>org.scala-ide.build</artifactId>
-  <version>4.5.1-SNAPSHOT</version>
+  <version>4.6.0-SNAPSHOT</version>
   <description>Default config holder (value, profiles, versions, ...) for the build of Scala IDE for Eclipse</description>
   <packaging>pom</packaging>
 
@@ -32,10 +32,10 @@
     <log4j.version>1.2.17</log4j.version>
     <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <zinc.version>1.0.0-X6</zinc.version>
-    <sbt-util.version>0.1.0-M14</sbt-util.version>
-    <sbt-io.version>1.0.0-M7</sbt-io.version>
-    <sbinary.version>0.4.3</sbinary.version>
+    <zinc.version>1.0.0-X14</zinc.version>
+    <sbt-util.version>1.0.0-M23</sbt-util.version>
+    <sbt-io.version>1.0.0-M11</sbt-io.version>
+    <sbinary.version>0.4.4</sbinary.version>
     <scala-refactoring.version>0.13.0-SNAPSHOT</scala-refactoring.version>
 
     <!-- plugin versions -->
@@ -43,7 +43,7 @@
     <scala.plugin.version>3.2.0</scala.plugin.version>
     <aspectj.plugin.version>1.8</aspectj.plugin.version>
     <aspectj.version>1.8.7</aspectj.version>
-    <maven-bundle.plugin.version>2.3.7</maven-bundle.plugin.version>
+    <maven-bundle.plugin.version>3.2.0</maven-bundle.plugin.version>
     <properties-maven.plugin.version>1.1.10</properties-maven.plugin.version>
     <buildnumber-maven.plugin.version>1.1</buildnumber-maven.plugin.version>
     <maven-clean.plugin.version>2.5</maven-clean.plugin.version>
@@ -63,15 +63,14 @@
     <!-- Scala 2.11.x -->
     <scala211.version>2.11.8</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
-    <scala211.scala-xml.version>1.0.3</scala211.scala-xml.version>
-    <scala211.scala-parser-combinators.version>1.0.3</scala211.scala-parser-combinators.version>
+    <scala211.scala-xml.version>1.0.6</scala211.scala-xml.version>
+    <scala211.scala-parser-combinators.version>1.0.5</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
     <!-- Scala 2.12.x -->
-    <scala212.version>2.12.0-SNAPSHOT</scala212.version>
-    <scala212.binary.version>2.11</scala212.binary.version>
-    <scala212.scala-xml.version>1.0.3</scala212.scala-xml.version>
-    <scala212.scala-parser-combinators.version>1.0.3</scala212.scala-parser-combinators.version>
-    <scala212.scala-swing.version>1.0.1</scala212.scala-swing.version>
+    <scala212.version>2.12.2</scala212.version>
+    <scala212.binary.version>2.12</scala212.binary.version>
+    <scala212.scala-xml.version>1.0.5</scala212.scala-xml.version>
+    <scala212.scala-parser-combinators.version>1.0.5</scala212.scala-parser-combinators.version>
 
     <!-- dependencies repos, can be overwritten by profiles -->
     <eclipse.codename>Select an Eclipse profile</eclipse.codename>
@@ -235,6 +234,7 @@
         <sdt.debug.dir>org.scala-ide.sdt.debug</sdt.debug.dir>
         <sdt.debug.expression.dir>org.scala-ide.sdt.debug.expression</sdt.debug.expression.dir>
         <sdt.update-site.dir>org.scala-ide.sdt.update-site</sdt.update-site.dir>
+        <sdt.feature.dir>org.scala-ide.sdt.feature</sdt.feature.dir>
       </properties>
       <build>
         <plugins>
@@ -242,6 +242,23 @@
             <artifactId>maven-resources-plugin</artifactId>
             <version>2.6</version>
             <executions>
+              <execution>
+                <id>copy-resources-sdt-feature</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>${sdt.feature.dir}</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>${sdt.feature.dir}/resources</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                  <overwrite>true</overwrite>
+                </configuration>
+              </execution>
               <execution>
                 <id>copy-resources-zinc-feature</id>
                 <phase>validate</phase>
@@ -320,7 +337,7 @@
                   <outputDirectory>${scala211.feature.dir}</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>${scala211.feature.dir}/resources/${scala.short.version}</directory>
+                      <directory>${scala211.feature.dir}/resources</directory>
                       <filtering>true</filtering>
                     </resource>
                   </resources>
@@ -401,6 +418,7 @@
                           <filter token="SBT_UTIL_VERSION" value="${sbt-util.version}"/>
                           <filter token="SBT_IO_VERSION" value="${sbt-io.version}"/>
                           <filter token="SBINARY_VERSION" value="${sbinary.version}"/>
+                          <filter token="SCALA_VERSION" value="${scala.version}"/>
                         </filterset>
                     </copy>
                     <copy file="${sdt.debug.dir}/resources/META-INF/MANIFEST-${version.suffix}.MF"
@@ -574,7 +592,7 @@
               <arg>-language:_</arg>
               <arg>-Xlint</arg>
               <arg>-Xfuture</arg>
-              <arg>-Xfatal-warnings</arg>
+              <!--arg>-Xfatal-warnings</arg-->
               <arg>-Yno-adapted-args</arg>
               <arg>-Ywarn-dead-code</arg>
               <arg>-Ywarn-unused-import</arg>

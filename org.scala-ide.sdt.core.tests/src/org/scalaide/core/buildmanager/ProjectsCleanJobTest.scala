@@ -59,12 +59,4 @@ class ProjectsCleanJobTest {
       util.control.Exception.ignoring(classOf[Exception]) { SDTTestUtils.deleteProjects(prjA, prjB) }
     }
   }
-
-  private implicit def anonResourceChangeListener(f: IResourceChangeEvent => Unit): IResourceChangeListener = new IResourceChangeListener() {
-    override def resourceChanged(event: IResourceChangeEvent): Unit = f(event)
-  }
-
-  private implicit def anonLogListener(f: (IStatus, String) => Unit): ILogListener = new ILogListener {
-    override def logging(status: IStatus, plugin: String): Unit = f(status, plugin)
-  }
 }

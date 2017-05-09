@@ -34,10 +34,10 @@ class ScalaJavaCompletionTests {
       // get the proposal
       val proposals = completionProposalComputer.mixedInCompletions(unit, positions(i) + 1, new NullProgressMonitor)
 
-      import scala.collection.JavaConversions._
+      import scala.collection.JavaConverters._
 
       // extract the data and sort
-      val resultCompletion = proposals.map(p => p.getDisplayString).sorted
+      val resultCompletion = proposals.asScala.map(p => p.getDisplayString).sorted
 
       // check the completions
       assertEquals("Wrong set of completions for " + i, expectedCompletions(i), resultCompletion)

@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.scala212.feature"
       label="Scala ${scala212.version}"
-      version="4.5.1.qualifier"
+      version="4.6.0.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-lang.scala-library">
 
@@ -93,10 +93,17 @@ SUCH DAMAGE.
          unpack="false"/>
 
    <plugin
-         id="org.scala-lang.modules.scala-swing"
+         id="org.scala-ide.scala210.jars"
          download-size="0"
          install-size="0"
          version="0.0.0"
-         unpack="false"/>
+         unpack="true"/>
+
+   <plugin
+         id="org.scala-ide.scala211.jars"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="true"/>
 
 </feature>

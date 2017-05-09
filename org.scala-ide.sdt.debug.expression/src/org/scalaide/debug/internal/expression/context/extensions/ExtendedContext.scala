@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context.extensions
 
-import scala.collection.JavaConversions._
 import scala.reflect.runtime.universe
 
 import org.scalaide.debug.internal.expression.Names.Debugger.contextParamName
@@ -45,6 +44,7 @@ case class ExtendedContext(currentFrame: StackFrame)
    * Returns None when we have cannot determine this object context.
    */
   final def nestedMethod(declaration: NestedMethodDeclaration): Option[NestedMethodImplementation] = {
+    import scala.collection.JavaConverters._
 
     def isLocationInMethodDeclaration(location: Location): Boolean =
       declaration.startLine <= location.lineNumber() && location.lineNumber() <= declaration.endLine
@@ -53,7 +53,7 @@ case class ExtendedContext(currentFrame: StackFrame)
 
     def isCandidate(m: Method): Boolean = {
       def nameMatch = m.name().startsWith(declaration.name + '$')
-      def placementCorrect = !m.allLineLocations().isEmpty && m.allLineLocations().forall(isLocationInMethodDeclaration)
+      def placementCorrect = !m.allLineLocations().isEmpty && m.allLineLocations().asScala.forall(isLocationInMethodDeclaration)
       def declaredBeforeCurrentLine = m.location().lineNumber() < currentExecutionLine
 
       nameMatch && placementCorrect && declaredBeforeCurrentLine
@@ -62,10 +62,10 @@ case class ExtendedContext(currentFrame: StackFrame)
       transformation =>
         val nestedMethodsImplementations = for {
           thisEntry <- transformation.thisHistory
-          candidateMethod <- thisEntry.referenceType.methods() if isCandidate(candidateMethod)
+          candidateMethod <- thisEntry.referenceType.methods().asScala if isCandidate(candidateMethod)
         } yield NestedMethodImplementation(transformation.nameMap(thisEntry),
             candidateMethod.name(),
-            candidateMethod.arguments().map(_.name()))
+            candidateMethod.arguments().asScala.map(_.name()))
 
         nestedMethodsImplementations match {
           case Seq(onlyCandidate) =>
@@ -114,7 +114,7 @@ case class ExtendedContext(currentFrame: StackFrame)
    * none for java static methods
    */
   private def createInitialTransformationContext: Option[ThisTransformation] = {
-    Option(currentFrame.thisObject()).map(_.referenceType()) match {
+    JdiHelpers.thisObject(currentFrame).map(_.referenceType()) match {
       case ScalaTrait(dollarThis) =>
         logger.info("Applying transformation for Traits")
 
@@ -135,8 +135,9 @@ case class ExtendedContext(currentFrame: StackFrame)
 
   /** class existing in VM */
   private object ExistingClass {
+    import scala.collection.JavaConverters._
     def unapply(name: String): Option[ReferenceType] =
-      currentFrame.virtualMachine().classesByName(name).headOption
+      currentFrame.virtualMachine().classesByName(name).asScala.headOption
   }
 
   /** class that is nested in other class */

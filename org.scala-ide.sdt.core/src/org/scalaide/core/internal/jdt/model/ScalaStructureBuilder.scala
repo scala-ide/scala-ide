@@ -233,7 +233,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
           } else {
             val className = m.nameString
 
-            val classElem = new ScalaClassElement(element, className, true, Option(m.tpe))
+            val classElem = new ScalaClassElement(element, className, true, Option(m.tpe))(pc)
             resolveDuplicates(classElem)
             addChild(classElem)
 
@@ -405,11 +405,11 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
 
         val classElem =
           if (sym hasFlag Flags.TRAIT)
-            new ScalaTraitElement(element, name, Option(sym.tpe))
+            new ScalaTraitElement(element, name, Option(sym.tpe))(pc)
           else if (isAnon) {
-            new ScalaAnonymousClassElement(element, superName, Option(sym.tpe))
+            new ScalaAnonymousClassElement(element, superName, Option(sym.tpe))(pc)
           } else
-            new ScalaClassElement(element, name, false, Option(sym.tpe))
+            new ScalaClassElement(element, name, false, Option(sym.tpe))(pc)
 
         resolveDuplicates(classElem)
         addChild(classElem)
@@ -490,9 +490,9 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
         val isSynthetic = sym.hasFlag(Flags.SYNTHETIC)
         val moduleElem =
           if (sym.isPackageObject)
-            new ScalaPackageModuleElement(element, m.name.toString, isSynthetic, Option(sym.tpe))
+            new ScalaPackageModuleElement(element, m.name.toString, isSynthetic, Option(sym.tpe))(pc)
           else
-            new ScalaModuleElement(element, m.name.toString, isSynthetic, Option(sym.tpe))
+            new ScalaModuleElement(element, m.name.toString, isSynthetic, Option(sym.tpe))(pc)
         resolveDuplicates(moduleElem)
         addChild(moduleElem)
 
@@ -617,7 +617,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
 
         val (typeElem, typeElemInfo) = {
           if (!asField) {
-            new ScalaTypeElement(element, name, name, None) -> new ScalaElementInfo
+            new ScalaTypeElement(element, name, name, None)(pc) -> new ScalaElementInfo
           } else {
             new ScalaTypeFieldElement(element, name, name) -> {
               val info = new ScalaSourceFieldElementInfo
