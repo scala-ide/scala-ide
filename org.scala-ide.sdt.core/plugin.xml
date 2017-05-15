@@ -636,6 +636,7 @@
          point="org.eclipse.core.resources.builders">
       <builder hasNature="true">
          <run class="org.scalaide.core.internal.builder.ScalaBuilder"/>
+         <dynamicReference class="org.eclipse.jdt.internal.core.DynamicProjectReferences"/>
       </builder>
    </extension>
    <extension
