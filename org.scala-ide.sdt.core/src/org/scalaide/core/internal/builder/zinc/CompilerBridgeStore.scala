@@ -25,7 +25,7 @@ import xsbti.Logger
 /** This class manages a store of compiler-bridge jars (as consumed by zinc). Each specific
  *  version of Scala needs a compiler-bridge jar compiled against that version.
  *
- *  `base` is used to store compiler-bridges on disk. The cache is based on the
+ *  `base` is used to store compiler-bridges on disk. The cache is based on the Zinc version included in IDE and
  *  Scala version for a given installation. The first time a client requests a compiler-bridge,
  *  the store will instantiate a raw compiler and compile it from the source. This may take some time,
  *  in the order of seconds.
@@ -93,7 +93,7 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
   def getStats: (Int, Int) = (hits, misses)
 
   private def cacheDir(installation: IScalaInstallation): IPath =
-    compilerBridgesDir / installation.version.unparse
+    compilerBridgesDir / plugin.zincCompilerBridgeBundle.getVersion.toString / installation.version.unparse
 
   private def bridgeJar(installation: IScalaInstallation): IPath = {
     cacheDir(installation) / compilerBridgeName

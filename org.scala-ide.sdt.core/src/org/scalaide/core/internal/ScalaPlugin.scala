@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IResourceChangeListener
 import org.eclipse.core.resources.IResourceDelta
 import org.eclipse.core.resources.IResourceDeltaVisitor
 import org.eclipse.core.resources.ResourcesPlugin
+import org.eclipse.core.runtime.Path
 import org.eclipse.core.runtime.Platform
 import org.eclipse.core.runtime.content.IContentType
 import org.eclipse.jdt.core.ElementChangedEvent
@@ -24,6 +25,7 @@ import org.eclipse.ui.PlatformUI
 import org.osgi.framework.BundleContext
 import org.scalaide.core.IScalaInstallation
 import org.scalaide.core.IScalaPlugin
+import org.scalaide.core.ScalaIdeDataStore
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.builder.zinc.CompilerBridgeStore
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
@@ -121,8 +123,8 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
     ScalaPlugin.plugin = null
   }
 
-  /** The compiler-bridge store, located in this plugin configuration area (usually inside the metadata directory */
-  lazy val compilerBridgeStore: CompilerBridgeStore = new CompilerBridgeStore(Platform.getStateLocation(sdtCoreBundle), this)
+  /** The compiler-bridge store, located in user data area */
+  lazy val compilerBridgeStore: CompilerBridgeStore = new CompilerBridgeStore(new Path(ScalaIdeDataStore.dataStoreLocation), this)
 
   /** A LRU cache of class loaders for Scala builders */
   lazy val classLoaderStore: FixedSizeCache[IScalaInstallation,ClassLoader] = new FixedSizeCache(initSize = 2, maxSize = 3)
