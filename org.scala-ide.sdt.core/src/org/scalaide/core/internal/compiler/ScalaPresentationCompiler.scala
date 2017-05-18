@@ -66,7 +66,10 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
   with HasLogger
   with Scaladoc { self =>
 
-  override lazy val analyzer = new {
+  import scala.tools.nsc.interactive.InteractiveAnalyzer
+  type ThisGlobal = { val global: ScalaPresentationCompiler.this.type }
+  type AnalyzerType = InteractiveAnalyzer with ThisGlobal
+  override lazy val analyzer: AnalyzerType = new {
     val global: ScalaPresentationCompiler.this.type = ScalaPresentationCompiler.this
   } with InteractiveScaladocAnalyzer with CommentPreservingTypers {
     // Copy pasted from the overriden method to change the line marked with the 'Modified' comment.
