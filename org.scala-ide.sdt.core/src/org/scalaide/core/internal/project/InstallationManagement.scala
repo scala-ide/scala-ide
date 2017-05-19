@@ -1,24 +1,26 @@
 package org.scalaide.core.internal.project
 
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
-import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.util.internal.CompilerUtils
-import scala.util.Try
-import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.core.IScalaPlugin
-import org.eclipse.core.resources.IMarker
+import java.util.concurrent.atomic.AtomicReference
+
 import scala.tools.nsc.settings.ScalaVersion
 import scala.util.Failure
-import org.eclipse.jface.util.PropertyChangeEvent
 import scala.util.Success
-import org.scalaide.core.resources.MarkerFactory
+import scala.util.Try
+
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.Path
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 trait InstallationManagement { this: ScalaProject =>
 
@@ -94,7 +96,7 @@ trait InstallationManagement { this: ScalaProject =>
     (ScalaInstallation.resolve _).get(desiredinstallationChoice())
   }
 
-  private def turnOnProjectSpecificSettings(reason: String): Unit ={
+  private def turnOnProjectSpecificSettings(reason: String): Unit = {
     if (!usesProjectSettings) {
       val pName = this.toString
       eclipseLog.debug(s"Turning on project-specific settings for $pName because of $reason")
@@ -158,13 +160,22 @@ trait InstallationManagement { this: ScalaProject =>
     projectSpecificStorage.addPropertyChangeListener(compilerSettingsListener)
   }
 
+  private lazy val actualAdditionalParams: AtomicReference[() => String] = new AtomicReference(() => {
+    actualAdditionalParams.getAndSet(() => storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+    val projectSpecific = storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
+    if (projectSpecific.isEmpty())
+      IScalaPlugin().getPreferenceStore().getString(CompilerSettings.ADDITIONAL_PARAMS)
+    else
+      projectSpecific
+  })
+
   private def turnOnProjectSpecificSettingsAndSetXSource(scalaVersion: ScalaVersion, reason: String) = {
     turnOnProjectSpecificSettings("requested Xsource change")
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
     val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
     eclipseLog.debug(s"Adding $optionString to compiler arguments of ${this.underlying.getName()} because of: $reason")
-    val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
+    val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(actualAdditionalParams.get()())
     val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }

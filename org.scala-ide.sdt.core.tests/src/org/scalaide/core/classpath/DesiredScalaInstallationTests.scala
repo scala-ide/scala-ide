@@ -18,8 +18,10 @@ import org.scalaide.core.internal.project.ScalaInstallation.platformInstallation
 import org.scalaide.core.internal.project.ScalaInstallationChoice
 import org.scalaide.core.internal.project.ScalaProject
 import org.scalaide.core.testsetup.SDTTestUtils
+import org.scalaide.core.util.when
 import org.scalaide.util.eclipse.EclipseUtils
 import org.scalaide.util.internal.SettingConverterUtil
+import org.scalaide.ui.internal.preferences.CompilerSettings
 
 object DesiredScalaInstallationTests {
   private var projects: List[IScalaProject] = List()
@@ -174,4 +176,69 @@ class DesiredScalaInstallationTests {
     assertTrue(s"Switching to a former bundle should show that bundle's version on the compiler classpath Container. Found ${newVersion map {_.unparse}}. Expected ${otherInstallation.map(_.version)}", newVersion == otherInstallation.map{_.version})
   }
 
+  @Test
+  def shouldHanldeCompilerAdditionalParams_v1(): Unit = {
+    val TestingParam = "-Ymacro-debug-lite"
+    val testedProject = createProject()
+    when("create project") `then` "set global 'Additional command line parameters' to TestingParam" in {
+      assertTrue(!testedProject.usesProjectSettings)
+      val originParams = testedProject.storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
+      assertTrue(!originParams.contains(TestingParam))
+      testedProject.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, TestingParam)
+    }
+    when("set other scala installation") `then` "global 'Additional command line parameters' are included in project specific settings" in {
+      val installations = ScalaInstallation.availableBundledInstallations
+      assertTrue(installations.nonEmpty)
+      val current_dsi = testedProject.effectiveScalaInstallation()
+      val other = installations.find(i => !(i == current_dsi))
+      assertTrue(other.nonEmpty)
+      other.map { si =>
+        testedProject.setDesiredInstallation(ScalaInstallationChoice(si.version), "compilerAdditionalParams")
+      }
+      assertTrue(testedProject.usesProjectSettings)
+      val actual = testedProject.storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
+      assertTrue(actual.contains(TestingParam) && actual != TestingParam)
+    }
+    when("set to yet another scala installation") `then` "project specific settings should be used only" in {
+      val installations = ScalaInstallation.availableBundledInstallations
+      assertTrue(installations.nonEmpty)
+      val current_dsi = testedProject.effectiveScalaInstallation()
+      val other = installations.find(i => !(i == current_dsi))
+      assertTrue(other.nonEmpty)
+      other.map { si =>
+        testedProject.setDesiredInstallation(ScalaInstallationChoice(si.version), "compilerAdditionalParams")
+      }
+      assertTrue(testedProject.usesProjectSettings)
+      val actual = testedProject.storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
+      assertTrue(actual.contains(TestingParam))
+    }
+  }
+
+  @Test
+  def shouldHanldeCompilerAdditionalParams_v2(): Unit = {
+    val TestingParam = "-Ymacro-debug-lite"
+    val testedProject = createProject()
+    when("create project") `then` "global 'Additional command line parameters' is empty" in {
+      assertTrue(!testedProject.usesProjectSettings)
+      testedProject.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "")
+    }
+    when("set to use project specific") `then` "set 'Additional command line parameters' to TestingParam" in {
+      testedProject.projectSpecificStorage.setValue(SettingConverterUtil.USE_PROJECT_SETTINGS_PREFERENCE, true)
+      assertTrue(testedProject.usesProjectSettings)
+      testedProject.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, TestingParam)
+    }
+    when("set other scala installation") `then` "project specific settings contains TestingParam" in {
+      val installations = ScalaInstallation.availableBundledInstallations
+      assertTrue(installations.nonEmpty)
+      val current_dsi = testedProject.effectiveScalaInstallation()
+      val other = installations.find(i => !(i == current_dsi))
+      assertTrue(other.nonEmpty)
+      other.map { si =>
+        testedProject.setDesiredInstallation(ScalaInstallationChoice(si.version), "compilerAdditionalParams")
+      }
+      assertTrue(testedProject.usesProjectSettings)
+      val actual = testedProject.storage.getString(CompilerSettings.ADDITIONAL_PARAMS)
+      assertTrue(actual.contains(TestingParam))
+    }
+  }
 }
