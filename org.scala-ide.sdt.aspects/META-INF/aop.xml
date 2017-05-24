@@ -32,5 +32,6 @@
 <aspect name="scala.tools.eclipse.contribution.weaving.pde.ui.PluginImportAspect"/>
 <aspect name="scala.tools.eclipse.contribution.weaving.jdt.launching.JUnitLaunchConfigurationTabAspect"/>
 <!-- aspect name="scala.tools.eclipse.contribution.weaving.jdt.jdi.JdiEntryGuardianAspect"/ -->
+<aspect name="scala.tools.eclipse.contribution.weaving.jdt.ui.document.CreateSlaveProjectionDocument"/>
 </aspects>
 </aspectj>
