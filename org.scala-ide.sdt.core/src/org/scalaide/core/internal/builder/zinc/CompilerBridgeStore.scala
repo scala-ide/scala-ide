@@ -3,6 +3,7 @@ package org.scalaide.core.internal.builder.zinc
 import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
+import scala.util.Properties
 
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.IProgressMonitor
@@ -93,7 +94,10 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
   def getStats: (Int, Int) = (hits, misses)
 
   private def cacheDir(installation: IScalaInstallation): IPath =
-    compilerBridgesDir / plugin.zincCompilerBridgeBundle.getVersion.toString / installation.version.unparse
+    compilerBridgesDir /
+    s"jdk-${Properties.javaVersion}" /
+    s"zinc-${plugin.zincCompilerBridgeBundle.getVersion}" /
+    s"scala-${installation.version.unparse}"
 
   private def bridgeJar(installation: IScalaInstallation): IPath = {
     cacheDir(installation) / compilerBridgeName
