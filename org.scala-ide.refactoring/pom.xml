@@ -28,7 +28,8 @@
       <name>Scala IDE refactoring repository</name>
       <url>${repo.scala-refactoring}</url>
       <snapshots>
-        <updatePolicy>daily</updatePolicy>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
       </snapshots>
     </repository>
   </repositories>
