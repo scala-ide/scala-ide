@@ -18,9 +18,9 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.eclipse.OSGiUtils
 
 import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.ClasspathOptionsUtil
 import sbt.internal.inc.RawCompiler
 import xsbti.Logger
+import xsbti.compile.ClasspathOptionsUtil
 
 /** This class manages a store of compiler-bridge jars (as consumed by zinc). Each specific
  *  version of Scala needs a compiler-bridge jar compiled against that version.

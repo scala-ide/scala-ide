@@ -13,6 +13,8 @@ object SbtUtils {
   def o2m[S](opt: Option[S]): Maybe[S] = if (opt.isEmpty) Maybe.nothing() else Maybe.just(opt.get)
   def jo2m[S](opt: Optional[S]): Maybe[S] = if (opt.isPresent()) Maybe.just(opt.get) else Maybe.nothing()
   def jo2o[S](opt: Optional[S]): Option[S] = if (opt.isPresent()) Some(opt.get) else None
+  def o2jo[S](opt: Option[S]): Optional[S] = if (opt.isEmpty) Optional.empty() else Optional.of(opt.get)
+  def m2jo[S](opt: Maybe[S]): Optional[S] = if (opt.isEmpty) Optional.empty() else Optional.of(opt.get)
 
   def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
     FileBasedStore(cacheFile).get().map(_ match {

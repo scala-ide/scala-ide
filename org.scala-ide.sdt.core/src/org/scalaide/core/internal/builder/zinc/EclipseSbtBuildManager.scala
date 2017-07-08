@@ -28,10 +28,10 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
 import sbt.internal.inc.Analysis
-import sbt.internal.inc.SourceInfo
 import xsbti.CompileFailed
 import xsbti.F0
 import xsbti.Logger
+import xsbti.compile.analysis.SourceInfo
 import xsbti.compile.CompileProgress
 
 /**
@@ -174,7 +174,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    * Create problem markers for the given source info.
    */
   private def createMarkers(sourceInfo: SourceInfo) = {
-    for (problem <- sourceInfo.reportedProblems)
+    for (problem <- sourceInfo.getReportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }
 

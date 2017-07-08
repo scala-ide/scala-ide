@@ -2,6 +2,7 @@ package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
 import java.util.zip.ZipFile
+import java.util.Optional
 
 import org.eclipse.core.resources.IContainer
 import org.eclipse.core.runtime.IPath
@@ -14,8 +15,6 @@ import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.CompilerCache
-import sbt.internal.inc.CompilerBridgeProvider
 import sbt.internal.inc.Locate
 import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
@@ -27,7 +26,11 @@ import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
 import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
+import xsbti.compile.OutputGroup
 import xsbti.compile.TransactionalManagerType
+import xsbti.compile.CompilerBridgeProvider
+import xsbti.compile.CompilerCache
+import xsbti.compile.ScalaInstance
 
 /**
  * Inputs-like class, but not implementing xsbti.compile.Inputs.
@@ -68,9 +71,9 @@ class SbtInputs(installation: IScalaInstallation,
     IncOptionsUtil.defaultIncOptions().
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withClassfileManagerType(Maybe.just(new TransactionalManagerType(tempDir, logger))).
-      withApiDumpDirectory(Maybe.nothing()).
-      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
+      withClassfileManagerType(Optional.of(new TransactionalManagerType(tempDir, logger))).
+      withApiDumpDirectory(Optional.empty()).
+      withRecompileOnMacroDef(Optional.of(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
   }
 
   def outputFolders = srcOutputs.map {
@@ -90,16 +93,16 @@ class SbtInputs(installation: IScalaInstallation,
     private def sourceOutputFolders =
       if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
 
-    override def outputGroups = sourceOutputFolders.map {
-      case (src, out) => new MultipleOutput.OutputGroup {
-        override def sourceDirectory = {
+    override def getOutputGroups = sourceOutputFolders.map {
+      case (src, out) => new OutputGroup {
+        override def getSourceDirectory = {
           val loc = src.getLocation
           if (loc != null)
             loc.toFile()
           else
             throw new IllegalStateException(s"The source folder location `$src` is invalid.")
         }
-        override def outputDirectory = {
+        override def getOutputDirectory = {
           val loc = out.getLocation
           if (loc != null)
             loc.toFile()
@@ -144,8 +147,12 @@ class SbtInputs(installation: IScalaInstallation,
       compilerBridge =>
         // prevent zinc from adding things to the (boot)classpath
         val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
+        val cbProvider = new CompilerBridgeProvider {
+          def fetchCompiledBridge(scalaInstance: ScalaInstance, logger: Logger): File = compilerBridge.toFile
+          def fetchScalaInstance(scalaVersion: String, logger: Logger): ScalaInstance = scalaInstance
+        }
         Compilers(
-          new AnalyzingCompiler(scalaInstance, CompilerBridgeProvider.constant(compilerBridge.toFile), cpOptions, _ ⇒ (), None),
+          new AnalyzingCompiler(scalaInstance, cbProvider, cpOptions, _ ⇒ (), None),
           new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
