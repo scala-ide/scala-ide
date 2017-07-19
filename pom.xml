@@ -87,7 +87,7 @@
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
-    <repo.scalariform>http://downloads.typesafe.com/scalaide/scalariform-${scala.short.version}x</repo.scalariform>
+    <repo.scalariform>https://raw.githubusercontent.com/scala-ide/scalariform/master/scalariform.update/target/site</repo.scalariform>
     <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>

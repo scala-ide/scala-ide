@@ -31,6 +31,7 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
         yield preference.preferenceType match {
         case BooleanPreference => new OverlayKey(BOOLEAN, preference.eclipseKey)
         case IntegerPreference(_, _) => new OverlayKey(INT, preference.eclipseKey)
+        case IntentPreference => new OverlayKey(STRING, preference.eclipseKey)
       }
     val overlayStore = new OverlayPreferenceStore(getPreferenceStore, keys.toArray)
     overlayStore.load()
@@ -55,21 +56,46 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     private def formatPreviewText: String = ScalaFormatter.format(previewText, getPreferences(overlayStore))
 
     protected def addCheckBox(parent: Composite, text: String, preference: BooleanPreferenceDescriptor): Unit = {
+      handleCheckBox(
+        parent, text, preference,
+        initialStateSelected = overlayStore(preference),
+        storePreference = btn => overlayStore(preference) = btn.getSelection,
+        setSelected = btn => btn.setSelection(overlayStore(preference))
+      )
+    }
+
+    protected def addCheckBox(parent: Composite, text: String, preference: IntentPreferenceDescriptor): Unit = {
+      handleCheckBox(
+        parent, text, preference,
+        initialStateSelected = overlayStore(preference) == Force.toString,
+        storePreference = btn => overlayStore(preference) = if (btn.getSelection) Force else Prevent,
+        setSelected = btn => btn.setSelection(overlayStore(preference) == Force.toString)
+      )
+    }
+
+    private def handleCheckBox[T <: PreferenceDescriptor[_]](
+      parent: Composite,
+      text: String,
+      preference: T,
+      initialStateSelected: Boolean,
+      storePreference: Button => Unit,
+      setSelected: Button => Unit): Unit = {
+
       import org.scalaide.util.eclipse.SWTUtils.fnToSelectionAdapter
 
       val checkBox = new Button(parent, SWT.CHECK | SWT.WRAP)
       checkBox.setText(text)
       checkBox.setToolTipText(preference.description + " (" + preference.key + ")")
-      checkBox.setSelection(overlayStore(preference))
+      checkBox.setSelection(initialStateSelected)
       checkBox.setLayoutData(new CC().spanX(2).growX.wrap)
+
       checkBox.addSelectionListener { e: SelectionEvent =>
-        overlayStore(preference) = checkBox.getSelection
+        storePreference(checkBox)
         previewDocument.set(formatPreviewText)
       }
 
       overlayStore.addPropertyChangeListener { e: PropertyChangeEvent =>
-        if (e.getProperty == preference.eclipseKey)
-          checkBox.setSelection(overlayStore(preference))
+        if (e.getProperty.equals(preference.eclipseKey)) setSelected(checkBox)
       }
 
       allEnableDisableControls += checkBox
@@ -112,6 +138,7 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
         if (e.getProperty == preference.eclipseKey)
           field.setText(overlayStore(preference).toString)
       }
+
       allEnableDisableControls ++= Set(label, field)
     }
 
@@ -133,19 +160,38 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     }
   }
 
-  object IndentPrefTab extends PrefTab("Indentation && Alignment", IndentPreviewText) {
+  object AlignmentPrefTab extends PrefTab("Alignment", AlignPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(9).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
 
-      addNumericField(composite, "Spaces to indent:", IndentSpaces)
-      addCheckBox(composite, "Indent using tabs", IndentWithTabs)
-      addCheckBox(composite, "Align parameters", AlignParameters)
-      addCheckBox(composite, "Double indent class declaration", DoubleIndentClassDeclaration)
-      addCheckBox(composite, "Align single-line case statements", AlignSingleLineCaseStatements)
-      addNumericField(composite, "Max arrow indent:", AlignSingleLineCaseStatements.MaxArrowIndent)
-      addCheckBox(composite, "Indent package blocks", IndentPackageBlocks)
-      addCheckBox(composite, "Indent local defs", IndentLocalDefs)
+      addCheckBox(composite, AlignArguments.description, AlignArguments)
+      addCheckBox(composite, AlignParameters.description, AlignParameters)
+      addCheckBox(composite, AlignSingleLineCaseStatements.description, AlignSingleLineCaseStatements)
+      addNumericField(
+        composite,
+        AlignSingleLineCaseStatements.MaxArrowIndent.description,
+        AlignSingleLineCaseStatements.MaxArrowIndent
+      )
+
+      addPreview(composite)
+    }
+  }
+
+  object IndentPrefTab extends PrefTab("Indentation", IndentPreviewText) {
+
+    def buildContents(composite: Composite): Unit = {
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(10).grow(1)))
+
+      addNumericField(composite, IndentSpaces.description, IndentSpaces)
+      addCheckBox(composite, IndentWithTabs.description, IndentWithTabs)
+      addCheckBox(composite, DoubleIndentConstructorArguments.description, DoubleIndentConstructorArguments)
+      addCheckBox(composite, DoubleIndentMethodDeclaration.description, DoubleIndentMethodDeclaration)
+      addCheckBox(composite, DanglingCloseParenthesis.description, DanglingCloseParenthesis)
+      addCheckBox(composite, FirstParameterOnNewline.description, FirstParameterOnNewline)
+      addCheckBox(composite, FirstArgumentOnNewline.description, FirstArgumentOnNewline)
+      addCheckBox(composite, IndentLocalDefs.description, IndentLocalDefs)
+      addCheckBox(composite, IndentPackageBlocks.description, IndentPackageBlocks)
 
       addPreview(composite)
     }
@@ -154,14 +200,16 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
   object SpacesPrefTab extends PrefTab("Spaces", SpacesPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(7).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(9).grow(1)))
 
-      addCheckBox(composite, "Space before colons", SpaceBeforeColon)
-      addCheckBox(composite, "Compact string concatenation", CompactStringConcatenation)
-      addCheckBox(composite, "Space inside brackets", SpaceInsideBrackets)
-      addCheckBox(composite, "Space inside parentheses", SpaceInsideParentheses)
-      addCheckBox(composite, "Preserve space before arguments", PreserveSpaceBeforeArguments)
-      addCheckBox(composite, "Spaces within pattern binders", SpacesWithinPatternBinders)
+      addCheckBox(composite, CompactStringConcatenation.description, CompactStringConcatenation)
+      addCheckBox(composite, PreserveSpaceBeforeArguments.description, PreserveSpaceBeforeArguments)
+      addCheckBox(composite, SpaceBeforeColon.description, SpaceBeforeColon)
+      addCheckBox(composite, SpaceBeforeContextColon.description, SpaceBeforeContextColon)
+      addCheckBox(composite, SpaceInsideBrackets.description, SpaceInsideBrackets)
+      addCheckBox(composite, SpaceInsideParentheses.description, SpaceInsideParentheses)
+      addCheckBox(composite, SpacesAroundMultiImports.description, SpacesAroundMultiImports)
+      addCheckBox(composite, SpacesWithinPatternBinders.description, SpacesWithinPatternBinders)
 
       addPreview(composite)
     }
@@ -172,10 +220,10 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
 
-      addCheckBox(composite, "Format XML", FormatXml)
-      addCheckBox(composite, "Rewrite arrow tokens", RewriteArrowSymbols)
-      addCheckBox(composite, "Preserve dangling close parenthesis", PreserveDanglingCloseParenthesis)
-      addCheckBox(composite, "Use Compact Control Readability style", CompactControlReadability)
+      addCheckBox(composite, CompactControlReadability.description, CompactControlReadability)
+      addCheckBox(composite, FormatXml.description, FormatXml)
+      addCheckBox(composite, NewlineAtEndOfFile.description, NewlineAtEndOfFile)
+      addCheckBox(composite, RewriteArrowSymbols.description, RewriteArrowSymbols)
 
       addPreview(composite)
     }
@@ -187,8 +235,8 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(3).grow(1)))
 
-      addCheckBox(composite, "Multiline Scaladoc comments start on first line", MultilineScaladocCommentsStartOnFirstLine)
-      addCheckBox(composite, "Align asterisks beneath second asterisk", PlaceScaladocAsterisksBeneathSecondAsterisk)
+      addCheckBox(composite, MultilineScaladocCommentsStartOnFirstLine.description, MultilineScaladocCommentsStartOnFirstLine)
+      addCheckBox(composite, PlaceScaladocAsterisksBeneathSecondAsterisk.description, PlaceScaladocAsterisksBeneathSecondAsterisk)
 
       addPreview(composite)
     }
@@ -239,6 +287,7 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     val tabFolder = new TabFolder(control, SWT.TOP)
     tabFolder.setLayoutData(new CC().spanX(2).grow)
 
+    AlignmentPrefTab.build(tabFolder)
     IndentPrefTab.build(tabFolder)
     SpacesPrefTab.build(tabFolder)
     ScaladocPrefTab.build(tabFolder)
@@ -320,9 +369,11 @@ object FormatterPreferencePage {
 
   val ImportExportDialogPath = "formatter.importExportDialogPath"
 
-  val ScalariformDocUrl = "http://mdr.github.com/scalariform/"
+  val ScalariformDocUrl = "https://github.com/scala-ide/scalariform#preferences"
 
-  val SpacesPreviewText = """class ClassName[T](name: String) {
+  val SpacesPreviewText = """import a.{b, c, d}
+
+class ClassName[T: List](name: String) {
 
   println("hello"+name+"world")
 
@@ -335,20 +386,36 @@ object FormatterPreferencePage {
 }
 """
 
-  val IndentPreviewText = """package foo {
-class Bar(param: Int)
-extends Foo with Baz {
-  def method(s: String,
-n: Int) = {
-    def localDef: Unit = {
-      // ..
-    }
+  val AlignPreviewText = """
+object Foo {
+  def method(string: String,
+int: Int) = {
     s match {
       case "wibble" => 42
       case "foo" => 123
       case _ => 100
     }
   }
+  method(
+    string = "hello",
+    int = 1
+  )
+}
+"""
+
+  val IndentPreviewText = """package foo {
+class Bar(param1: Int,
+param2: String)
+extends Foo with Baz {
+
+  def method(string: String,
+int: Int) = {
+    def localDef: Unit = {
+      // ..
+    }
+  }
+  method(string,
+    int)
 }
 }"""
 
