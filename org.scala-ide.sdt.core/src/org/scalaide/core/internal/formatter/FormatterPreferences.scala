@@ -1,26 +1,20 @@
 package org.scalaide.core.internal.formatter
 
 import org.eclipse.jdt.core.IJavaProject
-import org.eclipse.core.resources.IProject
-import scalariform.formatter.preferences.IntegerPreferenceDescriptor
-import scalariform.formatter.preferences.BooleanPreferenceDescriptor
-import scalariform.formatter.preferences.FormattingPreferences
-import scalariform.formatter.preferences.AllPreferences
-import org.scalaide.core.IScalaPlugin
-import scalariform.formatter.preferences.IFormattingPreferences
 import org.eclipse.jface.preference.IPreferenceStore
-import scalariform.formatter.preferences.PreferenceDescriptor
-import org.scalaide.ui.internal.preferences.PropertyStore
+import org.eclipse.core.resources.IProject
 import org.eclipse.core.resources.ProjectScope
+
+import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.SdtConstants
+import org.scalaide.ui.internal.preferences.PropertyStore
+import scalariform.formatter.preferences._
 
 object FormatterPreferences {
 
   implicit class RichFormatterPreference(preference: PreferenceDescriptor[_]) {
 
-    def eclipseKey = PREFIX  + preference.key
-
-    def oldEclipseKey = OLD_PREFIX + preference.key
+    def eclipseKey = PREFIX + preference.key
   }
 
   implicit class RichPreferenceStore(preferenceStore: IPreferenceStore) {
@@ -29,17 +23,29 @@ object FormatterPreferences {
 
     def apply(pref: PreferenceDescriptor[Int]) = preferenceStore.getInt(pref.eclipseKey)
 
-    def update(pref: PreferenceDescriptor[Boolean], value: Boolean): Unit = { preferenceStore.setValue(pref.eclipseKey, value) }
+    def apply(pref: PreferenceDescriptor[Intent]) = preferenceStore.getString(pref.eclipseKey)
 
-    def update(pref: PreferenceDescriptor[Int], value: Int): Unit = { preferenceStore.setValue(pref.eclipseKey, value) }
+    def update(pref: PreferenceDescriptor[Boolean], value: Boolean): Unit = {
+      preferenceStore.setValue(pref.eclipseKey, value)
+    }
+
+    def update(pref: PreferenceDescriptor[Int], value: Int): Unit = {
+      preferenceStore.setValue(pref.eclipseKey, value)
+    }
+
+    def update(pref: PreferenceDescriptor[Intent], value: Intent): Unit = {
+      preferenceStore.setValue(pref.eclipseKey, value.toString)
+    }
 
     def importPreferences(preferences: IFormattingPreferences): Unit = {
       for (preference <- AllPreferences.preferences)
         preference match {
-          case bpd: BooleanPreferenceDescriptor =>
-            preferenceStore.setValue(preference.eclipseKey, preferences(bpd))
-          case ipd: IntegerPreferenceDescriptor =>
-            preferenceStore.setValue(preference.eclipseKey, preferences(ipd))
+          case pd: BooleanPreferenceDescriptor => preferenceStore.setValue(pd.eclipseKey, preferences(pd))
+          case pd: IntegerPreferenceDescriptor => preferenceStore.setValue(pd.eclipseKey, preferences(pd))
+          case pd: IntentPreferenceDescriptor =>
+            preferenceStore.setValue(
+              pd.eclipseKey, preferences(pd).toString
+            )
         }
     }
 
@@ -47,13 +53,19 @@ object FormatterPreferences {
 
   def getPreferences: IFormattingPreferences = getPreferences(IScalaPlugin().getPreferenceStore)
 
-  def getPreferences(preferenceStore: IPreferenceStore): IFormattingPreferences =
+  def getPreferences(preferenceStore: IPreferenceStore): IFormattingPreferences = {
     AllPreferences.preferences.foldLeft(FormattingPreferences()) { (preferences, pref) =>
       pref match {
         case pd: BooleanPreferenceDescriptor => preferences.setPreference(pd, preferenceStore(pd))
         case pd: IntegerPreferenceDescriptor => preferences.setPreference(pd, preferenceStore(pd))
+        case pd: IntentPreferenceDescriptor =>
+          val value = IntentPreference.parseValue(preferenceStore(pd))
+          preferences.setPreference(
+            pd, value.getOrElse(pd.defaultValue)
+          )
       }
     }
+  }
 
   def getPreferences(project: IProject): IFormattingPreferences = getPreferences(getPreferenceStore(project))
 
@@ -66,8 +78,6 @@ object FormatterPreferences {
     val prefStore = if (useProjectSettings) projectStore else workspaceStore
     prefStore
   }
-
-  val OLD_PREFIX = "scala.tools.eclipse.formatter."
 
   val PREFIX = "formatter."
 
