@@ -3,7 +3,17 @@
 target/
 org.scala-ide.sdt.core/META-INF/MANIFEST.MF
 org.scala-ide.sdt.debug/META-INF/MANIFEST.MF
+org.scala-ide.sdt.debug.expression/META-INF/MANIFEST.MF
 org.scala-ide.sdt.update-site/site.xml
+org.scala-ide.scala210.build/org.scala-ide.scala210.feature/feature.xml
+org.scala-ide.scala210.build/org.scala-ide.scala210.source.feature/feature.xml
+org.scala-ide.scala211.build/org.scala-ide.scala211.feature/feature.xml
+org.scala-ide.scala211.build/org.scala-ide.scala211.source.feature/feature.xml
+org.scala-ide.scala212.build/org.scala-ide.scala212.feature/feature.xml
+org.scala-ide.scala212.build/org.scala-ide.scala212.source.feature/feature.xml
+org.scala-ide.sdt.feature/feature.xml
+org.scala-ide.zinc/org.scala-ide.zinc.feature/feature.xml
+org.scala-ide.zinc/org.scala-ide.zinc.source.feature/feature.xml
 .idea
 .metadata
 *~
