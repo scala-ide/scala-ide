@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala Expression Evaluator Plugin (Test)
 Bundle-SymbolicName: org.scala-ide.sdt.debug.expression.tests
-Bundle-Version: 4.6.1.qualifier
+Bundle-Version: 4.7.0.qualifier
 Bundle-Vendor: scala-ide.org
 Fragment-Host: org.scala-ide.sdt.debug.expression
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
