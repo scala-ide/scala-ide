@@ -50,6 +50,9 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
   class JavaSignature(symbol: Symbol) {
     import org.eclipse.jdt.core.Signature
 
+    // see scala/scala commit e5ea3ab
+    private val markClassUsed: Symbol => Unit = _ => ()
+
     private lazy val sig: Option[String] = {
       // make sure to execute this call in the presentation compiler's thread
       pc.asyncExec {
@@ -60,7 +63,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
 
         if (needsJavaSig) {
           // it's *really* important we ran pc.atPhase so that symbol's type is updated! (atPhase does side-effects on the type!)
-          for (signature <- erasure.javaSig(symbol, pc.enteringPhase(pc.currentRun.erasurePhase)(symbol.info)))
+          for (signature <- erasure.javaSig(symbol, pc.enteringPhase(pc.currentRun.erasurePhase)(symbol.info), markClassUsed))
             yield signature.replace("/", ".")
         } else None
       }.getOrElse(None)()
