@@ -20,6 +20,11 @@
       <artifactId>org.scala-refactoring.library_${scala.version}</artifactId>
       <version>${scala-refactoring.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.scalariform</groupId>
+      <artifactId>scalariform_${scala.minor.version}</artifactId>
+      <version>${scalariform.version}</version>
+    </dependency>
   </dependencies>
 
   <repositories>
