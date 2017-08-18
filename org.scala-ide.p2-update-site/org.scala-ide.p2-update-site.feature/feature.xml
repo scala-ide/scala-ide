@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.refactoring.feature"
+      id="org.scala-ide.p2-update-site.feature"
       label="Scala IDE Refactoring"
       version="4.7.0.qualifier"
       provider-name="scala-ide.org"

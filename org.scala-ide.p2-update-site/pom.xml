@@ -9,7 +9,7 @@
     <relativePath>../org.scala-ide.p2-toolchain/pom.xml</relativePath>
   </parent>
 
-  <artifactId>org.scala-ide.refactoring</artifactId>
+  <artifactId>org.scala-ide.p2-update-site</artifactId>
   <description>The local p2 repo for scala-refactoring</description>
   <packaging>pom</packaging>
   <version>4.7.0-SNAPSHOT</version>
@@ -39,8 +39,8 @@
   </repositories>
 
   <modules>
-    <module>org.scala-ide.refactoring.feature</module>
-    <module>org.scala-ide.refactoring.update-site</module>
+    <module>org.scala-ide.p2-update-site.feature</module>
+    <module>org.scala-ide.p2-update-site.update-site</module>
   </modules>
 
 </project>
