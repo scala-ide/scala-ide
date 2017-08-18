@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="org.scala-ide.refactoring.feature"
+      id="org.scala-ide.p2-update-site.feature"
       label="Scala IDE Refactoring"
       version="4.7.0.qualifier"
       provider-name="scala-ide.org"
@@ -55,6 +55,13 @@ SUCH DAMAGE.
 
    <plugin
          id="org.scala-refactoring.library"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="scalariform"
          download-size="0"
          install-size="0"
          version="0.0.0"

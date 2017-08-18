@@ -56,13 +56,7 @@
       <id>scala-refactoring</id>
       <name>Scala Refactoring p2 repository</name>
       <layout>p2</layout>
-      <url>file:../org.scala-ide.refactoring/org.scala-ide.refactoring.update-site/target/site</url>
-    </repository>
-    <repository>
-      <id>scalariform</id>
-      <name>Scalariform Scala p2 repository</name>
-      <layout>p2</layout>
-      <url>${repo.scalariform}</url>
+      <url>file:../org.scala-ide.p2-update-site/org.scala-ide.p2-update-site.update-site/target/site</url>
     </repository>
     <repository>
       <id>equinox.launcher</id>
