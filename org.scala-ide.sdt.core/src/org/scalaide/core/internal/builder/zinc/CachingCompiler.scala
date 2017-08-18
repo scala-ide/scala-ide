@@ -50,13 +50,13 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
         case (a, s) => (Option(a), Option(s))
       }.getOrElse((Option(SbtUtils.readAnalysis(cacheFile)), None))
     cacheAndReturnLastAnalysis(new IncrementalCompilerImpl().compile(comps.scalac, comps.javac, in.sources, in.classpath, in.output, in.cache,
-      in.scalacOptions, in.javacOptions, SbtUtils.o2m(previousAnalysis), SbtUtils.o2m(previousSetup), lookup, sbtReporter, in.order,
+      in.scalacOptions, in.javacOptions, SbtUtils.o2jo(previousAnalysis), SbtUtils.o2jo(previousSetup), lookup, sbtReporter, in.order,
       skip = false, in.progress, in.incOptions, extra = Array(), log))
   }
 
   private def cacheAndReturnLastAnalysis(compilationResult: CompileResult): Analysis = {
     if (compilationResult.hasModified)
-      AnalysisStore.materializeLazy(MixedAnalyzingCompiler.staticCachedStore(cacheFile)).set(compilationResult.analysis, compilationResult.setup)
+      AnalysisStore.materializeLazy(MixedAnalyzingCompiler.staticCachedStore(cacheFile, true)).set(compilationResult.analysis, compilationResult.setup)
     compilationResult.analysis match {
       case a: Analysis => a
       case a => throw new IllegalStateException(s"object of type `Analysis` was expected but got `${a.getClass}`.")

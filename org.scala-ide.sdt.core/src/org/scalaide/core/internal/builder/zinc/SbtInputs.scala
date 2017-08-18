@@ -14,12 +14,10 @@ import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.CompilerCache
-import sbt.internal.inc.CompilerBridgeProvider
+import xsbti.compile.CompilerBridgeProvider
 import sbt.internal.inc.Locate
 import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
-import xsbti.Maybe
 import xsbti.compile.ClasspathOptions
 import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileProgress
@@ -28,6 +26,8 @@ import xsbti.compile.IncOptions
 import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
 import xsbti.compile.TransactionalManagerType
+import sbt.internal.inc.FreshCompilerCache
+import java.util.Optional
 
 /**
  * Inputs-like class, but not implementing xsbti.compile.Inputs.
@@ -45,32 +45,32 @@ class SbtInputs(installation: IScalaInstallation,
     addToClasspath: Seq[IPath] = Seq.empty,
     srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty) {
 
-  def cache = CompilerCache.fresh // May want to explore caching possibilities.
+  def cache = new FreshCompilerCache // May want to explore caching possibilities.
 
   private val allProjects = project +: project.transitiveDependencies.flatMap(ScalaPlugin().asScalaProject)
 
-  def analysisMap(f: File): Maybe[CompileAnalysis] =
+  def analysisMap(f: File): Optional[CompileAnalysis] =
     if (f.isFile)
-      Maybe.nothing[CompileAnalysis]
+      Optional.empty[CompileAnalysis]
     else {
       val analysis = allProjects.collectFirst {
         case project if project.buildManager.buildManagerOf(f).nonEmpty =>
           project.buildManager.buildManagerOf(f).get.latestAnalysis
       }
       analysis.map { analysis =>
-        Maybe.just(analysis)
-      }.getOrElse(Maybe.nothing[CompileAnalysis])
+        Optional.ofNullable(analysis)
+      }.getOrElse(Optional.empty[CompileAnalysis])
     }
 
-  def progress = Maybe.just(scalaProgress)
+  def progress = Optional.ofNullable(scalaProgress)
 
   def incOptions: IncOptions = {
     IncOptionsUtil.defaultIncOptions().
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withClassfileManagerType(Maybe.just(new TransactionalManagerType(tempDir, logger))).
-      withApiDumpDirectory(Maybe.nothing()).
-      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
+      withClassfileManagerType(Optional.ofNullable(new TransactionalManagerType(tempDir, logger))).
+      withApiDumpDirectory(Optional.empty()).
+      withRecompileOnMacroDef(Optional.ofNullable(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
   }
 
   def outputFolders = srcOutputs.map {
