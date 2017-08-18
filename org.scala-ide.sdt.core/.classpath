@@ -6,19 +6,20 @@
 	<classpathentry kind="src" output="target/classes" path="src"/>
 	<classpathentry kind="lib" path="target/lib/miglayout-3.7.4.jar"/>
 	<classpathentry kind="lib" path="target/lib/log4j-1.2.17.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc-core_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc-core_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/util-interface-1.0.0-M23.jar" sourcepath="target/lib/util-interface-1.0.0-M23-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc-classpath_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc-classpath_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/compiler-interface-1.0.0-X14.jar" sourcepath="target/lib/compiler-interface-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc-compile-core_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc-compile-core_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc-persist_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc-persist_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/util-logging_2.12-1.0.0-M23.jar" sourcepath="target/lib/util-logging_2.12-1.0.0-M23-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/util-control_2.12-1.0.0-M23.jar" sourcepath="target/lib/util-control_2.12-1.0.0-M23-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/io_2.12-1.0.0-M11.jar" sourcepath="target/lib/io_2.12-1.0.0-M11-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/sbinary_2.12-0.4.4.jar" sourcepath="target/lib/sbinary_2.12-0.4.4-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/zinc-apiinfo_2.12-1.0.0-X14.jar" sourcepath="target/lib/zinc-apiinfo_2.12-1.0.0-X14-sources.jar"/>
-	<classpathentry kind="lib" path="target/lib/util-relation_2.12-1.0.0-M23.jar" sourcepath="target/lib/util-relation_2.12-1.0.0-M23-sources.jar"/>
 	<classpathentry kind="lib" path="target/lib/scalap-2.12.2.jar"/>
+	<classpathentry kind="lib" path="target/lib/compiler-interface-1.0.0-X18.jar" sourcepath="target/lib/compiler-interface-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-apiinfo_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-apiinfo_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-classfile_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-classfile_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-classpath_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-classpath_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-compile-core_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-compile-core_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-core_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-core_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/zinc-persist_2.12-1.0.0-X18.jar" sourcepath="target/lib/zinc-persist_2.12-1.0.0-X18-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/io_2.12-1.0.0-M12.jar" sourcepath="target/lib/io_2.12-1.0.0-M12-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-control_2.12-1.0.0-M26.jar" sourcepath="target/lib/util-control_2.12-1.0.0-M26-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-interface-1.0.0-M26.jar" sourcepath="target/lib/util-interface-1.0.0-M26-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-logging_2.12-1.0.0-M26.jar" sourcepath="target/lib/util-logging_2.12-1.0.0-M26-sources.jar"/>
+	<classpathentry kind="lib" path="target/lib/util-relation_2.12-1.0.0-M26.jar" sourcepath="target/lib/util-relation_2.12-1.0.0-M26-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
