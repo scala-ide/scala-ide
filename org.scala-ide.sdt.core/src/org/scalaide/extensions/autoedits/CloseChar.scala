@@ -42,8 +42,8 @@ trait CloseChar extends AutoEdit {
 
   def autoClosingRequired(offset: Int): Boolean =
     if (offset < document.length)
-      !ch(-1, ''') && (Character.isWhitespace(document(offset)) || isNested(offset))
+      !ch(-1, '\'') && (Character.isWhitespace(document(offset)) || isNested(offset))
     else
-      !ch(-1, ''')
+      !ch(-1, '\'')
 
 }
