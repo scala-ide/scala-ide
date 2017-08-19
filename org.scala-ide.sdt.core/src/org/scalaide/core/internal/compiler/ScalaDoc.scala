@@ -38,7 +38,7 @@ trait Scaladoc extends MemberLookupBase with CommentFactoryBase { this: ScalaPre
   }
 
   override def warnNoLink: Boolean = false
-  override def findExternalLink(sym: Symbol, name: String): Option[LinkToExternal] = None
+  override def findExternalLink(sym: Symbol, name: String) = None
 
   val TIMEOUT = if (IScalaPlugin().noTimeoutMode) Duration.Inf else 500.millis
 
