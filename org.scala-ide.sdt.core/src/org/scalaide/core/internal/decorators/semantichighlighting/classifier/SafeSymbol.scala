@@ -143,15 +143,8 @@ private[classifier] trait SafeSymbol extends CompilerAccess with EnrichedTrees {
       safeSymbol(ref)
 
     case _ =>
-      // the local variable backing a lazy value is called 'originalName$lzy'. We swap it here for its
-      // accessor, otherwise this symbol would fail the test in `getNameRegion`
-      val sym1 = Option(t.symbol).map { sym =>
-        if (sym.isLazy && sym.isMutable) sym.lazyAccessor
-        else sym
-      }.toList
-
-      if (!hasSourceCodeRepresentation(t)) Nil
-      else sym1.zip(List(t.namePosition))
+      if (!hasSourceCodeRepresentation(t) || t.symbol == null) Nil
+      else List(t.symbol → t.namePosition)
   }
 
   private def isViewBound(args: List[Tree]): Boolean =
