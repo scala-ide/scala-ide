@@ -45,7 +45,7 @@ object ProjectUtils {
     val w = Option(PlatformUI.getWorkbench().getActiveWorkbenchWindow())
 
     w flatMap (w ⇒ w.getSelectionService().getSelection() match {
-      case s: ITextSelection =>
+      case _: ITextSelection =>
         val ei = w.getActivePage().getActiveEditor().getEditorInput()
         Option(ei.getAdapter(classOf[IResource]).asInstanceOf[IResource])
 

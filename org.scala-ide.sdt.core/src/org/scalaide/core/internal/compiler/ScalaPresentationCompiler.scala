@@ -362,7 +362,7 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
           tokens.size match {
             case 1 => true    // whitespace
             case 2 => !(IDS contains tokens.head.tokenType)
-            case more => true
+            case _ => true
           }
         } catch {case _: ScalaLexerException => true  /* Illegal chars encountered */}
       }

@@ -150,7 +150,6 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
 
       val pos = compiler.rangePos(src, actualSelectionStart, actualSelectionStart, actualSelectionEnd + 1)
 
-
       val typedRes = compiler.askTypeAt(pos).getOption()
       val cont: Cont = compiler.asyncExec {
         typedRes match {
@@ -194,10 +193,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
                 } else
                   acceptMethod(sym)
 
-              case a@compiler.Annotated(atp, _) =>
+              case compiler.Annotated(atp, _) =>
                 acceptTypeWithFlags(atp.symbol, ClassFileConstants.AccAnnotation)
 
-              case i@compiler.Import(expr, selectors) =>
+              case compiler.Import(expr, selectors) =>
                 def acceptSymbol(sym: compiler.Symbol): Cont = {
                   sym match {
                     case c: compiler.ClassSymbol =>

@@ -202,7 +202,7 @@ object ScalaLaunchShortcut {
                 javaElement <- comp.getJavaElement(cdef.symbol, scu.getJavaProject)
               } yield javaElement.asInstanceOf[IType]
 
-            case Right(ex) =>
+            case Right(_) =>
               Nil
           }
 

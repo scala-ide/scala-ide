@@ -42,8 +42,8 @@ trait GenerateHashcodeAndEqualsConfigurationPageGenerator {
         case Nil => // nothing to do
         case ms => {
           val existingMethodNames = ms.map(_.nameString) match {
-            case n1::n2::Nil => n1 + " and " + n2 + "."
-            case names @ n1::n2::ns => names.init.mkString(", ") + " and " + names.last + "."
+            case n1 :: n2 :: Nil => n1 + " and " + n2 + "."
+            case names @ _ :: _ :: _ => names.init.mkString(", ") + " and " + names.last + "."
             case names => names.mkString(", ") + "."
           }
           val existingLabel = new Label(composite, SWT.WRAP)

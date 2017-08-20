@@ -13,16 +13,16 @@ class ScalaOutlineLabelProvider extends ILabelProvider {
     val reg = ScalaPlugin().imageDescriptorRegistry
     o match {
       case n: ClassNode => if (n.isTrait) reg.get(SCALA_TRAIT) else reg.get(SCALA_CLASS)
-      case n: TypeNode => reg.get(SCALA_TYPE)
+      case _: TypeNode => reg.get(SCALA_TYPE)
       case n: ValNode => if (n.isPrivate) reg.get(PRIVATE_VAL) else if (n.isProtected) reg.get(PROTECTED_VAL) else reg.get(PUBLIC_VAL)
       case n: VarNode => if (n.isPrivate) reg.get(PRIVATE_VAR) else if (n.isProtected) reg.get(PROTECTED_VAR) else reg.get(PUBLIC_VAR)
       case n: MethodNode =>
         if (n.parent.isInstanceOf[MethodNode]) reg.get(DESC_INNER_METHOD)
         else if (n.isPrivate) reg.get(PRIVATE_DEF) else if (n.isProtected) reg.get(PROTECTED_DEF) else reg.get(PUBLIC_DEF)
-      case n: ObjectNode => reg.get(SCALA_OBJECT)
-      case n: PackageNode => reg.get(PACKAGE)
-      case n: ImportsNode => reg.get(DESC_OBJS_IMPCONT)
-      case n: ImportNode => reg.get(DESC_OBJS_IMPDECL)
+      case _: ObjectNode => reg.get(SCALA_OBJECT)
+      case _: PackageNode => reg.get(PACKAGE)
+      case _: ImportsNode => reg.get(DESC_OBJS_IMPCONT)
+      case _: ImportNode => reg.get(DESC_OBJS_IMPDECL)
       case _ => null
     }
   }

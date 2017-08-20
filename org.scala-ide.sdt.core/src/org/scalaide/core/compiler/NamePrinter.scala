@@ -116,7 +116,6 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
       shortName(sym.name)
     }
 
-
     def declPrinterTypeStr(tpe: comp.Type) = {
       new DeclarationPrinter {
         val compiler: comp.type = comp
@@ -130,7 +129,7 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
 
     def handleIdent(ident: comp.Ident) = {
       ident.name match {
-        case typeName: comp.TypeName => (Some(ident.symbol.fullName), false)
+        case _: comp.TypeName => (Some(ident.symbol.fullName), false)
         case _ => (Some(ident.symbol.nameString), true)
       }
     }
@@ -171,9 +170,9 @@ class NamePrinter(cu: InteractiveCompilationUnit) extends HasLogger {
     }
 
     def selectStr(select: comp.Select) = select match {
-      case comp.Select(comp.Block(List(stat: comp.ClassDef), _), name) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
+      case comp.Select(comp.Block(List(stat: comp.ClassDef), _), _) if stat.symbol.isAnonOrRefinementClass && stat.symbol.isInstanceOf[comp.ClassSymbol] =>
         anonClassSymStr(stat.symbol.asInstanceOf[comp.ClassSymbol]) + "." + select.symbol.nameString
-      case comp.Select(qualifier, name) =>
+      case comp.Select(qualifier, _) =>
         if (select.symbol.isConstructor) qualifier.tpe.toString
         else select.symbol.fullName
     }

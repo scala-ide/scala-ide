@@ -409,7 +409,7 @@ class ScalaAutoIndentStrategy(
       return true
 
     } catch {
-      case e : BadLocationException => // Ignore this exception
+      case _ : BadLocationException => // Ignore this exception
     }
     return false
   }
@@ -838,9 +838,9 @@ class ScalaAutoIndentStrategy(
       return new Region(tokenOffset + scanRegion.getOffset(), tokenLength)
 
     } catch {
-      case e : InvalidInputException =>
+      case _ : InvalidInputException =>
         return null
-      case e : BadLocationException =>
+      case _ : BadLocationException =>
         return null
     }
   }

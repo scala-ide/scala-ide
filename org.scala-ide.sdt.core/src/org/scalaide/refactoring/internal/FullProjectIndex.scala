@@ -139,7 +139,7 @@ trait FullProjectIndex extends HasLogger {
       responses flatMap {
         case r if !pm.isCanceled =>
           waitForResultOrCancel(r)
-        case r =>
+        case _ =>
           None
       }
     }

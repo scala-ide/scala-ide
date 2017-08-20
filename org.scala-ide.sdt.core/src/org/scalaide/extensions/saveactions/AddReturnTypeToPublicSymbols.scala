@@ -57,7 +57,7 @@ trait AddReturnTypeToPublicSymbols extends SaveAction with CompilerSupport {
     }
 
     val validSymbol = filter {
-      case d @ ValOrDefDef(_, TermName(name), tpt, _) =>
+      case ValOrDefDef(_, TermName(name), tpt, _) =>
         val t = tpt.tpe
         !(name == "$init$" || name == "<init>" || t =:= typeOf[Nothing] || t =:= typeOf[Null] || t.isErroneous)
     }

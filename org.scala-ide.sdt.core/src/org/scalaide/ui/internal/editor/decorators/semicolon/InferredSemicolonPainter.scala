@@ -87,7 +87,7 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
       val tokens = ScalaLexer.tokenise(textViewer.getDocument.get)
       InferredSemicolonScalaParser.findSemicolons(tokens.toArray).toList
     } catch {
-      case e: ScalaParserException => Nil
+      case _: ScalaParserException => Nil
     }
 
   override def paintByEvent(event: PaintEvent): Unit = {
@@ -139,4 +139,3 @@ class InferredSemicolonPainter(textViewer: ISourceViewer with ITextViewerExtensi
   }
 
 }
-
