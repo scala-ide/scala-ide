@@ -56,7 +56,7 @@ trait DecoratedInteractiveEditor extends ISourceViewerEditor {
         // TODO: This should be replaced by a better modularization of semantic highlighting PositionsChange
         val newPositions = newAnnotations.values
         def end(x: Position) = x.offset + x.length - 1
-        val taintedBounds = (newPositions foldLeft (Int.MaxValue, 0)) { (acc, p1) ⇒ (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1))) }
+        val taintedBounds = (newPositions foldLeft (Int.MaxValue → 0)) { (acc, p1) ⇒ (Math.min(acc._1, p1.offset), Math.max(acc._2, end(p1))) }
         val taintedLength = (taintedBounds._2 - taintedBounds._1 + 1)
 
         DisplayThread.asyncExec {

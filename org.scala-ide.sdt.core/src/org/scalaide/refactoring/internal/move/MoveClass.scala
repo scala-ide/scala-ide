@@ -122,7 +122,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
       // the changes contain either a NewFileChange or we need to move the current file.
 
       val (textChanges, newFileChanges) = {
-        (performRefactoring() :\ (List[TextChange](), List[NewFileChange]())) {
+        (performRefactoring() :\ (List[TextChange]() → List[NewFileChange]())) {
           case (change: TextChange, (textChanges, newFiles)) =>
             (change :: textChanges, newFiles)
           case (change: NewFileChange, (textChanges, newFilesChanges)) =>
