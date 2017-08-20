@@ -132,14 +132,15 @@ class RetainedStackManager(debugTarget: ScalaDebugTarget) extends HasLogger {
     stackFrames.get(future).flatMap(_(messageOrdinal))
 
   def start(): Unit = if (debugTarget.getLaunch.getLaunchConfiguration.getAttribute(LaunchWithAsyncDebugger, false)) {
-    for {
-      app @ AsyncProgramPoint(clazz, meth, _) <- programPoints
-      refType = debugTarget.virtualMachine.classesByName(clazz).asScala
-    } if (!refType.isEmpty)
-      installMethodBreakpoint(refType(0), app)
-    else
-      // in case it's not been loaded yet
-      debugTarget.cache.addClassPrepareEventListener(subordinate, clazz)
+    programPoints foreach {
+      case app @ AsyncProgramPoint(clazz, _, _) ⇒
+        val refType = debugTarget.virtualMachine.classesByName(clazz).asScala
+        if (!refType.isEmpty)
+          installMethodBreakpoint(refType(0), app)
+        else
+          // in case it's not been loaded yet
+          debugTarget.cache.addClassPrepareEventListener(subordinate, clazz)
+    }
   }
 
   def dispose(): Unit = Future {

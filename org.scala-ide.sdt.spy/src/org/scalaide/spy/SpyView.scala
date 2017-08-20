@@ -73,7 +73,7 @@ class SpyView extends ViewPart with HasLogger {
           }
         }
 
-      case editor => ()
+      case _ => ()
     }
     textArea.setSelection(0, 0)
   }

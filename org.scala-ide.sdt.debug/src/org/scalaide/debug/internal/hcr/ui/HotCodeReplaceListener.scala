@@ -23,7 +23,7 @@ import ScalaHotCodeReplaceManager.HCRSucceeded
 private[internal] object HotCodeReplaceListener extends Subscriber[HCRResult, Publisher[HCRResult]] {
 
   override def notify(publisher: Publisher[HCRResult], event: HCRResult): Unit = event match {
-    case HCRSucceeded(launchName) => // nothing to do
+    case HCRSucceeded(_) => // nothing to do
     case HCRNotSupported(launchName) =>
       if (HotCodeReplacePreferences.notifyAboutUnsupportedHcr)
         notifyAboutUnsupportedHCR(launchName)

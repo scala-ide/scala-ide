@@ -73,7 +73,7 @@ class ScalaDebugTestSession private (launchConfiguration: ILaunchConfiguration) 
   val debugEventListener = ScalaDebugTestSession.addDebugEventListener {
     case EclipseDebugEvent(DebugEvent.CREATE, target: ScalaDebugTarget) =>
       setLaunched(target)
-    case EclipseDebugEvent(DebugEvent.RESUME, x) =>
+    case EclipseDebugEvent(DebugEvent.RESUME, _) =>
       setRunning()
     case EclipseDebugEvent(DebugEvent.SUSPEND, thread: ScalaThread) =>
       setSuspended(thread.getTopStackFrame.asInstanceOf[ScalaStackFrame])

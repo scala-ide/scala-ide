@@ -174,7 +174,7 @@ class AsyncDebugView extends AbstractDebugView with IDebugContextListener with H
 
     override def getParent(element: AnyRef): AnyRef = element match {
       case frame: ScalaStackFrame => frame.getThread
-      case variable: IVariable => null // TODO proper parent?
+      case _: IVariable => null // TODO proper parent?
       case _ => null
     }
 

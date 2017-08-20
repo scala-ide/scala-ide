@@ -36,7 +36,7 @@ object ScalaDebugModelPresentation {
         v.getValueString
       case v: ScalaStringReference =>
         v.underlying.value
-      case v: ScalaNullValue =>
+      case _: ScalaNullValue =>
         "null"
       case arrayReference: ScalaArrayReference =>
         computeDetail(arrayReference)
@@ -77,7 +77,7 @@ object ScalaDebugModelPresentation {
       objectReference.invokeMethod("toString", "()Ljava/lang/String;", ScalaDebugger.currentThread) match {
         case s: ScalaStringReference =>
           s.underlying.value
-        case n: ScalaNullValue =>
+        case _: ScalaNullValue =>
           "null"
       }
     } catch {
@@ -110,16 +110,16 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
 
   override def getImage(element: Any): org.eclipse.swt.graphics.Image = {
     element match {
-      case target: ScalaDebugTarget =>
+      case _: ScalaDebugTarget =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_DEBUG_TARGET)
-      case thread: ScalaThread =>
+      case _: ScalaThread =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_THREAD_RUNNING)
-      case stackFrame: ScalaStackFrame =>
+      case _: ScalaStackFrame =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
-      case variable: IndexedVariablePartition =>
+      case _: IndexedVariablePartition =>
         // variable used to split large arrays
         // TODO: see ScalaVariable before
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
@@ -127,10 +127,10 @@ class ScalaDebugModelPresentation extends IDebugModelPresentation with IInstruct
         ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
       case VirtualVariable("<parent>", _, _) =>
         ScalaDebugPlugin.plugin.registry.get(ScalaDebugPlugin.IMG_ACTOR)
-      case variable: IVariable =>
+      case _: IVariable =>
         // TODO: right image depending on ?
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_VARIABLE)
-      case asyncSF: IStackFrame =>
+      case _: IStackFrame =>
         // TODO: right image depending of state
         DebugUITools.getImage(IDebugUIConstants.IMG_OBJS_STACKFRAME)
 
