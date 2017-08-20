@@ -148,7 +148,7 @@ case class ExtendedContext(currentFrame: StackFrame)
       val field = refType.fieldByName(outerFieldName)
       field match {
         case null => None
-        case outerField if refType.toString.startsWith(field.`type`().toString) =>
+        case _ if refType.toString.startsWith(field.`type`().toString) =>
           Some(outerFieldName)
         case _ => None
       }

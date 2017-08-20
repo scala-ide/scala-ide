@@ -70,7 +70,7 @@ class ImplementMockedNestedMethods(context: VariableContext)
   }
 
   final override def transformSingleTree(tree: Tree, transformFurther: Tree => Tree): Tree = tree match {
-    case ValDef(mods, name, tpt, MockedNestedLambda(parametersListsCount, from, to)) =>
+    case ValDef(_, name, tpt, MockedNestedLambda(parametersListsCount, from, to)) =>
 
       val count = tpt.tpe match {
         case TypeRef(_, _, args) => args.size

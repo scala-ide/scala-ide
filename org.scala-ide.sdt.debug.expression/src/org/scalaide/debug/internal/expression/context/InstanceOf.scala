@@ -44,9 +44,9 @@ private[context] trait InstanceOf {
    * Handles null, Unit, primitives and delegates everything else to `handleObject`.
    */
   private def isInstanceOf(proxy: JdiProxy, typeName: String): Boolean = proxy match {
-    case nullProxy: NullJdiProxy =>
+    case _: NullJdiProxy =>
       false
-    case unitProxy: UnitJdiProxy =>
+    case _: UnitJdiProxy =>
       typeName == fixScalaPrimitives(Scala.unitType)
     case _ if proxy.__type.name == Scala.boxedUnitType =>
       typeName == fixScalaPrimitives(Scala.unitType)

@@ -178,7 +178,7 @@ abstract class ExpressionEvaluator(protected val projectClassLoader: ClassLoader
     (try {
       toolbox.compile(tree)
     } catch {
-      case e: UnsupportedOperationException =>
+      case _: UnsupportedOperationException =>
         // Workaround for "No position error"
         // Reset type information is buggy so in some cases to compile expression we have to make "hard reset" (stringify, parse, compile)
         logger.warn("Compilation failed - stringifying and recompilig whole tree.")

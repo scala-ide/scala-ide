@@ -30,7 +30,7 @@ class MockNewOperator
    * Traverse through method call and returns arguments
    */
   private def extractParameters(tree: Tree): List[Tree] = tree match {
-    case select: Select => Nil
+    case _: Select => Nil
     case TypeApply(fun, _) => extractParameters(fun)
     case Apply(fun, args) => extractParameters(fun) ++ args
     case _ => throw new IllegalStateException(s"Not supported or unrecognized $tree")

@@ -73,7 +73,7 @@ trait MethodInvoker extends HasLogger {
 
   /** Boxes proxy value if type is a `ReferenceType`. */
   protected def autobox(tpe: Type, proxy: JdiProxy): Value = (proxy, tpe) match {
-    case (primitive: PrimitiveJdiProxy[_, _, _], objectType: ReferenceType) => primitive.boxed
+    case (primitive: PrimitiveJdiProxy[_, _, _], _: ReferenceType) => primitive.boxed
     case (other, _) => other.__value
   }
 

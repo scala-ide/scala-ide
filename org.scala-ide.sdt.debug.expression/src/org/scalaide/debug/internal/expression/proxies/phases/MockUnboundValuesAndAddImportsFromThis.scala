@@ -70,7 +70,7 @@ class MockUnboundValuesAndAddImportsFromThis(val toolbox: ToolBox[universe.type]
       case valDef: ValDef => Seq(valDef)
       case Block(children, Literal(Constant(()))) => children
       case block: Block => block.children
-      case empty @ universe.EmptyTree => Nil
+      case universe.EmptyTree => Nil
       case any => throw new IllegalArgumentException(s"Unsupported tree: $any")
     }
 
