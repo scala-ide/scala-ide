@@ -596,7 +596,7 @@
               <arg>-Yno-adapted-args</arg>
               <arg>-Ywarn-dead-code</arg>
               <arg>-Ywarn-unused-import</arg>
-              <arg>-Ywarn-unused:-patvars,-params,-implicits,_</arg>
+              <arg>-Ywarn-unused:-params,-implicits,_</arg>
             </args>
           </configuration>
         </plugin>
