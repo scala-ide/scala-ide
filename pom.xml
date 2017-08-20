@@ -606,12 +606,6 @@
           <artifactId>buildnumber-maven-plugin</artifactId>
           <version>${buildnumber-maven.plugin.version}</version>
         </plugin>
-        <!-- creating maven source artefact -->
-<!--        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>${maven-source.plugin.version}</version>
-        </plugin> -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>
