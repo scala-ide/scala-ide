@@ -24,6 +24,7 @@ import xsbti.compile.CompileProgress
 import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
 import xsbti.compile.MultipleOutput
+import xsbti.compile.OutputGroup
 import xsbti.compile.TransactionalManagerType
 import sbt.internal.inc.FreshCompilerCache
 import java.util.Optional
@@ -91,16 +92,16 @@ class SbtInputs(installation: IScalaInstallation,
     private def sourceOutputFolders =
       if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
 
-    override def outputGroups = sourceOutputFolders.map {
-      case (src, out) => new MultipleOutput.OutputGroup {
-        override def sourceDirectory = {
+    override def getOutputGroups = sourceOutputFolders.map {
+      case (src, out) => new OutputGroup {
+        override def getSourceDirectory = {
           val loc = src.getLocation
           if (loc != null)
             loc.toFile()
           else
             throw new IllegalStateException(s"The source folder location `$src` is invalid.")
         }
-        override def outputDirectory = {
+        override def getOutputDirectory = {
           val loc = out.getLocation
           if (loc != null)
             loc.toFile()
@@ -144,7 +145,7 @@ class SbtInputs(installation: IScalaInstallation,
     store.compilerBridgeFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerBridge =>
         // prevent zinc from adding things to the (boot)classpath
-        val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
+        val cpOptions = ClasspathOptions.create(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
           new AnalyzingCompiler(scalaInstance,
               new CompilerBridgeProvider {
