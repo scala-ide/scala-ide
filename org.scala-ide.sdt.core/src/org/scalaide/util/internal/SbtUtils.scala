@@ -3,10 +3,11 @@ package org.scalaide.util.internal
 import java.io.File
 
 import sbt.internal.inc.Analysis
-import sbt.internal.inc.FileBasedStore
+import sbt.internal.inc.FileAnalysisStore
 import xsbti._
 import xsbti.compile.MiniSetup
 import java.util.Optional
+import xsbti.compile.AnalysisContents
 
 object SbtUtils {
   def jo2o[S](opt: Optional[S]): Option[S] = if (opt.isPresent()) Some(opt.get) else None
@@ -15,10 +16,14 @@ object SbtUtils {
     case None => Optional.empty()
   }
 
+  object AnalysisContents {
+    def unapply(ac: AnalysisContents) = Option((ac.getAnalysis, ac.getMiniSetup))
+  }
+
   def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
-    FileBasedStore(cacheFile).get().map(_ match {
-      case (a: Analysis, i) => (a, i)
-      case (a, _) => throw new RuntimeException(s"Expected that sbt analysis for $cacheFile is of type ${classOf[Analysis]} but was ${a.getClass}.")
+    SbtUtils.jo2o(FileAnalysisStore.text(cacheFile).get()).map(_ match {
+      case AnalysisContents(a: Analysis, i) => (a, i)
+      case AnalysisContents(a, _) => throw new RuntimeException(s"Expected that sbt analysis for $cacheFile is of type ${classOf[Analysis]} but was ${a.getClass}.")
     })
 
   def readAnalysis(cacheFile: File): Analysis =

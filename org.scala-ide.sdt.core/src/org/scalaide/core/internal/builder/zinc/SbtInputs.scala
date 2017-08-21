@@ -23,7 +23,6 @@ import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileProgress
 import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
-import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
 import xsbti.compile.TransactionalManagerType
 import sbt.internal.inc.FreshCompilerCache
@@ -65,7 +64,8 @@ class SbtInputs(installation: IScalaInstallation,
   def progress = Optional.ofNullable(scalaProgress)
 
   def incOptions: IncOptions = {
-    IncOptionsUtil.defaultIncOptions().
+    val base = IncOptions.of()
+    base.
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
       withClassfileManagerType(Optional.ofNullable(new TransactionalManagerType(tempDir, logger))).
