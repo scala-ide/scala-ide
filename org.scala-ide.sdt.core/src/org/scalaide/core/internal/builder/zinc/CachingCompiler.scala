@@ -14,6 +14,7 @@ import xsbti.compile.DefinesClass
 import xsbti.compile.JavaCompiler
 import xsbti.compile.PerClasspathEntryLookup
 import xsbti.compile.ScalaCompiler
+import xsbti.compile.AnalysisContents
 
 /**
  * Contains a Scala and a Java compiler. Should be used instead of
@@ -56,7 +57,7 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
 
   private def cacheAndReturnLastAnalysis(compilationResult: CompileResult): Analysis = {
     if (compilationResult.hasModified)
-      AnalysisStore.materializeLazy(MixedAnalyzingCompiler.staticCachedStore(cacheFile, true)).set(compilationResult.analysis, compilationResult.setup)
+      AnalysisStore.materializeLazy(MixedAnalyzingCompiler.staticCachedStore(cacheFile, true)).set(AnalysisContents.create(compilationResult.analysis, compilationResult.setup))
     compilationResult.analysis match {
       case a: Analysis => a
       case a => throw new IllegalStateException(s"object of type `Analysis` was expected but got `${a.getClass}`.")

@@ -1,5 +1,7 @@
 package org.scalaide.core.internal.builder.zinc
 
+import java.util.Optional
+
 import scala.collection.mutable
 import scala.reflect.internal.Chars
 
@@ -95,7 +97,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   def createMarker(pos: xsbti.Position, msg: String, sev: xsbti.Severity) = {
-    import SbtUtils._
+    import org.scalaide.util.internal.SbtUtils._
     val severity = eclipseSeverity(sev)
 
     val marker: Option[Unit] = for {
@@ -104,7 +106,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       offset <- jo2o(pos.offset)
       line <- jo2o(pos.line)
     } yield if (resource.getFileExtension != "java") {
-      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, jo2m(pos.pointer)), line)
+      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
       logger.info(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
@@ -116,9 +118,9 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   /** Return the identifier starting at `start` inside `content`. */
-  private def identifierLength(content: String, start: xsbti.Maybe[Integer]): Int = {
+  private def identifierLength(content: String, start: Optional[Integer]): Int = {
     def isOK(c: Char) = Chars.isIdentifierPart(c) || Chars.isOperatorPart(c)
-    if (start.isDefined)
+    if (start.isPresent)
       (content drop start.get takeWhile isOK).size
     else
       0
