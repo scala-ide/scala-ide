@@ -27,6 +27,7 @@ import xsbti.compile.MultipleOutput
 import xsbti.compile.TransactionalManagerType
 import sbt.internal.inc.FreshCompilerCache
 import java.util.Optional
+import xsbti.compile.ScalaInstance
 
 /**
  * Inputs-like class, but not implementing xsbti.compile.Inputs.
@@ -145,7 +146,16 @@ class SbtInputs(installation: IScalaInstallation,
         // prevent zinc from adding things to the (boot)classpath
         val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
-          new AnalyzingCompiler(scalaInstance, CompilerBridgeProvider.constant(compilerBridge.toFile), cpOptions, _ ⇒ (), None),
+          new AnalyzingCompiler(scalaInstance,
+              new CompilerBridgeProvider {
+                def fetchCompiledBridge(si: ScalaInstance, logger: Logger) = si match {
+                  case scalaInstance => compilerBridge.toFile
+                }
+                def fetchScalaInstance(scalaVersion: String, logger: Logger) = scalaInstance
+              },
+              cpOptions,
+              _ ⇒ (),
+              None),
           new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
