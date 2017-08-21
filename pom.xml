@@ -37,6 +37,7 @@
     <sbt-io.version>1.0.0</sbt-io.version>
     <sbinary.version>0.4.4</sbinary.version>
     <scala-refactoring.version>0.13.0-SNAPSHOT</scala-refactoring.version>
+    <scalariform.version>0.2.3</scalariform.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -87,7 +88,6 @@
 
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
-    <repo.scalariform>http://downloads.typesafe.com/scalaide/scalariform-${scala.short.version}x</repo.scalariform>
     <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
 
   </properties>
