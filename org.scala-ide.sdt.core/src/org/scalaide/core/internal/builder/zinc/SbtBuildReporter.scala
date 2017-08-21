@@ -75,13 +75,14 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       Option(riseErrorOrWarning(_))
     }.foreach(_(sev))
 
-  override def log(pos: xsbti.Position, msg: String, sev: xsbti.Severity): Unit = {
-    val problem = SbtProblem(sev, msg, pos, "compile")
+  override def log(sbtProblem: xsbti.Problem): Unit = {
+    import sbtProblem._
+    val problem = SbtProblem(severity, message, position, category)
     if (!probs.contains(problem)) {
-      createMarker(pos, msg, sev)
+      createMarker(position, message, severity)
       probs += problem
     }
-    riseNonJavaErrorOrWarning(pos, sev)
+    riseNonJavaErrorOrWarning(position, severity)
   }
 
   def eclipseSeverity(severity: xsbti.Severity): Int = severity match {

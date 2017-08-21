@@ -89,7 +89,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         hasInternalErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
-        sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
+        sbtReporter.log(new xsbti.Problem {
+          def position = SbtUtils.NoPosition
+          def message = "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details."
+          def severity = xsbti.Severity.Error
+          def category = "compile"
+        })
     } finally {
       ProductExposer.showJavaCompilationProducts(project.underlying)
     }
@@ -212,7 +217,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       case Right(comps) =>
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
-        sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
+        sbtReporter.log(new xsbti.Problem {
+          def position = SbtUtils.NoPosition
+          def message = errors
+          def severity = xsbti.Severity.Error
+          def category = "compile"
+        })
         throw CompilerBridgeFailed
     }
   }
