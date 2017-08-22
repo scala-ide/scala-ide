@@ -36,6 +36,7 @@ import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.ui.internal.preferences.ScalaPluginSettings
 import org.scalaide.util.eclipse.EclipseUtils
+import org.scalaide.util.internal.CompilerUtils
 import org.scalaide.util.internal.SettingConverterUtil
 
 /** The Scala classpath broken down in the JDK, Scala library and user library.
@@ -102,15 +103,16 @@ private final case class ClasspathMarkerFactory(markerId: String) extends Marker
 private object VersionInFile {
 
   /**
-   * Regex accepting filename of the format: name_2.xx.xx-version.jar.
-   * It is used to extract the `2.xx.xx` section.
+   * Regex accepting filename of the format: name_2.MIN.REV-BUILD.jar.
+   * It is used to extract the `2.MIN` or `2.MIN.REV` section.
+   * Second extracted variable indicates if REV was specified.
    */
-  private val CrossCompiledRegex = """.*_(2\.\d+(?:\.\d*)?)(?:-.*)?.jar""".r
+  private val CrossCompiledRegex = """.*_(2\.\d+(?:\.(\d*))?)(?:-.*)?.jar""".r
 
-  def unapply(fileName: String): Option[ScalaVersion] = {
+  def unapply(fileName: String): Option[(ScalaVersion, Boolean)] = {
     fileName match {
-      case CrossCompiledRegex(version) =>
-        Some(ScalaVersion(version))
+      case CrossCompiledRegex(version, revision) =>
+        Some((ScalaVersion(version), revision != null))
       case _ =>
         None
     }
@@ -490,7 +492,7 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
   private def validateBinaryVersionsOnClasspath(): Seq[ClasspathErrorMarker] = {
     scalaClasspath.userCp.foldLeft(List[ClasspathErrorMarker]()) {
       case (errors, entry) if entry ne null ⇒ entry.lastSegment() match {
-        case VersionInFile(version) if !ScalaPlugin().isCompatibleVersion(version, this) ⇒
+        case VersionInFile(version, _) if !ScalaPlugin().isCompatibleVersion(version, this) ⇒
           val msg = s"${entry.lastSegment()} of ${underlying.getName()} build path is cross-compiled with an incompatible version of Scala (${version.unparse}). In case this report is mistaken, this check can be disabled in the compiler preference page."
           ClasspathErrorMarker(IMarker.SEVERITY_ERROR, msg, SdtConstants.ScalaVersionProblemMarkerId) :: errors
         case _ ⇒
@@ -524,7 +526,11 @@ trait ClasspathManagement extends HasLogger { self: ScalaProject =>
       SdtConstants.ScalaVersionProblemMarkerId)
 
     plugins.foldLeft(List[ClasspathErrorMarker]()) {
-      case (errors, p @ VersionInFile(version)) if version != installation.version ⇒
+      // plugins cross compiled with full Scala version
+      case (errors, p @ VersionInFile(version, true)) if version != installation.version ⇒
+        error(version, p) :: errors
+      // plugins cross compiled with binary Scala version
+      case (errors, p @ VersionInFile(version, false)) if !CompilerUtils.isBinarySame(version, installation.version) ⇒
         error(version, p) :: errors
       case (errors, _) ⇒
         errors
