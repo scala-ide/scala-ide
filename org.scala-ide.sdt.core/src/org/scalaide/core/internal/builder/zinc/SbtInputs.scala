@@ -72,7 +72,9 @@ class SbtInputs(installation: IScalaInstallation,
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
       withClassfileManagerType(Optional.ofNullable(TransactionalManagerType.create(tempDir, logger))).
       withApiDumpDirectory(Optional.empty()).
-      withRecompileOnMacroDef(Optional.ofNullable(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
+      withRecompileOnMacroDef(Optional.ofNullable(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
+      withEnabled(IncOptions.defaultEnabled()).
+      withStoreApis(IncOptions.defaultStoreApis())
   }
 
   def outputFolders = srcOutputs.map {
@@ -88,29 +90,11 @@ class SbtInputs(installation: IScalaInstallation,
 
   def sources = sourceFiles.toArray
 
-  def output = new MultipleOutput {
-    private def sourceOutputFolders =
-      if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
-
-    override def getOutputGroups = sourceOutputFolders.map {
-      case (src, out) => new OutputGroup {
-        override def getSourceDirectory = {
-          val loc = src.getLocation
-          if (loc != null)
-            loc.toFile()
-          else
-            throw new IllegalStateException(s"The source folder location `$src` is invalid.")
-        }
-        override def getOutputDirectory = {
-          val loc = out.getLocation
-          if (loc != null)
-            loc.toFile()
-          else
-            throw new IllegalStateException(s"The output folder location `$out` is invalid.")
-        }
-      }
-    }.toArray
+  private val srcOutDirs = (if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders).map {
+      case (src, out) => (src.getLocation.toFile(), out.getLocation.toFile())
   }
+
+  def output = new EclipseMultipleOutput(srcOutDirs)
 
   // remove arguments not understood by build compiler
   def scalacOptions =
@@ -160,6 +144,15 @@ class SbtInputs(installation: IScalaInstallation,
           new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
+}
+
+class EclipseMultipleOutput(val srcOuts: Seq[(File, File)]) extends MultipleOutput {
+  override def getOutputGroups = srcOuts.map {
+    case (src, out) => new OutputGroup {
+      override def getSourceDirectory = src
+      override def getOutputDirectory = out
+    }
+  }.toArray
 }
 
 private[zinc] object Locator {
