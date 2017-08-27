@@ -505,8 +505,7 @@ class ClasspathTests {
   def errorKeptAfterClean(): Unit = {
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
 
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    rebuild()
 
     checkMarkers(0, 1)
   }
@@ -524,8 +523,7 @@ class ClasspathTests {
     // illegal option
     projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xi_dont_know")
 
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    rebuild()
 
     project.classpathHasChanged() // trick to make the check happen
 
@@ -537,8 +535,7 @@ class ClasspathTests {
     // back to normal
     projectStore.setToDefault(CompilerSettings.ADDITIONAL_PARAMS)
 
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    rebuild()
 
     project.classpathHasChanged() // trick to make the check happen
 
@@ -553,8 +550,7 @@ class ClasspathTests {
     // illegal option
     projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-P:unknown:error")
 
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    rebuild()
 
     project.classpathHasChanged() // trick to make the check happen
 
@@ -568,8 +564,7 @@ class ClasspathTests {
    */
   @Test
   def errorInClasspathStopBuild(): Unit = {
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
+    rebuild()
 
     // no error on the project itself
     checkMarkers(0, 0)
@@ -585,6 +580,70 @@ class ClasspathTests {
     // no code errors visible anymore
     markers = project.underlying.findMarkers(SdtConstants.ProblemMarkerId, true, IResource.DEPTH_INFINITE)
     assertEquals("Unexpected number of scala problems in project", 0, markers.length)
+  }
+
+  /**
+   * Check that binary cross-compiled compiler plugin is accepted when versions match
+   * eg. kind-projector_2.12-0.9.4 with Scala 2.12.3
+   */
+  @Test
+  def compatibleBinaryCrossCompiledPlugin(): Unit = {
+    enableProjectSpecificSettings()
+
+    val plugin = s".../compiler-plugin_${scalaVersion(full = false, offset = 0)}-1.0.jar"
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-XPlugin=$plugin")
+
+    rebuild()
+
+    checkMarkers(0, 0)
+  }
+
+  /**
+   * Check that binary cross-compiled compiler plugin is rejected when versions don't match
+   * eg. kind-projector_2.11-0.9.4 with Scala 2.12.3
+   */
+  @Test
+  def nonCompatibleBinaryCrossCompiledPlugin(): Unit = {
+    enableProjectSpecificSettings()
+
+    val plugin = s".../compiler-plugin_${scalaVersion(full = false, offset = -1)}-1.0.jar"
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-XPlugin=$plugin")
+
+    rebuild()
+
+    setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
+  }
+
+  /**
+   * Check that fully cross-compiled compiler plugin is accepted when versions match
+   * eg. paradise_2.12.3-2.1.0 with Scala 2.12.3
+   */
+  @Test
+  def compatibleFullCrossCompiledPlugin(): Unit = {
+    enableProjectSpecificSettings()
+
+    val plugin = s".../compiler-plugin_${scalaVersion(full = true, offset = 0)}-1.0.jar"
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-XPlugin=$plugin")
+
+    rebuild()
+
+    checkMarkers(0, 0)
+  }
+
+  /**
+   * Check that fully cross-compiled compiler plugin is rejected when versions don't match
+   * eg. paradise_2.12.2-2.1.0 with Scala 2.12.3
+   */
+  @Test
+  def nonCompatibleFullCrossCompiledPlugin(): Unit = {
+    enableProjectSpecificSettings()
+
+    val plugin = s".../compiler-plugin_${scalaVersion(full = true, offset = -1)}-1.0.jar"
+    projectStore.setValue(CompilerSettings.ADDITIONAL_PARAMS, s"-XPlugin=$plugin")
+
+    rebuild()
+
+    setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
   }
 
   /**
@@ -672,5 +731,13 @@ class ClasspathTests {
 
   private def newLibraryEntry(name: String, shortScalaVersion: String = testShortScalaVersion): IClasspathEntry = {
     JavaCore.newLibraryEntry(new Path("/classpath/lib/"+shortScalaVersion+".x/"+name), null, null)
+  }
+
+  private def scalaVersion(full: Boolean, offset: Int) =
+    CompilerUtils.versionString(IScalaPlugin().scalaVersion, full, offset)
+
+  private def rebuild(): Unit = {
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
   }
 }
