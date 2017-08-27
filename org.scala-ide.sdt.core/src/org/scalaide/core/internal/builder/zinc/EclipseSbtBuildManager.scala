@@ -219,7 +219,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
         sbtReporter.log(problem(
-       	  "compile",
+          "compile",
           SbtUtils.NoPosition,
           errors,
           xsbti.Severity.Error
