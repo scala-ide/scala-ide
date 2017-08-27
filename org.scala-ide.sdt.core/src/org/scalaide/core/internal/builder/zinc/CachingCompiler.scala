@@ -7,14 +7,15 @@ import org.scalaide.util.internal.SbtUtils
 import sbt.internal.inc.Analysis
 import sbt.internal.inc.IncrementalCompilerImpl
 import sbt.internal.inc.MixedAnalyzingCompiler
+import sbt.util.InterfaceUtil.o2jo
 import xsbti.Logger
 import xsbti.Reporter
+import xsbti.compile.AnalysisContents
 import xsbti.compile.CompileResult
 import xsbti.compile.DefinesClass
 import xsbti.compile.JavaCompiler
 import xsbti.compile.PerClasspathEntryLookup
 import xsbti.compile.ScalaCompiler
-import xsbti.compile.AnalysisContents
 
 /**
  * Contains a Scala and a Java compiler. Should be used instead of
@@ -51,7 +52,7 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
         case (a, s) => (Option(a), Option(s))
       }.getOrElse((Option(SbtUtils.readAnalysis(cacheFile)), None))
     cacheAndReturnLastAnalysis(new IncrementalCompilerImpl().compile(comps.scalac, comps.javac, in.sources, in.classpath, in.output, in.cache,
-      in.scalacOptions, in.javacOptions, SbtUtils.o2jo(previousAnalysis), SbtUtils.o2jo(previousSetup), lookup, sbtReporter, in.order,
+      in.scalacOptions, in.javacOptions, o2jo(previousAnalysis), o2jo(previousSetup), lookup, sbtReporter, in.order,
       skip = false, in.progress, in.incOptions, extra = Array(), log))
   }
 

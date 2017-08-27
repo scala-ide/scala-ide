@@ -1,11 +1,11 @@
 package org.scalaide.core.internal.builder.zinc
 
-import sbt.internal.inc.Analysis
+import java.util.Optional
 
+import sbt.internal.inc.Analysis
+import xsbti.compile.AnalysisContents
 import xsbti.compile.CompileAnalysis
 import xsbti.compile.MiniSetup
-import java.util.Optional
-import xsbti.compile.AnalysisContents
 
 object AnalysisStore {
   import xsbti.compile.{ AnalysisStore => SbtAnalysisStore }

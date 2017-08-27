@@ -33,6 +33,7 @@ import xsbti.CompileFailed
 import xsbti.Logger
 import xsbti.compile.CompileProgress
 import xsbti.compile.analysis.SourceInfo
+import sbt.util.InterfaceUtil._
 
 /**
  * An Eclipse builder using the Sbt engine.
@@ -89,12 +90,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         hasInternalErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
-        sbtReporter.log(new xsbti.Problem {
-          def position = SbtUtils.NoPosition
-          def message = "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details."
-          def severity = xsbti.Severity.Error
-          def category = "compile"
-        })
+        sbtReporter.log(problem(
+          "compile",
+          SbtUtils.NoPosition,
+          "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.",
+          xsbti.Severity.Error
+        ))
     } finally {
       ProductExposer.showJavaCompilationProducts(project.underlying)
     }
@@ -217,12 +218,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       case Right(comps) =>
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
-        sbtReporter.log(new xsbti.Problem {
-          def position = SbtUtils.NoPosition
-          def message = errors
-          def severity = xsbti.Severity.Error
-          def category = "compile"
-        })
+        sbtReporter.log(problem(
+       	  "compile",
+          SbtUtils.NoPosition,
+          errors,
+          xsbti.Severity.Error
+        ))
         throw CompilerBridgeFailed
     }
   }

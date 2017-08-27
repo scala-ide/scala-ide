@@ -12,7 +12,8 @@ import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.util.internal.SbtUtils
+
+import sbt.util.InterfaceUtil._
 
 private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
     extends xsbti.Problem {
@@ -64,7 +65,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
-    SbtUtils.jo2o(pos.sourceFile).flatMap { file =>
+    jo2o(pos.sourceFile).flatMap { file =>
       FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
     }.map { resource =>
       if (resource.getFileExtension != "java")
@@ -98,7 +99,6 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   def createMarker(pos: xsbti.Position, msg: String, sev: xsbti.Severity) = {
-    import org.scalaide.util.internal.SbtUtils._
     val severity = eclipseSeverity(sev)
 
     val marker: Option[Unit] = for {

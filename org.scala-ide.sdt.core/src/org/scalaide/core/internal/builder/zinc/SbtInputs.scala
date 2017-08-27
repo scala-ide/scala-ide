@@ -1,6 +1,7 @@
 package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
+import java.util.Optional
 import java.util.zip.ZipFile
 
 import org.eclipse.core.resources.IContainer
@@ -14,21 +15,20 @@ import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.AnalyzingCompiler
-import xsbti.compile.CompilerBridgeProvider
+import sbt.internal.inc.FreshCompilerCache
 import sbt.internal.inc.Locate
 import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
 import xsbti.compile.ClasspathOptions
 import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileProgress
+import xsbti.compile.CompilerBridgeProvider
 import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
 import xsbti.compile.MultipleOutput
 import xsbti.compile.OutputGroup
-import xsbti.compile.TransactionalManagerType
-import sbt.internal.inc.FreshCompilerCache
-import java.util.Optional
 import xsbti.compile.ScalaInstance
+import xsbti.compile.TransactionalManagerType
 
 /**
  * Inputs-like class, but not implementing xsbti.compile.Inputs.
@@ -66,15 +66,25 @@ class SbtInputs(installation: IScalaInstallation,
   def progress = Optional.ofNullable(scalaProgress)
 
   def incOptions: IncOptions = {
-    val base = IncOptions.of()
+    import xsbti.compile.IncOptions._
+    val base = of()
     base.
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
       withClassfileManagerType(Optional.ofNullable(TransactionalManagerType.create(tempDir, logger))).
       withApiDumpDirectory(Optional.empty()).
       withRecompileOnMacroDef(Optional.ofNullable(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
-      withEnabled(IncOptions.defaultEnabled()).
-      withStoreApis(IncOptions.defaultStoreApis())
+      withEnabled(defaultEnabled()).
+      withStoreApis(defaultStoreApis()).
+      withApiDiffContextSize(defaultApiDiffContextSize()).
+      withExternalHooks(defaultExternal()).
+      withExtra(defaultExtra()).
+      withLogRecompileOnMacro(defaultLogRecompileOnMacro()).
+      withRecompileAllFraction(defaultRecompileAllFraction()).
+      withRelationsDebug(defaultRelationsDebug()).
+      withTransitiveStep(defaultTransitiveStep()).
+      withUseCustomizedFileManager(defaultUseCustomizedFileManager()).
+      withUseOptimizedSealed(defaultUseOptimizedSealed())
   }
 
   def outputFolders = srcOutputs.map {
@@ -90,9 +100,14 @@ class SbtInputs(installation: IScalaInstallation,
 
   def sources = sourceFiles.toArray
 
-  private val srcOutDirs = (if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders).map {
-      case (src, out) => (src.getLocation.toFile(), out.getLocation.toFile())
-  }
+  private def srcOutDirs = (if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders).map {
+      case (src, out) => (Option(src.getLocation).map(_.toFile()), Option(out.getLocation).map(_.toFile()))
+    }.collect {
+      case (Some(src), Some(out)) => (src, out)
+      case (Some(src), None) => throw new IllegalStateException(s"Not found output folder for source $src folder. Check build configuration.")
+      case (None, Some(out)) => throw new IllegalStateException(s"Not found source folder for output $out folder. Check build configuration.")
+      // case (None, None) is correct for some project building states. Ignore it.
+    }
 
   def output = new EclipseMultipleOutput(srcOutDirs)
 
@@ -146,6 +161,10 @@ class SbtInputs(installation: IScalaInstallation,
   }
 }
 
+/**
+ * This class is serialized by Zinc. Don't forget to get rid off all closure dependences
+ * in case of re-implementing it.
+ */
 class EclipseMultipleOutput(val srcOuts: Seq[(File, File)]) extends MultipleOutput {
   override def getOutputGroups = srcOuts.map {
     case (src, out) => new OutputGroup {
