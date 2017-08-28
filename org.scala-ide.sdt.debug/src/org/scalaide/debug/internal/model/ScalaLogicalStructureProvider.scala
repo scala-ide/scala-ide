@@ -3,7 +3,6 @@
  */
 package org.scalaide.debug.internal.model
 
-
 import org.eclipse.debug.core.ILogicalStructureProvider
 import org.eclipse.debug.core.ILogicalStructureType
 import org.eclipse.debug.core.model.IValue
@@ -25,8 +24,8 @@ class ScalaLogicalStructureProvider extends ILogicalStructureProvider {
         if (ScalaLogicalStructureProvider.isScalaCollection(objectReference)) {
           Array(ScalaLogicalStructureProvider)
         } else AkkaActorLogicalStructure.enclosingActor(objectReference) match {
-          case Some(actorReference) => Array(AkkaActorLogicalStructure)
-          case _                    => Array()
+          case Some(_) => Array(AkkaActorLogicalStructure)
+          case _       => Array()
         }
       case _ =>
         ScalaLogicalStructureProvider.emptyLogicalStructureTypes

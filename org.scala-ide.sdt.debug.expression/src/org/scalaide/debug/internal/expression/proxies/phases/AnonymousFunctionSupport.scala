@@ -180,7 +180,7 @@ trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
 
   // we should exclude start function -> it must stay function cos it is not a part of original expression
   protected def isStartFunctionForExpression(params: List[ValDef]) = params match {
-    case List(ValDef(_, name, typeTree, _)) if name == ContextParamName => true
+    case List(ValDef(_, name, _, _)) if name == ContextParamName => true
     case _ => false
   }
 
@@ -224,7 +224,7 @@ trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
     val arity = params.size
 
     val lambdaParams = params.zip(parametersTypes).map{
-      case (ValDef(mods, name, _, impl), typeName) =>
+      case (ValDef(_, name, _, _), typeName) =>
         s"$name: $typeName"
     }.mkString(", ")
 
@@ -280,7 +280,7 @@ trait AnonymousFunctionSupport[+Tpe <: TypecheckRelation]
       tpe match {
         case PolyType(_, realType) =>
           innerArgs(realType)
-        case MethodType(params, resultType) =>
+        case MethodType(params, _) =>
           params.map(isByNameParam)
         case _ => Nil
       }

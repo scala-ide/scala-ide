@@ -28,7 +28,7 @@ trait ScalaInstallationChoiceUIProviders {
     override def getText(element: Any): String = element match {
       case ch: IScalaInstallationChoice => ch.marker match {
         case Left(scalaVersion) => s"Latest ${shortString(scalaVersion)} bundle (dynamic)"
-        case Right(hashcode) => s"Fixed $itemTitle : ${resolve(ch) map (_.version.unparse) getOrElse " none "}"
+        case Right(_) => s"Fixed $itemTitle : ${resolve(ch) map (_.version.unparse) getOrElse " none "}"
       }
       case _ => "[ unparseable ]"
     }

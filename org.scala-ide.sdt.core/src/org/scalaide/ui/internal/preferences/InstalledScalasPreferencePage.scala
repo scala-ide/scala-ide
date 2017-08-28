@@ -125,7 +125,7 @@ class InstalledScalasPreferencePage extends PreferencePage with IWorkbenchPrefer
       val selection = list.getSelection().asInstanceOf[IStructuredSelection]
       selection.iterator().asScala foreach { s =>
         s match {
-          case d: LabeledScalaInstallation if cond(d.label) { case CustomScalaInstallationLabel(tag) => true } =>
+          case d: LabeledScalaInstallation if cond(d.label) { case CustomScalaInstallationLabel(_) => true } =>
             customInstallations -= d
             list.remove(d)
           case _ => ()

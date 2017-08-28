@@ -98,7 +98,7 @@ case class FoundToRequiredTypeCase(formatStrings: List[String],
         // fold all groups and compare them - capturing group count must be the same for both patterns
         (true /: (1 to foundMatcher.groupCount()) ) {
           case (false, _) => false
-          case (result, ind) => foundMatcher.group(ind) == requiredMatcher.group(ind)
+          case (_, ind) => foundMatcher.group(ind) == requiredMatcher.group(ind)
         }
       ) {
         // get annotation matcher

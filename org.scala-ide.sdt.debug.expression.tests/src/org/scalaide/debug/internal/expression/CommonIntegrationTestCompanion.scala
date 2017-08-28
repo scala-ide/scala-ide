@@ -60,7 +60,7 @@ class CommonIntegrationTestCompanion(projectName: String)
     try {
       BlockingProgressMonitor.waitUntilDone(SDTTestUtils.deleteProjects(project)(_))
     } catch {
-      case e: ResourceException => // could not delete resource, but don't you worry ;)
+      case _: ResourceException => // could not delete resource, but don't you worry ;)
     }
   }
 }

@@ -4,7 +4,6 @@ import java.io.IOException
 import java.util.{ List => JList }
 import java.util.{ Map => JMap }
 
-
 import org.eclipse.core.runtime.IProgressMonitor
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
@@ -190,7 +189,7 @@ class ListenForConnectionJob(launch: ILaunch, process: ListenForConnectionProces
       connectionSuccesful()
       Status.OK_STATUS
     } catch {
-      case e: TransportTimeoutException =>
+      case _: TransportTimeoutException =>
         connectionFailed("No connection received before timeout expired")
         Status.OK_STATUS
       case e: IOException =>

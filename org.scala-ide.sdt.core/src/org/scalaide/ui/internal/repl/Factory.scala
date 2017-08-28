@@ -60,7 +60,7 @@ object Factory {
     target match {
       case Some(x : IPackageFragment) =>
         workingCopy.setAttribute(InterpreterLaunchConstants.PACKAGE_IMPORT, x.getElementName)
-      case Some(x : ITypeRoot) =>
+      case Some(_ : ITypeRoot) =>
 
       case _ => //Ignore
     }

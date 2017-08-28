@@ -6,7 +6,6 @@ package proxies.phases
 
 import scala.reflect.runtime.universe
 
-
 /**
  * Flattens the methods parameters lists.
  *
@@ -26,7 +25,7 @@ class FlattenMultiArgListMethods extends AstTransformer[AfterTypecheck] {
   private def flattenArgumentLists(transformFurther: (Tree => Tree), tree: Tree): (Option[List[Tree]], Tree) = {
     tree match {
       // select part of a method
-      case select @ Select(qualifier, name) if select.symbol.isMethod =>
+      case select @ Select(_, _) if select.symbol.isMethod =>
         None -> transformFurther(select)
 
       // flatten parameters lists

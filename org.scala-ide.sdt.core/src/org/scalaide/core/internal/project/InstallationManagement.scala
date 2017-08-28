@@ -113,7 +113,7 @@ trait InstallationManagement { this: ScalaProject =>
   private def parseScalaInstallationChoice(str: String): Option[ScalaInstallationChoice] = Try(str.toInt) match {
     case Success(int) => Some(ScalaInstallationChoice(Right(int)))
     case Failure(t) => t match {
-      case ex: NumberFormatException => Try(ScalaVersion(str)).toOption map (ScalaInstallationChoice(_))
+      case _: NumberFormatException => Try(ScalaVersion(str)).toOption map (ScalaInstallationChoice(_))
     }
   }
 

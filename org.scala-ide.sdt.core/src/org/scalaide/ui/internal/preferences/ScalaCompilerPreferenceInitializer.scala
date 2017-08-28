@@ -21,13 +21,13 @@ class ScalaCompilerPreferenceInitializer extends AbstractPreferenceInitializer {
     def defaultPreference(s: Settings#Setting): Unit = {
       val preferenceName = convertNameToProperty(s.name)
       val default = s match {
-          case bswd : ScalaPluginSettings.BooleanSettingWithDefault => bswd.default.toString()
-          case bs : Settings#BooleanSetting => "false"
-          case is : Settings#IntSetting => is.default.toString
-          case ss : Settings#StringSetting => ss.default
-          case ms : Settings#MultiStringSetting => ""
-          case cs : Settings#ChoiceSetting => cs.default
-        }
+        case bswd: ScalaPluginSettings.BooleanSettingWithDefault => bswd.default.toString()
+        case _: Settings#BooleanSetting                          => "false"
+        case is: Settings#IntSetting                             => is.default.toString
+        case ss: Settings#StringSetting                          => ss.default
+        case _: Settings#MultiStringSetting                      => ""
+        case cs: Settings#ChoiceSetting                          => cs.default
+      }
       store.setDefault(preferenceName, default)
     }
 

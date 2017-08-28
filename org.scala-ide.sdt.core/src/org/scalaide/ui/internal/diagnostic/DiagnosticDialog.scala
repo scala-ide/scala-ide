@@ -129,7 +129,7 @@ class DiagnosticDialog(configurer: WeavingStateConfigurer, shell: Shell) extends
     def updateWidget(): Unit = { textWidget.setText(value.toString) }
     def updateValue(): Unit = {
       value = DiagnosticDialog.getIntOrError(textWidget.getText) match {
-        case Left(error) => recommendedVal
+        case Left(_) => recommendedVal
         case Right(num) => num
       }
     }
@@ -418,7 +418,7 @@ object DiagnosticDialog {
         if (result <= 0) Left(Messages.format(PreferencesMessages.SpellingPreferencePage_invalid_threshold, number))
         else Right(result)
       } catch {
-        case e: NumberFormatException =>
+        case _: NumberFormatException =>
           Left(Messages.format(PreferencesMessages.SpellingPreferencePage_invalid_threshold, number))
       }
     }

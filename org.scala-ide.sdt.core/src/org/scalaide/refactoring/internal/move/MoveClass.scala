@@ -93,7 +93,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
             add(new MoveResourceChange(file.getResource, target.getCorrespondingResource.asInstanceOf[IFolder]))
 
           // Otherwise, create a new file with the changes's content.
-          case newFile :: rest =>
+          case newFile :: _ =>
             val pth = target.getPath.append(preparationResult.right.get.get.name.toString + ".scala")
             add(new CreateFileChange(pth, newFile.text, file.getResource.asInstanceOf[IFile].getCharset))
         }
@@ -122,7 +122,7 @@ class MoveClass extends RefactoringExecutorWithWizard {
       // the changes contain either a NewFileChange or we need to move the current file.
 
       val (textChanges, newFileChanges) = {
-        (performRefactoring() :\ (List[TextChange](), List[NewFileChange]())) {
+        (performRefactoring() :\ (List[TextChange]() → List[NewFileChange]())) {
           case (change: TextChange, (textChanges, newFiles)) =>
             (change :: textChanges, newFiles)
           case (change: NewFileChange, (textChanges, newFilesChanges)) =>

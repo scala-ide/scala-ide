@@ -35,7 +35,7 @@ class ScalaDeclarationHyperlinkComputer extends HasLogger {
               if (expr.pos.includes(pos)) {
                 @annotation.tailrec
                 def locate(p: Position, inExpr: Tree): Symbol = inExpr match {
-                  case Select(qualifier, name) =>
+                  case Select(qualifier, _) =>
                     if (qualifier.pos.includes(p)) locate(p, qualifier)
                     else inExpr.symbol
                   case tree => tree.symbol

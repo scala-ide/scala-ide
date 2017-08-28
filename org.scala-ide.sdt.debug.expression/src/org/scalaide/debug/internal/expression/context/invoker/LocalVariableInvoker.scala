@@ -27,7 +27,7 @@ class LocalVariableInvoker(
       result = frame.setValue(variable, autobox(variable.`type`, newValue))
     } yield context.mirrorOf(result)
   } catch {
-    case isfe: InvalidStackFrameException =>
+    case _: InvalidStackFrameException =>
       // TODO - O-8559 - assignment to local var of primitive type does not work now
       throw new UnsupportedFeature("assignment to local var of primitive type")
   }

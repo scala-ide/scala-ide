@@ -224,7 +224,7 @@ trait SaveActionExtensions extends HasLogger {
           applyChanges(instance.setting, changes, udoc)
         }
 
-      case Failure(f) =>
+      case Failure(_) =>
         eclipseLog.error(s"""|
            |Save action '$id' didn't complete, it had $timeout
            | time to complete. Please consider to disable it in the preferences.

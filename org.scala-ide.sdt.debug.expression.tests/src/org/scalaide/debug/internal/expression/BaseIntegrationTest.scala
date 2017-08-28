@@ -25,7 +25,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
     def apply(value: String, tpe: String) = s"$value (of type: $tpe)"
     def unapply(string: String): Option[(String, String)] = string match {
       case regex(value, tpe) => Some((value, tpe))
-      case other => None
+      case _ => None
     }
   }
 
@@ -61,7 +61,7 @@ class BaseIntegrationTest(protected val companion: BaseIntegrationTestCompanion)
       runInEclipse(code, forceRetry = false).toString
       fail(s"ToolBoxError should be thrown")
     } catch {
-      case expected: ReflectiveCompilationFailure => // OK
+      case _: ReflectiveCompilationFailure => // OK
       case other: Throwable =>
         other.printStackTrace()
         fail(s"Expected ReflectiveCompilationFailure, got $other")

@@ -46,7 +46,7 @@ abstract class BaseHyperlinkDetector extends AbstractHyperlinkDetector with HasL
                 else Array(links.head)
             }
           } catch {
-            case e: TimeoutException =>
+            case _: TimeoutException =>
               eclipseLog.info("Timeout while resolving hyperlink in " + scu.file + " at: " + currentSelection)
               null
           }

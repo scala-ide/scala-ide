@@ -56,9 +56,9 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
          * This is done because reference matches are always reported on the enclosing declaration.
          * Ideally, we should create a Traverser subclass and move this ad-hoc logic there.*/
         tree match {
-         case ClassDef(mods, name, tparams, impl) if tree.symbol.isAnonymousClass =>
+         case ClassDef(mods, _, tparams, impl) if tree.symbol.isAnonymousClass =>
            traverseTrees(mods.annotations); traverseTrees(tparams); traverse(impl)
-         case TypeDef(mods, name, tparams, rhs) if !tree.symbol.isAliasType =>
+         case TypeDef(mods, _, tparams, rhs) if !tree.symbol.isAliasType =>
            traverseTrees(mods.annotations); traverseTrees(tparams); traverse(rhs)
          case Function(vparams, body) => traverseTrees(vparams); traverse(body)
          case _ => super.traverse(tree)
@@ -238,7 +238,7 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
           if (t.pos.isDefined)
             reportTypeReference(t.tpe, t.pos)
           t.tpe match {
-            case TypeRef(pre, sym, args) =>
+            case TypeRef(_, _, args) =>
               args foreach { a => reportTypeReference(a, t.pos) }
             case TypeBounds(lo, hi) =>
               reportTypeReference(lo, t.pos)
@@ -277,9 +277,11 @@ trait ScalaMatchLocator { self: ScalaPresentationCompiler =>
     }
 
     def reportAnnotations(sym: Symbol): Unit = {
-      for (annot @ AnnotationInfo(atp, args, assocs) <- sym.annotations) if (annot.pos.isDefined) {
-        reportTypeReference(atp, annot.pos)
-        traverseTrees(args)
+      sym.annotations foreach {
+        case annot @ AnnotationInfo(atp, args, _) if annot.pos.isDefined ⇒
+          reportTypeReference(atp, annot.pos)
+          traverseTrees(args)
+        case _ ⇒
       }
     }
 

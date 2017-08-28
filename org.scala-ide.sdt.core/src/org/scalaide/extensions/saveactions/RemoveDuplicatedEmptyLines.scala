@@ -27,7 +27,7 @@ trait RemoveDuplicatedEmptyLines extends SaveAction with DocumentSupport {
     }
 
     def removedLines = emptyLines.sliding(2) flatMap {
-      case Seq((l1, i1), (l2, i2)) =>
+      case Seq((l1, i1), (_, i2)) =>
         if (i1+1 == i2)
           Seq(Remove(l1.start, l1.end+1))
         else

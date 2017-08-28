@@ -36,7 +36,7 @@ abstract class MethodSignatureIdeRefactoring(feature: Feature, refactoringName: 
   private[method] def mkConfigPage(defdef: refactoring.global.DefDef, paramsObs: refactoring.RefactoringParameters => Unit): UserInputWizardPage
 
   override def getPages: List[RefactoringWizardPage] = defdefOrError match {
-    case Left(error) => Nil
+    case Left(_) => Nil
     case Right(defdef) => mkConfigPage(defdef, refactoringParameters_=)::Nil
   }
 }

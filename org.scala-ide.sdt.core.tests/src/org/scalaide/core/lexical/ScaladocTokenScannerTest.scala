@@ -103,7 +103,7 @@ class ScaladocTokenScannerTest {
      * token of the same type grouped as one single token.
      */
     val groupedToken = (Seq(data.head) /: data.tail) {
-      case (token, t @ (scc, off, len)) =>
+      case (token, t @ (scc, _, len)) =>
         val (sccBefore, offBefore, lenBefore) = token.last
         if (sccBefore == scc)
           token.init :+ ((scc, offBefore, lenBefore+len))

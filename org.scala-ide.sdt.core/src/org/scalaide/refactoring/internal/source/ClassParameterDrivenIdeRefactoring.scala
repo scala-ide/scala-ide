@@ -28,7 +28,7 @@ abstract class ClassParameterDrivenIdeRefactoring(feature: Feature, name: String
     refactoring.RefactoringParameters(callSuper, selectByNames(selectedClassParamNames), keepExistingEqualityMethods)
 
   override def getPages: List[RefactoringWizardPage] = preparationResult match {
-    case Left(error) => Nil
+    case Left(_) => Nil
     case Right(prepResult) => configPage(prepResult)::Nil
   }
 

@@ -102,7 +102,7 @@ object SimpleContentProposalProvider extends HasLogger {
       getMembersForThisClassUsingReflection(currentThisClassName)
     } catch {
       // cannot create class for name locally so use information available via JDI
-      case e: Throwable => getDistinctProposalsForThisViaJdi(thisReference, currentThisClassName)
+      case _: Throwable => getDistinctProposalsForThisViaJdi(thisReference, currentThisClassName)
     }
   }
 
@@ -133,7 +133,7 @@ object SimpleContentProposalProvider extends HasLogger {
     stackFrame.visibleVariables().asScala.map { variable =>
       val typeName = variable.typeName()
       (variable.name(), s"${variable.name()}: ${javaNameToScalaName(typeName)}")
-    }.groupBy { case (content, label) => content }
+    }.groupBy { case (content, _) => content }
       .map {
         case (_, proposals) =>
           val (content, label) = proposals.last
@@ -181,7 +181,7 @@ object SimpleContentProposalProvider extends HasLogger {
 
   private def getMembersForType(tpe: ru.Type): Seq[(String, String)] = {
     val pairs = tpe.members.map(symbol => (symbol, symbol.name.decodedName.toString.trim()))
-      .filter { case (symbol, name) => shouldBeProposal(name) }
+      .filter { case (_, name) => shouldBeProposal(name) }
 
     pairs.flatMap {
       case (symbol, name) =>

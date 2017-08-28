@@ -16,7 +16,7 @@ object SyncCall extends HasLogger {
     }.map { _ =>
       false
     }.recover {
-      case e: TimeoutException => true
+      case _: TimeoutException => true
     }.get
   }
 
@@ -27,7 +27,7 @@ object SyncCall extends HasLogger {
     }.map {
       Option.apply
     }.recover {
-      case e: TimeoutException => None
+      case _: TimeoutException => None
     }.get
   }
 }

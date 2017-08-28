@@ -101,7 +101,7 @@ class AutoEditsPreferencePage extends PreferencePage with IWorkbenchPreferencePa
       def isValid(str: String): Boolean = {
         str.isEmpty() || Commons.split(str, '\n').forall { line ⇒
           Commons.split(line, '=') match {
-            case Seq(k, v) if k.nonEmpty ⇒ true
+            case Seq(k, _) if k.nonEmpty ⇒ true
             case Seq(k) if k.nonEmpty ⇒ true
             case _ ⇒ false
           }

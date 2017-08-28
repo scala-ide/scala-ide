@@ -143,7 +143,7 @@ final class ScalaOutlineInformationControl(parent: Shell, shellStyle: Int, treeS
 
       def matchPattern(node: Any): Boolean = {
         node match {
-          case n: RootNode => true
+          case _: RootNode => true
           case n: ContainerNode =>
             nameMatch(n.name, namePattern) || n.children.values.exists { x => matchPattern(x) }
 

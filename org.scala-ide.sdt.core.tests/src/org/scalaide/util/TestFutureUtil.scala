@@ -25,7 +25,7 @@ object TestFutureUtil {
 
   def waitForConditionOrTimeout(cond: => Boolean, timeout: Duration = DefaultTimeout): Unit = {
     Try(Assert.assertTrue(Await.result(Future { cond }, timeout))) recover {
-      case all => Assert.fail(s"condition '$cond' timed out")
+      case _ => Assert.fail(s"condition '$cond' timed out")
     }
   }
 }

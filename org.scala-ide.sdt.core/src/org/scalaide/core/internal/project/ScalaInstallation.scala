@@ -293,12 +293,12 @@ object ScalaInstallation {
   lazy val initialScalaInstallations = savedScalaInstallations() match {
     case Success(sis) => sis filter (_.isValid()) filter { deserial => !(bundledInstallations ++ multiBundleInstallations exists (_.similar(deserial))) }
     // we need to silently fail, as this happens early in initialization
-    case Failure(throwable) => Nil
+    case Failure(_) => Nil
   }
 
   // This lets you see installs retrieved from serialized bundles as newly-defined custom installations
   private def customize(install: LabeledScalaInstallation) = install.label match {
-    case CustomScalaInstallationLabel(tag) => install
+    case CustomScalaInstallationLabel(_) => install
     case BundledScalaInstallationLabel() | MultiBundleScalaInstallationLabel() => new LabeledScalaInstallation() {
       override def label = new CustomScalaInstallationLabel(s"Scala (legacy with hash ${ScalaInstallationChoice(install).toString()})")
       override def compiler = install.compiler

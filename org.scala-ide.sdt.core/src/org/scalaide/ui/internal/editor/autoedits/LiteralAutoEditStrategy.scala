@@ -32,13 +32,13 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
         command.length = 2
         command.offset -= 1
       } else if (ch(0, '\\') && isEscapeSequence(1)) {
-        if (ch(1, ''')) {
-          if (ch(2, ''')) {
+        if (ch(1, '\'')) {
+          if (ch(2, '\'')) {
             command.length = 2
           }
         } else
           command.length = 2
-      } else if ((ch(0, '"') && ch(1, '"')) || (ch(0, ''') && ch(1, ''')))
+      } else if ((ch(0, '"') && ch(1, '"')) || (ch(0, '\'') && ch(1, '\'')))
         command.length = 2
     }
 
@@ -56,9 +56,9 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def handleClosingLiteral(): Unit = {
-      val isCharFilled = if (ch(-1, ''')) ch(-2, '\\') else !ch(-1, '\\')
+      val isCharFilled = if (ch(-1, '\'')) ch(-2, '\\') else !ch(-1, '\\')
 
-      if (ch(0, ''') && isCharFilled)
+      if (ch(0, '\'') && isCharFilled)
         jumpOverClosingLiteral()
     }
 
@@ -85,7 +85,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
     }
 
     def isEmptyLiteral =
-      ((ch(0, ''') && ch(1, ''')) || (ch(0, '"') && ch(1, '"'))) && !ch(-1, '\\')
+      ((ch(0, '\'') && ch(1, '\'')) || (ch(0, '"') && ch(1, '"'))) && !ch(-1, '\\')
 
     def deleteEmptyLiteral(): Unit = {
       command.length = 2
@@ -117,7 +117,7 @@ class LiteralAutoEditStrategy(prefStore: IPreferenceStore) extends IAutoEditStra
       return
     }
 
-    val isCharacterLiteral = ch(-1, ''') && ch(0, ''')
+    val isCharacterLiteral = ch(-1, '\'') && ch(0, '\'')
     val isMultiLineStringLiteral = ch(-2, '"') && ch(-1, '"')
 
     /*

@@ -55,7 +55,7 @@ class ScalaJdiEventDispatcher private (virtualMachine: VirtualMachine, protected
       else
         Dispatch.done
     } recoverWith {
-      case e: VMDisconnectedException =>
+      case _: VMDisconnectedException =>
         // it is likely that we will see this exception before being able to
         // shutdown the loop after a VMDisconnectedEvent
         dispose()

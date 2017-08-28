@@ -39,7 +39,7 @@ class ScalaOccurrencesFinder(unit: InteractiveCompilationUnit) extends HasLogger
             override val index: IndexLookup = Utils.debugTimed("Time elapsed for building mark occurrences index in source " + sourceFile.file.name) {
               askLoadedTyped(sourceFile, keepLoaded = false).get match {
                 case Left(tree) => compiler.asyncExec(GlobalIndex(tree)).getOrElse(EmptyIndex)()
-                case Right(ex)  => EmptyIndex
+                case Right(_)  => EmptyIndex
               }
             }
           }

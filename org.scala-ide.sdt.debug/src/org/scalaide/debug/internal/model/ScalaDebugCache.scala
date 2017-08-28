@@ -37,7 +37,7 @@ object ScalaDebugCache {
    * Return the the name of the lowest (outer) type containing the type with the given name (everything before the first '$').
    */
   private[model] def extractOuterTypeName(typeName: String) = typeName match {
-    case OuterTypeNameRegex(outerTypeName, nestedTypeName) =>
+    case OuterTypeNameRegex(outerTypeName, _) =>
       outerTypeName
   }
 

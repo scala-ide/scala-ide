@@ -7,7 +7,6 @@ package proxies.phases
 import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
-
 /**
  * Responsible for extracting all functions created from code and rewriting them to proxies.
  * Creates new class for each function and compiles it.
@@ -33,7 +32,7 @@ case class MockLambdas(toolbox: ToolBox[universe.type])
   private def hasByNameParams(byNames: Option[Seq[Boolean]]): Boolean =  byNames.forall(bools => bools.isEmpty || bools.forall(!_))
 
   protected override def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
-    case fun @ Function(params, body) if !isStartFunctionForExpression(params) =>
+    case Function(params, body) if !isStartFunctionForExpression(params) =>
       //search for FunctionXJdiProxy which should be used
       createAndCompileNewFunction(params, body)
 

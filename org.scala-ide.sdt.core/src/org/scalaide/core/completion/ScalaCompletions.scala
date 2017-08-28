@@ -181,7 +181,7 @@ class ScalaCompletions extends HasLogger {
       case Some(compiler.New(name)) =>
         fillTypeCompletions(name.pos.end, CompletionContext.NewContext,
           "", name.pos.start, false)
-      case Some(compiler.Select(qualifier, name)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
+      case Some(compiler.Select(qualifier, _)) if qualifier.pos.isDefined && qualifier.pos.isRange =>
         // completion on qualified type
         fillTypeCompletions(qualifier.pos.end, defaultContext)
       case Some(compiler.Import(expr, _)) =>
@@ -189,7 +189,7 @@ class ScalaCompletions extends HasLogger {
         fillTypeCompletions(expr.pos.end, CompletionContext.ImportContext)
       case Some(compiler.Apply(fun, _)) =>
         fun match {
-          case compiler.Select(qualifier: compiler.New, name) =>
+          case compiler.Select(qualifier: compiler.New, _) =>
             fillTypeCompletions(qualifier.pos.end, CompletionContext.NewContext,
               "", qualifier.pos.start, false)
           case compiler.Select(qualifier, name) if qualifier.pos.isDefined && qualifier.pos.isRange =>

@@ -361,7 +361,7 @@ object IScalaPresentationCompiler extends HasLogger {
                 logger.info("MissingResponse in ask. Called from: ", m)
                 None
 
-              case Right(ie: InterruptedException) =>
+              case Right(_: InterruptedException) =>
                 logger.error("Ignoring InterruptException")
                 Thread.currentThread().interrupt()
                 None
