@@ -148,10 +148,14 @@ class SbtInputs(installation: IScalaInstallation,
         Compilers(
           new AnalyzingCompiler(scalaInstance,
               new CompilerBridgeProvider {
-                def fetchCompiledBridge(si: ScalaInstance, logger: Logger) = si match {
-                  case scalaInstance => compilerBridge.toFile
+                def fetchCompiledBridge(si: ScalaInstance, logger: Logger) = si.version match {
+                  case scalaInstance.version => compilerBridge.toFile
+                  case requested => throw new IllegalStateException(s"${scalaInstance.version} does not match requested one $requested")
                 }
-                def fetchScalaInstance(scalaVersion: String, logger: Logger) = scalaInstance
+                def fetchScalaInstance(scalaVersion: String, logger: Logger) = scalaVersion match {
+                  case scalaInstance.version => scalaInstance
+                  case requested => throw new IllegalStateException(s"${scalaInstance.version} does not match requested one $requested")
+                }
               },
               cpOptions,
               _ ⇒ (),

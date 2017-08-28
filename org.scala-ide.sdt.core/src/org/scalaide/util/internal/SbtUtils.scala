@@ -5,13 +5,14 @@ import java.util.Optional
 
 import sbt.internal.inc.Analysis
 import sbt.internal.inc.FileAnalysisStore
-import sbt.util.InterfaceUtil._
+import sbt.util.InterfaceUtil.jo2o
 import xsbti.compile.AnalysisContents
+import xsbti.compile.CompileAnalysis
 import xsbti.compile.MiniSetup
 
 object SbtUtils {
   object AnalysisContents {
-    def unapply(ac: AnalysisContents) = Option((ac.getAnalysis, ac.getMiniSetup))
+    def unapply(ac: AnalysisContents): Option[(CompileAnalysis, MiniSetup)] = Option((ac.getAnalysis, ac.getMiniSetup))
   }
 
   def readCache(cacheFile: File): Option[(Analysis, MiniSetup)] =
