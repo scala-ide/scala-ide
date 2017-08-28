@@ -25,7 +25,7 @@ class ExpressionManagerTest extends BaseIntegrationTest(ExpressionManagerTest) {
     var error: String = null
 
     ExpressionManager.compute(code) match {
-      case SuccessWithValue(scalaValue, outputText) =>
+      case SuccessWithValue(_, outputText) =>
         result = Some(outputText)
       case SuccessWithoutValue(outputText) =>
         result = Some(outputText)

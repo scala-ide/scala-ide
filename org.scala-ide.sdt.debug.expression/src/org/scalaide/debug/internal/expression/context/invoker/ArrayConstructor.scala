@@ -15,6 +15,6 @@ class ArrayConstructor(className: String, args: Seq[JdiProxy], context: JdiConte
     case List(proxy: IntJdiProxy) =>
       val arrayType = context.arrayByName(className)
       Some(arrayType.newInstance(proxy.__value.value))
-    case other => None
+    case _ => None
   }
 }

@@ -4,7 +4,6 @@
 package org.scalaide.debug.internal.expression
 package context
 
-
 import org.scalaide.debug.internal.expression.Names.Java
 import org.scalaide.debug.internal.expression.proxies.ArrayJdiProxy
 import org.scalaide.debug.internal.expression.proxies.JdiProxy
@@ -121,7 +120,7 @@ private[context] trait Proxyfier {
     case value: CharValue => CharJdiProxy(this, value)
     case value: BooleanValue => BooleanJdiProxy(this, value)
     case value: LongValue => LongJdiProxy(this, value)
-    case value: VoidValue => UnitJdiProxy(this)
+    case _: VoidValue => UnitJdiProxy(this)
 
     case v => throw new UnsupportedOperationException("not supported primitive class: " + v.getClass.getName)
   }
@@ -146,7 +145,7 @@ private[context] trait Proxyfier {
       case Java.boxed.Float => FloatJdiProxy(this, primitiveValue.asInstanceOf[FloatValue])
       case Java.boxed.Character => CharJdiProxy(this, primitiveValue.asInstanceOf[CharValue])
       case Java.boxed.Long => LongJdiProxy(this, primitiveValue.asInstanceOf[LongValue])
-      case other => ObjectJdiProxy(this, objectReference)
+      case _ => ObjectJdiProxy(this, objectReference)
     }
   }
 

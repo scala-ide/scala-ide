@@ -223,10 +223,10 @@ private[context] trait JdiMethodInvoker {
       proxy match {
         case Success(some: Some[_]) => some
         case Success(other) if !clsName.contains('.') => other
-        case Success(other) =>
+        case Success(_) =>
           val newClsName = clsName.reverse.replaceFirst("\\.", "\\$").reverse
           if (newClsName != clsName) tryNext(newClsName, constructor) else None
-        case util.Failure(ex: com.sun.jdi.InvocationException) =>
+        case util.Failure(_: com.sun.jdi.InvocationException) =>
           val newClsName = clsName.reverse.replaceFirst("\\.", "\\$").reverse
           if (newClsName != clsName) tryNext(newClsName, constructor) else None
         case util.Failure(exception) => throw exception

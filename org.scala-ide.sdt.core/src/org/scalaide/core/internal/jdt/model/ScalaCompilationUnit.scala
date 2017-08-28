@@ -48,7 +48,7 @@ object ScalaCompilationUnit extends HasLogger {
   // This method provides better error message if cast fails
   private def cast(a: AnyRef): ScalaCompilationUnit = a match {
     case scu: ScalaCompilationUnit => scu
-    case other =>
+    case _ =>
       val message = """Underlying compilation unit is not a Scala Compilation unit.
                       |This is most probably caused by disabled JDT weaving.
                       |Run `Scala -> Run Setup Diagnostics` to enable it.""".stripMargin
@@ -134,7 +134,7 @@ trait ScalaCompilationUnit extends Openable
           unsafeElements.putAll(tmpMap)
           true
         } catch {
-          case e: InterruptedException =>
+          case _: InterruptedException =>
             Thread.currentThread().interrupt()
             logger.info("ignored InterruptedException in build structure")
             false

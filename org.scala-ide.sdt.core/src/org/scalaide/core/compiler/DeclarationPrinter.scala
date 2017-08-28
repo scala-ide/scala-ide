@@ -56,7 +56,7 @@ abstract class DeclarationPrinter extends HasLogger {
           })
       } else if (sym.isModule) "" //  avoid "object X of type X.type"
       else tp match {
-        case PolyType(tparams, res)    => tp.typeParams.map(defString(_, flagMask)()).mkString("[", ", ", "]") + infoString(res)
+        case PolyType(_, res)          => tp.typeParams.map(defString(_, flagMask)()).mkString("[", ", ", "]") + infoString(res)
         case NullaryMethodType(res)    => infoString(res)
         case MethodType(params, res)   => params.map(s => defString(s, flagMask)()).mkString("(", ", ", ")") + infoString(res)
         case _ if isStructuralThisType => ": " + sym.owner.name
@@ -117,24 +117,24 @@ abstract class DeclarationPrinter extends HasLogger {
    *  @note Should be run on the presentation compiler thread (inside askOption).
    */
   def showType(tpe: Type): String = tpe match {
-    case ErrorType                             => showErrorType()
-    case WildcardType                          => showWildcardType()
-    case NoType                                => showNoType()
-    case NoPrefix                              => showNoPrefix()
-    case bwt @ BoundedWildcardType(bounds)     => showBoundedWildcardType(bwt)
-    case tt @ ThisType(sym)                    => showThisType(tt)
-    case st @ SuperType(thistpe, supertpe)     => showSuperType(st)
-    case st @ SingleType(pre, sym)             => showSingleType(st)
-    case ct @ ConstantType(value)              => showConstantType(ct)
-    case tref @ TypeRef(pre, sym, args)        => showTypeRef(tref)
-    case refTpe @ RefinedType(parents, defs)   => showRefinedType(refTpe)
-    case et @ ExistentialType(tparams, result) => showExistentialType(et)
-    case at @ AnnotatedType(annots, tp)        => showAnnotatedType(at)
-    case mt @ MethodType(params, resultType)   => showMethodType(mt)
-    case NullaryMethodType(underlying)         => showType(underlying)
-    case pt @ PolyType(tparams, result)        => showPolyType(pt)
-    case tb @ TypeBounds(lo, hi)               => showTypeBounds(tb)
-    case cit @ ClassInfoType(_, _, _)          => showClassInfoType(cit)
+    case ErrorType                     => showErrorType()
+    case WildcardType                  => showWildcardType()
+    case NoType                        => showNoType()
+    case NoPrefix                      => showNoPrefix()
+    case bwt @ BoundedWildcardType(_)  => showBoundedWildcardType(bwt)
+    case tt @ ThisType(_)              => showThisType(tt)
+    case st @ SuperType(_, _)          => showSuperType(st)
+    case st @ SingleType(_, _)         => showSingleType(st)
+    case ct @ ConstantType(_)          => showConstantType(ct)
+    case tref @ TypeRef(_, _, _)       => showTypeRef(tref)
+    case refTpe @ RefinedType(_, _)    => showRefinedType(refTpe)
+    case et @ ExistentialType(_, _)    => showExistentialType(et)
+    case at @ AnnotatedType(_, _)      => showAnnotatedType(at)
+    case mt @ MethodType(_, _)         => showMethodType(mt)
+    case NullaryMethodType(underlying) => showType(underlying)
+    case pt @ PolyType(_, _)           => showPolyType(pt)
+    case tb @ TypeBounds(_, _)         => showTypeBounds(tb)
+    case cit @ ClassInfoType(_, _, _)  => showClassInfoType(cit)
 
     case _ =>
       logger.info(s"Unknown type: $tpe of class: ${tpe.getClass}")

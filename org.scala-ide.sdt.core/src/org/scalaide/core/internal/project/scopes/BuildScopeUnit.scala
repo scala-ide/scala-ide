@@ -53,7 +53,7 @@ class BuildScopeUnit(val scope: CompileScope, val owningProject: IScalaProject, 
   }
 
   private def srcOutputs = owningProject.sourceOutputFolders.collect {
-    case entry @ (src, out) if managesSrcFolder(src) => entry
+    case entry @ (src, _) if managesSrcFolder(src) => entry
   }
 
   def sources: Seq[IContainer] = srcOutputs.unzip._1

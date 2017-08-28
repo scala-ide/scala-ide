@@ -22,7 +22,7 @@ object SourceFileProviderRegistry extends HasLogger {
   def getProvider(path: IPath): SourceFileProvider = {
     import scala.collection.JavaConverters._
     val fullName = path.toPortableString()
-    val record = registry.asScala find { case (k, v) => fullName.endsWith(k) }
+    val record = registry.asScala find { case (k, _) => fullName.endsWith(k) }
     record.map(_._2).getOrElse(null)
   }
 

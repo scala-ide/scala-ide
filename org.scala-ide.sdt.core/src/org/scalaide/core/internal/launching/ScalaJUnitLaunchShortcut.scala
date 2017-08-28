@@ -121,7 +121,7 @@ class ScalaJUnitLaunchShortcut extends JUnitLaunchShortcut {
         config1.getAttribute(element, EMPTY_STRING) == config2.getAttribute(element, EMPTY_STRING)
       }
     } catch {
-      case e: CoreException =>
+      case _: CoreException =>
         // ignore access problems here, return false
         false
     }

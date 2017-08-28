@@ -57,7 +57,7 @@ trait ScalaIndexBuilder extends HasLogger { self: ScalaPresentationCompiler =>
       val superNames = supers map {
         case Ident(id)                           => id.toChars
         case Select(_, name)                     => name.toChars
-        case AppliedTypeTree(fun: RefTree, args) => fun.name.toChars
+        case AppliedTypeTree(fun: RefTree, _) => fun.name.toChars
         case tpt @ TypeTree()                    => javaTypeName(tpt.symbol).toCharArray // maybe the tree was typed
         case parent =>
           logger.info(s"superclass not understood: $parent")

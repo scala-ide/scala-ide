@@ -124,7 +124,7 @@ private[context] trait JdiVariableContext
 
     typeName match {
       case Scala.Array(innerType) => onClassPath(classLoader, innerType)
-      case other => prefixes.exists(prefix => tryClassName(prefix + typeName))
+      case _ => prefixes.exists(prefix => tryClassName(prefix + typeName))
     }
   }
 }

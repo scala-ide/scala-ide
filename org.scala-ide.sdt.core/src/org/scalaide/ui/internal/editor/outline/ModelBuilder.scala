@@ -63,9 +63,9 @@ object ModelBuilder extends HasLogger {
       def renderATT(sb: StringBuilder, t: Tree, args: List[Tree], needParenthesis: Boolean): Unit = {
         t match {
           case AppliedTypeTree(tpt: Tree, args1: List[Tree]) => renderATT(sb, tpt, args1, needParenthesis)
-          case Ident(name) =>
+          case Ident(_) =>
             renderType(sb, t, args)
-          case Select(qualifier: Tree, name: Name) =>
+          case Select(_: Tree, name: Name) =>
             name.toString match {
               case tuple(_*) =>
                 if (needParenthesis)
@@ -112,9 +112,9 @@ object ModelBuilder extends HasLogger {
             renderType(sb, ref)
             sb.append(".type")
 
-          case CompoundTypeTree(templ: Template) =>
+          case CompoundTypeTree(_: Template) =>
 
-          case This(qual: TypeName) =>
+          case This(_: TypeName) =>
 
           case _ =>
         }
@@ -185,7 +185,7 @@ object ModelBuilder extends HasLogger {
           stats.foreach(x => updateTree(parent, x))
         }
 
-        case ClassDef(mods, name, tpars, templ) => {
+        case ClassDef(mods, name, tpars, _) => {
           if (name.toString() != "$anon") {
             val ch = ClassNode(showName(name, t), parent, showTypeList(tpars))
             setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
@@ -197,7 +197,7 @@ object ModelBuilder extends HasLogger {
 
         case `noSelfType` =>
 
-        case ValDef(mods, name, tpt, rsh) =>
+        case ValDef(mods, name, tpt, _) =>
           if ((mods.flags & SYNTHETIC) == 0) {
             val ch = if ((mods.flags & MUTABLE) == 0)
               ValNode(showName(name, t), parent, if (tpt.isEmpty) None else Some(showType(tpt)))
@@ -240,13 +240,13 @@ object ModelBuilder extends HasLogger {
           t.children.foreach(x => updateTree(ch, x))
         }
 
-        case DocDef(comment: DocComment, definition: Tree) => updateTree(parent, definition)
+        case DocDef(_: DocComment, definition: Tree) => updateTree(parent, definition)
 
-        case Block(stats: List[Tree], expr: Tree) => {
+        case Block(stats: List[Tree], _: Tree) => {
           stats.foreach(updateTree(parent, _))
         }
 
-        case TypeDef(mods: Modifiers, name: TypeName, tparams: List[TypeDef], rhs: Tree) =>
+        case TypeDef(mods: Modifiers, name: TypeName, tparams: List[TypeDef], _: Tree) =>
           val ch = TypeNode(showName(name, t) + showTypeList(tparams), parent)
           setPos(ch, t.pos.point, t.pos.point + nameLen(name, t))
           ch.setFlags(mods.flags)

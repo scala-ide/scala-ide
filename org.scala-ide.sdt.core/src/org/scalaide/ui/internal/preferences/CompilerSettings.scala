@@ -123,7 +123,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   }
 
   override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
-    event match { case e: ScalaInstallationChange => save() }
+    event match { case _: ScalaInstallationChange => save() }
   }
   override def dispose() = {
     getConcernedProject() flatMap (ScalaPlugin().asScalaProject(_)) foreach (_.removeSubscriptions())
@@ -133,7 +133,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
   def getConcernedProject(): Option[IProject] = getElement() match {
     case project: IProject => Some(project)
     case javaProject: IJavaProject => Some(javaProject.getProject())
-    case other => None // We're a Preference page!
+    case _ => None // We're a Preference page!
   }
 
   lazy val preferenceStore0: IPreferenceStore = {
@@ -326,7 +326,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
       case javaProject: IJavaProject =>
         //Make sure project is rebuilt
         Seq(javaProject.getProject())
-      case other =>
+      case _ =>
         // rebuild all Scala projects that use global settings
         val plugin = ScalaPlugin()
 
@@ -397,7 +397,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match {
-        case e: ScalaInstallationChange =>
+        case _: ScalaInstallationChange =>
           DisplayThread.asyncExec(doLoad())
           DisplayThread.asyncExec(handleToggle())
         case _ => ()
@@ -460,7 +460,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match {
-        case e: ScalaInstallationChange =>
+        case _: ScalaInstallationChange =>
           // the semantics of the initial value have changed through this backend update
           // it's very important to do this before the Load (platform checks on file IO)
           initialValue = getPreferenceStore().getString(SettingConverterUtil.SCALA_DESIRED_INSTALLATION)
@@ -499,7 +499,7 @@ class CompilerSettings extends PropertyPage with IWorkbenchPreferencePage with E
 
     override def notify(pub: Publisher[IScalaProjectEvent], event: IScalaProjectEvent): Unit = {
       event match {
-        case e: ScalaInstallationChange =>
+        case _: ScalaInstallationChange =>
           DisplayThread.asyncExec(doLoad())
           DisplayThread.asyncExec(updateApply())
         case _ => ()

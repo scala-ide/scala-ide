@@ -68,7 +68,7 @@ object SyntacticInfo {
             text = selfRefToken.text
             token <- astNode.tokens.filter { token => token.text == text || token.text == "`" + text + "`" }
           } maybeSelfRefs += token.range.toRegion
-        case ann @ Annotation(_, annotationType, _, _) =>
+        case Annotation(_, annotationType, _, _) =>
           val tokens = annotationType.tokens.toIndexedSeq.filter(_.tokenType.isId)
           val pkges = tokens.take(tokens.size-1)
           val annotation = tokens.lastOption

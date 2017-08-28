@@ -51,7 +51,7 @@ class SocketAttachConnectorScala extends IVMConnector with SocketConnectorScala 
         throw ScalaDebugPlugin.wrapInCoreException("Unable to connect to the remote VM", e)
       case e: IOException =>
         throw ScalaDebugPlugin.wrapInCoreException(s"""Unable to connect to the remote VM with args: ${arguments.asScala.map {
-            case (key, value) if value ne null => value.name() + "->" + value.value()
+            case (_, value) if value ne null => value.name() + "->" + value.value()
           }.mkString}""", e)
     }
   }

@@ -3,7 +3,6 @@ package org.scalaide.refactoring.internal.method.ui
 import org.eclipse.swt.widgets.Button
 import org.scalaide.refactoring.internal.ScalaIdeRefactoring
 
-
 /**
  * Generates the wizard page for a ChangeParameterOrder refactoring.
  */
@@ -81,7 +80,7 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
         paramsWithSeparators: List[ParamOrSeparator]):
           List[ParamOrSeparator] = paramsWithSeparators match {
       case Nil => Nil
-      case p::Nil => paramsWithSeparators
+      case List(_) => paramsWithSeparators
       case Left(first)::Left(second)::rest if second == param => Left(second)::Left(first)::rest
       case p::ps => p::moveParamUp(param, ps)
     }
@@ -97,7 +96,7 @@ trait ChangeParameterOrderConfigurationPageGenerator extends MethodSignatureRefa
         paramsWithSeparators: List[ParamOrSeparator]):
           List[ParamOrSeparator] = paramsWithSeparators match {
       case Nil => Nil
-      case p::Nil => paramsWithSeparators
+      case List(_) => paramsWithSeparators
       case Left(first)::Left(second)::rest if first == param => Left(second)::Left(first)::rest
       case p::ps => p::moveParamDown(param, ps)
     }

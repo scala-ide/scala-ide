@@ -115,7 +115,8 @@ object TextPresentationEditorHighlighter {
         for {
           semanticCategory <- ScalaSyntaxClasses.scalaSemanticCategory.children
           if event.getProperty().startsWith(semanticCategory.baseName)
-          symType: SymbolTypes.SymbolType <- SymbolTypes.values.find(HighlightingStyle.symbolTypeToSyntaxClass(_) == semanticCategory)
+          symType <- SymbolTypes.values.find(HighlightingStyle.symbolTypeToSyntaxClass(_) == semanticCategory)
+          if symType.isInstanceOf[SymbolTypes.SymbolType]
         } invalidateSymTypes(symType)
       }
     }

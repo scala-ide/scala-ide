@@ -42,7 +42,7 @@ class ScalaJdiEventDispatcherTest {
     val colaborator: () => Future[Unit] = () => Future { probe += 1 }
 
     val tested = Dispatch(running)(throwingColaborator) recoverWith {
-      case any: Exception =>
+      case _: Exception =>
         recovered += 1
         Dispatch(running)(colaborator)
     }

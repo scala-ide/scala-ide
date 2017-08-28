@@ -153,7 +153,7 @@ trait UnboundValuesSupport {
     final override def traverse(tree: Tree): Unit = {
       scopeManager.pushTree(tree)
       tree match {
-        case assign @ Assign(Ident(name: TermName), value) =>
+        case Assign(Ident(name: TermName), value) =>
           // suppressing value extraction from lhs if it's not local
           if (isLocalVar(name)) nameManager.registerUnboundName(name, tree, isLocal = true)
           super.traverse(value)
@@ -179,12 +179,12 @@ trait UnboundValuesSupport {
           super.traverse(tree)
 
         // value definition like: val ala = "Ala"
-        case restTree @ ValDef(_, name, _, impl) =>
+        case ValDef(_, name, _, impl) =>
           nameManager.registerNameBinding(name, scopeManager.findCurrentScopeTree())
           super.traverse(impl)
 
         //typed expression like x: Int
-        case restTree @ Typed(impl, _) =>
+        case Typed(impl, _) =>
           super.traverse(impl)
 
         case _ => super.traverse(tree)

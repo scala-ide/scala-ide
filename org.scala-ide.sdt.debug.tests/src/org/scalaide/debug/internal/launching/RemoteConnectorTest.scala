@@ -63,7 +63,7 @@ object RemoteConnectorTest extends TestProjectSetup("debug", bundleName = "org.s
     // event listener to wait for the creation of the process
     val latch = new CountDownLatch(1)
     val eventListener = addDebugEventListener {
-      case EclipseDebugEvent(DebugEvent.CREATE, p: IProcess) =>
+      case EclipseDebugEvent(DebugEvent.CREATE, _: IProcess) =>
         latch.countDown()
     }
 

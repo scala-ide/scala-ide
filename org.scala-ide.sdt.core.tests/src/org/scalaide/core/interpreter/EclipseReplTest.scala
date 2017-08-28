@@ -213,14 +213,14 @@ object EclipseReplTest {
       initReplaying ++ blame(io.DoingFailed)
 
     def blame(es: Seq[Expect]) =
-      replace(es, { case Failed(r, t, o) => Failed(settings, t, o) })
+      replace(es, { case Failed(_, t, o) => Failed(settings, t, o) })
 
     def steal(es: Seq[Expect]) =
       replace(es, {
         case init(_) => init(settings)
         case Starting(_) => Starting(settings)
         case Started(_) => Started(settings)
-        case Failed(i: Init, t, o) => Failed(settings, t, o)
+        case Failed(_: Init, t, o) => Failed(settings, t, o)
       })
   }
 
@@ -314,7 +314,7 @@ object EclipseReplTest {
           dispatch(seq.head.msg).flatMap { unit =>
             chainFutures(seq.tail)
           }.recoverWith {
-            case ignoreAllExceptions =>
+            case _ =>
               if (seq.drop(1).nonEmpty)
                 chainFutures(seq.drop(1).tail)
               else chainFutures(Nil)

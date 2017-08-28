@@ -155,7 +155,7 @@ class Presenter(
             presentationHighlighter.updateTextPresentation(damagedRegion)
           }
         }
-        catch { case e: Exception => () }
+        catch { case _: Exception => () }
         finally done(Status.OK_STATUS)
       }
   }

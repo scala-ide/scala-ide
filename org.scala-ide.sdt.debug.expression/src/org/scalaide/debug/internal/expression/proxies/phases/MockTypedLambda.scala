@@ -120,7 +120,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type])
 
       // In partial function is better to search for first case -> match can change during the processing
       val stopTree = body match {
-        case Match(_, first :: cases) => first
+        case Match(_, first :: _) => first
         case _ => body
       }
 
@@ -141,7 +141,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type])
     val argsTrees = closuresArs match {
       case v: ValDef => Seq(v)
       case block: universe.Block => block.children
-      case empty @ universe.EmptyTree => Nil
+      case universe.EmptyTree => Nil
       case any => throw new IllegalArgumentException(s"Unsupported tree: $any")
     }
 
@@ -208,7 +208,7 @@ case class MockTypedLambda(toolbox: ToolBox[universe.type])
    * @param transformFurther call it on tree node to recursively transform it further
    */
   protected def transformSingleTree(baseTree: Tree, transformFurther: (Tree) => Tree): Tree = baseTree match {
-    case fun @ Function(params, body) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
+    case fun @ Function(params, _) if !isStartFunctionForExpression(params) && allParamsTyped(params) =>
       createStubedFunction(fun)
     case fun @ Match(selector, cases) if selector.isEmpty && allCasesTyped(cases) =>
       createStubedPartialFunction(fun)

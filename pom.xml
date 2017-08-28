@@ -592,11 +592,11 @@
               <arg>-language:_</arg>
               <arg>-Xlint</arg>
               <arg>-Xfuture</arg>
-              <!--arg>-Xfatal-warnings</arg-->
+              <arg>-Xfatal-warnings</arg>
               <arg>-Yno-adapted-args</arg>
               <arg>-Ywarn-dead-code</arg>
               <arg>-Ywarn-unused-import</arg>
-              <arg>-Ywarn-unused</arg>
+              <arg>-Ywarn-unused:-params,-implicits,_</arg>
             </args>
           </configuration>
         </plugin>
@@ -606,12 +606,6 @@
           <artifactId>buildnumber-maven-plugin</artifactId>
           <version>${buildnumber-maven.plugin.version}</version>
         </plugin>
-        <!-- creating maven source artefact -->
-<!--        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>${maven-source.plugin.version}</version>
-        </plugin> -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-clean-plugin</artifactId>

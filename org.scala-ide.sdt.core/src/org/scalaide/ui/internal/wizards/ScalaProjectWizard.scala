@@ -48,7 +48,7 @@ class NewScalaProjectWizardPageTwo(pageOne : NewJavaProjectWizardPageOne) extend
       addScalaNatures(SubMonitor.convert(monitor, 1))
       getBuildPathsBlock(this).configureJavaProject(newProjectCompliance, SubMonitor.convert(monitor, 5))
     } catch {
-      case ex : OperationCanceledException => throw new InterruptedException
+      case _ : OperationCanceledException => throw new InterruptedException
     } finally {
       monitor.done
     }

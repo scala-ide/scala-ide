@@ -26,7 +26,7 @@ class ContextualizedObjectInputStream(in: InputStream) extends ObjectInputStream
     val res = Try[Class[_]](Thread.currentThread().getContextClassLoader().loadClass(desc.getName()))
     res match {
       case Success(cl) => cl
-      case Failure(thrown) => throw new IllegalAccessException("Something went horribly wrong deserializing")
+      case Failure(_)  => throw new IllegalAccessException("Something went horribly wrong deserializing")
     }
   }
 

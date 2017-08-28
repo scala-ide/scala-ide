@@ -33,8 +33,10 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
     def unapply(sym: Symbol): Option[Array[Array[Char]]] = {
       val throwsAnnotations = sym.annotations.filter(_.atp.typeSymbol == definitions.ThrowsClass)
 
-      val typeNames = for (AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) <- throwsAnnotations)
-        yield javaTypeNameMono(typeName).toCharArray
+      val typeNames = throwsAnnotations collect {
+        case AnnotationInfo(_, List(Literal(Constant(typeName: Type))), _) ⇒
+          javaTypeNameMono(typeName).toCharArray
+      }
 
       if (typeNames.isEmpty) None
       else Some(typeNames.toArray)
@@ -206,7 +208,7 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
             d.pos match {
               case NoPosition =>
                 (module.pos.point, module.pos.point, module.pos.point)
-              case pos =>
+              case _ =>
                 (d.pos.start, d.pos.point, d.pos.end)
             }
 
@@ -949,8 +951,8 @@ trait ScalaStructureBuilder extends ScalaAnnotationHelper { pc: ScalaPresentatio
               if (dd.name != nme.MIXIN_CONSTRUCTOR && (dd.symbol ne NoSymbol))
                 (builder.addDef(dd), List(dd.tpt, dd.rhs))
               else (builder, Nil)
-            case Template(parents, self, body) => (builder, body)
-            case Function(vparams, body) => (builder, Nil)
+            case Template(_, _, body) => (builder, body)
+            case Function(_, _) => (builder, Nil)
             case _ => (builder, tree.children)
           }
         }

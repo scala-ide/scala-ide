@@ -40,7 +40,7 @@ class BreakpointEventHandler extends DebugEventHandler {
           SuspendExecution
         case Success(false) =>
           ContinueExecution
-        case Failure(e: VMDisconnectedException) =>
+        case Failure(_: VMDisconnectedException) =>
           // Ok, end of debugging
           ContinueExecution
         case Failure(e) =>

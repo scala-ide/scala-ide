@@ -19,7 +19,7 @@ object JDIUtil {
     try {
       method.allLineLocations.asScala.map(_.lineNumber)
     } catch {
-      case e: AbsentInformationException =>
+      case _: AbsentInformationException =>
         Nil
     }
   }
@@ -34,7 +34,7 @@ object JDIUtil {
         try {
           method.allLineLocations.asScala
         } catch {
-          case e: AbsentInformationException =>
+          case _: AbsentInformationException =>
             Nil
         })
   }

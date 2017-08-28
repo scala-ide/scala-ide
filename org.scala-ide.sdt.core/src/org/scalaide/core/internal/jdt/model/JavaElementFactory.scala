@@ -32,7 +32,7 @@ object JavaElementFactory extends ReflectionUtils {
 
   def createImportContainer(parent : JavaElement) = {
     parent match {
-      case cu : CompilationUnit =>
+      case _ : CompilationUnit =>
         icCtor.newInstance(parent).asInstanceOf[ImportContainer]
       case _ =>
         val ic = icCtor.newInstance(null).asInstanceOf[ImportContainer]

@@ -64,7 +64,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
       case jc: JavaContentAssistInvocationContext =>
         if (ScalaProject.isScalaProject(jc.getProject()))
           jc.getCompilationUnit match {
-          case scu: ScalaCompilationUnit => javaEmptyList()
+          case _: ScalaCompilationUnit => javaEmptyList()
           case _ => mixedInCompletions(jc.getCompilationUnit(), jc.getInvocationOffset(), monitor)
         } else
           javaEmptyList()
@@ -242,7 +242,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
       } else {
         getDeclaringTypeBinding(simpleName) // test: bar4, bar 6
       }
-    case expressionStatement: ExpressionStatement => // test: bar5
+    case _: ExpressionStatement => // test: bar5
       getDeclaringTypeBinding(simpleName)
     case fieldAccess: FieldAccess => // test: foo13
       fieldAccess.getExpression().resolveTypeBinding()
@@ -259,7 +259,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
       } else {
         getDeclaringTypeBinding(simpleName) // test: bar11
       }
-    case variableDeclarationFragment: VariableDeclarationFragment => // test: var12
+    case _: VariableDeclarationFragment => // test: var12
       getDeclaringTypeBinding(simpleName)
     case _ =>
       null
@@ -420,7 +420,7 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
     node match {
       case typeDeclaration: TypeDeclaration =>
         typeDeclaration.resolveBinding()
-      case compilationUnit: CompilationUnit =>
+      case _: CompilationUnit =>
         // no point to call this method in this case, but better be safe
         null
       case _ =>

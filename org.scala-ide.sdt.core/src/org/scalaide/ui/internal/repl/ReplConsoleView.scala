@@ -160,7 +160,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     }
 
     def notify(pub:Publisher[IScalaProjectEvent], event:IScalaProjectEvent): Unit = {
-      event match { case e: BuildSuccess =>
+      event match { case _: BuildSuccess =>
         DisplayThread.asyncExec {
           if (!isStopped) {
             displayError("\n------ Project Rebuilt, Replaying Command History ------\n")
@@ -219,7 +219,7 @@ class ReplConsoleView extends ViewPart with InterpreterConsoleView {
     var isProjectChange = false
     override def visit(delta: IResourceDelta): Boolean = {
       delta.getResource() match {
-        case project: IProject =>
+        case _: IProject =>
           // the project has been opened, closed, added or removed
           isProjectChange |= ((delta.getFlags() & IResourceDelta.OPEN) | (delta.getKind() & (IResourceDelta.ADDED | IResourceDelta.REMOVED))) != 0
 

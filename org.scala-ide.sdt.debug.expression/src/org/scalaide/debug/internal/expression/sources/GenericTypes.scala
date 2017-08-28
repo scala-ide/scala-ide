@@ -60,11 +60,11 @@ object GenericTypes extends SPCIntegration with HasLogger {
 
           var argumentListCount = 0
           def methodSig(t: Type): String = t match {
-            case mt @ MethodType(params, ret) =>
+            case MethodType(params, ret) =>
               argumentListCount += 1
               val paramsTypes = params.map(_.tpe.toLongString).mkString(", ")
               s"($paramsTypes) => ${methodSig(ret)}"
-            case a @ NullaryMethodType(ret) =>
+            case NullaryMethodType(ret) =>
               s"() => ${methodSig(ret)}"
             case other => other.toLongString
           }
@@ -91,7 +91,7 @@ object GenericTypes extends SPCIntegration with HasLogger {
             name,
             member.tpe.toLongString,
             member.sym.isImplicit && member.sym.isLocalToBlock))
-        case other =>
+        case _ =>
           None
       }
     }

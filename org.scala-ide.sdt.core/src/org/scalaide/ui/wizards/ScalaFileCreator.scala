@@ -108,7 +108,7 @@ trait ScalaFileCreator extends FileCreator {
         }
         case Failure(exception) => {
           exception match {
-            case e: scalariform.lexer.ScalaLexerException => false
+            case _: scalariform.lexer.ScalaLexerException => false
             case e => throw e
           }
         }

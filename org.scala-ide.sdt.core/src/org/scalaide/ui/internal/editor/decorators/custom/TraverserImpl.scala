@@ -104,7 +104,7 @@ final case class AllMethodsTraverserImpl(traverserDef: AllMethodsTraverserDef, c
   override def apply(tree: SPC#Tree): Option[(SPC#Position, String)] = {
     import compiler.Select
     tree match {
-      case select @ Select(obj, method) if checkType(obj) && !select.symbol.isConstructor =>
+      case select @ Select(obj, _) if checkType(obj) && !select.symbol.isConstructor =>
         Some((obj.pos, createMessage(select)))
       case _ => None
     }
@@ -168,7 +168,7 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
 
   import compiler._
   private val annotation: PartialFunction[SPC#Tree, Option[(SPC#Position, String)]] = {
-    case select @ Select(obj, method) if checkAnnotations(select) && !select.symbol.isConstructor =>
+    case select @ Select(_, _) if checkAnnotations(select) && !select.symbol.isConstructor =>
       Some((select.pos, createMessage(select)))
   }
 
@@ -191,5 +191,3 @@ final case class AnnotationTraverserImpl(traverserDef: AnnotationTraverserDef, c
       .orElse(annotationInConstructor)
       .orElse(default)(tree)
 }
-
-

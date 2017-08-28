@@ -72,8 +72,6 @@ class ScalaPlugin extends IScalaPlugin with PluginLogConfigurator with IResource
       isBinarySubsequent(ScalaVersion.current, version)
   }
 
-  private lazy val sdtCoreBundle = getBundle()
-
   lazy val zincCompilerBundle = Platform.getBundle(SdtConstants.ZincPluginId)
   lazy val zincCompilerBridgeBundle = Platform.getBundle(SdtConstants.ZincCompilerBridgePluginId)
   lazy val zincCompilerBridge = OSGiUtils.pathInBundle(zincCompilerBridgeBundle, "/")

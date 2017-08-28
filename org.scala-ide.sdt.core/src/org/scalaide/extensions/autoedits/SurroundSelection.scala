@@ -40,7 +40,7 @@ trait SurroundSelection extends AutoEdit {
 
   override def perform() = {
     check(textChange) {
-      case c @ TextChange(start, end, o) if end > start && o == opening ⇒
+      case TextChange(start, end, o) if end > start && o == opening ⇒
         Some(TextChange(start, end, opening + document.textRange(start, end) + closing))
     }
   }

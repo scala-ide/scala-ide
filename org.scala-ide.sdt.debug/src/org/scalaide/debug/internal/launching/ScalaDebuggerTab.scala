@@ -117,7 +117,7 @@ class ScalaDebuggerTab extends AbstractLaunchConfigurationTab {
   override def initializeFrom(configuration: ILaunchConfiguration): Unit = Try {
     generalSettingsBlock.initializeFrom(configuration)
   } recover {
-    case eatQuietly: CoreException =>
+    case _: CoreException =>
     case rethrow => throw rethrow
   }
 

@@ -29,8 +29,8 @@ class ScalaLaunchableTester extends PropertyTester {
     try {
       ScalaLaunchShortcut.getMainMethods(element).nonEmpty
     } catch {
-      case e: JavaModelException => false
-      case e: CoreException => false
+      case _: JavaModelException => false
+      case _: CoreException => false
     }
   }
 
@@ -43,13 +43,13 @@ class ScalaLaunchableTester extends PropertyTester {
   private def canLaunchAsJUnit(element: IJavaElement): Boolean = {
     try {
       element match {
-        case e: ScalaSourceFile =>
+        case _: ScalaSourceFile =>
           ScalaLaunchShortcut.getJunitTestClasses(element).nonEmpty
         case _ => true
       }
     } catch {
-      case e: JavaModelException => false
-      case e: CoreException => false
+      case _: JavaModelException => false
+      case _: CoreException => false
     }
   }
 

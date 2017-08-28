@@ -63,7 +63,7 @@ object ScalaValue {
       case null =>
         // TODO : cache one per target
         new ScalaNullValue(target)
-      case voidValue: VoidValue =>
+      case _: VoidValue =>
         ??? // TODO: in what cases do we get this value ?
       case _ =>
         ???

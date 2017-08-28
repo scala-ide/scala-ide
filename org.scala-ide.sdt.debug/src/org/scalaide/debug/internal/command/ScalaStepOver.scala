@@ -96,7 +96,7 @@ private[command] class ScalaStepOverSubordinate(debugTarget: ScalaDebugTarget, t
         false
       }
     // JDI event triggered when a breakpoint is hit
-    case breakpointEvent: BreakpointEvent =>
+    case _: BreakpointEvent =>
       disable()
       thread.suspendedFromScala(DebugEvent.STEP_OVER)
       true

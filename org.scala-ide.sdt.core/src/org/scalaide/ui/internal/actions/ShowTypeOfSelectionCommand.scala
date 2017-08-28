@@ -20,7 +20,7 @@ class ShowTypeOfSelectionCommand extends AbstractHandler {
     HandlerUtil.getActiveEditor(event) match {
       case scalaEditor: ScalaSourceFileEditor =>
         scalaEditor.getSelectionProvider.getSelection match {
-          case sel: ITextSelection =>
+          case _: ITextSelection =>
             scalaEditor.typeOfExpressionPresenter.showInformation()
           case _ => ()
         }

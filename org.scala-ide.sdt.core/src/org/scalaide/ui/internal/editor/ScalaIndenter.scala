@@ -1325,7 +1325,7 @@ class ScalaIndenter(
     try {
       fLine = document.getLineOfOffset(fPosition)
     } catch {
-      case e: BadLocationException =>
+      case _: BadLocationException =>
         fLine = -1
     }
   }
