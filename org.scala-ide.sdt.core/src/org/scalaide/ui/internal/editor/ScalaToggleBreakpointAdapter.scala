@@ -19,6 +19,7 @@ import org.eclipse.jdt.internal.debug.ui.BreakpointUtils
 import org.eclipse.jdt.internal.debug.ui.DebugWorkingCopyManager
 import org.eclipse.jdt.internal.debug.ui.JDIDebugUIPlugin
 import org.eclipse.jdt.internal.debug.ui.actions.ActionMessages
+import org.eclipse.jdt.internal.debug.ui.actions.BreakpointToggleUtils
 import org.eclipse.jdt.internal.debug.ui.actions.ToggleBreakpointAdapter
 import org.eclipse.jface.text.BadLocationException
 import org.eclipse.jface.text.ITextSelection
@@ -50,7 +51,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
           if (monitor.isCanceled)
             return Status.CANCEL_STATUS
           try {
-            report(null, part)
+            BreakpointToggleUtils.report(null, part)
             val sel =
               if(!selection.isInstanceOf[IStructuredSelection])
                 translateToMembers(part, selection)
@@ -93,7 +94,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
                 }
                 JDIDebugModel.createLineBreakpoint(resource, tname, lnumber, -1, -1, 0, true, attributes)
               } else {
-                report(ActionMessages.ToggleBreakpointAdapter_3, part)
+                BreakpointToggleUtils.report(ActionMessages.ToggleBreakpointAdapter_3, part)
                 return Status.OK_STATUS
               }
             } catch {

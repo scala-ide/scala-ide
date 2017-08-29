@@ -271,7 +271,7 @@ object SDTTestUtils extends HasLogger {
     names map (n => internalCreateProjectInWorkspace(n, withSourceRootOnly))
 
   def deleteProjects(projects: IScalaProject*)(implicit progressMonitor: IProgressMonitor = new NullProgressMonitor): Unit = {
-    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace) { _ =>
+    EclipseUtils.workspaceRunnableIn(EclipseUtils.workspaceRoot.getWorkspace, progressMonitor) { _ =>
       projects foreach (_.underlying.delete(true, progressMonitor))
     }
   }
