@@ -11,15 +11,6 @@
   <artifactId>org.scala-ide.sdt.core</artifactId>
   <packaging>eclipse-plugin</packaging>
 
-  <profiles>
-    <profile>
-      <id>scala-2.10.x</id>
-    </profile>
-    <profile>
-      <id>scala-2.11.x</id>
-    </profile>
-  </profiles>
-
   <dependencies>
     <dependency>
       <groupId>com.miglayout</groupId>
