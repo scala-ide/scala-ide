@@ -38,7 +38,7 @@
     <sbt-util.version>1.0.0</sbt-util.version>
     <sbt-io.version>1.0.0</sbt-io.version>
     <sbinary.version>0.4.4</sbinary.version>
-    <scala-refactoring.version>0.13.0-SNAPSHOT</scala-refactoring.version>
+    <scala-refactoring.version>0.14.0-SNAPSHOT</scala-refactoring.version>
     <scalariform.version>0.2.3</scalariform.version>
 
     <!-- plugin versions -->
@@ -62,9 +62,9 @@
 
     <!-- base versions -->
     <!-- Scala 2.10.x -->
-    <scala210.version>2.10.5</scala210.version>
+    <scala210.version>2.10.6</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.8</scala211.version>
+    <scala211.version>2.11.11</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
     <scala211.scala-xml.version>1.0.6</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.5</scala211.scala-parser-combinators.version>
