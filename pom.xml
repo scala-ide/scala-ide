@@ -32,9 +32,9 @@
     <log4j.version>1.2.17</log4j.version>
     <json-io.version>4.1.6</json-io.version>
     <mockito.version>1.9.5</mockito.version>
-    <zinc.version>1.0.0-X14</zinc.version>
-    <sbt-util.version>1.0.0-M23</sbt-util.version>
-    <sbt-io.version>1.0.0-M11</sbt-io.version>
+    <zinc.version>1.0.0</zinc.version>
+    <sbt-util.version>1.0.0</sbt-util.version>
+    <sbt-io.version>1.0.0</sbt-io.version>
     <sbinary.version>0.4.4</sbinary.version>
     <scala-refactoring.version>0.13.0-SNAPSHOT</scala-refactoring.version>
     <scalariform.version>0.2.3</scalariform.version>

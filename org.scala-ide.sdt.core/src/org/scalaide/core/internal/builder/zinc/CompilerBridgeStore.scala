@@ -1,5 +1,7 @@
 package org.scalaide.core.internal.builder.zinc
 
+import java.util.function.Supplier
+
 import scala.collection.mutable.ListBuffer
 import scala.tools.nsc.settings.ScalaVersion
 import scala.tools.nsc.settings.SpecificScalaVersion
@@ -19,9 +21,9 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.eclipse.OSGiUtils
 
 import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.ClasspathOptionsUtil
 import sbt.internal.inc.RawCompiler
 import xsbti.Logger
+import xsbti.compile.ClasspathOptionsUtil
 
 /** This class manages a store of compiler-bridge jars (as consumed by zinc). Each specific
  *  version of Scala needs a compiler-bridge jar compiled against that version.
@@ -142,21 +144,21 @@ class CompilerBridgeStore(base: IPath, plugin: ScalaPlugin) extends HasLogger {
 
     def errorMessages: Seq[String] = errors.toSeq
 
-    def debug(x: xsbti.F0[String]): Unit = {}
-    def trace(x: xsbti.F0[Throwable]): Unit = {}
+    def debug(x: Supplier[String]): Unit = {}
+    def trace(x: Supplier[Throwable]): Unit = {}
 
-    def error(x: xsbti.F0[String]): Unit = {
-      val msg = x() // don't force it more than once, in case of side-effects
+    def error(x: Supplier[String]): Unit = {
+      val msg = x.get // don't force it more than once, in case of side-effects
       logger.debug(msg)
       errors += msg
     }
 
-    def info(x: xsbti.F0[String]): Unit = {
-      logger.info(x())
+    def info(x: Supplier[String]): Unit = {
+      logger.info(x.get)
     }
 
-    def warn(x: xsbti.F0[String]): Unit = {
-      logger.warn(x())
+    def warn(x: Supplier[String]): Unit = {
+      logger.warn(x.get)
     }
   }
 }

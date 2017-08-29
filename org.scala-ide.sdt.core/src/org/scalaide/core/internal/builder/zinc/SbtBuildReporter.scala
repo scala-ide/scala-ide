@@ -1,5 +1,7 @@
 package org.scalaide.core.internal.builder.zinc
 
+import java.util.Optional
+
 import scala.collection.mutable
 import scala.reflect.internal.Chars
 
@@ -10,7 +12,8 @@ import org.scalaide.core.internal.builder.BuildProblemMarker
 import org.scalaide.core.resources.MarkerFactory
 import org.scalaide.logging.HasLogger
 import org.scalaide.util.eclipse.FileUtils
-import org.scalaide.util.internal.SbtUtils
+
+import sbt.util.InterfaceUtil._
 
 private case class SbtProblem(severity: xsbti.Severity, message: String, position: xsbti.Position, category: String)
     extends xsbti.Problem {
@@ -62,7 +65,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   private def riseNonJavaErrorOrWarning(pos: xsbti.Position, sev: xsbti.Severity): Unit =
-    SbtUtils.jo2o(pos.sourceFile).flatMap { file =>
+    jo2o(pos.sourceFile).flatMap { file =>
       FileUtils.fileResourceForPath(new Path(file.getAbsolutePath), project.underlying.getFullPath)
     }.map { resource =>
       if (resource.getFileExtension != "java")
@@ -73,13 +76,14 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       Option(riseErrorOrWarning(_))
     }.foreach(_(sev))
 
-  override def log(pos: xsbti.Position, msg: String, sev: xsbti.Severity): Unit = {
-    val problem = SbtProblem(sev, msg, pos, "compile")
+  override def log(sbtProblem: xsbti.Problem): Unit = {
+    import sbtProblem._
+    val problem = SbtProblem(severity, message, position, category)
     if (!probs.contains(problem)) {
-      createMarker(pos, msg, sev)
+      createMarker(position, message, severity)
       probs += problem
     }
-    riseNonJavaErrorOrWarning(pos, sev)
+    riseNonJavaErrorOrWarning(position, severity)
   }
 
   def eclipseSeverity(severity: xsbti.Severity): Int = severity match {
@@ -95,7 +99,6 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   def createMarker(pos: xsbti.Position, msg: String, sev: xsbti.Severity) = {
-    import SbtUtils._
     val severity = eclipseSeverity(sev)
 
     val marker: Option[Unit] = for {
@@ -104,7 +107,7 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
       offset <- jo2o(pos.offset)
       line <- jo2o(pos.line)
     } yield if (resource.getFileExtension != "java") {
-      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, jo2m(pos.pointer)), line)
+      val markerPos = MarkerFactory.RegionPosition(offset, identifierLength(pos.lineContent, pos.pointer), line)
       BuildProblemMarker.create(resource, severity, msg, markerPos)
     } else
       logger.info(s"suppressed error in Java file ${resource.getFullPath}:$line: $msg")
@@ -116,9 +119,9 @@ private[zinc] class SbtBuildReporter(project: IScalaProject) extends xsbti.Repor
   }
 
   /** Return the identifier starting at `start` inside `content`. */
-  private def identifierLength(content: String, start: xsbti.Maybe[Integer]): Int = {
+  private def identifierLength(content: String, start: Optional[Integer]): Int = {
     def isOK(c: Char) = Chars.isIdentifierPart(c) || Chars.isOperatorPart(c)
-    if (start.isDefined)
+    if (start.isPresent)
       (content drop start.get takeWhile isOK).size
     else
       0

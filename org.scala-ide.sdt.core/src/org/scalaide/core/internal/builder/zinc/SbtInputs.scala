@@ -1,6 +1,7 @@
 package org.scalaide.core.internal.builder.zinc
 
 import java.io.File
+import java.util.Optional
 import java.util.zip.ZipFile
 
 import org.eclipse.core.resources.IContainer
@@ -14,19 +15,19 @@ import org.scalaide.ui.internal.preferences
 import org.scalaide.util.internal.SettingConverterUtil
 
 import sbt.internal.inc.AnalyzingCompiler
-import sbt.internal.inc.CompilerCache
-import sbt.internal.inc.CompilerBridgeProvider
+import sbt.internal.inc.FreshCompilerCache
 import sbt.internal.inc.Locate
 import sbt.internal.inc.classpath.ClasspathUtilities
 import xsbti.Logger
-import xsbti.Maybe
 import xsbti.compile.ClasspathOptions
 import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileProgress
+import xsbti.compile.CompilerBridgeProvider
 import xsbti.compile.DefinesClass
 import xsbti.compile.IncOptions
-import xsbti.compile.IncOptionsUtil
 import xsbti.compile.MultipleOutput
+import xsbti.compile.OutputGroup
+import xsbti.compile.ScalaInstance
 import xsbti.compile.TransactionalManagerType
 
 /**
@@ -45,32 +46,45 @@ class SbtInputs(installation: IScalaInstallation,
     addToClasspath: Seq[IPath] = Seq.empty,
     srcOutputs: Seq[(IContainer, IContainer)] = Seq.empty) {
 
-  def cache = CompilerCache.fresh // May want to explore caching possibilities.
+  def cache = new FreshCompilerCache // May want to explore caching possibilities.
 
   private val allProjects = project +: project.transitiveDependencies.flatMap(ScalaPlugin().asScalaProject)
 
-  def analysisMap(f: File): Maybe[CompileAnalysis] =
+  def analysisMap(f: File): Optional[CompileAnalysis] =
     if (f.isFile)
-      Maybe.nothing[CompileAnalysis]
+      Optional.empty[CompileAnalysis]
     else {
       val analysis = allProjects.collectFirst {
         case project if project.buildManager.buildManagerOf(f).nonEmpty =>
           project.buildManager.buildManagerOf(f).get.latestAnalysis
       }
       analysis.map { analysis =>
-        Maybe.just(analysis)
-      }.getOrElse(Maybe.nothing[CompileAnalysis])
+        Optional.ofNullable(analysis)
+      }.getOrElse(Optional.empty[CompileAnalysis])
     }
 
-  def progress = Maybe.just(scalaProgress)
+  def progress = Optional.ofNullable(scalaProgress)
 
   def incOptions: IncOptions = {
-    IncOptionsUtil.defaultIncOptions().
+    import xsbti.compile.IncOptions._
+    val base = of()
+    base.
       withApiDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.apiDiff.name))).
       withRelationsDebug(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.relationsDebug.name))).
-      withClassfileManagerType(Maybe.just(new TransactionalManagerType(tempDir, logger))).
-      withApiDumpDirectory(Maybe.nothing()).
-      withRecompileOnMacroDef(Maybe.just(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name))))
+      withClassfileManagerType(Optional.ofNullable(TransactionalManagerType.create(tempDir, logger))).
+      withApiDumpDirectory(Optional.empty()).
+      withRecompileOnMacroDef(Optional.ofNullable(project.storage.getBoolean(SettingConverterUtil.convertNameToProperty(preferences.ScalaPluginSettings.recompileOnMacroDef.name)))).
+      withEnabled(defaultEnabled()).
+      withStoreApis(defaultStoreApis()).
+      withApiDiffContextSize(defaultApiDiffContextSize()).
+      withExternalHooks(defaultExternal()).
+      withExtra(defaultExtra()).
+      withLogRecompileOnMacro(defaultLogRecompileOnMacro()).
+      withRecompileAllFraction(defaultRecompileAllFraction()).
+      withRelationsDebug(defaultRelationsDebug()).
+      withTransitiveStep(defaultTransitiveStep()).
+      withUseCustomizedFileManager(defaultUseCustomizedFileManager()).
+      withUseOptimizedSealed(defaultUseOptimizedSealed())
   }
 
   def outputFolders = srcOutputs.map {
@@ -86,29 +100,16 @@ class SbtInputs(installation: IScalaInstallation,
 
   def sources = sourceFiles.toArray
 
-  def output = new MultipleOutput {
-    private def sourceOutputFolders =
-      if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders
+  private def srcOutDirs = (if (srcOutputs.nonEmpty) srcOutputs else project.sourceOutputFolders).map {
+      case (src, out) => (Option(src.getLocation).map(_.toFile()), Option(out.getLocation).map(_.toFile()))
+    }.collect {
+      case (Some(src), Some(out)) => (src, out)
+      case (Some(src), None) => throw new IllegalStateException(s"Not found output folder for source $src folder. Check build configuration.")
+      case (None, Some(out)) => throw new IllegalStateException(s"Not found source folder for output $out folder. Check build configuration.")
+      // case (None, None) is correct for some project building states. Ignore it.
+    }
 
-    override def outputGroups = sourceOutputFolders.map {
-      case (src, out) => new MultipleOutput.OutputGroup {
-        override def sourceDirectory = {
-          val loc = src.getLocation
-          if (loc != null)
-            loc.toFile()
-          else
-            throw new IllegalStateException(s"The source folder location `$src` is invalid.")
-        }
-        override def outputDirectory = {
-          val loc = out.getLocation
-          if (loc != null)
-            loc.toFile()
-          else
-            throw new IllegalStateException(s"The output folder location `$out` is invalid.")
-        }
-      }
-    }.toArray
-  }
+  def output = new EclipseMultipleOutput(srcOutDirs)
 
   // remove arguments not understood by build compiler
   def scalacOptions =
@@ -143,12 +144,38 @@ class SbtInputs(installation: IScalaInstallation,
     store.compilerBridgeFor(installation)(javaMonitor.newChild(10)).right.map {
       compilerBridge =>
         // prevent zinc from adding things to the (boot)classpath
-        val cpOptions = new ClasspathOptions(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
+        val cpOptions = ClasspathOptions.create(false, false, false, /* autoBoot = */ false, /* filterLibrary = */ false)
         Compilers(
-          new AnalyzingCompiler(scalaInstance, CompilerBridgeProvider.constant(compilerBridge.toFile), cpOptions, _ ⇒ (), None),
+          new AnalyzingCompiler(scalaInstance,
+              new CompilerBridgeProvider {
+                def fetchCompiledBridge(si: ScalaInstance, logger: Logger) = si.version match {
+                  case scalaInstance.version => compilerBridge.toFile
+                  case requested => throw new IllegalStateException(s"${scalaInstance.version} does not match requested one $requested")
+                }
+                def fetchScalaInstance(scalaVersion: String, logger: Logger) = scalaVersion match {
+                  case scalaInstance.version => scalaInstance
+                  case requested => throw new IllegalStateException(s"${scalaInstance.version} does not match requested one $requested")
+                }
+              },
+              cpOptions,
+              _ ⇒ (),
+              None),
           new JavaEclipseCompiler(project.underlying, javaMonitor))
     }
   }
+}
+
+/**
+ * This class is serialized by Zinc. Don't forget to get rid off all closure dependences
+ * in case of re-implementing it.
+ */
+class EclipseMultipleOutput(val srcOuts: Seq[(File, File)]) extends MultipleOutput {
+  override def getOutputGroups = srcOuts.map {
+    case (src, out) => new OutputGroup {
+      override def getSourceDirectory = src
+      override def getOutputDirectory = out
+    }
+  }.toArray
 }
 
 private[zinc] object Locator {

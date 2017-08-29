@@ -4,6 +4,7 @@ package zinc
 import java.io.File
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Supplier
 
 import scala.collection.mutable
 import scala.tools.nsc.Settings
@@ -28,11 +29,11 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
 import sbt.internal.inc.Analysis
-import sbt.internal.inc.SourceInfo
 import xsbti.CompileFailed
-import xsbti.F0
 import xsbti.Logger
 import xsbti.compile.CompileProgress
+import xsbti.compile.analysis.SourceInfo
+import sbt.util.InterfaceUtil._
 
 /**
  * An Eclipse builder using the Sbt engine.
@@ -65,11 +66,11 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   private def tempDirFile = tempDir.getLocation().toFile()
 
   private val sbtLogger = new xsbti.Logger {
-    override def error(msg: F0[String]) = logger.error(msg())
-    override def warn(msg: F0[String]) = logger.warn(msg())
-    override def info(msg: F0[String]) = logger.info(msg())
-    override def debug(msg: F0[String]) = logger.debug(msg())
-    override def trace(exc: F0[Throwable]) = logger.error("", exc())
+    override def error(msg: Supplier[String]) = logger.error(msg.get)
+    override def warn(msg: Supplier[String]) = logger.warn(msg.get)
+    override def info(msg: Supplier[String]) = logger.info(msg.get)
+    override def debug(msg: Supplier[String]) = logger.debug(msg.get)
+    override def trace(exc: Supplier[Throwable]) = logger.error("", exc.get)
   }
 
   private lazy val sbtReporter = new SbtBuildReporter(project)
@@ -89,7 +90,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
         hasInternalErrors = true
         BuildProblemMarker.create(project, e)
         eclipseLog.error("Error in Scala compiler", e)
-        sbtReporter.log(SbtUtils.NoPosition, "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.", xsbti.Severity.Error)
+        sbtReporter.log(problem(
+          "compile",
+          SbtUtils.NoPosition,
+          "SBT builder crashed while compiling. The error message is '" + e.getMessage() + "'. Check Error Log for details.",
+          xsbti.Severity.Error
+        ))
     } finally {
       ProductExposer.showJavaCompilationProducts(project.underlying)
     }
@@ -174,7 +180,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
    * Create problem markers for the given source info.
    */
   private def createMarkers(sourceInfo: SourceInfo) = {
-    for (problem <- sourceInfo.reportedProblems)
+    for (problem <- sourceInfo.getReportedProblems)
       sbtReporter.createMarker(problem.position, problem.message, problem.severity)
   }
 
@@ -212,7 +218,12 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
       case Right(comps) =>
         CachingCompiler(cacheFile, sbtReporter, log).compile(in, comps)
       case Left(errors) =>
-        sbtReporter.log(SbtUtils.NoPosition, errors, xsbti.Severity.Error)
+        sbtReporter.log(problem(
+          "compile",
+          SbtUtils.NoPosition,
+          errors,
+          xsbti.Severity.Error
+        ))
         throw CompilerBridgeFailed
     }
   }
