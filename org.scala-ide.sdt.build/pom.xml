@@ -84,18 +84,6 @@
     </repository>
   </repositories>
 
-  <profiles>
-    <profile>
-      <id>scala-2.10.x</id>
-
-    </profile>
-
-    <profile>
-      <id>scala-2.11.x</id>
-
-    </profile>
-  </profiles>
-
   <build>
     <plugins>
       <plugin>
@@ -140,19 +128,6 @@
           </jvmArgs>
         </configuration>
       </plugin>
-      <!-- create a package with the sources -->
-<!--      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin> -->
       <!-- create the source plug-in -->
       <plugin>
         <groupId>org.eclipse.tycho</groupId>

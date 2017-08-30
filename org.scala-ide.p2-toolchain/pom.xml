@@ -15,24 +15,8 @@
 
   <profiles>
     <profile>
-      <id>scala-2.10.x</id>
-      <modules>
-        <module>../org.scala-ide.scala210.build</module>
-      </modules>
-    </profile>
-    <profile>
-      <id>scala-2.11.x</id>
-      <modules>
-<!-- TODO enable back when multiple bundles of Scala are supported -->
-<!--        <module>../org.scala-ide.scala210.build</module> -->
-        <module>../org.scala-ide.scala211.build</module>
-        <module>../org.scala-ide.p2-update-site</module>
-      </modules>
-    </profile>
-    <profile>
       <id>scala-2.12.x</id>
       <modules>
-        <!--module>../org.scala-ide.scala211.build</module-->
         <module>../org.scala-ide.scala212.build</module>
         <module>../org.scala-ide.p2-update-site</module>
       </modules>

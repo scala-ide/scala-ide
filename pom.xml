@@ -38,7 +38,7 @@
     <sbt-util.version>1.0.0</sbt-util.version>
     <sbt-io.version>1.0.0</sbt-io.version>
     <sbinary.version>0.4.4</sbinary.version>
-    <scala-refactoring.version>0.13.0-SNAPSHOT</scala-refactoring.version>
+    <scala-refactoring.version>0.14.0-SNAPSHOT</scala-refactoring.version>
     <scalariform.version>0.2.3</scalariform.version>
 
     <!-- plugin versions -->
@@ -62,9 +62,9 @@
 
     <!-- base versions -->
     <!-- Scala 2.10.x -->
-    <scala210.version>2.10.5</scala210.version>
+    <scala210.version>2.10.6</scala210.version>
     <!-- Scala 2.11.x -->
-    <scala211.version>2.11.8</scala211.version>
+    <scala211.version>2.11.11</scala211.version>
     <scala211.binary.version>2.11</scala211.binary.version>
     <scala211.scala-xml.version>1.0.6</scala211.scala-xml.version>
     <scala211.scala-parser-combinators.version>1.0.5</scala211.scala-parser-combinators.version>
@@ -91,7 +91,6 @@
     <!-- the repos containing the Scala dependencies -->
     <repo.scala-refactoring>https://oss.sonatype.org/content/repositories/snapshots</repo.scala-refactoring>
     <repo.typesafe>https://proxy-ch.typesafe.com:8082/artifactory/ide-${scala.minor.version}</repo.typesafe>
-
   </properties>
 
   <profiles>
@@ -103,43 +102,12 @@
     </profile>
 
     <profile>
-      <id>scala-2.10.x</id>
-      <properties>
-        <scala.version>${scala210.version}</scala.version>
-        <scala.short.version>210</scala.short.version>
-        <scala.minor.version>2.10</scala.minor.version>
-        <version.suffix>2_10</version.suffix>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>scala-2.11.x</id>
-      <properties>
-        <scala.version>${scala211.version}</scala.version>
-        <scala.short.version>211</scala.short.version>
-        <scala.minor.version>2.11</scala.minor.version>
-        <version.suffix>2_11</version.suffix>
-      </properties>
-    </profile>
-
-    <profile>
       <id>scala-2.12.x</id>
       <properties>
         <scala.version>${scala212.version}</scala.version>
         <scala.short.version>212</scala.short.version>
         <scala.minor.version>2.12</scala.minor.version>
         <version.suffix>2_12</version.suffix>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>eclipse-neon</id>
-      <properties>
-        <eclipse.codename>neon</eclipse.codename>
-        <repo.eclipse>${repo.eclipse.neon}</repo.eclipse>
-        <repo.ajdt>${repo.ajdt.neon}</repo.ajdt>
-        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
-        <weaving.hook.plugin.version>1.1.200.v20150730-1648</weaving.hook.plugin.version>
       </properties>
     </profile>
 
