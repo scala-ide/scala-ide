@@ -6,9 +6,6 @@
    <feature url="features/org.scala-ide.zinc.feature_0.0.0.jar" id="org.scala-ide.zinc.feature" version="0.0.0">
       <category name="sdt"/>
    </feature>
-   <!--feature url="features/org.scala-ide.scala211.feature_0.0.0.jar" id="org.scala-ide.scala211.feature" version="0.0.0">
-      <category name="sdt"/>
-   </feature-->
    <feature url="features/org.scala-ide.scala212.feature_0.0.0.jar" id="org.scala-ide.scala212.feature" version="0.0.0">
       <category name="sdt"/>
    </feature>
@@ -18,9 +15,6 @@
    <feature url="features/org.scala-ide.zinc.source.feature_0.0.0.jar" id="org.scala-ide.zinc.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature>
-   <!--feature url="features/org.scala-ide.scala211.source.feature_0.0.0.jar" id="org.scala-ide.scala211.source.feature" version="0.0.0">
-      <category name="sdt-source"/>
-   </feature-->
    <feature url="features/org.scala-ide.scala212.source.feature_0.0.0.jar" id="org.scala-ide.scala212.source.feature" version="0.0.0">
       <category name="sdt-source"/>
    </feature>
