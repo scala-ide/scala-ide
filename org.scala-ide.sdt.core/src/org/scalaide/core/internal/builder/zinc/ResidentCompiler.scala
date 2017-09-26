@@ -7,6 +7,7 @@ import java.util.function.Supplier
 import scala.reflect.internal.util.NoPosition
 import scala.reflect.internal.util.Position
 
+import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
 import org.scalaide.core.IScalaProject
 import org.scalaide.core.internal.ScalaPlugin
@@ -25,7 +26,6 @@ import xsbti.compile.IncOptions
 import xsbti.compile.MiniSetup
 import xsbti.compile.PerClasspathEntryLookup
 import xsbti.compile.ScalaInstance
-import org.eclipse.core.runtime.IPath
 
 object ResidentCompiler {
   def apply(project: IScalaProject, worksheetBinFolder: File, worksheetLibs: Option[IPath]) = {
@@ -75,31 +75,10 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, worksh
   }
   private val worksheetLibs = libs.map(_.toFile).toSeq
 
-  def compile(worksheetSrc : File): CompilationResult = {
-    //val worksheetSrc = ResourcesPlugin.getWorkspace.getRoot
+  def compile(worksheetSrc: File): CompilationResult = {
     def sbtReporter = new SbtBuildReporter(project)
 
-    def incOptions: IncOptions = {
-      import xsbti.compile.IncOptions._
-      val base = of()
-      base.
-        withApiDebug(defaultApiDebug()).
-        withRelationsDebug(defaultRelationsDebug()).
-        withClassfileManagerType(Optional.empty()).
-        withApiDumpDirectory(Optional.empty()).
-        withRecompileOnMacroDef(defaultRecompileOnMacroDef()).
-        withEnabled(defaultEnabled()).
-        withStoreApis(defaultStoreApis()).
-        withApiDiffContextSize(defaultApiDiffContextSize()).
-        withExternalHooks(defaultExternal()).
-        withExtra(defaultExtra()).
-        withLogRecompileOnMacro(defaultLogRecompileOnMacro()).
-        withRecompileAllFraction(defaultRecompileAllFraction()).
-        withRelationsDebug(defaultRelationsDebug()).
-        withTransitiveStep(defaultTransitiveStep()).
-        withUseCustomizedFileManager(defaultUseCustomizedFileManager()).
-        withUseOptimizedSealed(defaultUseOptimizedSealed())
-    }
+    def incOptions: IncOptions = IncOptions.of()
 
     val lookup = new PerClasspathEntryLookup {
       override def analysis(classpathEntry: File) =
@@ -113,9 +92,7 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, worksh
       }
     }
 
-    def srcOutDirs = Seq(worksheetSrc.toPath.getParent.toFile -> worksheetBinFolder)
-
-    def output = new EclipseMultipleOutput(srcOutDirs)
+    def output = new EclipseMultipleOutput(Seq(worksheetSrc.toPath.getParent.toFile -> worksheetBinFolder))
     def cache = new FreshCompilerCache
 
     val classpath = worksheetLibs ++ project.scalaClasspath.userCp.map(_.toFile)
@@ -125,19 +102,20 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, worksh
     new IncrementalCompilerImpl().compile(comps.scalac, comps.javac, Array(worksheetSrc), classpath.toArray, output,
       cache, project.scalacArguments.toArray, javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup],
       lookup, sbtReporter, ScalaThenJava, skip = false, Optional.empty() /*progress*/ , incOptions, extra = Array(), sbtLogger)
+
     import xsbti.Severity._
     val errors = sbtReporter.problems.collect {
-      case p if p.severity() == Error =>
-        val pos = if (p.position().line().isPresent())
+      case p if p.severity == Error =>
+        val pos = p.position.line.map[Position] { pline =>
           new Position {
-            override def line = p.position().line().get
+            override def line = pline
           }
-        else NoPosition
-        CompilationError(p.message(), pos)
+        }.orElse { NoPosition }
+        CompilationError(p.message, pos)
     }
-    if (errors.nonEmpty)
-      CompilationFailed(errors)
-    else
-      CompilationSuccess
+    errors.toSeq match {
+      case errors @ _ +: _ => CompilationFailed(errors)
+      case Nil => CompilationSuccess
+    }
   }
 }
