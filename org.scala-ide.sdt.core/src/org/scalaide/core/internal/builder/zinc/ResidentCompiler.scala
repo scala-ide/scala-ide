@@ -75,8 +75,8 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, worksh
   }
   private val worksheetLibs = libs.map(_.toFile).toSeq
 
-  def compile(worksheetSrc_ : File): CompilationResult = {
-    val worksheetSrc = worksheetSrc_.getAbsoluteFile
+  def compile(worksheetSrc : File): CompilationResult = {
+    //val worksheetSrc = ResourcesPlugin.getWorkspace.getRoot
     def sbtReporter = new SbtBuildReporter(project)
 
     def incOptions: IncOptions = {
@@ -113,14 +113,8 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, worksh
       }
     }
 
-    def srcOutDirs = project.sourceOutputFolders.map {
-      case (src, out) => (Option(src.getLocation).map(_.toFile()), Option(out.getLocation).map(_.toFile()))
-    }.collect {
-      case (Some(src), Some(out)) => (src, out)
-      case (Some(src), None) => throw new IllegalStateException(s"Not found output folder for source $src folder. Check build configuration.")
-      case (None, Some(out)) => throw new IllegalStateException(s"Not found source folder for output $out folder. Check build configuration.")
-      // case (None, None) is correct for some project building states. Ignore it.
-    }
+    def srcOutDirs = Seq(worksheetSrc.toPath.getParent.toFile -> worksheetBinFolder)
+
     def output = new EclipseMultipleOutput(srcOutDirs)
     def cache = new FreshCompilerCache
 
