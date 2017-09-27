@@ -2,6 +2,9 @@ package org.scalaide.util.internal
 
 import java.io.File
 import java.util.Optional
+import java.util.function.Supplier
+
+import org.scalaide.logging.Logger
 
 import sbt.internal.inc.Analysis
 import sbt.internal.inc.FileAnalysisStore
@@ -31,6 +34,14 @@ object SbtUtils {
     def pointer(): Optional[Integer] = Optional.empty()
     def pointerSpace(): Optional[String] = Optional.empty()
     def sourceFile(): Optional[File] = Optional.empty()
-    def sourcePath(): Optional[String] =  Optional.empty()
+    def sourcePath(): Optional[String] = Optional.empty()
+  }
+
+  def defaultSbtLogger(logger: Logger): xsbti.Logger = new xsbti.Logger {
+    override def error(msg: Supplier[String]) = logger.error(msg.get)
+    override def warn(msg: Supplier[String]) = logger.warn(msg.get)
+    override def info(msg: Supplier[String]) = logger.info(msg.get)
+    override def debug(msg: Supplier[String]) = logger.debug(msg.get)
+    override def trace(exc: Supplier[Throwable]) = logger.error("", exc.get)
   }
 }
