@@ -5,6 +5,7 @@ import java.util.Optional
 
 import scala.reflect.internal.util.NoPosition
 import scala.reflect.internal.util.Position
+import scala.tools.nsc.settings.SpecificScalaVersion
 
 import org.eclipse.core.runtime.IPath
 import org.eclipse.core.runtime.NullProgressMonitor
@@ -49,9 +50,14 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
     def cache = new FreshCompilerCache
     val lookup = new DefaultPerClasspathEntryLookup {}
     val classpath = libs ++ project.scalaClasspath.userCp.map(_.toFile)
+    val scalacOpts = project.effectiveScalaInstallation.version match {
+      case SpecificScalaVersion(2, 10, _, _) =>
+        project.scalacArguments.filterNot(opt => opt == "-Xsource:2.10" || opt == "-Ymacro-expand:none")
+      case _ => project.scalacArguments
+    }
 
     new IncrementalCompilerImpl().compile(comps.scalac, comps.javac, Array(compiledSource), classpath.toArray, output,
-      cache, project.scalacArguments.toArray, javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup],
+      cache, scalacOpts.toArray, javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup],
       lookup, sbtReporter, CompileOrder.ScalaThenJava, skip = false, Optional.empty[CompileProgress], incOptions, extra = Array(),
       sbtLogger)
 
