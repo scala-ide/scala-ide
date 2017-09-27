@@ -42,23 +42,24 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
   import ResidentCompiler._
   private val sbtLogger = SbtUtils.defaultSbtLogger(logger)
   private val libs = extraLibsToCompile.map(_.toFile).toSeq
+  private val zincCompiler = new IncrementalCompilerImpl
+  private val sbtReporter = new SbtBuildReporter(project)
+  private val lookup = new DefaultPerClasspathEntryLookup {}
+  private val classpath = libs ++ project.scalaClasspath.userCp.map(_.toFile) toArray
+  private val scalacOpts = (project.effectiveScalaInstallation.version match {
+    case SpecificScalaVersion(2, 10, _, _) =>
+      project.scalacArguments.filterNot(opt => opt == "-Xsource:2.10" || opt == "-Ymacro-expand:none")
+    case _ => project.scalacArguments
+  }) toArray
 
   def compile(compiledSource: File): CompilationResult = {
-    def sbtReporter = new SbtBuildReporter(project)
     def incOptions: IncOptions = IncOptions.of()
     def output = new EclipseMultipleOutput(Seq(compiledSource.toPath.getParent.toFile -> compilationOutputFolder))
     def cache = new FreshCompilerCache
-    val lookup = new DefaultPerClasspathEntryLookup {}
-    val classpath = libs ++ project.scalaClasspath.userCp.map(_.toFile)
-    val scalacOpts = project.effectiveScalaInstallation.version match {
-      case SpecificScalaVersion(2, 10, _, _) =>
-        project.scalacArguments.filterNot(opt => opt == "-Xsource:2.10" || opt == "-Ymacro-expand:none")
-      case _ => project.scalacArguments
-    }
 
-    new IncrementalCompilerImpl().compile(comps.scalac, comps.javac, Array(compiledSource), classpath.toArray, output,
-      cache, scalacOpts.toArray, javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup],
-      lookup, sbtReporter, CompileOrder.ScalaThenJava, skip = false, Optional.empty[CompileProgress], incOptions, extra = Array(),
+    zincCompiler.compile(comps.scalac, comps.javac, Array(compiledSource), classpath, output, cache, scalacOpts,
+      javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup], lookup, sbtReporter,
+      CompileOrder.ScalaThenJava, skip = false, Optional.empty[CompileProgress], incOptions, extra = Array(),
       sbtLogger)
 
     import xsbti.Severity._
