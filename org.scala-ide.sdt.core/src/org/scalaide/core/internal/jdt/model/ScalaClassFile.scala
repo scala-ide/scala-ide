@@ -158,7 +158,7 @@ class ScalaClassFile(parent: PackageFragment, name: String, sourceFile: String)
   def openAncestors0(newElements: JHashMap[_, _], monitor: IProgressMonitor): Unit = { super.openAncestors(newElements, monitor) }
   def getHandleMementoDelimiter0() = super.getHandleMementoDelimiter()
   def isSourceElement0(): Boolean = super.isSourceElement()
-  def ignoreOptionalProblems(): Boolean = false
+  override def ignoreOptionalProblems(): Boolean = false
 
   override def getHandleFromMemento(token: String, memento: MementoTokenizer, owner: WorkingCopyOwner): IJavaElement = {
     token.charAt(0) match {

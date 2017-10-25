@@ -39,7 +39,7 @@
     <sbt-io.version>1.0.0</sbt-io.version>
     <sbinary.version>0.4.4</sbinary.version>
     <scala-refactoring.version>0.14.0-SNAPSHOT</scala-refactoring.version>
-    <scalariform.version>0.2.3</scalariform.version>
+    <scalariform.version>0.2.4</scalariform.version>
 
     <!-- plugin versions -->
     <tycho.plugin.version>0.21.0</tycho.plugin.version>
@@ -573,7 +573,7 @@
               <arg>-language:_</arg>
               <arg>-Xlint</arg>
               <arg>-Xfuture</arg>
-              <arg>-Xfatal-warnings</arg>
+              <!-- <arg>-Xfatal-warnings</arg> -->
               <arg>-Yno-adapted-args</arg>
               <arg>-Ywarn-dead-code</arg>
               <arg>-Ywarn-unused-import</arg>
