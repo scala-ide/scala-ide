@@ -319,6 +319,10 @@ class ScalaSelectionEngine(nameEnvironment: SearchableEnvironment, requestor: Sc
     // NOP
   }
 
+  override def acceptModule(moduleName: Array[Char]): Unit = {
+    // NOP
+  }
+
   override def acceptConstructor(
     modifiers: Int,
     simpleTypeName: Array[Char],
