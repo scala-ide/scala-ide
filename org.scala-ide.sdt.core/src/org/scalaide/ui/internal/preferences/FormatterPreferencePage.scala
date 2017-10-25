@@ -220,6 +220,7 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
     def buildContents(composite: Composite): Unit = {
       composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
 
+      addCheckBox(composite, AllowParamGroupsOnNewlines.description, AllowParamGroupsOnNewlines)
       addCheckBox(composite, CompactControlReadability.description, CompactControlReadability)
       addCheckBox(composite, FormatXml.description, FormatXml)
       addCheckBox(composite, NewlineAtEndOfFile.description, NewlineAtEndOfFile)
