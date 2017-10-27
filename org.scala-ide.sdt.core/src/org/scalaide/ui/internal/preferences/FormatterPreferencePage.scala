@@ -218,13 +218,14 @@ class FormatterPreferencePage extends FieldEditors with HasLogger {
   object MiscPrefTab extends PrefTab("Miscellaneous", MiscPreviewText) {
 
     def buildContents(composite: Composite): Unit = {
-      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(5).grow(1)))
+      composite.setLayout(new MigLayout(new LC().fill, new AC, new AC().index(7).grow(1)))
 
       addCheckBox(composite, AllowParamGroupsOnNewlines.description, AllowParamGroupsOnNewlines)
       addCheckBox(composite, CompactControlReadability.description, CompactControlReadability)
       addCheckBox(composite, FormatXml.description, FormatXml)
       addCheckBox(composite, NewlineAtEndOfFile.description, NewlineAtEndOfFile)
       addCheckBox(composite, RewriteArrowSymbols.description, RewriteArrowSymbols)
+      addCheckBox(composite, SingleCasePatternOnNewline.description, SingleCasePatternOnNewline)
 
       addPreview(composite)
     }
