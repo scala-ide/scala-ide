@@ -12,9 +12,7 @@ import xsbti.Logger
 import xsbti.Reporter
 import xsbti.compile.AnalysisContents
 import xsbti.compile.CompileResult
-import xsbti.compile.DefinesClass
 import xsbti.compile.JavaCompiler
-import xsbti.compile.PerClasspathEntryLookup
 import xsbti.compile.ScalaCompiler
 
 /**
@@ -36,16 +34,9 @@ class CachingCompiler private (cacheFile: File, sbtReporter: Reporter, log: Logg
    *  method which is not implemented in `IC.compile`.
    */
   def compile(in: SbtInputs, comps: Compilers): Analysis = {
-    val lookup = new PerClasspathEntryLookup {
+    val lookup = new DefaultPerClasspathEntryLookup {
       override def analysis(classpathEntry: File) =
         in.analysisMap(classpathEntry)
-
-      override def definesClass(classpathEntry: File) = {
-        val dc = Locator(classpathEntry)
-        new DefinesClass() {
-          def apply(name: String) = dc.apply(name)
-        }
-      }
     }
     val (previousAnalysis, previousSetup) = SbtUtils.readCache(cacheFile)
       .map {

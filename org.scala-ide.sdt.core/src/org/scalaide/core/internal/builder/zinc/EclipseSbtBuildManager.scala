@@ -4,7 +4,6 @@ package zinc
 import java.io.File
 import java.lang.ref.SoftReference
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.Supplier
 
 import scala.collection.mutable
 import scala.tools.nsc.Settings
@@ -29,11 +28,11 @@ import org.scalaide.util.eclipse.FileUtils
 import org.scalaide.util.internal.SbtUtils
 
 import sbt.internal.inc.Analysis
+import sbt.util.InterfaceUtil.problem
 import xsbti.CompileFailed
 import xsbti.Logger
 import xsbti.compile.CompileProgress
 import xsbti.compile.analysis.SourceInfo
-import sbt.util.InterfaceUtil._
 
 /**
  * An Eclipse builder using the Sbt engine.
@@ -65,13 +64,7 @@ class EclipseSbtBuildManager(val project: IScalaProject, settings: Settings, ana
   private val tempDir = project.underlying.getFolder(".tmpBin")
   private def tempDirFile = tempDir.getLocation().toFile()
 
-  private val sbtLogger = new xsbti.Logger {
-    override def error(msg: Supplier[String]) = logger.error(msg.get)
-    override def warn(msg: Supplier[String]) = logger.warn(msg.get)
-    override def info(msg: Supplier[String]) = logger.info(msg.get)
-    override def debug(msg: Supplier[String]) = logger.debug(msg.get)
-    override def trace(exc: Supplier[Throwable]) = logger.error("", exc.get)
-  }
+  private val sbtLogger = SbtUtils.defaultSbtLogger(logger)
 
   private lazy val sbtReporter = new SbtBuildReporter(project)
 

@@ -70,6 +70,7 @@ import org.scalaide.core.sbtbuilder.Scala210Compilation
 import org.scalaide.core.sbtbuilder.Scala211Compilation
 import org.scalaide.core.sbtbuilder.SourcePathFinderTest
 import org.scalaide.core.scalaelements.ScalaElementsNameTest
+import org.scalaide.core.compiler.ResidentCompilerTest
 
 @RunWith(classOf[Suite])
 @Suite.SuiteClasses(
@@ -141,6 +142,7 @@ import org.scalaide.core.scalaelements.ScalaElementsNameTest
     classOf[Scala210Compilation],
     classOf[SourcePathFinderTest],
     classOf[ScalaElementsNameTest],
-    classOf[Scala211Compilation]
+    classOf[Scala211Compilation],
+    classOf[ResidentCompilerTest]
 ))
 class TestsSuite
