@@ -10,23 +10,25 @@ import org.eclipse.core.runtime.content.IContentDescription
 import org.scalaide.logging.HasLogger
 
 object ScalaClassFileDescriber extends HasLogger {
-
-  def isScala(contents: Array[Byte]): Option[String] = {
+  import scala.util.Try
+  def isScala(contents: Array[Byte]): Option[String] = Try {
     import scala.tools.scalap.{ ByteArrayReader, Classfile }
-    val classFile = new Classfile(new ByteArrayReader(contents))
+    new Classfile(new ByteArrayReader(contents))
+  }.toOption.flatMap { classFile =>
     import classFile._
     def scalaAttribute = classFile.attribs.find { _.toString == "Scala" }
     (classFile.scalaSigAttribute orElse scalaAttribute).flatMap { _ =>
       classFile.attribs.collectFirst {
         case atr @ Attribute(_, data) if atr.toString == "SourceFile" =>
-          data.map { d => pool(d) }.collectFirst {
-            case pool.UTF8(s) =>
-              s
-          }
-      }.flatten
+          data
+      }
+    }.flatMap { data =>
+      data.map { d => pool(d) }.collectFirst {
+        case pool.UTF8(sourcePath) =>
+          sourcePath
+      }
     }
   }
-
 }
 
 class ScalaClassFileDescriber extends IContentDescriber {
@@ -34,8 +36,8 @@ class ScalaClassFileDescriber extends IContentDescriber {
   import org.eclipse.core.runtime.content.IContentDescriber.INVALID
   import org.eclipse.core.runtime.content.IContentDescriber.VALID
 
-  override def describe(contents : InputStream, description : IContentDescription) : Int =
-    if (isScala(Source.fromInputStream(contents).map(_.toByte).toArray).isDefined) VALID else INVALID
+  override def describe(contents: InputStream, description: IContentDescription): Int =
+    isScala(Source.fromInputStream(contents).map(_.toByte).toArray).map(_ => VALID).getOrElse(INVALID)
 
-  override def getSupportedOptions : Array[QualifiedName] = new Array[QualifiedName](0)
+  override def getSupportedOptions: Array[QualifiedName] = new Array[QualifiedName](0)
 }
