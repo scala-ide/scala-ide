@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.p2-update-site.feature"
       label="Scala IDE Refactoring"
-      version="4.7.0.qualifier"
+      version="4.7.1.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-refactoring.library">
 

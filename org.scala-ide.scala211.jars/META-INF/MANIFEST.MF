@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Scala 2.11 jars
 Bundle-SymbolicName: org.scala-ide.scala211.jars;singleton:=true
-Bundle-Version: 4.7.0.qualifier
+Bundle-Version: 4.7.1.qualifier
 Bundle-Vendor: scala-ide.org
 Bundle-ActivationPolicy: lazy
 Bundle-Localization: plugin
