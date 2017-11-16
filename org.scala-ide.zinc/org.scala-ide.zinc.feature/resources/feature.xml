@@ -2,7 +2,7 @@
 <feature
       id="org.scala-ide.zinc.feature"
       label="zinc ${zinc.version}"
-      version="4.7.0.qualifier"
+      version="4.7.1.qualifier"
       provider-name="scala-ide.org"
       plugin="org.scala-ide.zinc.library">
 
