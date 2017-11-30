@@ -93,7 +93,10 @@ class ScalaPresentationCompiler(private[compiler] val name: String, _settings: S
 
   override def forScaladoc = true
 
-  def presentationReporter = reporter.asInstanceOf[ScalaPresentationCompiler.PresentationReporter]
+  def presentationReporter: ScalaPresentationCompiler.PresentationReporter = reporter match {
+    case reporter: ScalaPresentationCompiler.PresentationReporter => reporter
+    case probablyReplacedByCompilerPlugin @ _ => new ScalaPresentationCompiler.PresentationReporter(name)
+  }
   presentationReporter.compiler = this
 
   def compilationUnits: List[InteractiveCompilationUnit] = {
