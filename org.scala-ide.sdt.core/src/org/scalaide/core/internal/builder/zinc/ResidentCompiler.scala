@@ -52,7 +52,7 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
     case _ => project.scalacArguments
   }) toArray
 
-  def compile(compiledSource: File): CompilationResult = {
+  def compile(compiledSource: File): CompilationResult = try {
     def incOptions: IncOptions = IncOptions.of()
     def output = new EclipseMultipleOutput(Seq(compiledSource.toPath.getParent.toFile -> compilationOutputFolder))
     def cache = new FreshCompilerCache
@@ -76,5 +76,8 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
       case errors @ _ +: _ => CompilationFailed(errors)
       case Nil => CompilationSuccess
     }
+  } catch {
+    case anyException: Throwable =>
+      CompilationFailed(Seq(CompilationError(anyException.getMessage, NoPosition)))
   }
 }

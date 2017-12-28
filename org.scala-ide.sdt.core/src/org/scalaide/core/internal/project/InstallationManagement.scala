@@ -1,24 +1,25 @@
 package org.scalaide.core.internal.project
 
-import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
-import org.eclipse.jface.preference.IPreferenceStore
-import org.scalaide.util.internal.CompilerUtils
-import scala.util.Try
-import org.scalaide.ui.internal.preferences.CompilerSettings
-import org.eclipse.jface.util.IPropertyChangeListener
-import org.scalaide.util.internal.SettingConverterUtil
-import org.scalaide.core.IScalaPlugin
-import org.eclipse.core.resources.IMarker
 import scala.tools.nsc.settings.ScalaVersion
+import scala.tools.nsc.settings.SpecificScalaVersion
 import scala.util.Failure
-import org.eclipse.jface.util.PropertyChangeEvent
 import scala.util.Success
-import org.scalaide.core.resources.MarkerFactory
+import scala.util.Try
+
+import org.eclipse.core.resources.IMarker
 import org.eclipse.core.runtime.Path
+import org.eclipse.jface.preference.IPreferenceStore
+import org.eclipse.jface.util.IPropertyChangeListener
+import org.eclipse.jface.util.PropertyChangeEvent
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.ScalaInstallationChange
 import org.scalaide.core.SdtConstants
 import org.scalaide.core.internal.compiler.ScalaPresentationCompiler
+import org.scalaide.core.internal.jdt.util.ClasspathContainerSetter
+import org.scalaide.core.resources.MarkerFactory
+import org.scalaide.ui.internal.preferences.CompilerSettings
+import org.scalaide.util.internal.CompilerUtils
+import org.scalaide.util.internal.SettingConverterUtil
 
 trait InstallationManagement { this: ScalaProject =>
 
@@ -162,10 +163,17 @@ trait InstallationManagement { this: ScalaProject =>
     turnOnProjectSpecificSettings("requested Xsource change")
     val scalaVersionString = CompilerUtils.shortString(scalaVersion)
     // initial space here is important
-    val optionString = s" -Xsource:$scalaVersionString -Ymacro-expand:none"
+    val optionString = scalaVersion match {
+      case SpecificScalaVersion(2, 10, _, _) => s" -Xsource:$scalaVersionString -Ymacro-expand:none"
+      case _ => s" -Xsource:$scalaVersionString"
+    }
+    val extraArgsFilter = scalaVersion match {
+      case SpecificScalaVersion(2, 10, _, _) => (s: String) => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand")
+      case _ => (s: String) => !s.startsWith("-Xsource")
+    }
     eclipseLog.debug(s"Adding $optionString to compiler arguments of ${this.underlying.getName()} because of: $reason")
     val extraArgs = ScalaPresentationCompiler.defaultScalaSettings().splitParams(storage.getString(CompilerSettings.ADDITIONAL_PARAMS))
-    val curatedArgs = extraArgs.filter { s => !s.startsWith("-Xsource") && !s.startsWith("-Ymacro-expand") }
+    val curatedArgs = extraArgs.filter(extraArgsFilter)
     storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, curatedArgs.mkString(" ") + optionString)
   }
 
