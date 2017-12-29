@@ -16,6 +16,7 @@ import org.scalaide.util.internal.SbtUtils
 
 import sbt.internal.inc.FreshCompilerCache
 import sbt.internal.inc.IncrementalCompilerImpl
+import xsbti.CompileFailed
 import xsbti.compile.CompileAnalysis
 import xsbti.compile.CompileOrder
 import xsbti.compile.CompileProgress
@@ -24,7 +25,7 @@ import xsbti.compile.MiniSetup
 
 object ResidentCompiler {
   def apply(project: IScalaProject, compilationOutputFolder: File, extraLibsToCompile: Option[IPath],
-      monitor: SubMonitor = SubMonitor.convert(new NullProgressMonitor)) = {
+            monitor: SubMonitor = SubMonitor.convert(new NullProgressMonitor)) = {
     val installation = project.effectiveScalaInstallation
     val comps = compilers(installation, monitor)
     comps.toOption.map { comps => new ResidentCompiler(project, comps, compilationOutputFolder, extraLibsToCompile) }
@@ -38,13 +39,16 @@ object ResidentCompiler {
 }
 
 class ResidentCompiler private (project: IScalaProject, comps: Compilers, compilationOutputFolder: File,
-    extraLibsToCompile: Option[IPath]) extends HasLogger {
+                                extraLibsToCompile: Option[IPath]) extends HasLogger {
   import ResidentCompiler._
   private val sbtLogger = SbtUtils.defaultSbtLogger(logger)
   private val libs = extraLibsToCompile.map(_.toFile).toSeq
   private val zincCompiler = new IncrementalCompilerImpl
   private val sbtReporter = new SbtBuildReporter(project)
-  private val lookup = new DefaultPerClasspathEntryLookup {}
+  private val lookup = new DefaultPerClasspathEntryLookup {
+    override def definesClass(classpathEntry: File) =
+      Locator.NoClass
+  }
   private val classpath = libs ++ project.scalaClasspath.userCp.map(_.toFile) toArray
   private val scalacOpts = (project.effectiveScalaInstallation.version match {
     case SpecificScalaVersion(2, 10, _, _) =>
@@ -52,31 +56,43 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
     case _ => project.scalacArguments
   }) toArray
 
+  val problemToCompilationError: PartialFunction[xsbti.Problem, CompilationError] = {
+    case p if p.severity == xsbti.Severity.Error =>
+      val pos = p.position.line.map[Position] { pline =>
+        new Position {
+          override def line = pline
+        }
+      }.orElse { NoPosition }
+      CompilationError(p.message, pos)
+  }
+
   def compile(compiledSource: File): CompilationResult = try {
+    import java.nio.file.Files
+    Files.lines(compiledSource.toPath).toArray.foreach(a => logger.warn(a))
     def incOptions: IncOptions = IncOptions.of()
     def output = new EclipseMultipleOutput(Seq(compiledSource.toPath.getParent.toFile -> compilationOutputFolder))
     def cache = new FreshCompilerCache
 
+    sbtReporter.reset()
     zincCompiler.compile(comps.scalac, comps.javac, Array(compiledSource), classpath, output, cache, scalacOpts,
       javaOptions = Array(), Optional.empty[CompileAnalysis], Optional.empty[MiniSetup], lookup, sbtReporter,
       CompileOrder.ScalaThenJava, skip = false, Optional.empty[CompileProgress], incOptions, extra = Array(),
       sbtLogger)
 
-    import xsbti.Severity._
-    val errors = sbtReporter.problems.collect {
-      case p if p.severity == Error =>
-        val pos = p.position.line.map[Position] { pline =>
-          new Position {
-            override def line = pline
-          }
-        }.orElse { NoPosition }
-        CompilationError(p.message, pos)
-    }
-    errors.toSeq match {
+    sbtReporter.problems.collect {
+      problemToCompilationError
+    }.toSeq match {
       case errors @ _ +: _ => CompilationFailed(errors)
-      case Nil => CompilationSuccess
+      case Nil             => CompilationSuccess
     }
   } catch {
+    case compileFailed: CompileFailed =>
+      compileFailed.problems
+        .collect(problemToCompilationError)
+        .toSeq match {
+          case errors @ _ +: _ => CompilationFailed(errors)
+          case Nil             => CompilationSuccess
+        }
     case anyException: Throwable =>
       CompilationFailed(Seq(CompilationError(anyException.getMessage, NoPosition)))
   }
