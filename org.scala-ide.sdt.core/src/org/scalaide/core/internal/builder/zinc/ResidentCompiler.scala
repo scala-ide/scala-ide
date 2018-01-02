@@ -56,7 +56,7 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
     case _ => project.scalacArguments
   }) toArray
 
-  val problemToCompilationError: PartialFunction[xsbti.Problem, CompilationError] = {
+  private val problemToCompilationError: PartialFunction[xsbti.Problem, CompilationError] = {
     case p if p.severity == xsbti.Severity.Error =>
       val pos = p.position.line.map[Position] { pline =>
         new Position {
@@ -64,6 +64,11 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
         }
       }.orElse { NoPosition }
       CompilationError(p.message, pos)
+  }
+
+  private def toCompilationResult(errors: Seq[CompilationError]): CompilationResult = errors match {
+    case errors @ _ +: _ => CompilationFailed(errors)
+    case Nil             => CompilationSuccess
   }
 
   def compile(compiledSource: File): CompilationResult = try {
@@ -79,20 +84,10 @@ class ResidentCompiler private (project: IScalaProject, comps: Compilers, compil
       CompileOrder.ScalaThenJava, skip = false, Optional.empty[CompileProgress], incOptions, extra = Array(),
       sbtLogger)
 
-    sbtReporter.problems.collect {
-      problemToCompilationError
-    }.toSeq match {
-      case errors @ _ +: _ => CompilationFailed(errors)
-      case Nil             => CompilationSuccess
-    }
+    toCompilationResult(sbtReporter.problems.collect(problemToCompilationError))
   } catch {
     case compileFailed: CompileFailed =>
-      compileFailed.problems
-        .collect(problemToCompilationError)
-        .toSeq match {
-          case errors @ _ +: _ => CompilationFailed(errors)
-          case Nil             => CompilationSuccess
-        }
+      toCompilationResult(compileFailed.problems.collect(problemToCompilationError))
     case anyException: Throwable =>
       CompilationFailed(Seq(CompilationError(anyException.getMessage, NoPosition)))
   }
