@@ -11,8 +11,8 @@ trait HtmlHover {
   import IScalaHover._
   import HTMLPrinter._
 
-  def createHtmlOutput(f: StringBuffer => Unit): String = {
-    val b = new StringBuffer()
+  def createHtmlOutput(f: java.lang.StringBuilder => Unit): String = {
+    val b = new java.lang.StringBuilder()
 
     val fd = JFaceResources.getFontRegistry().getFontData(HoverFontId)(0)
     val configuredFont = convertTopLevelFont("""html { font-family: sans-serif; font-size: 10pt; font-style: normal; font-weight: normal; }""", fd)

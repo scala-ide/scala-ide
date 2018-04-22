@@ -2,7 +2,7 @@ package org.scalaide.core.internal.compiler
 
 import org.eclipse.core.resources.ResourcesPlugin
 import org.eclipse.core.runtime.Path
-import org.eclipse.jdt.core.WorkingCopyOwner
+import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.internal.core.SearchableEnvironment
 import org.eclipse.jdt.internal.core.JavaProject
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
@@ -32,7 +32,7 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
 
       val name = symClassName(sym)
       packName.flatMap { pn =>
-        val pfs = new SearchableEnvironment(javaProject.asInstanceOf[JavaProject], null: WorkingCopyOwner).nameLookup.findPackageFragments(pn, false)
+        val pfs = new SearchableEnvironment(javaProject.asInstanceOf[JavaProject], null: Array[ICompilationUnit], false).nameLookup.findPackageFragments(pn, false)
         name.flatMap { nm =>
           if (pfs eq null)
             None
@@ -50,7 +50,7 @@ trait LocateSymbol { self: ScalaPresentationCompiler =>
 
     def findPath(): Option[IPath] = {
       logger.info("Looking for a compilation unit for " + sym.fullName)
-      val nameLookup = new SearchableEnvironment(javaProject.asInstanceOf[JavaProject], null: WorkingCopyOwner).nameLookup
+      val nameLookup = new SearchableEnvironment(javaProject.asInstanceOf[JavaProject], null: Array[ICompilationUnit], false).nameLookup
 
       val name = asyncExec {
         if ((sym != NoSymbol) && sym.owner.isPackageObject) sym.owner.owner.fullName + ".package" else sym.enclosingTopLevelClass.fullName
