@@ -27,6 +27,7 @@ import org.eclipse.jface.viewers.ISelection
 import org.eclipse.jface.viewers.IStructuredSelection
 import org.eclipse.jface.viewers.StructuredSelection
 import org.eclipse.ui.IEditorInput
+import org.eclipse.ui.texteditor.ITextEditor
 import org.eclipse.ui.IWorkbenchPart
 import org.scalaide.core.IScalaPlugin
 import org.scalaide.core.internal.jdt.model.ScalaSourceTypeElement
@@ -35,6 +36,12 @@ import org.scalaide.util.internal.ReflectionUtils
 
 class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogger { self =>
   import ScalaToggleBreakpointAdapterUtils._
+
+  private def getTextEditor(part: IWorkbenchPart): ITextEditor =
+    if (part.isInstanceOf[ITextEditor])
+      part.asInstanceOf[ITextEditor]
+    else
+      part.getAdapter(classOf[ITextEditor]).asInstanceOf[ITextEditor]
 
   /** Implementation of the breakpoint toggler. This method relies on the JDT being able
    *  to find the corresponding JDT element for the given selection.
