@@ -8,8 +8,8 @@ import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.TypeNameMatch
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.scalaide.core.quickassist.BasicCompletionProposal
+import org.scalaide.util.eclipse.TypeNameMatchCollector
 
 package object quickassist {
 
