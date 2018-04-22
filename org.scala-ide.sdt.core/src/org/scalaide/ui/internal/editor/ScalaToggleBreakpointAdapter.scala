@@ -134,7 +134,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
               case _                             => ()
             }
           case IJavaElement.TYPE =>
-            toggleClassBreakpoints(part, sel)
+            ToggleBreakpointAdapter.toggleClassBreakpoints(part, sel)
           case _ =>
             toggleLineBreakpointsImpl(part, selection)
         }
