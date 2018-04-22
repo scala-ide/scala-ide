@@ -151,7 +151,7 @@ class ScalaToggleBreakpointAdapter extends ToggleBreakpointAdapter with HasLogge
    * The implementation of this method is copied from the super class, which had
    * to be overwritten because it doesn't know how to get a ScalaCompilationUnit.
    */
-  override def translateToMembers(part: IWorkbenchPart, selection: ISelection): ISelection = {
+  def translateToMembers(part: IWorkbenchPart, selection: ISelection): ISelection = {
     def typeRoot(input: IEditorInput): Option[ITypeRoot] =
       Option(input.getAdapter(classOf[IClassFile]).asInstanceOf[IClassFile])
         .orElse(IScalaPlugin().scalaCompilationUnit(input).asInstanceOf[Option[ICompilationUnit]])
