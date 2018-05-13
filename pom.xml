@@ -70,7 +70,7 @@
     <scala211.scala-parser-combinators.version>1.0.5</scala211.scala-parser-combinators.version>
     <scala211.scala-swing.version>1.0.1</scala211.scala-swing.version>
     <!-- Scala 2.12.x -->
-    <scala212.version>2.12.3</scala212.version>
+    <scala212.version>2.12.6</scala212.version>
     <scala212.binary.version>2.12</scala212.binary.version>
     <scala212.scala-xml.version>1.0.6</scala212.scala-xml.version>
     <scala212.scala-parser-combinators.version>1.0.6</scala212.scala-parser-combinators.version>
@@ -577,7 +577,7 @@
               <arg>-Yno-adapted-args</arg>
               <arg>-Ywarn-dead-code</arg>
               <arg>-Ywarn-unused-import</arg>
-              <arg>-Ywarn-unused:-params,-implicits,_</arg>
+              <arg>-Ywarn-unused:-explicits,-implicits,_</arg>
             </args>
           </configuration>
         </plugin>
