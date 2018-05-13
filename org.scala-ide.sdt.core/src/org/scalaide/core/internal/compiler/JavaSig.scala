@@ -50,6 +50,41 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
   class JavaSignature(symbol: Symbol) {
     import org.eclipse.jdt.core.Signature
 
+    // Erasure.needsJavaSig was made private in scala/scala ee6f3864
+    def rebindInnerClass(pre: Type, cls: Symbol): Type =
+      if (cls.isTopLevel || cls.isLocalToBlock) pre else cls.owner.tpe_*
+
+    private object NeedsSigCollector extends TypeCollector(false) {
+      def traverse(tp: Type): Unit = {
+        if (!result) {
+          tp match {
+            case st: SubType =>
+              traverse(st.supertype)
+            case TypeRef(pre, sym, args) =>
+              if (sym == definitions.ArrayClass) args foreach traverse
+              else if (sym.isTypeParameterOrSkolem || sym.isExistentiallyBound || !args.isEmpty) result = true
+              else if (sym.isClass) traverse(rebindInnerClass(pre, sym)) // #2585
+              else if (!sym.isTopLevel) traverse(pre)
+            case PolyType(_, _) | ExistentialType(_, _) =>
+              result = true
+            case RefinedType(parents, _) =>
+              parents foreach traverse
+            case ClassInfoType(parents, _, _) =>
+              parents foreach traverse
+            case AnnotatedType(_, atp) =>
+              traverse(atp)
+            case _ =>
+              mapOver(tp)
+          }
+        }
+      }
+    }
+
+    private def erasureNeedsJavaSig(tp: Type, throwsArgs: List[Type]) = !settings.Ynogenericsig && {
+      def needs(tp: Type) = NeedsSigCollector.collect(tp)
+      needs(tp) || throwsArgs.exists(needs)
+    }
+
     // see scala/scala commit e5ea3ab
     private val markClassUsed: Symbol => Unit = _ => ()
 
@@ -58,7 +93,7 @@ trait JavaSig { pc: ScalaPresentationCompiler =>
       pc.asyncExec {
         def needsJavaSig: Boolean = {
           // there is no need to generate the generic type information for local symbols
-          !symbol.isLocalToBlock && erasure.needsJavaSig(symbol.info, throwsArgs = Nil)
+          !symbol.isLocalToBlock && erasureNeedsJavaSig(symbol.info, throwsArgs = Nil)
         }
 
         if (needsJavaSig) {
