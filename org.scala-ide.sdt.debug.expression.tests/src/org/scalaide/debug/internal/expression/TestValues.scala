@@ -243,6 +243,8 @@ object TestValues {
     val double2 = 2.3
     val float = 1.1f
     val float2 = 0.7f
+    val bigDecimal = BigDecimal(1.1)
+    val bigDecimal2 = BigDecimal(2.3)
     val char = 'c'
     val char2 = 'd'
     val boolean = false
