@@ -131,7 +131,7 @@
         <repo.eclipse>${repo.eclipse.photon}</repo.eclipse>
         <repo.ajdt>${repo.ajdt.photon}</repo.ajdt>
         <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
-        <weaving.hook.plugin.version>1.2.0.v20160929-1449</weaving.hook.plugin.version>
+        <weaving.hook.plugin.version>1.2.100.v20171221-2204</weaving.hook.plugin.version>
       </properties>
     </profile>
 
