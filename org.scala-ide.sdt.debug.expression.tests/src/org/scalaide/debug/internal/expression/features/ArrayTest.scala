@@ -98,9 +98,15 @@ class ArrayTest extends BaseIntegrationTest(ArrayTest) with AssignmentTest {
     eval("""Array("")""", Array(""), Scala.Array(Java.String))
 
   @Test
-  def testNestedMixedArrayApply(): Unit = eval(
+  def testNestedMixedAnyValArrayApply(): Unit = eval(
     "Array(Array(1,2,3), Array(2.0, 3.0, 4.0))",
     Array(Array(1, 2, 3), Array(2.0, 3.0, 4.0)),
+    Scala.Array(Java.Object))
+
+  @Test
+  def testNestedMixedAnyArrayApply(): Unit = eval(
+    "Array(Array(1,2,3), Array(\"foo\", \"bar\"))",
+    Array(Array(1, 2, 3), Array("foo", "bar")),
     Scala.Array(Java.Object))
 
   @Test

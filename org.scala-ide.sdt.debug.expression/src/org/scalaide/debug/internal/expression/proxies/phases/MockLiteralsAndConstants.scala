@@ -42,11 +42,19 @@ class MockLiteralsAndConstants
 
   private val ClassOf = """classOf\[(.*?)\]""".r
 
+  // A naive fix of regression introduced by https://github.com/scala/scala/pull/6131/
+  // As of Scala 2.12.5 TypeTags can contain references to existential types after TypeCheck phase
+  // The transformation performed by this class prevents them from being erased properly, for example
+  // Array[_ >: Double with Int <: AnyVal] gets erased to [Lscala.AnyVal;
+  private def fixErasure(clazz: String): String =
+    if(clazz.contains("scala.Any")) "java.lang.Object"
+    else clazz
+
   private def classOfCode(literal: Literal) = {
     val ClassOf(className) = literal.toString()
     Apply(
       SelectMethod(contextParamName, classOfProxyMethodName),
-      List(Literal(Constant(className))))
+      List(Literal(Constant(fixErasure(className)))))
   }
 
   private def nullLiteralCode = {
