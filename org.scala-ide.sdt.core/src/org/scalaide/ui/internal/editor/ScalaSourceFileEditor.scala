@@ -368,7 +368,7 @@ class ScalaSourceFileEditor
         // this should be fast, the whole unit was fully type-checked
         Utils.debugTimed("makeConsistent after reconcile") {
           unit.makeConsistent(
-            AST.JLS9, // anything other than NO_AST would work
+            AST.JLS10, // anything other than NO_AST would work
             true, // resolve bindings
             0, // don't perform statements recovery
             null, // don't collect problems but report them
