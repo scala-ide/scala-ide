@@ -79,7 +79,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
-    val ast = unit.reconcile(AST.JLS8,
+    val ast = unit.reconcile(AST.JLS10,
       ICompilationUnit.FORCE_PROBLEM_DETECTION | // force the resolution of the type bindings
         ICompilationUnit.ENABLE_STATEMENTS_RECOVERY | // try to make sense of malformed statements
         ICompilationUnit.ENABLE_BINDINGS_RECOVERY, // try to guess binding even if the code is not fully valid

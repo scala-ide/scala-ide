@@ -5,7 +5,7 @@ import testsetup.SDTTestUtils._
 import org.junit._
 import org.eclipse.core.runtime.Path
 import org.scalaide.core.internal.jdt.model.ScalaClassFile
-import org.eclipse.jdt.core.IClassFile
+import org.eclipse.jdt.core.IOrdinaryClassFile
 import org.scalaide.core.IScalaProject
 
 object ScalaBinaryTypeTest {
@@ -42,7 +42,7 @@ class ScalaBinaryTypeTest {
   }
 
   private def testForPath(path: String): Unit = {
-    val elementsCf = prj.javaProject.findElement(new Path(path)).asInstanceOf[IClassFile]
+    val elementsCf = prj.javaProject.findElement(new Path(path)).asInstanceOf[IOrdinaryClassFile]
     Assert.assertNotNull("Couldn't find classfile " + path, elementsCf)
     val elementsClass = elementsCf.getType()
     elementsCf match {

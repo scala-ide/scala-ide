@@ -15,7 +15,6 @@ import org.eclipse.jdt.core.search.IJavaSearchConstants
 import org.eclipse.jdt.core.search.SearchEngine
 import org.eclipse.jdt.core.search.TypeNameMatch
 import org.eclipse.jdt.internal.corext.util.QualifiedTypeNameHistory
-import org.eclipse.jdt.internal.corext.util.TypeNameMatchCollector
 import org.eclipse.jdt.internal.ui.actions.ActionMessages
 import org.eclipse.jdt.internal.ui.dialogs.MultiElementListSelectionDialog
 import org.eclipse.jdt.internal.ui.util.TypeNameMatchLabelProvider
@@ -27,6 +26,7 @@ import org.scalaide.core.internal.jdt.model.ScalaSourceFile
 import org.scalaide.core.internal.statistics.Features.OrganizeImports
 import org.scalaide.ui.internal.preferences.OrganizeImportsPreferences._
 import org.scalaide.util.eclipse.EditorUtils
+import org.scalaide.util.eclipse.TypeNameMatchCollector
 import org.scalaide.util.internal.eclipse.TextEditUtils
 
 /**

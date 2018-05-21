@@ -25,9 +25,11 @@
     <repo.ajdt.neon>http://download.eclipse.org/tools/ajdt/46/dev/update</repo.ajdt.neon>
     <repo.eclipse.oxygen>http://download.eclipse.org/releases/oxygen</repo.eclipse.oxygen>
     <repo.ajdt.oxygen>http://download.eclipse.org/tools/ajdt/47/dev/update</repo.ajdt.oxygen>
+    <repo.eclipse.photon>http://download.eclipse.org/releases/photon</repo.eclipse.photon>
+    <repo.ajdt.photon>http://download.eclipse.org/tools/ajdt/47/dev/update</repo.ajdt.photon>
     <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
-    <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
+    <repo.nebula>http://download.eclipse.org/nebula/releases/latest</repo.nebula>
 
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
@@ -119,6 +121,17 @@
         <repo.ajdt>${repo.ajdt.oxygen}</repo.ajdt>
         <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
         <weaving.hook.plugin.version>1.2.0.v20160929-1449</weaving.hook.plugin.version>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>eclipse-photon</id>
+      <properties>
+        <eclipse.codename>photon</eclipse.codename>
+        <repo.eclipse>${repo.eclipse.photon}</repo.eclipse>
+        <repo.ajdt>${repo.ajdt.photon}</repo.ajdt>
+        <jdt.core.version.range>[3.10.0,4.0.0)</jdt.core.version.range>
+        <weaving.hook.plugin.version>1.2.100.v20171221-2204</weaving.hook.plugin.version>
       </properties>
     </profile>
 

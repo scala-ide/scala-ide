@@ -466,7 +466,7 @@ class ScalaAutoIndentStrategy(
 
     var compilationUnit : CompilationUnit = null
     try {
-      val parser = ASTParser.newParser(AST.JLS8)
+      val parser = ASTParser.newParser(AST.JLS10)
       parser.setSource(info.buffer)
       compilationUnit = parser.createAST(null).asInstanceOf[CompilationUnit]
     } catch {
