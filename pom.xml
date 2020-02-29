@@ -27,7 +27,7 @@
     <repo.ajdt.oxygen>http://download.eclipse.org/tools/ajdt/47/dev/update</repo.ajdt.oxygen>
     <repo.equinox.launcher>http://download.scala-ide.org/plugins/equinox-weaving-launcher/releases/site</repo.equinox.launcher>
     <repo.scala-ide.root>http://download.scala-ide.org</repo.scala-ide.root>
-    <repo.nebula>http://download.eclipse.org/technology/nebula/snapshot</repo.nebula>
+    <repo.nebula>http://download.eclipse.org/nebula/snapshot</repo.nebula>
 
     <!-- fixed versions -->
     <miglayout.version>3.7.4</miglayout.version>
