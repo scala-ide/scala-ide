@@ -1,4 +1,4 @@
-# Scala IDE for eclipse is archived
+# The Scala IDE for eclipse is archived
 
 The Scala IDE for eclipse is no longer maintained.
 
